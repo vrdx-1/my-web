@@ -1,82 +1,82 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase'; // ตัวเชื่อมฐานข้อมูลที่เรากำลังจะสร้าง
+'use client'
 
-export default function HomePage() {
-  const [cars, setCars] = useState([]);
-  const [loading, setLoading] = useState(true);
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
-  // ฟังก์ชันดึงข้อมูลรถจากฐานข้อมูล
-  const fetchCars = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('cars')
-      .select('*')
-      .order('created_at', { ascending: false }); // เอารถใหม่ขึ้นก่อน
-
-    if (!error) {
-      setCars(data);
-    }
-    setLoading(false);
-  };
+export default function Home() {
+  // แก้ไขจุดนี้: เติม <any[]> เพื่อให้ Vercel ยอมรับข้อมูลจาก Database
+  const [cars, setCars] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchCars();
-  }, []);
+    const fetchCars = async () => {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (!error) {
+        setCars(data || [])
+      }
+      setLoading(false)
+    }
+
+    fetchCars()
+  }, [])
+
+  if (loading) return <div className="p-10 text-center">กำลังโหลดข้อมูลรถ...</div>
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* ส่วนหัวเว็บ (Header) */}
-      <nav className="bg-blue-800 text-white p-5 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">JACK CARS MARKET</h1>
-          <span className="bg-blue-700 px-3 py-1 rounded-full text-sm">ซื้อ-ขายรถเจ้าของมือเดียว</span>
+    <main className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <nav className="bg-blue-600 text-white p-4 shadow-lg">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold">โชว์รูมรถมือสองคุณภาพ</h1>
+          <div className="space-x-4 text-sm">
+            <span>ติดต่อเรา: 08x-xxx-xxxx</span>
+          </div>
         </div>
       </nav>
 
-      {/* ส่วนเนื้อหาหลัก */}
-      <main className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">รถพร้อมขาย</h2>
-          <div className="text-gray-500">{cars.length} รายการทั้งหมด</div>
+      {/* Hero Section */}
+      <div className="bg-white p-8 text-center border-b">
+        <h2 className="text-3xl font-bold text-gray-800">ค้นหารถในฝันของคุณ</h2>
+        <p className="text-gray-600 mt-2">รวมรถบ้านสภาพดี ราคาเป็นกันเอง</p>
+      </div>
+
+      {/* Car List */}
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cars.map((car) => (
+            <div key={car.id} className="bg-white rounded-xl shadow-md overflow-hidden border hover:shadow-xl transition-shadow">
+              <div className="h-48 bg-gray-200 flex items-center justify-center text-gray-400">
+                {/* ส่วนนี้อนาคตไว้ใส่รูปภาพ */}
+                <span className="text-xs">ไม่มีรูปภาพ</span>
+              </div>
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{car.brand} {car.model}</h3>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{car.category}</span>
+                  </div>
+                  <p className="text-blue-600 font-bold text-lg">
+                    ฿{car.price?.toLocaleString()}
+                  </p>
+                </div>
+                <button className="w-full mt-4 bg-gray-800 text-white py-2 rounded-lg hover:bg-black transition-colors">
+                  ดูรายละเอียด
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {loading ? (
-          <div className="text-center py-20 text-gray-500 text-xl">กำลังโหลดข้อมูลรถ...</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {cars.map((car) => (
-              <div key={car.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-200">
-                {/* รูปภาพ (ตอนนี้ใช้สีพื้นไปก่อนจนกว่าจะอัปโหลดรูปจริง) */}
-                <div className="h-56 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                  <span className="text-gray-400">รูปภาพ {car.brand}</span>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-gray-900">{car.brand} {car.model}</h3>
-                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">ว่าง</span>
-                  </div>
-                  <p className="text-gray-500 mb-4">ประเภท: {car.category || 'ทั่วไป'}</p>
-                  <div className="flex justify-between items-center border-t pt-4">
-                    <span className="text-2xl font-black text-blue-600">฿{car.price?.toLocaleString()}</span>
-                    <button className="bg-gray-900 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-600 transition">
-                      ดูข้อมูลเพิ่มเติม
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {cars.length === 0 && (
+          <div className="text-center py-20 text-gray-500">
+            ยังไม่มีรายการรถในขณะนี้
           </div>
         )}
-
-        {/* กรณีไม่มีรถในระบบ */}
-        {!loading && cars.length === 0 && (
-          <div className="bg-white p-12 text-center rounded-xl shadow-inner">
-            <p className="text-gray-400 text-lg">ขณะนี้ยังไม่มีรถในรายการ</p>
-          </div>
-        )}
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  )
 }
