@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react"; // เพิ่ม Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { ChevronLeft, X, CheckCircle2 } from "lucide-react";
 
-export default function BoostPostPage() {
+// สร้าง Component แยกเพื่อจัดการ Logic เดิมทั้งหมด
+function BoostPostContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get("id");
@@ -17,7 +18,6 @@ export default function BoostPostPage() {
   const [selectedPkg, setSelectedPkg] = useState<{ name: string; price: string; days: number; qr_url: string } | null>(null);
   const [dbStatus, setDbStatus] = useState<string | null>(null);
 
-  // แก้ไข: เพิ่ม qr_url ให้ตรงกับแต่ละแพ็กเกจที่คุณระบุมา
   const packages = [
     { 
       name: "24 ຊົ່ວໂມງ", 
@@ -133,7 +133,6 @@ export default function BoostPostPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       <div className="bg-white p-4 flex items-center border-b sticky top-0 z-10">
-        {/* แก้ไขปุ่มย้อนกลับ: ถ้าอยู่ Step 2 ให้กลับไป Step 1 ถ้าอย่างอื่นให้ไปหน้า Home */}
         <button 
           onClick={() => step === 2 ? setStep(1) : router.push("/")} 
           className="p-2"
@@ -196,5 +195,14 @@ export default function BoostPostPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// ฟังก์ชันหลักที่ส่งออก โดยหุ้มด้วย Suspense เพื่อแก้ Build Error
+export default function BoostPostPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center font-bold">ກຳລັງໂຫລດ...</div>}>
+      <BoostPostContent />
+    </Suspense>
   );
 }
