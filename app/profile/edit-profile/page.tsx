@@ -115,7 +115,7 @@ export default function EditProfile() {
  };
 
  const fetchSavedStatus = async (uid: string) => {
- const { data } = await supabase.from('saved_posts').select('post_id').eq('user_id', uid);
+ const { data } = await supabase.from('post_saves').select('post_id').eq('user_id', uid);
  if (data) {
  const savedMap: any = {};
  data.forEach(item => savedMap[item.post_id] = true);
@@ -124,7 +124,7 @@ export default function EditProfile() {
  };
 
  const fetchLikedStatus = async (uid: string) => {
- const { data } = await supabase.from('liked_posts').select('post_id').eq('user_id', uid);
+ const { data } = await supabase.from('post_likes').select('post_id').eq('user_id', uid);
  if (data) {
  const likedMap: any = {};
  data.forEach(item => likedMap[item.post_id] = true);
@@ -201,40 +201,56 @@ export default function EditProfile() {
  const toggleLike = async (postId: string) => {
  if (!session) return;
  const isCurrentlyLiked = likedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newLikesCount = isCurrentlyLiked ? Math.max(0, (currentPost?.likes || 1) - 1) : (currentPost?.likes || 0) + 1;
  
  // Optimistic UI update
  setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }));
  setPosts(prev => prev.map(p => {
  if (p.id === postId) {
- return { ...p, likes: isCurrentlyLiked ? (p.likes || 1) - 1 : (p.likes || 0) + 1 };
+ return { ...p, likes: newLikesCount };
  }
  return p;
  }));
 
  if (isCurrentlyLiked) {
- await supabase.from('liked_posts').delete().eq('user_id', userId).eq('post_id', postId);
+ const { error } = await supabase.from('post_likes').delete().eq('user_id', userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ }
  } else {
- await supabase.from('liked_posts').insert([{ user_id: userId, post_id: postId }]);
+ const { error } = await supabase.from('post_likes').insert([{ user_id: userId, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ }
  }
  };
 
  const toggleSave = async (postId: string) => {
  if (!session) return;
  const isCurrentlySaved = savedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newSavesCount = isCurrentlySaved ? Math.max(0, (currentPost?.saves || 1) - 1) : (currentPost?.saves || 0) + 1;
  
  // Optimistic UI update
  setSavedPosts(prev => ({ ...prev, [postId]: !isCurrentlySaved }));
  setPosts(prev => prev.map(p => {
  if (p.id === postId) {
- return { ...p, saves: isCurrentlySaved ? (p.saves || 1) - 1 : (p.saves || 0) + 1 };
+ return { ...p, saves: newSavesCount };
  }
  return p;
  }));
 
  if (isCurrentlySaved) {
- await supabase.from('saved_posts').delete().eq('user_id', userId).eq('post_id', postId);
+ const { error } = await supabase.from('post_saves').delete().eq('user_id', userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+ }
  } else {
- await supabase.from('saved_posts').insert([{ user_id: userId, post_id: postId }]);
+ const { error } = await supabase.from('post_saves').insert([{ user_id: userId, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+ }
  }
  };
 
@@ -254,9 +270,16 @@ export default function EditProfile() {
  try {
  if (navigator.share) {
  await navigator.share({ title: 'Car Post', text: post.caption, url: window.location.href });
- // Increment share count in database
- await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
- setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
+ 
+ // บันทึกข้อมูลการแชร์ลงฐานข้อมูล (ถ้ามีตาราง post_shares)
+ if (userId) {
+ await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
+ }
+
+ // อัปเดตตัวเลขในตาราง cars
+ const newSharesCount = (post.shares || 0) + 1;
+ await supabase.from('cars').update({ shares: newSharesCount }).eq('id', post.id);
+ setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: newSharesCount } : p));
  } else {
  navigator.clipboard.writeText(window.location.href);
  alert("ຄັດລອກລິ້ງແລ້ວ!");

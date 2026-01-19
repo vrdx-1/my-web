@@ -14,7 +14,8 @@ export default function Home() {
  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
  const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
  const [viewingPost, setViewingPost] = useState<any | null>(null);
- const [activeMenu, setActiveMenu] = useState<string | null>(null);
+ const [activeMenu, setMenu] = useState<string | null>(null);
+ const [activeMenuState, setActiveMenu] = useState<string | null>(null);
  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
 
  const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
@@ -32,6 +33,9 @@ export default function Home() {
  const [loadingMore, setLoadingMore] = useState(false);
  const PAGE_SIZE = 12; // โหลดครั้งละ 12 โพสต์
  const observer = useRef<IntersectionObserver | null>(null);
+
+ // --- ตัวตรวจจับการคลิกไฟล์ (ส่วนที่แก้ไขใหม่) ---
+ const hiddenFileInputRef = useRef<HTMLInputElement>(null);
 
  // ตัวตรวจจับจุดสิ้นสุดหน้าจอ - แก้ไขให้เช็ค loadingMore ก่อนสร้าง Observer เพื่อลดการกระตุก
  const lastPostElementRef = useCallback((node: any) => {
@@ -168,10 +172,14 @@ export default function Home() {
  }, [page]);
 
  const fetchSavedStatus = async (userIdOrToken: string) => {
+ // เช็คทั้งตารางจริงและตาราง guest
+ const table = session ? 'post_saves' : 'post_saves_guest';
+ const column = session ? 'user_id' : 'guest_token';
+ 
  const { data } = await supabase
- .from('post_saves')
+ .from(table)
  .select('post_id')
- .eq('user_id', userIdOrToken);
+ .eq(column, userIdOrToken);
  if (data) {
  const savedMap: { [key: string]: boolean } = {};
  data.forEach(item => savedMap[item.post_id] = true);
@@ -180,10 +188,14 @@ export default function Home() {
  };
 
  const fetchLikedStatus = async (userIdOrToken: string) => {
+ // เช็คทั้งตารางจริงและตาราง guest
+ const table = session ? 'post_likes' : 'post_likes_guest';
+ const column = session ? 'user_id' : 'guest_token';
+
  const { data } = await supabase
- .from('post_likes')
+ .from(table)
  .select('post_id')
- .eq('user_id', userIdOrToken);
+ .eq(column, userIdOrToken);
  if (data) {
  const likedMap: { [key: string]: boolean } = {};
  data.forEach(item => likedMap[item.post_id] = true);
@@ -228,9 +240,10 @@ export default function Home() {
 
  const interval = setInterval(() => {
  const latestStored = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
- supabase.auth.getSession().then(({ data: { session } }) => {
- if (session) {
- updateLastSeen(session.user.id);
+ supabase.auth.getSession().then(({ data: sessionData }) => {
+ const currentSession = sessionData?.session;
+ if (currentSession) {
+ updateLastSeen(currentSession.user.id);
  } else {
  const token = getPrimaryGuestToken();
  updateLastSeen(token);
@@ -246,7 +259,7 @@ export default function Home() {
  subscription.unsubscribe();
  clearInterval(interval);
  };
- }, []); // เอา tab/searchTerm ออกเพราะแยกไปจัดการด้านบนแล้ว
+ }, [session]); // เพิ่ม session เข้าไปเพื่อให้ fetch status ใหม่เมื่อเปลี่ยนสถานะ
 
  const getOnlineStatus = (lastSeen: string | null) => {
  if (!lastSeen) return { isOnline: false, text: '' };
@@ -258,7 +271,7 @@ export default function Home() {
  const diffInMinutes = Math.floor(diffInSeconds / 60);
  if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMinutes} ນາທີທີ່ແລ้ว` };
  const diffInHours = Math.floor(diffInMinutes / 60);
- if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມงທີ່ແລ້ວ` };
+ if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
  const diffInDays = Math.floor(diffInHours / 24);
  if (diffInDays < 7) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInDays} ມື้ທີ່ແล้ว` };
  const diffInWeeks = Math.floor(diffInDays / 7);
@@ -307,35 +320,32 @@ export default function Home() {
  };
 
  const toggleLike = async (postId: string) => {
- const userId = session ? session.user.id : getPrimaryGuestToken();
- const isCurrentlyLiked = likedPosts[postId];
+ const isUser = !!session;
+ const userId = isUser ? session.user.id : getPrimaryGuestToken();
+ const table = isUser ? 'post_likes' : 'post_likes_guest';
+ const column = isUser ? 'user_id' : 'guest_token';
  
- // Optimistic UI: อัปเดตหน้าจอทันที
+ const isCurrentlyLiked = likedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newLikesCount = isCurrentlyLiked ? (currentPost?.likes || 1) - 1 : (currentPost?.likes || 0) + 1;
+ 
+ // Optimistic UI
  setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }));
- setPosts(prev => prev.map(p => {
- if (p.id === postId) {
- return { ...p, likes: isCurrentlyLiked ? (p.likes || 1) - 1 : (p.likes || 0) + 1 };
- }
- return p;
- }));
+ setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikesCount } : p));
 
  if (isCurrentlyLiked) {
- // 1. ลบจากตารางหลักฐาน
- const { error: relError } = await supabase.from('post_likes').delete().eq('user_id', userId).eq('post_id', postId);
- // 2. ลดจำนวนในตารางหลัก
- const { error: mainError } = await supabase.rpc('decrement_likes', { row_id: postId });
- 
- if (relError || mainError) {
+ const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ } else {
  setLikedPosts(prev => ({ ...prev, [postId]: true }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
  }
  } else {
- // 1. เพิ่มลงตารางหลักฐาน
- const { error: relError } = await supabase.from('post_likes').insert([{ user_id: userId, post_id: postId }]);
- // 2. เพิ่มจำนวนในตารางหลัก
- const { error: mainError } = await supabase.rpc('increment_likes', { row_id: postId });
-
- if (relError || mainError) {
+ const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ } else {
  setLikedPosts(prev => ({ ...prev, [postId]: false }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 1) - 1 } : p));
  }
@@ -343,31 +353,32 @@ export default function Home() {
  };
 
  const toggleSave = async (postId: string) => {
- const userId = session ? session.user.id : getPrimaryGuestToken();
- const isCurrentlySaved = savedPosts[postId];
+ const isUser = !!session;
+ const userId = isUser ? session.user.id : getPrimaryGuestToken();
+ const table = isUser ? 'post_saves' : 'post_saves_guest';
+ const column = isUser ? 'user_id' : 'guest_token';
 
- // Optimistic UI: อัปเดตหน้าจอทันที
+ const isCurrentlySaved = savedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newSavesCount = isCurrentlySaved ? (currentPost?.saves || 1) - 1 : (currentPost?.saves || 0) + 1;
+
+ // Optimistic UI
  setSavedPosts(prev => ({ ...prev, [postId]: !isCurrentlySaved }));
- setPosts(prev => prev.map(p => {
- if (p.id === postId) {
- return { ...p, saves: isCurrentlySaved ? (p.saves || 1) - 1 : (p.saves || 0) + 1 };
- }
- return p;
- }));
+ setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: newSavesCount } : p));
 
  if (isCurrentlySaved) {
- const { error: relError } = await supabase.from('post_saves').delete().eq('user_id', userId).eq('post_id', postId);
- const { error: mainError } = await supabase.rpc('decrement_saves', { row_id: postId });
-
- if (relError || mainError) {
+ const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+ } else {
  setSavedPosts(prev => ({ ...prev, [postId]: true }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 0) + 1 } : p));
  }
  } else {
- const { error: relError } = await supabase.from('post_saves').insert([{ user_id: userId, post_id: postId }]);
- const { error: mainError } = await supabase.rpc('increment_saves', { row_id: postId });
-
- if (relError || mainError) {
+ const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+ } else {
  setSavedPosts(prev => ({ ...prev, [postId]: false }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
  }
@@ -402,7 +413,7 @@ export default function Home() {
  setPosts(prev => prev.filter(p => p.id !== postId));
  alert("ລຶບໂພສສຳເລັດແລ้ວ");
  } else {
- alert("ເກີດຂໍ้ຜິດພາດ: " + error.message);
+ alert("ເກີດຂໍ้ຜິດພาด: " + error.message);
  }
  setActiveMenu(null);
  };
@@ -435,7 +446,7 @@ export default function Home() {
  ]);
 
  if (error) {
- alert("ເກີດຂໍ້ຜິດພาด: " + error.message);
+ alert("ເກີດຂໍ້ຜິດພາດ: " + error.message);
  } else {
  alert("ລາຍງານສຳເລັດແລ້ວ! Admin ຈະກວດສອບໂດຍໄວ");
  setReportingPost(null);
@@ -446,22 +457,23 @@ export default function Home() {
  // ----------------------------------------------------
 
  const handleShare = async (post: any) => {
- const userId = session ? session.user.id : getPrimaryGuestToken();
  const shareData = { title: 'Car Post', text: post.caption, url: window.location.href };
  try {
  if (navigator.share) {
  await navigator.share(shareData);
- // 1. บันทึกหลักฐานการแชร์
- await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
- // 2. อัปเดตจำนวนในตารางหลัก
- await supabase.rpc('increment_shares', { row_id: post.id });
  
+ const isUser = !!session;
+ const userId = isUser ? session.user.id : getPrimaryGuestToken();
+ const table = isUser ? 'post_shares' : 'post_shares_guest';
+ const column = isUser ? 'user_id' : 'guest_token';
+
+ await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
+
+ // อัปเดตยอดแชร์
+ await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
  }
- else { 
- navigator.clipboard.writeText(window.location.href); 
- alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!"); 
- }
+ else { navigator.clipboard.writeText(window.location.href); alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!"); }
  } catch (err) { console.log('User cancelled share'); }
  };
 
@@ -519,11 +531,28 @@ export default function Home() {
  );
  };
 
+ // --- ส่วนที่แก้ไข: ฟังก์ชันจัดการการเลือกไฟล์จากหน้าโฮม (จุดสำคัญ) ---
+ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ if (e.target.files && e.target.files.length > 0) {
+    const filesArray = Array.from(e.target.files);
+    
+    // แปลง File Object เป็น Data URL หรือเก็บข้อมูลดิบไม่ได้โดยตรงใน URL
+    // วิธีที่ดีที่สุดคือเก็บลง sessionStorage (จำกัดขนาด) หรือใช้ URL.createObjectURL
+    // เพื่อให้หน้าถัดไปดึงไปแสดงผลพรีวิวได้ทันที
+    const previewUrls = filesArray.map(file => URL.createObjectURL(file));
+    sessionStorage.setItem('pending_images', JSON.stringify(previewUrls));
+    
+    // หมายเหตุ: การอัปโหลดไฟล์จริงต้องใช้ Global State หรือเก็บ File Object ไว้ในตัวแปรภายนอก
+    // สำหรับโครงสร้างคุณ แนะนำให้หน้า create-post มีฟังก์ชันรับช่วงต่อจากจุดนี้
+    router.push('/create-post');
+ }
+ };
+
  // --- ฟังก์ชันจัดการการกดปุ่มสร้างโพสต์ (+) ---
  const handleCreatePostClick = () => {
  if (session) {
- // ถ้า Login แล้วไปหน้าสร้างโพสต์เลย
- router.push('/create-post');
+ // ถ้า Login แล้ว สั่งให้ input file ทำงานทันที (นิ้วกดปุ่ม = นิ้วกดเลือกรูป)
+ hiddenFileInputRef.current?.click();
  } else {
  // ถ้ายังไม่ Login ให้เปิด Modal ยอมรับเงื่อนไข
  setShowTermsModal(true);
@@ -539,6 +568,16 @@ export default function Home() {
  .animate-pop { animation: popOnce 0.3s ease-out; }
  `}</style>
 
+ {/* Input ลับสำหรับเลือกรูปที่หน้าโฮม */}
+ <input 
+ type="file" 
+ ref={hiddenFileInputRef} 
+ multiple 
+ accept="image/*" 
+ onChange={handleFileChange} 
+ style={{ display: 'none' }} 
+ />
+
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
  <img src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/1000253086.jpg" alt="Logo" onClick={handleLogoClick} style={{ width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', objectFit: 'cover' }} />
  <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
@@ -547,25 +586,9 @@ export default function Home() {
  </div>
  <button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
  
- {/* เพิ่มปุ่มกระดิ่งแจ้งเตือนตามความต้องการ */}
- <button 
- onClick={() => router.push('/notification')} 
- style={{ 
- width: '38px', 
- height: '38px', 
- borderRadius: '50%', 
- background: '#f0f2f5', 
- border: 'none', 
- cursor: 'pointer', 
- display: 'flex', 
- alignItems: 'center', 
- justifyContent: 'center', 
- flexShrink: 0 
- }}
- >
- <svg width="22" height="22" viewBox="0 0 24 24" fill="#65676b">
- <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
- </svg>
+ {/* ปุ่มแจ้งเตือน (Notification Bell) เพิ่มเข้ามาระหว่างปุ่ม + และ โปรไฟล์ */}
+ <button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f0f2f5', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.98 2.98 0 0 0 2.818-2H9.182A2.98 2.98 0 0 0 12 22zm7-7.414V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C8.63 5.36 7 7.92 7 11v3.586l-2 2V18h14v-1.414l-2-2z" /></svg>
  </button>
 
  <div onClick={() => router.push('/profile')} style={{ cursor: 'pointer', flexShrink: 0 }}>
@@ -631,12 +654,12 @@ export default function Home() {
  </div>
  </div>
  <div style={{ position: 'relative', marginTop: '-4px' }}>
- <button onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
- {activeMenu === post.id && (
+ <button onClick={() => setActiveMenu(activeMenuState === post.id ? null : post.id)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
+ {activeMenuState === post.id && (
  <div style={{ position: 'absolute', right: 0, top: '40px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', zIndex: 150, width: '130px', border: '1px solid #eee', overflow: 'hidden' }}>
  {isPostOwner(post) ? (
  <>
- <div onClick={() => { setActiveMenu(null); router.push(`/edit-post/${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'normal' }}>แກ้ไข</div>
+ <div onClick={() => { setActiveMenu(null); router.push(`/edit-post/${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'normal' }}>แก้ไข</div>
  <div onClick={() => handleDeletePost(post.id)} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'normal' }}>ລົບ</div>
  <div onClick={() => { setActiveMenu(null); router.push(`/boost_post?id=${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', fontWeight: 'normal' }}>Boost Post</div>
  </>
@@ -705,7 +728,8 @@ export default function Home() {
  onClick={() => {
  if(acceptedTerms) {
  setShowTermsModal(false);
- router.push('/create-post');
+ // กรณี Guest เมื่อยอมรับแล้ว ให้เด้งไฟล์เช่นกัน
+ hiddenFileInputRef.current?.click();
  }
  }}
  disabled={!acceptedTerms}
@@ -743,7 +767,7 @@ export default function Home() {
  <div style={{ display: 'flex', gap: '10px' }}>
  <button onClick={() => setReportingPost(null)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: '#f0f2f5', fontWeight: 'bold' }}>ຍົກເລີກ</button>
  <button onClick={submitReport} disabled={isSubmittingReport} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#1877f2', color: '#fff', fontWeight: 'bold', opacity: isSubmittingReport ? 0.6 : 1 }}>
- {isSubmittingReport ? 'ກຳລັງສົ່ງ...' : 'ສົ່ງລายງານ'}
+ {isSubmittingReport ? 'ກຳລັງສົ່ງ...' : 'ສົ່ງລາຍງານ'}
  </button>
  </div>
  </div>
@@ -795,7 +819,7 @@ export default function Home() {
  <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column', touchAction: 'none' }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
  <div style={{ padding: '15px', display: 'flex', justifyContent: 'flex-end', gap: '15px', alignItems: 'center' }}>
  <div style={{ position: 'relative' }}>
- <button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activeMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
+ <button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activePhotoMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
  {activePhotoMenu === currentImgIndex && (<div style={{ position: 'absolute', right: 0, top: '45px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', borderRadius: '8px', width: '130px', zIndex: 3100, overflow: 'hidden' }}><div onClick={() => downloadImage(fullScreenImages[currentImgIndex])} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div></div>)}
  </div>
  <button onClick={() => { setFullScreenImages(null); setActivePhotoMenu(null); }} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>

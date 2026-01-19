@@ -189,53 +189,43 @@ export default function LikedPosts() {
 
  const toggleLike = async (postId: string) => {
  if (!session) return;
- const userId = session.user.id;
+ const currentPost = posts.find(p => p.id === postId);
+ const newLikesCount = Math.max(0, (currentPost?.likes || 1) - 1);
 
- // Optimistic UI: กรองออกทันทีเพราะเป็นหน้า Liked Posts
+ // หน้านี้เป็นหน้า LikedPosts การกดยกเลิกคือการลบออก
  setLikedPosts(prev => ({ ...prev, [postId]: false }));
  setPosts(prev => prev.filter(p => p.id !== postId));
  
- // 1. ลบจากตารางหลักฐาน
- const { error: relError } = await supabase.from('post_likes').delete().eq('user_id', userId).eq('post_id', postId);
- // 2. ลดจำนวนในตารางหลัก
- const { error: mainError } = await supabase.rpc('decrement_likes', { row_id: postId });
-
- if (relError || mainError) {
- console.error("Error toggling like:", relError || mainError);
+ const { error } = await supabase.from('post_likes').delete().eq('user_id', session.user.id).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
  }
  };
 
  const toggleSave = async (postId: string) => {
  if (!session) return;
- const userId = session.user.id;
  const isCurrentlySaved = savedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newSavesCount = isCurrentlySaved ? Math.max(0, (currentPost?.saves || 1) - 1) : (currentPost?.saves || 0) + 1;
  
  // Optimistic UI update
  setSavedPosts(prev => ({ ...prev, [postId]: !isCurrentlySaved }));
  setPosts(prev => prev.map(p => {
  if (p.id === postId) {
- return { ...p, saves: isCurrentlySaved ? (p.saves || 1) - 1 : (p.saves || 0) + 1 };
+ return { ...p, saves: newSavesCount };
  }
  return p;
  }));
 
  if (isCurrentlySaved) {
- // 1. ลบหลักฐาน
- const { error: relError } = await supabase.from('post_saves').delete().eq('user_id', userId).eq('post_id', postId);
- // 2. ลดจำนวนรวม
- const { error: mainError } = await supabase.rpc('decrement_saves', { row_id: postId });
- if (relError || mainError) {
- setSavedPosts(prev => ({ ...prev, [postId]: true }));
- setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 0) + 1 } : p));
+ const { error } = await supabase.from('post_saves').delete().eq('user_id', session.user.id).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
  }
  } else {
- // 1. เพิ่มหลักฐาน
- const { error: relError } = await supabase.from('post_saves').insert([{ user_id: userId, post_id: postId }]);
- // 2. เพิ่มจำนวนรวม
- const { error: mainError } = await supabase.rpc('increment_saves', { row_id: postId });
- if (relError || mainError) {
- setSavedPosts(prev => ({ ...prev, [postId]: false }));
- setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
+ const { error } = await supabase.from('post_saves').insert([{ user_id: session.user.id, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
  }
  }
  };
@@ -259,17 +249,18 @@ export default function LikedPosts() {
  };
 
  const handleShare = async (post: any) => {
- if (!session) return;
- const userId = session.user.id;
  try {
  if (navigator.share) {
  await navigator.share({ title: 'Car Post', text: post.caption, url: window.location.href });
- // 1. บันทึกหลักฐาน
- await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
- // 2. เพิ่มจำนวนรวม
- await supabase.rpc('increment_shares', { row_id: post.id });
  
- setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
+ const userId = session?.user?.id;
+ if (userId) {
+ await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
+ }
+
+ const newSharesCount = (post.shares || 0) + 1;
+ await supabase.from('cars').update({ shares: newSharesCount }).eq('id', post.id);
+ setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: newSharesCount } : p));
  } else {
  navigator.clipboard.writeText(window.location.href);
  alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
@@ -325,7 +316,7 @@ export default function LikedPosts() {
  .animate-pop { animation: popOnce 0.3s ease-out; }
  `}</style>
 
- <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f2f5' }}>
+ <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
  <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
  <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>ລາຍການທີ່ຖືກໃຈ</h1>
  </div>
@@ -382,7 +373,7 @@ export default function LikedPosts() {
  <div onClick={() => handleShare(post)} style={{ cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2.8"><path d="M15 3h6v6" /><path d="M10 14L21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></div>
  </div>
  {isPostOwner(post) ? (
- <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#f0f2f5', padding: '6px 12px', borderRadius: '6px', border: 'none', color: '#8e8e8e', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂาย'}</button>
+ <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#f0f2f5', padding: '6px 12px', borderRadius: '6px', border: 'none', color: '#8e8e8e', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
  ) : (
  post.profiles?.phone && <a href={`https://wa.me/${post.profiles.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0f2f5', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', color: '#65676b', fontWeight: '600', fontSize: '13px' }}>WhatsApp</a>
  )}

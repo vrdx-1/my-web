@@ -7,151 +7,109 @@ export default function NotificationPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
 
-  // ใช้ useCallback เพื่อความเสถียรของฟังก์ชัน
   const fetchNotifications = useCallback(async (userId: string) => {
     setLoading(true);
     try {
+      // ดึงข้อมูลจาก View: ตรวจสอบให้แน่ใจว่าได้รัน SQL สร้าง View แล้ว
       const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          cars:post_id (
-            id,
-            caption,
-            images,
-            likes,
-            saves,
-            shares,
-            post_boosts (status, expires_at)
-          ),
-          profiles:owner_id (avatar_url)
-        `)
+        .from('all_notifications')
+        .select('id, post_id, created_at, type, username, avatar_url, car_data')
         .eq('owner_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      if (data) setNotifications(data);
+      if (error) {
+        console.error('Supabase Error:', error);
+        throw error;
+      }
+
+      if (data) {
+        const formatted = data.map(item => ({
+          id: item.id,
+          type: item.type,
+          post_id: item.post_id,
+          created_at: item.created_at,
+          sender_name: item.username || 'User',
+          sender_avatar: item.avatar_url,
+          // ป้องกัน Error กรณี car_data เป็น null
+          post_caption: item.car_data?.caption || '',
+          post_images: item.car_data?.images || []
+        }));
+        setNotifications(formatted);
+      }
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      console.error('Fetch Error:', err);
+      // หากเกิด Error ให้เซตเป็นอาเรย์ว่างเพื่อหยุด Loading
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // 1. เช็ค Session ทันทีที่โหลด
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        fetchNotifications(session.user.id);
-      } else {
-        // ถ้าไม่มี session ให้หยุดโหลด เพื่อโชว์ข้อความ "ไม่มีการแจ้งเตือน"
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          fetchNotifications(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
         setLoading(false);
       }
-    });
-
-    // 2. ฟังการเปลี่ยนแปลงสถานะ (สำคัญมากตอน Login/Logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchNotifications(session.user.id);
-      } else {
-        setNotifications([]);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    };
+    checkSession();
   }, [fetchNotifications]);
-
-  const getBoostStatus = (post: any) => {
-    if (!post || !post.post_boosts || post.post_boosts.length === 0) return null;
-    
-    const boost = post.post_boosts[0];
-    const now = new Date();
-    const expire = new Date(boost.expires_at);
-    const diffInMs = expire.getTime() - now.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-
-    if (boost.status === 'pending') return 'Boost ກຳລັງລໍຖ້າການອະນຸມັດ';
-    if (boost.status === 'rejected') return 'Boost ຖືກປະຕິເສດ';
-    if (diffInMs <= 0) return 'Boost ໝົດອາຍຸ';
-    if (diffInHours > 0 && diffInHours <= 3) return 'Boost ຈະຫມົດອາຍຸພາຍໃນ 3 ຊົ່ວໂມງ';
-    if (boost.status === 'approved') return 'Boost ໄດ້ຮັບການອະນຸມັດ';
-    
-    return null;
-  };
 
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh' }}>
-      <div style={{ padding: '15px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
+      <div style={{ padding: '15px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center' }}>
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', marginRight: '15px' }}>←</button>
         <h1 style={{ fontSize: '18px', fontWeight: 'bold' }}>ແຈ້ງເຕືອນ</h1>
       </div>
 
-      {!session && !loading ? (
-        <div style={{ padding: '50px 20px', textAlign: 'center' }}>
-          <p style={{ color: '#65676b' }}>ກະລຸນາເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງການແຈ້ງເຕືອນ</p>
-          <button 
-            onClick={() => router.push('/profile')}
-            style={{ marginTop: '10px', padding: '8px 20px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-          >
-            ໄປທີ່ໜ້າໂປຣໄຟລ໌
-          </button>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div style={{ padding: '20px', textAlign: 'center' }}>ກຳລັງໂຫຼດ...</div>
       ) : (
         <div>
-          {notifications.map((notif) => {
-            const post = notif.cars;
-            const boostMsg = post ? getBoostStatus(post) : null;
-            const totalEngagement = (post?.likes || 0) + (post?.saves || 0) + (post?.shares || 0);
-
-            return (
-              <div 
-                key={notif.id} 
-                onClick={() => post && router.push(`/notification/${post.id}`)}
-                style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f9f9f9', cursor: 'pointer' }}
-              >
-                <div style={{ width: '55px', height: '55px', borderRadius: '10px', overflow: 'hidden', background: '#f0f0f0', flexShrink: 0 }}>
-                  <img 
-                    src={notif.profiles?.avatar_url || 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png'} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                    onError={(e: any) => e.target.src = 'https://via.placeholder.com/100'}
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', color: '#1c1e21', marginBottom: '4px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {post?.caption || 'ໂພສຂອງທ່ານມີການເຄື່ອນໄຫວ'}
-                  </div>
-                  
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '13px', color: '#65676b', fontWeight: 'bold' }}>
-                       📊 {totalEngagement.toLocaleString()} ຄົນມີສ່ວນຮ່ວມ
-                    </span>
-                    {boostMsg && (
-                      <span style={{ fontSize: '11px', color: '#1877f2', background: '#e7f3ff', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
-                        {boostMsg}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {post?.images?.[0] && (
-                  <div style={{ width: '45px', height: '45px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                    <img src={post.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
+          {notifications.map((notif) => (
+            <div 
+              key={`${notif.id}-${notif.type}`} 
+              onClick={() => router.push(`/notification/${notif.post_id}`)}
+              style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f9f9f9', cursor: 'pointer' }}
+            >
+              <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', background: '#f0f0f0', flexShrink: 0 }}>
+                <img 
+                  src={notif.sender_avatar || 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png'} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  alt="avatar"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png';
+                  }}
+                />
               </div>
-            );
-          })}
-          
-          {notifications.length === 0 && (
-            <div style={{ padding: '50px 20px', textAlign: 'center', color: '#65676b' }}>ບໍ່ມີການແຈ້ງເຕືອນໃນເວລານີ້</div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '14px', color: '#1c1e21' }}>
+                  <strong>{notif.sender_name}</strong> 
+                  {notif.type === 'like' ? ' ມັກໂພສຂອງທ່ານ' : 
+                   notif.type === 'save' ? ' ບັນທຶກໂພສຂອງທ່ານ' : 
+                   notif.type === 'share' ? ' ແຊຣ໌ໂພສຂອງທ່ານ' : ' ມີສ່ວນຮ່ວມກັບໂພສ'}
+                  {notif.post_caption && `: ${notif.post_caption.substring(0, 30)}...`}
+                </div>
+                <div style={{ fontSize: '12px', color: '#8e9194', marginTop: '2px' }}>
+                  {new Date(notif.created_at).toLocaleString('lo-LA')}
+                </div>
+              </div>
+
+              {notif.post_images && notif.post_images[0] && (
+                <img src={notif.post_images[0]} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} alt="post preview" />
+              )}
+            </div>
+          ))}
+          {!loading && notifications.length === 0 && (
+            <div style={{ padding: '50px', textAlign: 'center', color: '#888' }}>ບໍ່ມີການແຈ້ງເຕືອນ</div>
           )}
         </div>
       )}

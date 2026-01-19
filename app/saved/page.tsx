@@ -208,33 +208,31 @@ export default function SavedPosts() {
  const toggleLike = async (postId: string) => {
  const userId = session ? session.user.id : getPrimaryGuestToken();
  const isCurrentlyLiked = likedPosts[postId];
+ const currentPost = posts.find(p => p.id === postId);
+ const newLikesCount = isCurrentlyLiked ? Math.max(0, (currentPost?.likes || 1) - 1) : (currentPost?.likes || 0) + 1;
  
  // Optimistic UI
  setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }));
  setPosts(prev => prev.map(p => {
  if (p.id === postId) {
- return { ...p, likes: isCurrentlyLiked ? (p.likes || 1) - 1 : (p.likes || 0) + 1 };
+ return { ...p, likes: newLikesCount };
  }
  return p;
  }));
 
  if (isCurrentlyLiked) {
- // 1. ลบหลักฐาน
- const { error: relError } = await supabase.from('post_likes').delete().eq('user_id', userId).eq('post_id', postId);
- // 2. ลดจำนวนรวม
- const { error: mainError } = await supabase.rpc('decrement_likes', { row_id: postId });
-
- if (relError || mainError) {
+ const { error } = await supabase.from('post_likes').delete().eq('user_id', userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ } else {
  setLikedPosts(prev => ({ ...prev, [postId]: true }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
  }
  } else {
- // 1. เพิ่มหลักฐาน
- const { error: relError } = await supabase.from('post_likes').insert([{ user_id: userId, post_id: postId }]);
- // 2. เพิ่มจำนวนรวม
- const { error: mainError } = await supabase.rpc('increment_likes', { row_id: postId });
-
- if (relError || mainError) {
+ const { error } = await supabase.from('post_likes').insert([{ user_id: userId, post_id: postId }]);
+ if (!error) {
+ await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+ } else {
  setLikedPosts(prev => ({ ...prev, [postId]: false }));
  setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 1) - 1 } : p));
  }
@@ -243,13 +241,12 @@ export default function SavedPosts() {
 
  const toggleSave = async (postId: string) => {
  const userId = session ? session.user.id : getPrimaryGuestToken();
- 
- // 1. ลบจากตารางหลักฐาน
- const { error: relError } = await supabase.from('post_saves').delete().eq('user_id', userId).eq('post_id', postId);
- // 2. ลดจำนวนรวมในตารางหลัก
- const { error: mainError } = await supabase.rpc('decrement_saves', { row_id: postId });
+ const currentPost = posts.find(p => p.id === postId);
+ const newSavesCount = Math.max(0, (currentPost?.saves || 1) - 1);
 
- if (!relError && !mainError) {
+ const { error } = await supabase.from('post_saves').delete().eq('user_id', userId).eq('post_id', postId);
+ if (!error) {
+ await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
  setSavedPosts(prev => ({ ...prev, [postId]: false }));
  setPosts(prev => prev.filter(p => p.id !== postId));
  }
@@ -274,16 +271,18 @@ export default function SavedPosts() {
  };
 
  const handleShare = async (post: any) => {
- const userId = session ? session.user.id : getPrimaryGuestToken();
  try {
  if (navigator.share) {
  await navigator.share({ title: 'Car Post', text: post.caption, url: window.location.href });
- // 1. บันทึกหลักฐาน
- await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
- // 2. เพิ่มจำนวนรวม
- await supabase.rpc('increment_shares', { row_id: post.id });
  
- setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
+ const userId = session ? session.user.id : getPrimaryGuestToken();
+ if (userId) {
+ await supabase.from('post_shares').insert([{ user_id: userId, post_id: post.id }]);
+ }
+
+ const newSharesCount = (post.shares || 0) + 1;
+ await supabase.from('cars').update({ shares: newSharesCount }).eq('id', post.id);
+ setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: newSharesCount } : p));
  }
  else { navigator.clipboard.writeText(window.location.href); alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!"); }
  } catch (err) { console.log('Cancelled'); }

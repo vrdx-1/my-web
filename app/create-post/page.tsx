@@ -12,14 +12,18 @@ const LAO_PROVINCES = [
 export default function CreatePost() {
  const router = useRouter();
  const fileInputRef = useRef<HTMLInputElement>(null);
- const [step, setStep] = useState(1);
+ const textareaRef = useRef<HTMLTextAreaElement>(null);
+ const isSelecting = useRef(false);
+ const [step, setStep] = useState(2); // เริ่มต้นที่ Step 2 ทันที
  const [caption, setCaption] = useState('');
  const [province, setProvince] = useState('');
  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
  const [previews, setPreviews] = useState<string[]>([]);
  const [loading, setLoading] = useState(false);
+ const [isUploading, setIsUploading] = useState(false); 
+ const [uploadProgress, setUploadProgress] = useState(0); 
  const [session, setSession] = useState<any>(null);
- const [isViewing, setIsViewing] = useState(false); // State สำหรับ Viewing Mode
+ const [isViewing, setIsViewing] = useState(false); 
  const [userProfile, setUserProfile] = useState<{username: string, avatar_url: string | null}>({
  username: 'User',
  avatar_url: null
@@ -47,16 +51,31 @@ export default function CreatePost() {
  };
  checkUser();
 
- const timer = setTimeout(() => {
- if (fileInputRef.current && step === 1 && previews.length === 0) {
- fileInputRef.current.click();
- }
- }, 100);
- 
- return () => clearTimeout(timer);
- }, [step]);
+ // ดึงข้อมูลจากหน้าโฮม
+ const pendingImages = sessionStorage.getItem('pending_images');
+ if (pendingImages) {
+    try {
+        const urls = JSON.parse(pendingImages);
+        setPreviews(urls);
+        setStep(2); 
 
- // ฟังก์ชันบีบอัดรูปภาพเป็น WebP
+        // แก้ไข: แปลง Blob URL กลับเป็น File Object เพื่อให้ handleSubmit อัปโหลดได้
+        urls.forEach(async (url: string) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const file = new File([blob], `image-${Date.now()}.webp`, { type: 'image/webp' });
+            setSelectedFiles(prev => [...prev, file]);
+        });
+        
+        sessionStorage.removeItem('pending_images');
+    } catch (e) {
+        console.error("Error parsing pending images", e);
+    }
+ }
+
+ // ลบ Logic การเปิด file input อัตโนมัติออกเนื่องจากไม่ใช้ Step 1 แล้ว
+ }, []); 
+
  const compressImage = async (file: File): Promise<File> => {
  return new Promise((resolve) => {
  const reader = new FileReader();
@@ -66,7 +85,7 @@ export default function CreatePost() {
  img.src = event.target?.result as string;
  img.onload = () => {
  const canvas = document.createElement('canvas');
- const MAX_WIDTH = 1080; // จำกัดความกว้างสูงสุด
+ const MAX_WIDTH = 1080; 
  let width = img.width;
  let height = img.height;
 
@@ -93,7 +112,7 @@ export default function CreatePost() {
  }
  },
  'image/webp',
- 0.8 // คุณภาพ 80% (ชัดแต่ไฟล์เล็กมาก)
+ 0.8 
  );
  };
  };
@@ -102,7 +121,8 @@ export default function CreatePost() {
 
  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
  if (e.target.files && e.target.files.length > 0) {
- const remainingSlots = 15 - selectedFiles.length;
+ isSelecting.current = false;
+ const remainingSlots = 15 - (selectedFiles.length);
  if (remainingSlots <= 0) return;
 
  let incomingFiles = Array.from(e.target.files);
@@ -110,7 +130,7 @@ export default function CreatePost() {
  incomingFiles = incomingFiles.slice(0, remainingSlots);
  }
 
- setLoading(true); // เริ่มบีบอัด
+ setLoading(true); 
  const compressedFiles = await Promise.all(
  incomingFiles.map(file => compressImage(file))
  );
@@ -122,22 +142,26 @@ export default function CreatePost() {
  setLoading(false);
 
  if (fileInputRef.current) fileInputRef.current.value = "";
+ setStep(2); 
  }
  };
 
  const removeImage = (index: number) => {
  const updatedFiles = [...selectedFiles];
- updatedFiles.splice(index, 1);
- setSelectedFiles(updatedFiles);
+ if (updatedFiles.length > 0) {
+    updatedFiles.splice(index, 1);
+    setSelectedFiles(updatedFiles);
+ }
 
  const updatedPreviews = [...previews];
  URL.revokeObjectURL(updatedPreviews[index]);
  updatedPreviews.splice(index, 1);
  setPreviews(updatedPreviews);
  
- // หากลบรูปจนหมดให้ปิดหน้า Viewing mode
  if (updatedPreviews.length === 0) {
  setIsViewing(false);
+ // ถ้าลบรูปจนหมด ให้กลับหน้าโฮม
+ router.push('/');
  }
  };
 
@@ -179,8 +203,9 @@ export default function CreatePost() {
  };
 
  const handleSubmit = async () => {
- if (loading) return;
- setLoading(true);
+ if (loading || isUploading || selectedFiles.length === 0) return;
+ setIsUploading(true);
+ setUploadProgress(0);
 
  try {
  const imageUrls = [];
@@ -193,9 +218,11 @@ export default function CreatePost() {
  }
  
  const uploadFolder = session ? session.user.id : 'guest-uploads';
+ const totalFiles = selectedFiles.length;
 
- for (const file of selectedFiles) {
- const fileExt = file.name.split('.').pop();
+ for (let i = 0; i < totalFiles; i++) {
+ const file = selectedFiles[i];
+ const fileExt = 'webp'; 
  const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
  const filePath = `${uploadFolder}/${fileName}`;
 
@@ -204,30 +231,19 @@ export default function CreatePost() {
 
  const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(filePath);
  imageUrls.push(publicUrl);
+ 
+ setUploadProgress(Math.round(((i + 1) / totalFiles) * 100)); 
  }
 
- // --- จุดที่แก้ไข: กู้คืน Active User โดยการ Sync Profile และใช้ guestToken เป็น user_id ---
  if (isGuest && guestToken) {
-  await supabase
-    .from('profiles')
-    .upsert(
-      { 
-        id: guestToken, 
-        username: 'Guest User', 
-        last_seen: new Date().toISOString() 
-      },
-      { onConflict: 'id' }
-    );
+ await supabase.from('profiles').upsert({ id: guestToken, username: 'Guest User', last_seen: new Date().toISOString() }, { onConflict: 'id' });
  } else if (session) {
-   await supabase
-     .from('profiles')
-     .update({ last_seen: new Date().toISOString() })
-     .eq('id', session.user.id);
+ await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', session.user.id);
  }
 
  const { data, error: insertError } = await supabase.from('cars').insert([
  {
- user_id: session ? session.user.id : guestToken, // แก้ไข: ใช้ guestToken แทน null เพื่อให้ระบบนับเป็น Active User
+ user_id: session ? session.user.id : guestToken, 
  is_guest: isGuest,
  guest_token: guestToken,
  caption: caption,
@@ -241,21 +257,16 @@ export default function CreatePost() {
  if (insertError) throw insertError;
 
  if (isGuest && data && data.length > 0) {
-    const myPosts = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
-    myPosts.push({
-      post_id: data[0].id,
-      token: guestToken
-    });
-    localStorage.setItem('my_guest_posts', JSON.stringify(myPosts));
+ const myPosts = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
+ myPosts.push({ post_id: data[0].id, token: guestToken });
+ localStorage.setItem('my_guest_posts', JSON.stringify(myPosts));
  }
- // ---------------------------------------------------
 
  router.push('/');
  router.refresh();
  } catch (err: any) {
  console.error(err.message);
- } finally {
- setLoading(false);
+ setIsUploading(false);
  }
  };
 
@@ -265,135 +276,125 @@ export default function CreatePost() {
  {/* Header */}
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
  <button 
- onClick={() => step > 1 ? setStep(step - 1) : router.push('/')} 
- style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '5px' }}
+ onClick={() => {
+ if (step === 3) {
+ setStep(2);
+ } else {
+ // ถ้าอยู่หน้าเขียน Caption (Step 2) แล้วกดออก ให้เด้งไปหน้าโฮมเลย
+ router.push('/');
+ }
+ }} 
+ style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1c1e21', padding: '5px' }}
  >
  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
  <polyline points="15 18 9 12 15 6"></polyline>
  </svg>
  </button>
  <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
- {step === 1 && 'ເລືອກຮູບພາບ'}
  {step === 2 && 'ສ້າງໂພສ'}
  {step === 3 && 'ລົດຢູ່ແຂວງ'}
  </h3>
- <div style={{ width: '40px' }}></div>
+ <div style={{ width: '60px', display: 'flex', justifyContent: 'flex-end' }}>
+ {step === 2 && caption.trim().length > 0 && (
+ <button onClick={() => setStep(3)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ຕໍ່ໄປ</button>
+ )}
+ {step === 3 && province && !isUploading && (
+ <button onClick={handleSubmit} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ໂພສ</button>
+ )}
+ </div>
  </div>
 
  <div style={{ flex: 1, paddingBottom: '100px' }}>
- {step === 1 && (
- <div style={{ padding: '20px' }}>
- <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
- {selectedFiles.length < 15 && (
- <label style={{ aspectRatio: '1/1', border: '2px dashed #ddd', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#f9f9f9' }}>
- <span style={{ fontSize: '24px' }}>➕</span>
- <input type="file" ref={fileInputRef} multiple accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
- </label>
- )}
- {previews.map((src, index) => (
- <div key={index} style={{ position: 'relative', aspectRatio: '1/1' }}>
- <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
- <button onClick={() => removeImage(index)} style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer' }}>✕</button>
- </div>
- ))}
- </div>
- </div>
- )}
-
  {step === 2 && (
  <div>
  <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
- {userProfile.avatar_url ? (
- <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- ) : (
- <svg width="26" height="26" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
- )}
+ {userProfile.avatar_url ? <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <svg width="26" height="26" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>}
  </div>
  <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{userProfile.username}</div>
  </div>
 
  <div style={{ padding: '0 15px 15px 15px' }}>
  <textarea 
+ ref={textareaRef}
  autoFocus
- style={{ width: '100%', minHeight: '100px', border: 'none', outline: 'none', fontSize: '16px', lineHeight: '1.5', resize: 'none', color: '#000' }}
+ style={{ width: '100%', minHeight: '150px', border: 'none', outline: 'none', fontSize: '16px', lineHeight: '1.5', resize: 'none', color: '#000', overflow: 'hidden' }}
  placeholder="ໃສ່ລາຍລະອຽດລົດ..."
  value={caption}
- onPaste={(e) => {
- e.preventDefault();
- const text = e.clipboardData.getData('text');
- const allLines = text.split('\n');
- const limitedText = allLines.slice(0, 15).join('\n');
- setCaption(limitedText);
- }}
  onChange={(e) => {
  const lines = e.target.value.split('\n');
  if (lines.length <= 15) {
  setCaption(e.target.value);
+ if (textareaRef.current) {
+ textareaRef.current.style.height = 'auto';
+ textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+ }
  }
  }}
  />
- {caption.split('\n').length >= 15 && (
- <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '5px' }}>
- ສູງສຸດ 15 ແຖວ
- </div>
- )}
+ {caption.split('\n').length >= 15 && <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '5px' }}>ສູງສຸດ 15 ແຖວ</div>}
  </div>
  <PhotoPreviewGrid images={previews} />
  </div>
  )}
 
  {step === 3 && (
- <div style={{ padding: '10px 20px', display: 'grid', gap: '8px' }}>
+ <div style={{ padding: '10px 0' }}>
  {LAO_PROVINCES.map((p) => (
  <div 
  key={p} 
  onClick={() => setProvince(p)} 
  style={{ 
- padding: '16px', 
- borderRadius: '12px', 
- border: '1px solid', 
- borderColor: province === p ? '#1877f2' : '#eee', 
- background: province === p ? '#e7f3ff' : '#fff', 
+ padding: '16px 20px', 
+ display: 'flex', 
+ justifyContent: 'space-between', 
+ alignItems: 'center',
+ borderBottom: '1px solid #f0f0f0',
  cursor: 'pointer',
- display: 'flex',
- justifyContent: 'space-between',
- alignItems: 'center'
+ background: '#fff'
  }}
  >
- <span style={{ fontSize: '16px', fontWeight: province === p ? 'bold' : 'normal' }}>{p}</span>
- {province === p && <span style={{ color: '#22c55e', fontSize: '20px', fontWeight: 'bold' }}>✓</span>}
+ <span style={{ fontSize: '16px', fontWeight: province === p ? 'bold' : 'normal', color: '#000' }}>{p}</span>
+ <div style={{ 
+ width: '22px', 
+ height: '22px', 
+ border: province === p ? '2px solid #22c55e' : '2px solid #ddd', 
+ borderRadius: '4px',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center',
+ background: province === p ? '#22c55e' : 'transparent'
+ }}>
+ {province === p && <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+ </div>
  </div>
  ))}
  </div>
  )}
  </div>
 
- {/* Viewing Mode Layer */}
+ {isUploading && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(255,255,255,0.95)', zIndex: 3000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+ <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#1c1e21' }}>ກຳລັງໂພສ</div>
+ <div style={{ width: '100%', maxWidth: '300px', height: '12px', background: '#e4e6eb', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+ <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#1877f2', transition: 'width 0.3s ease' }}></div>
+ </div>
+ <div style={{ marginTop: '10px', fontSize: '16px', fontWeight: 'bold', color: '#1877f2' }}>{uploadProgress}%</div>
+ </div>
+ )}
+
  {isViewing && (
  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
  <div style={{ width: '100%', maxWidth: '600px', height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
- 
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
  <div style={{ fontWeight: 'bold', fontSize: '18px' }}>ແກ້ໄຂ</div>
- <button 
- onClick={() => setIsViewing(false)} 
- style={{ position: 'absolute', right: '15px', background: 'none', border: 'none', color: '#1877f2', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
- >
- ສຳເລັດ
- </button>
+ <button onClick={() => setIsViewing(false)} style={{ position: 'absolute', right: '15px', background: 'none', border: 'none', color: '#1877f2', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>ສຳເລັດ</button>
  </div>
-
  <div style={{ paddingTop: '10px' }}>
  {previews.map((img, idx) => (
  <div key={idx} style={{ width: '100%', marginBottom: '24px', position: 'relative' }}>
  <img src={img} style={{ width: '100%', height: 'auto', display: 'block' }} />
- <button 
- onClick={() => removeImage(idx)} 
- style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
- >
- ✕
- </button>
+ <button onClick={() => removeImage(idx)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
  </div>
  ))}
  </div>
@@ -401,21 +402,6 @@ export default function CreatePost() {
  </div>
  </div>
  )}
-
- {/* Footer Navigation */}
- <div style={{ position: 'fixed', bottom: 0, maxWidth: '600px', width: '100%', padding: '20px', background: 'linear-gradient(transparent, #fff 30%)', display: 'flex', justifyContent: 'flex-end', pointerEvents: 'none', zIndex: 5 }}>
- {step === 1 && previews.length > 0 && (
- <button onClick={() => setStep(2)} style={{ pointerEvents: 'auto', background: '#1877f2', color: '#fff', border: 'none', padding: '12px 35px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer' }}>ຕໍ່ໄປ</button>
- )}
- {step === 2 && caption.trim() && caption.split('\n').length <= 15 && (
- <button onClick={() => setStep(3)} style={{ pointerEvents: 'auto', background: '#1877f2', color: '#fff', border: 'none', padding: '12px 35px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer' }}>ຕໍ່ໄປ</button>
- )}
- {step === 3 && province && (
- <button onClick={handleSubmit} disabled={loading} style={{ pointerEvents: 'auto', background: '#1877f2', color: '#fff', border: 'none', padding: '12px 40px', borderRadius: '25px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer' }}>
- {loading ? 'ກຳລັງໂພສ' : 'ໂພສ'}
- </button>
- )}
- </div>
  </div>
  );
 }
