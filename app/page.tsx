@@ -14,7 +14,6 @@ export default function Home() {
  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
  const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
  const [viewingPost, setViewingPost] = useState<any | null>(null);
- const [activeMenu, setMenu] = useState<string | null>(null);
  const [activeMenuState, setActiveMenu] = useState<string | null>(null);
  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
 
@@ -33,6 +32,12 @@ export default function Home() {
  const [loadingMore, setLoadingMore] = useState(false);
  const PAGE_SIZE = 12; // โหลดครั้งละ 12 โพสต์
  const observer = useRef<IntersectionObserver | null>(null);
+
+ // --- ส่วนที่แก้ไข: การจัดการแผง Interaction (BottomSheet) ---
+ const [interactionModal, setInteractionModal] = useState<{ show: boolean, type: 'likes' | 'saves', postId: string | null }>({ show: false, type: 'likes', postId: null });
+ const [interactionUsers, setInteractionUsers] = useState<any[]>([]);
+ const [interactionLoading, setInteractionLoading] = useState(false);
+ const [interactionSheetMode, setInteractionSheetMode] = useState<'half' | 'full' | 'hidden'>('hidden');
 
  // --- ตัวตรวจจับการคลิกไฟล์ (ส่วนที่แก้ไขใหม่) ---
  const hiddenFileInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +61,10 @@ export default function Home() {
  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
  // ---------------------------------------
 
+ // --- STATE ใหม่สำหรับแผงควบคุม (BottomSheet) ---
+ const [startY, setStartY] = useState(0);
+ const [currentY, setCurrentY] = useState(0);
+
  const getPrimaryGuestToken = () => {
  const stored = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
  if (stored.length > 0) return stored[0].token;
@@ -78,19 +87,6 @@ export default function Home() {
  const fetchUserProfile = async (userId: string) => {
  const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
  if (data) setUserProfile(data);
- };
-
- // --- ส่วนที่แก้ไข: อัลกอริทึมการผสมโพสต์ Boost (ข้อ 2) ---
- const mixBoostedPosts = (normal: any[], boosted: any[]) => {
- if (boosted.length === 0) return normal;
- let mixed = [...normal];
- let boostIdx = 0;
- // แทรกทุกๆ 5 โพสต์ (ค่ากลางระหว่าง 3-8 ตามโจทย์)
- for (let i = 5; i < mixed.length && boostIdx < boosted.length; i += 6) {
- mixed.splice(i, 0, boosted[boostIdx]);
- boostIdx++;
- }
- return mixed;
  };
 
  // ปรับปรุงฟังก์ชัน Fetch ให้รองรับ Algorithm (ข้อ 1, 2, 3, 4, 5, 6)
@@ -203,6 +199,35 @@ export default function Home() {
  }
  };
 
+ // ฟังก์ชันสำหรับดึงรายชื่อคนที่กดใจหรือกดบันทึก
+ const fetchInteractions = async (type: 'likes' | 'saves', postId: string) => {
+ setInteractionLoading(true);
+ setInteractionModal({ show: true, type, postId });
+ setInteractionSheetMode('half'); // เปิดแผงครึ่งจอทันที
+ try {
+ const table = type === 'likes' ? 'post_likes' : 'post_saves';
+ const guestTable = `${table}_guest`;
+
+ const { data: userData } = await supabase.from(table).select(`created_at, profiles:user_id(username, avatar_url)`).eq('post_id', postId);
+ const { data: guestData } = await supabase.from(guestTable).select(`created_at`).eq('post_id', postId);
+
+ const formatted = [
+ ...(userData || []).map((item: any) => ({
+ username: item.profiles?.username || 'Unknown User',
+ avatar_url: item.profiles?.avatar_url || 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png',
+ created_at: item.created_at
+ })),
+ ...(guestData || []).map((item: any) => ({
+ username: 'User',
+ avatar_url: 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png',
+ created_at: item.created_at
+ }))
+ ];
+ formatted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+ setInteractionUsers(formatted);
+ } catch (err) { console.error(err); } finally { setInteractionLoading(false); }
+ };
+
  useEffect(() => {
  const stored = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
  setMyGuestPosts(stored);
@@ -271,11 +296,11 @@ export default function Home() {
  const diffInMinutes = Math.floor(diffInSeconds / 60);
  if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMinutes} ນາທີທີ່ແລ้ว` };
  const diffInHours = Math.floor(diffInMinutes / 60);
- if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
+ if (diffInHours < 24) return { isOnline: false, text: `ອອນลາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
  const diffInDays = Math.floor(diffInHours / 24);
  if (diffInDays < 7) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInDays} ມື้ທີ່ແล้ว` };
  const diffInWeeks = Math.floor(diffInDays / 7);
- if (diffInWeeks < 4) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດທີ່ແລ້ว` };
+ if (diffInWeeks < 4) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດที่แล้ว` };
  const diffInMonths = Math.floor(diffInDays / 30);
  return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMonths} ເດືອນที่แล้ว` };
  };
@@ -407,11 +432,11 @@ export default function Home() {
  };
 
  const handleDeletePost = async (postId: string) => {
- if (!confirm("ທ່ານແນ່ໃຈຫຼືບໍ່ว่าต้องการลึบໂພສນີ້?")) return;
+ if (!confirm("ທ່ານแນ่ใจหรือบ่ว่าต้องการลึบโพสนี้?")) return;
  const { error } = await supabase.from('cars').delete().eq('id', postId);
  if (!error) {
  setPosts(prev => prev.filter(p => p.id !== postId));
- alert("ລຶບໂພສສຳເລັດແລ้ວ");
+ alert("ລຶບໂພສສຳເລັດແລ้ว");
  } else {
  alert("ເກີດຂໍ้ຜິດພาด: " + error.message);
  }
@@ -523,7 +548,7 @@ export default function Home() {
  <div key={i} style={{ position: 'relative', height: '200px' }}>
  <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
  {i === 3 && count > 4 && (
- <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>+{count - 4}</div>
+ <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>+{count - 4}</div>
  )}
  </div>
  ))}
@@ -534,29 +559,44 @@ export default function Home() {
  // --- ส่วนที่แก้ไข: ฟังก์ชันจัดการการเลือกไฟล์จากหน้าโฮม (จุดสำคัญ) ---
  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
  if (e.target.files && e.target.files.length > 0) {
-    const filesArray = Array.from(e.target.files);
-    
-    // แปลง File Object เป็น Data URL หรือเก็บข้อมูลดิบไม่ได้โดยตรงใน URL
-    // วิธีที่ดีที่สุดคือเก็บลง sessionStorage (จำกัดขนาด) หรือใช้ URL.createObjectURL
-    // เพื่อให้หน้าถัดไปดึงไปแสดงผลพรีวิวได้ทันที
-    const previewUrls = filesArray.map(file => URL.createObjectURL(file));
-    sessionStorage.setItem('pending_images', JSON.stringify(previewUrls));
-    
-    // หมายเหตุ: การอัปโหลดไฟล์จริงต้องใช้ Global State หรือเก็บ File Object ไว้ในตัวแปรภายนอก
-    // สำหรับโครงสร้างคุณ แนะนำให้หน้า create-post มีฟังก์ชันรับช่วงต่อจากจุดนี้
-    router.push('/create-post');
+ const filesArray = Array.from(e.target.files);
+ const previewUrls = filesArray.map(file => URL.createObjectURL(file));
+ sessionStorage.setItem('pending_images', JSON.stringify(previewUrls));
+ router.push('/create-post');
  }
  };
 
  // --- ฟังก์ชันจัดการการกดปุ่มสร้างโพสต์ (+) ---
  const handleCreatePostClick = () => {
  if (session) {
- // ถ้า Login แล้ว สั่งให้ input file ทำงานทันที (นิ้วกดปุ่ม = นิ้วกดเลือกรูป)
  hiddenFileInputRef.current?.click();
  } else {
- // ถ้ายังไม่ Login ให้เปิด Modal ยอมรับเงื่อนไข
  setShowTermsModal(true);
  }
+ };
+
+ // --- ส่วนฟังก์ชันจัดการ Sheet (ลากขึ้นลง) สำหรับ Interaction ---
+ const onSheetTouchStart = (e: React.TouchEvent) => {
+ setStartY(e.touches[0].clientY);
+ };
+
+ const onSheetTouchMove = (e: React.TouchEvent) => {
+ const moveY = e.touches[0].clientY - startY;
+ setCurrentY(moveY);
+ };
+
+ const onSheetTouchEnd = () => {
+ if (currentY < -50) {
+ setInteractionSheetMode('full');
+ } else if (currentY > 50) {
+ if (interactionSheetMode === 'full') {
+ setInteractionSheetMode('half');
+ } else {
+ setInteractionSheetMode('hidden');
+ setInteractionModal({ ...interactionModal, show: false });
+ }
+ }
+ setCurrentY(0);
  };
 
  return (
@@ -579,14 +619,17 @@ export default function Home() {
  />
 
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
- <img src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/1000253086.jpg" alt="Logo" onClick={handleLogoClick} style={{ width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', objectFit: 'cover' }} />
  <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
  <span style={{ marginRight: '8px', color: '#65676b' }}>🔍</span>
  <input type="text" placeholder="ຄົ້ນຫາ..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px' }} />
  </div>
- <button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
  
- {/* ปุ่มแจ้งเตือน (Notification Bell) เพิ่มเข้ามาระหว่างปุ่ม + และ โปรไฟล์ */}
+ {/* แก้ไขไอคอนโพส (+) ให้มีขนาด 38x38 เท่ากับปุ่มอื่น */}
+ <button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <span style={{ fontSize: '32px', marginTop: '-4px' }}>+</span>
+ </button>
+ 
+ {/* ปุ่มแจ้งเตือน (Notification Bell) ขนาด 38x38 */}
  <button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f0f2f5', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.98 2.98 0 0 0 2.818-2H9.182A2.98 2.98 0 0 0 12 22zm7-7.414V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C8.63 5.36 7 7.92 7 11v3.586l-2 2V18h14v-1.414l-2-2z" /></svg>
  </button>
@@ -602,9 +645,9 @@ export default function Home() {
  </div>
  </div>
 
- <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
+ <div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'sticky', top: '59px', background: '#fff', zIndex: 90 }}>
  {['recommend', 'sold'].map((t) => (
- <div key={t} onClick={() => setTab(t)} style={{ flex: 1, textAlign: 'center', padding: '15px', color: tab === t ? '#1877f2' : '#65676b', fontWeight: 'bold', borderBottom: tab === t ? '3px solid #1877f2' : 'none', cursor: 'pointer' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</div>
+ <div key={t} onClick={() => { setTab(t); handleLogoClick(); }} style={{ flex: 1, textAlign: 'center', padding: '15px', color: tab === t ? '#1877f2' : '#65676b', fontWeight: 'bold', borderBottom: tab === t ? '3px solid #1877f2' : 'none', cursor: 'pointer' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</div>
  ))}
  </div>
 
@@ -639,7 +682,6 @@ export default function Home() {
  status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
  )}
  </div>
- {/* แก้ไขจุดการแสดงผล Ad สำหรับโพสต์ที่ Boost - เปลี่ยนสี Ad เป็นสีเทาตามโจทย์ */}
  <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>
  {post.is_boosted ? (
  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -674,17 +716,29 @@ export default function Home() {
  <PhotoGrid images={post.images || []} onPostClick={() => handleViewPost(post)} />
  <div style={{ borderTop: '1px solid #f0f2f5' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
- <div onClick={() => toggleLike(post.id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" className={likedPosts[post.id] ? "animate-heart" : ""} fill={likedPosts[post.id] ? "#e0245e" : "none"} stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b' }}>{post.likes || 0}</span></div>
- <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#65676b' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span style={{ fontSize: '14px', fontWeight: '500' }}>{post.views || 0}</span></div>
- <div onClick={() => toggleSave(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" className={savedPosts[post.id] ? "animate-pop" : ""} fill={savedPosts[post.id] ? "#FFD700" : "none"} stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b', marginLeft: '4px' }}>{post.saves || 0}</span></div>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+ <div onClick={() => fetchInteractions('likes', post.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" className={likedPosts[post.id] ? "animate-heart" : ""} fill={likedPosts[post.id] ? "#e0245e" : "none"} stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} strokeWidth="2" onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b' }}>{post.likes || 0}</span></div>
+ {/* แก้ไข: ย้าย icon save มาต่อจาก likes พร้อมตัวเลข */}
+ <div onClick={() => fetchInteractions('saves', post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><svg width="22" height="22" viewBox="0 0 24 24" className={savedPosts[post.id] ? "animate-pop" : ""} fill={savedPosts[post.id] ? "#FFD700" : "none"} stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} strokeWidth="2" onClick={(e) => { e.stopPropagation(); toggleSave(post.id); }}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b' }}>{post.saves || 0}</span></div>
+ 
+ {/* ส่วนที่แก้ไข: ไอคอนรูปตา (Views) กลับมาเป็นแบบเดิม */}
+ <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676b' }}>
+   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+     <circle cx="12" cy="12" r="3"></circle>
+   </svg>
+   <span style={{ fontSize: '14px', fontWeight: '600' }}>{post.views || 0}</span>
+ </div>
+
  <div onClick={() => handleShare(post)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14L21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></div>
  </div>
  {isPostOwner(post) ? (
- <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#f0f2f5', padding: '6px 12px', borderRadius: '6px', border: 'none', color: '#8e8e8e', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
+ <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#ff0000', padding: '6px 12px', borderRadius: '6px', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
  ) : (
  post.profiles?.phone && (
- <a href={`https://wa.me/${post.profiles.phone.replace(/\+/g, '').replace(/ /g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0f2f5', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', color: '#65676b', fontWeight: '600', fontSize: '13px' }}>WhatsApp</a>
+ <a href={`https://wa.me/${post.profiles.phone.replace(/\+/g, '').replace(/ /g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#25D366', width: '36px', height: '36px', borderRadius: '50%', textDecoration: 'none', color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+ <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+ </a>
  )
  )}
  </div>
@@ -693,6 +747,71 @@ export default function Home() {
  )
  })}
 
+ {/* ส่วนที่แก้ไขใหม่: Interaction Users Modal (BottomSheet แบบลากได้) */}
+ {interactionModal.show && (
+ <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s' }} onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }}>
+ <div 
+ onClick={e => e.stopPropagation()} 
+ onTouchStart={onSheetTouchStart}
+ onTouchMove={onSheetTouchMove}
+ onTouchEnd={onSheetTouchEnd}
+ style={{ 
+ width: '100%', 
+ maxWidth: '600px', 
+ margin: '0 auto', 
+ background: '#fff', 
+ borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', 
+ height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '50%', 
+ transform: `translateY(${currentY > 0 ? currentY : 0}px)`,
+ transition: currentY === 0 ? '0.3s ease-out' : 'none',
+ display: 'flex',
+ flexDirection: 'column',
+ overflow: 'hidden'
+ }}
+ >
+ {/* Handle ลาก - แก้ไขให้กดแล้วออกจากหน้าแสดงคนกดได้ทันที */}
+ <div 
+ onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }}
+ style={{ padding: '12px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+ <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
+ </div>
+
+ {/* ส่วนหัวแสดงไอคอนพร้อมตัวเลขด้านข้างและมีระยะห่างที่พอเหมาะ */}
+ <div style={{ display: 'flex', alignItems: 'center', gap: '40px', padding: '10px 25px', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
+ <div onClick={() => fetchInteractions('likes', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+ <svg width="24" height="24" viewBox="0 0 24 24" fill={interactionModal.type === 'likes' ? "#e0245e" : "none"} stroke={interactionModal.type === 'likes' ? "#e0245e" : "#65676b"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+ <span style={{ fontSize: '15px', fontWeight: 'bold', color: interactionModal.type === 'likes' ? '#e0245e' : '#65676b' }}>
+ {posts.find(p => p.id === interactionModal.postId)?.likes || 0}
+ </span>
+ </div>
+ <div style={{ width: '100%', height: '3px', background: interactionModal.type === 'likes' ? '#e0245e' : 'transparent', marginTop: '6px', borderRadius: '2px' }}></div>
+ </div>
+ <div onClick={() => fetchInteractions('saves', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+ <svg width="24" height="24" viewBox="0 0 24 24" fill={interactionModal.type === 'saves' ? "#FFD700" : "none"} stroke={interactionModal.type === 'saves' ? "#FFD700" : "#65676b"} strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+ <span style={{ fontSize: '15px', fontWeight: 'bold', color: interactionModal.type === 'saves' ? '#FFD700' : '#65676b' }}>
+ {posts.find(p => p.id === interactionModal.postId)?.saves || 0}
+ </span>
+ </div>
+ <div style={{ width: '100%', height: '3px', background: interactionModal.type === 'saves' ? '#FFD700' : 'transparent', marginTop: '6px', borderRadius: '2px' }}></div>
+ </div>
+ </div>
+
+ <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
+ {interactionLoading ? <div style={{ textAlign: 'center', padding: '20px' }}>ກຳລັງໂຫຼດ...</div> :
+ interactionUsers.length > 0 ? interactionUsers.map((u, i) => (
+ <div key={i} style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+ <img src={u.avatar_url} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+ <div style={{ fontWeight: '600', color: u.username === 'User' ? '#888' : '#000' }}>{u.username}</div>
+ </div>
+ )) : <div style={{ textAlign: 'center', padding: '30px', color: '#888' }}>ບໍ່ມີລາຍຊື່</div>
+ }
+ </div>
+ </div>
+ </div>
+ )}
+
  {/* Loading Indicator */}
  {loadingMore && (
  <div style={{ padding: '20px', textAlign: 'center', color: '#65676b', fontSize: '14px' }}>
@@ -700,75 +819,30 @@ export default function Home() {
  </div>
  )}
 
- {/* --- Modal ยอมรับเงื่อนไขสำหรับ Guest --- */}
+ {/* Modal ยอมรับเงื่อนไข */}
  {showTermsModal && (
  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
  <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '30px 20px', position: 'relative', textAlign: 'center' }}>
  <button onClick={() => setShowTermsModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#65676b' }}>✕</button>
- 
  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '40px 0 30px 0' }}>
- <input 
- type="checkbox" 
- id="modal-terms"
- checked={acceptedTerms}
- onChange={(e) => setAcceptedTerms(e.target.checked)}
- style={{ width: '20px', height: '20px', cursor: 'pointer' }}
- />
- <label htmlFor="modal-terms" style={{ fontSize: '15px', color: '#000', cursor: 'pointer' }}>
- ຍອມຮັບ <Link 
- href="/terms" 
- style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}
- >
- ຂໍ້ກຳນົດແລະນະໂຍບາຍ
- </Link>
- </label>
+ <input type="checkbox" id="modal-terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+ <label htmlFor="modal-terms" style={{ fontSize: '15px', color: '#000', cursor: 'pointer' }}>ຍອມຮັບ <Link href="/terms" style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}>ຂໍ້ກຳນົດແລະນະໂຍບາຍ</Link></label>
  </div>
-
- <button 
- onClick={() => {
- if(acceptedTerms) {
- setShowTermsModal(false);
- // กรณี Guest เมื่อยอมรับแล้ว ให้เด้งไฟล์เช่นกัน
- hiddenFileInputRef.current?.click();
- }
- }}
- disabled={!acceptedTerms}
- style={{ 
- width: '120px', 
- padding: '12px', 
- background: acceptedTerms ? '#1877f2' : '#e4e6eb', 
- color: acceptedTerms ? '#fff' : '#999', 
- border: 'none', 
- borderRadius: '12px', 
- fontWeight: 'bold', 
- fontSize: '16px', 
- cursor: acceptedTerms ? 'pointer' : 'not-allowed',
- transition: '0.3s'
- }}
- >
- ຕໍ່ໄປ
- </button>
+ <button onClick={() => { if(acceptedTerms) { setShowTermsModal(false); hiddenFileInputRef.current?.click(); } }} disabled={!acceptedTerms} style={{ width: '120px', padding: '12px', background: acceptedTerms ? '#1877f2' : '#e4e6eb', color: acceptedTerms ? '#fff' : '#999', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: acceptedTerms ? 'pointer' : 'not-allowed', transition: '0.3s' }}>ຕໍ່ໄປ</button>
  </div>
  </div>
  )}
 
- {/* --- ส่วนของ Modal รายงาน --- */}
+ {/* Modal รายงาน */}
  {reportingPost && (
  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
  <div style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}>
  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>ລາຍງານໂພສ</h3>
  <p style={{ fontSize: '14px', color: '#65676b', marginBottom: '10px' }}>ກະລຸນาລະບุສາເຫດ:</p>
- <textarea 
- value={reportReason}
- onChange={(e) => setReportReason(e.target.value)}
- placeholder="ພິມລາຍລະອຽດ..."
- style={{ width: '100%', height: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', marginBottom: '20px', outline: 'none' }}
- />
+ <textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} placeholder="ພິມລາຍລະອຽດ..." style={{ width: '100%', height: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', marginBottom: '20px', outline: 'none' }} />
  <div style={{ display: 'flex', gap: '10px' }}>
  <button onClick={() => setReportingPost(null)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: '#f0f2f5', fontWeight: 'bold' }}>ຍົກເລີກ</button>
- <button onClick={submitReport} disabled={isSubmittingReport} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#1877f2', color: '#fff', fontWeight: 'bold', opacity: isSubmittingReport ? 0.6 : 1 }}>
- {isSubmittingReport ? 'ກຳລັງສົ່ງ...' : 'ສົ່ງລາຍງານ'}
- </button>
+ <button onClick={submitReport} disabled={isSubmittingReport} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#1877f2', color: '#fff', fontWeight: 'bold', opacity: isSubmittingReport ? 0.6 : 1 }}>{isSubmittingReport ? 'ກຳລັງສົ່ງ...' : 'ສົ່ງລາຍງານ'}</button>
  </div>
  </div>
  </div>
@@ -781,35 +855,16 @@ export default function Home() {
  <div style={{ width: '100%', maxWidth: '600px', height: '100%', background: '#fff', position: 'relative', overflowY: 'auto', borderLeft: '1px solid #f0f0f0', borderRight: '1px solid #f0f0f0' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
- {viewingPost.profiles?.avatar_url ? (<img src={viewingPost.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<svg width="22" height="22" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>)}
- </div>
+ <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{viewingPost.profiles?.avatar_url ? (<img src={viewingPost.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<svg width="22" height="22" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>)}</div>
  <div>
- <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
- {viewingPost.profiles?.username || 'User'}
- {status.isOnline ? (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div><span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span></div>) : (status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>)}
- </div>
- {/* แก้ไขจุดการแสดงผล Ad สำหรับโพสต์ที่ Boost (ในหน้า View) - เปลี่ยนสี Ad เป็นสีเทาตามโจทย์ */}
- <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>
- {viewingPost.is_boosted ? (
- <span style={{ display: 'inline-flex', alignItems: 'center' }}>
- <span style={{ fontWeight: 'bold', color: '#65676b' }}>• Ad</span> 
- <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span>
- <span style={{ margin: '0 4px' }}>•</span>
- {viewingPost.province}
- </span>
- ) : (
- <>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>
- )}
- </div>
+ <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>{viewingPost.profiles?.username || 'User'}{status.isOnline ? (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div><span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span></div>) : (status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>)}</div>
+ <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>{viewingPost.is_boosted ? (<span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ fontWeight: 'bold', color: '#65676b' }}>• Ad</span> <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span><span style={{ margin: '0 4px' }}>•</span>{viewingPost.province}</span>) : (<>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>)}</div>
  </div>
  </div>
  <button onClick={() => setViewingPost(null)} style={{ background: '#f0f2f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
  </div>
  <div style={{ padding: '15px' }}><div style={{ color: '#000', fontSize: '16px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{viewingPost.caption}</div></div>
- {viewingPost.images.map((img: string, idx: number) => (
- <div key={idx} style={{ position: 'relative', background: '#fff', marginBottom: '24px' }}><div style={{ width: '100%', overflow: 'hidden' }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }} /></div></div>
- ))}
+ {viewingPost.images.map((img: string, idx: number) => (<div key={idx} style={{ position: 'relative', background: '#fff', marginBottom: '24px' }}><div style={{ width: '100%', overflow: 'hidden' }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }} /></div></div>))}
  <div style={{ height: '80px' }}></div>
  </div>
  </div>
