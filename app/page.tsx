@@ -11,8 +11,10 @@ export default function Home() {
  const [searchTerm, setSearchTerm] = useState('');
  const [session, setSession] = useState<any>(null);
  const [userProfile, setUserProfile] = useState<any>(null);
- const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
- const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
+const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
+const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
  const [viewingPost, setViewingPost] = useState<any | null>(null);
  const [activeMenuState, setActiveMenu] = useState<string | null>(null);
  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
@@ -350,13 +352,23 @@ export default function Home() {
  const table = isUser ? 'post_likes' : 'post_likes_guest';
  const column = isUser ? 'user_id' : 'guest_token';
  
- const isCurrentlyLiked = likedPosts[postId];
- const currentPost = posts.find(p => p.id === postId);
- const newLikesCount = isCurrentlyLiked ? (currentPost?.likes || 1) - 1 : (currentPost?.likes || 0) + 1;
- 
- // Optimistic UI
- setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }));
- setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikesCount } : p));
+const isCurrentlyLiked = likedPosts[postId];
+const currentPost = posts.find(p => p.id === postId);
+const newLikesCount = isCurrentlyLiked ? (currentPost?.likes || 1) - 1 : (currentPost?.likes || 0) + 1;
+
+// Optimistic UI
+setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }));
+setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikesCount } : p));
+
+// เพิ่ม animation เมื่อกด (ไม่ใช่ยกเลิก)
+if (!isCurrentlyLiked) {
+  setJustLikedPosts(prev => ({ ...prev, [postId]: true }));
+  setTimeout(() => setJustLikedPosts(prev => {
+    const newState = { ...prev };
+    delete newState[postId];
+    return newState;
+  }), 300);
+}
 
  if (isCurrentlyLiked) {
  const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
@@ -383,13 +395,23 @@ export default function Home() {
  const table = isUser ? 'post_saves' : 'post_saves_guest';
  const column = isUser ? 'user_id' : 'guest_token';
 
- const isCurrentlySaved = savedPosts[postId];
- const currentPost = posts.find(p => p.id === postId);
- const newSavesCount = isCurrentlySaved ? (currentPost?.saves || 1) - 1 : (currentPost?.saves || 0) + 1;
+const isCurrentlySaved = savedPosts[postId];
+const currentPost = posts.find(p => p.id === postId);
+const newSavesCount = isCurrentlySaved ? (currentPost?.saves || 1) - 1 : (currentPost?.saves || 0) + 1;
 
- // Optimistic UI
- setSavedPosts(prev => ({ ...prev, [postId]: !isCurrentlySaved }));
- setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: newSavesCount } : p));
+// Optimistic UI
+setSavedPosts(prev => ({ ...prev, [postId]: !isCurrentlySaved }));
+setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: newSavesCount } : p));
+
+// เพิ่ม animation เมื่อกด (ไม่ใช่ยกเลิก)
+if (!isCurrentlySaved) {
+  setJustSavedPosts(prev => ({ ...prev, [postId]: true }));
+  setTimeout(() => setJustSavedPosts(prev => {
+    const newState = { ...prev };
+    delete newState[postId];
+    return newState;
+  }), 300);
+}
 
  if (isCurrentlySaved) {
  const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
@@ -527,29 +549,44 @@ export default function Home() {
  const count = images.length;
  if (count === 0) return null;
  if (count === 1) return <img src={images[0]} onClick={onPostClick} style={{ width: '100%', cursor: 'pointer', display: 'block' }} />;
- if (count === 2) return (
- <div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', cursor: 'pointer' }}>
+if (count === 2) return (
+<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
  <img src={images[0]} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
  <img src={images[1]} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
  </div>
  );
- if (count === 3) return (
- <div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', cursor: 'pointer' }}>
+if (count === 3) return (
+<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
  <img src={images[0]} style={{ width: '100%', height: '400px', objectFit: 'cover', gridRow: 'span 2' }} />
- <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '2px' }}>
+<div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
  <img src={images[1]} style={{ width: '100%', height: '199px', objectFit: 'cover' }} />
  <img src={images[2]} style={{ width: '100%', height: '199px', objectFit: 'cover' }} />
  </div>
  </div>
  );
- return (
- <div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', cursor: 'pointer' }}>
+return (
+<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
  {images.slice(0, 4).map((img, i) => (
  <div key={i} style={{ position: 'relative', height: '200px' }}>
  <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- {i === 3 && count > 4 && (
- <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>+{count - 4}</div>
- )}
+        {i === 3 && count > 4 && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#fff',
+              WebkitTextStroke: '3px #000',
+              paintOrder: 'stroke fill',
+            }}
+          >
+            +{count - 4}
+          </div>
+        )}
  </div>
  ))}
  </div>
@@ -618,21 +655,30 @@ export default function Home() {
  style={{ display: 'none' }} 
  />
 
- <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
- <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
- <span style={{ marginRight: '8px', color: '#65676b' }}>🔍</span>
- <input type="text" placeholder="ຄົ້ນຫາ..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px' }} />
- </div>
+  <div style={{ padding: '8px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', flexShrink: 0 }}>
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input type="text" placeholder="ຄົ້ນຫາ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px' }} />
+    </div>
  
- {/* แก้ไขไอคอนโพส (+) ให้มีขนาด 38x38 เท่ากับปุ่มอื่น */}
- <button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
- <span style={{ fontSize: '32px', marginTop: '-4px' }}>+</span>
- </button>
+  {/* แก้ไขไอคอนโพส (+) ให้มีขนาด 38x38 เท่ากับปุ่มอื่น */}
+  <button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
  
- {/* ปุ่มแจ้งเตือน (Notification Bell) ขนาด 38x38 */}
- <button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f0f2f5', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
- <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.98 2.98 0 0 0 2.818-2H9.182A2.98 2.98 0 0 0 12 22zm7-7.414V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C8.63 5.36 7 7.92 7 11v3.586l-2 2V18h14v-1.414l-2-2z" /></svg>
- </button>
+  {/* ปุ่มแจ้งเตือน (Notification Bell) ขนาด 38x38 */}
+  <button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 11a7 7 0 0 1 14 0c0 3.5 1.5 5.5 2 6H3c.5-.5 2-2.5 2-6Z"></path>
+      <path d="M10 20a2 2 0 0 0 4 0"></path>
+    </svg>
+  </button>
 
  <div onClick={() => router.push('/profile')} style={{ cursor: 'pointer', flexShrink: 0 }}>
  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -645,11 +691,42 @@ export default function Home() {
  </div>
  </div>
 
- <div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'sticky', top: '59px', background: '#fff', zIndex: 90 }}>
- {['recommend', 'sold'].map((t) => (
- <div key={t} onClick={() => { setTab(t); handleLogoClick(); }} style={{ flex: 1, textAlign: 'center', padding: '15px', color: tab === t ? '#1877f2' : '#65676b', fontWeight: 'bold', borderBottom: tab === t ? '3px solid #1877f2' : 'none', cursor: 'pointer' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</div>
- ))}
- </div>
+  <div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'fixed', top: '48px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', background: '#fff', zIndex: 90 }}>
+    {['recommend', 'sold'].map((t) => {
+      const isActive = tab === t;
+      return (
+        <div
+          key={t}
+          onClick={() => { setTab(t); handleLogoClick(); }}
+          style={{
+            flex: 1,
+            padding: '13px 10px 7px 10px',
+            color: isActive ? '#1877f2' : '#65676b',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <span>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
+          {isActive && (
+            <div
+              style={{
+                marginTop: '4px',
+                width: '40%',
+                height: '3px',
+                background: '#1877f2',
+                borderRadius: '999px',
+              }}
+            />
+          )}
+        </div>
+      );
+    })}
+  </div>
+  <div style={{ height: '48px' }}></div>
 
  {posts.map((post, index) => {
  const status = getOnlineStatus(post.profiles?.last_seen);
@@ -658,7 +735,7 @@ export default function Home() {
  <div 
  key={`${post.id}-${index}`} 
  ref={isLastElement ? lastPostElementRef : null} 
- style={{ borderBottom: '8px solid #f0f2f5', position: 'relative' }}
+ style={{ borderBottom: '8px solid #d1d5db', position: 'relative' }}
  >
  <div style={{ padding: '12px 15px 8px 15px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
  <div style={{ position: 'relative' }}>
@@ -717,9 +794,9 @@ export default function Home() {
  <div style={{ borderTop: '1px solid #f0f2f5' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
- <div onClick={() => fetchInteractions('likes', post.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" className={likedPosts[post.id] ? "animate-heart" : ""} fill={likedPosts[post.id] ? "#e0245e" : "none"} stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} strokeWidth="2" onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b' }}>{post.likes || 0}</span></div>
+ <div onClick={() => fetchInteractions('likes', post.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" className={justLikedPosts[post.id] ? "animate-pop" : ""} fill={likedPosts[post.id] ? "#e0245e" : "none"} stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }} onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b', transition: 'none' }}>{post.likes || 0}</span></div>
  {/* แก้ไข: ย้าย icon save มาต่อจาก likes พร้อมตัวเลข */}
- <div onClick={() => fetchInteractions('saves', post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><svg width="22" height="22" viewBox="0 0 24 24" className={savedPosts[post.id] ? "animate-pop" : ""} fill={savedPosts[post.id] ? "#FFD700" : "none"} stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} strokeWidth="2" onClick={(e) => { e.stopPropagation(); toggleSave(post.id); }}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b' }}>{post.saves || 0}</span></div>
+ <div onClick={() => fetchInteractions('saves', post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><svg width="22" height="22" viewBox="0 0 24 24" className={justSavedPosts[post.id] ? "animate-pop" : ""} fill={savedPosts[post.id] ? "#FFD700" : "none"} stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }} onClick={(e) => { e.stopPropagation(); toggleSave(post.id); }}><path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b', transition: 'none' }}>{post.saves || 0}</span></div>
  
  {/* ส่วนที่แก้ไข: ไอคอนรูปตา (Views) กลับมาเป็นแบบเดิม */}
  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676b' }}>
@@ -730,10 +807,10 @@ export default function Home() {
    <span style={{ fontSize: '14px', fontWeight: '600' }}>{post.views || 0}</span>
  </div>
 
- <div onClick={() => handleShare(post)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14L21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></div>
+ <div onClick={() => handleShare(post)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></div>
  </div>
  {isPostOwner(post) ? (
- <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#ff0000', padding: '6px 12px', borderRadius: '6px', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
+<button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#ff0000', padding: '6px 16px', borderRadius: '999px', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
  ) : (
  post.profiles?.phone && (
  <a href={`https://wa.me/${post.profiles.phone.replace(/\+/g, '').replace(/ /g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#25D366', width: '36px', height: '36px', borderRadius: '50%', textDecoration: 'none', color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
