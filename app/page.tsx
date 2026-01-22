@@ -1,11 +1,12 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Home() {
  const router = useRouter();
+ const searchParams = useSearchParams();
  const [tab, setTab] = useState('recommend');
  const [posts, setPosts] = useState<any[]>([]);
  const [searchTerm, setSearchTerm] = useState('');
@@ -167,9 +168,36 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
  if (page > 0) {
  fetchPosts();
  }
- }, [page]);
+}, [page]);
 
- const fetchSavedStatus = async (userIdOrToken: string) => {
+// เช็ค query parameter สำหรับแสดงโพสต์ที่แชร์
+useEffect(() => {
+const postId = searchParams.get('post');
+if (postId && posts.length > 0) {
+const sharedPost = posts.find(p => p.id === postId);
+if (sharedPost) {
+setViewingPost(sharedPost);
+// ลบ query parameter ออกจาก URL
+router.replace(window.location.pathname, { scroll: false });
+}
+} else if (postId && posts.length === 0) {
+// ถ้ายังไม่มี posts ให้รอให้โหลดเสร็จก่อน
+const checkPost = async () => {
+const { data } = await supabase
+.from('cars')
+.select('*, profiles!cars_user_id_fkey(*)')
+.eq('id', postId)
+.single();
+if (data) {
+setViewingPost(data);
+router.replace(window.location.pathname, { scroll: false });
+}
+};
+checkPost();
+}
+}, [searchParams, posts, router]);
+
+const fetchSavedStatus = async (userIdOrToken: string) => {
  // เช็คทั้งตารางจริงและตาราง guest
  const table = session ? 'post_saves' : 'post_saves_guest';
  const column = session ? 'user_id' : 'guest_token';
@@ -503,26 +531,27 @@ if (!isCurrentlySaved) {
  };
  // ----------------------------------------------------
 
- const handleShare = async (post: any) => {
- const shareData = { title: 'Car Post', text: post.caption, url: window.location.href };
- try {
- if (navigator.share) {
- await navigator.share(shareData);
- 
- const isUser = !!session;
- const userId = isUser ? session.user.id : getPrimaryGuestToken();
- const table = isUser ? 'post_shares' : 'post_shares_guest';
- const column = isUser ? 'user_id' : 'guest_token';
+const handleShare = async (post: any) => {
+const shareUrl = `${window.location.origin}${window.location.pathname}?post=${post.id}`;
+const shareData = { title: 'Car Post', text: post.caption, url: shareUrl };
+try {
+if (navigator.share) {
+await navigator.share(shareData);
 
- await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
+const isUser = !!session;
+const userId = isUser ? session.user.id : getPrimaryGuestToken();
+const table = isUser ? 'post_shares' : 'post_shares_guest';
+const column = isUser ? 'user_id' : 'guest_token';
 
- // อัปเดตยอดแชร์
- await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
- setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
- }
- else { navigator.clipboard.writeText(window.location.href); alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!"); }
- } catch (err) { console.log('User cancelled share'); }
- };
+await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
+
+// อัปเดตยอดแชร์
+await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
+setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
+}
+else { navigator.clipboard.writeText(shareUrl); alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!"); }
+} catch (err) { console.log('User cancelled share'); }
+};
 
  const downloadImage = async (url: string) => {
  try {
