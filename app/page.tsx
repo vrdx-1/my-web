@@ -793,21 +793,21 @@ return (
  <PhotoGrid images={post.images || []} onPostClick={() => handleViewPost(post)} />
  <div style={{ borderTop: '1px solid #f0f2f5' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
  <div onClick={() => fetchInteractions('likes', post.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><svg width="22" height="22" viewBox="0 0 24 24" className={justLikedPosts[post.id] ? "animate-pop" : ""} fill={likedPosts[post.id] ? "#e0245e" : "none"} stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }} onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b', transition: 'none' }}>{post.likes || 0}</span></div>
  {/* แก้ไข: ย้าย icon save มาต่อจาก likes พร้อมตัวเลข */}
  <div onClick={() => fetchInteractions('saves', post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><svg width="22" height="22" viewBox="0 0 24 24" className={justSavedPosts[post.id] ? "animate-pop" : ""} fill={savedPosts[post.id] ? "#FFD700" : "none"} stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }} onClick={(e) => { e.stopPropagation(); toggleSave(post.id); }}><path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path></svg><span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b', transition: 'none' }}>{post.saves || 0}</span></div>
  
  {/* ส่วนที่แก้ไข: ไอคอนรูปตา (Views) กลับมาเป็นแบบเดิม */}
- <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676b' }}>
-   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-     <circle cx="12" cy="12" r="3"></circle>
-   </svg>
-   <span style={{ fontSize: '14px', fontWeight: '600' }}>{post.views || 0}</span>
- </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676b' }}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }}>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+    <span style={{ fontSize: '14px', fontWeight: '600', transition: 'none' }}>{post.views || 0}</span>
+  </div>
 
- <div onClick={() => handleShare(post)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></div>
+ <div onClick={() => handleShare(post)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'none' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
  </div>
  {isPostOwner(post) ? (
 <button onClick={() => togglePostStatus(post.id, post.status)} style={{ background: '#ff0000', padding: '6px 16px', borderRadius: '999px', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>{tab === 'recommend' ? 'ຍ້າຍໄປຂາຍແລ້ວ' : 'ຍ້າຍໄປພ້ອມຂາຍ'}</button>
