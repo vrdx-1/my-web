@@ -26,21 +26,50 @@ export default function AdminReviewPage() {
       // ดึงข้อมูลย้อนหลัง 24 ชั่วโมง
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-      const { data, error } = await supabase
+      // 1. ดึง ID ของโพสต์ทั้งหมด
+      const { data: idsData, error: idsError } = await supabase
         .from('cars')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url,
-            last_seen
-          )
-        `)
+        .select('id')
         .gt('created_at', twentyFourHoursAgo)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (idsError) throw idsError;
+
+      if (idsData && idsData.length > 0) {
+        setPosts([]); // รีเซ็ต posts
+
+        // 2. โหลดทีละโพสต์ (Sequential Loading)
+        for (let i = 0; i < idsData.length; i++) {
+          const postId = idsData[i].id;
+          
+          // โหลดทีละโพสต์
+          const { data: postData, error: postError } = await supabase
+            .from('cars')
+            .select(`
+              *,
+              profiles:user_id (
+                username,
+                avatar_url,
+                last_seen
+              )
+            `)
+            .eq('id', postId)
+            .single();
+
+          if (!postError && postData) {
+            // เพิ่มโพสต์เข้า state ทีละโพสต์
+            setPosts(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              if (!existingIds.has(postData.id)) {
+                return [...prev, postData];
+              }
+              return prev;
+            });
+          }
+        }
+      } else {
+        setPosts([]);
+      }
     } catch (err) {
       console.error("Fetch Error:", err);
     } finally {
@@ -125,7 +154,24 @@ export default function AdminReviewPage() {
     );
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>ກຳລັງໂຫຼດ...</div>;
+  if (loading) return (
+<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+<style>{`
+@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
+.loading-spinner-circle { display: inline-block; width: 40px; height: 40px; position: relative; }
+.loading-spinner-circle div { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; transform-origin: 4px 20px; background: #f0f0f0; animation: fadeColor 1s linear infinite; }
+.loading-spinner-circle div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+`}</style>
+<div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+</div>
+);
 
   return (
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>

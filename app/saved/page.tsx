@@ -25,6 +25,7 @@ export default function SavedPosts() {
  const [hasMore, setHasMore] = useState(true);
  const [loadingMore, setLoadingMore] = useState(false);
  const PAGE_SIZE = 12;
+ const PREFETCH_COUNT = 10; // โหลดล่วงหน้า 10 โพสต์
  const observer = useRef<IntersectionObserver | null>(null);
 
  const lastPostElementRef = useCallback((node: any) => {
@@ -53,58 +54,64 @@ export default function SavedPosts() {
 
  const fetchSavedPosts = async (userIdOrToken: string, isInitial = false) => {
  setLoadingMore(true);
- const from = isInitial ? 0 : page * PAGE_SIZE;
- const to = from + PAGE_SIZE - 1;
+ const startIndex = isInitial ? 0 : page * PAGE_SIZE;
+ const endIndex = startIndex + PREFETCH_COUNT - 1;
 
- const { data } = await supabase
+ // ดึง post_id ของโพสต์ทั้งหมดที่ต้องการ (10 โพสต์)
+ const { data: savesData, error: savesError } = await supabase
  .from('post_saves')
- .select(`
- post_id,
- cars (
- *,
- profiles!cars_user_id_fkey (
- username,
- avatar_url,
- phone,
- last_seen
- )
- )
- `)
+ .select('post_id')
  .eq('user_id', userIdOrToken)
  .order('created_at', { ascending: false })
- .range(from, to);
+ .range(startIndex, endIndex);
 
- if (data) {
- const currentUserId = session?.user?.id;
- 
- const formattedPosts = data
- .map((item: any) => item.cars)
- .filter(p => {
- if (!p) return false;
- // เช็คสถานะ Tab (พร้อมขาย/ขายแล้ว)
- if (p.status !== tab) return false;
- 
- // เงื่อนไข Shadow Hide: 
- // 1. ถ้าไม่ได้ถูกซ่อน (is_hidden เป็น false หรือ null) ให้แสดงปกติ
- // 2. ถ้าถูกซ่อน (is_hidden เป็น true) จะแสดงให้เห็นเฉพาะเจ้าของโพสต์เท่านั้น
- const isNotHidden = !p.is_hidden;
- const isOwner = currentUserId && p.user_id === currentUserId;
- 
- return isNotHidden || isOwner;
- });
- 
+ if (savesError || !savesData) {
+ setLoadingMore(false);
+ return;
+ }
+
+ const postIds = savesData.map(item => item.post_id);
+ setHasMore(postIds.length === PREFETCH_COUNT);
+
+ // โหลดทีละโพสต์ (Sequential Loading)
  if (isInitial) {
- setPosts(formattedPosts);
- } else {
- setPosts(prev => [...prev, ...formattedPosts]);
+ setPosts([]); // รีเซ็ต posts เมื่อโหลดครั้งแรก
  }
 
- const newSavedMap = { ...savedPosts };
- formattedPosts.forEach(p => newSavedMap[p.id] = true);
- setSavedPosts(newSavedMap);
+ const currentUserId = session?.user?.id;
 
- setHasMore(data.length === PAGE_SIZE);
+ for (let i = 0; i < postIds.length; i++) {
+ const postId = postIds[i];
+ 
+ // โหลดทีละโพสต์
+ const { data: postData, error: postError } = await supabase
+ .from('cars')
+ .select(`*, profiles!cars_user_id_fkey (username, avatar_url, phone, last_seen)`)
+ .eq('id', postId)
+ .single();
+
+ if (!postError && postData) {
+ // กรองเอาเฉพาะโพสต์ที่ตรงกับ Tab และจัดการระบบ Shadow Hide
+ const isNotHidden = !postData.is_hidden;
+ const isOwner = currentUserId && postData.user_id === currentUserId;
+ const matchesTab = postData.status === tab;
+
+ if (matchesTab && (isNotHidden || isOwner)) {
+ // เพิ่มโพสต์เข้า state ทีละโพสต์
+ setPosts(prev => {
+ const existingIds = new Set(prev.map(p => p.id));
+ if (!existingIds.has(postData.id)) {
+ return [...prev, postData];
  }
+ return prev;
+ });
+
+ // อัปเดตสถานะ Saved
+ setSavedPosts(prev => ({ ...prev, [postData.id]: true }));
+ }
+ }
+ }
+
  setLoadingMore(false);
  };
 
@@ -329,12 +336,23 @@ export default function SavedPosts() {
 
  return (
  <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
- <style>{`
- @keyframes heartBeat { 0% { transform: scale(1); } 25% { transform: scale(1.3); } 50% { transform: scale(1); } 75% { transform: scale(1.3); } 100% { transform: scale(1); } }
- @keyframes popOnce { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
- .animate-heart { animation: heartBeat 0.4s linear; }
- .animate-pop { animation: popOnce 0.3s ease-out; }
- `}</style>
+<style>{`
+@keyframes heartBeat { 0% { transform: scale(1); } 25% { transform: scale(1.3); } 50% { transform: scale(1); } 75% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes popOnce { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
+.animate-heart { animation: heartBeat 0.4s linear; }
+.animate-pop { animation: popOnce 0.3s ease-out; }
+.loading-spinner-circle { display: inline-block; width: 40px; height: 40px; position: relative; }
+.loading-spinner-circle div { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; transform-origin: 4px 20px; background: #f0f0f0; animation: fadeColor 1s linear infinite; }
+.loading-spinner-circle div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+`}</style>
 
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
  <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
@@ -401,9 +419,11 @@ export default function SavedPosts() {
  !loadingMore && <div style={{ textAlign: 'center', padding: '100px 20px', color: '#65676b', fontSize: '16px' }}>ຍັງບໍ່ມີລາຍການ</div>
  )}
 
- {loadingMore && (
- <div style={{ padding: '20px', textAlign: 'center', color: '#65676b', fontSize: '14px' }}>ກຳລັງໂຫຼດ...</div>
- )}
+{loadingMore && (
+<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
+<div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+</div>
+)}
 
  {viewingPost && (() => {
  const status = getOnlineStatus(viewingPost.profiles?.last_seen);

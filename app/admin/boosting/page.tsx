@@ -20,24 +20,62 @@ export default function AdminBoostingPage() {
     setLoading(true);
     const statusFilter = activeTab === "waiting" ? "pending" : "success";
     
-    const { data, error } = await supabase
+    // 1. ดึง ID ของ boost ทั้งหมด
+    const { data: boostsData, error: boostsError } = await supabase
       .from("post_boosts")
-      .select(`
-        *,
-        cars (
-          *,
-          profiles:user_id (
-            username,
-            avatar_url,
-            last_seen
-          )
-        )
-      `)
+      .select('id, post_id')
       .eq("status", statusFilter)
       .order("created_at", { ascending: false });
 
-    if (!error) setItems(data || []);
-    else console.error("Error fetching boosts:", error);
+    if (boostsError) {
+      console.error("Error fetching boosts:", boostsError);
+      setLoading(false);
+      return;
+    }
+
+    if (boostsData && boostsData.length > 0) {
+      setItems([]); // รีเซ็ต items
+
+      // 2. โหลดทีละ boost (Sequential Loading)
+      for (let i = 0; i < boostsData.length; i++) {
+        const boost = boostsData[i];
+        
+        // โหลดข้อมูล boost
+        const { data: boostData, error: boostError } = await supabase
+          .from("post_boosts")
+          .select('*')
+          .eq('id', boost.id)
+          .single();
+
+        // โหลดข้อมูลรถ
+        const { data: carData, error: carError } = await supabase
+          .from('cars')
+          .select(`
+            *,
+            profiles:user_id (
+              username,
+              avatar_url,
+              last_seen
+            )
+          `)
+          .eq('id', boost.post_id)
+          .single();
+
+        if (!boostError && !carError && boostData && carData) {
+          // เพิ่ม boost เข้า state ทีละ boost
+          setItems(prev => {
+            const existingIds = new Set(prev.map(item => item.id));
+            if (!existingIds.has(boostData.id)) {
+              return [...prev, { ...boostData, cars: carData }];
+            }
+            return prev;
+          });
+        }
+      }
+    } else {
+      setItems([]);
+    }
+
     setLoading(false);
   };
 
