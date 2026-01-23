@@ -18,15 +18,8 @@ export const metadata: Metadata = {
   title: "jutpai.com",
   description: "Second-hand products marketplace",
   icons: {
-    icon: [
-      {
-        url: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/84E395EF-E925-4C1D-9320-C08F45D17A40.png",
-        sizes: "any",
-        type: "image/png",
-      },
-    ],
-    shortcut: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/84E395EF-E925-4C1D-9320-C08F45D17A40.png",
-    apple: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/84E395EF-E925-4C1D-9320-C08F45D17A40.png",
+    icon: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png",
+    shortcut: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png",
   },
 };
 
