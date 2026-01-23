@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "jutpai.com",
   description: "Second-hand products marketplace",
   icons: {
-    icon: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/9a8595cc-bfa6-407d-94d4-67e2e82523e5/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg",
+    icon: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-23%20at%2016.53.00.jpeg",
   },
 };
 
