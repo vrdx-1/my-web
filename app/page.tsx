@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+let _fullScreenTouchY: number | null = null;
+
 function HomeContent() {
  const router = useRouter();
 const searchParams = useSearchParams();
@@ -18,6 +20,10 @@ const pathname = usePathname();
 const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
 const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
  const [viewingPost, setViewingPost] = useState<any | null>(null);
+ const [isViewingModeOpen, setIsViewingModeOpen] = useState(false);
+ const [initialImageIndex, setInitialImageIndex] = useState(0);
+ const [viewingModeTouchStart, setViewingModeTouchStart] = useState<{ x: number, y: number } | null>(null);
+ const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
  const [activeMenuState, setActiveMenu] = useState<string | null>(null);
  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
 
@@ -41,6 +47,7 @@ const PREFETCH_COUNT = 10;
 // --- การจัดการแผง Interaction (BottomSheet) ---
  const [interactionModal, setInteractionModal] = useState<{ show: boolean, type: 'likes' | 'saves', postId: string | null }>({ show: false, type: 'likes', postId: null });
  const [interactionUsers, setInteractionUsers] = useState<any[]>([]);
+ const [isInteractionModalAnimating, setIsInteractionModalAnimating] = useState(false);
  const [interactionLoading, setInteractionLoading] = useState(false);
  const [interactionSheetMode, setInteractionSheetMode] = useState<'half' | 'full' | 'hidden'>('hidden');
 
@@ -181,10 +188,43 @@ document.removeEventListener('touchstart', handleClickOutside as EventListener);
 }, [activeMenuState]);
 
 useEffect(() => {
+if (!viewingPost) {
+setIsViewingModeOpen(false);
+document.body.style.overflow = '';
+setTimeout(() => {
+window.scrollTo(0, savedScrollPosition);
+}, 100);
+} else if (viewingPost.images) {
+document.body.style.overflow = 'hidden';
+setTimeout(() => {
+const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
+const container = document.getElementById('viewing-mode-container');
+if (imageElement && container) {
+const headerHeight = 60;
+const imageTop = imageElement.offsetTop - headerHeight;
+container.scrollTop = imageTop;
+setTimeout(() => {
+setIsViewingModeOpen(true);
+}, 50);
+} else {
+setIsViewingModeOpen(true);
+}
+}, 10);
+}
+return () => {
+if (!viewingPost) {
+document.body.style.overflow = '';
+}
+};
+}, [viewingPost, initialImageIndex, savedScrollPosition]);
+
+useEffect(() => {
 const postId = searchParams.get('post');
 if (postId && posts.length > 0) {
 const sharedPost = posts.find(p => p.id === postId);
 if (sharedPost) {
+setInitialImageIndex(0);
+setIsViewingModeOpen(false);
 setViewingPost(sharedPost);
 router.replace(window.location.pathname, { scroll: false });
 }
@@ -196,6 +236,8 @@ const { data } = await supabase
 .eq('id', postId)
 .single();
 if (data) {
+setInitialImageIndex(0);
+setIsViewingModeOpen(false);
 setViewingPost(data);
 router.replace(window.location.pathname, { scroll: false });
 }
@@ -229,7 +271,13 @@ const { data } = await supabase.from(table).select('post_id').eq(column, userIdO
  const fetchInteractions = async (type: 'likes' | 'saves', postId: string) => {
  setInteractionLoading(true);
  setInteractionModal({ show: true, type, postId });
-setInteractionSheetMode('half'); 
+setInteractionSheetMode('half');
+setIsInteractionModalAnimating(true);
+requestAnimationFrame(() => {
+ requestAnimationFrame(() => {
+  setIsInteractionModalAnimating(false);
+ });
+}); 
  try {
  const table = type === 'likes' ? 'post_likes' : 'post_saves';
  const guestTable = `${table}_guest`;
@@ -448,13 +496,34 @@ return newState;
  }
  };
 
- const handleViewPost = async (post: any) => {
+ const handleViewPost = async (post: any, imageIndex: number = 0) => {
+ setSavedScrollPosition(window.scrollY);
+ setInitialImageIndex(imageIndex);
+ setIsViewingModeOpen(false);
  setViewingPost(post);
  const { error } = await supabase.rpc('increment_views', { post_id: post.id });
  if (error) {
  await supabase.from('cars').update({ views: (post.views || 0) + 1 }).eq('id', post.id);
  }
  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, views: (p.views || 0) + 1 } : p));
+ };
+
+ const handleViewingModeTouchStart = (e: React.TouchEvent) => {
+ setViewingModeTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+ };
+
+ const handleViewingModeTouchEnd = (e: React.TouchEvent) => {
+ if (!viewingModeTouchStart) return;
+ const diffX = viewingModeTouchStart.x - e.changedTouches[0].clientX;
+ const diffY = viewingModeTouchStart.y - e.changedTouches[0].clientY;
+ const container = document.getElementById('viewing-mode-container');
+ const isAtBottom = container && container.scrollHeight - container.scrollTop <= container.clientHeight + 10;
+ 
+ if (diffX > 50 || (isAtBottom && diffY > 50)) {
+ setIsViewingModeOpen(false);
+ setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 300);
+ }
+ setViewingModeTouchStart(null);
  };
 
  const togglePostStatus = async (postId: string, currentStatus: string) => {
@@ -534,14 +603,44 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
 
  const downloadImage = async (url: string) => {
  try {
+ // ตรวจสอบว่าเป็นมือถือหรือไม่
+ const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+ 
+ if (isMobile) {
+ // สำหรับมือถือ: fetch blob แล้วเปิดในแท็บใหม่เพื่อให้ผู้ใช้สามารถ long-press เพื่อบันทึกได้
  const res = await fetch(url);
  const blob = await res.blob();
+ const blobUrl = URL.createObjectURL(blob);
+ 
+ // เปิดในหน้าต่างใหม่เพื่อให้ผู้ใช้สามารถ long-press เพื่อบันทึกได้
+ const link = document.createElement('a');
+ link.href = blobUrl;
+ link.target = '_blank';
+ link.rel = 'noopener noreferrer';
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+ setActivePhotoMenu(null);
+ 
+ // ทำความสะอาด blob URL หลังจาก 10 วินาที
+ setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+ } else {
+ // สำหรับเดสก์ท็อป: ใช้วิธีเดิม
+ const res = await fetch(url);
+ const blob = await res.blob();
+ const fileName = `car-image-${Date.now()}.jpg`;
  const link = document.createElement('a');
  link.href = URL.createObjectURL(blob);
- link.download = `car-image-${Date.now()}.jpg`;
+ link.download = fileName;
+ document.body.appendChild(link);
  link.click();
+ document.body.removeChild(link);
+ setTimeout(() => URL.revokeObjectURL(link.href), 100);
  setActivePhotoMenu(null);
- } catch (err) { alert("ບໍ່ສາມາດບັນທຶກຮູບໄດ້ในขณะนี้"); }
+ }
+ } catch (err) { 
+ alert("ບໍ່ສາມາດບັນທຶກຮູບໄດ້ในขณะนี้"); 
+ }
  };
 
  const onTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientX);
@@ -553,37 +652,44 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  setTouchStart(null);
  };
 
- const PhotoGrid = ({ images, onPostClick }: { images: string[], onPostClick: () => void }) => {
+ const PhotoGrid = ({ images, onPostClick }: { images: string[], onPostClick: (imageIndex: number) => void }) => {
  const count = images.length;
  if (count === 0) return null;
- if (count === 1) return <img src={images[0]} onClick={onPostClick} style={{ width: '100%', cursor: 'pointer', display: 'block' }} />;
+ if (count === 1) return <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', cursor: 'pointer', display: 'block' }} />;
  if (count === 2) return (
-<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
- <img src={images[0]} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
- <img src={images[1]} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+ <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '300px', objectFit: 'contain', background: '#f0f0f0' }} />
+ <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '300px', objectFit: 'contain', background: '#f0f0f0' }} />
  </div>
  );
  if (count === 3) return (
-<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
- <img src={images[0]} style={{ width: '100%', height: '400px', objectFit: 'cover', gridRow: 'span 2' }} />
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+ <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '400px', objectFit: 'contain', background: '#f0f0f0', gridRow: 'span 2' }} />
 <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
- <img src={images[1]} style={{ width: '100%', height: '199px', objectFit: 'cover' }} />
- <img src={images[2]} style={{ width: '100%', height: '199px', objectFit: 'cover' }} />
+ <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '199px', objectFit: 'contain', background: '#f0f0f0' }} />
+ <img src={images[2]} onClick={() => onPostClick(2)} style={{ width: '100%', height: '199px', objectFit: 'contain', background: '#f0f0f0' }} />
  </div>
  </div>
  );
  return (
-<div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
- {images.slice(0, 4).map((img, i) => (
- <div key={i} style={{ position: 'relative', height: '200px' }}>
- <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- {i === 3 && count > 4 && (
-<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: '#fff', WebkitTextStroke: '3px #000', paintOrder: 'stroke fill' }}>
-+{count - 4}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+ {images.slice(0, 2).map((img, i) => (
+ <div key={i} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0' }}>
+ <img src={img} onClick={() => onPostClick(i)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+ </div>
+ ))}
+ <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+ {images.slice(2, 5).map((img, i) => (
+ <div key={i + 2} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0' }}>
+ <img src={img} onClick={() => onPostClick(i + 2)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+ {i === 2 && count > 5 && (
+<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: '#fff', WebkitTextStroke: '3px #000', paintOrder: 'stroke fill', pointerEvents: 'none' }}>
++{count - 5}
 </div>
  )}
  </div>
  ))}
+ </div>
  </div>
  );
  };
@@ -781,7 +887,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  </div>
  </div>
  <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{post.caption}</div>
- <PhotoGrid images={post.images || []} onPostClick={() => handleViewPost(post)} />
+ <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => handleViewPost(post, imageIndex)} />
  <div style={{ borderTop: '1px solid #f0f2f5' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -810,25 +916,26 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
 
  {interactionModal.show && (
  <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s' }} onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }}>
-<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '50%', transform: `translateY(${currentY > 0 ? currentY : 0}px)`, transition: currentY === 0 ? '0.3s ease-out' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-<div onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }} style={{ padding: '12px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', transform: `translateY(${isInteractionModalAnimating ? '100%' : currentY > 0 ? currentY : 0}px)`, transition: currentY === 0 && !isInteractionModalAnimating ? '0.3s ease-out' : isInteractionModalAnimating ? '0.3s ease-out' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+<div onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }} style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
  <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
  </div>
- <div style={{ display: 'flex', alignItems: 'center', gap: '40px', padding: '10px 25px', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
- <div onClick={() => fetchInteractions('likes', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+ <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#fff', zIndex: 10 }}>
+ <div onClick={() => fetchInteractions('likes', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', width: 'fit-content' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
- <svg width="24" height="24" viewBox="0 0 24 24" fill={interactionModal.type === 'likes' ? "#e0245e" : "none"} stroke={interactionModal.type === 'likes' ? "#e0245e" : "#65676b"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+ <svg width="22" height="22" viewBox="0 0 24 24" fill={interactionModal.type === 'likes' ? "#e0245e" : "none"} stroke={interactionModal.type === 'likes' ? "#e0245e" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
 <span style={{ fontSize: '15px', fontWeight: 'bold', color: interactionModal.type === 'likes' ? '#e0245e' : '#65676b' }}>{posts.find(p => p.id === interactionModal.postId)?.likes || 0}</span>
  </div>
  <div style={{ width: '100%', height: '3px', background: interactionModal.type === 'likes' ? '#e0245e' : 'transparent', marginTop: '6px', borderRadius: '2px' }}></div>
  </div>
- <div onClick={() => fetchInteractions('saves', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+ <div onClick={() => fetchInteractions('saves', interactionModal.postId!)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', width: 'fit-content' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
- <svg width="24" height="24" viewBox="0 0 24 24" fill={interactionModal.type === 'saves' ? "#FFD700" : "none"} stroke={interactionModal.type === 'saves' ? "#FFD700" : "#65676b"} strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+ <svg width="22" height="22" viewBox="0 0 24 24" fill={interactionModal.type === 'saves' ? "#FFD700" : "none"} stroke={interactionModal.type === 'saves' ? "#FFD700" : "#65676b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path></svg>
 <span style={{ fontSize: '15px', fontWeight: 'bold', color: interactionModal.type === 'saves' ? '#FFD700' : '#65676b' }}>{posts.find(p => p.id === interactionModal.postId)?.saves || 0}</span>
  </div>
  <div style={{ width: '100%', height: '3px', background: interactionModal.type === 'saves' ? '#FFD700' : 'transparent', marginTop: '6px', borderRadius: '2px' }}></div>
  </div>
+ <div style={{ position: 'absolute', bottom: '0px', left: 0, right: 0, height: '1px', background: '#f0f0f0' }}></div>
  </div>
  <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
 {interactionLoading ? <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}><div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div> :
@@ -880,40 +987,40 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  {viewingPost && (() => {
  const status = getOnlineStatus(viewingPost.profiles?.last_seen);
  return (
- <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
- <div style={{ width: '100%', maxWidth: '600px', height: '100%', background: '#fff', position: 'relative', overflowY: 'auto', borderLeft: '1px solid #f0f0f0', borderRight: '1px solid #f0f0f0' }}>
- <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, transform: isViewingModeOpen ? 'scale(1)' : 'scale(0.8)', opacity: isViewingModeOpen ? 1 : 0, transition: 'transform 0.3s ease-out, opacity 0.3s ease-out' }} onTouchStart={handleViewingModeTouchStart} onTouchEnd={handleViewingModeTouchEnd}>
+<div id="viewing-mode-container" style={{ width: '100%', height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
+ <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001 }}>
+<button onClick={() => { setIsViewingModeOpen(false); setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 300); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+</button>
  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{viewingPost.profiles?.avatar_url ? (<img src={viewingPost.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<svg width="22" height="22" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>)}</div>
  <div>
  <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>{viewingPost.profiles?.username || 'User'}{status.isOnline ? (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div><span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span></div>) : (status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>)}</div>
  <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>{viewingPost.is_boosted ? (<span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ fontWeight: 'bold', color: '#65676b' }}>• Ad</span> <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span><span style={{ margin: '0 4px' }}>•</span>{viewingPost.province}</span>) : (<>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>)}</div>
  </div>
  </div>
- <button onClick={() => setViewingPost(null)} style={{ background: '#f0f2f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
- </div>
- <div style={{ padding: '15px' }}><div style={{ color: '#000', fontSize: '16px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{viewingPost.caption}</div></div>
- {viewingPost.images.map((img: string, idx: number) => (<div key={idx} style={{ position: 'relative', background: '#fff', marginBottom: '24px' }}><div style={{ width: '100%', overflow: 'hidden' }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }} /></div></div>))}
- <div style={{ height: '80px' }}></div>
+{viewingPost.images.map((img: string, idx: number) => (<div key={idx} id={`viewing-image-${idx}`} style={{ position: 'relative', background: '#fff', marginBottom: '12px' }}><div style={{ width: '100%', overflow: 'hidden' }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }} /></div></div>))}
  </div>
  </div>
  )})()}
 
  {fullScreenImages && (
- <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column', touchAction: 'none' }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
- <div style={{ padding: '15px', display: 'flex', justifyContent: 'flex-end', gap: '15px', alignItems: 'center' }}>
+ <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column', touchAction: 'none' }} onTouchStart={(e) => { onTouchStart(e); _fullScreenTouchY = e.touches[0].clientY; }} onTouchEnd={(e) => { onTouchEnd(e); const t = (e.target as HTMLElement); if (!t.closest?.('[data-menu-button]') && !t.closest?.('[data-menu-container]')) { setActivePhotoMenu(null); if (_fullScreenTouchY != null) { const ey = e.changedTouches[0].clientY; const dy = Math.abs(ey - _fullScreenTouchY); const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0; if (dy > 40 && dy > dx) { setFullScreenImages(null); } } } _fullScreenTouchY = null; }} onClick={() => setActivePhotoMenu(null)}>
+ <div style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+ <button onClick={() => { setFullScreenImages(null); setActivePhotoMenu(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+ <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', padding: 0, margin: 0 }}>{currentImgIndex + 1}/{fullScreenImages.length}</div>
  <div style={{ position: 'relative' }}>
- <button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activePhotoMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
- {activePhotoMenu === currentImgIndex && (<div style={{ position: 'absolute', right: 0, top: '45px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', borderRadius: '8px', width: '130px', zIndex: 3100, overflow: 'hidden' }}><div onClick={() => downloadImage(fullScreenImages[currentImgIndex])} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div></div>)}
+ <button data-menu-button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activePhotoMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
+ {activePhotoMenu === currentImgIndex && (<div data-menu-container onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '45px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', borderRadius: '8px', width: '130px', zIndex: 3100, overflow: 'hidden', touchAction: 'manipulation' }}><div onClick={() => downloadImage(fullScreenImages[currentImgIndex])} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div></div>)}
  </div>
- <button onClick={() => { setFullScreenImages(null); setActivePhotoMenu(null); }} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
  </div>
  <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
  <div style={{ display: 'flex', transition: 'transform 0.3s ease-out', transform: `translateX(-${currentImgIndex * 100}%)`, width: '100%' }}>
- {fullScreenImages.map((img, idx) => (<div key={idx} style={{ minWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><img src={img} style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} /></div>))}
+ {fullScreenImages.map((img, idx) => (<div key={idx} style={{ minWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}
  </div>
  </div>
- <div style={{ padding: '20px', textAlign: 'center', color: '#fff', fontSize: '16px', background: 'rgba(0,0,0,0.3)', fontWeight: 'bold' }}>{currentImgIndex + 1} / {fullScreenImages.length}</div>
  </div>
  )}
  </main>
