@@ -21,16 +21,32 @@ const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>
 const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
  const [viewingPost, setViewingPost] = useState<any | null>(null);
  const [isViewingModeOpen, setIsViewingModeOpen] = useState(false);
+ const [viewingModeDragOffset, setViewingModeDragOffset] = useState(0);
+ const [viewingModeIsDragging, setViewingModeIsDragging] = useState(false);
  const [initialImageIndex, setInitialImageIndex] = useState(0);
  const [viewingModeTouchStart, setViewingModeTouchStart] = useState<{ x: number, y: number } | null>(null);
  const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
  const [activeMenuState, setActiveMenu] = useState<string | null>(null);
+ const [isMenuAnimating, setIsMenuAnimating] = useState(false);
  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
+ const [lastScrollY, setLastScrollY] = useState(0);
+ const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
  const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
  const [currentImgIndex, setCurrentImgIndex] = useState(0);
  const [touchStart, setTouchStart] = useState<number | null>(null);
  const [activePhotoMenu, setActivePhotoMenu] = useState<number | null>(null);
+ const [isPhotoMenuAnimating, setIsPhotoMenuAnimating] = useState(false);
+ const [fullScreenDragOffset, setFullScreenDragOffset] = useState(0);
+ const [fullScreenVerticalDragOffset, setFullScreenVerticalDragOffset] = useState(0);
+ const [fullScreenIsDragging, setFullScreenIsDragging] = useState(false);
+ const [fullScreenTransitionDuration, setFullScreenTransitionDuration] = useState(200);
+ const [fullScreenShowDetails, setFullScreenShowDetails] = useState(true);
+ const [fullScreenZoomScale, setFullScreenZoomScale] = useState(1);
+ const [fullScreenZoomOrigin, setFullScreenZoomOrigin] = useState<string>('50% 50%');
+ const [showImageForDownload, setShowImageForDownload] = useState<string | null>(null);
+ const [showDownloadBottomSheet, setShowDownloadBottomSheet] = useState(false);
+ const [isDownloadBottomSheetAnimating, setIsDownloadBottomSheetAnimating] = useState(false);
 
  // --- State สำหรับ Pop-up เงื่อนไข ---
  const [showTermsModal, setShowTermsModal] = useState(false);
@@ -52,6 +68,20 @@ const PREFETCH_COUNT = 10;
  const [interactionSheetMode, setInteractionSheetMode] = useState<'half' | 'full' | 'hidden'>('hidden');
 
  const hiddenFileInputRef = useRef<HTMLInputElement>(null);
+ const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+ const photoMenuButtonRef = useRef<HTMLButtonElement | null>(null);
+ const fullScreenTouchStartTimeRef = useRef<number>(0);
+ const fullScreenTouchStartYRef = useRef<number>(0);
+ const fullScreenLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+ const fullScreenLastTapTimeRef = useRef<number>(0);
+ const fullScreenLastTapPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+ const fullScreenDoubleTapHandledRef = useRef<boolean>(false);
+ const fullScreenPinchStartRef = useRef<number>(0);
+ const fullScreenPinchScaleStartRef = useRef<number>(1);
+ const fullScreenPinchingRef = useRef<boolean>(false);
+ const fullScreenLastClickTimeRef = useRef<number>(0);
+ const fullScreenLastClickPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+ const fullScreenImageContainerRef = useRef<HTMLDivElement | null>(null);
 
  const lastPostElementRef = useCallback((node: any) => {
  if (loadingMore || !hasMore) return; 
@@ -145,6 +175,10 @@ return prev;
  };
 
  useEffect(() => {
+ router.prefetch('/profile');
+ }, [router]);
+
+ useEffect(() => {
  setPage(0);
  setHasMore(true);
  fetchPosts(true);
@@ -162,11 +196,17 @@ return prev;
 // ปิดเมนูไข่ปลาเมื่อเลื่อนหน้าจอ
 useEffect(() => {
 const handleScroll = () => {
+if (activeMenuState) {
+setIsMenuAnimating(true);
+setTimeout(() => {
 setActiveMenu(null);
+setIsMenuAnimating(false);
+}, 300);
+}
 };
 window.addEventListener('scroll', handleScroll);
 return () => window.removeEventListener('scroll', handleScroll);
-}, []);
+}, [activeMenuState]);
 
 // ปิดเมนูไข่ปลาเมื่อคลิกที่อื่น
 useEffect(() => {
@@ -176,7 +216,11 @@ const target = (e.target || (e as TouchEvent).touches?.[0]?.target) as HTMLEleme
 if (!target) return;
 // ตรวจสอบว่า element ที่คลิกอยู่นอกเมนูและไม่ใช่ปุ่มไข่ปลาหรือไม่
 if (!target.closest('[data-menu-container]') && !target.closest('[data-menu-button]')) {
+setIsMenuAnimating(true);
+setTimeout(() => {
 setActiveMenu(null);
+setIsMenuAnimating(false);
+}, 300);
 }
 };
 document.addEventListener('mousedown', handleClickOutside as EventListener);
@@ -190,12 +234,16 @@ document.removeEventListener('touchstart', handleClickOutside as EventListener);
 useEffect(() => {
 if (!viewingPost) {
 setIsViewingModeOpen(false);
+setViewingModeDragOffset(0);
+setViewingModeIsDragging(false);
 document.body.style.overflow = '';
 setTimeout(() => {
 window.scrollTo(0, savedScrollPosition);
 }, 100);
 } else if (viewingPost.images) {
 document.body.style.overflow = 'hidden';
+setViewingModeDragOffset(0);
+setViewingModeIsDragging(false);
 setTimeout(() => {
 const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
 const container = document.getElementById('viewing-mode-container');
@@ -217,6 +265,19 @@ document.body.style.overflow = '';
 }
 };
 }, [viewingPost, initialImageIndex, savedScrollPosition]);
+
+useEffect(() => {
+if (fullScreenImages) {
+setFullScreenDragOffset(0);
+setFullScreenVerticalDragOffset(0);
+setFullScreenZoomScale(1);
+setFullScreenZoomOrigin('50% 50%');
+setFullScreenIsDragging(false);
+setFullScreenTransitionDuration(200);
+setFullScreenShowDetails(true);
+fullScreenTouchStartYRef.current = 0;
+}
+}, [fullScreenImages]);
 
 useEffect(() => {
 const postId = searchParams.get('post');
@@ -300,6 +361,22 @@ requestAnimationFrame(() => {
  setInteractionUsers(formatted);
  } catch (err) { console.error(err); } finally { setInteractionLoading(false); }
  };
+
+ useEffect(() => {
+ const handleScroll = () => {
+ const currentScrollY = window.scrollY;
+ if (currentScrollY < 10) {
+ setIsHeaderVisible(true);
+ } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+ setIsHeaderVisible(false);
+ } else if (currentScrollY < lastScrollY) {
+ setIsHeaderVisible(true);
+ }
+ setLastScrollY(currentScrollY);
+ };
+ window.addEventListener('scroll', handleScroll, { passive: true });
+ return () => window.removeEventListener('scroll', handleScroll);
+ }, [lastScrollY]);
 
  useEffect(() => {
  const stored = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
@@ -510,18 +587,47 @@ return newState;
 
  const handleViewingModeTouchStart = (e: React.TouchEvent) => {
  setViewingModeTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+ setViewingModeIsDragging(true);
+ setViewingModeDragOffset(0);
+ };
+
+ const handleViewingModeTouchMove = (e: React.TouchEvent) => {
+ if (!viewingModeTouchStart) return;
+ const clientX = e.touches[0].clientX;
+ const deltaX = viewingModeTouchStart.x - clientX;
+ const maxDrag = typeof window !== 'undefined' ? window.innerWidth : 600;
+ if (deltaX < 0) {
+ const dragOffset = Math.max(-maxDrag, deltaX);
+ setViewingModeDragOffset(dragOffset);
+ }
  };
 
  const handleViewingModeTouchEnd = (e: React.TouchEvent) => {
  if (!viewingModeTouchStart) return;
  const diffX = viewingModeTouchStart.x - e.changedTouches[0].clientX;
- const diffY = viewingModeTouchStart.y - e.changedTouches[0].clientY;
+ const diffY = Math.abs(viewingModeTouchStart.y - e.changedTouches[0].clientY);
+ const absDiffX = Math.abs(diffX);
  const container = document.getElementById('viewing-mode-container');
  const isAtBottom = container && container.scrollHeight - container.scrollTop <= container.clientHeight + 10;
+ const isAtTop = container && container.scrollTop <= 10;
  
- if (diffX > 50 || (isAtBottom && diffY > 50)) {
+ const isHorizontalSwipe = absDiffX > diffY * 1.5;
+ const isStrongHorizontalSwipe = diffX > 100 && isHorizontalSwipe;
+ const isAtBottomAndSwipeDown = isAtBottom && diffY > 50 && diffY > absDiffX * 1.5;
+ const isScrolling = !isAtTop && !isAtBottom && diffY > 30;
+ 
+ if ((isStrongHorizontalSwipe || isAtBottomAndSwipeDown) && !isScrolling) {
+ setViewingModeIsDragging(false);
+ setViewingModeDragOffset(window.innerWidth);
+ setTimeout(() => {
  setIsViewingModeOpen(false);
- setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 300);
+ setIsHeaderVisible(true);
+ setViewingModeDragOffset(0);
+ setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 50);
+ }, 300);
+ } else if (Math.abs(viewingModeDragOffset) > 20) {
+ setViewingModeDragOffset(0);
+ setViewingModeIsDragging(false);
  }
  setViewingModeTouchStart(null);
  };
@@ -607,23 +713,9 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
  
  if (isMobile) {
- // สำหรับมือถือ: fetch blob แล้วเปิดในแท็บใหม่เพื่อให้ผู้ใช้สามารถ long-press เพื่อบันทึกได้
- const res = await fetch(url);
- const blob = await res.blob();
- const blobUrl = URL.createObjectURL(blob);
- 
- // เปิดในหน้าต่างใหม่เพื่อให้ผู้ใช้สามารถ long-press เพื่อบันทึกได้
- const link = document.createElement('a');
- link.href = blobUrl;
- link.target = '_blank';
- link.rel = 'noopener noreferrer';
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
+ // สำหรับมือถือ: แสดงรูปใน overlay เพื่อให้ผู้ใช้สามารถ long-press เพื่อบันทึกได้
+ setShowImageForDownload(url);
  setActivePhotoMenu(null);
- 
- // ทำความสะอาด blob URL หลังจาก 10 วินาที
- setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
  } else {
  // สำหรับเดสก์ท็อป: ใช้วิธีเดิม
  const res = await fetch(url);
@@ -652,36 +744,271 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  setTouchStart(null);
  };
 
+ const fullScreenOnTouchStart = (e: React.TouchEvent) => {
+ onTouchStart(e);
+ _fullScreenTouchY = e.touches[0].clientY;
+ fullScreenTouchStartYRef.current = e.touches[0].clientY;
+ fullScreenTouchStartTimeRef.current = Date.now();
+ setFullScreenIsDragging(true);
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenTransitionDuration(0);
+ fullScreenDoubleTapHandledRef.current = false;
+
+ const t = (e.target as HTMLElement);
+ if (!t.closest('button') && !t.closest('[data-menu-container]') && !t.closest('[data-menu-button]')) {
+ if (e.touches.length >= 2) {
+ fullScreenPinchingRef.current = true;
+ const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+ fullScreenPinchStartRef.current = d;
+ fullScreenPinchScaleStartRef.current = fullScreenZoomScale;
+ if (fullScreenLongPressTimerRef.current) {
+ clearTimeout(fullScreenLongPressTimerRef.current);
+ fullScreenLongPressTimerRef.current = null;
+ }
+ } else {
+ fullScreenPinchingRef.current = false;
+ fullScreenLongPressTimerRef.current = setTimeout(() => {
+ setShowDownloadBottomSheet(true);
+ setIsDownloadBottomSheetAnimating(true);
+ requestAnimationFrame(() => {
+ requestAnimationFrame(() => setIsDownloadBottomSheetAnimating(false));
+ });
+ }, 500);
+ }
+ }
+ };
+
+ const fullScreenOnTouchMove = (e: React.TouchEvent) => {
+ if (fullScreenLongPressTimerRef.current) {
+ clearTimeout(fullScreenLongPressTimerRef.current);
+ fullScreenLongPressTimerRef.current = null;
+ }
+ if (e.touches.length >= 2 && fullScreenPinchingRef.current) {
+ const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+ const start = fullScreenPinchStartRef.current || 1;
+ const s = fullScreenPinchScaleStartRef.current * (d / start);
+ const scale = Math.max(1, Math.min(4, s));
+ setFullScreenZoomScale(scale);
+ return;
+ }
+ if (touchStart === null || fullScreenTouchStartYRef.current === 0) return;
+ const n = fullScreenImages?.length ?? 0;
+ if (n === 0) return;
+ const clientX = e.touches[0].clientX;
+ const clientY = e.touches[0].clientY;
+ 
+ const deltaX = touchStart - clientX;
+ const deltaY = fullScreenTouchStartYRef.current - clientY;
+ const absX = Math.abs(deltaX);
+ const absY = Math.abs(deltaY);
+ 
+ if (absY > absX) {
+ let verticalDelta = deltaY;
+ const maxVerticalDrag = typeof window !== 'undefined' ? window.innerHeight * 0.6 : 500;
+ verticalDelta = Math.max(-maxVerticalDrag, Math.min(maxVerticalDrag, verticalDelta));
+ setFullScreenVerticalDragOffset(verticalDelta);
+ setFullScreenDragOffset(0);
+ } else {
+ let horizontalDelta = deltaX;
+ const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
+ if (currentImgIndex === 0) horizontalDelta = Math.min(0, horizontalDelta);
+ else if (currentImgIndex === n - 1) horizontalDelta = Math.max(0, horizontalDelta);
+ else horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
+ setFullScreenDragOffset(horizontalDelta);
+ setFullScreenVerticalDragOffset(0);
+ }
+ };
+
+ const fullScreenOnTouchEnd = (e: React.TouchEvent) => {
+ if (fullScreenLongPressTimerRef.current) {
+ clearTimeout(fullScreenLongPressTimerRef.current);
+ fullScreenLongPressTimerRef.current = null;
+ }
+ const wasPinching = fullScreenPinchingRef.current;
+ fullScreenPinchingRef.current = false;
+ const startY = fullScreenTouchStartYRef.current;
+
+ const t = (e.target as HTMLElement);
+ if (!t.closest?.('[data-menu-button]') && !t.closest?.('[data-menu-container]')) {
+ if (activePhotoMenu !== null) {
+ setIsPhotoMenuAnimating(true);
+ setTimeout(() => { setActivePhotoMenu(null); setIsPhotoMenuAnimating(false); }, 300);
+ }
+ if (_fullScreenTouchY != null && fullScreenTouchStartYRef.current !== 0) {
+ const ey = e.changedTouches[0].clientY;
+ const dy = Math.abs(ey - _fullScreenTouchY);
+ const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0;
+ const verticalDelta = fullScreenTouchStartYRef.current - ey;
+ 
+ if (dy > 40 && dy > dx && verticalDelta > 0) {
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(350);
+ setFullScreenVerticalDragOffset(window.innerHeight);
+ setFullScreenZoomScale(1);
+ setTimeout(() => {
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenImages(null);
+ setTouchStart(null);
+ _fullScreenTouchY = null;
+ fullScreenTouchStartYRef.current = 0;
+ }, 350);
+ return;
+ } else if (Math.abs(fullScreenVerticalDragOffset) > 20) {
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(250);
+ setTouchStart(null);
+ _fullScreenTouchY = null;
+ fullScreenTouchStartYRef.current = 0;
+ return;
+ }
+ }
+ }
+ _fullScreenTouchY = null;
+ fullScreenTouchStartYRef.current = 0;
+
+ if (touchStart === null) { setTouchStart(null); return; }
+ const n = fullScreenImages?.length ?? 0;
+ if (n === 0) { setTouchStart(null); return; }
+ const endX = e.changedTouches[0].clientX;
+ const endY = e.changedTouches[0].clientY;
+ const endTime = Date.now();
+ const elapsed = Math.max(1, endTime - fullScreenTouchStartTimeRef.current);
+ const velocity = (touchStart - endX) / elapsed;
+ const diff = touchStart - endX;
+ const moveX = Math.abs(diff);
+ const moveY = Math.abs(endY - startY);
+ const fast = Math.abs(velocity) > 0.5;
+ const dur = fast ? 120 : 200;
+
+ if (diff > 40 || (velocity > 0.35 && diff > 15)) {
+ if (currentImgIndex < n - 1) {
+ setCurrentImgIndex((i) => i + 1);
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenZoomScale(1);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(dur);
+ }
+ else {
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(200);
+ }
+ } else if (diff < -40 || (velocity < -0.35 && diff < -15)) {
+ if (currentImgIndex > 0) {
+ setCurrentImgIndex((i) => i - 1);
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenZoomScale(1);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(dur);
+ }
+ else {
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(200);
+ }
+ } else {
+ setFullScreenDragOffset(0);
+ setFullScreenVerticalDragOffset(0);
+ setFullScreenIsDragging(false);
+ setFullScreenTransitionDuration(200);
+
+ if (!wasPinching && moveX < 15 && moveY < 15) {
+ const now = endTime;
+ const last = fullScreenLastTapTimeRef.current;
+ const lastPos = fullScreenLastTapPosRef.current;
+ const near = Math.abs(endX - lastPos.x) < 50 && Math.abs(endY - lastPos.y) < 50;
+ if (now - last < 350 && near) {
+ fullScreenDoubleTapHandledRef.current = true;
+ const container = fullScreenImageContainerRef.current;
+ if (container) {
+ const rect = container.getBoundingClientRect();
+ const x = ((endX - rect.left) / rect.width) * 100;
+ const y = ((endY - rect.top) / rect.height) * 100;
+ setFullScreenZoomOrigin(`${x}% ${y}%`);
+ }
+ setFullScreenZoomScale((z) => (z > 1 ? 1 : 2));
+ fullScreenLastTapTimeRef.current = 0;
+ } else {
+ fullScreenLastTapTimeRef.current = now;
+ fullScreenLastTapPosRef.current = { x: endX, y: endY };
+ }
+ }
+ }
+ setTouchStart(null);
+ };
+
+ const fullScreenOnClick = (e: React.MouseEvent) => {
+ const t = (e.target as HTMLElement);
+ if (t.closest('button') || t.closest('[data-menu-container]') || t.closest('[data-menu-button]')) return;
+ if (fullScreenDoubleTapHandledRef.current) {
+ fullScreenDoubleTapHandledRef.current = false;
+ return;
+ }
+ if (activePhotoMenu !== null) {
+ setIsPhotoMenuAnimating(true);
+ setTimeout(() => { setActivePhotoMenu(null); setIsPhotoMenuAnimating(false); }, 300);
+ return;
+ }
+ const now = Date.now();
+ const x = e.clientX;
+ const y = e.clientY;
+ const last = fullScreenLastClickTimeRef.current;
+ const lastPos = fullScreenLastClickPosRef.current;
+ const near = Math.abs(x - lastPos.x) < 50 && Math.abs(y - lastPos.y) < 50;
+ if (now - last < 350 && near) {
+ const container = fullScreenImageContainerRef.current;
+ if (container) {
+ const rect = container.getBoundingClientRect();
+ const xPercent = ((x - rect.left) / rect.width) * 100;
+ const yPercent = ((y - rect.top) / rect.height) * 100;
+ setFullScreenZoomOrigin(`${xPercent}% ${yPercent}%`);
+ }
+ setFullScreenZoomScale((z) => (z > 1 ? 1 : 2));
+ fullScreenLastClickTimeRef.current = 0;
+ return;
+ }
+ fullScreenLastClickTimeRef.current = now;
+ fullScreenLastClickPosRef.current = { x, y };
+ setFullScreenShowDetails((prev) => !prev);
+ };
+
  const PhotoGrid = ({ images, onPostClick }: { images: string[], onPostClick: (imageIndex: number) => void }) => {
  const count = images.length;
  if (count === 0) return null;
- if (count === 1) return <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', cursor: 'pointer', display: 'block' }} />;
+ if (count === 1) return <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', cursor: 'pointer', display: 'block', objectFit: 'cover', objectPosition: 'center', height: '400px' }} />;
  if (count === 2) return (
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
- <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '300px', objectFit: 'contain', background: '#f0f0f0' }} />
- <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '300px', objectFit: 'contain', background: '#f0f0f0' }} />
+ <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '300px', objectFit: 'cover', objectPosition: 'center', background: '#f0f0f0' }} />
+ <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '300px', objectFit: 'cover', objectPosition: 'center', background: '#f0f0f0' }} />
  </div>
  );
  if (count === 3) return (
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
- <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '400px', objectFit: 'contain', background: '#f0f0f0', gridRow: 'span 2' }} />
+ <img src={images[0]} onClick={() => onPostClick(0)} style={{ width: '100%', height: '400px', objectFit: 'cover', objectPosition: 'center', background: '#f0f0f0', gridRow: 'span 2' }} />
 <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
- <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '199px', objectFit: 'contain', background: '#f0f0f0' }} />
- <img src={images[2]} onClick={() => onPostClick(2)} style={{ width: '100%', height: '199px', objectFit: 'contain', background: '#f0f0f0' }} />
+ <img src={images[1]} onClick={() => onPostClick(1)} style={{ width: '100%', height: '199px', objectFit: 'cover', objectPosition: 'center', background: '#f0f0f0' }} />
+ <img src={images[2]} onClick={() => onPostClick(2)} style={{ width: '100%', height: '199px', objectFit: 'cover', objectPosition: 'center', background: '#f0f0f0' }} />
  </div>
  </div>
  );
  return (
 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
  {images.slice(0, 2).map((img, i) => (
- <div key={i} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0' }}>
- <img src={img} onClick={() => onPostClick(i)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+ <div key={i} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0', overflow: 'hidden' }}>
+ <img src={img} onClick={() => onPostClick(i)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
  </div>
  ))}
  <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
  {images.slice(2, 5).map((img, i) => (
- <div key={i + 2} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0' }}>
- <img src={img} onClick={() => onPostClick(i + 2)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+ <div key={i + 2} style={{ position: 'relative', aspectRatio: '1', background: '#f0f0f0', cursor: 'pointer', overflow: 'hidden' }} onClick={() => onPostClick(i + 2)}>
+ <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', pointerEvents: 'none' }} />
  {i === 2 && count > 5 && (
 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: '#fff', WebkitTextStroke: '3px #000', paintOrder: 'stroke fill', pointerEvents: 'none' }}>
 +{count - 5}
@@ -723,8 +1050,12 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  if (interactionSheetMode === 'full') {
  setInteractionSheetMode('half');
  } else {
+ setIsInteractionModalAnimating(true);
+ setTimeout(() => {
  setInteractionSheetMode('hidden');
  setInteractionModal({ ...interactionModal, show: false });
+ setIsInteractionModalAnimating(false);
+ }, 300);
  }
  }
  setCurrentY(0);
@@ -752,39 +1083,40 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
 
 <input type="file" ref={hiddenFileInputRef} multiple accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
 
-<div style={{ padding: '8px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
- <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', flexShrink: 0 }}>
+<div style={{ position: 'fixed', top: 0, left: '50%', transform: `translateX(-50%) translateY(${isHeaderVisible ? '0' : '-100%'})`, width: '100%', maxWidth: '600px', background: '#fff', zIndex: 100, transition: 'transform 0.3s ease-out' }}>
+ <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f0f0f0' }}>
+ <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '10px 18px' }}>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
 <circle cx="11" cy="11" r="8"></circle>
 <path d="m21 21-4.35-4.35"></path>
 </svg>
-<input type="text" placeholder="ຄົ້ນຫາ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px' }} />
+<input type="text" placeholder="ຄົ້ນຫາ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '16px' }} />
  </div>
-<button onClick={handleCreatePostClick} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+<button onClick={handleCreatePostClick} style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
 <line x1="12" y1="5" x2="12" y2="19"></line>
 <line x1="5" y1="12" x2="19" y2="12"></line>
 </svg>
- </button>
-<button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-<path d="M5 11a7 7 0 0 1 14 0c0 3.5 1.5 5.5 2 6H3c.5-.5 2-2.5 2-6Z"></path>
-<path d="M10 20a2 2 0 0 0 4 0"></path>
+</button>
+<button onClick={() => router.push('/notification')} style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
 </svg>
- </button>
+</button>
 
-<div onClick={() => router.push('/profile')} style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation' }}>
- <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+<Link href="/profile" style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
+ <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
  {userProfile?.avatar_url ? (
  <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
  ) : (
- <svg width="22" height="22" viewBox="0 0 24 24" fill={session ? "#1877f2" : "#65676b"}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+ <svg width="24" height="24" viewBox="0 0 24 24" fill={session ? "#1877f2" : "#65676b"}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
  )}
  </div>
- </div>
+ </Link>
  </div>
 
-<div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'fixed', top: '48px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', background: '#fff', zIndex: 90 }}>
+<div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
   {['recommend', 'sold'].map((t) => {
     const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
     return (
@@ -800,7 +1132,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
         }}
         style={{
           flex: 1,
-          padding: '13px 10px 7px 10px',
+          padding: '18px 15px 10px 15px',
           color: isActive ? '#1877f2' : '#65676b',
           fontWeight: 'bold',
           cursor: 'pointer',
@@ -809,25 +1141,32 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
           alignItems: 'center',
           justifyContent: 'center',
           touchAction: 'manipulation',
+          position: 'relative',
         }}
       >
-        <span>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
-        {isActive && (
-          <div
-            style={{
-              marginTop: '4px',
-              width: '40%',
-              height: '3px',
-              background: '#1877f2',
-              borderRadius: '999px',
-            }}
-          />
-        )}
+        <div style={{ display: 'inline-block', position: 'relative' }}>
+          <span style={{ fontSize: '17px' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
+          {isActive && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '200%',
+                height: '4px',
+                background: '#1877f2',
+                borderRadius: '999px',
+              }}
+            />
+          )}
+        </div>
  </div>
     );
   })}
 </div>
-<div style={{ height: '48px' }}></div>
+</div>
+<div style={{ height: '118px' }}></div>
 
  {posts.map((post, index) => {
  const status = getOnlineStatus(post.profiles?.last_seen);
@@ -870,9 +1209,16 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  </div>
  </div>
  <div style={{ position: 'relative', marginTop: '-4px' }}>
-<button data-menu-button onClick={() => setActiveMenu(activeMenuState === post.id ? null : post.id)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', touchAction: 'manipulation' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
- {activeMenuState === post.id && (
-<div data-menu-container onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '40px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', zIndex: 150, width: '130px', border: '1px solid #eee', overflow: 'hidden', touchAction: 'manipulation' }}>
+<button ref={(el) => { menuButtonRefs.current[post.id] = el; }} data-menu-button onClick={() => { if (activeMenuState === post.id) { setIsMenuAnimating(true); setTimeout(() => { setActiveMenu(null); setIsMenuAnimating(false); }, 300); } else { setActiveMenu(post.id); setIsMenuAnimating(true); requestAnimationFrame(() => { requestAnimationFrame(() => { setIsMenuAnimating(false); }); }); } }} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', touchAction: 'manipulation' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
+ {activeMenuState === post.id && (() => {
+ const buttonEl = menuButtonRefs.current[post.id];
+ const rect = buttonEl?.getBoundingClientRect();
+ const menuTop = rect ? rect.bottom + 4 : 0;
+ const menuRight = rect ? window.innerWidth - rect.right : 0;
+ return (
+<div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
+<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 10001, pointerEvents: 'auto' }} onClick={() => { setIsMenuAnimating(true); setTimeout(() => { setActiveMenu(null); setIsMenuAnimating(false); }, 300); }}></div>
+<div data-menu-container onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} style={{ position: 'fixed', right: `${menuRight}px`, top: `${menuTop}px`, background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', zIndex: 10002, width: '130px', border: '1px solid #eee', overflow: 'hidden', touchAction: 'manipulation', transform: isMenuAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)', opacity: isMenuAnimating ? 0 : 1, transition: 'transform 0.2s ease-out, opacity 0.2s ease-out', pointerEvents: 'auto' }}>
  {isPostOwner(post) ? (
  <>
 <div onClick={() => { setActiveMenu(null); router.push(`/edit-post/${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'normal', touchAction: 'manipulation' }}>ແກ້ໄຂ</div>
@@ -883,7 +1229,8 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
 <div onClick={() => { setActiveMenu(null); handleReport(post); }} style={{ padding: '12px 15px', fontSize: '14px', color: '#000', cursor: 'pointer', background: '#fff', fontWeight: 'normal', touchAction: 'manipulation' }}>ລາຍງານ</div>
  )}
  </div>
- )}
+ </div>
+ ); })()}
  </div>
  </div>
  <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{post.caption}</div>
@@ -915,9 +1262,9 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  })}
 
  {interactionModal.show && (
- <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s' }} onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }}>
-<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', transform: `translateY(${isInteractionModalAnimating ? '100%' : currentY > 0 ? currentY : 0}px)`, transition: currentY === 0 && !isInteractionModalAnimating ? '0.3s ease-out' : isInteractionModalAnimating ? '0.3s ease-out' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-<div onClick={() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); }} style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+ <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s' }} onClick={() => { setIsInteractionModalAnimating(true); setTimeout(() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); setIsInteractionModalAnimating(false); }, 300); }}>
+<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+<div onClick={() => { setIsInteractionModalAnimating(true); setTimeout(() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); setIsInteractionModalAnimating(false); }, 300); }} style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
  <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
  </div>
  <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#fff', zIndex: 10 }}>
@@ -985,12 +1332,12 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  )}
 
  {viewingPost && (() => {
- const status = getOnlineStatus(viewingPost.profiles?.last_seen);
- return (
-<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, transform: isViewingModeOpen ? 'scale(1)' : 'scale(0.8)', opacity: isViewingModeOpen ? 1 : 0, transition: 'transform 0.3s ease-out, opacity 0.3s ease-out' }} onTouchStart={handleViewingModeTouchStart} onTouchEnd={handleViewingModeTouchEnd}>
+    const status = getOnlineStatus(viewingPost.profiles?.last_seen);
+    return (
+<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, transform: isViewingModeOpen ? `translateX(calc(${viewingModeDragOffset}px))` : 'translateX(100%)', transition: viewingModeIsDragging ? 'none' : 'transform 0.3s ease-out' }} onTouchStart={handleViewingModeTouchStart} onTouchMove={handleViewingModeTouchMove} onTouchEnd={handleViewingModeTouchEnd}>
 <div id="viewing-mode-container" style={{ width: '100%', height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
  <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001 }}>
-<button onClick={() => { setIsViewingModeOpen(false); setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 300); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}>
+<button onClick={() => { setIsViewingModeOpen(false); setIsHeaderVisible(true); setTimeout(() => { setViewingPost(null); window.scrollTo(0, savedScrollPosition); }, 300); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}>
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
@@ -1007,20 +1354,50 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  )})()}
 
  {fullScreenImages && (
- <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column', touchAction: 'none' }} onTouchStart={(e) => { onTouchStart(e); _fullScreenTouchY = e.touches[0].clientY; }} onTouchEnd={(e) => { onTouchEnd(e); const t = (e.target as HTMLElement); if (!t.closest?.('[data-menu-button]') && !t.closest?.('[data-menu-container]')) { setActivePhotoMenu(null); if (_fullScreenTouchY != null) { const ey = e.changedTouches[0].clientY; const dy = Math.abs(ey - _fullScreenTouchY); const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0; if (dy > 40 && dy > dx) { setFullScreenImages(null); } } } _fullScreenTouchY = null; }} onClick={() => setActivePhotoMenu(null)}>
- <div style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
- <button onClick={() => { setFullScreenImages(null); setActivePhotoMenu(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+ <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column', touchAction: 'none' }} onTouchStart={fullScreenOnTouchStart} onTouchMove={fullScreenOnTouchMove} onTouchEnd={fullScreenOnTouchEnd} onClick={fullScreenOnClick}>
+ <div style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', opacity: fullScreenShowDetails ? 1 : 0, transition: 'opacity 0.35s ease-out', pointerEvents: fullScreenShowDetails ? 'auto' : 'none' }}>
+ <button onClick={() => { setFullScreenImages(null); if (activePhotoMenu !== null) { setIsPhotoMenuAnimating(true); setTimeout(() => { setActivePhotoMenu(null); setIsPhotoMenuAnimating(false); }, 300); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
  <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', padding: 0, margin: 0 }}>{currentImgIndex + 1}/{fullScreenImages.length}</div>
  <div style={{ position: 'relative' }}>
- <button data-menu-button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activePhotoMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
- {activePhotoMenu === currentImgIndex && (<div data-menu-container onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '45px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', borderRadius: '8px', width: '130px', zIndex: 3100, overflow: 'hidden', touchAction: 'manipulation' }}><div onClick={() => downloadImage(fullScreenImages[currentImgIndex])} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div></div>)}
+ <button ref={photoMenuButtonRef} data-menu-button onClick={(e) => { e.stopPropagation(); if (activePhotoMenu === currentImgIndex) { setIsPhotoMenuAnimating(true); setTimeout(() => { setActivePhotoMenu(null); setIsPhotoMenuAnimating(false); }, 300); } else { setActivePhotoMenu(currentImgIndex); setIsPhotoMenuAnimating(true); requestAnimationFrame(() => { requestAnimationFrame(() => { setIsPhotoMenuAnimating(false); }); }); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', touchAction: 'manipulation' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg></button>
+ {activePhotoMenu === currentImgIndex && (() => {
+ const buttonEl = photoMenuButtonRef.current;
+ const rect = buttonEl?.getBoundingClientRect();
+ const menuTop = rect ? rect.bottom + 4 : 0;
+ const menuRight = rect ? window.innerWidth - rect.right : 0;
+ return (
+<div style={{ position: 'fixed', inset: 0, zIndex: 3100, pointerEvents: 'none' }}>
+<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 3101, pointerEvents: 'auto' }} onClick={() => { setIsPhotoMenuAnimating(true); setTimeout(() => { setActivePhotoMenu(null); setIsPhotoMenuAnimating(false); }, 300); }}></div>
+<div data-menu-container onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} style={{ position: 'fixed', right: `${menuRight}px`, top: `${menuTop}px`, background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', borderRadius: '8px', width: '130px', zIndex: 3102, overflow: 'hidden', touchAction: 'manipulation', transform: isPhotoMenuAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)', opacity: isPhotoMenuAnimating ? 0 : 1, transition: 'transform 0.2s ease-out, opacity 0.2s ease-out', pointerEvents: 'auto' }}>
+<div onClick={() => { setActivePhotoMenu(null); downloadImage(fullScreenImages[currentImgIndex]); }} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div>
+</div>
+ </div>
+ ); })()}
  </div>
  </div>
- <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
- <div style={{ display: 'flex', transition: 'transform 0.3s ease-out', transform: `translateX(-${currentImgIndex * 100}%)`, width: '100%' }}>
- {fullScreenImages.map((img, idx) => (<div key={idx} style={{ minWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>))}
+ <div ref={fullScreenImageContainerRef} style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+ <div style={{ display: 'flex', transition: fullScreenIsDragging ? 'none' : `transform ${fullScreenTransitionDuration}ms ease-out`, transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px)) translateY(${fullScreenVerticalDragOffset}px)`, width: '100%', height: '100%' }}>
+ {fullScreenImages.map((img, idx) => (<div key={idx} style={{ minWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', transform: idx === currentImgIndex ? `scale(${fullScreenZoomScale})` : 'scale(1)', transformOrigin: idx === currentImgIndex ? fullScreenZoomOrigin : 'center center', transition: fullScreenIsDragging ? 'none' : 'transform 0.2s ease-out' }}><img src={img} style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center' }} /></div>))}
  </div>
  </div>
+ </div>
+ )}
+
+ {fullScreenImages && showDownloadBottomSheet && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 4000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', transition: 'background 0.3s' }} onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); }, 300); }}>
+ <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '20px 20px 0 0', transform: isDownloadBottomSheetAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', overflow: 'hidden', border: '1px solid #eee' }}>
+ <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }} onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); }, 300); }}>
+ <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
+ </div>
+ <div onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); fullScreenImages && downloadImage(fullScreenImages[currentImgIndex]); }, 300); }} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#1c1e21', fontWeight: 'bold', textAlign: 'center', background: '#fff', borderBottom: '1px solid #eee' }}>ບັນທຶກຮູບ</div>
+ <div onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); }, 300); }} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#65676b', textAlign: 'center', background: '#fff' }}>ຍົກເລີກ</div>
+ </div>
+ </div>
+ )}
+
+ {showImageForDownload && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowImageForDownload(null)}>
+ <img src={showImageForDownload} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'default' }} onContextMenu={(e) => e.preventDefault()} />
  </div>
  )}
  </main>

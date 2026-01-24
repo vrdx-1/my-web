@@ -464,25 +464,25 @@ function SoldPageContent() {
 
       <input type="file" ref={hiddenFileInputRef} multiple accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
 
-      <div style={{ padding: '8px 15px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '6px 15px' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', flexShrink: 0 }}><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
-          <input type="text" placeholder="ຄົ້ນຫາ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px' }} />
+      <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '10px 18px' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+          <input type="text" placeholder="ຄົ້ນຫາ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '16px' }} />
         </div>
-        <button onClick={() => session ? hiddenFileInputRef.current?.click() : setShowTermsModal(true)} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <button onClick={() => session ? hiddenFileInputRef.current?.click() : setShowTermsModal(true)} style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
-        <button onClick={() => router.push('/notification')} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11a7 7 0 0 1 14 0c0 3.5 1.5 5.5 2 6H3c.5-.5 2-2.5 2-6Z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg>
+        <button onClick={() => router.push('/notification')} style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', color: '#65676b', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, touchAction: 'manipulation' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11a7 7 0 0 1 14 0c0 3.5 1.5 5.5 2 6H3c.5-.5 2-2.5 2-6Z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg>
         </button>
-        <div onClick={() => router.push('/profile')} style={{ cursor: 'pointer', flexShrink: 0 }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {userProfile?.avatar_url ? (<img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<svg width="22" height="22" viewBox="0 0 24 24" fill={session ? "#1877f2" : "#65676b"}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>)}
+        <div onClick={() => router.push('/profile')} style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation' }}>
+          <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {userProfile?.avatar_url ? (<img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<svg width="26" height="26" viewBox="0 0 24 24" fill={session ? "#1877f2" : "#65676b"}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>)}
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'fixed', top: '48px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', background: '#fff', zIndex: 90 }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #ddd', position: 'fixed', top: '70px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', background: '#fff', zIndex: 90 }}>
         {['recommend', 'sold'].map((t) => {
           const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
           return (
@@ -497,7 +497,7 @@ function SoldPageContent() {
               }}
               style={{
                 flex: 1,
-                padding: '13px 10px 7px 10px',
+                padding: '18px 15px 10px 15px',
                 color: isActive ? '#1877f2' : '#65676b',
                 fontWeight: 'bold',
                 cursor: 'pointer',
@@ -505,25 +505,32 @@ function SoldPageContent() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
+                touchAction: 'manipulation',
+                position: 'relative',
               }}
             >
-              <span>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
-              {isActive && (
-                <div
-                  style={{
-                    marginTop: '4px',
-                    width: '40%',
-                    height: '3px',
-                    background: '#1877f2',
-                    borderRadius: '999px',
-                  }}
-                />
-              )}
+              <div style={{ display: 'inline-block', position: 'relative' }}>
+                <span style={{ fontSize: '17px' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
+                {isActive && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '-10px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '200%',
+                      height: '4px',
+                      background: '#1877f2',
+                      borderRadius: '999px',
+                    }}
+                  />
+                )}
+              </div>
             </div>
           );
         })}
       </div>
-      <div style={{ height: '48px' }}></div>
+      <div style={{ height: '70px' }}></div>
 
       {posts.map((post, index) => {
         const status = getOnlineStatus(post.profiles?.last_seen);
