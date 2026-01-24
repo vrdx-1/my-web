@@ -811,8 +811,8 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  const clientX = e.touches[0].clientX;
  const clientY = e.touches[0].clientY;
  
- const deltaX = touchStart - clientX;
- const deltaY = fullScreenTouchStartYRef.current - clientY;
+ const deltaX = clientX - touchStart;
+ const deltaY = clientY - fullScreenTouchStartYRef.current;
  const absX = Math.abs(deltaX);
  const absY = Math.abs(deltaY);
  
@@ -825,8 +825,8 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  } else {
  let horizontalDelta = deltaX;
  const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
- if (currentImgIndex === 0) horizontalDelta = Math.min(0, horizontalDelta);
- else if (currentImgIndex === n - 1) horizontalDelta = Math.max(0, horizontalDelta);
+ if (currentImgIndex === 0) horizontalDelta = Math.max(0, horizontalDelta);
+ else if (currentImgIndex === n - 1) horizontalDelta = Math.min(0, horizontalDelta);
  else horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
  setFullScreenDragOffset(horizontalDelta);
  setFullScreenVerticalDragOffset(0);
@@ -852,7 +852,7 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  const ey = e.changedTouches[0].clientY;
  const dy = Math.abs(ey - _fullScreenTouchY);
  const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0;
- const verticalDelta = fullScreenTouchStartYRef.current - ey;
+ const verticalDelta = ey - fullScreenTouchStartYRef.current;
  
 	if (dy > 40 && dy > dx) {
 	setFullScreenIsDragging(false);
@@ -889,14 +889,14 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  const endY = e.changedTouches[0].clientY;
  const endTime = Date.now();
  const elapsed = Math.max(1, endTime - fullScreenTouchStartTimeRef.current);
- const velocity = (touchStart - endX) / elapsed;
- const diff = touchStart - endX;
+ const velocity = (endX - touchStart) / elapsed;
+ const diff = endX - touchStart;
  const moveX = Math.abs(diff);
  const moveY = Math.abs(endY - startY);
  const fast = Math.abs(velocity) > 0.5;
  const dur = fast ? 120 : 200;
 
- if (diff > 40 || (velocity > 0.35 && diff > 15)) {
+ if (diff < -40 || (velocity < -0.35 && diff < -15)) {
  if (currentImgIndex < n - 1) {
  setCurrentImgIndex((i) => i + 1);
  setFullScreenDragOffset(0);
@@ -911,7 +911,7 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  setFullScreenIsDragging(false);
  setFullScreenTransitionDuration(200);
  }
- } else if (diff < -40 || (velocity < -0.35 && diff < -15)) {
+ } else if (diff > 40 || (velocity > 0.35 && diff > 15)) {
  if (currentImgIndex > 0) {
  setCurrentImgIndex((i) => i - 1);
  setFullScreenDragOffset(0);
@@ -1364,7 +1364,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>{viewingPost.is_boosted ? (<span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ fontWeight: 'bold', color: '#65676b' }}>• Ad</span> <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span><span style={{ margin: '0 4px' }}>•</span>{viewingPost.province}</span>) : (<>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>)}</div>
  </div>
  </div>
-{viewingPost.images.map((img: string, idx: number) => (<div key={idx} id={`viewing-image-${idx}`} style={{ position: 'relative', background: '#fff', marginBottom: '12px' }}><div style={{ width: '100%', overflow: 'hidden' }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }} /></div></div>))}
+{viewingPost.images.map((img: string, idx: number) => (<div key={idx} id={`viewing-image-${idx}`} style={{ position: 'relative', background: '#fff', marginBottom: '12px', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw' }}><div style={{ width: '100%', overflow: 'hidden', padding: 0, margin: 0 }}><img src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer', margin: 0, padding: 0 }} /></div></div>))}
  </div>
  </div>
  )})()}
