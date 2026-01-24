@@ -280,6 +280,17 @@ fullScreenTouchStartYRef.current = 0;
 }, [fullScreenImages]);
 
 useEffect(() => {
+if (interactionModal.show) {
+document.body.style.overflow = 'hidden';
+} else {
+document.body.style.overflow = '';
+}
+return () => {
+document.body.style.overflow = '';
+};
+}, [interactionModal.show]);
+
+useEffect(() => {
 const postId = searchParams.get('post');
 if (postId && posts.length > 0) {
 const sharedPost = posts.find(p => p.id === postId);
@@ -365,11 +376,13 @@ requestAnimationFrame(() => {
  useEffect(() => {
  const handleScroll = () => {
  const currentScrollY = window.scrollY;
+ const scrollDelta = Math.abs(currentScrollY - lastScrollY);
+ 
  if (currentScrollY < 10) {
  setIsHeaderVisible(true);
- } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+ } else if (currentScrollY > lastScrollY && currentScrollY > 80 && scrollDelta > 5) {
  setIsHeaderVisible(false);
- } else if (currentScrollY < lastScrollY) {
+ } else if (currentScrollY < lastScrollY && scrollDelta > 5) {
  setIsHeaderVisible(true);
  }
  setLastScrollY(currentScrollY);
@@ -594,17 +607,17 @@ return newState;
  const handleViewingModeTouchMove = (e: React.TouchEvent) => {
  if (!viewingModeTouchStart) return;
  const clientX = e.touches[0].clientX;
- const deltaX = viewingModeTouchStart.x - clientX;
+ const deltaX = clientX - viewingModeTouchStart.x;
  const maxDrag = typeof window !== 'undefined' ? window.innerWidth : 600;
- if (deltaX < 0) {
- const dragOffset = Math.max(-maxDrag, deltaX);
+ if (deltaX > 0) {
+ const dragOffset = Math.min(maxDrag, deltaX);
  setViewingModeDragOffset(dragOffset);
  }
  };
 
  const handleViewingModeTouchEnd = (e: React.TouchEvent) => {
  if (!viewingModeTouchStart) return;
- const diffX = viewingModeTouchStart.x - e.changedTouches[0].clientX;
+ const diffX = e.changedTouches[0].clientX - viewingModeTouchStart.x;
  const diffY = Math.abs(viewingModeTouchStart.y - e.changedTouches[0].clientY);
  const absDiffX = Math.abs(diffX);
  const container = document.getElementById('viewing-mode-container');
@@ -841,20 +854,20 @@ alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
  const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0;
  const verticalDelta = fullScreenTouchStartYRef.current - ey;
  
- if (dy > 40 && dy > dx && verticalDelta > 0) {
- setFullScreenIsDragging(false);
- setFullScreenTransitionDuration(350);
- setFullScreenVerticalDragOffset(window.innerHeight);
- setFullScreenZoomScale(1);
- setTimeout(() => {
- setFullScreenDragOffset(0);
- setFullScreenVerticalDragOffset(0);
- setFullScreenImages(null);
- setTouchStart(null);
- _fullScreenTouchY = null;
- fullScreenTouchStartYRef.current = 0;
- }, 350);
- return;
+	if (dy > 40 && dy > dx) {
+	setFullScreenIsDragging(false);
+	setFullScreenTransitionDuration(350);
+	setFullScreenVerticalDragOffset(verticalDelta > 0 ? window.innerHeight : -window.innerHeight);
+	setFullScreenZoomScale(1);
+	setTimeout(() => {
+	setFullScreenDragOffset(0);
+	setFullScreenVerticalDragOffset(0);
+	setFullScreenImages(null);
+	setTouchStart(null);
+	_fullScreenTouchY = null;
+	fullScreenTouchStartYRef.current = 0;
+	}, 350);
+	return;
  } else if (Math.abs(fullScreenVerticalDragOffset) > 20) {
  setFullScreenVerticalDragOffset(0);
  setFullScreenIsDragging(false);
@@ -1062,7 +1075,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  };
 
  return (
- <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
+ <main style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
  <style>{`
  @keyframes heartBeat { 0% { transform: scale(1); } 25% { transform: scale(1.3); } 50% { transform: scale(1); } 75% { transform: scale(1.3); } 100% { transform: scale(1); } }
  @keyframes popOnce { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
@@ -1079,12 +1092,15 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
 .loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
 .loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
 .loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+ /* ซ่อน scrollbar แต่ยังคงสามารถเลื่อนได้ */
+ * { scrollbar-width: none; -ms-overflow-style: none; }
+ *::-webkit-scrollbar { display: none; }
  `}</style>
 
 <input type="file" ref={hiddenFileInputRef} multiple accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
 
-<div style={{ position: 'fixed', top: 0, left: '50%', transform: `translateX(-50%) translateY(${isHeaderVisible ? '0' : '-100%'})`, width: '100%', maxWidth: '600px', background: '#fff', zIndex: 100, transition: 'transform 0.3s ease-out' }}>
- <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f0f0f0' }}>
+<div style={{ position: 'fixed', top: 0, left: 0, transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`, width: '100%', background: '#fff', zIndex: 100, transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' }}>
+ <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #f0f0f0' }}>
  <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '10px 18px' }}>
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
 <circle cx="11" cy="11" r="8"></circle>
@@ -1132,7 +1148,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
         }}
         style={{
           flex: 1,
-          padding: '18px 15px 10px 15px',
+          padding: '12px 15px 10px 15px',
           color: isActive ? '#1877f2' : '#65676b',
           fontWeight: 'bold',
           cursor: 'pointer',
@@ -1262,8 +1278,8 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
  })}
 
  {interactionModal.show && (
- <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s' }} onClick={() => { setIsInteractionModalAnimating(true); setTimeout(() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); setIsInteractionModalAnimating(false); }, 300); }}>
-<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+ <div style={{ position: 'fixed', inset: 0, background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', transition: 'background 0.3s', touchAction: 'none', overflow: 'hidden' }} onClick={() => { setIsInteractionModalAnimating(true); setTimeout(() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); setIsInteractionModalAnimating(false); }, 300); }}>
+<div onClick={e => e.stopPropagation()} onTouchStart={onSheetTouchStart} onTouchMove={onSheetTouchMove} onTouchEnd={onSheetTouchEnd} style={{ width: '100%', background: '#fff', borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', display: 'flex', flexDirection: 'column', overflow: 'hidden', touchAction: 'auto' }}>
 <div onClick={() => { setIsInteractionModalAnimating(true); setTimeout(() => { setInteractionSheetMode('hidden'); setInteractionModal({ ...interactionModal, show: false }); setIsInteractionModalAnimating(false); }, 300); }} style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
  <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
  </div>
@@ -1385,7 +1401,7 @@ const onSheetTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].client
 
  {fullScreenImages && showDownloadBottomSheet && (
  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 4000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', transition: 'background 0.3s' }} onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); }, 300); }}>
- <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '20px 20px 0 0', transform: isDownloadBottomSheetAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', overflow: 'hidden', border: '1px solid #eee' }}>
+ <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '20px 20px 0 0', transform: isDownloadBottomSheetAnimating ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.3s ease-out', overflow: 'hidden', border: '1px solid #eee' }}>
  <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'center', cursor: 'pointer' }} onClick={() => { setIsDownloadBottomSheetAnimating(true); setTimeout(() => { setShowDownloadBottomSheet(false); setIsDownloadBottomSheetAnimating(false); }, 300); }}>
  <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
  </div>
