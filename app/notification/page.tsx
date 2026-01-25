@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { EmptyState } from '@/components/EmptyState';
 
 export default function NotificationPage() {
   const router = useRouter();
@@ -124,7 +125,7 @@ export default function NotificationPage() {
             </div>
           ))}
           {!loading && notifications.length === 0 && (
-            <div style={{ padding: '50px', textAlign: 'center', color: '#888' }}>ບໍ່ມີການແຈ້ງເຕືອນ</div>
+            <EmptyState message="ບໍ່ມີການແຈ້ງເຕືອນ" variant="minimal" />
           )}
         </div>
       )}

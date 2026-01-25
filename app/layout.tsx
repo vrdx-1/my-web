@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // เพิ่มการนำเข้า Component สำหรับ Track Visitor
-import VisitorTracker from "@/components/VisitorTracker"; 
+import VisitorTracker from "@/components/VisitorTracker";
+import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
+import { SWRProvider } from "@/components/SWRProvider"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +35,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
-        <VisitorTracker />
-        {children}
+        <ErrorBoundaryWrapper>
+          <SWRProvider>
+            {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
+            <VisitorTracker />
+            {children}
+          </SWRProvider>
+        </ErrorBoundaryWrapper>
       </body>
     </html>
   );

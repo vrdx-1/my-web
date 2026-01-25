@@ -40,7 +40,7 @@ export default function Register() {
 
   // ฟังก์ชันช่วยบันทึกข้อมูลชื่อและรูปภาพลง localStorage ทันที
   const updatePendingData = (updates: any) => {
-    const currentData = JSON.parse(localStorage.getItem('pending_registration') || '{}');
+    const currentData = safeParseJSON<Record<string, any>>('pending_registration', {});
     localStorage.setItem('pending_registration', JSON.stringify({
       ...currentData,
       ...updates
@@ -88,7 +88,7 @@ export default function Register() {
 
     try {
       // 1. ดึงข้อมูล Email/Password จาก localStorage
-      const pendingData = JSON.parse(localStorage.getItem('pending_registration') || '{}');
+      const pendingData = safeParseJSON<{ email?: string; password?: string; avatarUrl?: string }>('pending_registration', {});
       if (!pendingData.email || !pendingData.password) {
         throw new Error('ບໍ່ພົບຂໍ້ມູນການລົງທະບຽນ');
       }
@@ -103,6 +103,9 @@ export default function Register() {
 
       const newUser = authData.user;
       if (newUser) {
+        // Extract avatar path from URL for cleanup if needed
+        const avatarPath = avatarUrl ? avatarUrl.split('/').slice(-2).join('/') : null;
+        
         // 3. บันทึกลงตาราง profiles
         const { error: profileError } = await supabase
           .from('profiles')
@@ -113,10 +116,16 @@ export default function Register() {
             updated_at: new Date(),
           });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          // ถ้า profile upsert ล้มเหลว ให้ cleanup avatar file (ถ้ามี)
+          if (avatarPath) {
+            await supabase.storage.from('car-images').remove([avatarPath]).catch(() => {});
+          }
+          throw profileError;
+        }
 
         // 4. Logic การโอนย้ายข้อมูลจาก Guest
-        const storedPosts = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
+        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
         const deviceToken = localStorage.getItem('device_guest_token');
         const guestTokens = Array.from(new Set([
           ...storedPosts.map((p: any) => p.token),

@@ -1,24 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { TimeFilter } from '@/components/admin/TimeFilter';
+import { applyDateFilter } from '@/utils/dateFilter';
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
-// รายชื่อแขวงทั้งหมด 18 แขวงของลาว
-const LAO_PROVINCES = [
-  "ຜົ້ງສາລີ", "ຫຼວງນ້ຳທາ", "ອຸດົມໄຊ", "ບໍ່ແກ້ວ", "ຫຼວງພະບາງ", 
-  "ຫົວພັນ", "ໄຊຍະບູລີ", "ຊຽງຂວາງ", "ໄຊສົມບູນ", "ວຽງຈັນ", 
-  "ນະຄອນຫຼວງວຽງຈັນ", "ບໍລິຄຳໄຊ", "ຄຳມ່ວນ", "ສະຫວັນນະເຂດ", 
-  "ສາລະວັນ", "ເຊກອງ", "ຈຳປາສັກ", "ອັດຕະປື"
-];
+import { LAO_PROVINCES } from '@/utils/constants';
 
 export default function AdminPostStatsPage() {
   const [filter, setFilter] = useState<'D' | 'W' | 'M' | 'Y' | 'A'>('A');
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createAdminSupabaseClient();
 
   useEffect(() => {
     fetchStats();
@@ -29,21 +23,8 @@ export default function AdminPostStatsPage() {
     try {
       let query = supabase.from('cars').select('province, status, created_at');
 
-      // --- ระบบกรองเวลา (Logic D/W/M/Y/A) ---
-      const now = new Date();
-      if (filter === 'D') {
-        const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
-        query = query.gt('created_at', startOfDay);
-      } else if (filter === 'W') {
-        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        query = query.gt('created_at', lastWeek);
-      } else if (filter === 'M') {
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        query = query.gt('created_at', startOfMonth);
-      } else if (filter === 'Y') {
-        const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
-        query = query.gt('created_at', startOfYear);
-      }
+      // --- ระบบกรองเวลา - ใช้ shared utility ---
+      query = applyDateFilter(query, filter);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -119,20 +100,7 @@ export default function AdminPostStatsPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} style={{ textAlign: 'center', padding: '40px' }}>
-                <style>{`
-@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
-.loading-spinner-circle { display: inline-block; width: 40px; height: 40px; position: relative; }
-.loading-spinner-circle div { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; transform-origin: 4px 20px; background: #f0f0f0; animation: fadeColor 1s linear infinite; }
-.loading-spinner-circle div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-.loading-spinner-circle div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
-.loading-spinner-circle div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
-.loading-spinner-circle div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
-.loading-spinner-circle div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
-.loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
-.loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
-.loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
-`}</style>
-                <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                <LoadingSpinner />
               </td></tr>
             ) : (
               <>

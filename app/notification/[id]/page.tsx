@@ -1,7 +1,29 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
+
+// Shared Components
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PhotoGrid } from '@/components/PhotoGrid';
+import { Avatar } from '@/components/Avatar';
+
+// Shared Hooks
+import { useViewingPost } from '@/hooks/useViewingPost';
+import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
+import { useMenu } from '@/hooks/useMenu';
+
+// Shared Utils
+import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
+import { deletePost } from '@/utils/postManagement';
+
+// Dynamic Imports
+const ViewingPostModal = lazy(() => 
+  import('@/components/modals/ViewingPostModal').then(m => ({ default: m.ViewingPostModal }))
+) as React.LazyExoticComponent<React.ComponentType<any>>;
+const FullScreenImageViewer = lazy(() => 
+  import('@/components/modals/FullScreenImageViewer').then(m => ({ default: m.FullScreenImageViewer }))
+) as React.LazyExoticComponent<React.ComponentType<any>>;
 
 export default function NotificationDetail() {
  const router = useRouter();
@@ -10,17 +32,16 @@ export default function NotificationDetail() {
  // --- States หลัก ---
  const [post, setPost] = useState<any>(null);
  const [session, setSession] = useState<any>(null);
- const [activeMenu, setActiveMenu] = useState<string | null>(null);
- const [viewingPost, setViewingPost] = useState<any | null>(null);
- const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
- const [currentImgIndex, setCurrentImgIndex] = useState(0);
- const [activePhotoMenu, setActivePhotoMenu] = useState<number | null>(null);
- const [touchStart, setTouchStart] = useState<number | null>(null);
+ const [loading, setLoading] = useState(true);
+
+ // Use shared hooks
+ const menu = useMenu();
+ const viewingPostHook = useViewingPost();
+ const fullScreenViewer = useFullScreenViewer();
 
  // --- States สำหรับแท็บด้านล่าง ---
  const [activeTab, setActiveTab] = useState<'likes' | 'saves' | 'shares'>('likes');
  const [userList, setUserList] = useState<any[]>([]);
- const [loading, setLoading] = useState(true);
  const [listLoading, setListLoading] = useState(false);
 
  useEffect(() => {
@@ -34,7 +55,13 @@ export default function NotificationDetail() {
  .select('*, profiles!cars_user_id_fkey(*)')
  .eq('id', id)
  .single();
- if (data) setPost(data);
+ if (data) {
+   setPost(data);
+   // Increment views
+   await supabase.rpc('increment_views', { post_id: id }).catch(() => {
+     supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
+   });
+ }
  setLoading(false);
  }, [id]);
 
@@ -93,104 +120,27 @@ export default function NotificationDetail() {
  }
  }, [id, activeTab, fetchPostDetail, fetchInteractions]);
 
- // --- Helper Functions (เลียนแบบ Logic หน้า Home) ---
- const getOnlineStatus = (lastSeen: string | null) => {
- if (!lastSeen) return { isOnline: false, text: '' };
- const now = new Date().getTime();
- const lastActive = new Date(lastSeen).getTime();
- const diffInSeconds = Math.floor((now - lastActive) / 1000);
- if (diffInSeconds < 300) return { isOnline: true, text: 'ອອນລາຍ' };
- if (diffInSeconds < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ເມື່ອຄູ່` };
- const diffInMinutes = Math.floor(diffInSeconds / 60);
- if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMinutes} ນາທີທີ່ແລ้ว` };
- const diffInHours = Math.floor(diffInMinutes / 60);
- if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
- return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${Math.floor(diffInHours / 24)} ມື้ທີ່ແລ້ว` };
- };
-
- const formatTime = (dateString: string) => {
- const diffInSeconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
- if (diffInSeconds < 60) return 'ເມື່ອຄູ່';
- if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} ນາທີ`;
- if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ຊົ່ວໂມງ`;
- return new Date(dateString).toLocaleDateString('lo-LA', { day: 'numeric', month: 'short' });
- };
-
- const isPostOwner = (p: any) => {
- if (session && String(p.user_id) === String(session.user.id)) return true;
- const stored = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
- return stored.some((item: any) => String(item.post_id) === String(p.id));
- };
+ // Removed duplicate functions - using from shared utils
 
  // --- Action Functions (ใช้งานได้จริง) ---
- const handleDeletePost = async (postId: string) => {
- if (!confirm("ທ່ານແນ່ໃຈຫຼືບໍ່ວ່າຕ້ອງການລົບໂພສນີ້?")) return;
- const { error } = await supabase.from('cars').delete().eq('id', postId);
- if (!error) {
- alert("ລົບໂພສສຳເລັດແລ້ວ");
- router.back();
- } else {
- alert("ເກີดຂໍ้ຜິດພາດ: " + error.message);
- }
- };
-
- const downloadImage = async (url: string) => {
- try {
- const res = await fetch(url);
- const blob = await res.blob();
- const link = document.createElement('a');
- link.href = URL.createObjectURL(blob);
- link.download = `car-image-${Date.now()}.jpg`;
- link.click();
- setActivePhotoMenu(null);
- } catch (err) { alert("ບໍ່ສາມາດບັນທຶກຮູບໄດ້"); }
- };
-
- const onTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientX);
- const onTouchEnd = (e: React.TouchEvent) => {
- if (touchStart === null) return;
- const diff = touchStart - e.changedTouches[0].clientX;
- if (diff > 40 && currentImgIndex < (fullScreenImages?.length || 0) - 1) setCurrentImgIndex(prev => prev + 1);
- else if (diff < -40 && currentImgIndex > 0) setCurrentImgIndex(prev => prev - 1);
- setTouchStart(null);
- };
-
- const PhotoGrid = ({ images, onPostClick }: { images: string[], onPostClick: () => void }) => {
- const count = images.length;
- if (count === 0) return null;
- if (count === 1) return <img src={images[0]} onClick={onPostClick} style={{ width: '100%', cursor: 'pointer', display: 'block' }} />;
- return (
- <div onClick={onPostClick} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', cursor: 'pointer' }}>
- {images.slice(0, 4).map((img, i) => (
- <div key={i} style={{ position: 'relative', height: count === 2 ? '300px' : '200px' }}>
- <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- {i === 3 && count > 4 && (
- <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>+{count - 4}</div>
- )}
- </div>
- ))}
- </div>
- );
- };
+ const handleDeletePost = useCallback(async (postId: string) => {
+   if (!confirm("ທ່ານແນ່ໃຈຫຼືບໍ່ວ່າຕ້ອງການລົບໂພສນີ້?")) return;
+   const { error } = await supabase.from('cars').delete().eq('id', postId);
+   if (!error) {
+     setPost(null);
+     menu.setActiveMenu(null);
+     alert("ລົບໂພສສຳເລັດແລ້ວ");
+     router.back();
+   } else {
+     alert("ເກີດຂໍ້ຜິດພາດ: " + error.message);
+   }
+ }, [router, menu]);
 
  if (loading || !post) return (
-<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-<style>{`
-@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
-.loading-spinner-circle { display: inline-block; width: 40px; height: 40px; position: relative; }
-.loading-spinner-circle div { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; transform-origin: 4px 20px; background: #f0f0f0; animation: fadeColor 1s linear infinite; }
-.loading-spinner-circle div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-.loading-spinner-circle div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
-.loading-spinner-circle div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
-.loading-spinner-circle div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
-.loading-spinner-circle div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
-.loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
-.loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
-.loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
-`}</style>
-<div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-</div>
-);
+   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+     <LoadingSpinner />
+   </div>
+ );
 
  const status = getOnlineStatus(post.profiles?.last_seen);
 
@@ -203,11 +153,11 @@ export default function NotificationDetail() {
  <span style={{ fontWeight: 'bold', fontSize: '18px' }}>ລາຍລະອຽດໂພສ</span>
  </div>
 
- {/* 2. ฟีดสไตล์หน้า Home */}
+ {/* 2. ฟีดสไตล์หน้า Home - ใช้ PostCard หรือ custom UI */}
  <div style={{ borderBottom: '8px solid #f0f2f5' }}>
  <div style={{ padding: '12px 15px 8px 15px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden' }}>
- <img src={post.profiles?.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+ <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} />
  </div>
  <div style={{ flex: 1 }}>
  <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -226,16 +176,20 @@ export default function NotificationDetail() {
  </div>
  
  <div style={{ position: 'relative' }}>
- <button onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer' }}>
+ <button 
+   ref={(el) => { menu.menuButtonRefs.current[post.id] = el; }}
+   onClick={() => menu.setActiveMenu(menu.activeMenuState === post.id ? null : post.id)} 
+   style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer' }}
+ >
  <svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg>
  </button>
- {activeMenu === post.id && (
+ {menu.activeMenuState === post.id && (
  <div style={{ position: 'absolute', right: 0, top: '40px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', zIndex: 150, width: '140px', border: '1px solid #eee', overflow: 'hidden' }}>
- {isPostOwner(post) ? (
+ {isPostOwner(post, session) ? (
  <>
- <div onClick={() => router.push(`/edit-post/${post.id}`)} style={{ padding: '12px 15px', fontSize: '14px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>ແກ້ໄຂ</div>
- <div onClick={() => handleDeletePost(post.id)} style={{ padding: '12px 15px', fontSize: '14px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>ລົບ</div>
- <div onClick={() => router.push(`/boost_post?id=${post.id}`)} style={{ padding: '12px 15px', fontSize: '14px', cursor: 'pointer' }}>Boost Post</div>
+ <div onClick={() => { menu.setActiveMenu(null); router.push(`/edit-post/${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>ແກ້ໄຂ</div>
+ <div onClick={() => { handleDeletePost(post.id); }} style={{ padding: '12px 15px', fontSize: '14px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>ລົບ</div>
+ <div onClick={() => { menu.setActiveMenu(null); router.push(`/boost_post?id=${post.id}`); }} style={{ padding: '12px 15px', fontSize: '14px', cursor: 'pointer' }}>Boost Post</div>
  </>
  ) : (
  <div style={{ padding: '12px 15px', fontSize: '14px', cursor: 'pointer' }}>ລາຍງານ</div>
@@ -245,7 +199,7 @@ export default function NotificationDetail() {
  </div>
  </div>
  <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{post.caption}</div>
- <PhotoGrid images={post.images || []} onPostClick={() => setViewingPost(post)} />
+ <PhotoGrid images={post.images || []} onPostClick={() => viewingPostHook.handleViewPost(post, 0, setPost, () => {})} />
  </div>
 
  {/* 3. แท็บแจ้งเตือน */}
@@ -277,65 +231,82 @@ export default function NotificationDetail() {
  }
  </div>
 
- {/* 4. Viewing Mode */}
- {viewingPost && (() => {
- const vStatus = getOnlineStatus(viewingPost.profiles?.last_seen);
- return (
- <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 2000, overflowY: 'auto' }}>
- <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden' }}>
- <img src={viewingPost.profiles?.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- </div>
- <div>
- <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '5px' }}>
- {viewingPost.profiles?.username}
- {vStatus.isOnline && <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>}
- </div>
- <div style={{ fontSize: '12px', color: '#65676b' }}>{formatTime(viewingPost.created_at)} · {viewingPost.province}</div>
- </div>
- </div>
- <button onClick={() => setViewingPost(null)} style={{ background: '#f0f2f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
- </div>
- <div style={{ padding: '15px', fontSize: '16px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{viewingPost.caption}</div>
- {viewingPost.images.map((img: string, idx: number) => (
- <img key={idx} src={img} onClick={() => { setFullScreenImages(viewingPost.images); setCurrentImgIndex(idx); }} style={{ width: '100%', marginBottom: '24px', cursor: 'pointer', display: 'block' }} />
- ))}
- </div>
- )
- })()}
-
- {/* 5. Full Screen Mode */}
- {fullScreenImages && (
- <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 3000, display: 'flex', flexDirection: 'column' }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
- <div style={{ padding: '15px', display: 'flex', justifyContent: 'flex-end', gap: '15px', alignItems: 'center' }}>
- <div style={{ position: 'relative' }}>
- <button onClick={(e) => { e.stopPropagation(); setActivePhotoMenu(activePhotoMenu === currentImgIndex ? null : currentImgIndex); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
- <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg>
- </button>
- {activePhotoMenu === currentImgIndex && (
- <div style={{ position: 'absolute', right: 0, top: '45px', background: '#fff', borderRadius: '8px', width: '130px', zIndex: 3100, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
- <div onClick={() => downloadImage(fullScreenImages[currentImgIndex])} style={{ padding: '15px', fontSize: '14px', cursor: 'pointer', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>ບັນທຶກຮູບ</div>
- </div>
+ {/* 4. Viewing Post Modal - Using shared components */}
+ {viewingPostHook.viewingPost && (
+   <Suspense fallback={null}>
+     <ViewingPostModal
+       viewingPost={viewingPostHook.viewingPost}
+       session={session}
+       isViewingModeOpen={viewingPostHook.isViewingModeOpen}
+       viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
+       viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
+       savedScrollPosition={viewingPostHook.savedScrollPosition}
+       onClose={() => {
+         viewingPostHook.setIsViewingModeOpen(false);
+         setTimeout(() => {
+           viewingPostHook.setViewingPost(null);
+           window.scrollTo(0, viewingPostHook.savedScrollPosition);
+         }, 300);
+       }}
+       onTouchStart={viewingPostHook.handleViewingModeTouchStart}
+       onTouchMove={viewingPostHook.handleViewingModeTouchMove}
+       onTouchEnd={(e: React.TouchEvent) => viewingPostHook.handleViewingModeTouchEnd(e, () => {})}
+       onImageClick={(images: string[], index: number) => {
+         fullScreenViewer.setFullScreenImages(images);
+         fullScreenViewer.setCurrentImgIndex(index);
+       }}
+     />
+   </Suspense>
  )}
- </div>
- <button onClick={() => { setFullScreenImages(null); setActivePhotoMenu(null); }} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
- </div>
- 
- <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
- <div style={{ display: 'flex', transition: 'transform 0.3s ease-out', transform: `translateX(-${currentImgIndex * 100}%)`, width: '100%' }}>
- {fullScreenImages.map((img, idx) => (
- <div key={idx} style={{ minWidth: '100%', display: 'flex', justifyContent: 'center' }}>
- <img src={img} style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
- </div>
- ))}
- </div>
- </div>
- 
- <div style={{ padding: '20px', textAlign: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', background: 'rgba(0,0,0,0.3)' }}>
- {currentImgIndex + 1} / {fullScreenImages.length}
- </div>
- </div>
+
+ {/* 5. Full Screen Image Viewer - Using shared component */}
+ {fullScreenViewer.fullScreenImages && (
+   <Suspense fallback={null}>
+     <FullScreenImageViewer
+       images={fullScreenViewer.fullScreenImages}
+       currentImgIndex={fullScreenViewer.currentImgIndex}
+       fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+       fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
+       fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
+       fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}
+       fullScreenShowDetails={fullScreenViewer.fullScreenShowDetails}
+       fullScreenZoomScale={fullScreenViewer.fullScreenZoomScale}
+       fullScreenZoomOrigin={fullScreenViewer.fullScreenZoomOrigin}
+       activePhotoMenu={fullScreenViewer.activePhotoMenu}
+       isPhotoMenuAnimating={fullScreenViewer.isPhotoMenuAnimating}
+       showDownloadBottomSheet={fullScreenViewer.showDownloadBottomSheet}
+       isDownloadBottomSheetAnimating={fullScreenViewer.isDownloadBottomSheetAnimating}
+       showImageForDownload={fullScreenViewer.showImageForDownload}
+       onClose={() => {
+         fullScreenViewer.setFullScreenImages(null);
+         if (fullScreenViewer.activePhotoMenu !== null) {
+           setTimeout(() => {
+             fullScreenViewer.setActivePhotoMenu(null);
+           }, 300);
+         }
+       }}
+       onTouchStart={fullScreenViewer.fullScreenOnTouchStart}
+       onTouchMove={fullScreenViewer.fullScreenOnTouchMove}
+       onTouchEnd={fullScreenViewer.fullScreenOnTouchEnd}
+       onClick={fullScreenViewer.fullScreenOnClick}
+       onDownload={fullScreenViewer.downloadImage}
+       onImageIndexChange={fullScreenViewer.setCurrentImgIndex}
+       onPhotoMenuToggle={fullScreenViewer.setActivePhotoMenu}
+       onDownloadBottomSheetClose={() => {
+         fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
+         setTimeout(() => {
+           fullScreenViewer.setShowDownloadBottomSheet(false);
+           fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
+         }, 300);
+       }}
+       onDownloadBottomSheetDownload={() => {
+         if (fullScreenViewer.showImageForDownload) {
+           fullScreenViewer.downloadImage(fullScreenViewer.showImageForDownload);
+         }
+       }}
+       onImageForDownloadClose={() => fullScreenViewer.setShowImageForDownload(null)}
+     />
+   </Suspense>
  )}
  </main>
  );

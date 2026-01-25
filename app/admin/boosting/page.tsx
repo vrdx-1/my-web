@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
+import { AdminPostCard } from "@/components/AdminPostCard";
+import { formatTime, getOnlineStatus } from "@/utils/postUtils";
+import { PhotoGrid } from "@/components/PhotoGrid";
+
+// Dynamic Imports
+const ViewingPostModal = lazy(() => 
+  import('@/components/modals/ViewingPostModal').then(m => ({ default: m.ViewingPostModal }))
+) as React.LazyExoticComponent<React.ComponentType<any>>;
+const FullScreenImageViewer = lazy(() => 
+  import('@/components/modals/FullScreenImageViewer').then(m => ({ default: m.FullScreenImageViewer }))
+) as React.LazyExoticComponent<React.ComponentType<any>>;
 
 export default function AdminBoostingPage() {
   const supabase = createClient();
@@ -36,41 +47,38 @@ export default function AdminBoostingPage() {
     if (boostsData && boostsData.length > 0) {
       setItems([]); // รีเซ็ต items
 
-      // 2. โหลดทีละ boost (Sequential Loading)
-      for (let i = 0; i < boostsData.length; i++) {
-        const boost = boostsData[i];
+      // 2. Batch loading: ดึง boosts และ posts ทั้งหมดในครั้งเดียว
+      const boostIds = boostsData.map(b => b.id);
+      const postIds = boostsData.map(b => b.post_id);
+
+      // โหลด boosts ทั้งหมด
+      const { data: allBoostsData, error: boostsError } = await supabase
+        .from("post_boosts")
+        .select('id, post_id, status, slip_url, amount, boost_expiry, created_at')
+        .in('id', boostIds);
+
+      // โหลด posts ทั้งหมด
+      const { data: allCarsData, error: carsError } = await supabase
+        .from("cars")
+        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
+        .in('id', postIds);
+
+      if (!boostsError && !carsError && allBoostsData && allCarsData) {
+        // สร้าง map สำหรับ cars
+        const carsMap = new Map(allCarsData.map(car => [car.id, car]));
         
-        // โหลดข้อมูล boost
-        const { data: boostData, error: boostError } = await supabase
-          .from("post_boosts")
-          .select('*')
-          .eq('id', boost.id)
-          .single();
+        // รวม boosts กับ cars
+        const combinedData = allBoostsData.map(boostData => {
+          const carData = carsMap.get(boostData.post_id);
+          return { ...boostData, cars: carData };
+        });
 
-        // โหลดข้อมูลรถ
-        const { data: carData, error: carError } = await supabase
-          .from('cars')
-          .select(`
-            *,
-            profiles:user_id (
-              username,
-              avatar_url,
-              last_seen
-            )
-          `)
-          .eq('id', boost.post_id)
-          .single();
-
-        if (!boostError && !carError && boostData && carData) {
-          // เพิ่ม boost เข้า state ทีละ boost
-          setItems(prev => {
-            const existingIds = new Set(prev.map(item => item.id));
-            if (!existingIds.has(boostData.id)) {
-              return [...prev, { ...boostData, cars: carData }];
-            }
-            return prev;
-          });
-        }
+        // เพิ่ม items เข้า state
+        setItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = combinedData.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
       }
     } else {
       setItems([]);
@@ -83,43 +91,7 @@ export default function AdminBoostingPage() {
     fetchBoosts();
   }, [activeTab]);
 
-  const getOnlineStatus = (lastSeen: string | null) => {
-    if (!lastSeen) return { isOnline: false, text: '' };
-    const now = new Date().getTime();
-    const lastActive = new Date(lastSeen).getTime();
-    const diffInSeconds = Math.floor((now - lastActive) / 1000);
-    if (diffInSeconds < 300) return { isOnline: true, text: 'ອອນລາຍ' };
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍ ${diffInMinutes} ນາທີກ່ອນ` };
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍ ${diffInHours} ຊົ່ວໂມງກ່อน` };
-    return { isOnline: false, text: `ອອນລາຍເມື່ອ ${new Date(lastSeen).toLocaleDateString('lo-LA')}` };
-  };
-
-  const formatTime = (dateString: string) => {
-    const diffInSeconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
-    if (diffInSeconds < 60) return 'ເມື່ອຄູ່';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} ນາທີ`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ຊົ່ວໂມງ`;
-    return `${Math.floor(diffInSeconds / 86400)} ມື້`;
-  };
-
-  const PhotoGrid = ({ images, onPostClick }: { images: string[], onPostClick: () => void }) => {
-    const count = images?.length || 0;
-    if (count === 0) return null;
-    return (
-      <div onClick={onPostClick} className="grid grid-cols-2 gap-0.5 cursor-pointer overflow-hidden">
-        {images.slice(0, 4).map((img, i) => (
-          <div key={i} className={`relative ${count === 3 && i === 0 ? 'row-span-2 h-[400px]' : 'h-[200px]'}`}>
-            <img src={img} className="w-full h-full object-cover" alt="" />
-            {i === 3 && count > 4 && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-2xl font-bold">+{count - 4}</div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // Removed duplicate functions - using from shared utils/components
 
   const handleApprove = async (item: any) => {
     if (!confirm("ຢືນຢັນການອະນຸມັດການ Boost?")) return;
@@ -187,30 +159,14 @@ export default function AdminBoostingPage() {
           return (
             <div key={item.id} className="flex flex-col lg:flex-row gap-6 items-stretch justify-center max-w-[1000px] mx-auto">
               
-              <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                <div className="p-4 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                    {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-[15px] flex items-center gap-1.5">
-                      {post.profiles?.username || 'User'}
-                      {status.isOnline && <div className="w-2.5 h-2.5 bg-[#31a24c] rounded-full border border-white" />}
-                      <span className="text-[12px] text-[#31a24c] font-normal">{status.text}</span>
-                    </div>
-                    <div className="text-[12px] text-gray-500">{formatTime(post.created_at)} · {post.province}</div>
-                  </div>
-                </div>
-
-                <div className="px-4 pb-3 text-[15px] whitespace-pre-wrap flex-grow">{post.caption}</div>
-                <PhotoGrid images={post.images || []} onPostClick={() => setViewingPost(post)} />
-
-                <div className="p-3 px-4 flex items-center gap-6 border-t border-gray-100 bg-gray-50/50">
-                   <div className="flex items-center gap-1.5 text-gray-500"><Heart size={18} /><span className="text-xs font-bold">{post.likes || 0}</span></div>
-                   <div className="flex items-center gap-1.5 text-gray-500"><Eye size={18} /><span className="text-xs font-bold">{post.views || 0}</span></div>
-                   <div className="flex items-center gap-1.5 text-gray-500"><Bookmark size={18} /><span className="text-xs font-bold">{post.saves || 0}</span></div>
-                   <div className="flex items-center gap-1.5 text-gray-500"><Share2 size={18} /><span className="text-xs font-bold">{post.shares || 0}</span></div>
-                </div>
+              {/* ฝั่งซ้าย: โพสต์ฟีด - ใช้ AdminPostCard */}
+              <div className="flex-1">
+                <AdminPostCard
+                  post={post}
+                  index={0}
+                  onViewPost={(p) => setViewingPost(p)}
+                  showStats={true}
+                />
               </div>
 
               <div className="w-full lg:w-[320px] bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col">

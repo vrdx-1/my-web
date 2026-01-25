@@ -1,0 +1,46 @@
+/**
+ * Shared Constants for the Application
+ */
+
+// Lao Provinces (18 provinces)
+export const LAO_PROVINCES = [
+  "ຜົ້ງສາລີ",
+  "ຫຼວງນ້ຳທາ",
+  "ອຸດົມໄຊ",
+  "ບໍ່ແກ້ວ",
+  "ຫຼວງພະບາງ",
+  "ຫົວພັນ",
+  "ໄຊຍະບູລີ",
+  "ຊຽງຂວາງ",
+  "ໄຊສົມບູນ",
+  "ວຽງຈັນ",
+  "ນະຄອນຫຼວງວຽງຈັນ",
+  "ບໍລິຄຳໄຊ",
+  "ຄຳມ່ວນ",
+  "ສະຫວັນນະເຂດ",
+  "ສາລະວັນ",
+  "ເຊກອງ",
+  "ຈຳປາສັກ",
+  "ອັດຕະປື"
+] as const;
+
+// Pagination Constants
+export const PAGE_SIZE = 12;
+export const PREFETCH_COUNT = 10;
+
+// Post Status Types
+export const POST_STATUS = {
+  RECOMMEND: 'recommend',
+  SOLD: 'sold',
+} as const;
+
+// Filter Types for Admin
+export type FilterType = 'D' | 'W' | 'M' | 'Y' | 'A';
+
+export const FILTER_LABELS: Record<FilterType, string> = {
+  D: 'Today',
+  W: 'This Week',
+  M: 'This Month',
+  Y: 'This Year',
+  A: 'All Time',
+};

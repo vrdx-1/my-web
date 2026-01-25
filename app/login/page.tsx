@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { safeParseJSON } from '@/utils/storageUtils'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -26,7 +27,7 @@ export default function Login() {
       // --- จุดที่เพิ่ม: ระบบโอนย้ายข้อมูลจาก Guest ไปยังบัญชีที่ Login ---
       const loggedInUser = data.user;
       if (loggedInUser) {
-        const storedPosts = JSON.parse(localStorage.getItem('my_guest_posts') || '[]');
+        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
         const deviceToken = localStorage.getItem('device_guest_token');
         
         const guestTokens = Array.from(new Set([

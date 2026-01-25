@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/utils/currency';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function RevenuePage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
@@ -46,10 +48,7 @@ export default function RevenuePage() {
     fetchRevenue();
   }, [selectedMonth, selectedYear]);
 
-  // ฟังก์ชันจัดรูปแบบตัวเลข (1.000.000 ກີບ)
-  const formatCurrency = (num: number) => {
-    return num.toLocaleString('de-DE') + " ກີບ";
-  };
+  // Removed duplicate formatCurrency - using from utils/currency.ts
 
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -101,22 +100,7 @@ export default function RevenuePage() {
       {/* Revenue Table */}
       <div style={{ padding: '0 20px' }}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '100px' }}>
-            <style>{`
-@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
-.loading-spinner-circle { display: inline-block; width: 40px; height: 40px; position: relative; }
-.loading-spinner-circle div { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 0; left: 50%; margin-left: -4px; transform-origin: 4px 20px; background: #f0f0f0; animation: fadeColor 1s linear infinite; }
-.loading-spinner-circle div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-.loading-spinner-circle div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
-.loading-spinner-circle div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
-.loading-spinner-circle div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
-.loading-spinner-circle div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
-.loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
-.loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
-.loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
-`}</style>
-            <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-          </div>
+          <LoadingSpinner />
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>

@@ -40,7 +40,7 @@ export default function AdminLogin() {
 
       if (profile?.role === 'admin') {
         // ໃຊ້ window.location ເພື່ອໃຫ້ Middleware ເຊັກຄ່າໃໝ່ໄດ້ຊັດເຈນ
-        window.location.href = '/admin/dashboard';
+        window.location.href = '/admin/overview';
       } else {
         await supabase.auth.signOut();
         alert('ທ່ານບໍ່ມີສິດເຂົ້າເຖິງ');

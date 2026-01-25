@@ -9,6 +9,8 @@ export default function VisitorTracker() {
   )
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const track = async () => {
       try {
         // เพิ่มเงื่อนไข: หากเป็นหน้า Admin ไม่ต้องทำการบันทึก Log และไม่ต้อง Sync Presence
@@ -38,7 +40,7 @@ export default function VisitorTracker() {
         // ดึงข้อมูล User ปัจจุบัน (ถ้ามี) เพื่อแยกแยะว่าเป็น Registered หรือ Guest
         const { data: { user } } = await supabase.auth.getUser();
         
-        const channel = supabase.channel('active_users', {
+        channel = supabase.channel('active_users', {
           config: { presence: { key: vId } }
         });
 
@@ -61,6 +63,13 @@ export default function VisitorTracker() {
     }
 
     track()
+
+    // Cleanup function: unsubscribe channel เมื่อ component unmount
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []) // ทำงานครั้งเดียวเมื่อโหลดหน้าเว็บ
 
   return null

@@ -116,7 +116,13 @@ function BoostPostContent() {
         status: "pending",
       });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        // Cleanup uploaded file ถ้า insert ล้มเหลว
+        if (uploadData?.path) {
+          await supabase.storage.from("slips").remove([uploadData.path]).catch(() => {});
+        }
+        throw dbError;
+      }
 
       setDbStatus("pending");
       setStep(3);

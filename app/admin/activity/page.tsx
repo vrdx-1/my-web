@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
+import { StatCard } from '@/components/admin/StatCard';
 
 export default function AdminActivityPage() {
   const [loading, setLoading] = useState(true);
@@ -12,10 +13,7 @@ export default function AdminActivityPage() {
     guestPost: 0
   });
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createAdminSupabaseClient();
 
   useEffect(() => {
     fetchStaticStats();
@@ -101,62 +99,45 @@ export default function AdminActivityPage() {
     gap: '15px'
   };
 
-  const cardStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px 30px',
-    background: '#fff',
-    borderRadius: '15px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    border: '1px solid #eee'
-  };
-
-  const labelStyle = {
-    fontSize: '20px',
-    fontWeight: '500',
-    color: '#333'
-  };
-
-  const valueStyle = {
-    fontSize: '22px',
-    fontWeight: 'bold',
-    color: '#000'
-  };
 
   return (
     <main style={containerStyle}>
       <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px', textAlign: 'center' }}>Activity Real-time</h2>
 
       {/* Online */}
-      <div style={cardStyle}>
-        <span style={labelStyle}>Online</span>
-        <span style={valueStyle}>{loading ? '...' : stats.online.toLocaleString()}</span>
-      </div>
+      <StatCard
+        label="Online"
+        value={stats.online.toLocaleString()}
+        loading={loading}
+      />
 
       {/* Offline */}
-      <div style={cardStyle}>
-        <span style={labelStyle}>Offline</span>
-        <span style={valueStyle}>{loading ? '...' : stats.offline.toLocaleString()}</span>
-      </div>
+      <StatCard
+        label="Offline"
+        value={stats.offline.toLocaleString()}
+        loading={loading}
+      />
 
       {/* Registered */}
-      <div style={cardStyle}>
-        <span style={labelStyle}>Registered</span>
-        <span style={valueStyle}>{loading ? '...' : stats.registered.toLocaleString()}</span>
-      </div>
+      <StatCard
+        label="Registered"
+        value={stats.registered.toLocaleString()}
+        loading={loading}
+      />
 
       {/* Guest Seller */}
-      <div style={cardStyle}>
-        <span style={labelStyle}>Guest Seller</span>
-        <span style={valueStyle}>{loading ? '...' : stats.guestSeller.toLocaleString()}</span>
-      </div>
+      <StatCard
+        label="Guest Seller"
+        value={stats.guestSeller.toLocaleString()}
+        loading={loading}
+      />
 
       {/* Guest Post */}
-      <div style={cardStyle}>
-        <span style={labelStyle}>Guest Post</span>
-        <span style={valueStyle}>{loading ? '...' : stats.guestPost.toLocaleString()}</span>
-      </div>
+      <StatCard
+        label="Guest Post"
+        value={stats.guestPost.toLocaleString()}
+        loading={loading}
+      />
     </main>
   );
 }

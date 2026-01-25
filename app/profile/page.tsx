@@ -22,13 +22,10 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       // ตรวจสอบข้อมูลที่ค้างอยู่ใน localStorage ทันทีที่โหลดหน้า
-      const pendingData = localStorage.getItem('pending_registration');
-      if (pendingData) {
-        const parsed = JSON.parse(pendingData);
-        if (parsed.email) setEmail(parsed.email);
-        if (parsed.password) setPassword(parsed.password);
-        if (parsed.acceptedTerms) setAcceptedTerms(parsed.acceptedTerms);
-      }
+      const pendingData = safeParseJSON<{ email?: string; password?: string; acceptedTerms?: boolean }>('pending_registration', {});
+      if (pendingData.email) setEmail(pendingData.email);
+      if (pendingData.password) setPassword(pendingData.password);
+      if (pendingData.acceptedTerms) setAcceptedTerms(pendingData.acceptedTerms);
 
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
@@ -53,7 +50,7 @@ export default function Profile() {
 
   // ฟังก์ชันช่วยบันทึกข้อมูลลง localStorage ทันทีที่มีการเปลี่ยนแปลง
   const updatePendingData = (updates: any) => {
-    const currentData = JSON.parse(localStorage.getItem('pending_registration') || '{}');
+    const currentData = safeParseJSON<Record<string, any>>('pending_registration', {});
     localStorage.setItem('pending_registration', JSON.stringify({
       ...currentData,
       ...updates
