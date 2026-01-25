@@ -129,7 +129,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                 background: 'none', 
                 border: 'none', 
                 cursor: 'pointer', 
-                padding: '8px', 
+                padding: '10px', 
                 touchAction: 'manipulation' 
               }}
             >

@@ -27,11 +27,17 @@ export const useInfiniteScroll = ({
       
       observer.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && hasMore) {
-            onLoadMore();
+          if (entries[0].isIntersecting && hasMore && !loadingMore) {
+            // ใช้ requestAnimationFrame เพื่อให้ scroll smooth ก่อน trigger onLoadMore
+            requestAnimationFrame(() => {
+              onLoadMore();
+            });
           }
         },
-        { threshold }
+        { 
+          threshold,
+          rootMargin: '100px' // Preload 100px before element is visible
+        }
       );
       
       if (node) observer.current.observe(node);

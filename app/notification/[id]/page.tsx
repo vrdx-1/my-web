@@ -58,9 +58,27 @@ export default function NotificationDetail() {
  if (data) {
    setPost(data);
    // Increment views
-   await supabase.rpc('increment_views', { post_id: id }).catch(() => {
-     supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
-   });
+   try {
+     // Try to use RPC function if available (same pattern as useViewingPost.ts)
+     if (supabase && typeof supabase.rpc === 'function') {
+       const { error } = await supabase.rpc('increment_views', { post_id: id });
+       if (error) {
+         // Fallback: update views directly if RPC fails
+         await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
+       }
+     } else {
+       // RPC is not available, update directly
+       await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
+     }
+   } catch (error) {
+     // Fallback: update views directly if any error occurs
+     console.error('Error incrementing views:', error);
+     try {
+       await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
+     } catch (updateError) {
+       console.error('Error updating views:', updateError);
+     }
+   }
  }
  setLoading(false);
  }, [id]);
@@ -179,9 +197,9 @@ export default function NotificationDetail() {
  <button 
    ref={(el) => { menu.menuButtonRefs.current[post.id] = el; }}
    onClick={() => menu.setActiveMenu(menu.activeMenuState === post.id ? null : post.id)} 
-   style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer' }}
+   style={{ background: 'none', border: 'none', padding: '10px', cursor: 'pointer' }}
  >
- <svg width="18" height="18" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg>
+ <svg width="24" height="24" viewBox="0 0 24 24" fill="#65676b"><circle cx="5" cy="12" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="19" cy="12" r="2.5" /></svg>
  </button>
  {menu.activeMenuState === post.id && (
  <div style={{ position: 'absolute', right: 0, top: '40px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', zIndex: 150, width: '140px', border: '1px solid #eee', overflow: 'hidden' }}>

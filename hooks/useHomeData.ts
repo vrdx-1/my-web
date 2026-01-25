@@ -31,7 +31,7 @@ interface UseHomeDataReturn {
   refreshData: () => Promise<void>;
 }
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const PREFETCH_COUNT = 10;
 
 export function useHomeData(searchTerm: string): UseHomeDataReturn {
@@ -98,12 +98,13 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     }
   }, []);
 
-  const fetchPosts = useCallback(async (isInitial = false) => {
+  const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (loadingMoreRef.current) return;
+    
     setLoadingMore(true);
-    const currentPage = isInitial ? 0 : pageRef.current;
+    const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
     const startIndex = currentPage * PAGE_SIZE;
-    const endIndex = startIndex + PREFETCH_COUNT - 1;
+    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex is inclusive, so this will fetch PREFETCH_COUNT items
 
     let postIds: string[] = [];
 
@@ -121,7 +122,10 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       postIds = data.map(p => p.id);
     }
 
-    setHasMore(postIds.length === PREFETCH_COUNT);
+    // hasMore ควรเป็น true ถ้ามี post เท่ากับ PREFETCH_COUNT (แสดงว่ายังมี post ให้โหลดต่อ)
+    // ถ้ามี post น้อยกว่า PREFETCH_COUNT แสดงว่าโหลดหมดแล้ว
+    // ใช้ >= แทน === เพื่อให้แน่ใจว่าถ้ามี post มากกว่าหรือเท่ากับ PREFETCH_COUNT จะยังโหลดต่อ
+    const newHasMore = postIds.length >= PREFETCH_COUNT;
 
     if (isInitial) {
       setPosts([]);
@@ -138,14 +142,24 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         .order('created_at', { ascending: false });
 
       if (!postsError && postsData) {
-        setPosts(prev => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newPosts = postsData.filter(p => !existingIds.has(p.id));
-          return [...prev, ...newPosts];
+        // ใช้ requestAnimationFrame เพื่อ batch state updates และลดการกระตุก
+        requestAnimationFrame(() => {
+          setPosts(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newPosts = postsData.filter(p => !existingIds.has(p.id));
+            return [...prev, ...newPosts];
+          });
+          setHasMore(newHasMore);
+          setLoadingMore(false);
         });
+      } else {
+        setHasMore(newHasMore);
+        setLoadingMore(false);
       }
+    } else {
+      setHasMore(newHasMore);
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   }, []); // Empty dependency array - using refs instead
 
   const handleActiveStatus = useCallback(async (currentSession: any) => {
@@ -225,11 +239,12 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
   // Fetch posts when page changes
   useEffect(() => {
-    if (page > 0) {
-      fetchPosts(false);
+    // ตรวจสอบว่า page > 0, hasMore = true, และไม่กำลัง loading
+    if (page > 0 && hasMore && !loadingMore) {
+      fetchPosts(false, page);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]); // Only depend on page
+  }, [page, hasMore, loadingMore]); // Depend on page, hasMore, and loadingMore
 
   const refreshData = useCallback(async () => {
     setPage(0);
