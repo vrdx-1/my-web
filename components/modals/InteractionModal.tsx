@@ -3,6 +3,7 @@
 import React from 'react';
 import { Avatar } from '../Avatar';
 import { LoadingSpinner } from '../LoadingSpinner';
+import { EmptyState } from '../EmptyState';
 
 interface InteractionModalProps {
   show: boolean;
