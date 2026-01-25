@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -79,10 +79,12 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
 
- useEffect(() => {
- router.prefetch('/profile');
- }, [router]);
+useEffect(() => {
+router.prefetch('/profile');
+}, [router]);
 
+// Track processed postId to avoid re-running when posts change
+const processedPostIdRef = useRef<string | null>(null);
 
 // Use shared post modals hook for managing modal side effects
 usePostModals({
@@ -107,44 +109,63 @@ usePostModals({
 
 useEffect(() => {
 const postId = searchParams.get('post');
-if (postId && homeData.posts.length > 0) {
-const sharedPost = homeData.posts.find(p => p.id === postId);
-if (sharedPost) {
-viewingPostHook.setInitialImageIndex(0);
-viewingPostHook.setIsViewingModeOpen(false);
-viewingPostHook.setViewingPost(sharedPost);
-router.replace(window.location.pathname, { scroll: false });
+if (!postId) {
+  processedPostIdRef.current = null;
+  return;
 }
-} else if (postId && homeData.posts.length === 0) {
+
+// Skip if we already processed this postId
+if (processedPostIdRef.current === postId) {
+  return;
+}
+
+// Try to find post in current posts
+if (homeData.posts.length > 0) {
+  const sharedPost = homeData.posts.find(p => p.id === postId);
+  if (sharedPost) {
+    processedPostIdRef.current = postId;
+    viewingPostHook.setInitialImageIndex(0);
+    viewingPostHook.setIsViewingModeOpen(false);
+    viewingPostHook.setViewingPost(sharedPost);
+    router.replace(window.location.pathname, { scroll: false });
+    return;
+  }
+}
+
+// If post not found in current posts, fetch it
 const checkPost = async () => {
-try {
-const { data, error } = await supabase
-.from('cars')
-.select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
-.eq('id', postId)
-.single();
-if (error) {
-console.error('Error fetching post:', error);
-return;
-}
-if (data) {
-viewingPostHook.setInitialImageIndex(0);
-viewingPostHook.setIsViewingModeOpen(false);
-viewingPostHook.setViewingPost(data);
-router.replace(window.location.pathname, { scroll: false });
-}
-} catch (err) {
-console.error('Error in checkPost:', err);
-}
+  try {
+    const { data, error } = await supabase
+      .from('cars')
+      .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
+      .eq('id', postId)
+      .single();
+    if (error) {
+      console.error('Error fetching post:', error);
+      return;
+    }
+    if (data) {
+      processedPostIdRef.current = postId;
+      viewingPostHook.setInitialImageIndex(0);
+      viewingPostHook.setIsViewingModeOpen(false);
+      viewingPostHook.setViewingPost(data);
+      router.replace(window.location.pathname, { scroll: false });
+    }
+  } catch (err) {
+    console.error('Error in checkPost:', err);
+  }
 };
-checkPost();
+
+// Only fetch if posts are loaded (to avoid duplicate fetches)
+if (homeData.posts.length > 0 || !homeData.loadingMore) {
+  checkPost();
 }
-}, [searchParams, homeData.posts.length, router, viewingPostHook]);
+}, [searchParams, router, viewingPostHook, homeData.posts, homeData.loadingMore]);
 
 
  const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string) => {
    await interactionModalHook.fetchInteractions(type, postId, homeData.posts);
- }, [homeData.posts, interactionModalHook]);
+ }, [interactionModalHook]); // Remove homeData.posts from dependencies - posts parameter is not actually used in the hook
 
 
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
@@ -44,6 +44,19 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string; token: string }[]>([]);
+  
+  // Use refs to avoid recreating fetchPosts function
+  const pageRef = useRef(page);
+  const loadingMoreRef = useRef(loadingMore);
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
 
   const updateLastSeen = useCallback(async (idOrToken: string) => {
     if (!idOrToken) return;
@@ -86,9 +99,10 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   }, []);
 
   const fetchPosts = useCallback(async (isInitial = false) => {
-    if (loadingMore) return;
+    if (loadingMoreRef.current) return;
     setLoadingMore(true);
-    const startIndex = isInitial ? 0 : page * PAGE_SIZE;
+    const currentPage = isInitial ? 0 : pageRef.current;
+    const startIndex = currentPage * PAGE_SIZE;
     const endIndex = startIndex + PREFETCH_COUNT - 1;
 
     let postIds: string[] = [];
@@ -132,7 +146,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       }
     }
     setLoadingMore(false);
-  }, [page, loadingMore]);
+  }, []); // Empty dependency array - using refs instead
 
   const handleActiveStatus = useCallback(async (currentSession: any) => {
     if (currentSession) {
@@ -206,14 +220,16 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     if (searchTerm) {
       localStorage.setItem('last_searched_province', searchTerm);
     }
-  }, [searchTerm, fetchPosts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]); // Only depend on searchTerm
 
   // Fetch posts when page changes
   useEffect(() => {
     if (page > 0) {
-      fetchPosts();
+      fetchPosts(false);
     }
-  }, [page, fetchPosts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]); // Only depend on page
 
   const refreshData = useCallback(async () => {
     setPage(0);
