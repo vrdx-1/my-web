@@ -11,6 +11,7 @@ interface PageHeaderProps {
     onClick: () => void;
     disabled?: boolean;
   };
+  centerTitle?: boolean;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
   title,
   onBack,
   actionButton,
+  centerTitle = false,
   className = '',
 }) => {
   const router = useRouter();
@@ -34,6 +36,35 @@ export const PageHeader = React.memo<PageHeaderProps>(({
       router.back();
     }
   };
+
+  const backButton = (
+    <button
+      onClick={handleBack}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#1c1e21',
+        padding: actionButton ? '5px' : '0',
+      }}
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+  );
 
   return (
     <div
@@ -50,35 +81,9 @@ export const PageHeader = React.memo<PageHeaderProps>(({
       }}
       className={className}
     >
-      <button
-        onClick={handleBack}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#1c1e21',
-          padding: actionButton ? '5px' : '0',
-        }}
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-
       {actionButton ? (
         <>
+          {backButton}
           <h3
             style={{
               flex: 1,
@@ -108,10 +113,21 @@ export const PageHeader = React.memo<PageHeaderProps>(({
             {actionButton.label}
           </button>
         </>
+      ) : centerTitle ? (
+        <>
+          <div style={{ minWidth: '40px', display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
+          <h1 style={{ flex: 1, fontSize: '18px', fontWeight: 'bold', margin: 0, textAlign: 'center' }}>
+            {title}
+          </h1>
+          <div style={{ minWidth: '40px' }} />
+        </>
       ) : (
-        <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
-          {title}
-        </h1>
+        <>
+          {backButton}
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
+            {title}
+          </h1>
+        </>
       )}
     </div>
   );

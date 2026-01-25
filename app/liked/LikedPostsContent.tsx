@@ -156,16 +156,17 @@ export function LikedPostsContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
-      <PageHeader title="ລາຍການທີ່ມັກ" />
-
-      <TabNavigation
-        tabs={[
-          { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-          { value: 'sold', label: 'ຂາຍແລ້ວ' },
-        ]}
-        activeTab={tab}
-        onTabChange={setTab}
-      />
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
+        <PageHeader title="ລາຍການທີ່ມັກ" centerTitle />
+        <TabNavigation
+          tabs={[
+            { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+            { value: 'sold', label: 'ຂາຍແລ້ວ' },
+          ]}
+          activeTab={tab}
+          onTabChange={setTab}
+        />
+      </div>
 
       <PostFeed
         posts={postListData.posts}

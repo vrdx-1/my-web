@@ -65,9 +65,27 @@ export default function NotificationPage() {
 
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh' }}>
-      <div style={{ padding: '15px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center' }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', marginRight: '15px' }}>←</button>
-        <h1 style={{ fontSize: '18px', fontWeight: 'bold' }}>ແຈ້ງເຕືອນ</h1>
+      <div style={{ padding: '15px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <button 
+          onClick={() => router.back()} 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '8px', 
+            touchAction: 'manipulation',
+            position: 'absolute',
+            left: '15px'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <h1 style={{ fontSize: '18px', fontWeight: 'bold' }}>ການແຈ້ງເຕືອນ</h1>
       </div>
 
       {loading ? (
@@ -82,16 +100,11 @@ export default function NotificationPage() {
               onClick={() => router.push(`/notification/${notif.post_id}`)}
               style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f9f9f9', cursor: 'pointer' }}
             >
-              <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', background: '#f0f0f0', flexShrink: 0 }}>
-                <img 
-                  src={notif.sender_avatar || 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png'} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  alt="avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png';
-                  }}
-                />
-              </div>
+              {notif.post_images && notif.post_images[0] ? (
+                <img src={notif.post_images[0]} style={{ width: '50px', height: '50px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }} alt="post preview" />
+              ) : (
+                <div style={{ width: '50px', height: '50px', borderRadius: '6px', background: '#f0f0f0', flexShrink: 0 }} />
+              )}
 
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '14px', color: '#1c1e21' }}>
@@ -105,10 +118,6 @@ export default function NotificationPage() {
                   {new Date(notif.created_at).toLocaleString('lo-LA')}
                 </div>
               </div>
-
-              {notif.post_images && notif.post_images[0] && (
-                <img src={notif.post_images[0]} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} alt="post preview" />
-              )}
             </div>
           ))}
           {!loading && notifications.length === 0 && (

@@ -134,7 +134,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #ddd', minHeight: '44px' }}>
         {(['recommend', 'sold'] as const).map((t) => {
           const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
           return (
@@ -143,6 +143,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               onClick={() => handleTabClick(t)}
               style={{
                 flex: 1,
+                minHeight: '44px',
                 padding: '12px 15px 10px 15px',
                 color: isActive ? '#1877f2' : '#65676b',
                 fontWeight: 'bold',
@@ -153,10 +154,11 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                 justifyContent: 'center',
                 touchAction: 'manipulation',
                 position: 'relative',
+                overflow: 'visible',
               }}
             >
               <div style={{ display: 'inline-block', position: 'relative' }}>
-                <span style={{ fontSize: '17px' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
+                <span style={{ fontSize: '17px', lineHeight: 1.25 }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
                 {isActive && (
                   <div
                     style={{

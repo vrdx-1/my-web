@@ -67,18 +67,18 @@ export default function ChangePassword() {
   };
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#e8eef2', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       
-      <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+      <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#e8eef2', zIndex: 100, borderBottom: '1px solid #ddd' }}>
         <button 
           onClick={() => router.back()} 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0', position: 'absolute', left: '15px' }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        <h1 style={{ fontSize: '18px', fontWeight: 'bold', marginLeft: '15px', color: '#1c1e21' }}>ປ່ຽນລະຫັດຜ່ານ</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1c1e21' }}>ປ່ຽນລະຫັດຜ່ານ</h1>
       </div>
 
       <div style={{ padding: '25px 20px' }}>
@@ -114,7 +114,8 @@ export default function ChangePassword() {
                 border: '1px solid #ddd', 
                 fontSize: '16px',
                 outline: 'none',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                background: '#fff'
               }}
             />
           </div>
@@ -135,7 +136,8 @@ export default function ChangePassword() {
                 border: '1px solid #ddd', 
                 fontSize: '16px',
                 outline: 'none',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                background: '#fff'
               }}
             />
           </div>
@@ -154,7 +156,8 @@ export default function ChangePassword() {
                 border: '1px solid #ddd', 
                 fontSize: '16px',
                 outline: 'none',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                background: '#fff'
               }}
             />
           </div>
