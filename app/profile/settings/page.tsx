@@ -78,9 +78,9 @@ export default function Settings() {
       </div>
 
       {/* ส่วนเนื้อหาหลัก */}
-      <div style={{ padding: '20px', flex: 1, overflow: 'hidden' }}>
+      <div style={{ padding: '20px 20px 0 20px', flex: 0 }}>
         
-        <div style={{ background: '#e0e0e0', borderRadius: '12px', overflow: 'hidden', marginBottom: '20px' }}>
+        <div style={{ background: '#e0e0e0', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
           
           {/* เมนูป່ຽນລະຫັດຜ່ານ - ใช้แบบเดิมไม่ต้องแก้ */}
           <div 
@@ -127,7 +127,7 @@ export default function Settings() {
       </div>
 
       {/* ปุ่มออกจากระบบ - ขยับขึ้นเล็กน้อย */}
-      <div style={{ padding: '5px 20px 40px 20px', marginTop: 'auto' }}>
+      <div style={{ padding: '270px 20px 20px 20px' }}>
         <button 
           onClick={handleLogout} 
           disabled={loading}

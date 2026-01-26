@@ -12,6 +12,9 @@ import { AppHeader } from '@/components/AppHeader';
 // Modal Components (Static - used frequently)
 import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -368,6 +371,24 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    onReportReasonChange={setReportReason}
    onReportSubmit={handlers.handleSubmitReport}
  />
+
+ {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
+ {handlers.showReportSuccess && (
+   <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+ )}
+
+ {/* Modal ยืนยันการลบโพสต์ */}
+ {handlers.showDeleteConfirm && (
+   <DeleteConfirmModal
+     onConfirm={handlers.handleConfirmDelete}
+     onCancel={handlers.handleCancelDelete}
+   />
+ )}
+
+ {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
+ {handlers.showDeleteSuccess && (
+   <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+ )}
  </main>
  );
 }

@@ -20,13 +20,12 @@ export async function togglePostStatus(
 }
 
 /**
- * Delete a post
+ * Delete a post (without confirmation - confirmation should be handled by caller)
  */
 export async function deletePost(
   postId: string,
   setPosts: (updater: (prev: any[]) => any[]) => void
 ): Promise<void> {
-  if (!confirm("ທ່ານแນ่ใจหรือบ่ว่าต้องการลึบโพสนี้?")) return;
   const { error } = await supabase.from('cars').delete().eq('id', postId);
   if (!error) {
     setPosts(prev => prev.filter(p => p.id !== postId));
@@ -61,10 +60,10 @@ export async function submitReport(
   setReportingPost: (post: any | null) => void,
   setReportReason: (reason: string) => void,
   setIsSubmittingReport: (submitting: boolean) => void
-): Promise<void> {
+): Promise<boolean> {
   if (!reportReason.trim()) {
     alert("ກະລຸນາລະບຸສາເຫດການລາຍງານ");
-    return;
+    return false;
   }
   setIsSubmittingReport(true);
   const { error } = await supabase.from('reports').insert([
@@ -80,12 +79,14 @@ export async function submitReport(
 
   if (error) {
     alert("ເກີດຂໍ້ຜິດພາດ: " + error.message);
+    setIsSubmittingReport(false);
+    return false;
   } else {
-    alert("ລາຍງານສຳເລັດແລ້ວ! Admin ຈະກວດສອບໂດຍໄວ");
     setReportingPost(null);
     setReportReason('');
+    setIsSubmittingReport(false);
+    return true;
   }
-  setIsSubmittingReport(false);
 }
 
 /**

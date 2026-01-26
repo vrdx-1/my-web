@@ -165,8 +165,8 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
             onTouchStart={(e) => e.stopPropagation()}
             style={{
               position: 'fixed',
-              left: `${dropdownRect?.left ?? 0}px`,
-              top: `${(dropdownRect?.bottom ?? 0) + 4}px`,
+              left: '50%',
+              top: '50%',
               background: '#fff',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               borderRadius: '8px',
@@ -174,9 +174,10 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
               width: '200px',
               maxHeight: 'min(560px, 95vh)',
               overflowY: 'auto',
-              border: '1px solid #eee',
               touchAction: 'manipulation',
-              transform: isAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',
+              transform: isAnimating 
+                ? 'translate(-50%, -50%) translateY(-10px) scale(0.95)' 
+                : 'translate(-50%, -50%)',
               opacity: isAnimating ? 0 : 1,
               transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
               pointerEvents: 'auto',

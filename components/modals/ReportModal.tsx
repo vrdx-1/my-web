@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ReportModalProps {
   reportingPost: any | null;
@@ -21,24 +21,69 @@ export const ReportModal = React.memo<ReportModalProps>(({
 }) => {
   if (!reportingPost) return null;
 
+  // จำกัดข้อความไม่เกิน 6 แถว
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const lines = value.split('\n');
+    
+    // ถ้ามีมากกว่า 6 แถว ให้ตัดเหลือแค่ 6 แถว
+    if (lines.length > 6) {
+      const limitedValue = lines.slice(0, 6).join('\n');
+      onReasonChange(limitedValue);
+    } else {
+      onReasonChange(value);
+    }
+  };
+
+  // ปิด modal เมื่อเลื่อนหน้าจอ (แต่ไม่ปิดเมื่อ scroll ใน textarea)
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // ไม่ปิด modal ถ้า scroll เกิดขึ้นใน textarea
+      if (target?.tagName === 'TEXTAREA') {
+        return;
+      }
+      onClose();
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [onClose]);
+
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}>
+    <div 
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+      onClick={onClose}
+    >
+      <div 
+        style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>ລາຍງານໂພສ</h3>
-        <p style={{ fontSize: '14px', color: '#65676b', marginBottom: '10px' }}>ກະລຸນາລະບຸສາເຫດ:</p>
         <textarea 
           value={reportReason} 
-          onChange={(e) => onReasonChange(e.target.value)} 
-          placeholder="ພິມລາຍລະອຽດ..." 
+          onChange={handleTextChange}
+          onKeyDown={(e) => {
+            // ป้องกันการกด Enter เมื่อถึงแถวที่ 6 แล้ว
+            const lines = reportReason.split('\n');
+            if (e.key === 'Enter' && lines.length >= 6) {
+              e.preventDefault();
+            }
+          }}
+          placeholder="ຄຳອະທິບາຍ…" 
+          rows={6}
           style={{ 
             width: '100%', 
-            height: '100px', 
             padding: '12px', 
             borderRadius: '8px', 
             border: '1px solid #ddd', 
             fontSize: '14px', 
+            lineHeight: '20px',
             marginBottom: '20px', 
-            outline: 'none' 
+            outline: 'none',
+            resize: 'none',
+            overflowY: 'hidden'
           }} 
         />
         <div style={{ display: 'flex', gap: '10px' }}>

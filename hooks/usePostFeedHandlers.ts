@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useViewingPost } from './useViewingPost';
 import { useHeaderScroll } from './useHeaderScroll';
@@ -57,13 +57,34 @@ export function usePostFeedHandlers({
     [setPosts]
   );
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+
   const handleDeletePost = useCallback(
-    async (postId: string) => {
-      await deletePost(postId, setPosts);
+    (postId: string) => {
+      setPostToDelete(postId);
+      setShowDeleteConfirm(true);
       menu?.setActiveMenu(null);
     },
-    [setPosts, menu]
+    [menu]
   );
+
+  const handleConfirmDelete = useCallback(
+    async () => {
+      if (!postToDelete) return;
+      await deletePost(postToDelete, setPosts);
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
+      setShowDeleteSuccess(true);
+    },
+    [postToDelete, setPosts]
+  );
+
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteConfirm(false);
+    setPostToDelete(null);
+  }, []);
 
   const handleReport = useCallback(
     (post: any) => {
@@ -75,9 +96,11 @@ export function usePostFeedHandlers({
     [session, setReportingPost, menu]
   );
 
-  const handleSubmitReport = useCallback(() => {
+  const [showReportSuccess, setShowReportSuccess] = useState(false);
+
+  const handleSubmitReport = useCallback(async () => {
     if (!reportingPost || !setReportingPost || !setReportReason || !setIsSubmittingReport) return;
-    submitReport(
+    const success = await submitReport(
       reportingPost,
       reportReason || '',
       session,
@@ -85,6 +108,9 @@ export function usePostFeedHandlers({
       setReportReason,
       setIsSubmittingReport
     );
+    if (success) {
+      setShowReportSuccess(true);
+    }
   }, [reportingPost, reportReason, session, setReportingPost, setReportReason, setIsSubmittingReport]);
 
   const handleShare = useCallback(
@@ -101,5 +127,12 @@ export function usePostFeedHandlers({
     handleReport,
     handleSubmitReport,
     handleShare,
+    showDeleteConfirm,
+    handleConfirmDelete,
+    handleCancelDelete,
+    showDeleteSuccess,
+    setShowDeleteSuccess,
+    showReportSuccess,
+    setShowReportSuccess,
   };
 }

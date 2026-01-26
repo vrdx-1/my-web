@@ -65,7 +65,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           borderRadius: '8px',
           zIndex: 10002,
           width: '130px',
-          border: '1px solid #eee',
           overflow: 'hidden',
           touchAction: 'manipulation',
           transform: isAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',

@@ -11,6 +11,9 @@ import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { AppHeader } from '@/components/AppHeader';
@@ -332,6 +335,24 @@ export function SoldPageContent() {
         onReportReasonChange={setReportReason}
         onReportSubmit={handlers.handleSubmitReport}
       />
+
+      {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
+      {handlers.showReportSuccess && (
+        <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+      )}
+
+      {/* Modal ยืนยันการลบโพสต์ */}
+      {handlers.showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={handlers.handleConfirmDelete}
+          onCancel={handlers.handleCancelDelete}
+        />
+      )}
+
+      {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
+      {handlers.showDeleteSuccess && (
+        <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
     </main>
   );
 }

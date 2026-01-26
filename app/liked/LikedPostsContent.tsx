@@ -10,6 +10,9 @@ import { PostFeed } from '@/components/PostFeed';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -263,6 +266,24 @@ export function LikedPostsContent() {
         onReportReasonChange={setReportReason}
         onReportSubmit={handlers.handleSubmitReport}
       />
+
+      {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
+      {handlers.showReportSuccess && (
+        <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+      )}
+
+      {/* Modal ยืนยันการลบโพสต์ */}
+      {handlers.showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={handlers.handleConfirmDelete}
+          onCancel={handlers.handleCancelDelete}
+        />
+      )}
+
+      {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
+      {handlers.showDeleteSuccess && (
+        <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
     </main>
   );
 }

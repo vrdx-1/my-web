@@ -8,6 +8,9 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { InteractionModal } from '@/components/modals/InteractionModal';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
 // Shared Hooks
 import { useViewingPost } from '@/hooks/useViewingPost';
@@ -384,8 +387,26 @@ export default function NotificationDetail() {
        isSubmittingReport={isSubmittingReport}
        onReportClose={() => setReportingPost(null)}
        onReportReasonChange={setReportReason}
-       onReportSubmit={handlers.handleSubmitReport}
-     />
-   </main>
+      onReportSubmit={handlers.handleSubmitReport}
+    />
+
+    {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
+    {handlers.showReportSuccess && (
+      <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+    )}
+
+    {/* Modal ยืนยันการลบโพสต์ */}
+    {handlers.showDeleteConfirm && (
+      <DeleteConfirmModal
+        onConfirm={handlers.handleConfirmDelete}
+        onCancel={handlers.handleCancelDelete}
+      />
+    )}
+
+    {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
+    {handlers.showDeleteSuccess && (
+      <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+    )}
+  </main>
  );
 }
