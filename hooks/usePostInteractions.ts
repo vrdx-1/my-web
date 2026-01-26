@@ -67,11 +67,29 @@ export const usePostInteractions = ({
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
       }
     } else {
-      const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
-      if (!error) {
-        await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
-      } else {
-        // Rollback on error
+      // ตรวจสอบว่ามี record อยู่แล้วหรือไม่ก่อน insert
+      const { data: existing, error: checkError } = await supabase
+        .from(table)
+        .select('post_id')
+        .eq(column, userId)
+        .eq('post_id', postId)
+        .maybeSingle();
+      
+      // ถ้าไม่มี error และไม่มี existing record ให้ insert
+      if (!checkError && !existing) {
+        const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
+        if (!error) {
+          await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+        } else {
+          // Rollback on error
+          setLikedPosts(prev => ({ ...prev, [postId]: false }));
+          setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 1) - 1 } : p));
+        }
+      } else if (existing) {
+        // Record มีอยู่แล้ว - update state ให้ถูกต้อง
+        setLikedPosts(prev => ({ ...prev, [postId]: true }));
+      } else if (checkError) {
+        // ถ้ามี error ในการตรวจสอบ ให้ rollback
         setLikedPosts(prev => ({ ...prev, [postId]: false }));
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 1) - 1 } : p));
       }
@@ -116,11 +134,29 @@ export const usePostInteractions = ({
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 0) + 1 } : p));
       }
     } else {
-      const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
-      if (!error) {
-        await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
-      } else {
-        // Rollback on error
+      // ตรวจสอบว่ามี record อยู่แล้วหรือไม่ก่อน insert
+      const { data: existing, error: checkError } = await supabase
+        .from(table)
+        .select('post_id')
+        .eq(column, userId)
+        .eq('post_id', postId)
+        .maybeSingle();
+      
+      // ถ้าไม่มี error และไม่มี existing record ให้ insert
+      if (!checkError && !existing) {
+        const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
+        if (!error) {
+          await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+        } else {
+          // Rollback on error
+          setSavedPosts(prev => ({ ...prev, [postId]: false }));
+          setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
+        }
+      } else if (existing) {
+        // Record มีอยู่แล้ว - update state ให้ถูกต้อง
+        setSavedPosts(prev => ({ ...prev, [postId]: true }));
+      } else if (checkError) {
+        // ถ้ามี error ในการตรวจสอบ ให้ rollback
         setSavedPosts(prev => ({ ...prev, [postId]: false }));
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
       }

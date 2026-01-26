@@ -442,6 +442,57 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               return updated;
             });
           }
+
+          // Fetch liked and saved status for my-posts (only on initial load)
+          if (type === 'my-posts' && isInitial && filteredPosts.length > 0) {
+            const idOrToken = getIdOrToken();
+            // ตรวจสอบอย่างเข้มงวด - ต้องไม่เป็น null, undefined, empty string, หรือ string "null"
+            if (idOrToken && 
+                idOrToken !== 'null' && 
+                idOrToken !== 'undefined' && 
+                idOrToken !== '' &&
+                typeof idOrToken === 'string' &&
+                idOrToken.length > 0 &&
+                !idOrToken.includes('null')) {
+              const isUser = !!currentUserId;
+              
+              // Fetch liked status
+              try {
+                const likesTable = isUser ? 'post_likes' : 'post_likes_guest';
+                const likesColumn = isUser ? 'user_id' : 'guest_token';
+                const { data: likedData, error: likedError } = await supabase
+                  .from(likesTable)
+                  .select('post_id')
+                  .eq(likesColumn, idOrToken);
+                
+                if (!likedError && likedData) {
+                  const likedMap: { [key: string]: boolean } = {};
+                  likedData.forEach(item => likedMap[item.post_id] = true);
+                  setLikedPosts(prev => ({ ...prev, ...likedMap }));
+                }
+              } catch (err) {
+                console.error('Exception fetching liked status for my-posts:', err);
+              }
+              
+              // Fetch saved status
+              try {
+                const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
+                const savesColumn = isUser ? 'user_id' : 'guest_token';
+                const { data: savedData, error: savedError } = await supabase
+                  .from(savesTable)
+                  .select('post_id')
+                  .eq(savesColumn, idOrToken);
+                
+                if (!savedError && savedData) {
+                  const savedMap: { [key: string]: boolean } = {};
+                  savedData.forEach(item => savedMap[item.post_id] = true);
+                  setSavedPosts(prev => ({ ...prev, ...savedMap }));
+                }
+              } catch (err) {
+                console.error('Exception fetching saved status for my-posts:', err);
+              }
+            }
+          }
         }
       }
 

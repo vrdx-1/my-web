@@ -10,6 +10,7 @@ interface PageHeaderProps {
     label: string;
     onClick: () => void;
     disabled?: boolean;
+    variant?: 'default' | 'pill';
   };
   centerTitle?: boolean;
   className?: string;
@@ -37,6 +38,9 @@ export const PageHeader = React.memo<PageHeaderProps>(({
     }
   };
 
+  const useCompactLayout = Boolean(actionButton || centerTitle);
+  const sideWidth = '72px';
+
   const backButton = (
     <button
       onClick={handleBack}
@@ -48,7 +52,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         alignItems: 'center',
         justifyContent: 'center',
         color: '#1c1e21',
-        padding: actionButton ? '5px' : '0',
+        padding: useCompactLayout ? '5px' : '0',
       }}
     >
       <svg
@@ -72,7 +76,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         padding: '10px 15px',
         display: 'flex',
         alignItems: 'center',
-        gap: actionButton ? '0' : '15px',
+        gap: useCompactLayout ? '0' : '15px',
         position: 'sticky',
         top: 0,
         background: '#fff',
@@ -83,7 +87,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
     >
       {actionButton ? (
         <>
-          {backButton}
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
           <h3
             style={{
               flex: 1,
@@ -91,35 +95,61 @@ export const PageHeader = React.memo<PageHeaderProps>(({
               margin: 0,
               fontSize: '18px',
               fontWeight: 'bold',
+              minWidth: 0,
             }}
           >
             {title}
           </h3>
-          <button
-            onClick={actionButton.onClick}
-            disabled={actionButton.disabled}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#1877f2',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: actionButton.disabled ? 'not-allowed' : 'pointer',
-              minWidth: '45px',
-              textAlign: 'right',
-              opacity: actionButton.disabled ? 0.5 : 1,
-            }}
-          >
-            {actionButton.label}
-          </button>
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={actionButton.onClick}
+              disabled={actionButton.disabled}
+              style={
+                actionButton.variant === 'pill'
+                  ? {
+                      background: '#1877f2',
+                      border: 'none',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      cursor: actionButton.disabled ? 'not-allowed' : 'pointer',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      opacity: actionButton.disabled ? 0.5 : 1,
+                    }
+                  : {
+                      background: 'none',
+                      border: 'none',
+                      color: '#1877f2',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      cursor: actionButton.disabled ? 'not-allowed' : 'pointer',
+                      minWidth: '45px',
+                      textAlign: 'right',
+                      opacity: actionButton.disabled ? 0.5 : 1,
+                    }
+              }
+            >
+              {actionButton.label}
+            </button>
+          </div>
         </>
       ) : centerTitle ? (
         <>
-          <div style={{ minWidth: '40px', display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
-          <h1 style={{ flex: 1, fontSize: '18px', fontWeight: 'bold', margin: 0, textAlign: 'center' }}>
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
+          <h3
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 'bold',
+              minWidth: 0,
+            }}
+          >
             {title}
-          </h1>
-          <div style={{ minWidth: '40px' }} />
+          </h3>
+          <div style={{ width: sideWidth, flexShrink: 0 }} aria-hidden />
         </>
       ) : (
         <>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LAO_PROVINCES } from '@/utils/constants';
 
 interface ProvinceDropdownProps {
@@ -22,6 +22,8 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
   className = '',
 }) => {
   const [showList, setShowList] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   if (variant === 'list') {
     // List variant (used in create-post step 3)
@@ -82,75 +84,159 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
     );
   }
 
-  // Button variant (used in edit-post)
-  return (
-    <div style={{ position: 'relative' }} className={className}>
-      <button
-        onClick={() => setShowList(!showList)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: '#f0f2f5',
-          border: 'none',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          marginTop: '2px',
-          cursor: 'pointer',
-        }}
-      >
-        {selectedProvince || 'ເລືອກແຂວງ'}
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
+  // Button variant — การปิดเปิดแบบปุ่มไข่ปลา (MenuDropdown + useMenu)
+  const handleClose = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setShowList(false);
+      setIsAnimating(false);
+    }, 300);
+  };
 
-      {/* Dropdown Menu */}
+  const handleOpen = () => {
+    setShowList(true);
+    setIsAnimating(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsAnimating(false));
+    });
+  };
+
+  const handleToggle = () => {
+    if (showList) handleClose();
+    else handleOpen();
+  };
+
+  const dropdownRect = showList && buttonRef.current
+    ? buttonRef.current.getBoundingClientRect()
+    : null;
+
+  useEffect(() => {
+    if (variant !== 'button' || !showList) return;
+    const handleScroll = () => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setShowList(false);
+        setIsAnimating(false);
+      }, 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [variant, showList]);
+
+  useEffect(() => {
+    if (variant !== 'button' || !showList) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
+      if (!target) return;
+      if (!target.closest('[data-province-dropdown]') && !target.closest('[data-province-button]')) {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setShowList(false);
+          setIsAnimating(false);
+        }, 300);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside as EventListener);
+    document.addEventListener('touchstart', handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside as EventListener);
+      document.removeEventListener('touchstart', handleClickOutside as EventListener);
+    };
+  }, [variant, showList]);
+
+  return (
+    <>
       {showList && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            background: '#fff',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            borderRadius: '8px',
-            zIndex: 110,
-            width: '200px',
-            maxHeight: '300px',
-            overflowY: 'auto',
-            marginTop: '5px',
-          }}
-        >
-          {LAO_PROVINCES.map((p) => (
-            <div
-              key={p}
-              onClick={() => {
-                onProvinceChange(p);
-                setShowList(false);
-              }}
-              style={{
-                padding: '10px 15px',
-                borderBottom: '1px solid #f0f0f0',
-                fontSize: '14px',
-                background: selectedProvince === p ? '#e7f3ff' : '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              {p} {selectedProvince === p && '✓'}
-            </div>
-          ))}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.3)',
+              zIndex: 10001,
+              pointerEvents: 'auto',
+            }}
+            onClick={handleClose}
+          />
+          <div
+            data-province-dropdown
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              left: `${dropdownRect?.left ?? 0}px`,
+              top: `${(dropdownRect?.bottom ?? 0) + 4}px`,
+              background: '#fff',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              borderRadius: '8px',
+              zIndex: 10002,
+              width: '200px',
+              maxHeight: 'min(560px, 95vh)',
+              overflowY: 'auto',
+              border: '1px solid #eee',
+              touchAction: 'manipulation',
+              transform: isAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',
+              opacity: isAnimating ? 0 : 1,
+              transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+              pointerEvents: 'auto',
+            }}
+          >
+            {LAO_PROVINCES.map((p) => (
+              <div
+                key={p}
+                onClick={() => {
+                  onProvinceChange(p);
+                  setShowList(false);
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderBottom: '1px solid #f0f0f0',
+                  fontSize: '14px',
+                  lineHeight: '1.25',
+                  background: selectedProvince === p ? '#e7f3ff' : '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                {p} {selectedProvince === p && '✓'}
+              </div>
+            ))}
+          </div>
         </div>
       )}
-    </div>
+      <div className={className}>
+        <button
+          ref={buttonRef}
+          data-province-button
+          onClick={handleToggle}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: '#f0f2f5',
+            border: 'none',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            marginTop: '2px',
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+          }}
+        >
+          {selectedProvince || 'ເລືອກແຂວງ'}
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+    </>
   );
 });
 
