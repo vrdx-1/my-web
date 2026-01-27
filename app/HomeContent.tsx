@@ -60,6 +60,9 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
  // --- State สำหรับ Pop-up เงื่อนไข ---
  const [showTermsModal, setShowTermsModal] = useState(false);
  const [acceptedTerms, setAcceptedTerms] = useState(false);
+ 
+ // --- State สำหรับ Pop-up ลงทะเบียนสำเร็จ ---
+ const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
 
  // Use file upload hook
  const fileUpload = useFileUpload();
@@ -80,6 +83,15 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
 useEffect(() => {
 router.prefetch('/profile');
 }, [router]);
+
+// ตรวจสอบ flag สำหรับแสดง popup ลงทะเบียนสำเร็จ
+useEffect(() => {
+  const showRegistrationSuccessFlag = localStorage.getItem('show_registration_success');
+  if (showRegistrationSuccessFlag === 'true') {
+    setShowRegistrationSuccess(true);
+    localStorage.removeItem('show_registration_success');
+  }
+}, []);
 
 // Track processed postId to avoid re-running when posts change
 const processedPostIdRef = useRef<string | null>(null);
@@ -388,6 +400,11 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
  {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
  {handlers.showDeleteSuccess && (
    <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+ )}
+
+ {/* ป๊อบอัพแสดงผลสำเร็จการลงทะเบียน */}
+ {showRegistrationSuccess && (
+   <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={() => setShowRegistrationSuccess(false)} />
  )}
  </main>
  );

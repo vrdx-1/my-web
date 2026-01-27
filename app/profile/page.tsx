@@ -14,6 +14,7 @@ export default function Profile() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false); // เพิ่มสถานะ Checkbox
+  const [showPassword, setShowPassword] = useState(true); // Default แสดงรหัสผ่าน
 
   // User Data State
   const [username, setUsername] = useState('');
@@ -77,6 +78,12 @@ export default function Profile() {
       return;
     }
 
+    // ตรวจสอบความยาวรหัสผ่าน (ต้องมีอย่างน้อย 6 ตัวอักษร)
+    if (password.length < 6) {
+      alert('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
+      return;
+    }
+
     setRegisterLoading(true);
 
     try {
@@ -88,6 +95,9 @@ export default function Profile() {
       setRegisterLoading(false);
     }
   };
+
+  // เงื่อนไขว่าพร้อมให้กด "ລົງທະບຽນ" หรือไม่ (ต้องกรอกอีเมล, รหัสผ่านอย่างน้อย 6 ตัว และติ๊ก Checkbox)
+  const canRegister = email.trim() !== '' && password.trim() !== '' && password.length >= 6 && acceptedTerms;
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
@@ -137,21 +147,67 @@ export default function Profile() {
                 style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none' }}
                 required
               />
-              <input 
-                type="password" 
-                placeholder="ລະຫັດຜ່ານ" 
-                value={password}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setPassword(val);
-                  updatePendingData({ password: val });
-                }}
-                style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none' }}
-                required
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    placeholder="ລະຫັດຜ່ານ" 
+                    value={password}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPassword(val);
+                      updatePendingData({ password: val });
+                    }}
+                    style={{ 
+                      width: '100%', 
+                      padding: '15px 45px 15px 15px', 
+                      borderRadius: '12px', 
+                      border: password.length > 0 && password.length < 6 ? '1px solid #e0245e' : '1px solid #ddd', 
+                      background: '#f9f9f9', 
+                      fontSize: '16px', 
+                      outline: 'none' 
+                    }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '5px'
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {password.length > 0 && password.length < 6 && (
+                  <div style={{ fontSize: '13px', color: '#e0245e', textAlign: 'left' }}>
+                    ລະຫັດຜ່ານຕ້ອງມີຂັ້ນຕ່ຳ 6 ຕົວ
+                  </div>
+                )}
+              </div>
 
               {/* เพิ่มส่วน Checkbox ยอมรับเงื่อนไข */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '5px 0 10px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', margin: '0' }}>
                 <input 
                   type="checkbox" 
                   id="profile-terms"
@@ -176,27 +232,44 @@ export default function Profile() {
 
               <button 
                 type="submit" 
-                disabled={registerLoading || !acceptedTerms}
+                disabled={registerLoading || !canRegister}
                 style={{ 
                   width: '100%', 
                   padding: '15px', 
-                  background: (registerLoading || !acceptedTerms) ? '#e4e6eb' : '#808080', 
-                  color: (registerLoading || !acceptedTerms) ? '#999' : '#fff', 
+                  background: (canRegister && !registerLoading) ? '#1877f2' : '#808080', 
+                  color: '#fff', 
                   border: 'none', 
                   borderRadius: '12px', 
                   fontWeight: 'bold', 
-                  fontSize: '16px', 
-                  cursor: (registerLoading || !acceptedTerms) ? 'not-allowed' : 'pointer', 
+                  fontSize: '18px', 
+                  cursor: (registerLoading || !canRegister) ? 'not-allowed' : 'pointer', 
                   marginTop: '5px' 
                 }}
               >
-                {registerLoading ? 'ກຳລັງປະມວນຜົນ...' : 'ລົງທະບຽນ'}
+                {registerLoading ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <style>{`
+@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
+.loading-spinner-circle-btn { display: inline-block; width: 20px; height: 20px; position: relative; }
+.loading-spinner-circle-btn div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: fadeColor 1s linear infinite; opacity: 0.8; }
+.loading-spinner-circle-btn div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle-btn div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle-btn div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle-btn div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle-btn div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle-btn div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle-btn div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle-btn div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+`}</style>
+                    <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+                  </span>
+                ) : 'ສ້າງບັນຊີໃໝ່'}
               </button>
             </form>
 
             <button 
               onClick={() => router.push('/login')}
-              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '60px' }}
+              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '80px' }}
             >
               ເຂົ້າສູ່ລະບົບ
             </button>
@@ -210,8 +283,11 @@ export default function Profile() {
                   {avatarUrl ? (
                     <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
                     </div>
                   )}
                 </div>

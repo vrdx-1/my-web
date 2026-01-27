@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 export default function Settings() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   // ปิดการ scroll ของหน้านี้
   useEffect(() => {
@@ -16,10 +17,11 @@ export default function Settings() {
     }
   }, [])
 
-  const handleLogout = async () => {
-    const confirmLogout = confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການອອກຈາກລະບົບ?")
-    if (!confirmLogout) return
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true)
+  }
 
+  const handleLogoutConfirm = async () => {
     setLoading(true)
     const { error } = await supabase.auth.signOut()
     if (!error) {
@@ -28,6 +30,13 @@ export default function Settings() {
     } else {
       alert("ເກີດຂໍ້ຜິດພາດໃນການອອກຈາກລະບົບ")
       setLoading(false)
+      setShowLogoutConfirm(false)
+    }
+  }
+
+  const handleLogoutCancel = () => {
+    if (!loading) {
+      setShowLogoutConfirm(false)
     }
   }
 
@@ -129,7 +138,7 @@ export default function Settings() {
       {/* ปุ่มออกจากระบบ - ขยับขึ้นเล็กน้อย */}
       <div style={{ padding: '270px 20px 20px 20px' }}>
         <button 
-          onClick={handleLogout} 
+          onClick={handleLogoutClick} 
           disabled={loading}
           style={{ 
             width: '100%', 
@@ -158,6 +167,98 @@ export default function Settings() {
           )}
         </button>
       </div>
+
+      {/* Logout Confirm Modal */}
+      {showLogoutConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 2500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={loading ? undefined : handleLogoutCancel}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '320px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+              ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ?
+            </h3>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+              <button
+                type="button"
+                onClick={handleLogoutCancel}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#e4e6eb',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#1c1e21',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1,
+                }}
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={handleLogoutConfirm}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#1877f2',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {loading ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <style>{`
+@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
+.loading-spinner-circle-btn { display: inline-block; width: 20px; height: 20px; position: relative; }
+.loading-spinner-circle-btn div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: fadeColor 1s linear infinite; opacity: 0.8; }
+.loading-spinner-circle-btn div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle-btn div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle-btn div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle-btn div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle-btn div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle-btn div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle-btn div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle-btn div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+`}</style>
+                    <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+                  </span>
+                ) : 'ອອກຈາກລະບົບ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </main>
   )

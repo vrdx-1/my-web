@@ -46,9 +46,14 @@ export const Avatar = React.memo<AvatarProps>(({
           width={defaultSize * 0.65} 
           height={defaultSize * 0.65} 
           viewBox="0 0 24 24" 
-          fill={session ? "#1877f2" : "#65676b"}
+          fill="none" 
+          stroke={session ? "#1877f2" : "#8a8a8a"}
+          strokeWidth="1.5" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
         >
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       )}
     </div>

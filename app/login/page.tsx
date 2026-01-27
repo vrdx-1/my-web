@@ -3,11 +3,14 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { safeParseJSON } from '@/utils/storageUtils'
+import { ErrorPopup } from '@/components/modals/ErrorPopup'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(true) // Default แสดงรหัสผ่าน
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,7 +24,7 @@ export default function Login() {
     })
 
     if (error) {
-      alert('ອີເມລ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ: ' + error.message)
+      setShowErrorPopup(true)
       setLoading(false)
     } else {
       // --- จุดที่เพิ่ม: ระบบโอนย้ายข้อมูลจาก Guest ไปยังบัญชีที่ Login ---
@@ -61,61 +64,99 @@ export default function Login() {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '450px', margin: '0 auto', fontFamily: 'sans-serif', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       
-      {/* ປຸ່ມກັບຄືນ */}
-      <button 
-        onClick={() => router.back()} 
-        style={{ position: 'fixed', top: '20px', left: '20px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#65676b' }}
-      >
-        ✕
-      </button>
-
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1877f2', marginBottom: '10px' }}>Pidjob</h1>
-        <p style={{ color: '#1c1e21', fontSize: '18px', fontWeight: '500' }}>ເຂົ້າສູ່ລະບົບ</p>
+      {/* Header */}
+      <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+        <button 
+          onClick={() => router.push('/profile')} 
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
       </div>
 
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: '12px' }}>
-          <input 
-            type="email" 
-            placeholder="ອີເມລ ຫຼື ເບີໂທລະສັບ" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)} 
-            style={{ width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px' }}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <input 
-            type="password" 
-            placeholder="ລະຫັດຜ່ານ" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)} 
-            style={{ width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px' }}
-            required
-          />
-        </div>
+      <div style={{ padding: '20px' }}>
+        <div style={{ textAlign: 'center', paddingTop: '10px' }}>
+          {/* Logo Website */}
+          <div style={{ width: '100px', height: '100px', margin: '0 auto 30px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }}>
+            <img 
+              src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/9a8595cc-bfa6-407d-94d4-67e2e82523e5/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
+              alt="Logo" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
 
-        <button 
-          type="submit" 
-          disabled={loading}
-          style={{ 
-            width: '100%', 
-            padding: '12px', 
-            background: '#1877f2', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '8px', 
-            fontSize: '20px', 
-            fontWeight: 'bold', 
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <style>{`
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <input 
+              type="email" 
+              placeholder="ອີເມລ" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)} 
+              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px' }}
+              required
+            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                placeholder="ລະຫັດຜ່ານ" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)} 
+                style={{ width: '100%', padding: '15px 45px 15px 15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '5px'
+                }}
+              >
+                {showPassword ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              style={{ 
+                width: '100%', 
+                padding: '15px', 
+                background: '#1877f2', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '12px', 
+                fontSize: '18px', 
+                fontWeight: 'bold', 
+                cursor: loading ? 'not-allowed' : 'pointer',
+                marginTop: '30px'
+              }}
+            >
+              {loading ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <style>{`
 @keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
 .loading-spinner-circle-btn { display: inline-block; width: 20px; height: 20px; position: relative; }
 .loading-spinner-circle-btn div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: fadeColor 1s linear infinite; opacity: 0.8; }
@@ -128,35 +169,21 @@ export default function Login() {
 .loading-spinner-circle-btn div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
 .loading-spinner-circle-btn div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
 `}</style>
-              <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
-            </span>
-          ) : 'ເຂົ້າສູ່ລະບົບ'}
-        </button>
-      </form>
-
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <a href="#" style={{ color: '#1877f2', textDecoration: 'none', fontSize: '14px' }}>ລືມລະຫັດຜ່ານແມ່ນບໍ່?</a>
+                  <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+                </span>
+              ) : 'ເຂົ້າສູ່ລະບົບ'}
+            </button>
+          </form>
+        </div>
       </div>
 
-      <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ddd', margin: '30px 0' }} />
-
-      <div style={{ textAlign: 'center' }}>
-        <button 
-          onClick={() => router.push('/register')}
-          style={{ 
-            padding: '12px 20px', 
-            background: '#42b72a', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '8px', 
-            fontSize: '16px', 
-            fontWeight: 'bold', 
-            cursor: 'pointer' 
-          }}
-        >
-          ສ້າງບັນຊີໃໝ່
-        </button>
-      </div>
-    </div>
+      {/* Error Popup */}
+      {showErrorPopup && (
+        <ErrorPopup 
+          message="ອີເມລ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ" 
+          onClose={() => setShowErrorPopup(false)} 
+        />
+      )}
+    </main>
   )
 }

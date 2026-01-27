@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { safeParseJSON } from '@/utils/storageUtils'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -93,6 +94,11 @@ export default function Register() {
         throw new Error('ບໍ່ພົບຂໍ້ມູນການລົງທະບຽນ');
       }
 
+      // ตรวจสอบความยาวรหัสผ่าน (ต้องมีอย่างน้อย 6 ตัวอักษร)
+      if (pendingData.password.length < 6) {
+        throw new Error('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
+      }
+
       // 2. ทำการสร้างบัญชีจริง (Sign Up) ที่นี่
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: pendingData.email,
@@ -145,7 +151,8 @@ export default function Register() {
 
         // 5. ล้างข้อมูลชั่วคราวทั้งหมดและเสร็จสิ้น
         localStorage.removeItem('pending_registration');
-        alert('ຕັ້ງຄ່າບັນຊີສຳເລັດ!');
+        // บันทึก flag เพื่อแสดง popup ที่หน้า home
+        localStorage.setItem('show_registration_success', 'true');
         router.push('/');
       }
     } catch (error: any) {
@@ -158,9 +165,11 @@ export default function Register() {
     <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
       
       {/* Header - ปุ่มย้อนกลับแบบหน้า Edit Profile */}
-      <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
         </button>
       </div>
 
@@ -175,7 +184,7 @@ export default function Register() {
               borderRadius: '50%', 
               background: '#f0f2f5', 
               overflow: 'hidden', 
-              border: avatarUrl ? '2px solid #1c1e21' : '1px solid #ddd', 
+              border: 'none', 
               margin: '0 auto',
               display: 'flex',
               alignItems: 'center',
@@ -184,7 +193,12 @@ export default function Register() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', background: '#f0f2f5', color: '#ccc', width: '100%' }}>👤</div>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a', width: '100%' }}>
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
               )}
             </div>
             
@@ -217,11 +231,19 @@ export default function Register() {
               type="text" 
               placeholder="ຊື່ຂອງທ່ານ" 
               value={username}
+              maxLength={36}
               onChange={(e) => {
-                const val = e.target.value;
+                const val = e.target.value.slice(0, 36);
                 setUsername(val);
                 updatePendingData({ username: val });
-              }} 
+              }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData('text').slice(0, 36);
+                const newValue = (username + pastedText).slice(0, 36);
+                setUsername(newValue);
+                updatePendingData({ username: newValue });
+              }}
               style={{ 
                 width: '100%', 
                 padding: '16px', 
@@ -243,17 +265,34 @@ export default function Register() {
             style={{ 
               width: '100%', 
               padding: '16px', 
-              background: (loading || uploading || !isFormValid) ? '#e4e6eb' : '#1c1e21', 
-              color: (loading || uploading || !isFormValid) ? '#999' : 'white', 
+              background: (loading || uploading || !isFormValid) ? '#e4e6eb' : '#1877f2', 
+              color: (loading || uploading || !isFormValid) ? '#000' : '#fff', 
               border: 'none', 
               borderRadius: '30px', 
-              fontSize: '18px', 
+              fontSize: '20px', 
               fontWeight: 'bold', 
               cursor: (loading || uploading || !isFormValid) ? 'not-allowed' : 'pointer',
               transition: '0.3s'
             }}
           >
-            {loading ? 'ກຳລັງປະມວນຜົນ...' : 'ສຳເລັດ'}
+            {(loading || uploading) ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <style>{`
+@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
+.loading-spinner-circle-btn { display: inline-block; width: 20px; height: 20px; position: relative; }
+.loading-spinner-circle-btn div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: fadeColor 1s linear infinite; opacity: 0.8; }
+.loading-spinner-circle-btn div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle-btn div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle-btn div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle-btn div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle-btn div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle-btn div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle-btn div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle-btn div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+`}</style>
+                <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+              </span>
+            ) : 'ສຳເລັດ'}
           </button>
 
         </form>

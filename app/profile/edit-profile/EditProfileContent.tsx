@@ -241,7 +241,19 @@ export function EditProfileContent() {
  style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '280px', maxWidth: '90vw' }}
  >
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <input value={editingUsername} onChange={e => setEditingUsername(e.target.value)} autoFocus style={{ fontSize: '18px', fontWeight: 'bold', border: 'none', borderBottom: '2px solid #1877f2', outline: 'none', flex: 1, minWidth: 0, padding: '4px 0' }} />
+ <input 
+   value={editingUsername} 
+   maxLength={36}
+   onChange={e => setEditingUsername(e.target.value.slice(0, 36))} 
+   onPaste={(e) => {
+     e.preventDefault();
+     const pastedText = e.clipboardData.getData('text').slice(0, 36);
+     const newValue = (editingUsername + pastedText).slice(0, 36);
+     setEditingUsername(newValue);
+   }}
+   autoFocus 
+   style={{ fontSize: '18px', fontWeight: 'bold', border: 'none', borderBottom: '2px solid #1877f2', outline: 'none', flex: 1, minWidth: 0, padding: '4px 0' }} 
+ />
  <button disabled={editingUsername.trim().length < 1} onClick={() => editingUsername.trim().length >= 1 && saveUsername(editingUsername.trim())} style={{ padding: '4px 12px', background: editingUsername.trim().length >= 1 ? '#1877f2' : '#e4e6eb', color: editingUsername.trim().length >= 1 ? '#fff' : '#999', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: editingUsername.trim().length >= 1 ? 'pointer' : 'not-allowed', flexShrink: 0 }}>ບັນທຶກ</button>
  </div>
  </div>
@@ -254,41 +266,60 @@ export function EditProfileContent() {
  style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '280px', maxWidth: '90vw' }}
  >
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <input 
-   type="tel" 
-   inputMode="numeric" 
-   pattern="[0-9]*" 
-   autoComplete="tel" 
-   value={editingPhone} 
-   onChange={e => {
-     const inputValue = e.target.value.replace(/\D/g, '');
-     
+      <input 
+      type="tel" 
+      inputMode="numeric" 
+      pattern="[0-9]*" 
+      autoComplete="tel" 
+      value={editingPhone} 
+      onChange={e => {
+      const inputValue = e.target.value.replace(/\D/g, '');
+      
      // บังคับให้เริ่มต้นด้วย 020 เสมอ และจำกัดความยาวที่ 11 หลัก (020 + 8 หลัก)
      if (inputValue.length === 0 || inputValue.length < 3) {
-       // ถ้าลบจนเหลือน้อยกว่า 3 หลัก ให้คงไว้ที่ 020
-       setEditingPhone('020');
-     } else if (!inputValue.startsWith('020')) {
-       // ถ้าไม่เริ่มด้วย 020 ให้บังคับให้เริ่มด้วย 020
-       // เอาเฉพาะตัวเลขที่เหลือ (หลัง 3 หลักแรก) มาวางต่อ (จำกัด 8 หลัก)
-       const remainingDigits = inputValue.length >= 3 
-         ? inputValue.slice(3).slice(0, 8)  // ถ้ามี 3 หลักขึ้นไป ให้เอา 3 หลักแรกเป็น 020
-         : inputValue.slice(0, 8);  // ถ้ามีน้อยกว่า 3 หลัก ให้เอามาทั้งหมด (จำกัด 8 หลัก)
-       setEditingPhone('020' + remainingDigits);
-     } else if (inputValue.length <= 11) {
-       // ถ้าเริ่มด้วย 020 แล้ว และความยาวไม่เกิน 11 หลัก (020 + 8 หลัก)
-       setEditingPhone(inputValue);
-     }
-     // ถ้ายาวกว่า 11 หลัก ไม่ต้องอัพเดท (จำกัดไว้ที่ 11 หลัก)
-   }} 
-   onFocus={e => {
-     // เมื่อ focus ให้เลือกข้อความทั้งหมดเพื่อให้พิมพ์ทับได้ง่าย
-     e.target.select();
-   }}
-   autoFocus 
-   placeholder="ເບີ WhatsApp" 
-   style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} 
- />
- <button type="button" onClick={() => savePhone(editingPhone)} style={{ padding: '4px 12px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>ບັນທຶກ</button>
+        // ถ้าลบจนเหลือน้อยกว่า 3 หลัก ให้คงไว้ที่ 020
+        setEditingPhone('020');
+      } else if (!inputValue.startsWith('020')) {
+        // ถ้าไม่เริ่มด้วย 020 ให้บังคับให้เริ่มด้วย 020
+        // เอาเฉพาะตัวเลขที่เหลือ (หลัง 3 หลักแรก) มาวางต่อ (จำกัด 8 หลัก)
+        const remainingDigits = inputValue.length >= 3 
+          ? inputValue.slice(3).slice(0, 8)  // ถ้ามี 3 หลักขึ้นไป ให้เอา 3 หลักแรกเป็น 020
+          : inputValue.slice(0, 8);  // ถ้ามีน้อยกว่า 3 หลัก ให้เอามาทั้งหมด (จำกัด 8 หลัก)
+        setEditingPhone('020' + remainingDigits);
+      } else if (inputValue.length <= 11) {
+        // ถ้าเริ่มด้วย 020 แล้ว และความยาวไม่เกิน 11 หลัก (020 + 8 หลัก)
+        setEditingPhone(inputValue);
+      }
+      // ถ้ายาวกว่า 11 หลัก ไม่ต้องอัพเดท (จำกัดไว้ที่ 11 หลัก)
+      }} 
+      onFocus={e => {
+        // เมื่อ focus ให้เลือกข้อความทั้งหมดเพื่อให้พิมพ์ทับได้ง่าย
+        e.target.select();
+      }}
+      autoFocus 
+      placeholder="ເບີ WhatsApp" 
+      style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} 
+      />
+     <button 
+       type="button" 
+       disabled={!(editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11))} 
+       onClick={() => {
+         if (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) {
+           savePhone(editingPhone);
+         }
+       }} 
+       style={{ 
+         padding: '4px 12px', 
+         background: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#1877f2' : '#e4e6eb', 
+         color: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#fff' : '#999', 
+         border: 'none', 
+         borderRadius: '6px', 
+         fontWeight: 'bold', 
+         fontSize: '13px', 
+         cursor: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? 'pointer' : 'not-allowed', 
+         flexShrink: 0 
+       }}
+     >ບັນທຶກ</button>
  </div>
  </div>
  )}
@@ -298,7 +329,12 @@ export function EditProfileContent() {
  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
  <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
  <div style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5' }}>
- {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' }}>👤</div>}
+ {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a', width: '100%' }}>
+   <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+     <circle cx="12" cy="7" r="4"></circle>
+   </svg>
+ </div>}
  </div>
  <label htmlFor="avatar-up" style={{ position: 'absolute', bottom: 0, right: 0, background: '#e4e6eb', borderRadius: '50%', padding: '7px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer', display: 'flex' }}>
  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>

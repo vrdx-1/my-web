@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
 import { MenuDropdown } from './MenuDropdown';
+import { ShareIconTraced } from './icons/ShareIconTraced';
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 
@@ -101,7 +102,7 @@ export const PostCard = React.memo<PostCardProps>(({
           <Avatar avatarUrl={post.profiles?.avatar_url} size={50} session={session} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: '#111111' }}>
             {post.profiles?.username || 'User'}
             {status.isOnline ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -189,7 +190,7 @@ export const PostCard = React.memo<PostCardProps>(({
       </div>
 
       {/* Caption */}
-      <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>
+      <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap', color: '#111111', fontWeight: 500 }}>
         {post.caption}
       </div>
 
@@ -275,23 +276,11 @@ export const PostCard = React.memo<PostCardProps>(({
             {/* Share Button */}
             <div 
               onClick={() => onShare(post)} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px', borderRadius: '4px', minHeight: '30px', minWidth: '30px' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px', borderRadius: '4px', minHeight: '30px' }}
             >
-              <svg 
-                width="22" 
-                height="22" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="#65676b" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
+              <ShareIconTraced size={24} style={{ color: '#65676b' }} />
             </div>
+
           </div>
 
           {/* Action Buttons */}
