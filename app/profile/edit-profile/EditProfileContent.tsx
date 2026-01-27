@@ -254,7 +254,40 @@ export function EditProfileContent() {
  style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '280px', maxWidth: '90vw' }}
  >
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <input type="tel" inputMode="numeric" pattern="[0-9]*" autoComplete="tel" value={editingPhone} onChange={e => setEditingPhone(e.target.value.replace(/\D/g, ''))} autoFocus placeholder="ເບີ WhatsApp" style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} />
+ <input 
+   type="tel" 
+   inputMode="numeric" 
+   pattern="[0-9]*" 
+   autoComplete="tel" 
+   value={editingPhone} 
+   onChange={e => {
+     const inputValue = e.target.value.replace(/\D/g, '');
+     
+     // บังคับให้เริ่มต้นด้วย 020 เสมอ และจำกัดความยาวที่ 11 หลัก (020 + 8 หลัก)
+     if (inputValue.length === 0 || inputValue.length < 3) {
+       // ถ้าลบจนเหลือน้อยกว่า 3 หลัก ให้คงไว้ที่ 020
+       setEditingPhone('020');
+     } else if (!inputValue.startsWith('020')) {
+       // ถ้าไม่เริ่มด้วย 020 ให้บังคับให้เริ่มด้วย 020
+       // เอาเฉพาะตัวเลขที่เหลือ (หลัง 3 หลักแรก) มาวางต่อ (จำกัด 8 หลัก)
+       const remainingDigits = inputValue.length >= 3 
+         ? inputValue.slice(3).slice(0, 8)  // ถ้ามี 3 หลักขึ้นไป ให้เอา 3 หลักแรกเป็น 020
+         : inputValue.slice(0, 8);  // ถ้ามีน้อยกว่า 3 หลัก ให้เอามาทั้งหมด (จำกัด 8 หลัก)
+       setEditingPhone('020' + remainingDigits);
+     } else if (inputValue.length <= 11) {
+       // ถ้าเริ่มด้วย 020 แล้ว และความยาวไม่เกิน 11 หลัก (020 + 8 หลัก)
+       setEditingPhone(inputValue);
+     }
+     // ถ้ายาวกว่า 11 หลัก ไม่ต้องอัพเดท (จำกัดไว้ที่ 11 หลัก)
+   }} 
+   onFocus={e => {
+     // เมื่อ focus ให้เลือกข้อความทั้งหมดเพื่อให้พิมพ์ทับได้ง่าย
+     e.target.select();
+   }}
+   autoFocus 
+   placeholder="ເບີ WhatsApp" 
+   style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} 
+ />
  <button type="button" onClick={() => savePhone(editingPhone)} style={{ padding: '4px 12px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>ບັນທຶກ</button>
  </div>
  </div>
@@ -282,8 +315,13 @@ export function EditProfileContent() {
  </div>
  {/* เบอร์โทร - กดกล่องเปิด modal เบอร์ */}
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <button type="button" onClick={() => { setEditingPhone(phone); setIsEditingPhone(true); }} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px', textAlign: 'left', color: phone ? '#1c1e21' : '#999', cursor: 'pointer' }}>
- {phone || 'ເບີ WhatsApp'}
+ <button type="button" onClick={() => { 
+   // ถ้ามีเบอร์โทรและเริ่มด้วย 020 ให้ใช้เบอร์เดิม, ถ้าไม่มีหรือไม่เริ่มด้วย 020 ให้ใช้ 020
+   const initialPhone = phone && phone.startsWith('020') ? phone : '020';
+   setEditingPhone(initialPhone); 
+   setIsEditingPhone(true); 
+ }} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px', textAlign: 'left', color: phone && phone !== '020' ? '#1c1e21' : '#999', cursor: 'pointer' }}>
+ {phone && phone !== '020' ? phone : 'ເບີ WhatsApp'}
  </button>
  </div>
  </div>

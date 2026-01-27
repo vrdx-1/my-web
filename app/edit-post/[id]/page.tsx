@@ -309,98 +309,45 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
       {/* Viewing Mode Layer */}
       {isViewing && (
-        <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 2000, display: 'flex', flexDirection: 'column' }}>
-          {/* Header Viewing Mode — โครง + ขนาดเท่ากับ PageHeader หน้า ແກ້ໄຂໂພສ */}
-          <div
-            style={{
-              padding: '10px 15px',
-              borderBottom: '1px solid #f0f0f0',
-              background: '#fff',
-              position: 'sticky',
-              top: 0,
-              flexShrink: 0,
-              zIndex: 10,
-              maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
-              margin: '0 auto',
-              width: '100%',
-              boxSizing: 'border-box',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0,
-              }}
-            >
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH, height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
+            <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
               <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
                 <div style={{ padding: '5px', width: 24, height: 24 }} aria-hidden />
               </div>
-              <h3
-                style={{
-                  flex: 1,
-                  textAlign: 'center',
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  minWidth: 0,
-                }}
-              >
-                ແກ້ໄຂ
-              </h3>
+              <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0 }}>ແກ້ໄຂ</h3>
               <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setIsViewing(false)}
-                  style={{
-                    background: '#1877f2',
-                    border: 'none',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                  }}
-                >
-                  ສຳເລັດ
-                </button>
+                <button onClick={() => setIsViewing(false)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ສຳເລັດ</button>
               </div>
             </div>
-          </div>
-
-          {/* Scrollable Content */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <div style={{ maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH, margin: '0 auto' }}>
-              <div style={{ padding: '10px 0' }}>
-                {/* รูปจาก Database */}
-                {images.map((img, idx) => (
-                  <div key={`old-${idx}`} style={{ position: 'relative', marginBottom: '20px' }}>
-                    <img src={img} style={{ width: '100%', display: 'block' }} />
-                    <button onClick={() => removeImage(idx, false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer' }}>✕</button>
-                  </div>
-                ))}
-                {/* รูปใหม่ */}
-                {imageUpload.previews.map((img, idx) => (
-                  <div key={`new-${idx}`} style={{ position: 'relative', marginBottom: '20px' }}>
-                    <img src={img} style={{ width: '100%', display: 'block', opacity: 0.8 }} />
-                    <button onClick={() => removeImage(idx, true)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer' }}>✕</button>
-                  </div>
-                ))}
-
-                {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
-                <div style={{ padding: '30px 15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1877f2', fontWeight: 'bold', cursor: 'pointer' }}>
-                    <span style={{ fontSize: '24px', color: '#000' }}>➕</span> ເພີ່ມຮູບ
-                    <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
-                  </label>
-                </div>
+            {/* รูปจาก Database */}
+            {images.map((img, idx) => (
+              <div key={`old-${idx}`} style={{ width: '100%', marginBottom: '12px', position: 'relative' }}>
+                <img src={img} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <button onClick={() => removeImage(idx, false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
+            ))}
+            {/* รูปใหม่ */}
+            {imageUpload.previews.map((img, idx) => (
+              <div key={`new-${idx}`} style={{ width: '100%', marginBottom: '12px', position: 'relative' }}>
+                <img src={img} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <button onClick={() => removeImage(idx, true)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            ))}
+
+            {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
+            <div style={{ padding: '5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
+                <span style={{ fontSize: '18px', color: '#fff', lineHeight: '1' }}>+</span> ເພີ່ມຮູບ
+                <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
+              </label>
             </div>
+            <div style={{ height: '10px' }}></div>
           </div>
         </div>
       )}
 
-      {/* Modal ยืนยัน — ທ່ານຕ້ອງການບັນທຶກການແກ້ໄຂບໍ? */}
+      {/* Modal ยืนยัน — ທ່ານຕ້ອງການຖິ້ມການແກ້ໄຂບໍ? */}
       {showLeaveConfirm && (
         <div
           style={{
@@ -426,6 +373,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+              ທ່ານຕ້ອງການຖິ້ມການແກ້ໄຂບໍ?
+            </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
               <button
                 type="button"

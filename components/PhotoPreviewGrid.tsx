@@ -181,7 +181,45 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
     );
   }
 
-  // 4+ รูป — เหมือน PhotoGrid (2 บน, 3 ล่าง, +N ถ้า >5)
+  // 4 รูป — 2x2 grid, แต่ละรูป 1:1
+  if (count === 4) {
+    return (
+      <div
+        onClick={click}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: '1fr 1fr',
+          gap: '4px',
+          cursor,
+        }}
+        className={className}
+      >
+        {allImages.map((img, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'relative',
+              aspectRatio: '1',
+              background: '#f0f0f0',
+              overflow: 'hidden',
+            }}
+          >
+            <Image
+              src={img}
+              alt={`Preview ${i + 1}`}
+              fill
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+              unoptimized
+            />
+            {removeBtn(i)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // 5+ รูป — เหมือน PhotoGrid (2 บน, 3 ล่าง, +N ถ้า >5)
   return (
     <div
       onClick={click}
@@ -240,7 +278,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
                 unoptimized
               />
-              {idx === 2 && count > 5 && (
+              {idx === 4 && count > 5 && (
                 <div
                   style={{
                     position: 'absolute',

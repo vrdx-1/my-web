@@ -121,7 +121,39 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
     );
   }
   
-  // Four or more images
+  // Four images — 2x2 grid
+  if (count === 4) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+        {images.map((img, i) => (
+          <div 
+            key={i} 
+            style={{ 
+              position: 'relative', 
+              aspectRatio: '1', 
+              background: '#f0f0f0', 
+              overflow: 'hidden' 
+            }}
+          >
+            <Image 
+              src={img} 
+              onClick={() => onPostClick(i)} 
+              fill
+              style={{ 
+                objectFit: 'cover', 
+                objectPosition: 'center'
+              }}
+              loading="lazy"
+              alt={`Post image ${i + 1}`}
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  // Five or more images
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
       {images.slice(0, 2).map((img, i) => (
@@ -149,50 +181,53 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
         </div>
       ))}
       <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
-        {images.slice(2, 5).map((img, i) => (
-          <div 
-            key={i + 2} 
-            style={{ 
-              position: 'relative', 
-              aspectRatio: '1', 
-              background: '#f0f0f0', 
-              cursor: 'pointer', 
-              overflow: 'hidden' 
-            }} 
-            onClick={() => onPostClick(i + 2)}
-          >
-            <Image 
-              src={img} 
-              fill
+        {images.slice(2, 5).map((img, i) => {
+          const idx = i + 2;
+          return (
+            <div 
+              key={idx} 
               style={{ 
-                objectFit: 'cover', 
-                objectPosition: 'center', 
-                pointerEvents: 'none' 
-              }}
-              loading="lazy"
-              alt={`Post image ${i + 3}`}
-              sizes="(max-width: 768px) 33vw, 16vw"
-            />
-            {i === 2 && count > 5 && (
-              <div style={{ 
-                position: 'absolute', 
-                inset: 0, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: '#fff', 
-                WebkitTextStroke: '3px #000', 
-                paintOrder: 'stroke fill', 
-                pointerEvents: 'none',
-                zIndex: 1
-              }}>
-                +{count - 5}
-              </div>
-            )}
-          </div>
-        ))}
+                position: 'relative', 
+                aspectRatio: '1', 
+                background: '#f0f0f0', 
+                cursor: 'pointer', 
+                overflow: 'hidden' 
+              }} 
+              onClick={() => onPostClick(idx)}
+            >
+              <Image 
+                src={img} 
+                fill
+                style={{ 
+                  objectFit: 'cover', 
+                  objectPosition: 'center', 
+                  pointerEvents: 'none' 
+                }}
+                loading="lazy"
+                alt={`Post image ${idx + 1}`}
+                sizes="(max-width: 768px) 33vw, 16vw"
+              />
+              {idx === 4 && count > 5 && (
+                <div style={{ 
+                  position: 'absolute', 
+                  inset: 0, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '24px', 
+                  fontWeight: 'bold', 
+                  color: '#fff', 
+                  WebkitTextStroke: '3px #000', 
+                  paintOrder: 'stroke fill', 
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}>
+                  +{count - 5}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
