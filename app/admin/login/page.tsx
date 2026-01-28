@@ -25,7 +25,6 @@ export default function AdminLogin() {
     });
 
     if (error) {
-      alert('ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ');
       setLoading(false);
       return;
     }
@@ -43,7 +42,6 @@ export default function AdminLogin() {
         window.location.href = '/admin/overview';
       } else {
         await supabase.auth.signOut();
-        alert('ທ່ານບໍ່ມີສິດເຂົ້າເຖິງ');
         setLoading(false);
       }
     }

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // เพิ่มการนำเข้า Component สำหรับ Track Visitor
 import VisitorTracker from "@/components/VisitorTracker";
+import BackHandler from "@/components/BackHandler";
+import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider"; 
 
@@ -39,6 +41,10 @@ export default function RootLayout({
           <SWRProvider>
             {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
             <VisitorTracker />
+            {/* กดย้อนกลับ (browser/มือถือ) ไม่ให้เด้งออกจากเว็บ back ตามสเต็ป */}
+            <BackHandler />
+            {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
+            <RedirectToHomeOnReturn />
             {children}
           </SWRProvider>
         </ErrorBoundaryWrapper>

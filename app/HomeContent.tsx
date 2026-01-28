@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { AppHeader } from '@/components/AppHeader';
+import { SearchScreen } from '@/components/SearchScreen';
 
 // Modal Components (Static - used frequently)
 import { TermsModal } from '@/components/modals/TermsModal';
@@ -32,24 +33,62 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { LAO_FONT } from '@/utils/constants';
 
 export function HomeContent() {
  const router = useRouter();
 const searchParams = useSearchParams(); 
+ const pathname = usePathname();
  const [searchTerm, setSearchTerm] = useState('');
+const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
 const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
 const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
+const [tabRefreshing, setTabRefreshing] = useState(false);
  
  // Use home data hook
  const homeData = useHomeData(searchTerm);
+
+ const [unreadCount, setUnreadCount] = useState<number>(0);
+
+ const fetchUnreadCount = useCallback(async () => {
+   const userId = homeData.session?.user?.id;
+   if (!userId) {
+     setUnreadCount(0);
+     return;
+   }
+   const { data, error } = await supabase.rpc('get_unread_notifications_count', { p_user_id: String(userId) });
+   if (!error) {
+     const n = typeof data === 'number' ? data : Number(data);
+     setUnreadCount(Number.isFinite(n) ? n : 0);
+   }
+ }, [homeData.session]);
+
+ useEffect(() => {
+   fetchUnreadCount();
+ }, [fetchUnreadCount]);
+
+ // Re-fetch when returning to this tab/page
+ useEffect(() => {
+   if (pathname !== '/') return;
+   const onFocus = () => fetchUnreadCount();
+   const onVisibility = () => {
+     if (document.visibilityState === 'visible') fetchUnreadCount();
+   };
+   window.addEventListener('focus', onFocus);
+   document.addEventListener('visibilitychange', onVisibility);
+   return () => {
+     window.removeEventListener('focus', onFocus);
+     document.removeEventListener('visibilitychange', onVisibility);
+   };
+ }, [pathname, fetchUnreadCount]);
  
  // Use viewing post hook
  const viewingPostHook = useViewingPost();
  // Use menu hook
  const menu = useMenu();
  
- // Use header scroll hook
- const headerScroll = useHeaderScroll();
+ // Use header scroll hook (ไม่ให้ header เลื่อนลงมาตอนโหลดโพสต์ถัดไป)
+ const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore });
 
  // Use fullScreen viewer hook
  const fullScreenViewer = useFullScreenViewer();
@@ -185,6 +224,10 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    window.scrollTo({ top: 0, behavior: 'smooth' });
  }, [homeData]);
 
+ useEffect(() => {
+   if (!homeData.loadingMore) setTabRefreshing(false);
+ }, [homeData.loadingMore]);
+
  // Use shared post interactions hook
  const { toggleLike, toggleSave } = usePostInteractions({
    session: homeData.session,
@@ -215,7 +258,7 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
  });
 
  return (
- <main style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
+ <main style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
  <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
  <AppHeader
@@ -223,10 +266,24 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    onSearchChange={setSearchTerm}
    onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
    onNotificationClick={() => router.push('/notification')}
+   unreadCount={unreadCount}
    userProfile={homeData.userProfile}
    session={homeData.session}
    isHeaderVisible={headerScroll.isHeaderVisible}
    onTabChange={handleLogoClick}
+   onSearchClick={() => setIsSearchScreenOpen(true)}
+   onTabRefresh={() => {
+     setTabRefreshing(true);
+     handleLogoClick();
+   }}
+   loadingTab={tabRefreshing ? 'recommend' : null}
+ />
+
+ <SearchScreen
+   isOpen={isSearchScreenOpen}
+   searchTerm={searchTerm}
+   onSearchChange={setSearchTerm}
+   onClose={() => setIsSearchScreenOpen(false)}
  />
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>

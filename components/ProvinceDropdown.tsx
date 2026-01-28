@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LAO_PROVINCES } from '@/utils/constants';
+import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 
 interface ProvinceDropdownProps {
   selectedProvince: string;
@@ -48,6 +48,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
                 fontSize: '16px',
                 fontWeight: selectedProvince === p ? 'bold' : 'normal',
                 color: '#000',
+                fontFamily: LAO_FONT,
               }}
             >
               {p}
@@ -197,6 +198,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
                   lineHeight: '1.25',
                   background: selectedProvince === p ? '#e7f3ff' : '#fff',
                   cursor: 'pointer',
+                  fontFamily: LAO_FONT,
                 }}
               >
                 {p} {selectedProvince === p && '✓'}
@@ -222,6 +224,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
             marginTop: '2px',
             cursor: 'pointer',
             touchAction: 'manipulation',
+            fontFamily: LAO_FONT,
           }}
         >
           {selectedProvince || 'ເລືອກແຂວງ'}

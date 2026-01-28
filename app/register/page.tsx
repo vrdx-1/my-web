@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { safeParseJSON } from '@/utils/storageUtils'
+import { LAO_FONT } from '@/utils/constants'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -72,7 +73,6 @@ export default function Register() {
       // บันทึก URL รูปภาพลง localStorage ทันที
       updatePendingData({ avatarUrl: publicUrl });
     } catch (error: any) {
-      alert('Error uploading avatar: ' + error.message)
     } finally {
       setUploading(false)
     }
@@ -82,8 +82,8 @@ export default function Register() {
     e.preventDefault()
     
     // Validation เพิ่มเติมเพื่อความปลอดภัย
-    if (!username.trim()) return alert('ກະລຸນາໃສ່ຊື່ຂອງທ່ານ')
-    if (!avatarUrl) return alert('ກະລຸນາເລືອກຮູບໂປຣໄຟລ໌ຂອງທ່ານ')
+    if (!username.trim()) return
+    if (!avatarUrl) return
     
     setLoading(true)
 
@@ -156,13 +156,12 @@ export default function Register() {
         router.push('/');
       }
     } catch (error: any) {
-      alert('ເກີດຂໍ້ຜິດພາດ: ' + error.message);
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', position: 'relative' }}>
+    <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
       
       {/* Header - ปุ่มย้อนกลับแบบหน้า Edit Profile */}
       <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
@@ -193,7 +192,7 @@ export default function Register() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a', width: '100%' }}>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b', width: '100%' }}>
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>

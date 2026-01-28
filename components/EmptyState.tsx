@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { LAO_FONT } from '@/utils/constants';
 
 interface EmptyStateProps {
   message: string;
@@ -26,19 +27,22 @@ export const EmptyState = React.memo<EmptyStateProps>(({
           padding: '40px',
           textAlign: 'center' as const,
           borderRadius: '8px',
+          fontFamily: LAO_FONT,
         };
       case 'minimal':
         return {
           textAlign: 'center' as const,
           padding: '30px',
           color: '#888',
+          fontFamily: LAO_FONT,
         };
       default: // 'default'
         return {
           textAlign: 'center' as const,
           padding: '100px 20px',
-          color: '#65676b',
+          color: '#4a4d52',
           fontSize: '16px',
+          fontFamily: LAO_FONT,
         };
     }
   };

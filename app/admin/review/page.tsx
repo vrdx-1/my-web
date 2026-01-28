@@ -86,8 +86,6 @@ export default function AdminReviewPage() {
 
     if (!error) {
       setPosts(posts.map(p => p.id === postId ? { ...p, is_hidden: !currentHiddenStatus } : p));
-    } else {
-      alert(`Error: ${error.message}`);
     }
   };
 
@@ -252,7 +250,7 @@ export default function AdminReviewPage() {
                         );
                       })()}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>
+                    <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
                       {formatTime(viewingPost.created_at)} · {viewingPost.province}
                     </div>
                 </div>

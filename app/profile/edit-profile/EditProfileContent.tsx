@@ -48,6 +48,7 @@ export function EditProfileContent() {
 
  // Feed States
  const [tab, setTab] = useState('recommend');
+ const [tabRefreshing, setTabRefreshing] = useState(false);
  const [session, setSession] = useState<any>(null);
  const [justLikedPosts, setJustLikedPosts] = useState<{[key: string]: boolean}>({});
  const [justSavedPosts, setJustSavedPosts] = useState<{[key: string]: boolean}>({});
@@ -110,24 +111,16 @@ export function EditProfileContent() {
    }
  }, [tab, userId, session]);
 
+ useEffect(() => {
+   if (!postListData.loadingMore) setTabRefreshing(false);
+ }, [postListData.loadingMore]);
+
  // Load more when page changes
  useEffect(() => {
    if (postListData.page > 0 && !postListData.loadingMore && userId && session) {
      postListData.fetchPosts(false);
    }
  }, [postListData.page, userId, session]);
-
- // ปิด modal (ชื่อ/เบอร์) เมื่อเลื่อนดูฟีด
- useEffect(() => {
-   const onScroll = () => {
-     if (isEditingName || isEditingPhone) {
-       setIsEditingName(false);
-       setIsEditingPhone(false);
-     }
-   };
-   window.addEventListener('scroll', onScroll, { passive: true });
-   return () => window.removeEventListener('scroll', onScroll);
- }, [isEditingName, isEditingPhone]);
 
  const fetchProfile = async (uid: string) => {
  // Optimize: Select เฉพาะ fields ที่จำเป็น
@@ -163,23 +156,21 @@ export function EditProfileContent() {
  } finally { setUploading(false); }
  };
 
- const saveUsername = async (name: string) => {
- const { error } = await supabase.from('profiles').update({ username: name }).eq('id', userId);
- if (!error) {
- setUsername(name);
- setIsEditingName(false);
- alert("ບັນທຶກຊື່ສຳເລັດ!");
- }
- };
+const saveUsername = async (name: string) => {
+  const { error } = await supabase.from('profiles').update({ username: name }).eq('id', userId);
+  if (!error) {
+    setUsername(name);
+    setIsEditingName(false);
+  }
+};
 
- const savePhone = async (phoneNum: string) => {
- const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', userId);
- if (!error) {
- setPhone(phoneNum);
- setIsEditingPhone(false);
- alert("ບັນທຶກເບີໂທສຳເລັດ!");
- }
- };
+const savePhone = async (phoneNum: string) => {
+  const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', userId);
+  if (!error) {
+    setPhone(phoneNum);
+    setIsEditingPhone(false);
+  }
+};
 
  // Removed duplicate formatTime - using from utils/postUtils
 
@@ -254,7 +245,7 @@ export function EditProfileContent() {
    autoFocus 
    style={{ fontSize: '18px', fontWeight: 'bold', border: 'none', borderBottom: '2px solid #1877f2', outline: 'none', flex: 1, minWidth: 0, padding: '4px 0' }} 
  />
- <button disabled={editingUsername.trim().length < 1} onClick={() => editingUsername.trim().length >= 1 && saveUsername(editingUsername.trim())} style={{ padding: '4px 12px', background: editingUsername.trim().length >= 1 ? '#1877f2' : '#e4e6eb', color: editingUsername.trim().length >= 1 ? '#fff' : '#999', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: editingUsername.trim().length >= 1 ? 'pointer' : 'not-allowed', flexShrink: 0 }}>ບັນທຶກ</button>
+ <button disabled={editingUsername.trim().length < 1} onClick={() => editingUsername.trim().length >= 1 && saveUsername(editingUsername.trim())} style={{ padding: '4px 12px', background: editingUsername.trim().length >= 1 ? '#1877f2' : '#e4e6eb', color: editingUsername.trim().length >= 1 ? '#fff' : '#5c5c5c', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: editingUsername.trim().length >= 1 ? 'pointer' : 'not-allowed', flexShrink: 0 }}>ບັນທຶກ</button>
  </div>
  </div>
  )}
@@ -311,7 +302,7 @@ export function EditProfileContent() {
        style={{ 
          padding: '4px 12px', 
          background: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#1877f2' : '#e4e6eb', 
-         color: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#fff' : '#999', 
+         color: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#fff' : '#5c5c5c', 
          border: 'none', 
          borderRadius: '6px', 
          fontWeight: 'bold', 
@@ -329,7 +320,7 @@ export function EditProfileContent() {
  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
  <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
  <div style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5' }}>
- {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a', width: '100%' }}>
+ {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b', width: '100%' }}>
    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
      <circle cx="12" cy="7" r="4"></circle>
@@ -343,8 +334,8 @@ export function EditProfileContent() {
  </div>
  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0, paddingTop: '10px' }}>
  {/* ชื่อ - กดปากกาเปิด modal ชื่อ */}
- <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
- <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#1c1e21', flex: 1 }}>{username || 'ຊື່ຜູ້ໃຊ້'}</h2>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+ <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#1c1e21', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username || 'ຊື່ຜູ້ໃຊ້'}</h2>
  <button onClick={() => { setEditingUsername(username); setIsEditingName(true); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px', flexShrink: 0 }}>
  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
  </button>
@@ -356,7 +347,7 @@ export function EditProfileContent() {
    const initialPhone = phone && phone.startsWith('020') ? phone : '020';
    setEditingPhone(initialPhone); 
    setIsEditingPhone(true); 
- }} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px', textAlign: 'left', color: phone && phone !== '020' ? '#1c1e21' : '#999', cursor: 'pointer' }}>
+ }} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', outline: 'none', fontSize: '16px', textAlign: 'left', color: phone && phone !== '020' ? '#1c1e21' : '#5c5c5c', cursor: 'pointer' }}>
  {phone && phone !== '020' ? phone : 'ເບີ WhatsApp'}
  </button>
  </div>
@@ -373,7 +364,18 @@ export function EditProfileContent() {
      { value: 'sold', label: 'ຂາຍແລ້ວ' },
    ]}
    activeTab={tab}
-   onTabChange={setTab}
+   onTabChange={(v) => {
+     if (v === tab) {
+       setTabRefreshing(true);
+       postListData.setPage(0);
+       postListData.setHasMore(true);
+       postListData.fetchPosts(true);
+       return;
+     }
+     setTabRefreshing(true);
+     setTab(v);
+   }}
+   loadingTab={tabRefreshing ? tab : null}
    className="sticky top-[45px] bg-white z-[90]"
  />
 
@@ -401,6 +403,7 @@ export function EditProfileContent() {
    onSetActiveMenu={menu.setActiveMenu}
    onSetMenuAnimating={menu.setIsMenuAnimating}
    loadingMore={postListData.loadingMore}
+   hideBoost={tab === 'sold'}
  />
 
  <PostFeedModals

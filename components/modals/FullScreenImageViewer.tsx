@@ -309,7 +309,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                 padding: '15px', 
                 fontSize: '14px', 
                 cursor: 'pointer', 
-                color: '#65676b', 
+                color: '#4a4d52', 
                 textAlign: 'center', 
                 background: '#fff' 
               }}

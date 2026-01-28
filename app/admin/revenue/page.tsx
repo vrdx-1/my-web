@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatCurrency } from '@/utils/currency';
+import { LAO_FONT } from '@/utils/constants';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function RevenuePage() {
@@ -55,7 +56,7 @@ export default function RevenuePage() {
   const totalRevenue = Object.values(revenueData).reduce((a, b) => a + b, 0);
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '40px' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: '40px' }}>
       
       {/* Header Selector Section */}
       <div style={{ padding: '20px', display: 'flex', justifyContent: 'center', gap: '30px', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
@@ -131,7 +132,7 @@ export default function RevenuePage() {
         )}
       </div>
 
-      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999', fontSize: '13px', letterSpacing: '0.5px' }}>
+      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#5c5c5c', fontSize: '13px', letterSpacing: '0.5px' }}>
         REVENUE REPORT • APPROVED POSTS ONLY
       </div>
     </main>

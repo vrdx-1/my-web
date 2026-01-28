@@ -2,6 +2,9 @@
  * Shared Constants for the Application
  */
 
+/** Font สำหรับข้อความภาษาลาว — ใช้เดียวกับแขวง (Arial, Helvetica, sans-serif) */
+export const LAO_FONT = 'Arial, Helvetica, sans-serif';
+
 // Lao Provinces (18 provinces)
 export const LAO_PROVINCES = [
   "ຜົ້ງສາລີ",

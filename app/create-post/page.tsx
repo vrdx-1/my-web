@@ -52,6 +52,7 @@ export default function CreatePost() {
  const [isViewing, setIsViewing] = useState(false);
  const [isInitialized, setIsInitialized] = useState(false);
  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+ const [showVideoAlert, setShowVideoAlert] = useState(false);
 
  // Use shared profile hook
  const { profile: userProfile } = useProfile();
@@ -244,6 +245,17 @@ if (savedStep) setStep(savedStep);
 
  // Removed duplicate functions - using from hooks/useImageUpload.ts and utils/imageCompression.ts
  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const raw = e.target.files;
+   if (raw && raw.length > 0) {
+     const arr = Array.from(raw);
+     const hasNonImage = arr.some((f) => !f.type.startsWith('image/'));
+     if (hasNonImage) {
+       setShowVideoAlert(true);
+       e.target.value = '';
+       if (imageUpload.fileInputRef.current) imageUpload.fileInputRef.current.value = '';
+       return;
+     }
+   }
    await imageUpload.handleFileChange(e);
    // Check after state update
    setTimeout(() => {
@@ -313,6 +325,15 @@ if (savedStep) setStep(savedStep);
    return () => window.removeEventListener('keydown', onKey);
  }, [showLeaveConfirm]);
 
+ useEffect(() => {
+   if (!showVideoAlert) return;
+   const onKey = (e: KeyboardEvent) => {
+     if (e.key === 'Escape') setShowVideoAlert(false);
+   };
+   window.addEventListener('keydown', onKey);
+   return () => window.removeEventListener('keydown', onKey);
+ }, [showVideoAlert]);
+
  // Removed duplicate PhotoPreviewGrid - using from components/PhotoPreviewGrid.tsx
 
  // Removed duplicate generateGuestToken - using from utils/postUtils
@@ -344,7 +365,7 @@ const compressedFiles = await Promise.all(
 
 for (let i = 0; i < totalFiles; i++) {
 const file = compressedFiles[i];
-const fileExt = 'webp'; 
+const fileExt = file.type === 'image/jpeg' ? 'jpg' : 'webp';
 const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
 const filePath = `${uploadFolder}/${fileName}`;
 
@@ -415,11 +436,23 @@ if (typeof window !== 'undefined') {
  router.refresh();
  } catch (err: any) {
  console.error(err.message);
- alert(err.message || 'ເກີດຂໍ້ຜິດພາດ');
- } finally {
  setIsUploading(false);
  }
  };
+
+ if (isUploading) {
+   return (
+     <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, minHeight: '100vh' }}>
+       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+         <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#1c1e21' }}>ກຳລັງໂພສ</div>
+         <div style={{ width: '100%', maxWidth: '300px', height: '12px', background: '#e4e6eb', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+           <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#1877f2', transition: 'width 0.3s ease' }}></div>
+         </div>
+         <div style={{ marginTop: '10px', fontSize: '16px', fontWeight: 'bold', color: '#1877f2' }}>{uploadProgress}%</div>
+       </div>
+     </div>
+   );
+ }
 
  return (
  <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
@@ -450,7 +483,7 @@ if (typeof window !== 'undefined') {
  </div>
  </div>
 
- <div style={{ flex: 1, paddingBottom: '100px' }}>
+ <div style={{ flex: 1, paddingBottom: '100px', minHeight: 0, overflowY: 'auto' }}>
  {step === 2 && (
  <div>
  <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -594,46 +627,31 @@ if (typeof window !== 'undefined') {
     display: block;
   }
   :global(.createPostProvinceListTight > div) {
-    padding: 6px 24px !important;
+    padding: 10px 24px !important;
     border-bottom: none !important;
   }
 
-  /* Mobile-only: show all provinces without scrolling */
   @media (max-width: 520px) {
-    :global(.createPostProvinceListTight) {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-    }
     :global(.createPostProvinceListTight > div) {
-      padding: 4px 20px !important;
+      padding: 8px 20px !important;
     }
-     :global(.createPostProvinceListTight > div span) {
-       font-size: 14px !important;
-       line-height: 1.2 !important;
-     }
-     :global(.createPostProvinceListTight > div > div) {
-       width: 18px !important;
-       height: 18px !important;
-     }
-     :global(.createPostProvinceListTight > div > div svg) {
-       width: 10px !important;
-       height: 10px !important;
-     }
-   }
- `}</style>
+    :global(.createPostProvinceListTight > div span) {
+      font-size: 14px !important;
+      line-height: 1.2 !important;
+    }
+    :global(.createPostProvinceListTight > div > div) {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    :global(.createPostProvinceListTight > div > div svg) {
+      width: 10px !important;
+      height: 10px !important;
+    }
+  }
+`}</style>
  </div>
  )}
  </div>
-
- {isUploading && (
- <div style={{ position: 'fixed', inset: 0, background: 'rgba(255,255,255,0.95)', zIndex: 3000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
- <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#1c1e21' }}>ກຳລັງໂພສ</div>
- <div style={{ width: '100%', maxWidth: '300px', height: '12px', background: '#e4e6eb', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
- <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#1877f2', transition: 'width 0.3s ease' }}></div>
- </div>
- <div style={{ marginTop: '10px', fontSize: '16px', fontWeight: 'bold', color: '#1877f2' }}>{uploadProgress}%</div>
- </div>
- )}
 
  {isViewing && (
  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
@@ -656,9 +674,9 @@ if (typeof window !== 'undefined') {
 
  {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
  <div style={{ padding: '5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
- <label style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
+ <label style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
  <span style={{ fontSize: '18px', color: '#fff', lineHeight: '1' }}>+</span> ເພີ່ມຮູບ
- <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
+ <input type="file" multiple accept="image/*" onChange={handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
  </label>
  </div>
  <div style={{ height: '10px' }}></div>
@@ -729,6 +747,57 @@ if (typeof window !== 'undefined') {
            }}
          >
            ສ້າງໂພສຕໍ່
+         </button>
+       </div>
+     </div>
+   </div>
+ )}
+
+ {/* ป๊อบอัพแจ้งเตือน: อัปโหลดวิดีโอ/ไฟล์อื่น → โพสต์ได้เฉพาะรูปภาพ */}
+ {showVideoAlert && (
+   <div
+     style={{
+       position: 'fixed',
+       inset: 0,
+       background: 'rgba(0,0,0,0.4)',
+       zIndex: 2500,
+       display: 'flex',
+       alignItems: 'center',
+       justifyContent: 'center',
+       padding: '20px',
+     }}
+     onClick={() => setShowVideoAlert(false)}
+   >
+     <div
+       style={{
+         background: '#fff',
+         borderRadius: '12px',
+         padding: '20px',
+         maxWidth: '320px',
+         width: '100%',
+         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+       }}
+       onClick={(e) => e.stopPropagation()}
+     >
+       <p style={{ fontSize: '16px', marginBottom: '20px', textAlign: 'center' }}>
+         ໂພສໄດ້ສະເພາະຮູບພາບເທົ່ານັ້ນ
+       </p>
+       <div style={{ display: 'flex', justifyContent: 'center' }}>
+         <button
+           type="button"
+           onClick={() => setShowVideoAlert(false)}
+           style={{
+             padding: '10px 24px',
+             background: '#1877f2',
+             border: 'none',
+             borderRadius: '8px',
+             fontSize: '15px',
+             fontWeight: 'bold',
+             color: '#fff',
+             cursor: 'pointer',
+           }}
+         >
+           ຕົກລົງ
          </button>
        </div>
      </div>

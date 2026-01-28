@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { LAO_FONT } from '@/utils/constants'
 
 export default function Settings() {
   const router = useRouter()
@@ -28,7 +29,6 @@ export default function Settings() {
       router.push('/')
       router.refresh()
     } else {
-      alert("ເກີດຂໍ້ຜິດພາດໃນການອອກຈາກລະບົບ")
       setLoading(false)
       setShowLogoutConfirm(false)
     }
@@ -47,7 +47,7 @@ export default function Settings() {
       background: '#fff', 
       height: '100vh', 
       overflow: 'hidden',
-      fontFamily: 'sans-serif',
+      fontFamily: LAO_FONT,
       display: 'flex',
       flexDirection: 'column' // กำหนดเป็น column เพื่อให้แยกส่วนบนกับส่วนล่างได้
     }}>
@@ -135,8 +135,8 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* ปุ่มออกจากระบบ - ขยับขึ้นเล็กน้อย */}
-      <div style={{ padding: '270px 20px 20px 20px' }}>
+      {/* ปุ่มออกจากระบบ - ย้ายลงมาต่ำกว่าเดิม */}
+      <div style={{ padding: '420px 20px 20px 20px' }}>
         <button 
           onClick={handleLogoutClick} 
           disabled={loading}

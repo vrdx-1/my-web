@@ -109,10 +109,8 @@ export default function AdminBoostingPage() {
          throw new Error("Update failed - ตรวจสอบ RLS ใน Supabase Dashboard");
       }
 
-      alert("ອະນຸມັດສຳເລັດ!");
       fetchBoosts(); // โหลดข้อมูลใหม่หลังจากเปลี่ยนแท็บ
     } catch (err: any) { 
-      alert(err.message || "ເກີດຂໍ້ຜິດພາດ"); 
       setActiveTab("waiting"); // ถ้าพังให้กลับมาหน้าเดิม
       fetchBoosts();
     }
@@ -124,9 +122,8 @@ export default function AdminBoostingPage() {
     try {
       await supabase.from("cars").update({ is_boosted: false, boost_expiry: null }).eq("id", item.post_id);
       await supabase.from("post_boosts").delete().eq("id", item.id);
-      alert("ດຳເນີນການສຳເລັດ");
       fetchBoosts();
-    } catch (err) { alert("ເກີດຂໍ້ຜິດພາດ"); }
+    } catch (err) { }
   };
 
   return (

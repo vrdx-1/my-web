@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { LAO_FONT } from '@/utils/constants';
 
 export default function TermsAndPolicies() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function TermsAndPolicies() {
       margin: '0 auto', 
       background: '#fff', 
       minHeight: '100vh', 
-      fontFamily: 'sans-serif' 
+      fontFamily: LAO_FONT 
     }}>
       
       {/* Header - ปุ่มย้อนกลับ */}
@@ -97,7 +98,7 @@ export default function TermsAndPolicies() {
             <div style={{ height: '50px' }}></div> {/* พื้นที่ว่างด้านล่าง */}
           </>
         ) : (
-          <div style={{ textAlign: 'center', padding: '50px', color: '#65676b' }}>
+          <div style={{ textAlign: 'center', padding: '50px', color: '#4a4d52' }}>
             ບໍ່ພົບຂໍ້ມູນຂໍ້ກຳນົດ ແລະ ນະໂຍບາຍ
           </div>
         )}

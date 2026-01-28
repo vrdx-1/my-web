@@ -95,7 +95,6 @@ function BoostPostContent() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert("กรุณาเข้าสู่ระบบก่อนทำรายการ");
         return;
       }
 
@@ -128,7 +127,6 @@ function BoostPostContent() {
       setStep(3);
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
       setLoading(false);
     }

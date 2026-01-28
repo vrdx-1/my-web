@@ -31,6 +31,7 @@ import { safeParseJSON } from '@/utils/storageUtils';
 export function SavedPostsContent() {
   const router = useRouter();
   const [tab, setTab] = useState('recommend');
+  const [tabRefreshing, setTabRefreshing] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
@@ -114,6 +115,10 @@ export function SavedPostsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  useEffect(() => {
+    if (!postListData.loadingMore) setTabRefreshing(false);
+  }, [postListData.loadingMore]);
+
   // Load more when page changes
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
@@ -187,7 +192,18 @@ export function SavedPostsContent() {
             { value: 'sold', label: 'ຂາຍແລ້ວ' },
           ]}
           activeTab={tab}
-          onTabChange={setTab}
+          onTabChange={(v) => {
+            if (v === tab) {
+              setTabRefreshing(true);
+              postListData.setPage(0);
+              postListData.setHasMore(true);
+              postListData.fetchPosts(true);
+              return;
+            }
+            setTabRefreshing(true);
+            setTab(v);
+          }}
+          loadingTab={tabRefreshing ? tab : null}
         />
       </div>
 
@@ -214,6 +230,7 @@ export function SavedPostsContent() {
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
         loadingMore={postListData.loadingMore}
+        hideBoost={tab === 'sold'}
       />
 
       <PostFeedModals

@@ -167,7 +167,7 @@ export default function AdminOverviewPage() {
               {data.topSeller.avatar && <img src={data.topSeller.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
             <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>{loading ? '...' : data.topSeller.name}</span>
-            <span style={{ color: '#65676b', fontSize: '14px' }}>{data.topSeller.count} ຄັນ</span>
+            <span style={{ color: '#4a4d52', fontSize: '14px' }}>{data.topSeller.count} ຄັນ</span>
           </div>
         </div>
 
@@ -188,7 +188,7 @@ export default function AdminOverviewPage() {
               {data.topPost.avatar && <img src={data.topPost.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
             <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>{loading ? '...' : data.topPost.name}</span>
-            <span style={{ color: '#65676b', fontSize: '14px' }}>{data.topPost.count} ຄັນ</span>
+            <span style={{ color: '#4a4d52', fontSize: '14px' }}>{data.topPost.count} ຄັນ</span>
           </div>
         </div>
 

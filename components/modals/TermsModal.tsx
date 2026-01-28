@@ -25,7 +25,7 @@ export const TermsModal = React.memo<TermsModalProps>(({
       <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '30px 20px', position: 'relative', textAlign: 'center' }}>
         <button 
           onClick={onClose} 
-          style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#65676b' }}
+          style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#4a4d52' }}
         >
           ✕
         </button>
@@ -51,7 +51,7 @@ export const TermsModal = React.memo<TermsModalProps>(({
             width: '120px', 
             padding: '12px', 
             background: acceptedTerms ? '#1877f2' : '#e4e6eb', 
-            color: acceptedTerms ? '#fff' : '#999', 
+            color: acceptedTerms ? '#fff' : '#5c5c5c', 
             border: 'none', 
             borderRadius: '12px', 
             fontWeight: 'bold', 

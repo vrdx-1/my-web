@@ -39,6 +39,8 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   if (!isOpen) return null;
 
+  const showBoost = typeof onBoost === 'function';
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
       <div
@@ -78,12 +80,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             <div onClick={onEdit} style={commonStyles.menuItem}>
               ແກ້ໄຂ
             </div>
-            <div onClick={onDelete} style={commonStyles.menuItem}>
+            <div onClick={onDelete} style={showBoost ? commonStyles.menuItem : commonStyles.menuItemLast}>
               ລົບ
             </div>
-            <div onClick={onBoost} style={commonStyles.menuItemLast}>
-              Boost
-            </div>
+            {showBoost && (
+              <div onClick={onBoost} style={commonStyles.menuItemLast}>
+                Boost
+              </div>
+            )}
           </>
         ) : (
           <div onClick={onReport} style={commonStyles.menuItemLast}>

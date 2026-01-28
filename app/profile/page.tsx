@@ -4,11 +4,14 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { safeParseJSON } from '@/utils/storageUtils';
+import { LAO_FONT } from '@/utils/constants';
 
 export default function Profile() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
+  const [validationMessages, setValidationMessages] = useState<string[]>([]);
   
   // Register State
   const [email, setEmail] = useState('');
@@ -71,47 +74,45 @@ export default function Profile() {
   // Logic การลงทะเบียนที่ปรับปรุงใหม่ (ยังไม่เรียก signUp)
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // ตรวจสอบว่ายอมรับเงื่อนไขหรือยัง
-    if (!acceptedTerms) {
-      alert('ກະລຸນາຍອມຮັບຂໍ້ກຳນົດແລະນະໂຍບາຍກ່ອນລົງທະບຽນ');
-      return;
-    }
+    if (registerLoading) return;
 
-    // ตรวจสอบความยาวรหัสผ่าน (ต้องมีอย่างน้อย 6 ตัวอักษร)
-    if (password.length < 6) {
-      alert('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
+    const missing: string[] = [];
+    if (!email.trim()) missing.push('ກະລຸນາໃສ່ອີເມລ');
+    if (!password.trim()) missing.push('ກະລຸນາໃສ່ລະຫັດຜ່ານ');
+    else if (password.length < 6) missing.push('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
+    if (!acceptedTerms) missing.push('ກະລຸນາຍອມຮັບຂໍ້ກຳນົດແລະນະໂຍບາຍ');
+
+    if (missing.length > 0) {
+      setValidationMessages(missing);
+      setShowValidationPopup(true);
       return;
     }
 
     setRegisterLoading(true);
-
     try {
-      // ยืนยันการบันทึกข้อมูลก่อนไปหน้าถัดไป
       updatePendingData({ email, password, acceptedTerms });
       router.push('/register');
     } catch (err) {
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูลชั่วคราว');
       setRegisterLoading(false);
     }
   };
 
-  // เงื่อนไขว่าพร้อมให้กด "ລົງທະບຽນ" หรือไม่ (ต้องกรอกอีเมล, รหัสผ่านอย่างน้อย 6 ตัว และติ๊ก Checkbox)
-  const canRegister = email.trim() !== '' && password.trim() !== '' && password.length >= 6 && acceptedTerms;
-
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: LAO_FONT }}>
       <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
     </div>
   );
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
       
       {/* Header */}
       <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
         <button 
-          onClick={() => router.push('/')} 
+          onClick={() => {
+            if (!session) localStorage.removeItem('pending_registration');
+            router.push('/');
+          }} 
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -139,13 +140,13 @@ export default function Profile() {
                 type="email" 
                 placeholder="ອີເມລ" 
                 value={email}
+                maxLength={50}
                 onChange={(e) => {
-                  const val = e.target.value;
+                  const val = e.target.value.slice(0, 50);
                   setEmail(val);
                   updatePendingData({ email: val });
                 }}
                 style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none' }}
-                required
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <div style={{ position: 'relative' }}>
@@ -153,8 +154,9 @@ export default function Profile() {
                     type={showPassword ? 'text' : 'password'} 
                     placeholder="ລະຫັດຜ່ານ" 
                     value={password}
+                    maxLength={50}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = e.target.value.slice(0, 50);
                       setPassword(val);
                       updatePendingData({ password: val });
                     }}
@@ -167,7 +169,6 @@ export default function Profile() {
                       fontSize: '16px', 
                       outline: 'none' 
                     }}
-                    required
                   />
                   <button
                     type="button"
@@ -187,12 +188,12 @@ export default function Profile() {
                     }}
                   >
                     {showPassword ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
                     ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                         <line x1="1" y1="1" x2="23" y2="23"></line>
                       </svg>
@@ -232,17 +233,17 @@ export default function Profile() {
 
               <button 
                 type="submit" 
-                disabled={registerLoading || !canRegister}
+                disabled={registerLoading}
                 style={{ 
                   width: '100%', 
                   padding: '15px', 
-                  background: (canRegister && !registerLoading) ? '#1877f2' : '#808080', 
+                  background: '#1877f2', 
                   color: '#fff', 
                   border: 'none', 
                   borderRadius: '12px', 
                   fontWeight: 'bold', 
                   fontSize: '18px', 
-                  cursor: (registerLoading || !canRegister) ? 'not-allowed' : 'pointer', 
+                  cursor: registerLoading ? 'not-allowed' : 'pointer', 
                   marginTop: '5px' 
                 }}
               >
@@ -269,10 +270,64 @@ export default function Profile() {
 
             <button 
               onClick={() => router.push('/login')}
-              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '80px' }}
+              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '200px' }}
             >
               ເຂົ້າສູ່ລະບົບ
             </button>
+
+            {showValidationPopup && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.4)',
+                  zIndex: 2500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '20px',
+                }}
+                onClick={() => setShowValidationPopup(false)}
+              >
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    maxWidth: '320px',
+                    width: '100%',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
+                    ກະລຸນາໃສ່ຂໍ້ມູນໃຫ້ຄົບຖ້ວນ
+                  </h3>
+                  <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', fontSize: '15px', color: '#1c1e21', lineHeight: 1.6 }}>
+                    {validationMessages.map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() => setShowValidationPopup(false)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      background: '#1877f2',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ຕົກລົງ
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* กรณีที่ Login แล้ว: แสดงหน้า Profile เดิม (ห้ามแก้ไขส่วนนี้) */
@@ -283,7 +338,7 @@ export default function Profile() {
                   {avatarUrl ? (
                     <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#8a8a8a' }}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b' }}>
                       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
@@ -291,8 +346,8 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1c1e21' }}>{username || 'ຊື່ຜູ້ໃຊ້'}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1c1e21', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username || 'ຊື່ຜູ້ໃຊ້'}</div>
                 </div>
               </div>
             </Link>

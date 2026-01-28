@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
+import { LAO_FONT } from '@/utils/constants';
 
 interface NotificationItem {
   id: string;
@@ -16,6 +17,7 @@ interface NotificationItem {
   is_read?: boolean;
   likes?: number;
   saves?: number;
+  notification_count?: number;
 }
 
 // Helper function to format time ago
@@ -69,32 +71,23 @@ const getNotificationIcon = (type: string) => {
   }
 };
 
-// Get notification text based on type
+// Get notification text based on type (เฉพาะ like ใช้งาน)
 const getNotificationText = (notification: NotificationItem): { name: string; action: string } => {
-  const name = notification.sender_name || 'ผู้ใช้';
+  const name = notification.sender_name || 'ຜູ້ໃຊ້';
   let action = '';
   switch (notification.type) {
     case 'like':
-      action = 'กดถูกใจโพสต์ของคุณ';
-      break;
-    case 'comment':
-      action = 'แสดงความคิดเห็นในโพสต์ของคุณ';
-      break;
-    case 'share':
-      action = 'แชร์โพสต์ของคุณ';
-      break;
-    case 'mention':
-      action = 'กล่าวถึงคุณ';
+      action = 'ກົດຖືກໃຈໂພສຂອງທ່ານ';
       break;
     default:
-      action = 'มีการอัปเดต';
+      action = 'ການແຈ້ງເຕືອນ';
   }
   return { name, action };
 };
 
-// Mini PostCard Image Component
+// Mini PostCard Image Component - Layout เหมือน PhotoGrid แต่ขนาดเล็ก
 const MiniPostImage = ({ images }: { images: string[] }) => {
-  const imageSize = '72px'; // เพิ่มขนาดจาก 48px เป็น 72px
+  const imageSize = '72px'; // ขนาดเล็กเท่าเดิม
   
   if (!images || images.length === 0) {
     return (
@@ -107,17 +100,18 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="#999">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#5c5c5c">
           <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
         </svg>
       </div>
     );
   }
 
-  const firstImage = images[0];
+  const count = images.length;
+  const gap = '2px';
 
   // Single image
-  if (images.length === 1) {
+  if (count === 1) {
     return (
       <div style={{ 
         position: 'relative',
@@ -127,7 +121,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
         overflow: 'hidden'
       }}>
         <img 
-          src={firstImage} 
+          src={images[0]} 
           alt="Post"
           style={{ 
             width: '100%', 
@@ -141,19 +135,27 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
   }
 
   // Two images
-  if (images.length === 2) {
+  if (count === 2) {
     return (
       <div style={{ 
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '2px',
+        gap: gap,
         width: imageSize, 
         height: imageSize, 
         borderRadius: '10px',
         overflow: 'hidden'
       }}>
         {images.slice(0, 2).map((img, i) => (
-          <div key={i} style={{ position: 'relative', overflow: 'hidden', aspectRatio: '1' }}>
+          <div 
+            key={i} 
+            style={{ 
+              position: 'relative', 
+              overflow: 'hidden', 
+              width: '100%',
+              height: '100%'
+            }}
+          >
             <img 
               src={img} 
               alt={`Post ${i + 1}`}
@@ -170,24 +172,79 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
     );
   }
 
-  // Three or more images - Layout: 2 on top, 3 on bottom
-  return (
-    <div style={{ 
-      display: 'grid',
-      gridTemplateRows: '1fr 1fr',
-      gap: '2px',
-      width: imageSize, 
-      height: imageSize, 
-      borderRadius: '10px',
-      overflow: 'hidden'
-    }}>
-      {/* Top row: 2 images */}
+  // Three images - Layout: รูปแรกใหญ่ซ้าย, 2 รูปเล็กขวา (เหมือน PhotoGrid)
+  if (count === 3) {
+    return (
       <div style={{ 
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '1px'
+        gap: gap,
+        width: imageSize, 
+        height: imageSize, 
+        borderRadius: '10px',
+        overflow: 'hidden'
       }}>
-        {images.slice(0, 2).map((img, i) => (
+        <div style={{ 
+          position: 'relative', 
+          overflow: 'hidden', 
+          gridRow: 'span 2',
+          borderTopLeftRadius: '10px',
+          borderBottomLeftRadius: '10px'
+        }}>
+          <img 
+            src={images[0]} 
+            alt="Post 1"
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover'
+            }}
+            loading="lazy"
+          />
+        </div>
+        <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: gap }}>
+          {images.slice(1, 3).map((img, i) => (
+            <div 
+              key={i + 1} 
+              style={{ 
+                position: 'relative', 
+                overflow: 'hidden', 
+                aspectRatio: '1',
+                borderTopRightRadius: i === 0 ? '10px' : '0',
+                borderBottomRightRadius: i === 1 ? '10px' : '0'
+              }}
+            >
+              <img 
+                src={img} 
+                alt={`Post ${i + 2}`}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover'
+                }}
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Four images - 2x2 grid (เหมือน PhotoGrid)
+  if (count === 4) {
+    return (
+      <div style={{ 
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        gap: gap,
+        width: imageSize, 
+        height: imageSize, 
+        borderRadius: '10px',
+        overflow: 'hidden'
+      }}>
+        {images.map((img, i) => (
           <div 
             key={i} 
             style={{ 
@@ -195,7 +252,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
               overflow: 'hidden', 
               aspectRatio: '1',
               borderTopLeftRadius: i === 0 ? '10px' : '0',
-              borderTopRightRadius: i === 1 ? '10px' : '0'
+              borderTopRightRadius: i === 1 ? '10px' : '0',
+              borderBottomLeftRadius: i === 2 ? '10px' : '0',
+              borderBottomRightRadius: i === 3 ? '10px' : '0'
             }}
           >
             <img 
@@ -211,52 +270,93 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
           </div>
         ))}
       </div>
-      
+    );
+  }
+
+  // Five or more images - Layout: 2 รูปบน, 3 รูปล่าง (เหมือน PhotoGrid)
+  return (
+    <div style={{ 
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: gap,
+      width: imageSize, 
+      height: imageSize, 
+      borderRadius: '10px',
+      overflow: 'hidden'
+    }}>
+      {/* Top row: 2 images */}
+      {images.slice(0, 2).map((img, i) => (
+        <div 
+          key={i} 
+          style={{ 
+            position: 'relative', 
+            overflow: 'hidden', 
+            aspectRatio: '1',
+            borderTopLeftRadius: i === 0 ? '10px' : '0',
+            borderTopRightRadius: i === 1 ? '10px' : '0'
+          }}
+        >
+          <img 
+            src={img} 
+            alt={`Post ${i + 1}`}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover'
+            }}
+            loading="lazy"
+          />
+        </div>
+      ))}
       {/* Bottom row: 3 images */}
       <div style={{ 
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
-        gap: '2px'
+        gridColumn: 'span 2', 
+        display: 'grid', 
+        gridTemplateColumns: '1fr 1fr 1fr', 
+        gap: gap 
       }}>
-        {images.slice(2, 5).map((img, i) => (
-          <div 
-            key={i + 2} 
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              aspectRatio: '1',
-              borderBottomLeftRadius: i === 0 ? '10px' : '0',
-              borderBottomRightRadius: i === 2 ? '10px' : '0'
-            }}
-          >
-            <img 
-              src={img} 
-              alt={`Post ${i + 3}`}
+        {images.slice(2, 5).map((img, i) => {
+          const idx = i + 2;
+          return (
+            <div 
+              key={idx} 
               style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover'
+                position: 'relative', 
+                overflow: 'hidden', 
+                aspectRatio: '1',
+                borderBottomLeftRadius: i === 0 ? '10px' : '0',
+                borderBottomRightRadius: i === 2 ? '10px' : '0'
               }}
-              loading="lazy"
-            />
-            {i === 2 && images.length > 5 && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'rgba(0,0,0,0.6)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                borderBottomRightRadius: '10px'
-              }}>
-                +{images.length - 5}
-              </div>
-            )}
-          </div>
-        ))}
+            >
+              <img 
+                src={img} 
+                alt={`Post ${idx + 1}`}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover'
+                }}
+                loading="lazy"
+              />
+              {idx === 4 && count > 5 && (
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  borderBottomRightRadius: '10px'
+                }}>
+                  +{count - 5}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -266,87 +366,201 @@ export default function NotificationPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // เก็บข้อมูลว่า user ดูแจ้งเตือนของ post ไหน "ถึงเวลาไหนแล้ว"
+  // key = post_id, value = created_at ล่าสุดที่ผู้ใช้เปิดดู
+  const [clearedPostMap, setClearedPostMap] = useState<Record<string, string>>({});
 
-  const fetchNotifications = useCallback(async (userId: string) => {
-    setLoading(true);
+  // โหลดโพสต์ที่เคยถูกเคลียร์ตัวเลขแจ้งเตือนไว้แล้วจาก localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.localStorage.getItem('notification_cleared_posts');
+    if (!raw) return;
     try {
-      const { data, error } = await supabase
-        .from('all_notifications')
-        .select('id, post_id, created_at, type, username, avatar_url, car_data')
-        .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase Error:', error);
-        throw error;
-      }
-
-      if (data) {
-        const formatted: NotificationItem[] = await Promise.all(
-          data.map(async (item) => {
-            // ดึงจำนวน likes และ saves
-            const [likesResult, savesResult] = await Promise.all([
-              supabase.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', item.post_id),
-              supabase.from('post_saves').select('*', { count: 'exact', head: true }).eq('post_id', item.post_id)
-            ]);
-
-            return {
-              id: item.id,
-              type: item.type,
-              post_id: item.post_id,
-              created_at: item.created_at,
-              sender_name: item.username || 'User',
-              sender_avatar: item.avatar_url,
-              post_caption: item.car_data?.caption || '',
-              post_images: item.car_data?.images || [],
-              is_read: false,
-              likes: likesResult.count || 0,
-              saves: savesResult.count || 0
-            };
-          })
-        );
-        
-        // กรองให้แสดงเฉพาะโพสที่ไม่ซ้ำกัน (1 โพสแสดงได้ 1 ที่) - เลือก notification ที่ใหม่ที่สุด
-        const uniquePosts = new Map<string, NotificationItem>();
-        formatted.forEach(notif => {
-          const existing = uniquePosts.get(notif.post_id);
-          if (!existing || new Date(notif.created_at) > new Date(existing.created_at)) {
-            uniquePosts.set(notif.post_id, notif);
-          }
+      const parsed = JSON.parse(raw);
+      // backward compatible:
+      // เดิมเก็บเป็น array ของ post_id → แปลงเป็น object โดยถือว่าเคลียร์ "ถึงตอนนี้"
+      if (Array.isArray(parsed)) {
+        const now = new Date().toISOString();
+        const obj: Record<string, string> = {};
+        (parsed as string[]).forEach((id) => {
+          obj[id] = now;
         });
-        
-        setNotifications(Array.from(uniquePosts.values()));
+        setClearedPostMap(obj);
+      } else if (parsed && typeof parsed === 'object') {
+        setClearedPostMap(parsed as Record<string, string>);
       }
-    } catch (err) {
-      console.error('Fetch Error:', err);
-      setNotifications([]);
-    } finally {
-      setLoading(false);
+    } catch {
+      // ignore parse error
     }
   }, []);
+
+  const fetchNotifications = useCallback(
+    async (userId: string) => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('all_notifications')
+          .select('id, post_id, created_at, type, username, avatar_url, car_data')
+          .eq('owner_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase Error:', error);
+          throw error;
+        }
+
+        if (data) {
+          // mark ทั้งหมดว่าอ่านแล้วเพื่อให้ badge หน้า Home หายทันที
+          try {
+            if (data.length > 0) {
+              await supabase
+                .from('notification_reads')
+                .upsert(
+                  data.map((n: any) => ({
+                    user_id: userId,
+                    notification_id: n.id,
+                  })),
+                  { onConflict: 'user_id,notification_id' }
+                );
+            }
+          } catch {
+            // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
+          }
+
+          const formatted: NotificationItem[] = await Promise.all(
+            data.map(async (item) => {
+              // ดึงจำนวน likes และ saves
+              const [likesResult, savesResult] = await Promise.all([
+                supabase
+                  .from('post_likes')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('post_id', item.post_id),
+                supabase
+                  .from('post_saves')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('post_id', item.post_id),
+              ]);
+
+              return {
+                id: item.id,
+                type: item.type,
+                post_id: item.post_id,
+                created_at: item.created_at,
+                sender_name: item.username || 'User',
+                sender_avatar: item.avatar_url,
+                post_caption: item.car_data?.caption || '',
+                post_images: item.car_data?.images || [],
+                likes: likesResult.count || 0,
+                saves: savesResult.count || 0,
+              };
+            })
+          );
+
+          // รวมแจ้งเตือนตามโพสต์:
+          // - นับ "จำนวนแจ้งเตือนใหม่" ต่อ post_id โดยเทียบกับเวลาที่ user เคยเปิดดูโพสต์นั้นล่าสุด
+          // - เก็บเฉพาะ notification ล่าสุดของแต่ละโพสต์เพื่อแสดง
+          const perPost = new Map<string, { notif: NotificationItem; count: number }>();
+          formatted.forEach((notif) => {
+            const existing = perPost.get(notif.post_id);
+            const clearedAt = clearedPostMap[notif.post_id];
+            const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
+            const notifTime = new Date(notif.created_at).getTime();
+            const isNewForUser = notifTime > clearedTime;
+
+            if (!existing) {
+              perPost.set(notif.post_id, {
+                notif,
+                count: isNewForUser ? 1 : 0,
+              });
+            } else {
+              const existingDate = new Date(existing.notif.created_at).getTime();
+              if (notifTime > existingDate) {
+                existing.notif = notif;
+              }
+              if (isNewForUser) {
+                existing.count += 1;
+              }
+            }
+          });
+
+          const uniqueList: NotificationItem[] = Array.from(perPost.values())
+            .map(({ notif, count }) => ({
+              ...notif,
+              notification_count: count,
+            }))
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            );
+
+          setNotifications(uniqueList);
+        }
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [clearedPostMap]
+  );
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
           fetchNotifications(session.user.id);
         } else {
           setLoading(false);
         }
-      } catch (err) {
+      } catch {
         setLoading(false);
       }
     };
     checkSession();
   }, [fetchNotifications]);
 
-  const handleNotificationClick = (notification: NotificationItem) => {
-    router.push(`/notification/${notification.post_id}`);
-  };
+  const handleNotificationClick = useCallback(
+    (notification: NotificationItem) => {
+      // เมื่อผู้ใช้กดเข้าไปดูโพสต์นี้:
+      // 1) บันทึกเวลา created_at ล่าสุดที่ user เห็น เพื่อใช้เป็นเส้นแบ่ง "แจ้งเตือนใหม่"
+      const lastSeen = notification.created_at;
+      setClearedPostMap((prev) => {
+        const next = { ...prev, [notification.post_id]: lastSeen };
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            'notification_cleared_posts',
+            JSON.stringify(next)
+          );
+        }
+        return next;
+      });
+
+      // 2) อัปเดตรายการปัจจุบันให้ตัวเลขของโพสต์นี้กลายเป็น 0 ทันที (แจ้งเตือนที่มีอยู่ก่อนหน้านี้ถือว่าอ่านแล้ว)
+      setNotifications((current) =>
+        current.map((n) => {
+          if (n.post_id !== notification.post_id) return n;
+          const clearedTime = new Date(lastSeen).getTime();
+          const isNewForUser =
+            new Date(n.created_at).getTime() > clearedTime;
+          return {
+            ...n,
+            notification_count: isNewForUser ? n.notification_count : 0,
+          };
+        })
+      );
+
+      router.push(`/notification/${notification.post_id}`);
+    },
+    [router]
+  );
 
   return (
-    <main style={{ background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ background: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: LAO_FONT }}>
       {/* Header */}
       <div style={{ 
         padding: '15px', 
@@ -389,11 +603,17 @@ export default function NotificationPage() {
         </div>
       ) : notifications.length === 0 ? (
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center', flex: 1 }}>
-          <EmptyState message="ไม่มีการแจ้งเตือน" variant="minimal" />
+          <EmptyState message="ບໍ່ມີການແຈ້ງເຕືອນ" variant="minimal" />
         </div>
       ) : (
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {notifications.map((notification) => (
+          {notifications.map((notification) => {
+            // ถ้ามีตัวเลขแจ้งเตือน (notification_count > 0) ให้ถือว่ายัง "มีแจ้งเตือนใหม่" → ใช้พื้นหลังแบบยังไม่อ่าน
+            const hasNewNotifications =
+              typeof notification.notification_count === 'number' &&
+              notification.notification_count > 0;
+            const isReadStyle = !hasNewNotifications;
+            return (
             <div
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
@@ -403,28 +623,54 @@ export default function NotificationPage() {
                 padding: '16px 20px',
                 cursor: 'pointer',
                 borderBottom: '1px solid #f0f0f0',
-                backgroundColor: notification.is_read ? '#fff' : '#e7f3ff',
+                backgroundColor: isReadStyle ? '#fff' : '#e7f3ff',
                 transition: 'background-color 0.2s',
                 gap: '16px'
               }}
               onMouseEnter={(e) => {
-                if (notification.is_read) {
+                if (isReadStyle) {
                   e.currentTarget.style.backgroundColor = '#f5f5f5';
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = notification.is_read ? '#fff' : '#e7f3ff';
+                e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
               }}
             >
-              {/* Post Image */}
+              {/* Post Image + per-post notification count badge */}
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <MiniPostImage images={notification.post_images || []} />
+                {typeof notification.notification_count === 'number' &&
+                  notification.notification_count > 0 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        minWidth: '16px',
+                        height: '16px',
+                        padding: '0 4px',
+                        borderRadius: '999px',
+                        background: '#e0245e',
+                        color: '#fff',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: '16px',
+                      }}
+                    >
+                      {notification.notification_count > 99
+                        ? '99+'
+                        : notification.notification_count}
+                    </div>
+                  )}
               </div>
 
               {/* Notification Content */}
               <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
                 <div style={{ fontSize: '17px', lineHeight: '1.4', color: '#050505', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: '600', color: '#65676b' }}>
+                  <span style={{ fontSize: '20px', fontWeight: '600', color: '#4a4d52' }}>
                     {((notification.likes || 0) + (notification.saves || 0))}
                   </span>
                   {/* Like Icon - สีแดง */}
@@ -454,12 +700,12 @@ export default function NotificationPage() {
                     <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
                   </svg>
                 </div>
-                <div style={{ fontSize: '15px', color: '#65676b', marginTop: '6px' }}>
+                <div style={{ fontSize: '15px', color: '#4a4d52', marginTop: '6px' }}>
                   {formatTimeAgo(notification.created_at)}
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </main>

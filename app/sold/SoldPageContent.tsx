@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -17,6 +17,7 @@ import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { AppHeader } from '@/components/AppHeader';
+import { SearchScreen } from '@/components/SearchScreen';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -41,6 +42,8 @@ export function SoldPageContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
+  const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
@@ -48,9 +51,44 @@ export function SoldPageContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const hasFetchedRef = useRef(false);
 
   // Use home data hook for user profile and session management
   const homeData = useHomeData('');
+
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const fetchUnreadCount = useCallback(async () => {
+    const userId = homeData.session?.user?.id;
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
+    const { data, error } = await supabase.rpc('get_unread_notifications_count', { p_user_id: String(userId) });
+    if (!error) {
+      const n = typeof data === 'number' ? data : Number(data);
+      setUnreadCount(Number.isFinite(n) ? n : 0);
+    }
+  }, [homeData.session]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  // Re-fetch when returning to this tab/page
+  useEffect(() => {
+    if (pathname !== '/sold') return;
+    const onFocus = () => fetchUnreadCount();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fetchUnreadCount();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [pathname, fetchUnreadCount]);
 
   // Use post list data hook for sold posts
   const postListData = usePostListData({
@@ -101,19 +139,22 @@ export function SoldPageContent() {
 
   // Initialize data when search term changes
   useEffect(() => {
-    if (homeData.session !== undefined) {
+    // รอให้ session ใน hook ถูก initialize แล้ว (ไม่ใช่ undefined)
+    if (postListData.session !== undefined) {
       postListData.setPage(0);
       postListData.setHasMore(true);
       postListData.fetchPosts(true);
+      hasFetchedRef.current = true;
     }
-  }, [searchTerm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, postListData.session]);
 
   // Load more when page changes
   useEffect(() => {
-    if (postListData.page > 0 && !postListData.loadingMore) {
+    if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
       postListData.fetchPosts(false);
     }
-  }, [postListData.page]);
+  }, [postListData.page, postListData.session]);
 
   // Handle shared post from URL
   useEffect(() => {
@@ -151,6 +192,10 @@ export function SoldPageContent() {
     postListData.fetchPosts(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [postListData]);
+
+  useEffect(() => {
+    if (!postListData.loadingMore) setTabRefreshing(false);
+  }, [postListData.loadingMore]);
 
   // Use shared post feed handlers
   const handlers = usePostFeedHandlers({
@@ -198,10 +243,24 @@ export function SoldPageContent() {
         onSearchChange={setSearchTerm}
         onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
         onNotificationClick={() => router.push('/notification')}
+        unreadCount={unreadCount}
         userProfile={homeData.userProfile}
         session={homeData.session}
         isHeaderVisible={headerScroll.isHeaderVisible}
         onTabChange={handleLogoClick}
+        onSearchClick={() => setIsSearchScreenOpen(true)}
+        onTabRefresh={() => {
+          setTabRefreshing(true);
+          handleLogoClick();
+        }}
+        loadingTab={tabRefreshing ? 'sold' : null}
+      />
+
+      <SearchScreen
+        isOpen={isSearchScreenOpen}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onClose={() => setIsSearchScreenOpen(false)}
       />
 
       <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
@@ -229,6 +288,7 @@ export function SoldPageContent() {
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
         loadingMore={postListData.loadingMore}
+        hideBoost
       />
 
       {/* Terms Modal */}

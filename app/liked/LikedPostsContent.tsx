@@ -31,6 +31,7 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 export function LikedPostsContent() {
   const router = useRouter();
   const [tab, setTab] = useState('recommend');
+  const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
@@ -112,6 +113,10 @@ export function LikedPostsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  useEffect(() => {
+    if (!postListData.loadingMore) setTabRefreshing(false);
+  }, [postListData.loadingMore]);
+
   // Load more when page changes
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
@@ -161,13 +166,24 @@ export function LikedPostsContent() {
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
         <PageHeader title="ລາຍການທີ່ມັກ" centerTitle />
-        <TabNavigation
-          tabs={[
+<TabNavigation
+        tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },
             { value: 'sold', label: 'ຂາຍແລ້ວ' },
           ]}
           activeTab={tab}
-          onTabChange={setTab}
+          onTabChange={(v) => {
+            if (v === tab) {
+              setTabRefreshing(true);
+              postListData.setPage(0);
+              postListData.setHasMore(true);
+              postListData.fetchPosts(true);
+              return;
+            }
+            setTabRefreshing(true);
+            setTab(v);
+          }}
+          loadingTab={tabRefreshing ? tab : null}
         />
       </div>
 
@@ -194,6 +210,7 @@ export function LikedPostsContent() {
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
         loadingMore={postListData.loadingMore}
+        hideBoost={tab === 'sold'}
       />
 
       <PostFeedModals

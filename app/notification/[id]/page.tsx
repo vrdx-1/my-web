@@ -24,6 +24,7 @@ import { usePostModals } from '@/hooks/usePostModals';
 
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { LAO_FONT } from '@/utils/constants';
 
 export default function NotificationDetail() {
  const router = useRouter();
@@ -168,6 +169,20 @@ export default function NotificationDetail() {
    setJustSavedPosts,
  });
 
+ // Custom handler for togglePostStatus that updates post state instead of filtering
+ const handleTogglePostStatus = useCallback(async (postId: string, currentStatus: string) => {
+   const newStatus = currentStatus === 'recommend' ? 'sold' : 'recommend';
+   const { error } = await supabase.from('cars').update({ status: newStatus }).eq('id', postId);
+   if (!error) {
+     setPost((prevPost: any) => {
+       if (prevPost && prevPost.id === postId) {
+         return { ...prevPost, status: newStatus };
+       }
+       return prevPost;
+     });
+   }
+ }, []);
+
  // Use shared post feed handlers
  const handlers = usePostFeedHandlers({
    session,
@@ -212,7 +227,7 @@ export default function NotificationDetail() {
  );
 
  return (
-   <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', position: 'relative', fontFamily: 'sans-serif' }}>
+   <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', position: 'relative', fontFamily: LAO_FONT }}>
      {/* 1. Header */}
      <div style={{ 
        padding: '15px', 
@@ -268,12 +283,13 @@ export default function NotificationDetail() {
          onShare={handlers.handleShare}
          onViewLikes={handleViewLikes}
          onViewSaves={handleViewSaves}
-         onTogglePostStatus={handlers.handleTogglePostStatus}
+         onTogglePostStatus={handleTogglePostStatus}
          onDeletePost={handlers.handleDeletePost}
-         onReport={handlers.handleReport}
-         onSetActiveMenu={menu.setActiveMenu}
-         onSetMenuAnimating={menu.setIsMenuAnimating}
-       />
+        onReport={handlers.handleReport}
+        onSetActiveMenu={menu.setActiveMenu}
+        onSetMenuAnimating={menu.setIsMenuAnimating}
+        hideBoost={post?.status === 'sold'}
+      />
      )}
 
      {/* Modals - Using shared components */}

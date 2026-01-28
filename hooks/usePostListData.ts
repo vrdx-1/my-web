@@ -418,6 +418,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               const matchesTab = tab ? postData.status === tab : true;
               return matchesTab && (isNotHidden || isOwner);
             }
+            if (type === 'sold') {
+              // Filter เฉพาะ posts ที่ status === 'sold' และไม่ถูกซ่อน
+              return postData.status === 'sold' && !postData.is_hidden;
+            }
             return true;
           });
 

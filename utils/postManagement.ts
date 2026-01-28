@@ -15,7 +15,6 @@ export async function togglePostStatus(
   const { error } = await supabase.from('cars').update({ status: newStatus }).eq('id', postId);
   if (!error) {
     setPosts(prev => prev.filter(p => p.id !== postId));
-    alert("ອັບເດດສະຖານະສຳເລັດ!");
   }
 }
 
@@ -29,9 +28,6 @@ export async function deletePost(
   const { error } = await supabase.from('cars').delete().eq('id', postId);
   if (!error) {
     setPosts(prev => prev.filter(p => p.id !== postId));
-    alert("ລຶບໂພສສຳເລັດແລ້ວ");
-  } else {
-    alert("ເກີດຂໍ້ຜິດພາດ: " + error.message);
   }
 }
 
@@ -44,7 +40,6 @@ export function openReportModal(
   setReportingPost: (post: any | null) => void
 ): void {
   if (!session) {
-    alert("ກະລຸນາລົງທະບຽນກ່ອນ");
     return;
   }
   setReportingPost(post);
@@ -62,7 +57,6 @@ export async function submitReport(
   setIsSubmittingReport: (submitting: boolean) => void
 ): Promise<boolean> {
   if (!reportReason.trim()) {
-    alert("ກະລຸນາລະບຸສາເຫດການລາຍງານ");
     return false;
   }
   setIsSubmittingReport(true);
@@ -78,7 +72,6 @@ export async function submitReport(
   ]);
 
   if (error) {
-    alert("ເກີດຂໍ້ຜິດພາດ: " + error.message);
     setIsSubmittingReport(false);
     return false;
   } else {
@@ -112,7 +105,6 @@ export async function sharePost(
       setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
     } else {
       navigator.clipboard.writeText(shareUrl);
-      alert("ຄັດລອກລິ້ງສຳເລັດແລ້ວ!");
     }
   } catch (err) {
     console.log('User cancelled share');

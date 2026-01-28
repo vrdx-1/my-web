@@ -93,10 +93,10 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                 status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
               )}
             </div>
-            <div style={{ fontSize: '12px', color: '#65676b', lineHeight: '16px' }}>
+            <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
               {viewingPost.is_boosted ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 'bold', color: '#65676b' }}>• Ad</span> 
+                  <span style={{ fontWeight: 'bold', color: '#4a4d52' }}>• Ad</span> 
                   <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span>
                   <span style={{ margin: '0 4px' }}>•</span>
                   {viewingPost.province}

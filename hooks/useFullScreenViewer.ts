@@ -101,7 +101,6 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
         setActivePhotoMenu(null);
       }
     } catch (err) {
-      alert("ບໍ່ສາມາດບັນທຶກຮູບໄດ້ในขณะนี้");
     }
   }, []);
 

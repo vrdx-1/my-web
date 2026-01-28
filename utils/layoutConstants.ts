@@ -4,6 +4,8 @@
  * Reduces duplication of inline styles
  */
 
+import { LAO_FONT } from './constants';
+
 export const LAYOUT_CONSTANTS = {
   // Container widths
   MAIN_CONTAINER_WIDTH: '600px',
@@ -18,7 +20,7 @@ export const LAYOUT_CONSTANTS = {
     margin: '0 auto',
     background: '#fff',
     minHeight: '100vh',
-    fontFamily: 'sans-serif',
+    fontFamily: LAO_FONT,
     position: 'relative' as const,
   },
   
@@ -30,6 +32,7 @@ export const LAYOUT_CONSTANTS = {
     background: '#fff',
     display: 'flex',
     flexDirection: 'column' as const,
+    fontFamily: LAO_FONT,
   },
   
   // Admin container styles (used in admin/reporting, admin/review, admin/visitor)

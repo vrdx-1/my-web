@@ -29,6 +29,7 @@ interface PostFeedProps {
   onSetMenuAnimating: (animating: boolean) => void;
   loadingMore?: boolean;
   emptyMessage?: string;
+  hideBoost?: boolean;
 }
 
 /**
@@ -59,6 +60,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   onSetMenuAnimating,
   loadingMore = false,
   emptyMessage = 'ຍັງບໍ່ມີລາຍການ',
+  hideBoost = false,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (
@@ -96,15 +98,15 @@ export const PostFeed = React.memo<PostFeedProps>(({
             onReport={onReport}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
+            hideBoost={hideBoost}
           />
         );
       })}
 
-      {loadingMore && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
-          <LoadingSpinner />
-        </div>
-      )}
+      {/* จองพื้นที่คงที่ ไม่ให้ layout shift ตอนโหลดโพสต์ถัดไป (ลดการกระตุก/กระพริบ) */}
+      <div style={{ minHeight: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {loadingMore ? <LoadingSpinner /> : null}
+      </div>
     </>
   );
 });

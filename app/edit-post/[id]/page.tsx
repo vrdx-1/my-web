@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
 import { useImageUpload } from '@/hooks/useImageUpload';
 
-import { LAO_PROVINCES } from '@/utils/constants';
+import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { ProvinceDropdown } from '@/components/ProvinceDropdown';
 
@@ -154,11 +154,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
   const handleUpdate = async (goBackAfterSave?: boolean) => {
     if (!province) {
-      alert('ກະລຸນາເລືອກແຂວງ');
       return;
     }
     if (images.length === 0 && imageUpload.selectedFiles.length === 0) {
-      alert('ກະລຸນາເລືອກຮູບພາບຢ່າງໜ້ອຍ 1 ຮູບ');
       return;
     }
     setUploading(true);
@@ -206,7 +204,6 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
       }
       router.refresh();
     } catch (err: any) {
-      alert(err.message || "ເກີດຂໍ້ຜິດພາດ");
     } finally {
       setUploading(false);
     }
@@ -214,7 +211,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: LAO_FONT }}>
         <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
       </div>
     );
@@ -247,7 +244,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             {userProfile?.avatar_url ? (
               <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
             ) : (
-              <svg width="50" height="50" viewBox="0 0 24 24" fill="#65676b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+              <svg width="50" height="50" viewBox="0 0 24 24" fill="#4a4d52"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
             )}
           </div>
           <div style={{ flex: 1 }}>
@@ -337,7 +334,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
             {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
             <div style={{ padding: '5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
                 <span style={{ fontSize: '18px', color: '#fff', lineHeight: '1' }}>+</span> ເພີ່ມຮູບ
                 <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
               </label>

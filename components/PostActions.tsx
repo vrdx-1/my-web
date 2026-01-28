@@ -54,7 +54,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               viewBox="0 0 24 24" 
               className={justLikedPosts[post.id] ? "animate-pop" : ""} 
               fill={likedPosts[post.id] ? "#e0245e" : "none"} 
-              stroke={likedPosts[post.id] ? "#e0245e" : "#65676b"} 
+              stroke={likedPosts[post.id] ? "#e0245e" : "#4a4d52"} 
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round" 
@@ -62,7 +62,7 @@ export const PostActions = React.memo<PostActionsProps>(({
             >
               <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path>
             </svg>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#65676b' }}>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#4a4d52' }}>
               {post.likes || 0}
             </span>
           </div>
@@ -78,7 +78,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               viewBox="0 0 24 24" 
               className={justSavedPosts[post.id] ? "animate-pop" : ""} 
               fill={savedPosts[post.id] ? "#FFD700" : "none"} 
-              stroke={savedPosts[post.id] ? "#FFD700" : "#65676b"} 
+              stroke={savedPosts[post.id] ? "#FFD700" : "#4a4d52"} 
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round" 
@@ -86,19 +86,19 @@ export const PostActions = React.memo<PostActionsProps>(({
             >
               <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
             </svg>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#65676b' }}>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#4a4d52' }}>
               {post.saves || 0}
             </span>
           </div>
 
           {/* View Count */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4a4d52' }}>
             <svg 
               width="22" 
               height="22" 
               viewBox="0 0 24 24" 
               fill="none" 
-              stroke="#65676b" 
+              stroke="#4a4d52" 
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
@@ -119,7 +119,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               height="22" 
               viewBox="0 0 24 24" 
               fill="none" 
-              stroke="#65676b" 
+              stroke="#4a4d52" 
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"

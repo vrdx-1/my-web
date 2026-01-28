@@ -68,20 +68,18 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
   const cursor = onImageClick ? 'pointer' : 'default';
   const click = onImageClick ? () => onImageClick() : undefined;
 
-  // 1 รูป — เหมือน PhotoGrid
+  // 1 รูป — แสดง aspect ratio ตามรูปจริง
   if (count === 1) {
     return (
       <div
         onClick={click}
-        style={{ position: 'relative', width: '100%', height: '400px', cursor }}
+        style={{ position: 'relative', width: '100%', cursor }}
         className={className}
       >
-        <Image
+        <img
           src={allImages[0]}
           alt="Preview"
-          fill
-          style={{ objectFit: 'cover', objectPosition: 'center' }}
-          unoptimized
+          style={{ width: '100%', height: 'auto', display: 'block' }}
         />
         {removeBtn(0)}
       </div>

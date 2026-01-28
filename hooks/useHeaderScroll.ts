@@ -2,13 +2,18 @@
 
 import { useState, useEffect } from 'react';
 
+interface UseHeaderScrollOptions {
+  loadingMore?: boolean;
+}
+
 interface UseHeaderScrollReturn {
   isHeaderVisible: boolean;
   lastScrollY: number;
   setIsHeaderVisible: (visible: boolean) => void;
 }
 
-export function useHeaderScroll(): UseHeaderScrollReturn {
+export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
+  const { loadingMore = false } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -16,6 +21,15 @@ export function useHeaderScroll(): UseHeaderScrollReturn {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY);
+      
+      if (loadingMore) {
+        /* ขณะโหลดโพสต์ถัดไป อย่าให้ header เลื่อนลงมา */
+        if (currentScrollY > lastScrollY && currentScrollY > 80 && scrollDelta > 5) {
+          setIsHeaderVisible(false);
+        }
+        setLastScrollY(currentScrollY);
+        return;
+      }
       
       if (currentScrollY < 10) {
         setIsHeaderVisible(true);
@@ -29,7 +43,7 @@ export function useHeaderScroll(): UseHeaderScrollReturn {
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, loadingMore]);
 
   return {
     isHeaderVisible,

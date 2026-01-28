@@ -75,7 +75,7 @@ export default function AdminPostStatsPage() {
                 fontSize: '14px',
                 fontWeight: '600',
                 background: filter === item ? '#fff' : 'transparent',
-                color: filter === item ? '#007bff' : '#65676b',
+                color: filter === item ? '#007bff' : '#4a4d52',
                 boxShadow: filter === item ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
                 transition: '0.2s'
               }}

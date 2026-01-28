@@ -3,6 +3,8 @@
  * Shared inline style objects used across components
  */
 
+import { LAO_FONT } from '@/utils/constants';
+
 export const commonStyles = {
   // Container styles
   mainContainer: {
@@ -10,7 +12,7 @@ export const commonStyles = {
     margin: '0 auto',
     background: '#fff',
     minHeight: '100vh',
-    fontFamily: 'sans-serif',
+    fontFamily: LAO_FONT,
     position: 'relative' as const,
   },
 
