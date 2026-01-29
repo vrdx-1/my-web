@@ -7,7 +7,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
-import { AppHeader } from '@/components/AppHeader';
+import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
 
 // Modal Components (Static - used frequently)
@@ -88,7 +88,7 @@ const [tabRefreshing, setTabRefreshing] = useState(false);
  const menu = useMenu();
  
  // Use header scroll hook (ไม่ให้ header เลื่อนลงมาตอนโหลดโพสต์ถัดไป)
- const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore });
+ const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore, disableScrollHide: true });
 
  // Use fullScreen viewer hook
  const fullScreenViewer = useFullScreenViewer();
@@ -261,7 +261,7 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
  <main style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
  <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
- <AppHeader
+ <HomeHeader
    searchTerm={searchTerm}
    onSearchChange={setSearchTerm}
    onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
@@ -272,6 +272,8 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    isHeaderVisible={headerScroll.isHeaderVisible}
    onTabChange={handleLogoClick}
    onSearchClick={() => setIsSearchScreenOpen(true)}
+   controlSize={40}
+   iconSize={22}
    onTabRefresh={() => {
      setTabRefreshing(true);
      handleLogoClick();
@@ -355,12 +357,7 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
    savedScrollPosition={viewingPostHook.savedScrollPosition}
    onViewingPostClose={() => {
-     viewingPostHook.setIsViewingModeOpen(false);
-     headerScroll.setIsHeaderVisible(true);
-     setTimeout(() => {
-       viewingPostHook.setViewingPost(null);
-       window.scrollTo(0, viewingPostHook.savedScrollPosition);
-     }, 300);
+     viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
    }}
    onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
    onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

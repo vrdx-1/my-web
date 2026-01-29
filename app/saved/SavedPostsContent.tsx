@@ -242,12 +242,7 @@ export function SavedPostsContent() {
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         onViewingPostClose={() => {
-          viewingPostHook.setIsViewingModeOpen(false);
-          headerScroll.setIsHeaderVisible(true);
-          setTimeout(() => {
-            viewingPostHook.setViewingPost(null);
-            window.scrollTo(0, viewingPostHook.savedScrollPosition);
-          }, 300);
+          viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

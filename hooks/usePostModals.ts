@@ -52,13 +52,12 @@ export function usePostModals({
       setViewingModeDragOffset(0);
       setViewingModeIsDragging(false);
       document.body.style.overflow = '';
-      setTimeout(() => {
-        window.scrollTo(0, savedScrollPosition);
-      }, 100);
+      window.scrollTo(0, savedScrollPosition);
     } else if (viewingPost.images) {
       document.body.style.overflow = 'hidden';
       setViewingModeDragOffset(0);
       setViewingModeIsDragging(false);
+      setIsViewingModeOpen(true);
       setTimeout(() => {
         const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
         const container = document.getElementById('viewing-mode-container');
@@ -66,11 +65,6 @@ export function usePostModals({
           const headerHeight = 60;
           const imageTop = imageElement.offsetTop - headerHeight;
           container.scrollTop = imageTop;
-          setTimeout(() => {
-            setIsViewingModeOpen(true);
-          }, 50);
-        } else {
-          setIsViewingModeOpen(true);
         }
       }, 10);
     }
@@ -89,7 +83,7 @@ export function usePostModals({
       setFullScreenZoomScale(1);
       setFullScreenZoomOrigin('50% 50%');
       setFullScreenIsDragging(false);
-      setFullScreenTransitionDuration(200);
+      setFullScreenTransitionDuration(0);
       setFullScreenShowDetails(true);
     }
   }, [fullScreenImages, setFullScreenDragOffset, setFullScreenVerticalDragOffset, setFullScreenZoomScale, setFullScreenZoomOrigin, setFullScreenIsDragging, setFullScreenTransitionDuration, setFullScreenShowDetails]);

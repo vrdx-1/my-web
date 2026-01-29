@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useState, useCallback } from 'react';
+import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
 
 interface FullScreenImageViewerProps {
   images: string[] | null;
@@ -64,6 +65,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   return (
     <>
       <div 
+        {...{ [FULLSCREEN_VIEWER_ROOT_ATTR]: FULLSCREEN_VIEWER_ROOT_VALUE }}
         style={{ 
           position: 'fixed', 
           inset: 0, 
@@ -85,7 +87,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           alignItems: 'center', 
           position: 'relative', 
           opacity: fullScreenShowDetails ? 1 : 0, 
-          transition: 'opacity 0.35s ease-out', 
+          transition: 'none', 
           pointerEvents: fullScreenShowDetails ? 'auto' : 'none' 
         }}>
           <button 
@@ -117,88 +119,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           }}>
             {currentImgIndex + 1}/{images.length}
           </div>
-          <div style={{ position: 'relative' }}>
-            <button 
-              ref={photoMenuButtonRef} 
-              data-menu-button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onPhotoMenuToggle(currentImgIndex); 
-              }} 
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer', 
-                padding: '10px', 
-                touchAction: 'manipulation' 
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
-                <circle cx="5" cy="12" r="2.5" />
-                <circle cx="12" cy="12" r="2.5" />
-                <circle cx="19" cy="12" r="2.5" />
-              </svg>
-            </button>
-            {activePhotoMenu === currentImgIndex && (() => {
-              const buttonEl = photoMenuButtonRef.current;
-              const rect = buttonEl?.getBoundingClientRect();
-              const menuTop = rect ? rect.bottom + 4 : 0;
-              const menuRight = rect ? window.innerWidth - rect.right : 0;
-              return (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 3100, pointerEvents: 'none' }}>
-                  <div 
-                    style={{ 
-                      position: 'fixed', 
-                      inset: 0, 
-                      background: 'rgba(0,0,0,0.3)', 
-                      zIndex: 3101, 
-                      pointerEvents: 'auto' 
-                    }} 
-                    onClick={onDownloadBottomSheetClose}
-                  />
-                  <div 
-                    data-menu-container 
-                    onClick={(e) => e.stopPropagation()} 
-                    onMouseDown={(e) => e.stopPropagation()} 
-                    onTouchStart={(e) => e.stopPropagation()} 
-                    style={{ 
-                      position: 'fixed', 
-                      right: `${menuRight}px`, 
-                      top: `${menuTop}px`, 
-                      background: '#fff', 
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)', 
-                      borderRadius: '8px', 
-                      width: '130px', 
-                      zIndex: 3102, 
-                      overflow: 'hidden', 
-                      touchAction: 'manipulation', 
-                      transform: isPhotoMenuAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)', 
-                      opacity: isPhotoMenuAnimating ? 0 : 1, 
-                      transition: 'transform 0.2s ease-out, opacity 0.2s ease-out', 
-                      pointerEvents: 'auto' 
-                    }}
-                  >
-                    <div 
-                      onClick={() => { 
-                        onPhotoMenuToggle(-1); 
-                        onDownload(images[currentImgIndex]); 
-                      }} 
-                      style={{ 
-                        padding: '15px', 
-                        fontSize: '14px', 
-                        cursor: 'pointer', 
-                        color: '#1c1e21', 
-                        fontWeight: 'bold', 
-                        textAlign: 'center' 
-                      }}
-                    >
-                      ບັນທຶກຮູບ
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
+          {/* Removed download/save menu */}
+          <div style={{ width: '44px', height: '44px' }} />
         </div>
         <div 
           ref={(el) => {
@@ -216,7 +138,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
         >
           <div style={{ 
             display: 'flex', 
-            transition: fullScreenIsDragging ? 'none' : `transform ${fullScreenTransitionDuration}ms ease-out`, 
+            transition: 'none', 
             transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px)) translateY(${fullScreenVerticalDragOffset}px)`, 
             width: '100%', 
             height: '100%' 
@@ -232,7 +154,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                   height: '100%', 
                   transform: idx === currentImgIndex ? `scale(${fullScreenZoomScale})` : 'scale(1)', 
                   transformOrigin: idx === currentImgIndex ? fullScreenZoomOrigin : 'center center', 
-                  transition: fullScreenIsDragging ? 'none' : 'transform 0.2s ease-out' 
+                  transition: 'none' 
                 }}
               >
                 <img 
@@ -249,105 +171,6 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           </div>
         </div>
       </div>
-
-      {showDownloadBottomSheet && (
-        <div 
-          style={{ 
-            position: 'fixed', 
-            inset: 0, 
-            background: 'rgba(0,0,0,0.5)', 
-            zIndex: 4000, 
-            display: 'flex', 
-            alignItems: 'flex-end', 
-            justifyContent: 'center', 
-            transition: 'background 0.3s' 
-          }} 
-          onClick={onDownloadBottomSheetClose}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              width: '100%', 
-              background: '#fff', 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
-              borderRadius: '20px 20px 0 0', 
-              transform: isDownloadBottomSheetAnimating ? 'translateY(100%)' : 'translateY(0)', 
-              transition: 'transform 0.3s ease-out', 
-              overflow: 'hidden', 
-              border: '1px solid #eee' 
-            }}
-          >
-            <div 
-              style={{ 
-                padding: '8px 0', 
-                display: 'flex', 
-                justifyContent: 'center', 
-                cursor: 'pointer' 
-              }} 
-              onClick={onDownloadBottomSheetClose}
-            >
-              <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
-            </div>
-            <div 
-              onClick={onDownloadBottomSheetDownload} 
-              style={{ 
-                padding: '15px', 
-                fontSize: '14px', 
-                cursor: 'pointer', 
-                color: '#1c1e21', 
-                fontWeight: 'bold', 
-                textAlign: 'center', 
-                background: '#fff', 
-                borderBottom: '1px solid #eee' 
-              }}
-            >
-              ບັນທຶກຮູບ
-            </div>
-            <div 
-              onClick={onDownloadBottomSheetClose} 
-              style={{ 
-                padding: '15px', 
-                fontSize: '14px', 
-                cursor: 'pointer', 
-                color: '#4a4d52', 
-                textAlign: 'center', 
-                background: '#fff' 
-              }}
-            >
-              ຍົກເລີກ
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showImageForDownload && (
-        <div 
-          style={{ 
-            position: 'fixed', 
-            inset: 0, 
-            background: 'rgba(0,0,0,0.9)', 
-            zIndex: 4000, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            padding: '20px' 
-          }} 
-          onClick={onImageForDownloadClose}
-        >
-          <img 
-            src={showImageForDownload} 
-            style={{ 
-              maxWidth: '100%', 
-              maxHeight: '100%', 
-              objectFit: 'contain', 
-              userSelect: 'none', 
-              WebkitUserSelect: 'none', 
-              WebkitTouchCallout: 'default' 
-            }} 
-            onContextMenu={(e) => e.preventDefault()} 
-          />
-        </div>
-      )}
     </>
   );
 });

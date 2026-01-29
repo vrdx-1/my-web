@@ -23,6 +23,7 @@ interface UseViewingPostReturn {
   
   // Handlers
   handleViewPost: (post: any, imageIndex: number, setPosts: (updater: (prev: any[]) => any[]) => void, setIsHeaderVisible: (visible: boolean) => void) => Promise<void>;
+  closeViewingMode: (setIsHeaderVisible?: (visible: boolean) => void) => void;
   handleViewingModeTouchStart: (e: React.TouchEvent) => void;
   handleViewingModeTouchMove: (e: React.TouchEvent) => void;
   handleViewingModeTouchEnd: (e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => void;
@@ -55,6 +56,16 @@ export function useViewingPost(): UseViewingPostReturn {
     setPosts(prev => prev.map(p => p.id === post.id ? { ...p, views: (p.views || 0) + 1 } : p));
   }, []);
 
+  const closeViewingMode = useCallback((setIsHeaderVisible?: (visible: boolean) => void) => {
+    setIsViewingModeOpen(false);
+    setViewingModeDragOffset(0);
+    setViewingModeIsDragging(false);
+    setViewingModeTouchStart(null);
+    if (setIsHeaderVisible) setIsHeaderVisible(true);
+    setViewingPost(null);
+    window.scrollTo({ top: savedScrollPosition, behavior: 'auto' });
+  }, [savedScrollPosition]);
+
   const handleViewingModeTouchStart = useCallback((e: React.TouchEvent) => {
     setViewingModeTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
     setViewingModeIsDragging(true);
@@ -83,27 +94,18 @@ export function useViewingPost(): UseViewingPostReturn {
     
     const isHorizontalSwipe = absDiffX > diffY * 1.5;
     const isStrongHorizontalSwipe = diffX > 100 && isHorizontalSwipe;
-    const isAtBottomAndSwipeDown = isAtBottom && diffY > 50 && diffY > absDiffX * 1.5;
     const isScrolling = !isAtTop && !isAtBottom && diffY > 30;
     
-    if ((isStrongHorizontalSwipe || isAtBottomAndSwipeDown) && !isScrolling) {
-      setViewingModeIsDragging(false);
-      setViewingModeDragOffset(window.innerWidth);
-      setTimeout(() => {
-        setIsViewingModeOpen(false);
-        setIsHeaderVisible(true);
-        setViewingModeDragOffset(0);
-        setTimeout(() => {
-          setViewingPost(null);
-          window.scrollTo(0, savedScrollPosition);
-        }, 50);
-      }, 300);
+    if (isStrongHorizontalSwipe && !isScrolling) {
+      // Close immediately (no animation)
+      closeViewingMode(setIsHeaderVisible);
+      return;
     } else if (Math.abs(viewingModeDragOffset) > 20) {
       setViewingModeDragOffset(0);
       setViewingModeIsDragging(false);
     }
     setViewingModeTouchStart(null);
-  }, [viewingModeTouchStart, viewingModeDragOffset, savedScrollPosition]);
+  }, [viewingModeTouchStart, viewingModeDragOffset, closeViewingMode]);
 
   return {
     // State
@@ -125,6 +127,7 @@ export function useViewingPost(): UseViewingPostReturn {
     
     // Handlers
     handleViewPost,
+    closeViewingMode,
     handleViewingModeTouchStart,
     handleViewingModeTouchMove,
     handleViewingModeTouchEnd,

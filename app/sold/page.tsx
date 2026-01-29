@@ -1,18 +1,14 @@
 'use client'
 
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
 
 // Lazy load SoldPageContent with real code splitting
-const LazySoldPageContent = dynamic(() => import('./SoldPageContent').then(mod => ({ default: mod.SoldPageContent })), {
-  loading: () => <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>,
-  ssr: true,
-});
+const LazySoldPageContent = dynamicNamed(() => import('./SoldPageContent'), 'SoldPageContent', { ssr: true });
 
 export default function SoldPage() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>}>
+    <Suspense fallback={<PageLoadingFallback />}>
       <LazySoldPageContent />
     </Suspense>
   );

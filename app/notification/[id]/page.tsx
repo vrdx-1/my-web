@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
+import { EmptyState } from '@/components/EmptyState';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -198,10 +199,59 @@ export default function NotificationDetail() {
    fetchInteractions('saves', postId);
  }, [fetchInteractions]);
 
- if (loading || !post) return (
+ if (loading) return (
    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
      <LoadingSpinner />
    </div>
+ );
+
+ if (!post) return (
+   <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', position: 'relative', fontFamily: LAO_FONT }}>
+     {/* Header - ລາຍລະອຽດໂພສ ตรงกลาง, ปุ่ม back ด้านซ้าย */}
+     <div style={{
+       padding: '15px',
+       borderBottom: '1px solid #f0f0f0',
+       display: 'flex',
+       alignItems: 'center',
+       justifyContent: 'center',
+       position: 'sticky',
+       top: 0,
+       background: '#fff',
+       zIndex: 100,
+       flexShrink: 0,
+     }}>
+       <button
+         type="button"
+         onClick={(e) => {
+           e.preventDefault();
+           e.stopPropagation();
+           router.back();
+         }}
+         style={{
+           background: 'none',
+           border: 'none',
+           cursor: 'pointer',
+           display: 'flex',
+           alignItems: 'center',
+           justifyContent: 'center',
+           padding: '8px',
+           touchAction: 'manipulation',
+           position: 'absolute',
+           left: '15px',
+           zIndex: 10,
+         }}
+       >
+         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+           <polyline points="15 18 9 12 15 6"></polyline>
+         </svg>
+       </button>
+       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>ລາຍລະອຽດໂພສ</h1>
+     </div>
+
+     <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
+       <EmptyState message="ບໍ່ມີຂໍ້ມູນ" variant="minimal" />
+     </div>
+   </main>
  );
 
  return (
@@ -305,12 +355,7 @@ export default function NotificationDetail() {
        viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
        savedScrollPosition={viewingPostHook.savedScrollPosition}
        onViewingPostClose={() => {
-         viewingPostHook.setIsViewingModeOpen(false);
-         headerScroll.setIsHeaderVisible(true);
-         setTimeout(() => {
-           viewingPostHook.setViewingPost(null);
-           window.scrollTo(0, viewingPostHook.savedScrollPosition);
-         }, 300);
+         viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
        }}
        onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
        onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

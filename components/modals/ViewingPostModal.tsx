@@ -45,8 +45,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         bottom: 0, 
         background: '#fff', 
         zIndex: 2000, 
-        transform: isViewingModeOpen ? `translateX(calc(${viewingModeDragOffset}px))` : 'translateX(100%)', 
-        transition: viewingModeIsDragging ? 'none' : 'transform 0.3s ease-out' 
+        transform: `translateX(calc(${viewingModeDragOffset}px))`,
+        transition: 'none',
       }} 
       onTouchStart={onTouchStart} 
       onTouchMove={onTouchMove} 
@@ -59,7 +59,9 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           height: '100%', 
           background: '#fff', 
           position: 'relative', 
-          overflowY: 'auto' 
+          overflowY: 'auto',
+          scrollBehavior: 'auto',
+          WebkitOverflowScrolling: 'auto',
         }}
       >
         <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001 }}>
@@ -81,16 +83,18 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </svg>
           </button>
           <Avatar avatarUrl={viewingPost.profiles?.avatar_url} size={38} session={session} />
-          <div>
-            <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              {viewingPost.profiles?.username || 'User'}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                {viewingPost.profiles?.username || 'User'}
+              </span>
               {status.isOnline ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                   <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>
                   <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
                 </div>
               ) : (
-                status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
+                status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
               )}
             </div>
             <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
@@ -125,6 +129,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             <div style={{ width: '100%', overflow: 'hidden', padding: 0, margin: 0 }}>
               <img 
                 src={img} 
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
                 onClick={() => onImageClick(viewingPost.images, idx)} 
                 style={{ 
                   width: '100%', 

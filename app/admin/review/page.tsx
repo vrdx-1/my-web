@@ -1,18 +1,21 @@
 'use client'
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { AdminPostCard } from '@/components/AdminPostCard';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { EmptyState } from '@/components/EmptyState';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { PhotoGrid } from '@/components/PhotoGrid';
+import { lazyNamed } from '@/utils/lazyLoad';
 
 // Dynamic Imports
-const ViewingPostModal = lazy(() => 
-  import('@/components/modals/ViewingPostModal').then(m => ({ default: m.ViewingPostModal }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
-const FullScreenImageViewer = lazy(() => 
-  import('@/components/modals/FullScreenImageViewer').then(m => ({ default: m.FullScreenImageViewer }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
+const ViewingPostModal = lazyNamed(
+  () => import('@/components/modals/ViewingPostModal'),
+  'ViewingPostModal'
+);
+const FullScreenImageViewer = lazyNamed(
+  () => import('@/components/modals/FullScreenImageViewer'),
+  'FullScreenImageViewer'
+);
 
 export default function AdminReviewPage() {
   const [posts, setPosts] = useState<any[]>([]);

@@ -16,7 +16,7 @@ import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
-import { AppHeader } from '@/components/AppHeader';
+import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
 
 // Shared Hooks
@@ -114,7 +114,7 @@ export function SoldPageContent() {
   const fileUpload = useFileUpload();
 
   // Use header scroll hook
-  const headerScroll = useHeaderScroll();
+  const headerScroll = useHeaderScroll({ disableScrollHide: true });
 
   // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -238,7 +238,7 @@ export function SoldPageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <AppHeader
+      <HomeHeader
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
@@ -333,12 +333,7 @@ export function SoldPageContent() {
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         onViewingPostClose={() => {
-          viewingPostHook.setIsViewingModeOpen(false);
-          headerScroll.setIsHeaderVisible(true);
-          setTimeout(() => {
-            viewingPostHook.setViewingPost(null);
-            window.scrollTo(0, viewingPostHook.savedScrollPosition);
-          }, 300);
+          viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

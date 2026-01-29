@@ -15,6 +15,10 @@ interface AppHeaderProps {
   isHeaderVisible: boolean;
   onTabChange?: () => void;
   onSearchClick?: () => void;
+  /** ขนาด icon ด้านใน header (search/post/notification/profile) */
+  iconSize?: number;
+  /** ขนาดแท็บ/ปุ่มใน header (search/post/notification/profile) */
+  controlSize?: number;
   /** เรียกเมื่อกดแท็บที่ active อยู่ (refresh) */
   onTabRefresh?: () => void;
   /** แท็บที่กำลัง refresh แสดง loading เหมือนปุ่มเข้าสู่ระบบ */
@@ -36,6 +40,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isHeaderVisible,
   onTabChange,
   onSearchClick,
+  iconSize = 18,
+  controlSize = 36,
   onTabRefresh,
   loadingTab = null,
 }) => {
@@ -74,9 +80,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         {/* Search Bar */}
         <div 
           onClick={onSearchClick}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '7px 14px', cursor: 'pointer' }}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '7px 14px', cursor: 'pointer', minHeight: `${controlSize}px` }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
@@ -98,8 +104,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         <button 
           onClick={onCreatePostClick} 
           style={{ 
-            width: '36px', 
-            height: '36px', 
+            width: `${controlSize}px`, 
+            height: `${controlSize}px`, 
             borderRadius: '50%', 
             background: '#e4e6eb', 
             color: '#000', 
@@ -112,7 +118,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             touchAction: 'manipulation' 
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
@@ -122,8 +128,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         <button 
           onClick={onNotificationClick} 
           style={{ 
-            width: '36px', 
-            height: '36px', 
+            width: `${controlSize}px`, 
+            height: `${controlSize}px`, 
             borderRadius: '50%', 
             background: '#e4e6eb', 
             color: '#000', 
@@ -137,7 +143,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             position: 'relative',
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
@@ -168,11 +174,11 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 
         {/* Profile Avatar */}
         <Link href="/profile" style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <div style={{ width: `${controlSize}px`, height: `${controlSize}px`, borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             {userProfile?.avatar_url ? (
               <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>

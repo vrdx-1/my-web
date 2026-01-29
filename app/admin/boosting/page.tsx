@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { AdminPostCard } from "@/components/AdminPostCard";
 import { formatTime, getOnlineStatus } from "@/utils/postUtils";
 import { PhotoGrid } from "@/components/PhotoGrid";
+import { lazyNamed } from "@/utils/lazyLoad";
 
 // Dynamic Imports
-const ViewingPostModal = lazy(() => 
-  import('@/components/modals/ViewingPostModal').then(m => ({ default: m.ViewingPostModal }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
-const FullScreenImageViewer = lazy(() => 
-  import('@/components/modals/FullScreenImageViewer').then(m => ({ default: m.FullScreenImageViewer }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
+const ViewingPostModal = lazyNamed(
+  () => import('@/components/modals/ViewingPostModal'),
+  'ViewingPostModal'
+);
+const FullScreenImageViewer = lazyNamed(
+  () => import('@/components/modals/FullScreenImageViewer'),
+  'FullScreenImageViewer'
+);
 
 export default function AdminBoostingPage() {
   const supabase = createClient();
@@ -126,6 +129,8 @@ export default function AdminBoostingPage() {
     } catch (err) { }
   };
 
+  const hasRenderableItems = items.some((item) => Boolean(item?.cars));
+
   return (
     <main className="max-w-[1200px] mx-auto p-5 bg-[#f0f2f5] min-h-screen">
       <div className="flex flex-col items-center mb-10 space-y-4">
@@ -145,6 +150,12 @@ export default function AdminBoostingPage() {
           </button>
         </div>
       </div>
+
+      {!loading && !hasRenderableItems && (
+        <div className="w-full flex items-center justify-center py-24">
+          <div className="text-gray-500 font-semibold text-base">ບໍ່ມີລາຍການ</div>
+        </div>
+      )}
 
       <div className="space-y-12">
         {items.map((item) => {

@@ -1,17 +1,13 @@
 'use client'
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
 
 // Lazy load EditProfileContent with real code splitting
-const LazyEditProfile = dynamic(() => import('./EditProfileContent').then(mod => ({ default: mod.EditProfileContent })), {
-  loading: () => <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>,
-  ssr: true,
-});
+const LazyEditProfile = dynamicNamed(() => import('./EditProfileContent'), 'EditProfileContent', { ssr: true });
 
 export default function EditProfile() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>}>
+    <Suspense fallback={<PageLoadingFallback />}>
       <LazyEditProfile />
     </Suspense>
   );

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;
+  /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
+  disableScrollHide?: boolean;
 }
 
 interface UseHeaderScrollReturn {
@@ -13,11 +15,12 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { loadingMore = false } = options ?? {};
+  const { loadingMore = false, disableScrollHide = false } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
+    if (disableScrollHide) return;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY);
@@ -43,7 +46,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, loadingMore]);
+  }, [lastScrollY, loadingMore, disableScrollHide]);
 
   return {
     isHeaderVisible,

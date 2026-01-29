@@ -1,17 +1,13 @@
 'use client'
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
 
 // Lazy load LikedPostsContent with real code splitting
-const LazyLikedPosts = dynamic(() => import('./LikedPostsContent').then(mod => ({ default: mod.LikedPostsContent })), {
-  loading: () => <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>,
-  ssr: true,
-});
+const LazyLikedPosts = dynamicNamed(() => import('./LikedPostsContent'), 'LikedPostsContent', { ssr: true });
 
 export default function LikedPosts() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><LoadingSpinner /></div>}>
+    <Suspense fallback={<PageLoadingFallback />}>
       <LazyLikedPosts />
     </Suspense>
   );

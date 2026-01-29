@@ -7,6 +7,7 @@ import BackHandler from "@/components/BackHandler";
 import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider"; 
+import ZoomLock from "@/components/ZoomLock";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,8 @@ export default function RootLayout({
       >
         <ErrorBoundaryWrapper>
           <SWRProvider>
+            {/* Lock browser zoom on all pages (except full screen viewer) */}
+            <ZoomLock />
             {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
             <VisitorTracker />
             {/* กดย้อนกลับ (browser/มือถือ) ไม่ให้เด้งออกจากเว็บ back ตามสเต็ป */}

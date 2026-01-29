@@ -222,11 +222,7 @@ export function LikedPostsContent() {
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         onViewingPostClose={() => {
-          viewingPostHook.setIsViewingModeOpen(false);
-          setTimeout(() => {
-            viewingPostHook.setViewingPost(null);
-            window.scrollTo(0, viewingPostHook.savedScrollPosition);
-          }, 300);
+          viewingPostHook.closeViewingMode();
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

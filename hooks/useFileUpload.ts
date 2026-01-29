@@ -16,7 +16,9 @@ export function useFileUpload(): UseFileUploadReturn {
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files && e.target.files.length > 0) {
-      const filesArray = Array.from(e.target.files);
+      // Allow only images (block videos/other files)
+      const filesArray = Array.from(e.target.files).filter((file) => file.type?.startsWith('image/'));
+      if (filesArray.length === 0) return;
       const previewUrls = filesArray.map(file => URL.createObjectURL(file));
       sessionStorage.setItem('pending_images', JSON.stringify(previewUrls));
       router.push('/create-post');
