@@ -199,6 +199,7 @@ export function LikedPostsContent() {
         lastPostElementRef={lastPostElementRef}
         menuButtonRefs={menu.menuButtonRefs}
         onViewPost={handlers.handleViewPost}
+        onImpression={handlers.handleImpression}
         onLike={toggleLike}
         onSave={toggleSave}
         onShare={handlers.handleShare}

@@ -1,29 +1,34 @@
 import React from 'react';
 
-export type ShareIconTracedProps = React.SVGProps<SVGSVGElement> & {
+export type ShareIconTracedProps = React.ImgHTMLAttributes<HTMLImageElement> & {
   size?: number;
 };
 
+/** สีเดียวกับ action อื่น #4a4d52 – ใช้ filter ให้ไอคอนเป็นสีดำ/เทาเข้ม */
+const ACTION_ICON_FILTER = 'brightness(0) saturate(100%)';
+
 /**
- * Traced from the reference PNG the user provided.
- * Uses `fill="currentColor"` so it behaves like a normal icon.
+ * Share icon – ใช้รูปอ้างอิงที่ส่งมาโดยตรง เพื่อให้ตรงแบบทุกพิกเซล
  */
-export function ShareIconTraced({ size = 24, width, height, ...props }: ShareIconTracedProps) {
+export function ShareIconTraced({ size = 24, width, height, style, ...props }: ShareIconTracedProps) {
+  const w = width ?? size;
+  const h = height ?? size;
+  const combinedStyle = {
+    display: 'block',
+    objectFit: 'contain',
+    ...style,
+    filter: ACTION_ICON_FILTER,
+  };
   return (
-    <svg
-      width={width ?? size}
-      height={height ?? size}
-      viewBox="0 0 512 512"
-      fill="currentColor"
-      focusable="false"
-      aria-hidden={props['aria-label'] ? undefined : true}
+    <img
+      src="/share-icon.png?v=2"
+      alt=""
+      width={w}
+      height={h}
+      style={combinedStyle}
+      loading="eager"
+      decoding="async"
       {...props}
-    >
-      <path
-        fillRule="evenodd"
-        d="M 274.479 59.762 C 266.832 62.466, 263.049 65.667, 260.122 71.909 L 257.500 77.500 257.195 121 L 256.890 164.500 240.195 164.174 C 190.542 163.205, 149.202 173.894, 115 196.547 C 70.418 226.073, 42.489 279.009, 34.563 349 C 30.961 380.810, 31.652 425.478, 35.874 433.754 C 38.410 438.723, 43.913 444.256, 48.472 446.420 C 53.020 448.578, 62.496 448.421, 67.500 446.104 C 72.821 443.641, 75.887 440.098, 81.008 430.500 C 95.021 404.236, 111.246 388.258, 136.382 375.970 C 162.881 363.016, 193.121 357.595, 235.500 358.200 L 256.500 358.500 257.002 396.500 L 257.505 434.500 260.188 439.590 C 263.376 445.637, 268.416 450.322, 273.560 452.020 C 278.814 453.754, 287.661 452.720, 293.563 449.682 C 297.291 447.763, 320.198 425.399, 387.142 358.320 C 483.295 261.975, 478.486 267.371, 478.321 256 C 478.152 244.327, 481.787 248.401, 385.200 151.643 C 322.575 88.907, 295.324 62.253, 292.500 60.975 C 286.208 58.128, 280.237 57.726, 274.479 59.762 M 290 139.073 C 290 181.372, 289.846 182.485, 282.907 190.369 C 278.624 195.234, 272.958 197.941, 266.500 198.207 C 264.300 198.298, 254.850 198.008, 245.500 197.564 C 203.253 195.557, 165.915 203.878, 137.666 221.596 C 114.842 235.911, 99.851 253.053, 87.027 279.500 C 73.251 307.911, 66.647 338.029, 64.443 382.500 L 63.749 396.500 67.895 391 C 89.907 361.796, 118.621 343.671, 158.203 333.994 C 186.768 327.010, 223.230 324.495, 258.868 327.050 C 275.075 328.212, 278.782 329.494, 283.932 335.721 C 289.508 342.463, 290 346.050, 290 379.931 L 290 410.498 367.249 333.249 L 444.498 256 367.249 178.751 L 290 101.502 290 139.073"
-      />
-    </svg>
+    />
   );
 }
-

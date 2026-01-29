@@ -1,4 +1,5 @@
 import React from 'react';
+import { ShareIconTraced } from './icons/ShareIconTraced';
 
 interface PostActionsProps {
   post: any;
@@ -112,22 +113,10 @@ export const PostActions = React.memo<PostActionsProps>(({
           {/* Share Button */}
           <div 
             onClick={() => onShare(post)} 
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '-12px', marginTop: '-4px' }}
           >
-            <svg 
-              width="22" 
-              height="22" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="#4a4d52" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
+            <ShareIconTraced size={36} style={{ color: '#4a4d52' }} />
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{post.shares || 0}</span>
           </div>
         </div>
       </div>

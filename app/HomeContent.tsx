@@ -186,7 +186,7 @@ const checkPost = async () => {
   try {
     const { data, error } = await supabase
       .from('cars')
-      .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
+      .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
       .eq('id', postId)
       .single();
     if (error) {
@@ -300,6 +300,7 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    lastPostElementRef={lastPostElementRef}
    menuButtonRefs={menu.menuButtonRefs}
    onViewPost={handlers.handleViewPost}
+   onImpression={handlers.handleImpression}
    onLike={toggleLike}
    onSave={toggleSave}
    onShare={handlers.handleShare}

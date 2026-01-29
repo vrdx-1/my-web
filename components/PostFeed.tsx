@@ -27,6 +27,7 @@ interface PostFeedProps {
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
+  onImpression?: (postId: string) => void;
   loadingMore?: boolean;
   emptyMessage?: string;
   hideBoost?: boolean;
@@ -58,6 +59,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   onReport,
   onSetActiveMenu,
   onSetMenuAnimating,
+  onImpression,
   loadingMore = false,
   emptyMessage = 'ຍັງບໍ່ມີລາຍການ',
   hideBoost = false,
@@ -98,6 +100,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
             onReport={onReport}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
+            onImpression={onImpression}
             hideBoost={hideBoost}
           />
         );

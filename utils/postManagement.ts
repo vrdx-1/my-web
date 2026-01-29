@@ -84,25 +84,28 @@ export async function submitReport(
 
 /**
  * Share a post
+ * ยอดแชร์นับทันทีเมื่อกด (ไม่สามารถยกเลิกได้) กดหลายครั้งก็นับเพิ่มเรื่อยๆ
  */
 export async function sharePost(
   post: any,
   session: any,
   setPosts: (updater: (prev: any[]) => any[]) => void
 ): Promise<void> {
-  const shareUrl = `${window.location.origin}${window.location.pathname}?post=${post.id}`;
-  const shareData = { title: 'Car Post', text: post.caption, url: shareUrl };
-  
+  const shareUrl = `${window.location.origin}/post/${post.id}`;
+  const shareData = { url: shareUrl };
+
+  // นับยอดแชร์ทันทีทุกครั้งที่กด (ไม่สามารถยกเลิกได้, คนเดิมกดหลายครั้งก็นับเพิ่ม)
+  const isUser = !!session;
+  const userId = isUser ? session.user.id : getPrimaryGuestToken();
+  const table = isUser ? 'post_shares' : 'post_shares_guest';
+  const column = isUser ? 'user_id' : 'guest_token';
+  await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
+  await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
+  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
+
   try {
     if (navigator.share) {
       await navigator.share(shareData);
-      const isUser = !!session;
-      const userId = isUser ? session.user.id : getPrimaryGuestToken();
-      const table = isUser ? 'post_shares' : 'post_shares_guest';
-      const column = isUser ? 'user_id' : 'guest_token';
-      await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
-      await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
-      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
     } else {
       navigator.clipboard.writeText(shareUrl);
     }

@@ -1,10 +1,11 @@
 'use client'
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useViewingPost } from './useViewingPost';
 import { useHeaderScroll } from './useHeaderScroll';
 import { useMenu } from './useMenu';
+import { supabase } from '@/lib/supabase';
 import { togglePostStatus, deletePost, openReportModal, submitReport, sharePost } from '@/utils/postManagement';
 
 interface UsePostFeedHandlersProps {
@@ -41,6 +42,22 @@ export function usePostFeedHandlers({
   setIsSubmittingReport,
 }: UsePostFeedHandlersProps) {
   const router = useRouter();
+  const impressionRecordedRef = useRef<Set<string>>(new Set());
+
+  const handleImpression = useCallback((postId: string) => {
+    if (impressionRecordedRef.current.has(postId)) return;
+    impressionRecordedRef.current.add(postId);
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, views: (p.views || 0) + 1 } : p))
+    );
+    const rpcPromise = supabase.rpc('increment_views', { post_id: postId });
+    Promise.resolve(rpcPromise).then((res) => {
+      if (res?.error) throw res.error;
+    }).catch(async () => {
+      const { data } = await supabase.from('cars').select('views').eq('id', postId).single();
+      await supabase.from('cars').update({ views: (data?.views ?? 0) + 1 }).eq('id', postId);
+    });
+  }, [setPosts]);
 
   const handleViewPost = useCallback(
     async (post: any, imageIndex: number = 0) => {
@@ -122,6 +139,7 @@ export function usePostFeedHandlers({
 
   return {
     handleViewPost,
+    handleImpression,
     handleTogglePostStatus,
     handleDeletePost,
     handleReport,

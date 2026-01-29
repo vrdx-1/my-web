@@ -115,28 +115,6 @@ export default function NotificationDetail() {
      .single();
    if (data) {
      setPost(data);
-     // Increment views
-     try {
-       // Try to use RPC function if available (same pattern as useViewingPost.ts)
-       if (supabase && typeof supabase.rpc === 'function') {
-         const { error } = await supabase.rpc('increment_views', { post_id: id });
-         if (error) {
-           // Fallback: update views directly if RPC fails
-           await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
-         }
-       } else {
-         // RPC is not available, update directly
-         await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
-       }
-     } catch (error) {
-       // Fallback: update views directly if any error occurs
-       console.error('Error incrementing views:', error);
-       try {
-         await supabase.from('cars').update({ views: (data.views || 0) + 1 }).eq('id', id);
-       } catch (updateError) {
-         console.error('Error updating views:', updateError);
-       }
-     }
    }
    setLoading(false);
  }, [id]);
@@ -278,6 +256,7 @@ export default function NotificationDetail() {
          isMenuAnimating={menu.isMenuAnimating}
          menuButtonRefs={menu.menuButtonRefs}
          onViewPost={handlers.handleViewPost}
+         onImpression={handlers.handleImpression}
          onLike={toggleLike}
          onSave={toggleSave}
          onShare={handlers.handleShare}

@@ -52,7 +52,7 @@ export async function fetchPostsByIds(postIds: string[]): Promise<any[]> {
   
   const { data, error } = await supabase
     .from('cars')
-    .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
+    .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
     .in('id', postIds)
     .order('is_boosted', { ascending: false })
     .order('created_at', { ascending: false });

@@ -33,6 +33,7 @@ interface PostCardProps {
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
+  onImpression?: (postId: string) => void;
   hideBoost?: boolean;
 }
 
@@ -60,6 +61,7 @@ export const PostCard = React.memo<PostCardProps>(({
   onReport,
   onSetActiveMenu,
   onSetMenuAnimating,
+  onImpression,
   hideBoost = false,
 }) => {
   const router = useRouter();
@@ -69,6 +71,8 @@ export const PostCard = React.memo<PostCardProps>(({
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
+  const cardRef = React.useRef<HTMLDivElement | null>(null);
+  const impressionSentRef = React.useRef<Set<string>>(new Set());
 
   // Close popups on scroll (feed scroll)
   React.useEffect(() => {
@@ -107,10 +111,29 @@ export const PostCard = React.memo<PostCardProps>(({
     }, 300);
   };
 
+  React.useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !onImpression) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting || impressionSentRef.current.has(post.id)) return;
+        impressionSentRef.current.add(post.id);
+        onImpression(post.id);
+      },
+      { threshold: 0.25, rootMargin: '0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post.id, onImpression]);
+
   return (
-    <div 
-      key={`${post.id}-${index}`} 
-      ref={isLastElement ? lastPostElementRef : undefined} 
+    <div
+      key={`${post.id}-${index}`}
+      ref={(node) => {
+        cardRef.current = node;
+        if (isLastElement && lastPostElementRef) lastPostElementRef(node);
+      }}
       style={{ borderBottom: '8px solid #d1d5db', position: 'relative' }}
     >
       {/* Post Header */}
@@ -295,9 +318,10 @@ export const PostCard = React.memo<PostCardProps>(({
             {/* Share Button */}
             <div 
               onClick={() => onShare(post)} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px 6px', borderRadius: '4px', minHeight: '26px' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 6px', borderRadius: '4px', minHeight: '26px', marginLeft: '-12px', marginTop: '-4px' }}
             >
-              <ShareIconTraced size={18} style={{ color: '#4a4d52' }} />
+              <ShareIconTraced size={32} style={{ color: '#4a4d52' }} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{post.shares || 0}</span>
             </div>
 
           </div>
