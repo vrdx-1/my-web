@@ -206,44 +206,28 @@ export default function NotificationDetail() {
 
  return (
    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', position: 'relative', fontFamily: LAO_FONT }}>
-     {/* 1. Header */}
-     <div style={{ 
-       padding: '15px', 
-       borderBottom: '1px solid #f0f0f0', 
-       display: 'flex', 
-       alignItems: 'center', 
-       justifyContent: 'center', 
-       position: 'sticky',
-       top: 0,
-       background: '#fff',
-       zIndex: 100,
-       flexShrink: 0
-     }}>
-       <button 
-         onClick={() => router.back()} 
-         style={{ 
-           background: 'none', 
-           border: 'none', 
-           cursor: 'pointer', 
-           display: 'flex', 
-           alignItems: 'center', 
-           justifyContent: 'center', 
-           padding: '8px', 
-           touchAction: 'manipulation',
-           position: 'absolute',
-           left: '15px'
-         }}
-       >
-         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-           <polyline points="15 18 9 12 15 6"></polyline>
-         </svg>
-       </button>
-       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>ລາຍລະອຽດໂພສ</h1>
-     </div>
-
-     {/* 2. PostCard - Using shared component */}
+     {/* PostCard - Using shared component (back button passed as leftOfAvatar) */}
      {post && (
        <PostCard
+         leftOfAvatar={
+           <button
+             onClick={() => router.back()}
+             style={{
+               background: 'none',
+               border: 'none',
+               cursor: 'pointer',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               padding: '8px',
+               touchAction: 'manipulation',
+             }}
+           >
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+               <polyline points="15 18 9 12 15 6"></polyline>
+             </svg>
+           </button>
+         }
          post={post}
          index={0}
          isLastElement={false}

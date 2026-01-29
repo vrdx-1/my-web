@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShareIconTraced } from './icons/ShareIconTraced';
+import { formatCompactNumber } from '@/utils/currency';
 
 interface PostActionsProps {
   post: any;
@@ -64,7 +65,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path>
             </svg>
             <span style={{ fontSize: '14px', fontWeight: '600', color: likedPosts[post.id] ? '#e0245e' : '#4a4d52' }}>
-              {post.likes || 0}
+              {formatCompactNumber(post.likes || 0)}
             </span>
           </div>
 
@@ -88,7 +89,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
             </svg>
             <span style={{ fontSize: '14px', fontWeight: '600', color: savedPosts[post.id] ? '#FFD700' : '#4a4d52' }}>
-              {post.saves || 0}
+              {formatCompactNumber(post.saves || 0)}
             </span>
           </div>
 
@@ -107,7 +108,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <span style={{ fontSize: '14px', fontWeight: '600' }}>{post.views || 0}</span>
+            <span style={{ fontSize: '14px', fontWeight: '600' }}>{formatCompactNumber(post.views || 0)}</span>
           </div>
 
           {/* Share Button */}
@@ -116,7 +117,7 @@ export const PostActions = React.memo<PostActionsProps>(({
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '-12px', marginTop: '-4px' }}
           >
             <ShareIconTraced size={36} style={{ color: '#4a4d52' }} />
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{post.shares || 0}</span>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{formatCompactNumber(post.shares || 0)}</span>
           </div>
         </div>
       </div>
