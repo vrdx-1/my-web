@@ -488,7 +488,11 @@ if (typeof window !== 'undefined') {
  <div>
  <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
  <Avatar avatarUrl={userProfile?.avatar_url} size={50} session={session} />
- <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px' }}>{userProfile?.username || 'User'}</div>
+ <div style={{ flex: 1, minWidth: 0 }}>
+   <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+     {userProfile?.username || 'User'}
+   </div>
+ </div>
  </div>
 
  <div style={{ padding: '0 15px 15px 15px', display: 'flex', justifyContent: 'center' }}>

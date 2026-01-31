@@ -212,7 +212,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: LAO_FONT }}>
-        <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -247,8 +247,10 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               <svg width="50" height="50" viewBox="0 0 24 24" fill="#4a4d52"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
             )}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px' }}>{userProfile?.username || 'User'}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {userProfile?.username || 'User'}
+            </div>
             <ProvinceDropdown
               selectedProvince={province}
               onProvinceChange={setProvince}

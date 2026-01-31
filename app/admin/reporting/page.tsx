@@ -166,16 +166,18 @@ export default function AdminReportingPage() {
  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden' }}>
  {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
  </div>
- <div style={{ flex: 1 }}>
+ <div style={{ flex: 1, minWidth: 0 }}>
  <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+ <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
  {post.profiles?.username || 'User'}
+ </span>
  {status.isOnline ? (
- <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
  <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>
  <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
  </div>
  ) : (
- status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
+ status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
  )}
  </div>
  <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>

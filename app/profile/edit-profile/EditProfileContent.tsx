@@ -258,10 +258,8 @@ const savePhone = async (phoneNum: string) => {
  >
  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       <input 
-      type="tel" 
-      inputMode="numeric" 
-      pattern="[0-9]*" 
-      autoComplete="tel" 
+      type="text"
+      autoComplete="tel"
       value={editingPhone} 
       onChange={e => {
       const inputValue = e.target.value.replace(/\D/g, '');

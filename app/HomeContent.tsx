@@ -34,6 +34,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LAO_FONT } from '@/utils/constants';
+import { PageSpinner } from '@/components/LoadingSpinner';
 
 export function HomeContent() {
  const router = useRouter();
@@ -44,6 +45,8 @@ const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
 const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
 const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
 const [tabRefreshing, setTabRefreshing] = useState(false);
+const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false);
+const initialFetchStartedRef = useRef(false);
  
  // Use home data hook
  const homeData = useHomeData(searchTerm);
@@ -228,6 +231,16 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
    if (!homeData.loadingMore) setTabRefreshing(false);
  }, [homeData.loadingMore]);
 
+// Hide empty state until first fetch finishes (avoid "no items" while loading)
+useEffect(() => {
+  if (!initialFetchStartedRef.current && homeData.loadingMore) {
+    initialFetchStartedRef.current = true;
+  }
+  if (initialFetchStartedRef.current && !homeData.loadingMore) {
+    setHasInitialFetchCompleted(true);
+  }
+}, [homeData.loadingMore]);
+
  // Use shared post interactions hook
  const { toggleLike, toggleSave } = usePostInteractions({
    session: homeData.session,
@@ -290,31 +303,37 @@ if (homeData.posts.length > 0 || !homeData.loadingMore) {
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
 
- <PostFeed
-   posts={homeData.posts}
-   session={homeData.session}
-   likedPosts={homeData.likedPosts}
-   savedPosts={homeData.savedPosts}
-   justLikedPosts={justLikedPosts}
-   justSavedPosts={justSavedPosts}
-   activeMenuState={menu.activeMenuState}
-   isMenuAnimating={menu.isMenuAnimating}
-   lastPostElementRef={lastPostElementRef}
-   menuButtonRefs={menu.menuButtonRefs}
-   onViewPost={handlers.handleViewPost}
-   onImpression={handlers.handleImpression}
-   onLike={toggleLike}
-   onSave={toggleSave}
-   onShare={handlers.handleShare}
-   onViewLikes={(postId) => fetchInteractions('likes', postId)}
-   onViewSaves={(postId) => fetchInteractions('saves', postId)}
-   onTogglePostStatus={handlers.handleTogglePostStatus}
-   onDeletePost={handlers.handleDeletePost}
-   onReport={handlers.handleReport}
-   onSetActiveMenu={menu.setActiveMenu}
-   onSetMenuAnimating={menu.setIsMenuAnimating}
-   loadingMore={homeData.loadingMore}
- />
+ {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
+   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+     <PageSpinner />
+   </div>
+ ) : (
+   <PostFeed
+     posts={homeData.posts}
+     session={homeData.session}
+     likedPosts={homeData.likedPosts}
+     savedPosts={homeData.savedPosts}
+     justLikedPosts={justLikedPosts}
+     justSavedPosts={justSavedPosts}
+     activeMenuState={menu.activeMenuState}
+     isMenuAnimating={menu.isMenuAnimating}
+     lastPostElementRef={lastPostElementRef}
+     menuButtonRefs={menu.menuButtonRefs}
+     onViewPost={handlers.handleViewPost}
+     onImpression={handlers.handleImpression}
+     onLike={toggleLike}
+     onSave={toggleSave}
+     onShare={handlers.handleShare}
+     onViewLikes={(postId) => fetchInteractions('likes', postId)}
+     onViewSaves={(postId) => fetchInteractions('saves', postId)}
+     onTogglePostStatus={handlers.handleTogglePostStatus}
+     onDeletePost={handlers.handleDeletePost}
+     onReport={handlers.handleReport}
+     onSetActiveMenu={menu.setActiveMenu}
+     onSetMenuAnimating={menu.setIsMenuAnimating}
+     loadingMore={homeData.loadingMore}
+   />
+ )}
 
  <InteractionModal
    show={interactionModalHook.interactionModal.show}

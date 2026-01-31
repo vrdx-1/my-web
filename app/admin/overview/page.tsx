@@ -65,9 +65,10 @@ export default function AdminOverviewPage() {
         }
 
         const userId = car.user_id || 'guest';
+        const profile = Array.isArray((car as any).profiles) ? (car as any).profiles[0] : (car as any).profiles;
         const userData = {
-          name: car.profiles?.username || 'Guest User',
-          avatar: car.profiles?.avatar_url || ''
+          name: profile?.username || 'Guest User',
+          avatar: profile?.avatar_url || ''
         };
 
         userPostCount[userId] = { ...userData, count: (userPostCount[userId]?.count || 0) + 1 };
@@ -162,12 +163,14 @@ export default function AdminOverviewPage() {
           justifyContent: 'space-between',
         }}>
           <span style={{ color: '#1a1a1a', fontSize: '16px', fontWeight: '500' }}>Top Seller</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eee', overflow: 'hidden' }}>
               {data.topSeller.avatar && <img src={data.topSeller.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>{loading ? '...' : data.topSeller.name}</span>
-            <span style={{ color: '#4a4d52', fontSize: '14px' }}>{data.topSeller.count} ຄັນ</span>
+            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {loading ? '...' : data.topSeller.name}
+            </span>
+            <span style={{ color: '#4a4d52', fontSize: '14px', flexShrink: 0 }}>{data.topSeller.count} ຄັນ</span>
           </div>
         </div>
 
@@ -183,12 +186,14 @@ export default function AdminOverviewPage() {
           justifyContent: 'space-between',
         }}>
           <span style={{ color: '#1a1a1a', fontSize: '16px', fontWeight: '500' }}>Top poster</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eee', overflow: 'hidden' }}>
               {data.topPost.avatar && <img src={data.topPost.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>{loading ? '...' : data.topPost.name}</span>
-            <span style={{ color: '#4a4d52', fontSize: '14px' }}>{data.topPost.count} ຄັນ</span>
+            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {loading ? '...' : data.topPost.name}
+            </span>
+            <span style={{ color: '#4a4d52', fontSize: '14px', flexShrink: 0 }}>{data.topPost.count} ຄັນ</span>
           </div>
         </div>
 

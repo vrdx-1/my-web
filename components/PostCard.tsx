@@ -9,6 +9,7 @@ import { ShareIconTraced } from './icons/ShareIconTraced';
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { formatCompactNumber } from '@/utils/currency';
+import { ButtonSpinner } from '@/components/LoadingSpinner';
 
 interface PostCardProps {
   post: any;
@@ -123,14 +124,14 @@ export const PostCard = React.memo<PostCardProps>(({
         <div style={{ position: 'relative' }}>
           <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, marginTop: '2px' }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '6px', color: '#111111' }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
               {post.profiles?.username || 'User'}
             </span>
             {status.isOnline ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                <div style={{ ...commonStyles.onlineIndicator, width: '11px', height: '11px' }}></div>
+                <div style={{ ...commonStyles.onlineIndicator, width: '11px', height: '11px', marginTop: '2px' }}></div>
                 <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
               </div>
             ) : (
@@ -152,18 +153,20 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
         
         {/* Menu Button */}
-        <PostCardMenu
-          post={post}
-          isOwner={isOwner}
-          hideBoost={hideBoost}
-          activeMenuState={activeMenuState}
-          isMenuAnimating={isMenuAnimating}
-          menuButtonRefs={menuButtonRefs}
-          onDeletePost={onDeletePost}
-          onReport={onReport}
-          onSetActiveMenu={onSetActiveMenu}
-          onSetMenuAnimating={onSetMenuAnimating}
-        />
+        <div style={{ marginTop: '-2px' }}>
+          <PostCardMenu
+            post={post}
+            isOwner={isOwner}
+            hideBoost={hideBoost}
+            activeMenuState={activeMenuState}
+            isMenuAnimating={isMenuAnimating}
+            menuButtonRefs={menuButtonRefs}
+            onDeletePost={onDeletePost}
+            onReport={onReport}
+            onSetActiveMenu={onSetActiveMenu}
+            onSetMenuAnimating={onSetMenuAnimating}
+          />
+        </div>
       </div>
 
       {/* Caption */}
@@ -422,20 +425,7 @@ export const PostCard = React.memo<PostCardProps>(({
               >
                 {isTogglingStatus ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <style>{`
-@keyframes fadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
-.loading-spinner-circle-btn { display: inline-block; width: 20px; height: 20px; position: relative; }
-.loading-spinner-circle-btn div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: fadeColor 1s linear infinite; opacity: 0.8; }
-.loading-spinner-circle-btn div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-.loading-spinner-circle-btn div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
-.loading-spinner-circle-btn div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
-.loading-spinner-circle-btn div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
-.loading-spinner-circle-btn div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
-.loading-spinner-circle-btn div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
-.loading-spinner-circle-btn div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
-.loading-spinner-circle-btn div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
-`}</style>
-                    <span className="loading-spinner-circle-btn"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+                    <ButtonSpinner />
                   </span>
                 ) : 'ຂາຍແລ້ວ'}
               </button>

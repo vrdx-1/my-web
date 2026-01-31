@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createAdminSupabaseClient } from "@/utils/adminSupabaseClient";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { AdminPostCard } from "@/components/AdminPostCard";
 import { formatTime, getOnlineStatus } from "@/utils/postUtils";
@@ -19,7 +19,7 @@ const FullScreenImageViewer = lazyNamed(
 );
 
 export default function AdminBoostingPage() {
-  const supabase = createClient();
+  const supabase = createAdminSupabaseClient();
   const [activeTab, setActiveTab] = useState<"waiting" | "boosting">("waiting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,7 @@ export default function AdminBoostingPage() {
       // โหลด boosts ทั้งหมด
       const { data: allBoostsData, error: boostsError } = await supabase
         .from("post_boosts")
-        .select('id, post_id, status, slip_url, amount, boost_expiry, created_at')
+        .select('id, post_id, status, slip_url, price, package_name, boost_days, expires_at, created_at')
         .in('id', boostIds);
 
       // โหลด posts ทั้งหมด
@@ -242,15 +242,17 @@ export default function AdminBoostingPage() {
               <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden shrink-0 shadow-inner">
                 {viewingPost.profiles?.avatar_url && <img src={viewingPost.profiles.avatar_url} className="w-full h-full object-cover" />}
               </div>
-              <div className="flex-1">
-                <div className="font-bold text-[15px] flex items-center gap-1.5">
-                  {viewingPost.profiles?.username || 'User'}
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-[15px] flex items-center gap-1.5 min-w-0">
+                  <span className="min-w-0 flex-1 truncate">
+                    {viewingPost.profiles?.username || 'User'}
+                  </span>
                   {(() => {
                     const status = getOnlineStatus(viewingPost.profiles?.last_seen);
                     return (
                       <>
                         {status.isOnline && <div className="w-2.5 h-2.5 bg-[#31a24c] rounded-full border border-white shadow-sm" />}
-                        <span className="text-[12px] text-[#31a24c] font-bold">{status.text}</span>
+                        <span className="text-[12px] text-[#31a24c] font-bold shrink-0">{status.text}</span>
                       </>
                     )
                   })()}

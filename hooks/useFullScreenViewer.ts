@@ -60,8 +60,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const [fullScreenIsDragging, setFullScreenIsDragging] = useState(false);
   const [fullScreenTransitionDuration, setFullScreenTransitionDuration] = useState(200);
   const [fullScreenShowDetails, setFullScreenShowDetails] = useState(true);
-  const [fullScreenZoomScale, setFullScreenZoomScale] = useState(1);
-  const [fullScreenZoomOrigin, setFullScreenZoomOrigin] = useState<string>('50% 50%');
+  // Zoom is disabled in full screen viewer. Keep state for API compatibility but hard-lock to default values.
+  const [fullScreenZoomScale, _setFullScreenZoomScale] = useState(1);
+  const [fullScreenZoomOrigin, _setFullScreenZoomOrigin] = useState<string>('50% 50%');
   const [showImageForDownload, setShowImageForDownload] = useState<string | null>(null);
   const [showDownloadBottomSheet, setShowDownloadBottomSheet] = useState(false);
   const [isDownloadBottomSheetAnimating, setIsDownloadBottomSheetAnimating] = useState(false);
@@ -70,14 +71,15 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const fullScreenImageContainerRef = useRef<HTMLDivElement | null>(null);
   const fullScreenTouchStartTimeRef = useRef<number>(0);
   const fullScreenTouchStartYRef = useRef<number>(0);
-  const fullScreenLastTapTimeRef = useRef<number>(0);
-  const fullScreenLastTapPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const fullScreenDoubleTapHandledRef = useRef<boolean>(false);
-  const fullScreenPinchStartRef = useRef<number>(0);
-  const fullScreenPinchScaleStartRef = useRef<number>(1);
-  const fullScreenPinchingRef = useRef<boolean>(false);
-  const fullScreenLastClickTimeRef = useRef<number>(0);
-  const fullScreenLastClickPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // (Zoom refs removed)
+
+  const setFullScreenZoomScale = useCallback((_: number | ((prev: number) => number)) => {
+    _setFullScreenZoomScale(1);
+  }, []);
+
+  const setFullScreenZoomOrigin = useCallback((_: string) => {
+    _setFullScreenZoomOrigin('50% 50%');
+  }, []);
 
   const downloadImage = useCallback(async (url: string) => {
     try {
@@ -116,30 +118,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     setFullScreenDragOffset(0);
     setFullScreenVerticalDragOffset(0);
     setFullScreenTransitionDuration(0);
-    fullScreenDoubleTapHandledRef.current = false;
-
-    const t = (e.target as HTMLElement);
-    if (!t.closest('button') && !t.closest('[data-menu-container]') && !t.closest('[data-menu-button]')) {
-      if (e.touches.length >= 2) {
-        fullScreenPinchingRef.current = true;
-        const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
-        fullScreenPinchStartRef.current = d;
-        fullScreenPinchScaleStartRef.current = fullScreenZoomScale;
-      } else {
-        fullScreenPinchingRef.current = false;
-      }
-    }
-  }, [fullScreenZoomScale, onTouchStart]);
+  }, [onTouchStart]);
 
   const fullScreenOnTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length >= 2 && fullScreenPinchingRef.current) {
-      const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
-      const start = fullScreenPinchStartRef.current || 1;
-      const s = fullScreenPinchScaleStartRef.current * (d / start);
-      const scale = Math.max(1, Math.min(4, s));
-      setFullScreenZoomScale(scale);
-      return;
-    }
     if (touchStart === null || fullScreenTouchStartYRef.current === 0) return;
     const n = fullScreenImages?.length ?? 0;
     if (n === 0) return;
@@ -160,17 +141,21 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     } else {
       let horizontalDelta = deltaX;
       const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
-      if (currentImgIndex === 0) horizontalDelta = Math.max(0, horizontalDelta);
-      else if (currentImgIndex === n - 1) horizontalDelta = Math.min(0, horizontalDelta);
-      else horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
+
+      // Popular "rubber-band" feel on edges (like common gallery apps).
+      if (currentImgIndex === 0 && horizontalDelta > 0) {
+        horizontalDelta = horizontalDelta * 0.35;
+      } else if (currentImgIndex === n - 1 && horizontalDelta < 0) {
+        horizontalDelta = horizontalDelta * 0.35;
+      } else {
+        horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
+      }
       setFullScreenDragOffset(horizontalDelta);
       setFullScreenVerticalDragOffset(0);
     }
   }, [touchStart, currentImgIndex, fullScreenImages]);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
-    const wasPinching = fullScreenPinchingRef.current;
-    fullScreenPinchingRef.current = false;
     const startY = fullScreenTouchStartYRef.current;
 
     const t = (e.target as HTMLElement);
@@ -189,12 +174,12 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
         const verticalDelta = ey - fullScreenTouchStartYRef.current;
         
         if (dy > 40 && dy > dx) {
-          // Close immediately (no animation)
+          // Full screen should only be closed via the Back button.
+          // If user swipes vertically, just reset the drag state (do not close).
           setFullScreenIsDragging(false);
           setFullScreenDragOffset(0);
           setFullScreenVerticalDragOffset(0);
-          setFullScreenZoomScale(1);
-          setFullScreenImages(null);
+          setFullScreenTransitionDuration(0);
           setTouchStart(null);
           _fullScreenTouchY = null;
           fullScreenTouchStartYRef.current = 0;
@@ -233,72 +218,31 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     const fast = Math.abs(velocity) > 0.5;
     const dur = fast ? 120 : 200;
 
-    if (diff < -40 || (velocity < -0.35 && diff < -15)) {
-      if (currentImgIndex < n - 1) {
-        setCurrentImgIndex((i) => i + 1);
-        setFullScreenDragOffset(0);
-        setFullScreenVerticalDragOffset(0);
-        setFullScreenZoomScale(1);
-        setFullScreenIsDragging(false);
-        setFullScreenTransitionDuration(0);
-      } else {
-        setFullScreenDragOffset(0);
-        setFullScreenVerticalDragOffset(0);
-        setFullScreenIsDragging(false);
-        setFullScreenTransitionDuration(0);
-      }
-    } else if (diff > 40 || (velocity > 0.35 && diff > 15)) {
-      if (currentImgIndex > 0) {
-        setCurrentImgIndex((i) => i - 1);
-        setFullScreenDragOffset(0);
-        setFullScreenVerticalDragOffset(0);
-        setFullScreenZoomScale(1);
-        setFullScreenIsDragging(false);
-        setFullScreenTransitionDuration(0);
-      } else {
-        setFullScreenDragOffset(0);
-        setFullScreenVerticalDragOffset(0);
-        setFullScreenIsDragging(false);
-        setFullScreenTransitionDuration(0);
-      }
-    } else {
-      setFullScreenDragOffset(0);
-      setFullScreenVerticalDragOffset(0);
-      setFullScreenIsDragging(false);
-      setFullScreenTransitionDuration(0);
+    // Horizontal swipe: follow finger, then snap with animation (common gallery behavior).
+    const screenW = typeof window !== 'undefined' ? window.innerWidth : 375;
+    const threshold = Math.min(80, screenW * 0.18); // typical paging threshold
+    const shouldGoNext = diff < -threshold || (velocity < -0.35 && diff < -15);
+    const shouldGoPrev = diff > threshold || (velocity > 0.35 && diff > 15);
 
-      if (!wasPinching && moveX < 15 && moveY < 15) {
-        const now = endTime;
-        const last = fullScreenLastTapTimeRef.current;
-        const lastPos = fullScreenLastTapPosRef.current;
-        const near = Math.abs(endX - lastPos.x) < 50 && Math.abs(endY - lastPos.y) < 50;
-        if (now - last < 350 && near) {
-          fullScreenDoubleTapHandledRef.current = true;
-          const container = fullScreenImageContainerRef.current;
-          if (container) {
-            const rect = container.getBoundingClientRect();
-            const x = ((endX - rect.left) / rect.width) * 100;
-            const y = ((endY - rect.top) / rect.height) * 100;
-            setFullScreenZoomOrigin(`${x}% ${y}%`);
-          }
-          setFullScreenZoomScale((z) => (z > 1 ? 1 : 2));
-          fullScreenLastTapTimeRef.current = 0;
-        } else {
-          fullScreenLastTapTimeRef.current = now;
-          fullScreenLastTapPosRef.current = { x: endX, y: endY };
-        }
-      }
+    let nextIndex = currentImgIndex;
+    if (moveX > moveY * 1.2) {
+      if (shouldGoNext) nextIndex = Math.min(n - 1, currentImgIndex + 1);
+      else if (shouldGoPrev) nextIndex = Math.max(0, currentImgIndex - 1);
     }
+
+    setFullScreenTransitionDuration(dur);
+    setFullScreenDragOffset(0);
+    setFullScreenVerticalDragOffset(0);
+    setFullScreenZoomScale(1);
+    setFullScreenIsDragging(false);
+    if (nextIndex !== currentImgIndex) setCurrentImgIndex(nextIndex);
+
     setTouchStart(null);
   }, [touchStart, currentImgIndex, fullScreenImages, activePhotoMenu]);
 
   const fullScreenOnClick = useCallback((e: React.MouseEvent) => {
     const t = (e.target as HTMLElement);
     if (t.closest('button') || t.closest('[data-menu-container]') || t.closest('[data-menu-button]')) return;
-    if (fullScreenDoubleTapHandledRef.current) {
-      fullScreenDoubleTapHandledRef.current = false;
-      return;
-    }
     if (activePhotoMenu !== null) {
       setIsPhotoMenuAnimating(true);
       setTimeout(() => {
@@ -307,26 +251,6 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       }, 300);
       return;
     }
-    const now = Date.now();
-    const x = e.clientX;
-    const y = e.clientY;
-    const last = fullScreenLastClickTimeRef.current;
-    const lastPos = fullScreenLastClickPosRef.current;
-    const near = Math.abs(x - lastPos.x) < 50 && Math.abs(y - lastPos.y) < 50;
-    if (now - last < 350 && near) {
-      const container = fullScreenImageContainerRef.current;
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        const xPercent = ((x - rect.left) / rect.width) * 100;
-        const yPercent = ((y - rect.top) / rect.height) * 100;
-        setFullScreenZoomOrigin(`${xPercent}% ${yPercent}%`);
-      }
-      setFullScreenZoomScale((z) => (z > 1 ? 1 : 2));
-      fullScreenLastClickTimeRef.current = 0;
-      return;
-    }
-    fullScreenLastClickTimeRef.current = now;
-    fullScreenLastClickPosRef.current = { x, y };
     setFullScreenShowDetails((prev) => !prev);
   }, [activePhotoMenu]);
 

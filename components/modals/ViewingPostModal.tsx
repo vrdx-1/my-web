@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar } from '../Avatar';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 
@@ -34,6 +34,24 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   if (!viewingPost) return null;
 
   const status = getOnlineStatus(viewingPost.profiles?.last_seen);
+  const [enterPhase, setEnterPhase] = useState<'offscreen' | 'animating' | 'entered'>('offscreen');
+
+  // Slide-in only when opening. Closing remains instant (unmount).
+  useEffect(() => {
+    setEnterPhase('offscreen');
+  }, [viewingPost?.id]);
+
+  useEffect(() => {
+    if (!isViewingModeOpen) return;
+    if (enterPhase !== 'offscreen') return;
+
+    setEnterPhase('animating');
+    const t = window.setTimeout(() => {
+      setEnterPhase('entered');
+    }, 220);
+
+    return () => window.clearTimeout(t);
+  }, [isViewingModeOpen, enterPhase]);
 
   return (
     <div 
@@ -45,8 +63,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         bottom: 0, 
         background: '#fff', 
         zIndex: 2000, 
-        transform: `translateX(calc(${viewingModeDragOffset}px))`,
-        transition: 'none',
+        transform: `translateX(calc(${enterPhase === 'offscreen' ? '100vw' : '0px'} + ${viewingModeDragOffset}px))`,
+        transition: enterPhase === 'animating' ? 'transform 220ms ease-out' : 'none',
       }} 
       onTouchStart={onTouchStart} 
       onTouchMove={onTouchMove} 

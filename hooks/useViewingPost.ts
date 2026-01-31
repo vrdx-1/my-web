@@ -97,8 +97,11 @@ export function useViewingPost(): UseViewingPostReturn {
     const isScrolling = !isAtTop && !isAtBottom && diffY > 30;
     
     if (isStrongHorizontalSwipe && !isScrolling) {
-      // Close immediately (no animation)
-      closeViewingMode(setIsHeaderVisible);
+      // Viewing mode should only be closed via the Back button.
+      // If user swipes, just reset the drag state (do not close).
+      setViewingModeDragOffset(0);
+      setViewingModeIsDragging(false);
+      setViewingModeTouchStart(null);
       return;
     } else if (Math.abs(viewingModeDragOffset) > 20) {
       setViewingModeDragOffset(0);

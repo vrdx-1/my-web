@@ -94,3 +94,64 @@ body {
 .loading-spinner-circle div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
 .loading-spinner-circle div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
 .loading-spinner-circle div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+
+/* Small spinner (buttons/tabs) - same animation as notification page */
+.loading-spinner-circle-btn,
+.app-header-tab-spinner,
+.tab-nav-loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+.loading-spinner-circle-btn div,
+.app-header-tab-spinner div,
+.tab-nav-loading-spinner div {
+  opacity: 0.2;
+}
+
+@keyframes spinnerDotOpacity {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+.loading-spinner-circle-btn div,
+.app-header-tab-spinner div,
+.tab-nav-loading-spinner div {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  top: 0;
+  left: 50%;
+  margin-left: -2px;
+  transform-origin: 2px 10px;
+  background: currentColor;
+  animation: spinnerDotOpacity 1s linear infinite;
+}
+
+.loading-spinner-circle-btn div:nth-child(1),
+.app-header-tab-spinner div:nth-child(1),
+.tab-nav-loading-spinner div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
+.loading-spinner-circle-btn div:nth-child(2),
+.app-header-tab-spinner div:nth-child(2),
+.tab-nav-loading-spinner div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
+.loading-spinner-circle-btn div:nth-child(3),
+.app-header-tab-spinner div:nth-child(3),
+.tab-nav-loading-spinner div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
+.loading-spinner-circle-btn div:nth-child(4),
+.app-header-tab-spinner div:nth-child(4),
+.tab-nav-loading-spinner div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
+.loading-spinner-circle-btn div:nth-child(5),
+.app-header-tab-spinner div:nth-child(5),
+.tab-nav-loading-spinner div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
+.loading-spinner-circle-btn div:nth-child(6),
+.app-header-tab-spinner div:nth-child(6),
+.tab-nav-loading-spinner div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
+.loading-spinner-circle-btn div:nth-child(7),
+.app-header-tab-spinner div:nth-child(7),
+.tab-nav-loading-spinner div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
+.loading-spinner-circle-btn div:nth-child(8),
+.app-header-tab-spinner div:nth-child(8),
+.tab-nav-loading-spinner div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { TabSpinner } from '@/components/LoadingSpinner';
 
 interface AppHeaderProps {
   searchTerm: string;
@@ -47,6 +48,48 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
+
+  // Prevent accidental notification navigation during scroll/drag on touch devices
+  const notificationTouchRef = React.useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const NOTIFICATION_TOUCH_MOVE_THRESHOLD = 8;
+
+  const onNotificationTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
+    const t = e.touches?.[0];
+    if (!t) return;
+    notificationTouchRef.current = { x: t.clientX, y: t.clientY, moved: false };
+  };
+
+  const onNotificationTouchMove = (e: React.TouchEvent<HTMLButtonElement>) => {
+    const current = notificationTouchRef.current;
+    const t = e.touches?.[0];
+    if (!current || !t) return;
+    const dx = Math.abs(t.clientX - current.x);
+    const dy = Math.abs(t.clientY - current.y);
+    if (dx > NOTIFICATION_TOUCH_MOVE_THRESHOLD || dy > NOTIFICATION_TOUCH_MOVE_THRESHOLD) {
+      current.moved = true;
+    }
+  };
+
+  const onNotificationTouchEnd = () => {
+    // Keep ref long enough for the synthetic click event to run, then clear.
+    window.setTimeout(() => {
+      notificationTouchRef.current = null;
+    }, 350);
+  };
+
+  const onNotificationTouchCancel = () => {
+    notificationTouchRef.current = null;
+  };
+
+  const handleNotificationClick = () => {
+    // If this "click" came from a drag/scroll gesture, ignore it.
+    if (notificationTouchRef.current?.moved) {
+      notificationTouchRef.current = null;
+      return;
+    }
+    notificationTouchRef.current = null;
+    onNotificationClick();
+  };
 
   const handleTabClick = (tab: 'recommend' | 'sold') => {
     const isActive = (tab === 'recommend' && pathname === '/') || (tab === 'sold' && pathname === '/sold');
@@ -126,7 +169,11 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 
         {/* Notification Button */}
         <button 
-          onClick={onNotificationClick} 
+          onClick={handleNotificationClick}
+          onTouchStart={onNotificationTouchStart}
+          onTouchMove={onNotificationTouchMove}
+          onTouchEnd={onNotificationTouchEnd}
+          onTouchCancel={onNotificationTouchCancel}
           style={{ 
             width: `${controlSize}px`, 
             height: `${controlSize}px`, 
@@ -189,19 +236,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}>
-        <style>{`
-@keyframes appHeaderTabFadeColor { 0%, 100% { background: #f0f0f0; } 12.5% { background: #1a1a1a; } 25% { background: #4a4a4a; } 37.5% { background: #6a6a6a; } 50% { background: #8a8a8a; } 62.5% { background: #b0b0b0; } 75% { background: #d0d0d0; } 87.5% { background: #e5e5e5; } }
-.app-header-tab-spinner { display: inline-block; width: 20px; height: 20px; position: relative; }
-.app-header-tab-spinner div { position: absolute; width: 4px; height: 4px; border-radius: 50%; top: 0; left: 50%; margin-left: -2px; transform-origin: 2px 10px; background: currentColor; animation: appHeaderTabFadeColor 1s linear infinite; opacity: 0.8; }
-.app-header-tab-spinner div:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-.app-header-tab-spinner div:nth-child(2) { transform: rotate(45deg); animation-delay: 0.125s; }
-.app-header-tab-spinner div:nth-child(3) { transform: rotate(90deg); animation-delay: 0.25s; }
-.app-header-tab-spinner div:nth-child(4) { transform: rotate(135deg); animation-delay: 0.375s; }
-.app-header-tab-spinner div:nth-child(5) { transform: rotate(180deg); animation-delay: 0.5s; }
-.app-header-tab-spinner div:nth-child(6) { transform: rotate(225deg); animation-delay: 0.625s; }
-.app-header-tab-spinner div:nth-child(7) { transform: rotate(270deg); animation-delay: 0.75s; }
-.app-header-tab-spinner div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
-        `}</style>
         {(['recommend', 'sold'] as const).map((t) => {
           const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
           const isLoading = loadingTab === t;
@@ -227,7 +261,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             >
               <div style={{ display: 'inline-block', position: 'relative' }}>
                 {isLoading ? (
-                  <span className="app-header-tab-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></span>
+                  <TabSpinner />
                 ) : (
                   <span style={{ fontSize: '14px', lineHeight: 1.25 }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
                 )}

@@ -45,6 +45,13 @@ export function usePostModals({
   interactionModalShow,
   setIsHeaderVisible,
 }: UsePostModalsProps) {
+  // Ensure body scroll is restored if this hook unmounts.
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   // Handle viewing post modal effects
   useEffect(() => {
     if (!viewingPost) {
@@ -93,10 +100,10 @@ export function usePostModals({
     if (interactionModalShow) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      // Don't unlock background scroll if another modal (e.g. viewing mode / fullscreen) is open.
+      if (!viewingPost && !fullScreenImages) {
+        document.body.style.overflow = '';
+      }
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [interactionModalShow]);
 }

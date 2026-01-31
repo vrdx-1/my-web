@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
 import { LAO_FONT } from '@/utils/constants';
+import { PageSpinner } from '@/components/LoadingSpinner';
+import { NotificationPostPreviewCard } from '../../components/NotificationPostPreviewCard';
 
 interface NotificationItem {
   id: string;
@@ -18,6 +20,8 @@ interface NotificationItem {
   likes?: number;
   saves?: number;
   notification_count?: number;
+  interaction_avatars?: (string | null)[];
+  interaction_total?: number;
 }
 
 // Helper function to format time ago
@@ -86,282 +90,6 @@ const getNotificationText = (notification: NotificationItem): { name: string; ac
 };
 
 // Mini PostCard Image Component - Layout เหมือน PhotoGrid แต่ขนาดเล็ก
-const MiniPostImage = ({ images }: { images: string[] }) => {
-  const imageSize = '72px'; // ขนาดเล็กเท่าเดิม
-  
-  if (!images || images.length === 0) {
-    return (
-      <div style={{ 
-        width: imageSize, 
-        height: imageSize, 
-        borderRadius: '10px',
-        background: '#f0f0f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="#5c5c5c">
-          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-        </svg>
-      </div>
-    );
-  }
-
-  const count = images.length;
-  const gap = '2px';
-
-  // Single image
-  if (count === 1) {
-    return (
-      <div style={{ 
-        position: 'relative',
-        width: imageSize, 
-        height: imageSize, 
-        borderRadius: '10px',
-        overflow: 'hidden'
-      }}>
-        <img 
-          src={images[0]} 
-          alt="Post"
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover'
-          }}
-          loading="lazy"
-        />
-      </div>
-    );
-  }
-
-  // Two images
-  if (count === 2) {
-    return (
-      <div style={{ 
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: gap,
-        width: imageSize, 
-        height: imageSize, 
-        borderRadius: '10px',
-        overflow: 'hidden'
-      }}>
-        {images.slice(0, 2).map((img, i) => (
-          <div 
-            key={i} 
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              width: '100%',
-              height: '100%'
-            }}
-          >
-            <img 
-              src={img} 
-              alt={`Post ${i + 1}`}
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover'
-              }}
-              loading="lazy"
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Three images - Layout: รูปแรกใหญ่ซ้าย, 2 รูปเล็กขวา (เหมือน PhotoGrid)
-  if (count === 3) {
-    return (
-      <div style={{ 
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: gap,
-        width: imageSize, 
-        height: imageSize, 
-        borderRadius: '10px',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          position: 'relative', 
-          overflow: 'hidden', 
-          gridRow: 'span 2',
-          borderTopLeftRadius: '10px',
-          borderBottomLeftRadius: '10px'
-        }}>
-          <img 
-            src={images[0]} 
-            alt="Post 1"
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover'
-            }}
-            loading="lazy"
-          />
-        </div>
-        <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: gap }}>
-          {images.slice(1, 3).map((img, i) => (
-            <div 
-              key={i + 1} 
-              style={{ 
-                position: 'relative', 
-                overflow: 'hidden', 
-                aspectRatio: '1',
-                borderTopRightRadius: i === 0 ? '10px' : '0',
-                borderBottomRightRadius: i === 1 ? '10px' : '0'
-              }}
-            >
-              <img 
-                src={img} 
-                alt={`Post ${i + 2}`}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover'
-                }}
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Four images - 2x2 grid (เหมือน PhotoGrid)
-  if (count === 4) {
-    return (
-      <div style={{ 
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: '1fr 1fr',
-        gap: gap,
-        width: imageSize, 
-        height: imageSize, 
-        borderRadius: '10px',
-        overflow: 'hidden'
-      }}>
-        {images.map((img, i) => (
-          <div 
-            key={i} 
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              aspectRatio: '1',
-              borderTopLeftRadius: i === 0 ? '10px' : '0',
-              borderTopRightRadius: i === 1 ? '10px' : '0',
-              borderBottomLeftRadius: i === 2 ? '10px' : '0',
-              borderBottomRightRadius: i === 3 ? '10px' : '0'
-            }}
-          >
-            <img 
-              src={img} 
-              alt={`Post ${i + 1}`}
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover'
-              }}
-              loading="lazy"
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Five or more images - Layout: 2 รูปบน, 3 รูปล่าง (เหมือน PhotoGrid)
-  return (
-    <div style={{ 
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: gap,
-      width: imageSize, 
-      height: imageSize, 
-      borderRadius: '10px',
-      overflow: 'hidden'
-    }}>
-      {/* Top row: 2 images */}
-      {images.slice(0, 2).map((img, i) => (
-        <div 
-          key={i} 
-          style={{ 
-            position: 'relative', 
-            overflow: 'hidden', 
-            aspectRatio: '1',
-            borderTopLeftRadius: i === 0 ? '10px' : '0',
-            borderTopRightRadius: i === 1 ? '10px' : '0'
-          }}
-        >
-          <img 
-            src={img} 
-            alt={`Post ${i + 1}`}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover'
-            }}
-            loading="lazy"
-          />
-        </div>
-      ))}
-      {/* Bottom row: 3 images */}
-      <div style={{ 
-        gridColumn: 'span 2', 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr 1fr', 
-        gap: gap 
-      }}>
-        {images.slice(2, 5).map((img, i) => {
-          const idx = i + 2;
-          return (
-            <div 
-              key={idx} 
-              style={{ 
-                position: 'relative', 
-                overflow: 'hidden', 
-                aspectRatio: '1',
-                borderBottomLeftRadius: i === 0 ? '10px' : '0',
-                borderBottomRightRadius: i === 2 ? '10px' : '0'
-              }}
-            >
-              <img 
-                src={img} 
-                alt={`Post ${idx + 1}`}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover'
-                }}
-                loading="lazy"
-              />
-              {idx === 4 && count > 5 && (
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.6)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontSize: '10px',
-                  fontWeight: 'bold',
-                  borderBottomRightRadius: '10px'
-                }}>
-                  +{count - 5}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 export default function NotificationPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -398,11 +126,9 @@ export default function NotificationPage() {
     async (userId: string) => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('all_notifications')
-          .select('id, post_id, created_at, type, username, avatar_url, car_data')
-          .eq('owner_id', userId)
-          .order('created_at', { ascending: false });
+        const { data, error } = await supabase.rpc('get_notifications_feed', {
+          p_owner_id: userId,
+        });
 
         if (error) {
           console.error('Supabase Error:', error);
@@ -427,34 +153,20 @@ export default function NotificationPage() {
             // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
           }
 
-          const formatted: NotificationItem[] = await Promise.all(
-            data.map(async (item) => {
-              // ดึงจำนวน likes และ saves
-              const [likesResult, savesResult] = await Promise.all([
-                supabase
-                  .from('post_likes')
-                  .select('*', { count: 'exact', head: true })
-                  .eq('post_id', item.post_id),
-                supabase
-                  .from('post_saves')
-                  .select('*', { count: 'exact', head: true })
-                  .eq('post_id', item.post_id),
-              ]);
-
-              return {
-                id: item.id,
-                type: item.type,
-                post_id: item.post_id,
-                created_at: item.created_at,
-                sender_name: item.username || 'User',
-                sender_avatar: item.avatar_url,
-                post_caption: item.car_data?.caption || '',
-                post_images: item.car_data?.images || [],
-                likes: likesResult.count || 0,
-                saves: savesResult.count || 0,
-              };
-            })
-          );
+          const formatted: NotificationItem[] = (data as any[]).map((item) => ({
+            id: item.id,
+            type: item.type,
+            post_id: item.post_id,
+            created_at: item.created_at,
+            sender_name: item.username || 'User',
+            sender_avatar: item.avatar_url,
+            post_caption: item.car_data?.caption || '',
+            post_images: item.car_data?.images || [],
+            likes: item.likes_count || 0,
+            saves: item.saves_count || 0,
+            interaction_avatars: item.interaction_avatars || [],
+            interaction_total: item.interaction_total || 0,
+          }));
 
           // รวมแจ้งเตือนตามโพสต์:
           // - นับ "จำนวนแจ้งเตือนใหม่" ต่อ post_id โดยเทียบกับเวลาที่ user เคยเปิดดูโพสต์นั้นล่าสุด
@@ -571,7 +283,7 @@ export default function NotificationPage() {
         position: 'sticky',
         top: 0,
         background: '#fff',
-        zIndex: 100,
+        zIndex: 1000,
         flexShrink: 0
       }}>
         <button 
@@ -599,7 +311,7 @@ export default function NotificationPage() {
       {/* Notification List */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flex: 1 }}>
-          <div className="loading-spinner-circle"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+          <PageSpinner />
         </div>
       ) : notifications.length === 0 ? (
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center', flex: 1 }}>
@@ -614,97 +326,13 @@ export default function NotificationPage() {
               notification.notification_count > 0;
             const isReadStyle = !hasNewNotifications;
             return (
-            <div
+            <NotificationPostPreviewCard
               key={notification.id}
+              notification={notification}
+              isReadStyle={isReadStyle}
+              timeAgoText={formatTimeAgo(notification.created_at)}
               onClick={() => handleNotificationClick(notification)}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                padding: '16px 20px',
-                cursor: 'pointer',
-                borderBottom: '1px solid #f0f0f0',
-                backgroundColor: isReadStyle ? '#fff' : '#e7f3ff',
-                transition: 'background-color 0.2s',
-                gap: '16px'
-              }}
-              onMouseEnter={(e) => {
-                if (isReadStyle) {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
-              }}
-            >
-              {/* Post Image + per-post notification count badge */}
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <MiniPostImage images={notification.post_images || []} />
-                {typeof notification.notification_count === 'number' &&
-                  notification.notification_count > 0 && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '-4px',
-                        right: '-4px',
-                        minWidth: '16px',
-                        height: '16px',
-                        padding: '0 4px',
-                        borderRadius: '999px',
-                        background: '#e0245e',
-                        color: '#fff',
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        lineHeight: '16px',
-                      }}
-                    >
-                      {notification.notification_count > 99
-                        ? '99+'
-                        : notification.notification_count}
-                    </div>
-                  )}
-              </div>
-
-              {/* Notification Content */}
-              <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
-                <div style={{ fontSize: '17px', lineHeight: '1.4', color: '#050505', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: '600', color: '#4a4d52' }}>
-                    {((notification.likes || 0) + (notification.saves || 0))}
-                  </span>
-                  {/* Like Icon - สีแดง */}
-                  <svg 
-                    width="22" 
-                    height="22" 
-                    viewBox="0 0 24 24" 
-                    fill="#e0245e" 
-                    stroke="#e0245e" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path>
-                  </svg>
-                  {/* Save Icon - สีเหลืองทอง */}
-                  <svg 
-                    width="22" 
-                    height="22" 
-                    viewBox="0 0 24 24" 
-                    fill="#FFD700" 
-                    stroke="#FFD700" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
-                  </svg>
-                </div>
-                <div style={{ fontSize: '15px', color: '#4a4d52', marginTop: '6px' }}>
-                  {formatTimeAgo(notification.created_at)}
-                </div>
-              </div>
-            </div>
+            />
           )})}
         </div>
       )}

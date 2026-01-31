@@ -70,7 +70,8 @@ export function useInteractionModal(): UseInteractionModalReturn {
         })),
         ...(guestData || []).map((item: any) => ({
           username: 'User',
-          avatar_url: 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png',
+          // Guest: show grey silhouette avatar (same as guest post profile)
+          avatar_url: null,
           created_at: item.created_at
         }))
       ];

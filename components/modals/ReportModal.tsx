@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react';
+import { ButtonSpinner } from '@/components/LoadingSpinner';
 
 interface ReportModalProps {
   reportingPost: any | null;
@@ -114,7 +115,13 @@ export const ReportModal = React.memo<ReportModalProps>(({
               opacity: isSubmittingReport ? 0.6 : 1 
             }}
           >
-            {isSubmittingReport ? 'ກຳລັງສົ່ງ...' : 'ສົ່ງລາຍງານ'}
+            {isSubmittingReport ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ButtonSpinner />
+              </span>
+            ) : (
+              'ສົ່ງລາຍງານ'
+            )}
           </button>
         </div>
       </div>
