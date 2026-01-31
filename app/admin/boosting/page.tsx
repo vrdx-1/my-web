@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { createAdminSupabaseClient } from "@/utils/adminSupabaseClient";
+import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { AdminPostCard } from "@/components/AdminPostCard";
 import { formatTime, getOnlineStatus } from "@/utils/postUtils";
@@ -19,7 +19,7 @@ const FullScreenImageViewer = lazyNamed(
 );
 
 export default function AdminBoostingPage() {
-  const supabase = createAdminSupabaseClient();
+  const supabase = supabaseClient;
   const [activeTab, setActiveTab] = useState<"waiting" | "boosting">("waiting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,8 +105,14 @@ export default function AdminBoostingPage() {
       // บังคับเปลี่ยนแท็บล่วงหน้า (Optimistic UI)
       setActiveTab("boosting");
 
-      const { error: boostError } = await supabase.from("post_boosts").update({ status: "success" }).eq("id", item.id);
-      const { error: carError } = await supabase.from("cars").update({ is_boosted: true, boost_expiry: expiryDate.toISOString() }).eq("id", item.post_id);
+      const { error: boostError } = await supabase
+        .from("post_boosts")
+        .update({ status: "success", expires_at: expiryDate.toISOString() })
+        .eq("id", item.id);
+      const { error: carError } = await supabase
+        .from("cars")
+        .update({ is_boosted: true, boost_expiry: expiryDate.toISOString() })
+        .eq("id", item.post_id);
       
       if (boostError || carError) {
          throw new Error("Update failed - ตรวจสอบ RLS ใน Supabase Dashboard");
@@ -124,7 +130,7 @@ export default function AdminBoostingPage() {
     if (!confirm(msg)) return;
     try {
       await supabase.from("cars").update({ is_boosted: false, boost_expiry: null }).eq("id", item.post_id);
-      await supabase.from("post_boosts").delete().eq("id", item.id);
+      await supabase.from("post_boosts").update({ status: "reject" }).eq("id", item.id);
       fetchBoosts();
     } catch (err) { }
   };

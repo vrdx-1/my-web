@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 export const AvatarGroup = React.memo<{
   avatars: (string | null)[];
@@ -58,20 +59,7 @@ export const AvatarGroup = React.memo<{
                   justifyContent: 'center',
                 }}
               >
-                {/* Guest: black silhouette (same as Home profile icon) */}
-                <svg
-                  width={18}
-                  height={18}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#000"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+                <GuestAvatarIcon size={18} />
               </div>
             )}
           </div>

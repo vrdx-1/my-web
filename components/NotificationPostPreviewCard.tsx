@@ -11,6 +11,7 @@ export interface NotificationPostPreviewItem {
   likes?: number;
   saves?: number;
   interaction_avatars?: (string | null)[];
+  boost_status?: 'pending' | 'reject' | 'success' | string | null;
 }
 
 // Mini PostCard Image Component - Layout เหมือน PhotoGrid แต่ขนาดเล็ก
@@ -319,6 +320,15 @@ export const NotificationPostPreviewCard = React.memo<{
       ? notification.interaction_total
       : (notification.likes || 0) + (notification.saves || 0);
 
+  const boostBadgeConfig =
+    notification.boost_status === 'pending'
+      ? { text: 'ລະບົບກຳລັງກວດສອບໂຄສະນາ', bg: '#fffbeb', border: '#fcd34d', color: '#92400e' }
+      : notification.boost_status === 'reject'
+        ? { text: 'ໂຄສະນາຖືກປະຕິເສດ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
+        : notification.boost_status === 'success'
+          ? { text: 'ໂຄສະນາໄດ້ຮັບການອະນຸມັດແລ້ວ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
+          : null;
+
   return (
     <div
       onClick={onClick}
@@ -371,6 +381,9 @@ export const NotificationPostPreviewCard = React.memo<{
 
       {/* Notification Content */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
+        <div style={{ fontSize: '12px', color: '#6b6b6b', fontWeight: 600, marginBottom: '6px' }}>
+          ມີການແຈ້ງເຕືອນໃໝ່ເມື່ອ {timeAgoText}
+        </div>
         <div
           style={{
             fontSize: '17px',
@@ -385,7 +398,25 @@ export const NotificationPostPreviewCard = React.memo<{
           <span>ຄົນມັກໂພສຂອງທ່ານ</span>
           <AvatarGroup avatars={notification.interaction_avatars || []} totalCount={interactionTotal} />
         </div>
-        <div style={{ fontSize: '15px', color: '#4a4d52', marginTop: '6px' }}>{timeAgoText}</div>
+        {boostBadgeConfig && (
+          <div style={{ marginTop: '8px' }}>
+            <div
+              style={{
+                display: 'inline-block',
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '3px 8px',
+                borderRadius: '999px',
+                background: boostBadgeConfig.bg,
+                border: `1px solid ${boostBadgeConfig.border}`,
+                color: boostBadgeConfig.color,
+                lineHeight: 1.2,
+              }}
+            >
+              {boostBadgeConfig.text}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

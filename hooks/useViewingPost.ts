@@ -73,40 +73,16 @@ export function useViewingPost(): UseViewingPostReturn {
   }, []);
 
   const handleViewingModeTouchMove = useCallback((e: React.TouchEvent) => {
+    // Disable horizontal swipe/drag in Viewing mode while scrolling images
     if (!viewingModeTouchStart) return;
-    const clientX = e.touches[0].clientX;
-    const deltaX = clientX - viewingModeTouchStart.x;
-    const maxDrag = typeof window !== 'undefined' ? window.innerWidth : 600;
-    if (deltaX > 0) {
-      const dragOffset = Math.min(maxDrag, deltaX);
-      setViewingModeDragOffset(dragOffset);
-    }
+    setViewingModeDragOffset(0);
   }, [viewingModeTouchStart]);
 
   const handleViewingModeTouchEnd = useCallback((e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => {
     if (!viewingModeTouchStart) return;
-    const diffX = e.changedTouches[0].clientX - viewingModeTouchStart.x;
-    const diffY = Math.abs(viewingModeTouchStart.y - e.changedTouches[0].clientY);
-    const absDiffX = Math.abs(diffX);
-    const container = document.getElementById('viewing-mode-container');
-    const isAtBottom = container && container.scrollHeight - container.scrollTop <= container.clientHeight + 10;
-    const isAtTop = container && container.scrollTop <= 10;
-    
-    const isHorizontalSwipe = absDiffX > diffY * 1.5;
-    const isStrongHorizontalSwipe = diffX > 100 && isHorizontalSwipe;
-    const isScrolling = !isAtTop && !isAtBottom && diffY > 30;
-    
-    if (isStrongHorizontalSwipe && !isScrolling) {
-      // Viewing mode should only be closed via the Back button.
-      // If user swipes, just reset the drag state (do not close).
-      setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
-      setViewingModeTouchStart(null);
-      return;
-    } else if (Math.abs(viewingModeDragOffset) > 20) {
-      setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
-    }
+    // Keep behavior: do not allow left-right swipe in Viewing mode
+    setViewingModeDragOffset(0);
+    setViewingModeIsDragging(false);
     setViewingModeTouchStart(null);
   }, [viewingModeTouchStart, viewingModeDragOffset, closeViewingMode]);
 

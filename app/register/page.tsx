@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { safeParseJSON } from '@/utils/storageUtils'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -193,11 +194,8 @@ export default function Register() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b', width: '100%' }}>
-                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', width: '100%' }}>
+                  <GuestAvatarIcon size={60} />
                 </div>
               )}
             </div>

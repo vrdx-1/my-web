@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { TabSpinner } from '@/components/LoadingSpinner';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 interface AppHeaderProps {
   searchTerm: string;
@@ -225,10 +226,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             {userProfile?.avatar_url ? (
               <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+              <GuestAvatarIcon size={iconSize} />
             )}
           </div>
         </Link>

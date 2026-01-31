@@ -95,11 +95,6 @@ export async function sharePost(
   const shareData = { url: shareUrl };
 
   // นับยอดแชร์ทันทีทุกครั้งที่กด (ไม่สามารถยกเลิกได้, คนเดิมกดหลายครั้งก็นับเพิ่ม)
-  const isUser = !!session;
-  const userId = isUser ? session.user.id : getPrimaryGuestToken();
-  const table = isUser ? 'post_shares' : 'post_shares_guest';
-  const column = isUser ? 'user_id' : 'guest_token';
-  await supabase.from(table).insert([{ [column]: userId, post_id: post.id }]);
   await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
   setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
 

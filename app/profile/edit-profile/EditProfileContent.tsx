@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -318,11 +319,8 @@ const savePhone = async (phoneNum: string) => {
  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
  <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
  <div style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5' }}>
- {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b', width: '100%' }}>
-   <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-     <circle cx="12" cy="7" r="4"></circle>
-   </svg>
+ {avatarUrl ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', width: '100%' }}>
+   <GuestAvatarIcon size={50} />
  </div>}
  </div>
  <label htmlFor="avatar-up" style={{ position: 'absolute', bottom: 0, right: 0, background: '#e4e6eb', borderRadius: '50%', padding: '7px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer', display: 'flex' }}>

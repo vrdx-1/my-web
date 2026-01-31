@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_FONT } from '@/utils/constants';
 import { ButtonSpinner, PageSpinner } from '@/components/LoadingSpinner';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 export default function Profile() {
   const router = useRouter();
@@ -326,11 +327,8 @@ export default function Profile() {
                   {avatarUrl ? (
                     <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#6b6b6b' }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
+                      <GuestAvatarIcon size={40} />
                     </div>
                   )}
                 </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import { Avatar } from '../Avatar';
 import { LoadingSpinner } from '../LoadingSpinner';
 import { EmptyState } from '../EmptyState';
+import { GuestAvatarIcon } from '../GuestAvatarIcon';
 
 interface InteractionModalProps {
   show: boolean;
@@ -153,20 +154,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
                       flexShrink: 0,
                     }}
                   >
-                    {/* Guest: black silhouette (same as Home profile icon) */}
-                    <svg
-                      width={18}
-                      height={18}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#000"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
+                    <GuestAvatarIcon size={18} />
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>

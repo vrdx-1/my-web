@@ -2,16 +2,17 @@
 
 import { useState, useEffect, Suspense } from "react"; // เพิ่ม Suspense
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { supabase as supabaseClient } from "@/lib/supabase";
 import { X, CheckCircle2 } from "lucide-react";
 import { PageSpinner } from "@/components/LoadingSpinner";
+import { BoostAdDetailsPopup } from "@/components/modals/BoostAdDetailsPopup";
 
 // สร้าง Component แยกเพื่อจัดการ Logic เดิมทั้งหมด
 function BoostPostContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get("id");
-  const supabase = createClient();
+  const supabase = supabaseClient;
 
   const [step, setStep] = useState(0); 
   const [loading, setLoading] = useState(false);
@@ -20,6 +21,9 @@ function BoostPostContent() {
   const [dbStatus, setDbStatus] = useState<string | null>(null);
   const [showHowTo, setShowHowTo] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [isRedirectingToRegister, setIsRedirectingToRegister] = useState(false);
 
   const packages = [
     { 
@@ -74,6 +78,19 @@ function BoostPostContent() {
 
   useEffect(() => {
     async function checkExistingBoost() {
+      // Guest users must create an account before boosting
+      const { data: sessionData } = await supabase.auth.getSession();
+      let session = sessionData.session;
+      if (!session) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        session = refreshed.session ?? null;
+      }
+      if (!session) {
+        setIsRedirectingToRegister(true);
+        router.replace("/register");
+        return;
+      }
+
       if (!postId) {
         setStep(1);
         setCheckingStatus(false);
@@ -83,9 +100,10 @@ function BoostPostContent() {
         console.log("กำลังตรวจสอบสถานะของ postId:", postId);
         const { data, error } = await supabase
           .from("post_boosts")
-          .select("status")
+          .select("status, expires_at")
           .eq("post_id", postId)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (error) throw error;
 
@@ -93,6 +111,8 @@ function BoostPostContent() {
           const currentStatus = data[0].status;
           console.log("พบข้อมูลสถานะในระบบ:", currentStatus);
           setDbStatus(currentStatus);
+          setExpiresAt((data[0] as any)?.expires_at ?? null);
+          setJustSubmitted(false);
           setStep(3); 
         } else {
           console.log("ไม่พบข้อมูลการ Boost เดิม");
@@ -106,7 +126,7 @@ function BoostPostContent() {
       }
     }
     checkExistingBoost();
-  }, [postId, supabase]);
+  }, [postId, router, supabase]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,11 +137,33 @@ function BoostPostContent() {
     setLoading(true);
     setSubmitError(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setDbStatus("error");
-        setSubmitError("NOT_LOGGED_IN");
+      // If admin already rejected this post, block further submissions (anti-spam)
+      const { data: latestBoost, error: latestBoostError } = await supabase
+        .from("post_boosts")
+        .select("status")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (latestBoostError) throw latestBoostError;
+      if (latestBoost && latestBoost[0]?.status === "reject") {
+        setDbStatus("reject");
+        setExpiresAt(null);
+        setJustSubmitted(false);
         setStep(3);
+        return;
+      }
+
+      // Allow both logged-in and guest submissions (user_id is nullable in DB)
+      const { data: sessionData } = await supabase.auth.getSession();
+      let userId = sessionData.session?.user?.id ?? null;
+      if (!userId) {
+        // If user is actually logged in but session isn't loaded yet, try refresh once.
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        userId = refreshed.session?.user?.id ?? null;
+      }
+      if (!userId) {
+        setIsRedirectingToRegister(true);
+        router.replace("/register");
         return;
       }
 
@@ -135,7 +177,7 @@ function BoostPostContent() {
 
       const { error: dbError } = await supabase.from("post_boosts").insert({
         post_id: postId,
-        user_id: user.id,
+        user_id: userId,
         package_name: selectedPkg.name,
         boost_days: selectedPkg.days, 
         price: parseInt(selectedPkg.price.replace(/\D/g, "")),
@@ -152,16 +194,27 @@ function BoostPostContent() {
       }
 
       setDbStatus("pending");
+      setExpiresAt(null);
+      setJustSubmitted(true);
       setStep(3);
     } catch (error: any) {
       console.error(error);
       setDbStatus("error");
       setSubmitError(error?.message || "UNKNOWN_ERROR");
+      setJustSubmitted(false);
       setStep(3);
     } finally {
       setLoading(false);
     }
   };
+
+  if (isRedirectingToRegister) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+        <PageSpinner />
+      </div>
+    );
+  }
 
   if (checkingStatus) return <div className="p-10 text-center font-bold">ກຳລັງກວດສອບຂໍ້ມູນ...</div>;
 
@@ -274,43 +327,15 @@ function BoostPostContent() {
         )}
 
         {step === 3 && (
-          <div className="fixed inset-0 bg-white flex items-center justify-center p-6 z-50">
-            <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center">
-              <button onClick={() => router.push("/")} className="absolute top-4 right-4 text-gray-400"><X size={24} /></button>
-              {dbStatus === "pending" ? (
-                <>
-                  <h2 className="text-3xl font-bold mb-4 text-yellow-600">ກຳລັງກວດສອບ</h2>
-                  <p className="text-xl text-gray-700">ລະບົບກຳລັງກວດສອບการ Boost Post <br /> ຂອງທ່ານ.</p>
-                </>
-              ) : dbStatus === "error" ? (
-                <>
-                  <h2 className="text-2xl font-bold mb-3 text-red-600">ສົ່ງບໍ່ສຳເລັດ</h2>
-                  <p className="text-gray-700">
-                    ກະລຸນາລອງໃໝ່ (ກວດສອບອິນເຕີເນັດ / ການລ໋ອກອິນ).
-                  </p>
-                  {submitError && (
-                    <div className="mt-3 text-left text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                      <div className="font-bold text-gray-700 mb-1">Error</div>
-                      <div className="break-words">{submitError}</div>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-2xl transition-colors active:scale-[0.99]"
-                  >
-                    ລອງອີກຄັ້ງ
-                  </button>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={64} className="mx-auto text-green-500 mb-4" />
-                  <h2 className="text-3xl font-bold mb-4 text-green-600">ໂພສ Boost ສຳເລັດ</h2>
-                  <p className="text-gray-600">ຂອບໃຈທີ່ໃຊ້ບໍລິການ</p>
-                </>
-              )}
-            </div>
-          </div>
+          <BoostAdDetailsPopup
+            show={true}
+            status={dbStatus}
+            expiresAt={expiresAt}
+            justSubmitted={justSubmitted}
+            submitError={submitError}
+            onClose={() => router.push("/")}
+            onRetry={() => setStep(2)}
+          />
         )}
       </div>
 
@@ -335,13 +360,6 @@ function BoostPostContent() {
           >
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <div className="font-bold text-lg">ວິທີຍິງໂຄສະນາ</div>
-              <button
-                type="button"
-                onClick={() => setShowHowTo(false)}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
-              >
-                <X size={20} />
-              </button>
             </div>
 
             <div className="px-5 py-4 text-sm text-gray-700 space-y-3">

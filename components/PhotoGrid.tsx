@@ -11,7 +11,35 @@ interface PhotoGridProps {
  * Handles different image count layouts (1, 2, 3, 4+)
  */
 export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) => {
-  const count = images.length;
+  // Defensive: some rows may return images as a JSON string (e.g. '["url1","url2"]').
+  // Normalize to string[] to avoid rendering broken src like '[' / '"'.
+  const normalizedImages: string[] = (() => {
+    if (Array.isArray(images)) {
+      return images.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+    }
+    if (typeof images === 'string') {
+      const s = images.trim();
+      if (!s) return [];
+      if (s.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(s);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+          }
+        } catch {
+          // fallthrough
+        }
+      }
+      // If it's a single URL string, treat it as one image.
+      if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) {
+        return [s];
+      }
+      return [];
+    }
+    return [];
+  })();
+
+  const count = normalizedImages.length;
   
   if (count === 0) return null;
   
@@ -20,7 +48,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
     return (
       <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
         <Image 
-          src={images[0]} 
+          src={normalizedImages[0]} 
           onClick={() => onPostClick(0)} 
           fill
           style={{ 
@@ -41,7 +69,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
         <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
           <Image 
-            src={images[0]} 
+            src={normalizedImages[0]} 
             onClick={() => onPostClick(0)} 
             fill
             style={{ 
@@ -55,7 +83,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
         </div>
         <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
           <Image 
-            src={images[1]} 
+            src={normalizedImages[1]} 
             onClick={() => onPostClick(1)} 
             fill
             style={{ 
@@ -76,7 +104,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
         <img 
-          src={images[0]} 
+          src={normalizedImages[0]} 
           onClick={() => onPostClick(0)} 
           style={{ 
             width: '100%', 
@@ -91,7 +119,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
         />
         <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
           <img 
-            src={images[1]} 
+            src={normalizedImages[1]} 
             onClick={() => onPostClick(1)} 
             style={{ 
               width: '100%', 
@@ -104,7 +132,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
             alt="Post image 2"
           />
           <img 
-            src={images[2]} 
+            src={normalizedImages[2]} 
             onClick={() => onPostClick(2)} 
             style={{ 
               width: '100%', 
@@ -125,7 +153,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
   if (count === 4) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-        {images.map((img, i) => (
+        {normalizedImages.map((img, i) => (
           <div 
             key={i} 
             style={{ 
@@ -156,7 +184,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
   // Five or more images
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-      {images.slice(0, 2).map((img, i) => (
+      {normalizedImages.slice(0, 2).map((img, i) => (
         <div 
           key={i} 
           style={{ 
@@ -181,7 +209,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
         </div>
       ))}
       <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
-        {images.slice(2, 5).map((img, i) => {
+        {normalizedImages.slice(2, 5).map((img, i) => {
           const idx = i + 2;
           return (
             <div 

@@ -12,6 +12,7 @@ import { InteractionModal } from '@/components/modals/InteractionModal';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+import { BoostAdDetailsPopup } from '@/components/modals/BoostAdDetailsPopup';
 
 // Shared Hooks
 import { useViewingPost } from '@/hooks/useViewingPost';
@@ -42,6 +43,8 @@ export default function NotificationDetail() {
  const [reportingPost, setReportingPost] = useState<any | null>(null);
  const [reportReason, setReportReason] = useState('');
  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+ const [boostInfo, setBoostInfo] = useState<{ status: string; expiresAt: string | null } | null>(null);
+ const [showBoostDetails, setShowBoostDetails] = useState(false);
 
  // Use shared hooks
  const menu = useMenu();
@@ -120,11 +123,32 @@ export default function NotificationDetail() {
    setLoading(false);
  }, [id]);
 
+ const fetchBoostInfo = useCallback(async () => {
+   if (!id) return;
+   const { data, error } = await supabase
+     .from('post_boosts')
+     .select('status, expires_at, created_at')
+     .eq('post_id', id)
+     .order('created_at', { ascending: false })
+     .limit(1);
+   if (!error && data && data.length > 0) {
+     setBoostInfo({ status: String((data[0] as any).status), expiresAt: (data[0] as any).expires_at ?? null });
+   } else {
+     setBoostInfo(null);
+   }
+ }, [id]);
+
  useEffect(() => {
    if (id) {
      fetchPostDetail();
    }
  }, [id, fetchPostDetail]);
+
+ useEffect(() => {
+   if (id) {
+     fetchBoostInfo();
+   }
+ }, [id, fetchBoostInfo]);
 
  // Use shared post interactions hook
  const { toggleLike, toggleSave } = usePostInteractions({
@@ -326,6 +350,47 @@ export default function NotificationDetail() {
         hideBoost={post?.status === 'sold'}
       />
      )}
+
+     {/* Boost ad details tab (for posts that ever requested boosting) */}
+     {boostInfo && (
+       <div style={{ padding: '12px 15px 0 15px', display: 'flex', justifyContent: 'center' }}>
+         <button
+           type="button"
+           onClick={async () => {
+             await fetchBoostInfo();
+             setShowBoostDetails(true);
+           }}
+           style={{
+             display: 'inline-flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             padding: '10px 14px',
+             background: '#1877f2',
+             border: '1px solid #1877f2',
+             borderRadius: '999px',
+             fontSize: '15px',
+             fontWeight: 'bold',
+             color: '#fff',
+             cursor: 'pointer',
+             boxShadow: '0 2px 10px rgba(24, 119, 242, 0.20)',
+           }}
+         >
+           ລາຍລະອຽດຂອງໂຄສະນາ
+         </button>
+       </div>
+     )}
+
+     <BoostAdDetailsPopup
+       show={showBoostDetails}
+       status={boostInfo?.status ?? null}
+       expiresAt={boostInfo?.expiresAt ?? null}
+       justSubmitted={false}
+       submitError={null}
+       overlay="dim"
+       confirmOnly={true}
+       zIndex={2000}
+       onClose={() => setShowBoostDetails(false)}
+     />
 
      {/* Modals - Using shared components */}
      <InteractionModal

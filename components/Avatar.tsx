@@ -1,4 +1,5 @@
 import React from 'react';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 interface AvatarProps {
   avatarUrl?: string | null;
@@ -42,19 +43,7 @@ export const Avatar = React.memo<AvatarProps>(({
           loading="lazy"
         />
       ) : (
-        <svg 
-          width={defaultSize * 0.65} 
-          height={defaultSize * 0.65} 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke={session ? "#1877f2" : "#6b6b6b"}
-          strokeWidth="1.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
+        <GuestAvatarIcon size={defaultSize * 0.65} />
       )}
     </div>
   );

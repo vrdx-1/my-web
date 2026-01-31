@@ -22,6 +22,7 @@ interface NotificationItem {
   notification_count?: number;
   interaction_avatars?: (string | null)[];
   interaction_total?: number;
+  boost_status?: 'pending' | 'reject' | 'success' | string | null;
 }
 
 // Helper function to format time ago
@@ -206,7 +207,39 @@ export default function NotificationPage() {
                 new Date(a.created_at).getTime()
             );
 
-          setNotifications(uniqueList);
+          // Add boost status label (for boosted posts only)
+          try {
+            const postIds = uniqueList.map((n) => n.post_id);
+            if (postIds.length > 0) {
+              const { data: boostsData, error: boostsError } = await supabase
+                .from('post_boosts')
+                .select('post_id, status, created_at')
+                .in('post_id', postIds)
+                .order('created_at', { ascending: false });
+
+              if (!boostsError && boostsData) {
+                const statusByPostId = new Map<string, string>();
+                (boostsData as any[]).forEach((b) => {
+                  const pid = String(b.post_id);
+                  if (!statusByPostId.has(pid)) {
+                    statusByPostId.set(pid, String(b.status));
+                  }
+                });
+                setNotifications(
+                  uniqueList.map((n) => ({
+                    ...n,
+                    boost_status: statusByPostId.get(String(n.post_id)) ?? null,
+                  }))
+                );
+              } else {
+                setNotifications(uniqueList);
+              }
+            } else {
+              setNotifications(uniqueList);
+            }
+          } catch {
+            setNotifications(uniqueList);
+          }
         }
       } catch (err) {
         console.error('Fetch Error:', err);

@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -244,7 +245,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             {userProfile?.avatar_url ? (
               <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
             ) : (
-              <svg width="50" height="50" viewBox="0 0 24 24" fill="#4a4d52"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GuestAvatarIcon size={32.5} />
+              </div>
             )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
