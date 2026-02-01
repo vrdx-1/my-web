@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { LAO_FONT } from '@/utils/constants';
+import { supabase } from '@/lib/supabase';
+import { LAO_PROVINCES } from '@/utils/constants';
+import { getCarDictionarySuggestions } from '@/utils/carSearch';
 
 interface SearchScreenProps {
   isOpen: boolean;
@@ -10,13 +13,140 @@ interface SearchScreenProps {
   onClose: () => void;
 }
 
-interface RecentSearch {
-  id: string;
-  type: 'user' | 'query';
-  name: string;
-  avatar_url?: string;
-  hasNew?: boolean;
-  newCount?: number;
+const STOP_TOKENS = new Set([
+  // Thai
+  'ขาย',
+  'มือสอง',
+  'ไมล์',
+  'ดาวน์',
+  // Lao
+  'ຂາຍ',
+  'ມືສອງ',
+  'ໃໝ່',
+  // English
+  'sale',
+  'used',
+  'new',
+]);
+
+function renderHighlighted(text: string, query: string) {
+  const q = (query ?? '').trim();
+  if (!q) return text;
+
+  const lowerText = text.toLowerCase();
+  const lowerQ = q.toLowerCase();
+  const idx = lowerText.indexOf(lowerQ);
+  if (idx !== 0) return text; // autocomplete: only when suggestion starts with typed query
+
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + q.length);
+  const after = text.slice(idx + q.length);
+  return (
+    <>
+      {before}
+      <span style={{ fontWeight: 700 }}>{match}</span>
+      <span style={{ opacity: 0.65 }}>{after}</span>
+    </>
+  );
+}
+
+function normalizeForPrefix(text: string): string {
+  return String(text ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function suggestionToSearchTerm(suggestion: string): string {
+  // Guarantee that clicking a suggestion yields results:
+  // Use the first meaningful token (usually brand/model) rather than the full phrase,
+  // because the displayed suggestion may be a re-ordered/condensed caption snippet.
+  const parts = String(suggestion ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  const first = parts[0];
+  return first || '';
+}
+
+function extractImportantTokensFromCaption(caption: string): { tokens: string[] } {
+  const raw = String(caption ?? '').trim();
+  if (!raw) return { tokens: [] };
+
+  // Keep only word-ish parts; remove obvious noise.
+  const tokens = raw
+    .replace(/[()[\]{}"“”'‘’]/g, ' ')
+    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((t) => t.replace(/^#+|#+$/g, '')); // strip hashtags edges
+
+  const important: string[] = [];
+
+  for (const token of tokens) {
+    if (!token) continue;
+    const lower = token.toLowerCase();
+
+    // Skip provinces/locations (keep suggestions about car identity, not place)
+    if ((LAO_PROVINCES as readonly string[]).includes(token as any)) continue;
+
+    // Skip obvious stop words
+    if (STOP_TOKENS.has(token) || STOP_TOKENS.has(lower)) continue;
+
+    // Skip phone-like numbers
+    if (/^\+?\d{7,}$/.test(token.replace(/[-\s]/g, ''))) continue;
+
+    // Skip price-ish tokens (very rough)
+    if (/[฿$€₭]/.test(token)) continue;
+    if (/\d/.test(token) && /(k|K|m|M|ล้าน|ລ້ານ|kip|ກີບ|baht|ບາດ)/i.test(token)) continue;
+
+    // Skip pure numbers (years/prices/phones should not appear in suggestions)
+    if (/^\d+$/.test(token)) continue;
+
+    // Keep tokens that look like words (any script) and are not too short
+    if (token.length < 2) continue;
+
+    important.push(token);
+    if (important.length >= 3) break; // brand + model + maybe trim
+  }
+
+  return { tokens: important };
+}
+
+function buildAutocompleteSuggestionFromCaption(
+  caption: string,
+  queryPrefix: string,
+): string | null {
+  const q = normalizeForPrefix(queryPrefix);
+  if (!q) return null;
+
+  const { tokens } = extractImportantTokensFromCaption(caption);
+  if (tokens.length === 0) return null;
+
+  const qParts = q.split(' ').filter(Boolean);
+
+  // Build a candidate suggestion that STARTS with what the user typed (global autocomplete feel).
+  // Try matching from each token boundary (brand/model/year...), then "rotate" to start there.
+  for (let start = 0; start < tokens.length; start++) {
+    const tail = tokens.slice(start, Math.min(tokens.length, start + 3)); // show up to 3 key tokens
+    let candidate = tail.join(' ').trim();
+
+    const candNorm = normalizeForPrefix(candidate);
+
+    if (q && candNorm.startsWith(q)) {
+      return candidate;
+    }
+
+    // Also allow matching the first token only (common while user types the first word)
+    // Example: user types "re" and candidate starts with "revo ..." (handled above),
+    // but if user types just "r" we still want a good completion.
+    const firstTokNorm = normalizeForPrefix(tokens[start]);
+    if (q && q.length >= 1 && firstTokNorm.startsWith(q)) {
+      return candidate;
+    }
+  }
+
+  return null;
 }
 
 export const SearchScreen: React.FC<SearchScreenProps> = ({
@@ -25,20 +155,15 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   onSearchChange,
   onClose,
 }) => {
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ display: string; searchKey: string }>>([]);
+  const suggestionReqIdRef = useRef(0);
+  const initialSearchTermRef = useRef<string>('');
 
-  // Load recent searches from localStorage
   useEffect(() => {
     if (isOpen) {
-      const saved = localStorage.getItem('recent_searches');
-      if (saved) {
-        try {
-          setRecentSearches(JSON.parse(saved));
-        } catch (e) {
-          console.error('Error loading recent searches:', e);
-        }
-      }
+      // Capture initial value so "back" can cancel edits (no search + clear typed changes).
+      initialSearchTermRef.current = searchTerm;
       // Focus search input when opened
       setTimeout(() => {
         searchInputRef.current?.focus();
@@ -46,51 +171,131 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     }
   }, [isOpen]);
 
+  const handleCancelSearch = () => {
+    onSearchChange(initialSearchTermRef.current || '');
+    onClose();
+  };
+
+  // Load suggestion examples from caption (only).
+  useEffect(() => {
+    if (!isOpen) {
+      setSuggestions([]);
+      return;
+    }
+
+    const q = (searchTerm ?? '').trim();
+    const dictSuggestions = getCarDictionarySuggestions(q, 6);
+
+    const reqId = ++suggestionReqIdRef.current;
+    const timer = setTimeout(async () => {
+      try {
+        let query = supabase
+          .from('cars')
+          .select('caption')
+          .eq('status', 'recommend')
+          .eq('is_hidden', false)
+          .order('created_at', { ascending: false })
+          .limit(250);
+
+        const { data, error } = await query;
+        if (reqId !== suggestionReqIdRef.current) return; // stale
+        if (error || !data) {
+          setSuggestions(dictSuggestions);
+          return;
+        }
+
+        const uniq: Array<{ display: string; searchKey: string }> = [...dictSuggestions];
+        const qPrefix = normalizeForPrefix(q);
+
+        const qParts = qPrefix.split(' ').filter(Boolean);
+
+        if (!qPrefix) {
+          // When empty input: show general suggestions (no recent list).
+          const counts = new Map<string, number>();
+          for (const row of data as any[]) {
+            const caption = String(row.caption ?? '').trim();
+            if (!caption) continue;
+            const { tokens } = extractImportantTokensFromCaption(caption);
+            if (!tokens || tokens.length === 0) continue;
+            const candidate = tokens.slice(0, 3).join(' ').trim();
+            if (!candidate) continue;
+            counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
+          }
+          const ranked = [...counts.entries()]
+            .sort((a, b) => (b[1] - a[1]) || a[0].length - b[0].length || a[0].localeCompare(b[0]))
+            .map(([k]) => k);
+          for (const s of ranked) {
+            const item = { display: s, searchKey: suggestionToSearchTerm(s) || s };
+            const exists = uniq.some((u) => normalizeForPrefix(u.display) === normalizeForPrefix(item.display));
+            if (!exists) uniq.push(item);
+            if (uniq.length >= 6) break;
+          }
+        } else {
+          // Build "completion style" suggestions from caption only.
+          const scored = [...data]
+            .map((d: any) => String(d.caption ?? '').trim())
+            .filter(Boolean)
+            .map((caption) => {
+              const suggestion = buildAutocompleteSuggestionFromCaption(caption, qPrefix);
+              if (!suggestion) return null;
+              const sNorm = normalizeForPrefix(suggestion);
+              const starts =
+                (qPrefix && sNorm.startsWith(qPrefix)) ? 1 : 0;
+              const wordCount = sNorm.split(' ').filter(Boolean).length;
+              const exactWords =
+                qParts.length > 1 && starts ? 1 : 0; // when user typed multiple words and we match at start
+              // Prefer:
+              // - startsWith query
+              // - matching multi-word prefixes
+              // - shorter completions (like global autocomplete)
+              const score = starts * 3 + exactWords * 2 + (1 / Math.max(1, wordCount));
+              return { suggestion, score, len: suggestion.length };
+            })
+            .filter(Boolean) as Array<{ suggestion: string; score: number; len: number }>;
+
+          scored.sort((a, b) => (b.score - a.score) || (a.len - b.len) || a.suggestion.localeCompare(b.suggestion));
+
+          for (const item of scored) {
+            const sug = { display: item.suggestion, searchKey: suggestionToSearchTerm(item.suggestion) || item.suggestion };
+            const exists = uniq.some((u) => normalizeForPrefix(u.display) === normalizeForPrefix(sug.display));
+            if (!exists) uniq.push(sug);
+            if (uniq.length >= 6) break;
+          }
+        }
+
+        setSuggestions(uniq);
+      } catch (e) {
+        if (reqId !== suggestionReqIdRef.current) return;
+        setSuggestions(dictSuggestions);
+      }
+    }, 250); // small debounce while typing
+
+    return () => clearTimeout(timer);
+  }, [isOpen, searchTerm]);
+
   // Handle Escape key to close search screen
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleCancelSearch();
       }
     };
     if (isOpen) {
       window.addEventListener('keydown', handleEscape);
       return () => window.removeEventListener('keydown', handleEscape);
     }
-  }, [isOpen, onClose]);
-
-  // Save search to recent searches
-  const saveToRecentSearches = (term: string) => {
-    if (!term.trim()) return;
-    
-    const newSearch: RecentSearch = {
-      id: Date.now().toString(),
-      type: 'query',
-      name: term,
-    };
-
-    const updated = [newSearch, ...recentSearches.filter(s => s.name !== term)].slice(0, 20);
-    setRecentSearches(updated);
-    localStorage.setItem('recent_searches', JSON.stringify(updated));
-  };
+  }, [isOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      saveToRecentSearches(searchTerm);
+      onClose();
     }
   };
 
-  const handleRecentClick = (search: RecentSearch) => {
-    onSearchChange(search.name);
-    saveToRecentSearches(search.name);
-  };
-
-  const handleRemoveRecent = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = recentSearches.filter(s => s.id !== id);
-    setRecentSearches(updated);
-    localStorage.setItem('recent_searches', JSON.stringify(updated));
+  const handleSuggestionClick = (searchKey: string) => {
+    onSearchChange(searchKey);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -122,7 +327,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
       >
         {/* Back Button */}
         <button
-          onClick={onClose}
+          onClick={handleCancelSearch}
           style={{
             width: '32px',
             height: '32px',
@@ -236,88 +441,46 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
         </form>
       </div>
 
-      {/* Recent Searches Section */}
-      {recentSearches.length > 0 && (
+      {/* Suggestions Section */}
+      {suggestions.length > 0 && (
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {/* Section Header */}
-          <div
-            style={{
-              padding: '12px 15px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ fontWeight: 'bold', fontSize: '17px', color: '#000' }}>
-              Recent
-            </div>
-            <button
-              onClick={() => {
-                // Handle "See all" - could show more recent searches
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#1877f2',
-                fontSize: '15px',
-                cursor: 'pointer',
-                padding: 0,
-                touchAction: 'manipulation',
-              }}
-            >
-              See all
-            </button>
-          </div>
-
-          {/* Recent Searches List */}
-          <div>
-            {recentSearches.map((search) => (
-              <div
-                key={search.id}
-                onClick={() => handleRecentClick(search)}
-                style={{
-                  padding: '12px 15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  touchAction: 'manipulation',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f0f0f0';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                {/* Avatar/Icon */}
+          {/* Suggestions */}
+          {suggestions.length > 0 && (
+            <div style={{ paddingTop: '6px' }}>
+              {suggestions.map((item) => (
                 <div
+                  key={`suggest-${item.searchKey}-${item.display}`}
+                  onClick={() => handleSuggestionClick(item.searchKey)}
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: search.type === 'user' ? '#e4e6eb' : '#e4e6eb',
+                    padding: '12px 15px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                    position: 'relative',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f0f0f0';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
                   }}
                 >
-                  {search.type === 'user' && search.avatar_url ? (
-                    <img
-                      src={search.avatar_url}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  ) : (
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: '#e4e6eb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <svg
-                      width="20"
-                      height="20"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="#4a4d52"
@@ -325,97 +488,28 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                  )}
-                </div>
-
-                {/* Name/Search Term */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      color: '#000',
-                      fontWeight: 500,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {search.name}
                   </div>
-                  {search.hasNew && search.newCount && (
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontSize: '13px',
-                        color: '#1877f2',
-                        marginTop: '2px',
+                        fontSize: '15px',
+                        color: '#000',
+                        fontWeight: 500,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {search.newCount} new
+                      {renderHighlighted(item.display, searchTerm)}
                     </div>
-                  )}
+                  </div>
                 </div>
-
-                {/* Options Menu */}
-                <button
-                  onClick={(e) => handleRemoveRecent(search.id, e)}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    touchAction: 'manipulation',
-                    padding: 0,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#e4e6eb';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#4a4d52"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="19" cy="12" r="1"></circle>
-                    <circle cx="5" cy="12" r="1"></circle>
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {recentSearches.length === 0 && (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#4a4d52',
-            fontSize: '15px',
-          }}
-        >
-          No recent searches
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

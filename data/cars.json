@@ -1,0 +1,386 @@
+{
+  "meta": {
+    "scope": "รุ่นรวม (ไม่แยกปี/โฉม/รุ่นย่อย)",
+    "importantNote": "ไฟล์นี้ถูกออกแบบให้รถ 1 รุ่นติดได้หลายหมวด (เช่น [suv, ev]) และเติมข้อมูลเพิ่มได้เรื่อย ๆ เมื่อมีรุ่นใหม่ออกมา",
+    "searchNote": "searchNames คือคำที่คนมักพิมพ์หา (ไทย/อังกฤษ/มีขีด-ไม่มีขีด/ชื่อเล่น)"
+  },
+  "brands": [
+    {
+      "brandId": "toyota",
+      "brandName": "Toyota",
+      "brandNameTh": "โตโยต้า",
+      "brandNameLo": "ໂຕໂຍຕ້າ",
+      "models": [
+        { "modelId": "yaris", "modelName": "Yaris", "modelNameTh": "ยาริส", "modelNameLo": "ຢາຣິສ", "searchNames": ["yaris", "ยาริส", "ຢາຣິສ"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "yaris-ativ", "modelName": "Yaris ATIV", "modelNameTh": "ยาริส เอทีฟ", "modelNameLo": "ຢາຣິສ ATIV", "searchNames": ["yaris ativ", "ativ", "ยาริส เอทีฟ", "เอทีฟ", "ຢາຣິສ ativ"], "categoryIds": ["citycar", "sedan", "petrol"] },
+        { "modelId": "vios", "modelName": "Vios", "modelNameTh": "วีออส", "modelNameLo": "ວີອອດ", "searchNames": ["vios", "วีออส", "ວີອອດ"], "categoryIds": ["sedan", "petrol"] },
+        { "modelId": "corolla-altis", "modelName": "Corolla Altis", "modelNameTh": "โคโรลล่า อัลติส", "modelNameLo": "ໂຄໂຣລາ ອາລຕິສ", "searchNames": ["altis", "corolla altis", "อัลติส", "โคโรลล่า อัลติส", "ອາລຕິສ"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "camry", "modelName": "Camry", "modelNameTh": "แคมรี่", "modelNameLo": "ແຄມຣີ", "searchNames": ["camry", "แคมรี่", "ແຄມຣີ"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "corolla-cross", "modelName": "Corolla Cross", "modelNameTh": "โคโรลล่า ครอส", "modelNameLo": "ໂຄໂຣລາ ຄຣອສ", "searchNames": ["corolla cross", "corolla-cross", "ครอส", "โคโรลล่า ครอส", "ຄຣອສ"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "c-hr", "modelName": "C-HR", "modelNameTh": "ซีเอชอาร์", "modelNameLo": "C-HR", "searchNames": ["c-hr", "chr", "ซีเอชอาร์", "c hr"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "rav4", "modelName": "RAV4", "modelNameTh": "แรฟโฟร์", "modelNameLo": "RAV4", "searchNames": ["rav4", "rav-4", "แรฟโฟร์", "rav 4"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "fortuner", "modelName": "Fortuner", "modelNameTh": "ฟอร์จูนเนอร์", "modelNameLo": "ຟອດຈູເນີ", "searchNames": ["fortuner", "ฟอร์จูนเนอร์", "ຟອດຈູເນີ"], "categoryIds": ["suv", "pickup-ppv", "diesel"] },
+        { "modelId": "hilux-revo", "modelName": "Hilux Revo", "modelNameTh": "ไฮลักซ์ รีโว่", "modelNameLo": "ໄຮລັກຊ໌ ລີໂວ້", "searchNames": ["revo", "ລີໂວ້", "รีโว่"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "hilux-champ", "modelName": "Hilux Champ", "modelNameTh": "ไฮลักซ์ แชมป์", "modelNameLo": "ໄຮລັກຊ໌ ແຊມ", "searchNames": ["hilux champ", "champ", "แชมป์", "ไฮลักซ์ แชมป์", "ແຊມ"], "categoryIds": ["pickup", "commercial", "diesel", "petrol"] },
+        { "modelId": "alphard", "modelName": "Alphard", "modelNameTh": "อัลฟาร์ด", "modelNameLo": "ອາລຟາດ", "searchNames": ["alphard", "อัลฟาร์ด", "ອາລຟາດ"], "categoryIds": ["van", "mpv", "petrol", "hybrid"] },
+        { "modelId": "vellfire", "modelName": "Vellfire", "modelNameTh": "เวลไฟร์", "modelNameLo": "ເວລໄຟຣ໌", "searchNames": ["vellfire", "เวลไฟร์", "ເວລໄຟຣ໌"], "categoryIds": ["van", "mpv", "petrol", "hybrid"] },
+        { "modelId": "commuter", "modelName": "Hiace", "modelNameTh": "ไฮเอซ", "modelNameLo": "ໄຮເອດ", "searchNames": ["hiace", "ไฮเอซ", "commuter", "คอมมิวเตอร์", "ໄຮເອດ"], "categoryIds": ["van", "commercial", "diesel"] },
+        { "modelId": "bZ4X", "modelName": "bZ4X", "modelNameTh": "บีแซดโฟร์เอ็กซ์", "modelNameLo": "bZ4X", "searchNames": ["bz4x", "bZ4X", "บีแซด4x", "บีแซดโฟร์เอ็กซ์"], "categoryIds": ["suv", "crossover", "ev"] }
+      ]
+    },
+    {
+      "brandId": "honda",
+      "brandName": "Honda",
+      "brandNameTh": "ฮอนด้า",
+      "brandNameLo": "ຮອນດ້າ",
+      "models": [
+        { "modelId": "city", "modelName": "City", "modelNameTh": "ซิตี้", "modelNameLo": "ຊິຕີ", "searchNames": ["city", "ฮอนด้า ซิตี้", "ซิตี้", "ຊິຕີ"], "categoryIds": ["citycar", "sedan", "petrol", "hybrid"] },
+        { "modelId": "city-hatchback", "modelName": "City Hatchback", "modelNameTh": "ซิตี้ แฮทช์แบ็ก", "modelNameLo": "ຊິຕີ ແຮັດຊ໌ແບັກ", "searchNames": ["city hatchback", "ซิตี้ แฮทช์แบ็ก", "city hb", "ຊິຕີ hatchback"], "categoryIds": ["citycar", "hatchback", "petrol", "hybrid"] },
+        { "modelId": "civic", "modelName": "Civic", "modelNameTh": "ซีวิค", "modelNameLo": "ຊີວິກ", "searchNames": ["civic", "ซีวิค", "ຊີວິກ"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "accord", "modelName": "Accord", "modelNameTh": "แอคคอร์ด", "modelNameLo": "ແອັກຄອດ", "searchNames": ["accord", "แอคคอร์ด", "ແອັກຄອດ"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "hr-v", "modelName": "HR-V", "modelNameTh": "เอชอาร์วี", "modelNameLo": "HR-V", "searchNames": ["hrv", "hr-v", "เอชอาร์วี", "hr v"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "cr-v", "modelName": "CR-V", "modelNameTh": "ซีอาร์วี", "modelNameLo": "CR-V", "searchNames": ["crv", "cr-v", "ซีอาร์วี"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "br-v", "modelName": "BR-V", "modelNameTh": "บีอาร์วี", "modelNameLo": "BR-V", "searchNames": ["brv", "br-v", "บีอาร์วี"], "categoryIds": ["mpv", "suv", "crossover", "petrol"] },
+        { "modelId": "mobilio", "modelName": "Mobilio", "modelNameTh": "โมบิลิโอ", "modelNameLo": "ໂມບິລິໂອ", "searchNames": ["mobilio", "โมบิลิโอ", "ໂມບິລິໂອ"], "categoryIds": ["mpv", "petrol"] },
+        { "modelId": "odyssey", "modelName": "Odyssey", "modelNameTh": "โอดิสซีย์", "modelNameLo": "ໂອດິສຊີ", "searchNames": ["odyssey", "โอดิสซีย์", "ໂອດິສຊີ"], "categoryIds": ["mpv", "petrol", "hybrid"] }
+      ]
+    },
+    {
+      "brandId": "nissan",
+      "brandName": "Nissan",
+      "brandNameTh": "นิสสัน",
+      "brandNameLo": "ນິດສັນ",
+      "models": [
+        { "modelId": "almera", "modelName": "Almera", "modelNameTh": "อัลเมร่า", "modelNameLo": "ອານເມຣາ", "searchNames": ["almera", "อัลเมร่า", "ອານເມຣາ"], "categoryIds": ["citycar", "sedan", "petrol"] },
+        { "modelId": "march", "modelName": "March", "modelNameTh": "มาร์ช", "modelNameLo": "ມາຣຊ໌", "searchNames": ["march", "มาร์ช", "ມາຣຊ໌"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "kicks", "modelName": "Kicks", "modelNameTh": "คิกส์", "modelNameLo": "ຄິກສ໌", "searchNames": ["kicks", "คิกส์", "ຄິກສ໌"], "categoryIds": ["suv", "crossover", "hybrid"] },
+        { "modelId": "x-trail", "modelName": "X-Trail", "modelNameTh": "เอ็กซ์เทรล", "modelNameLo": "X-Trail", "searchNames": ["x-trail", "xtrail", "เอ็กซ์เทรล"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "terra", "modelName": "Terra", "modelNameTh": "เทอร์ร่า", "modelNameLo": "ເທຣາ", "searchNames": ["terra", "เทอร์ร่า", "ເທຣາ"], "categoryIds": ["suv", "pickup-ppv", "diesel"] },
+        { "modelId": "navara", "modelName": "Navara", "modelNameTh": "นาวาร่า", "modelNameLo": "ນາວາຣາ", "searchNames": ["navara", "นาวาร่า", "ນາວາຣາ"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "leaf", "modelName": "Leaf", "modelNameTh": "ลีฟ", "modelNameLo": "ລີຟ", "searchNames": ["leaf", "ลีฟ", "ລີຟ"], "categoryIds": ["hatchback", "ev"] }
+      ]
+    },
+    {
+      "brandId": "mazda",
+      "brandName": "Mazda",
+      "brandNameTh": "มาสด้า",
+      "brandNameLo": "ມາສະດ້າ",
+      "models": [
+        { "modelId": "mazda2", "modelName": "Mazda2", "modelNameTh": "มาสด้า2", "searchNames": ["mazda2", "mazda 2", "มาสด้า2", "มาสด้า 2"], "categoryIds": ["citycar", "sedan", "hatchback", "petrol", "diesel"] },
+        { "modelId": "mazda3", "modelName": "Mazda3", "modelNameTh": "มาสด้า3", "searchNames": ["mazda3", "mazda 3", "มาสด้า3", "มาสด้า 3"], "categoryIds": ["sedan", "hatchback", "petrol"] },
+        { "modelId": "cx-3", "modelName": "CX-3", "modelNameTh": "ซีเอ็กซ์-3", "searchNames": ["cx-3", "cx3", "ซีเอ็กซ์3", "ซีเอ็กซ์-3"], "categoryIds": ["suv", "crossover", "petrol", "diesel"] },
+        { "modelId": "cx-30", "modelName": "CX-30", "modelNameTh": "ซีเอ็กซ์-30", "searchNames": ["cx-30", "cx30", "ซีเอ็กซ์30", "ซีเอ็กซ์-30"], "categoryIds": ["suv", "crossover", "petrol"] },
+        { "modelId": "cx-5", "modelName": "CX-5", "modelNameTh": "ซีเอ็กซ์-5", "searchNames": ["cx-5", "cx5", "ซีเอ็กซ์5", "ซีเอ็กซ์-5"], "categoryIds": ["suv", "crossover", "petrol", "diesel"] },
+        { "modelId": "cx-8", "modelName": "CX-8", "modelNameTh": "ซีเอ็กซ์-8", "searchNames": ["cx-8", "cx8", "ซีเอ็กซ์8", "ซีเอ็กซ์-8"], "categoryIds": ["suv", "crossover", "petrol", "diesel"] },
+        { "modelId": "bt-50", "modelName": "BT-50", "modelNameTh": "บีที-50", "searchNames": ["bt-50", "bt50", "บีที50", "บีที-50"], "categoryIds": ["pickup", "diesel"] }
+      ]
+    },
+    {
+      "brandId": "mitsubishi",
+      "brandName": "Mitsubishi",
+      "brandNameTh": "มิตซูบิชิ",
+      "brandNameLo": "ມິດຊູບິຊິ",
+      "models": [
+        { "modelId": "mirage", "modelName": "Mirage", "modelNameTh": "มิราจ", "searchNames": ["mirage", "มิราจ"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "attrage", "modelName": "Attrage", "modelNameTh": "แอททราจ", "searchNames": ["attrage", "แอททราจ"], "categoryIds": ["citycar", "sedan", "petrol"] },
+        { "modelId": "xpander", "modelName": "Xpander", "modelNameTh": "เอ็กซ์แพนเดอร์", "searchNames": ["xpander", "เอ็กซ์แพนเดอร์"], "categoryIds": ["mpv", "petrol"] },
+        { "modelId": "xpander-cross", "modelName": "Xpander Cross", "modelNameTh": "เอ็กซ์แพนเดอร์ ครอส", "searchNames": ["xpander cross", "xpander-cross", "เอ็กซ์แพนเดอร์ ครอส"], "categoryIds": ["mpv", "suv", "crossover", "petrol"] },
+        { "modelId": "pajero-sport", "modelName": "Pajero Sport", "modelNameTh": "ปาเจโร่ สปอร์ต", "searchNames": ["pajero sport", "pajero-sport", "ปาเจโร่ สปอร์ต"], "categoryIds": ["suv", "pickup-ppv", "diesel"] },
+        { "modelId": "triton", "modelName": "Triton", "modelNameTh": "ไทรทัน", "searchNames": ["triton", "ไทรทัน"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "outlander", "modelName": "Outlander", "modelNameTh": "เอาท์แลนเดอร์", "searchNames": ["outlander", "เอาท์แลนเดอร์"], "categoryIds": ["suv", "crossover", "petrol", "phev"] }
+      ]
+    },
+    {
+      "brandId": "isuzu",
+      "brandName": "Isuzu",
+      "brandNameTh": "อีซูซุ",
+      "brandNameLo": "ອີຊູຊຸ",
+      "models": [
+        { "modelId": "d-max", "modelName": "D-Max", "modelNameTh": "ดีแมคซ์", "searchNames": ["d-max", "dmax", "ดีแมคซ์", "ดี-แมคซ์"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "mu-x", "modelName": "MU-X", "modelNameTh": "มิว-เอ็กซ์", "searchNames": ["mu-x", "mux", "มิวเอ็กซ์", "มิว-เอ็กซ์"], "categoryIds": ["suv", "pickup-ppv", "diesel"] }
+      ]
+    },
+    {
+      "brandId": "ford",
+      "brandName": "Ford",
+      "brandNameTh": "ฟอร์ด",
+      "brandNameLo": "ຟອດ",
+      "models": [
+        { "modelId": "ranger", "modelName": "Ranger", "modelNameTh": "เรนเจอร์", "searchNames": ["ranger", "เรนเจอร์"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "ranger-raptor", "modelName": "Ranger Raptor", "modelNameTh": "เรนเจอร์ แร็พเตอร์", "searchNames": ["raptor", "ranger raptor", "แร็พเตอร์", "เรนเจอร์ แร็พเตอร์"], "categoryIds": ["pickup", "offroad", "diesel", "petrol"] },
+        { "modelId": "everest", "modelName": "Everest", "modelNameTh": "เอเวอเรสต์", "searchNames": ["everest", "เอเวอเรสต์"], "categoryIds": ["suv", "pickup-ppv", "diesel"] },
+        { "modelId": "mustang", "modelName": "Mustang", "modelNameTh": "มัสแตง", "searchNames": ["mustang", "มัสแตง"], "categoryIds": ["sport", "coupe", "convertible", "petrol"] }
+      ]
+    },
+    {
+      "brandId": "suzuki",
+      "brandName": "Suzuki",
+      "brandNameTh": "ซูซูกิ",
+      "brandNameLo": "ຊູຊູກິ",
+      "models": [
+        { "modelId": "swift", "modelName": "Swift", "modelNameTh": "สวิฟท์", "searchNames": ["swift", "สวิฟท์"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "celerio", "modelName": "Celerio", "modelNameTh": "เซเลริโอ", "searchNames": ["celerio", "เซเลริโอ"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "ciaz", "modelName": "Ciaz", "modelNameTh": "เซียส", "searchNames": ["ciaz", "เซียส"], "categoryIds": ["sedan", "petrol"] },
+        { "modelId": "ertiga", "modelName": "Ertiga", "modelNameTh": "เออร์ติกา", "searchNames": ["ertiga", "เออร์ติกา"], "categoryIds": ["mpv", "petrol"] },
+        { "modelId": "jimny", "modelName": "Jimny", "modelNameTh": "จิมนี่", "searchNames": ["jimny", "จิมนี่"], "categoryIds": ["suv", "offroad", "petrol"] }
+      ]
+    },
+    {
+      "brandId": "hyundai",
+      "brandName": "Hyundai",
+      "brandNameTh": "ฮุนได",
+      "brandNameLo": "ຮຸນໄດ",
+      "models": [
+        { "modelId": "ioniq-5", "modelName": "IONIQ 5", "modelNameTh": "ไอออนิค 5", "searchNames": ["ioniq 5", "ioniq5", "ไอออนิค5", "ไอออนิค 5"], "categoryIds": ["crossover", "ev"] },
+        { "modelId": "ioniq-6", "modelName": "IONIQ 6", "modelNameTh": "ไอออนิค 6", "searchNames": ["ioniq 6", "ioniq6", "ไอออนิค6", "ไอออนิค 6"], "categoryIds": ["sedan", "ev"] },
+        { "modelId": "kona", "modelName": "Kona", "modelNameTh": "โคน่า", "searchNames": ["kona", "โคน่า"], "categoryIds": ["suv", "crossover", "petrol", "ev"] },
+        { "modelId": "staria", "modelName": "Staria", "modelNameTh": "สตาเรีย", "searchNames": ["staria", "สตาเรีย"], "categoryIds": ["van", "mpv", "diesel", "hybrid"] }
+      ]
+    },
+    {
+      "brandId": "kia",
+      "brandName": "Kia",
+      "brandNameTh": "เกีย",
+      "brandNameLo": "ຄີອາ",
+      "models": [
+        { "modelId": "carnival", "modelName": "Carnival", "modelNameTh": "คาร์นิวัล", "searchNames": ["carnival", "คาร์นิวัล"], "categoryIds": ["van", "mpv", "diesel", "petrol", "hybrid"] },
+        { "modelId": "ev6", "modelName": "EV6", "modelNameTh": "อีวี6", "searchNames": ["ev6", "อีวี6", "ev 6"], "categoryIds": ["crossover", "ev"] }
+      ]
+    },
+    {
+      "brandId": "mg",
+      "brandName": "MG",
+      "brandNameTh": "เอ็มจี",
+      "brandNameLo": "ເອັມຈີ",
+      "models": [
+        { "modelId": "mg5", "modelName": "MG5", "modelNameTh": "เอ็มจี5", "searchNames": ["mg5", "เอ็มจี5", "mg 5"], "categoryIds": ["sedan", "petrol"] },
+        { "modelId": "zs", "modelName": "ZS", "modelNameTh": "แซดเอส", "searchNames": ["zs", "mg zs", "แซดเอส"], "categoryIds": ["suv", "crossover", "petrol", "ev"] },
+        { "modelId": "hs", "modelName": "HS", "modelNameTh": "เอชเอส", "searchNames": ["hs", "mg hs", "เอชเอส"], "categoryIds": ["suv", "crossover", "petrol", "phev"] },
+        { "modelId": "extender", "modelName": "Extender", "modelNameTh": "เอ็กซ์เทนเดอร์", "searchNames": ["extender", "mg extender", "เอ็กซ์เทนเดอร์"], "categoryIds": ["pickup", "diesel"] },
+        { "modelId": "4-ev", "modelName": "MG4", "modelNameTh": "เอ็มจี4", "searchNames": ["mg4", "mg 4", "เอ็มจี4"], "categoryIds": ["hatchback", "ev"] },
+        { "modelId": "ep", "modelName": "EP", "modelNameTh": "อีพี", "searchNames": ["mg ep", "ep", "อีพี"], "categoryIds": ["wagon", "ev"] }
+      ]
+    },
+    {
+      "brandId": "byd",
+      "brandName": "BYD",
+      "brandNameTh": "บีวายดี",
+      "brandNameLo": "ບີວາຍດີ",
+      "models": [
+        { "modelId": "atto-3", "modelName": "ATTO 3", "modelNameTh": "อัตโต 3", "searchNames": ["atto 3", "atto3", "อัตโต3", "อัตโต 3"], "categoryIds": ["suv", "crossover", "ev"] },
+        { "modelId": "seal", "modelName": "SEAL", "modelNameTh": "ซีล", "searchNames": ["seal", "ซีล"], "categoryIds": ["sedan", "ev"] },
+        { "modelId": "dolphin", "modelName": "Dolphin", "modelNameTh": "ดอลฟิน", "searchNames": ["dolphin", "ดอลฟิน"], "categoryIds": ["hatchback", "citycar", "ev"] },
+        { "modelId": "seal-u", "modelName": "SEAL U", "modelNameTh": "ซีล ยู", "searchNames": ["seal u", "sealu", "ซีลยู", "ซีล ยู"], "categoryIds": ["suv", "crossover", "ev", "phev"] }
+      ]
+    },
+    {
+      "brandId": "gwm",
+      "brandName": "GWM",
+      "brandNameTh": "เกรท วอลล์ มอเตอร์",
+      "brandNameLo": "GWM",
+      "models": [
+        { "modelId": "haval-h6", "modelName": "Haval H6", "modelNameTh": "ฮาวาล เอช6", "searchNames": ["haval h6", "h6", "ฮาวาล h6", "เอช6"], "categoryIds": ["suv", "crossover", "hybrid", "phev"] },
+        { "modelId": "haval-jolion", "modelName": "Haval Jolion", "modelNameTh": "ฮาวาล โจเลียน", "searchNames": ["jolion", "haval jolion", "โจเลียน", "ฮาวาล โจเลียน"], "categoryIds": ["suv", "crossover", "hybrid"] },
+        { "modelId": "ora-good-cat", "modelName": "ORA Good Cat", "modelNameTh": "โอร่า กู๊ดแคท", "searchNames": ["good cat", "ora good cat", "กู๊ดแคท", "โอร่า"], "categoryIds": ["hatchback", "citycar", "ev"] },
+        { "modelId": "tank-300", "modelName": "TANK 300", "modelNameTh": "แทงค์ 300", "searchNames": ["tank 300", "tank300", "แทงค์ 300", "แทงค์300"], "categoryIds": ["suv", "offroad", "hybrid"] }
+      ]
+    },
+    {
+      "brandId": "tesla",
+      "brandName": "Tesla",
+      "brandNameTh": "เทสลา",
+      "brandNameLo": "ເທສລາ",
+      "models": [
+        { "modelId": "model-3", "modelName": "Model 3", "modelNameTh": "โมเดล 3", "searchNames": ["model 3", "model-3", "โมเดล 3", "โมเดล3"], "categoryIds": ["sedan", "ev"] },
+        { "modelId": "model-y", "modelName": "Model Y", "modelNameTh": "โมเดล วาย", "searchNames": ["model y", "model-y", "โมเดล y", "โมเดลวาย"], "categoryIds": ["suv", "crossover", "ev"] }
+      ]
+    },
+    {
+      "brandId": "bmw",
+      "brandName": "BMW",
+      "brandNameTh": "บีเอ็มดับเบิลยู",
+      "brandNameLo": "BMW",
+      "models": [
+        { "modelId": "1-series", "modelName": "1 Series", "modelNameTh": "ซีรีส์ 1", "searchNames": ["1 series", "series 1", "ซีรีส์ 1"], "categoryIds": ["hatchback", "petrol", "diesel"] },
+        { "modelId": "3-series", "modelName": "3 Series", "modelNameTh": "ซีรีส์ 3", "searchNames": ["3 series", "series 3", "ซีรีส์ 3"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "5-series", "modelName": "5 Series", "modelNameTh": "ซีรีส์ 5", "searchNames": ["5 series", "series 5", "ซีรีส์ 5"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "x1", "modelName": "X1", "modelNameTh": "เอ็กซ์1", "searchNames": ["x1", "เอ็กซ์1", "เอ็กซ์ 1"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "x3", "modelName": "X3", "modelNameTh": "เอ็กซ์3", "searchNames": ["x3", "เอ็กซ์3", "เอ็กซ์ 3"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "x5", "modelName": "X5", "modelNameTh": "เอ็กซ์5", "searchNames": ["x5", "เอ็กซ์5", "เอ็กซ์ 5"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "i4", "modelName": "i4", "modelNameTh": "ไอ4", "searchNames": ["i4", "บีเอ็ม i4", "ไอ4"], "categoryIds": ["sedan", "sport", "ev"] },
+        { "modelId": "iX", "modelName": "iX", "modelNameTh": "ไอเอกซ์", "searchNames": ["ix", "iX", "ไอเอกซ์"], "categoryIds": ["suv", "ev"] }
+      ]
+    },
+    {
+      "brandId": "mercedes-benz",
+      "brandName": "Mercedes-Benz",
+      "brandNameTh": "เมอร์เซเดส-เบนซ์",
+      "brandNameLo": "Mercedes-Benz",
+      "models": [
+        { "modelId": "a-class", "modelName": "A-Class", "modelNameTh": "เอ-คลาส", "searchNames": ["a-class", "aclass", "เอคลาส", "เอ-คลาส"], "categoryIds": ["hatchback", "sedan", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "c-class", "modelName": "C-Class", "modelNameTh": "ซี-คลาส", "searchNames": ["c-class", "cclass", "ซีคลาส", "ซี-คลาส"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "e-class", "modelName": "E-Class", "modelNameTh": "อี-คลาส", "searchNames": ["e-class", "eclass", "อีคลาส", "อี-คลาส"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "s-class", "modelName": "S-Class", "modelNameTh": "เอส-คลาส", "searchNames": ["s-class", "sclass", "เอสคลาส", "เอส-คลาส"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "gla", "modelName": "GLA", "modelNameTh": "จีแอลเอ", "searchNames": ["gla", "จีแอลเอ"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "glc", "modelName": "GLC", "modelNameTh": "จีแอลซี", "searchNames": ["glc", "จีแอลซี"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "gle", "modelName": "GLE", "modelNameTh": "จีแอลอี", "searchNames": ["gle", "จีแอลอี"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "eqb", "modelName": "EQB", "modelNameTh": "อีคิวบี", "searchNames": ["eqb", "อีคิวบี"], "categoryIds": ["suv", "crossover", "ev"] },
+        { "modelId": "eqe", "modelName": "EQE", "modelNameTh": "อีคิวอี", "searchNames": ["eqe", "อีคิวอี"], "categoryIds": ["sedan", "ev"] },
+        { "modelId": "eqs", "modelName": "EQS", "modelNameTh": "อีคิวเอส", "searchNames": ["eqs", "อีคิวเอส"], "categoryIds": ["sedan", "ev"] }
+      ]
+    },
+    {
+      "brandId": "volvo",
+      "brandName": "Volvo",
+      "brandNameTh": "วอลโว่",
+      "brandNameLo": "Volvo",
+      "models": [
+        { "modelId": "xc40", "modelName": "XC40", "modelNameTh": "เอ็กซ์ซี40", "searchNames": ["xc40", "เอ็กซ์ซี40", "เอ็กซ์ซี 40"], "categoryIds": ["suv", "crossover", "hybrid", "phev", "ev"] },
+        { "modelId": "xc60", "modelName": "XC60", "modelNameTh": "เอ็กซ์ซี60", "searchNames": ["xc60", "เอ็กซ์ซี60", "เอ็กซ์ซี 60"], "categoryIds": ["suv", "crossover", "hybrid", "phev"] },
+        { "modelId": "xc90", "modelName": "XC90", "modelNameTh": "เอ็กซ์ซี90", "searchNames": ["xc90", "เอ็กซ์ซี90", "เอ็กซ์ซี 90"], "categoryIds": ["suv", "crossover", "hybrid", "phev"] },
+        { "modelId": "s60", "modelName": "S60", "modelNameTh": "เอส60", "searchNames": ["s60", "เอส60", "เอส 60"], "categoryIds": ["sedan", "hybrid", "phev"] },
+        { "modelId": "s90", "modelName": "S90", "modelNameTh": "เอส90", "searchNames": ["s90", "เอส90", "เอส 90"], "categoryIds": ["sedan", "hybrid", "phev"] }
+      ]
+    },
+    {
+      "brandId": "subaru",
+      "brandName": "Subaru",
+      "brandNameTh": "ซูบารุ",
+      "brandNameLo": "Subaru",
+      "models": [
+        { "modelId": "forester", "modelName": "Forester", "modelNameTh": "ฟอเรสเตอร์", "searchNames": ["forester", "ฟอเรสเตอร์"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "outback", "modelName": "Outback", "modelNameTh": "เอาท์แบ็ค", "searchNames": ["outback", "เอาท์แบ็ค"], "categoryIds": ["wagon", "suv", "crossover", "petrol"] },
+        { "modelId": "xv", "modelName": "XV", "modelNameTh": "เอ็กซ์วี", "searchNames": ["xv", "เอ็กซ์วี"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] }
+      ]
+    },
+    {
+      "brandId": "lexus",
+      "brandName": "Lexus",
+      "brandNameTh": "เลกซัส",
+      "brandNameLo": "Lexus",
+      "models": [
+        { "modelId": "is", "modelName": "IS", "modelNameTh": "ไอเอส", "searchNames": ["lexus is", "is", "ไอเอส"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "es", "modelName": "ES", "modelNameTh": "อีเอส", "searchNames": ["lexus es", "es", "อีเอส"], "categoryIds": ["sedan", "petrol", "hybrid"] },
+        { "modelId": "rx", "modelName": "RX", "modelNameTh": "อาร์เอ็กซ์", "searchNames": ["lexus rx", "rx", "อาร์เอ็กซ์"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "nx", "modelName": "NX", "modelNameTh": "เอ็นเอ็กซ์", "searchNames": ["lexus nx", "nx", "เอ็นเอ็กซ์"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "ux", "modelName": "UX", "modelNameTh": "ยูเอ็กซ์", "searchNames": ["lexus ux", "ux", "ยูเอ็กซ์"], "categoryIds": ["suv", "crossover", "hybrid", "ev"] }
+      ]
+    },
+    {
+      "brandId": "audi",
+      "brandName": "Audi",
+      "brandNameTh": "อาวดี้",
+      "brandNameLo": "Audi",
+      "models": [
+        { "modelId": "a3", "modelName": "A3", "modelNameTh": "เอ3", "searchNames": ["a3", "audi a3", "เอ3"], "categoryIds": ["sedan", "hatchback", "petrol", "hybrid"] },
+        { "modelId": "a4", "modelName": "A4", "modelNameTh": "เอ4", "searchNames": ["a4", "audi a4", "เอ4"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid"] },
+        { "modelId": "a6", "modelName": "A6", "modelNameTh": "เอ6", "searchNames": ["a6", "audi a6", "เอ6"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "q3", "modelName": "Q3", "modelNameTh": "คิว3", "searchNames": ["q3", "audi q3", "คิว3"], "categoryIds": ["suv", "crossover", "petrol", "hybrid"] },
+        { "modelId": "q5", "modelName": "Q5", "modelNameTh": "คิว5", "searchNames": ["q5", "audi q5", "คิว5"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "q7", "modelName": "Q7", "modelNameTh": "คิว7", "searchNames": ["q7", "audi q7", "คิว7"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "e-tron", "modelName": "e-tron", "modelNameTh": "อี-ทรอน", "searchNames": ["e-tron", "etron", "อีทรอน", "อี-ทรอน"], "categoryIds": ["suv", "ev"] }
+      ]
+    },
+    {
+      "brandId": "volkswagen",
+      "brandName": "Volkswagen",
+      "brandNameTh": "โฟล์คสวาเกน",
+      "brandNameLo": "Volkswagen",
+      "models": [
+        { "modelId": "polo", "modelName": "Polo", "modelNameTh": "โปโล", "searchNames": ["polo", "vw polo", "โปโล"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "golf", "modelName": "Golf", "modelNameTh": "กอล์ฟ", "searchNames": ["golf", "vw golf", "กอล์ฟ"], "categoryIds": ["hatchback", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "passat", "modelName": "Passat", "modelNameTh": "พาสสาท", "searchNames": ["passat", "vw passat", "พาสสาท"], "categoryIds": ["sedan", "wagon", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "tiguan", "modelName": "Tiguan", "modelNameTh": "ทีกวน", "searchNames": ["tiguan", "vw tiguan", "ทีกวน"], "categoryIds": ["suv", "crossover", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "id-4", "modelName": "ID.4", "modelNameTh": "ไอดี.4", "searchNames": ["id.4", "id4", "id-4", "ไอดี4", "ไอดี.4"], "categoryIds": ["suv", "crossover", "ev"] }
+      ]
+    },
+    {
+      "brandId": "mini",
+      "brandName": "MINI",
+      "brandNameTh": "มินิ",
+      "brandNameLo": "MINI",
+      "models": [
+        { "modelId": "mini-3-door", "modelName": "MINI 3 Door", "modelNameTh": "มินิ 3 ประตู", "searchNames": ["mini 3 door", "mini 3", "มินิ 3 ประตู", "มินิ3ประตู"], "categoryIds": ["citycar", "hatchback", "petrol", "ev"] },
+        { "modelId": "mini-5-door", "modelName": "MINI 5 Door", "modelNameTh": "มินิ 5 ประตู", "searchNames": ["mini 5 door", "mini 5", "มินิ 5 ประตู", "มินิ5ประตู"], "categoryIds": ["citycar", "hatchback", "petrol"] },
+        { "modelId": "countryman", "modelName": "Countryman", "modelNameTh": "คันทรีแมน", "searchNames": ["countryman", "คันทรีแมน"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev", "ev"] }
+      ]
+    },
+    {
+      "brandId": "porsche",
+      "brandName": "Porsche",
+      "brandNameTh": "ปอร์เช่",
+      "brandNameLo": "Porsche",
+      "models": [
+        { "modelId": "911", "modelName": "911", "modelNameTh": "911", "searchNames": ["911", "porsche 911", "ปอร์เช่ 911"], "categoryIds": ["sport", "coupe", "convertible", "petrol", "hybrid"] },
+        { "modelId": "cayenne", "modelName": "Cayenne", "modelNameTh": "คาเยนน์", "searchNames": ["cayenne", "คาเยนน์"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "macan", "modelName": "Macan", "modelNameTh": "มาคัน", "searchNames": ["macan", "มาคัน"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "ev"] },
+        { "modelId": "taycan", "modelName": "Taycan", "modelNameTh": "ไทคาน", "searchNames": ["taycan", "ไทคาน"], "categoryIds": ["sport", "sedan", "ev"] }
+      ]
+    },
+    {
+      "brandId": "land-rover",
+      "brandName": "Land Rover",
+      "brandNameTh": "แลนด์โรเวอร์",
+      "brandNameLo": "Land Rover",
+      "models": [
+        { "modelId": "range-rover", "modelName": "Range Rover", "modelNameTh": "เรนจ์โรเวอร์", "searchNames": ["range rover", "เรนจ์โรเวอร์"], "categoryIds": ["suv", "offroad", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "range-rover-sport", "modelName": "Range Rover Sport", "modelNameTh": "เรนจ์โรเวอร์ สปอร์ต", "searchNames": ["range rover sport", "เรนจ์โรเวอร์ สปอร์ต"], "categoryIds": ["suv", "offroad", "petrol", "diesel", "hybrid", "phev"] },
+        { "modelId": "defender", "modelName": "Defender", "modelNameTh": "ดีเฟนเดอร์", "searchNames": ["defender", "ดีเฟนเดอร์"], "categoryIds": ["suv", "offroad", "petrol", "diesel", "hybrid", "phev"] }
+      ]
+    },
+    {
+      "brandId": "peugeot",
+      "brandName": "Peugeot",
+      "brandNameTh": "เปอโยต์",
+      "brandNameLo": "Peugeot",
+      "models": [
+        { "modelId": "2008", "modelName": "2008", "modelNameTh": "2008", "searchNames": ["peugeot 2008", "2008", "เปอโยต์ 2008"], "categoryIds": ["suv", "crossover", "petrol", "ev"] },
+        { "modelId": "3008", "modelName": "3008", "modelNameTh": "3008", "searchNames": ["peugeot 3008", "3008", "เปอโยต์ 3008"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] },
+        { "modelId": "5008", "modelName": "5008", "modelNameTh": "5008", "searchNames": ["peugeot 5008", "5008", "เปอโยต์ 5008"], "categoryIds": ["suv", "crossover", "petrol", "hybrid", "phev"] }
+      ]
+    },
+    {
+      "brandId": "neta",
+      "brandName": "NETA",
+      "brandNameTh": "เนต้า",
+      "brandNameLo": "NETA",
+      "models": [
+        { "modelId": "v", "modelName": "V", "modelNameTh": "วี", "searchNames": ["neta v", "v", "เนต้า v", "วี"], "categoryIds": ["suv", "crossover", "ev"] },
+        { "modelId": "x", "modelName": "X", "modelNameTh": "เอ็กซ์", "searchNames": ["neta x", "x", "เนต้า x", "เอ็กซ์"], "categoryIds": ["suv", "crossover", "ev"] }
+      ]
+    },
+    {
+      "brandId": "aion",
+      "brandName": "AION",
+      "brandNameTh": "ไอออน",
+      "brandNameLo": "AION",
+      "models": [
+        { "modelId": "y-plus", "modelName": "Y Plus", "modelNameTh": "วาย พลัส", "searchNames": ["aion y plus", "y plus", "ไอออน y", "วาย พลัส"], "categoryIds": ["mpv", "suv", "crossover", "ev"] },
+        { "modelId": "es", "modelName": "ES", "modelNameTh": "อีเอส", "searchNames": ["aion es", "es", "ไอออน es", "อีเอส"], "categoryIds": ["sedan", "ev"] }
+      ]
+    },
+    {
+      "brandId": "chery",
+      "brandName": "Chery",
+      "brandNameTh": "เชอรี",
+      "brandNameLo": "Chery",
+      "models": [
+        { "modelId": "omoda-5", "modelName": "Omoda 5", "modelNameTh": "โอโมด้า 5", "searchNames": ["omoda 5", "omoda5", "โอโมด้า 5", "โอโมด้า5"], "categoryIds": ["suv", "crossover", "petrol", "ev"] }
+      ]
+    }
+  ],
+  "filterExamples": [
+    {
+      "selectedCategoryIds": ["suv"],
+      "means": "เอารถที่มี suv (รวม SUV ไฟฟ้า/ไฮบริดด้วย)"
+    },
+    {
+      "selectedCategoryIds": ["suv", "ev"],
+      "means": "เอารถที่มีทั้ง suv และ ev พร้อมกัน"
+    },
+    {
+      "selectedCategoryIds": ["citycar"],
+      "means": "เอารถที่เป็นรถเล็ก (กระป๋อง)"
+    }
+  ]
+}

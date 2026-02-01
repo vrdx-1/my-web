@@ -1,10 +1,28 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/carSearch';
+
+function normalizeCaptionSearch(text: string): string {
+  return String(text ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .trim()
+    .replace(/[()[\]{}"“”'‘’]/g, ' ')
+    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function captionIncludesSearch(caption: string, query: string): boolean {
+  const q = normalizeCaptionSearch(query);
+  if (!q) return false;
+  const c = normalizeCaptionSearch(caption);
+  return c.includes(q);
+}
 
 export type PostListType = 'saved' | 'liked' | 'sold' | 'my-posts';
 
@@ -50,6 +68,13 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const soldSearchScanCacheRef = useRef<{
+    term: string;
+    scannedUntil: number;
+    sourceExhausted: boolean;
+    matchedIds: string[];
+    primaryCount: number;
+  } | null>(null);
 
   // Initialize session
   useEffect(() => {
@@ -299,24 +324,83 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
       } else if (type === 'sold') {
-        let query = supabase
-          .from('cars')
-          .select('id')
-          .eq('status', status || 'sold')
-          .eq('is_hidden', false)
-          .order('created_at', { ascending: false })
-          .range(startIndex, endIndex);
-        
-        if (searchTerm) {
-          query = query.ilike('caption', `%${searchTerm}%`);
+        const term = (searchTerm ?? '').trim();
+        if (term) {
+          const termKey = term;
+          if (isInitial || !soldSearchScanCacheRef.current || soldSearchScanCacheRef.current.term !== termKey) {
+            soldSearchScanCacheRef.current = {
+              term: termKey,
+              scannedUntil: 0,
+              sourceExhausted: false,
+              matchedIds: [],
+              primaryCount: 0,
+            };
+          }
+
+          const cache = soldSearchScanCacheRef.current;
+          const neededEnd = endIndex + 1;
+          const batchSize = 80;
+          const expandedTerms = expandCarSearchAliases(term);
+          const searchLang = detectSearchLanguage(term);
+
+          while (cache && cache.matchedIds.length < neededEnd && !cache.sourceExhausted) {
+            const from = cache.scannedUntil;
+            const to = from + batchSize - 1;
+
+            const { data, error } = await supabase
+              .from('cars')
+              .select('id, caption')
+              .eq('status', status || 'sold')
+              .eq('is_hidden', false)
+              .order('created_at', { ascending: false })
+              .range(from, to);
+
+            if (error || !data) {
+              cache.sourceExhausted = true;
+              break;
+            }
+
+            if (data.length < batchSize) cache.sourceExhausted = true;
+            cache.scannedUntil += batchSize;
+
+            for (const row of data as any[]) {
+              if (!cache) break;
+              const caption = String(row.caption ?? '');
+              const match = expandedTerms.length > 0
+                ? captionMatchesAnyAlias(caption, expandedTerms)
+                : captionIncludesSearch(caption, term);
+              if (match) {
+                const id = String(row.id);
+                const isPrimary =
+                  searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
+                if (isPrimary) {
+                  cache.matchedIds.splice(cache.primaryCount, 0, id);
+                  cache.primaryCount += 1;
+                } else {
+                  cache.matchedIds.push(id);
+                }
+              }
+            }
+          }
+
+          postIds = (cache?.matchedIds ?? []).slice(startIndex, neededEnd);
+          setHasMore(!!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd)));
+        } else {
+          let query = supabase
+            .from('cars')
+            .select('id')
+            .eq('status', status || 'sold')
+            .eq('is_hidden', false)
+            .order('created_at', { ascending: false })
+            .range(startIndex, endIndex);
+
+          const { data, error } = await query;
+          if (error || !data) {
+            setLoadingMore(false);
+            return;
+          }
+          postIds = data.map((p: any) => p.id);
         }
-        
-        const { data, error } = await query;
-        if (error || !data) {
-          setLoadingMore(false);
-          return;
-        }
-        postIds = data.map(p => p.id);
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
         
@@ -410,8 +494,20 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         
         if (postsData) {
+          const orderedPostsData =
+            (type === 'sold' && (searchTerm ?? '').trim())
+              ? (() => {
+                  const order = new Map<string, number>(validPostIds.map((id, idx) => [String(id), idx]));
+                  return [...postsData].sort((a: any, b: any) => {
+                    const ai = order.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
+                    const bi = order.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
+                    return ai - bi;
+                  });
+                })()
+              : postsData;
+
           // Filter logic for saved/liked pages
-          const filteredPosts = postsData.filter(postData => {
+          const filteredPosts = orderedPostsData.filter(postData => {
             if (type === 'saved' || type === 'liked') {
               const isNotHidden = !postData.is_hidden;
               const isOwner = currentUserId && postData.user_id === currentUserId;

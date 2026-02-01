@@ -6,6 +6,24 @@ import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { safeParseJSON } from '@/utils/storageUtils';
+import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/carSearch';
+
+function normalizeCaptionSearch(text: string): string {
+  return String(text ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .trim()
+    .replace(/[()[\]{}"“”'‘’]/g, ' ')
+    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function captionIncludesSearch(caption: string, query: string): boolean {
+  const q = normalizeCaptionSearch(query);
+  if (!q) return false;
+  const c = normalizeCaptionSearch(caption);
+  return c.includes(q);
+}
 
 interface UseHomeDataReturn {
   // State
@@ -48,6 +66,14 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   // Use refs to avoid recreating fetchPosts function
   const pageRef = useRef(page);
   const loadingMoreRef = useRef(loadingMore);
+  const searchTermRef = useRef(searchTerm);
+  const searchScanCacheRef = useRef<{
+    term: string;
+    scannedUntil: number;
+    sourceExhausted: boolean;
+    matchedIds: string[];
+    primaryCount: number;
+  } | null>(null);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -57,6 +83,10 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   useEffect(() => {
     loadingMoreRef.current = loadingMore;
   }, [loadingMore]);
+
+  useEffect(() => {
+    searchTermRef.current = searchTerm;
+  }, [searchTerm]);
 
   const updateLastSeen = useCallback(async (idOrToken: string) => {
     if (!idOrToken) return;
@@ -109,23 +139,96 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     let postIds: string[] = [];
 
     // ดึงข้อมูลเฉพาะสถานะ recommend เท่านั้น
-    const { data, error } = await supabase
-      .from('cars')
-      .select('id')
-      .eq('status', 'recommend')
-      .eq('is_hidden', false)
-      .order('is_boosted', { ascending: false })
-      .order('created_at', { ascending: false })
-      .range(startIndex, endIndex);
+    const trimmedSearch = (searchTermRef.current ?? '').trim();
 
-    if (!error && data) {
-      postIds = data.map(p => p.id);
+    if (trimmedSearch) {
+      // Dictionary-assisted caption search (Thai/Lao/English aliases).
+      // We scan the feed in the same order, caching matches, so pagination still works.
+      const termKey = trimmedSearch;
+      if (isInitial || !searchScanCacheRef.current || searchScanCacheRef.current.term !== termKey) {
+        searchScanCacheRef.current = {
+          term: termKey,
+          scannedUntil: 0,
+          sourceExhausted: false,
+          matchedIds: [],
+          primaryCount: 0,
+        };
+      }
+
+      const cache = searchScanCacheRef.current;
+      const neededEnd = endIndex + 1; // slice end (exclusive)
+      const batchSize = 80;
+      const expandedTerms = expandCarSearchAliases(trimmedSearch);
+      const searchLang = detectSearchLanguage(trimmedSearch);
+
+      while (cache && cache.matchedIds.length < neededEnd && !cache.sourceExhausted) {
+        const from = cache.scannedUntil;
+        const to = from + batchSize - 1;
+
+        const { data, error } = await supabase
+          .from('cars')
+          .select('id, caption')
+          .eq('status', 'recommend')
+          .eq('is_hidden', false)
+          .order('is_boosted', { ascending: false })
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (error || !data) {
+          cache.sourceExhausted = true;
+          break;
+        }
+
+        if (data.length < batchSize) cache.sourceExhausted = true;
+        cache.scannedUntil += batchSize;
+
+        for (const row of data as any[]) {
+          if (!cache) break;
+          const caption = String(row.caption ?? '');
+          // Keep legacy behavior as fallback if dictionary yields nothing.
+          const match = expandedTerms.length > 0
+            ? captionMatchesAnyAlias(caption, expandedTerms)
+            : captionIncludesSearch(caption, trimmedSearch);
+          if (match) {
+            const id = String(row.id);
+            const isPrimary =
+              searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
+            if (isPrimary) {
+              cache.matchedIds.splice(cache.primaryCount, 0, id);
+              cache.primaryCount += 1;
+            } else {
+              cache.matchedIds.push(id);
+            }
+          }
+        }
+      }
+
+      postIds = (cache?.matchedIds ?? []).slice(startIndex, neededEnd);
+    } else {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('id')
+        .eq('status', 'recommend')
+        .eq('is_hidden', false)
+        .order('is_boosted', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(startIndex, endIndex);
+
+      if (!error && data) {
+        postIds = data.map((p: any) => p.id);
+      }
     }
 
     // hasMore ควรเป็น true ถ้ามี post เท่ากับ PREFETCH_COUNT (แสดงว่ายังมี post ให้โหลดต่อ)
     // ถ้ามี post น้อยกว่า PREFETCH_COUNT แสดงว่าโหลดหมดแล้ว
     // ใช้ >= แทน === เพื่อให้แน่ใจว่าถ้ามี post มากกว่าหรือเท่ากับ PREFETCH_COUNT จะยังโหลดต่อ
-    const newHasMore = postIds.length >= PREFETCH_COUNT;
+    const newHasMore = trimmedSearch
+      ? (() => {
+          const cache = searchScanCacheRef.current;
+          const neededEnd = endIndex + 1;
+          return !!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd));
+        })()
+      : (postIds.length >= PREFETCH_COUNT);
 
     if (isInitial) {
       setPosts([]);
@@ -142,11 +245,21 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         .order('created_at', { ascending: false });
 
       if (!postsError && postsData) {
+        const orderedPostsData = trimmedSearch
+          ? (() => {
+              const order = new Map<string, number>(postIds.map((id, idx) => [String(id), idx]));
+              return [...postsData].sort((a: any, b: any) => {
+                const ai = order.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
+                const bi = order.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
+                return ai - bi;
+              });
+            })()
+          : postsData;
         // ใช้ requestAnimationFrame เพื่อ batch state updates และลดการกระตุก
         requestAnimationFrame(() => {
           setPosts(prev => {
             const existingIds = new Set(prev.map(p => p.id));
-            const newPosts = postsData.filter(p => !existingIds.has(p.id));
+            const newPosts = orderedPostsData.filter(p => !existingIds.has(p.id));
             return [...prev, ...newPosts];
           });
           setHasMore(newHasMore);
