@@ -84,8 +84,8 @@
     {
       "modelId": "sorento",
       "modelName": "Sorento",
-      "modelNameTh": "Sorento",
-      "modelNameLo": "Sorento",
+      "modelNameTh": "โซเรนโต้",
+      "modelNameLo": "ໂຊເຣນໂຕ້",
       "searchNames": [
         "sorento"
       ],
@@ -369,6 +369,83 @@
       ],
       "categoryIds": [
         "truck"
+      ]
+    },
+    {
+      "modelId": "rio",
+      "modelName": "Rio",
+      "modelNameTh": "ริโอ",
+      "modelNameLo": "ຣີໂອ",
+      "searchNames": [
+        "rio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "stinger",
+      "modelName": "Stinger",
+      "modelNameTh": "Stinger",
+      "modelNameLo": "Stinger",
+      "searchNames": [
+        "stinger"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ceed-sw",
+      "modelName": "Ceed SW",
+      "modelNameTh": "Ceed SW",
+      "modelNameLo": "Ceed SW",
+      "searchNames": [
+        "ceed sw",
+        "ceed-sw"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mohave",
+      "modelName": "Mohave",
+      "modelNameTh": "Mohave",
+      "modelNameLo": "Mohave",
+      "searchNames": [
+        "mohave"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pv5",
+      "modelName": "PV5",
+      "modelNameTh": "PV5",
+      "modelNameLo": "PV5",
+      "searchNames": [
+        "pv5",
+        "pv 5"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cerato",
+      "modelName": "Cerato",
+      "modelNameTh": "เซราโต้",
+      "modelNameLo": "ຊີຣາໂຕ້",
+      "searchNames": [
+        "cerato",
+        "k3"
+      ],
+      "categoryIds": [
+        "sedan"
       ]
     }
   ]

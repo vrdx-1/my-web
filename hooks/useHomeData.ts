@@ -7,6 +7,7 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
+import { LAO_PROVINCES } from '@/utils/constants';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -73,6 +74,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     sourceExhausted: boolean;
     matchedIds: string[];
     primaryCount: number;
+    provinceTerm: string | null;
   } | null>(null);
   
   // Keep refs in sync with state
@@ -145,6 +147,8 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       // Dictionary-assisted caption search (Thai/Lao/English aliases).
       // We scan the feed in the same order, caching matches, so pagination still works.
       const termKey = trimmedSearch;
+      const provinceTerm =
+        LAO_PROVINCES.find((p) => trimmedSearch.includes(p)) ?? null;
       if (isInitial || !searchScanCacheRef.current || searchScanCacheRef.current.term !== termKey) {
         searchScanCacheRef.current = {
           term: termKey,
@@ -152,6 +156,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
           sourceExhausted: false,
           matchedIds: [],
           primaryCount: 0,
+          provinceTerm,
         };
       }
 
@@ -167,7 +172,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
         const { data, error } = await supabase
           .from('cars')
-          .select('id, caption')
+          .select('id, caption, province')
           .eq('status', 'recommend')
           .eq('is_hidden', false)
           .order('is_boosted', { ascending: false })
@@ -185,18 +190,29 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         for (const row of data as any[]) {
           if (!cache) break;
           const caption = String(row.caption ?? '');
+          const province = String(row.province ?? '');
           // Keep legacy behavior as fallback if dictionary yields nothing.
           const match = expandedTerms.length > 0
             ? captionMatchesAnyAlias(caption, expandedTerms)
             : captionIncludesSearch(caption, trimmedSearch);
           if (match) {
             const id = String(row.id);
-            const isPrimary =
+            const isLangPrimary =
               searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
-            if (isPrimary) {
+
+            const provinceTerm = cache.provinceTerm;
+            const isProvincePrimary = !!provinceTerm && province === provinceTerm;
+
+            if (isProvincePrimary) {
+              // รถในแขวงที่ผู้ใช้พิมพ์ → ดันขึ้นบนสุด
+              cache.matchedIds.splice(0, 0, id);
+              cache.primaryCount += 1;
+            } else if (isLangPrimary) {
+              // รถที่ภาษาตรงกับที่ผู้ใช้พิมพ์ → ตามหลังกลุ่มแขวงนั้น
               cache.matchedIds.splice(cache.primaryCount, 0, id);
               cache.primaryCount += 1;
             } else {
+              // ที่เหลือทั้งหมด
               cache.matchedIds.push(id);
             }
           }

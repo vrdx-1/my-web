@@ -130,8 +130,8 @@
     {
       "modelId": "city",
       "modelName": "City",
-      "modelNameTh": "City",
-      "modelNameLo": "City",
+      "modelNameTh": "ซิตี้",
+      "modelNameLo": "ຊິດຕີ້",
       "searchNames": [
         "city"
       ],
@@ -157,14 +157,29 @@
     {
       "modelId": "civic",
       "modelName": "Civic",
-      "modelNameTh": "Civic",
-      "modelNameLo": "Civic",
+      "modelNameTh": "ซีวิค",
+      "modelNameLo": "ຊີວິກ",
       "searchNames": [
         "civic"
       ],
       "categoryIds": [
         "sedan",
         "hybrid"
+      ]
+    },
+    {
+      "modelId": "civic-type-r",
+      "modelName": "Civic Type R",
+      "modelNameTh": "Civic Type R",
+      "modelNameLo": "Civic Type R",
+      "searchNames": [
+        "civic type r",
+        "type r",
+        "civic typer"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
       ]
     },
     {

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { LAO_FONT } from '@/utils/constants';
-import { supabase } from '@/lib/supabase';
 import { LAO_PROVINCES } from '@/utils/constants';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
 
@@ -176,7 +175,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     onClose();
   };
 
-  // Load suggestion examples from caption (only).
+  // Load search suggestions from car dictionary (brand / model / category only).
   useEffect(() => {
     if (!isOpen) {
       setSuggestions([]);
@@ -184,90 +183,12 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     }
 
     const q = (searchTerm ?? '').trim();
-    const dictSuggestions = getCarDictionarySuggestions(q, 6);
+    const dictSuggestions = getCarDictionarySuggestions(q, 9);
 
     const reqId = ++suggestionReqIdRef.current;
-    const timer = setTimeout(async () => {
-      try {
-        let query = supabase
-          .from('cars')
-          .select('caption')
-          .eq('status', 'recommend')
-          .eq('is_hidden', false)
-          .order('created_at', { ascending: false })
-          .limit(250);
-
-        const { data, error } = await query;
-        if (reqId !== suggestionReqIdRef.current) return; // stale
-        if (error || !data) {
-          setSuggestions(dictSuggestions);
-          return;
-        }
-
-        const uniq: Array<{ display: string; searchKey: string }> = [...dictSuggestions];
-        const qPrefix = normalizeForPrefix(q);
-
-        const qParts = qPrefix.split(' ').filter(Boolean);
-
-        if (!qPrefix) {
-          // When empty input: show general suggestions (no recent list).
-          const counts = new Map<string, number>();
-          for (const row of data as any[]) {
-            const caption = String(row.caption ?? '').trim();
-            if (!caption) continue;
-            const { tokens } = extractImportantTokensFromCaption(caption);
-            if (!tokens || tokens.length === 0) continue;
-            const candidate = tokens.slice(0, 3).join(' ').trim();
-            if (!candidate) continue;
-            counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
-          }
-          const ranked = [...counts.entries()]
-            .sort((a, b) => (b[1] - a[1]) || a[0].length - b[0].length || a[0].localeCompare(b[0]))
-            .map(([k]) => k);
-          for (const s of ranked) {
-            const item = { display: s, searchKey: suggestionToSearchTerm(s) || s };
-            const exists = uniq.some((u) => normalizeForPrefix(u.display) === normalizeForPrefix(item.display));
-            if (!exists) uniq.push(item);
-            if (uniq.length >= 6) break;
-          }
-        } else {
-          // Build "completion style" suggestions from caption only.
-          const scored = [...data]
-            .map((d: any) => String(d.caption ?? '').trim())
-            .filter(Boolean)
-            .map((caption) => {
-              const suggestion = buildAutocompleteSuggestionFromCaption(caption, qPrefix);
-              if (!suggestion) return null;
-              const sNorm = normalizeForPrefix(suggestion);
-              const starts =
-                (qPrefix && sNorm.startsWith(qPrefix)) ? 1 : 0;
-              const wordCount = sNorm.split(' ').filter(Boolean).length;
-              const exactWords =
-                qParts.length > 1 && starts ? 1 : 0; // when user typed multiple words and we match at start
-              // Prefer:
-              // - startsWith query
-              // - matching multi-word prefixes
-              // - shorter completions (like global autocomplete)
-              const score = starts * 3 + exactWords * 2 + (1 / Math.max(1, wordCount));
-              return { suggestion, score, len: suggestion.length };
-            })
-            .filter(Boolean) as Array<{ suggestion: string; score: number; len: number }>;
-
-          scored.sort((a, b) => (b.score - a.score) || (a.len - b.len) || a.suggestion.localeCompare(b.suggestion));
-
-          for (const item of scored) {
-            const sug = { display: item.suggestion, searchKey: suggestionToSearchTerm(item.suggestion) || item.suggestion };
-            const exists = uniq.some((u) => normalizeForPrefix(u.display) === normalizeForPrefix(sug.display));
-            if (!exists) uniq.push(sug);
-            if (uniq.length >= 6) break;
-          }
-        }
-
-        setSuggestions(uniq);
-      } catch (e) {
-        if (reqId !== suggestionReqIdRef.current) return;
-        setSuggestions(dictSuggestions);
-      }
+    const timer = setTimeout(() => {
+      if (reqId !== suggestionReqIdRef.current) return;
+      setSuggestions(dictSuggestions);
     }, 250); // small debounce while typing
 
     return () => clearTimeout(timer);

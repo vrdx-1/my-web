@@ -7,8 +7,8 @@
     {
       "modelId": "accent",
       "modelName": "Accent",
-      "modelNameTh": "Accent",
-      "modelNameLo": "Accent",
+      "modelNameTh": "แอคเซนท์",
+      "modelNameLo": "ແອັກເຊັນ",
       "searchNames": [
         "accent"
       ],
@@ -55,8 +55,8 @@
     {
       "modelId": "elantra",
       "modelName": "Elantra",
-      "modelNameTh": "Elantra",
-      "modelNameLo": "Elantra",
+      "modelNameTh": "เอลันตรา",
+      "modelNameLo": "ເອລັນຕຣາ",
       "searchNames": [
         "elantra"
       ],

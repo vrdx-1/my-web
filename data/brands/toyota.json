@@ -921,6 +921,18 @@
       ]
     },
     {
+      "modelId": "coaster",
+      "modelName": "Coaster",
+      "modelNameTh": "Coaster",
+      "modelNameLo": "Coaster",
+      "searchNames": [
+        "coaster"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
       "modelId": "innova",
       "modelName": "Innova",
       "modelNameTh": "Innova",

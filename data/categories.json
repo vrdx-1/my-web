@@ -1,16 +1,42 @@
 {
   "searchTermAliases": [
     {
-      "terms": ["family", "ครอบครัว", "ຄອບຄົວ"],
+      "terms": ["family", "ครอบครัว", "ຄອບຄົວ", "ລົດບ້ານ", "ລົດຄອບຄົວ", "รถบ้าน", "รถครอบคัว"],
       "categoryIds": ["suv", "sedan", "pickup", "van"]
     },
     {
-      "terms": ["delivery", "รถขนของ", "ລົດຂົນເຄື່ອງ"],
+      "terms": [
+        "delivery",
+        "รถขนของ",
+        "รถแก่ของ",
+        "ລົດຂົນເຄື່ອງ",
+        "ລົດແກ່ເຄື່ອງ",
+        "Hyundai Pony",
+        "Hyundai Excel",
+        "Hyundai Accent (X3)",
+        "Hyundai Elantra (J1/J2)",
+        "Hyundai Sonata (Y2/Y3)",
+        "Hyundai Scoupe",
+        "Hyundai Tiburon (RD)",
+        "Hyundai Galloper",
+        "Hyundai Santamo",
+        "Hyundai Atos",
+        "Hyundai Starex (Gen 1)",
+        "Hyundai Grace",
+        "Hyundai H-100 (Porter)",
+        "Hyundai Mighty (รถบรรทุกกลาง)",
+        "Hyundai Chorus (รถบัสเล็ก)",
+        "Hyundai County"
+      ],
       "categoryIds": ["pickup"]
     },
     {
       "terms": ["hilux", "ไฮลักซ์", "ໄຮລັກ"],
       "categoryIds": ["hilux"]
+    },
+    {
+      "terms": ["ລົດໄຟຟ້າ", "ລົດອີວີ", "ລົດ EV", "รถไฟฟ้า", "รถอีวี"],
+      "categoryIds": ["electric"]
     }
   ],
   "categoryGroups": [

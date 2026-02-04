@@ -52,12 +52,38 @@ function pickShortestMatching(items: string[], re: RegExp): string | null {
   return matches[0] ?? null;
 }
 
-function buildModelDisplay(searchNames: string[], modelName?: string, modelNameLo?: string, modelNameTh?: string): string {
+function buildModelDisplay(
+  searchNames: string[],
+  modelName: string | undefined,
+  modelNameLo: string | undefined,
+  modelNameTh: string | undefined,
+  lang: SearchLanguage,
+): string {
   const pool = uniqStringsCarSearch([...(searchNames ?? []), modelName, modelNameLo, modelNameTh]);
-  const bestEn = pickShortestMatching(pool, LATIN_RE) ?? modelName ?? pool[0] ?? '';
-  const bestLo = pickShortestMatching(pool, LAO_RE) ?? modelNameLo ?? '';
-  const bestTh = pickShortestMatching(pool, THAI_RE) ?? modelNameTh ?? '';
-  return uniqStringsCarSearch([bestEn, bestLo, bestTh]).join(', ');
+
+  if (lang === 'latin') {
+    // ผู้ใช้พิมพ์ภาษาอังกฤษ → แสดงเฉพาะชื่อภาษาอังกฤษ/โรมันที่สั้นและชัดที่สุด
+    const bestEn = pickShortestMatching(pool, LATIN_RE) ?? modelName ?? pool[0] ?? '';
+    return bestEn;
+  }
+
+  if (lang === 'lo') {
+    const bestLo = pickShortestMatching(pool, LAO_RE) ?? modelNameLo ?? '';
+    if (bestLo) return bestLo;
+    // fallback ถ้าไม่มีลาวเลย
+    const bestEn = pickShortestMatching(pool, LATIN_RE) ?? modelName ?? pool[0] ?? '';
+    return bestEn;
+  }
+
+  if (lang === 'th') {
+    const bestTh = pickShortestMatching(pool, THAI_RE) ?? modelNameTh ?? '';
+    if (bestTh) return bestTh;
+    const bestEn = pickShortestMatching(pool, LATIN_RE) ?? modelName ?? pool[0] ?? '';
+    return bestEn;
+  }
+
+  // ภาษาอื่น ๆ → เลือกตัวแรกที่มี
+  return pool[0] ?? modelName ?? '';
 }
 
 type EntityInfo =
@@ -358,19 +384,31 @@ export function expandCarSearchAliases(query: string): string[] {
 export function captionMatchesAnyAlias(caption: string, queries: string[]): boolean {
   const c = normalizeCarSearch(caption);
   if (!c) return false;
+  const tokens = c.split(' ').filter(Boolean);
   for (const q of queries ?? []) {
     const qn = normalizeCarSearch(q);
     if (!qn) continue;
+    // ตรงเป๊ะหรือเป็น substring เหมือนเดิม
     if (c.includes(qn)) return true;
+
+    // typo tolerance: ถ้าพิมพ์ผิด 1 ตัวอักษร ให้พยายามเดา
+    if (qn.length >= 3) {
+      for (const t of tokens) {
+        const dist = levenshteinWithin(t, qn, 1);
+        if (dist !== null) return true;
+      }
+    }
   }
   return false;
 }
 
 export type CarSuggestionItem = { display: string; searchKey: string };
 
-export function getCarDictionarySuggestions(prefix: string, limit = 6): CarSuggestionItem[] {
+export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {
   const qNorm = normalizeCarSearch(prefix);
   if (!qNorm) return [];
+
+  const lang = detectSearchLanguage(prefix);
 
   const bestByEntity = new Map<EntityKey, { score: number; matchedAliasNorm: string }>();
 
@@ -391,13 +429,69 @@ export function getCarDictionarySuggestions(prefix: string, limit = 6): CarSugge
 
     const matchedRaw = CAR_INDEX.aliasNormToRaw.get(m.matchedAliasNorm) ?? prefix;
 
-    const display =
-      info.kind === 'model'
-        ? buildModelDisplay(info.searchNames ?? [], info.modelName, info.modelNameLo, info.modelNameTh)
-        : uniqStringsCarSearch([info.brandName, info.brandNameLo, info.brandNameTh]).join(', ');
+    // helper: เลือกชื่อแบรนด์ตามภาษา
+    const pickBrandDisplay = (b: { brandName?: string; brandNameTh?: string; brandNameLo?: string }): string => {
+      if (lang === 'latin') return b.brandName ?? '';
+      if (lang === 'lo') return (b.brandNameLo as string) || b.brandName || (b.brandNameTh as string) || '';
+      if (lang === 'th') return (b.brandNameTh as string) || b.brandName || (b.brandNameLo as string) || '';
+      return b.brandName ?? '';
+    };
+
+    // แสดงผลตามภาษาที่ผู้ใช้พิมพ์ (อังกฤษ/ไทย/ลาว)
+    let display = '';
+    if (info.kind === 'model') {
+      const brandKey = CAR_INDEX.modelToBrandKey.get(entity);
+      const brandInfo = brandKey ? CAR_INDEX.entityInfo.get(brandKey) : undefined;
+      const brandDisplay = brandInfo && brandInfo.kind === 'brand' ? pickBrandDisplay(brandInfo) : '';
+      const modelDisplay = buildModelDisplay(
+        info.searchNames ?? [],
+        info.modelName,
+        info.modelNameLo,
+        info.modelNameTh,
+        lang,
+      );
+      display = uniqStringsCarSearch([brandDisplay, modelDisplay]).join(' ');
+    } else {
+      display = pickBrandDisplay(info);
+    }
 
     if (!display) continue;
     items.push({ display, searchKey: matchedRaw, _score: m.score });
+
+    // ถ้าเป็นการ match ที่ BRAND: แนะนำรุ่นต่าง ๆ ของแบรนด์นั้นต่อจากชื่อแบรนด์
+    if (info.kind === 'brand') {
+      const brandDisplay = display;
+      const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
+      if (modelKeys) {
+        let added = 0;
+        for (const mk of modelKeys) {
+          const mInfo = CAR_INDEX.entityInfo.get(mk);
+          if (!mInfo || mInfo.kind !== 'model') continue;
+
+          const modelDisplay = buildModelDisplay(
+            mInfo.searchNames ?? [],
+            mInfo.modelName,
+            mInfo.modelNameLo,
+            mInfo.modelNameTh,
+            lang,
+          );
+          if (!modelDisplay) continue;
+
+          const fullDisplay = uniqStringsCarSearch([brandDisplay, modelDisplay]).join(' ');
+          if (!fullDisplay) continue;
+
+          items.push({
+            display: fullDisplay,
+            // พอผู้ใช้คลิกรุ่น ให้ค้นด้วยชื่อรุ่นตามภาษาที่แสดง
+            searchKey: fullDisplay,
+            _score: m.score - 1, // ให้คะแนนต่ำกว่าชื่อแบรนด์เล็กน้อย
+          });
+
+          added++;
+          if (added >= 6) break; // จำกัดจำนวนรุ่นแนะนำต่อแบรนด์
+        }
+      }
+    }
   }
 
   items.sort((a, b) => b._score - a._score);

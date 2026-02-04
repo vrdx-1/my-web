@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 
 interface PhotoGridProps {
   images: string[];
@@ -47,17 +46,17 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
   if (count === 1) {
     return (
       <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
-        <Image 
+        <img 
           src={normalizedImages[0]} 
           onClick={() => onPostClick(0)} 
-          fill
           style={{ 
+            width: '100%',
+            height: '100%',
             objectFit: 'cover', 
             objectPosition: 'center'
           }}
           loading="lazy"
           alt="Post image"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
     );
@@ -68,31 +67,31 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
         <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
-          <Image 
+          <img 
             src={normalizedImages[0]} 
             onClick={() => onPostClick(0)} 
-            fill
             style={{ 
+              width: '100%',
+              height: '100%',
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
             loading="lazy"
             alt="Post image 1"
-            sizes="(max-width: 768px) 50vw, 25vw"
           />
         </div>
         <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
-          <Image 
+          <img 
             src={normalizedImages[1]} 
             onClick={() => onPostClick(1)} 
-            fill
             style={{ 
+              width: '100%',
+              height: '100%',
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
             loading="lazy"
             alt="Post image 2"
-            sizes="(max-width: 768px) 50vw, 25vw"
           />
         </div>
       </div>
@@ -163,17 +162,17 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               overflow: 'hidden' 
             }}
           >
-            <Image 
+            <img 
               src={img} 
               onClick={() => onPostClick(i)} 
-              fill
               style={{ 
+                width: '100%',
+                height: '100%',
                 objectFit: 'cover', 
                 objectPosition: 'center'
               }}
               loading="lazy"
               alt={`Post image ${i + 1}`}
-              sizes="(max-width: 768px) 50vw, 25vw"
             />
           </div>
         ))}
@@ -194,17 +193,17 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
             overflow: 'hidden' 
           }}
         >
-          <Image 
+          <img 
             src={img} 
             onClick={() => onPostClick(i)} 
-            fill
             style={{ 
+              width: '100%',
+              height: '100%',
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
             loading="lazy"
             alt={`Post image ${i + 1}`}
-            sizes="(max-width: 768px) 50vw, 25vw"
           />
         </div>
       ))}
@@ -223,17 +222,17 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               }} 
               onClick={() => onPostClick(idx)}
             >
-              <Image 
+              <img 
                 src={img} 
-                fill
                 style={{ 
+                  width: '100%',
+                  height: '100%',
                   objectFit: 'cover', 
                   objectPosition: 'center', 
                   pointerEvents: 'none' 
                 }}
                 loading="lazy"
                 alt={`Post image ${idx + 1}`}
-                sizes="(max-width: 768px) 33vw, 16vw"
               />
               {idx === 4 && count > 5 && (
                 <div style={{ 

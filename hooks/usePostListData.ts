@@ -6,6 +6,7 @@ import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
+import { LAO_PROVINCES } from '@/utils/constants';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -74,6 +75,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     sourceExhausted: boolean;
     matchedIds: string[];
     primaryCount: number;
+    provinceTerm: string | null;
   } | null>(null);
 
   // Initialize session
@@ -327,6 +329,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const term = (searchTerm ?? '').trim();
         if (term) {
           const termKey = term;
+          const provinceTerm =
+            LAO_PROVINCES.find((p) => term.includes(p)) ?? null;
           if (isInitial || !soldSearchScanCacheRef.current || soldSearchScanCacheRef.current.term !== termKey) {
             soldSearchScanCacheRef.current = {
               term: termKey,
@@ -334,6 +338,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               sourceExhausted: false,
               matchedIds: [],
               primaryCount: 0,
+              provinceTerm,
             };
           }
 
@@ -349,7 +354,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
 
             const { data, error } = await supabase
               .from('cars')
-              .select('id, caption')
+              .select('id, caption, province')
               .eq('status', status || 'sold')
               .eq('is_hidden', false)
               .order('created_at', { ascending: false })
@@ -366,14 +371,22 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             for (const row of data as any[]) {
               if (!cache) break;
               const caption = String(row.caption ?? '');
+              const province = String(row.province ?? '');
               const match = expandedTerms.length > 0
                 ? captionMatchesAnyAlias(caption, expandedTerms)
                 : captionIncludesSearch(caption, term);
               if (match) {
                 const id = String(row.id);
-                const isPrimary =
+                const isLangPrimary =
                   searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
-                if (isPrimary) {
+
+                const provinceTerm = cache.provinceTerm;
+                const isProvincePrimary = !!provinceTerm && province === provinceTerm;
+
+                if (isProvincePrimary) {
+                  cache.matchedIds.splice(0, 0, id);
+                  cache.primaryCount += 1;
+                } else if (isLangPrimary) {
                   cache.matchedIds.splice(cache.primaryCount, 0, id);
                   cache.primaryCount += 1;
                 } else {

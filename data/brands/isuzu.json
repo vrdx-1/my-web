@@ -129,12 +129,41 @@
     {
       "modelId": "d-max",
       "modelName": "D-Max",
-      "modelNameTh": "D-Max",
-      "modelNameLo": "D-Max",
+      "modelNameTh": "ดีแม็กซ์",
+      "modelNameLo": "ດີແມັກ",
       "searchNames": [
         "d-max",
         "dmax",
         "d max"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "v-cross",
+      "modelName": "V-Cross",
+      "modelNameTh": "V-Cross",
+      "modelNameLo": "V-Cross",
+      "searchNames": [
+        "v-cross",
+        "vcross",
+        "v cross"
+      ],
+      "categoryIds": [
+        "pickup",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "spark",
+      "modelName": "Spark",
+      "modelNameTh": "Spark",
+      "modelNameLo": "Spark",
+      "searchNames": [
+        "spark",
+        "d-max spark",
+        "dmax spark"
       ],
       "categoryIds": [
         "pickup"
