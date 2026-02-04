@@ -1,0 +1,151 @@
+{
+  "brandId": "tesla",
+  "brandName": "Tesla",
+  "brandNameTh": "เทสลา",
+  "brandNameLo": "ເທສລາ",
+  "models": [
+    {
+      "modelId": "roadster-1st-gen",
+      "modelName": "Roadster (1st Gen)",
+      "modelNameTh": "Roadster (1st Gen)",
+      "modelNameLo": "Roadster (1st Gen)",
+      "searchNames": [
+        "roadster",
+        "roadster 1st",
+        "roadster 1"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "model-s",
+      "modelName": "Model S",
+      "modelNameTh": "Model S",
+      "modelNameLo": "Model S",
+      "searchNames": [
+        "model s",
+        "models"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "model-x",
+      "modelName": "Model X",
+      "modelNameTh": "Model X",
+      "modelNameLo": "Model X",
+      "searchNames": [
+        "model x",
+        "modelx"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "model-3",
+      "modelName": "Model 3",
+      "modelNameTh": "Model 3",
+      "modelNameLo": "Model 3",
+      "searchNames": [
+        "model 3",
+        "model3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "model-y",
+      "modelName": "Model Y",
+      "modelNameTh": "Model Y",
+      "modelNameLo": "Model Y",
+      "searchNames": [
+        "model y",
+        "modely"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cybertruck",
+      "modelName": "Cybertruck",
+      "modelNameTh": "Cybertruck",
+      "modelNameLo": "Cybertruck",
+      "searchNames": [
+        "cybertruck",
+        "cyber truck"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "tesla-semi",
+      "modelName": "Tesla Semi",
+      "modelNameTh": "Tesla Semi",
+      "modelNameLo": "Tesla Semi",
+      "searchNames": [
+        "tesla semi",
+        "semi",
+        "tesla truck"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "roadster-2nd-gen",
+      "modelName": "Roadster (2nd Gen)",
+      "modelNameTh": "Roadster (2nd Gen)",
+      "modelNameLo": "Roadster (2nd Gen)",
+      "searchNames": [
+        "roadster 2nd",
+        "roadster 2",
+        "roadster 2020"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cybercab",
+      "modelName": "Cybercab",
+      "modelNameTh": "Cybercab",
+      "modelNameLo": "Cybercab",
+      "searchNames": [
+        "cybercab",
+        "cyber cab"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "robovan",
+      "modelName": "Robovan",
+      "modelNameTh": "Robovan",
+      "modelNameLo": "Robovan",
+      "searchNames": [
+        "robovan",
+        "robo van"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    }
+  ]
+}

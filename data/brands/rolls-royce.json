@@ -1,0 +1,618 @@
+{
+  "brandId": "rolls-royce",
+  "brandName": "Rolls-Royce",
+  "brandNameTh": "โรลส์-รอยซ์",
+  "brandNameLo": "ໂຣຣອຍ",
+  "models": [
+    {
+      "modelId": "10-hp",
+      "modelName": "10 hp",
+      "modelNameTh": "10 hp",
+      "modelNameLo": "10 hp",
+      "searchNames": [
+        "10 hp"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "15-hp",
+      "modelName": "15 hp",
+      "modelNameTh": "15 hp",
+      "modelNameLo": "15 hp",
+      "searchNames": [
+        "15 hp"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "20-hp",
+      "modelName": "20 hp",
+      "modelNameTh": "20 hp",
+      "modelNameLo": "20 hp",
+      "searchNames": [
+        "20 hp"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "20-25",
+      "modelName": "20/25",
+      "modelNameTh": "20/25",
+      "modelNameLo": "20/25",
+      "searchNames": [
+        "20/25",
+        "20 25"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "25-30",
+      "modelName": "25/30",
+      "modelNameTh": "25/30",
+      "modelNameLo": "25/30",
+      "searchNames": [
+        "25/30",
+        "25 30"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "30-hp",
+      "modelName": "30 hp",
+      "modelNameTh": "30 hp",
+      "modelNameLo": "30 hp",
+      "searchNames": [
+        "30 hp"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "40-50-hp-silver-ghost",
+      "modelName": "40/50 hp (Silver Ghost)",
+      "modelNameTh": "40/50 hp (Silver Ghost)",
+      "modelNameLo": "40/50 hp (Silver Ghost)",
+      "searchNames": [
+        "40/50 hp",
+        "silver ghost"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "arcadia-droptail",
+      "modelName": "Arcadia Droptail",
+      "modelNameTh": "Arcadia Droptail",
+      "modelNameLo": "Arcadia Droptail",
+      "searchNames": [
+        "arcadia droptail",
+        "arcadia"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "boat-tail",
+      "modelName": "Boat Tail",
+      "modelNameTh": "Boat Tail",
+      "modelNameLo": "Boat Tail",
+      "searchNames": [
+        "boat tail",
+        "boattail"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "camargue",
+      "modelName": "Camargue",
+      "modelNameTh": "Camargue",
+      "modelNameLo": "Camargue",
+      "searchNames": [
+        "camargue"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "centenary-phantom",
+      "modelName": "Centenary Phantom",
+      "modelNameTh": "Centenary Phantom",
+      "modelNameLo": "Centenary Phantom",
+      "searchNames": [
+        "centenary phantom"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "corniche",
+      "modelName": "Corniche",
+      "modelNameTh": "Corniche",
+      "modelNameLo": "Corniche",
+      "searchNames": [
+        "corniche"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "cullinan",
+      "modelName": "Cullinan",
+      "modelNameTh": "Cullinan",
+      "modelNameLo": "Cullinan",
+      "searchNames": [
+        "cullinan"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "cullinan-series-ii",
+      "modelName": "Cullinan Series II",
+      "modelNameTh": "Cullinan Series II",
+      "modelNameLo": "Cullinan Series II",
+      "searchNames": [
+        "cullinan series ii",
+        "cullinan series 2"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dawn",
+      "modelName": "Dawn",
+      "modelNameTh": "Dawn",
+      "modelNameLo": "Dawn",
+      "searchNames": [
+        "dawn"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "droptail",
+      "modelName": "Droptail",
+      "modelNameTh": "Droptail",
+      "modelNameLo": "Droptail",
+      "searchNames": [
+        "droptail"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "flying-spur-classic",
+      "modelName": "Flying Spur (Classic)",
+      "modelNameTh": "Flying Spur (Classic)",
+      "modelNameLo": "Flying Spur (Classic)",
+      "searchNames": [
+        "flying spur classic",
+        "flying spur"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ghost",
+      "modelName": "Ghost",
+      "modelNameTh": "Ghost",
+      "modelNameLo": "Ghost",
+      "searchNames": [
+        "ghost"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ghost-series-ii",
+      "modelName": "Ghost Series II",
+      "modelNameTh": "Ghost Series II",
+      "modelNameLo": "Ghost Series II",
+      "searchNames": [
+        "ghost series ii",
+        "ghost series 2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "la-rose-noire-droptail",
+      "modelName": "La Rose Noire Droptail",
+      "modelNameTh": "La Rose Noire Droptail",
+      "modelNameLo": "La Rose Noire Droptail",
+      "searchNames": [
+        "la rose noire droptail",
+        "la rose noire"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "park-ward",
+      "modelName": "Park Ward",
+      "modelNameTh": "Park Ward",
+      "modelNameLo": "Park Ward",
+      "searchNames": [
+        "park ward",
+        "parkward"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-i",
+      "modelName": "Phantom I",
+      "modelNameTh": "Phantom I",
+      "modelNameLo": "Phantom I",
+      "searchNames": [
+        "phantom i",
+        "phantom 1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-ii",
+      "modelName": "Phantom II",
+      "modelNameTh": "Phantom II",
+      "modelNameLo": "Phantom II",
+      "searchNames": [
+        "phantom ii",
+        "phantom 2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-iii",
+      "modelName": "Phantom III",
+      "modelNameTh": "Phantom III",
+      "modelNameLo": "Phantom III",
+      "searchNames": [
+        "phantom iii",
+        "phantom 3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-iv",
+      "modelName": "Phantom IV",
+      "modelNameTh": "Phantom IV",
+      "modelNameLo": "Phantom IV",
+      "searchNames": [
+        "phantom iv",
+        "phantom 4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-v",
+      "modelName": "Phantom V",
+      "modelNameTh": "Phantom V",
+      "modelNameLo": "Phantom V",
+      "searchNames": [
+        "phantom v",
+        "phantom 5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-vi",
+      "modelName": "Phantom VI",
+      "modelNameTh": "Phantom VI",
+      "modelNameLo": "Phantom VI",
+      "searchNames": [
+        "phantom vi",
+        "phantom 6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-vii",
+      "modelName": "Phantom VII",
+      "modelNameTh": "Phantom VII",
+      "modelNameLo": "Phantom VII",
+      "searchNames": [
+        "phantom vii",
+        "phantom 7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-viii",
+      "modelName": "Phantom VIII",
+      "modelNameTh": "Phantom VIII",
+      "modelNameLo": "Phantom VIII",
+      "searchNames": [
+        "phantom viii",
+        "phantom 8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-series-ii",
+      "modelName": "Phantom Series II",
+      "modelNameTh": "Phantom Series II",
+      "modelNameLo": "Phantom Series II",
+      "searchNames": [
+        "phantom series ii",
+        "phantom series 2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-coupe",
+      "modelName": "Phantom Coupé",
+      "modelNameTh": "Phantom Coupé",
+      "modelNameLo": "Phantom Coupé",
+      "searchNames": [
+        "phantom coupe",
+        "phantomcoupe"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "phantom-drophead-coupe",
+      "modelName": "Phantom Drophead Coupé",
+      "modelNameTh": "Phantom Drophead Coupé",
+      "modelNameLo": "Phantom Drophead Coupé",
+      "searchNames": [
+        "phantom drophead coupe",
+        "phantom drophead"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-cloud",
+      "modelName": "Silver Cloud",
+      "modelNameTh": "Silver Cloud",
+      "modelNameLo": "Silver Cloud",
+      "searchNames": [
+        "silver cloud"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-dawn",
+      "modelName": "Silver Dawn",
+      "modelNameTh": "Silver Dawn",
+      "modelNameLo": "Silver Dawn",
+      "searchNames": [
+        "silver dawn"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-seraph",
+      "modelName": "Silver Seraph",
+      "modelNameTh": "Silver Seraph",
+      "modelNameLo": "Silver Seraph",
+      "searchNames": [
+        "silver seraph"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-shadow",
+      "modelName": "Silver Shadow",
+      "modelNameTh": "Silver Shadow",
+      "modelNameLo": "Silver Shadow",
+      "searchNames": [
+        "silver shadow"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-spirit",
+      "modelName": "Silver Spirit",
+      "modelNameTh": "Silver Spirit",
+      "modelNameLo": "Silver Spirit",
+      "searchNames": [
+        "silver spirit"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-spur",
+      "modelName": "Silver Spur",
+      "modelNameTh": "Silver Spur",
+      "modelNameLo": "Silver Spur",
+      "searchNames": [
+        "silver spur"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "silver-wraith",
+      "modelName": "Silver Wraith",
+      "modelNameTh": "Silver Wraith",
+      "modelNameLo": "Silver Wraith",
+      "searchNames": [
+        "silver wraith"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "spectre",
+      "modelName": "Spectre",
+      "modelNameTh": "Spectre",
+      "modelNameLo": "Spectre",
+      "searchNames": [
+        "spectre"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sweptail",
+      "modelName": "Sweptail",
+      "modelNameTh": "Sweptail",
+      "modelNameLo": "Sweptail",
+      "searchNames": [
+        "sweptail"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "twenty",
+      "modelName": "Twenty",
+      "modelNameTh": "Twenty",
+      "modelNameLo": "Twenty",
+      "searchNames": [
+        "twenty"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "v-8",
+      "modelName": "V-8",
+      "modelNameTh": "V-8",
+      "modelNameLo": "V-8",
+      "searchNames": [
+        "v-8",
+        "v8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "wraith-1938",
+      "modelName": "Wraith (1938)",
+      "modelNameTh": "Wraith (1938)",
+      "modelNameLo": "Wraith (1938)",
+      "searchNames": [
+        "wraith 1938",
+        "wraith classic"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "wraith-2013",
+      "modelName": "Wraith (2013)",
+      "modelNameTh": "Wraith (2013)",
+      "modelNameLo": "Wraith (2013)",
+      "searchNames": [
+        "wraith 2013",
+        "wraith"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    }
+  ]
+}

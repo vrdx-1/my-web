@@ -1,0 +1,1084 @@
+{
+  "brandId": "cadillac",
+  "brandName": "Cadillac",
+  "brandNameTh": "แคดิลแลค",
+  "brandNameLo": "ຄາດິແລັກ",
+  "models": [
+    {
+      "modelId": "allante",
+      "modelName": "Allanté",
+      "modelNameTh": "Allanté",
+      "modelNameLo": "Allanté",
+      "searchNames": [
+        "allante",
+        "allante"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ats",
+      "modelName": "ATS",
+      "modelNameTh": "ATS",
+      "modelNameLo": "ATS",
+      "searchNames": [
+        "ats"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ats-v",
+      "modelName": "ATS-V",
+      "modelNameTh": "ATS-V",
+      "modelNameLo": "ATS-V",
+      "searchNames": [
+        "ats-v",
+        "ats v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ats-l",
+      "modelName": "ATS-L",
+      "modelNameTh": "ATS-L",
+      "modelNameLo": "ATS-L",
+      "searchNames": [
+        "ats-l",
+        "ats l"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ats-coupe",
+      "modelName": "ATS Coupe",
+      "modelNameTh": "ATS Coupe",
+      "modelNameLo": "ATS Coupe",
+      "searchNames": [
+        "ats coupe"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "bls",
+      "modelName": "BLS",
+      "modelNameTh": "BLS",
+      "modelNameLo": "BLS",
+      "searchNames": [
+        "bls"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "brougham",
+      "modelName": "Brougham",
+      "modelNameTh": "Brougham",
+      "modelNameLo": "Brougham",
+      "searchNames": [
+        "brougham"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "calais",
+      "modelName": "Calais",
+      "modelNameTh": "Calais",
+      "modelNameLo": "Calais",
+      "searchNames": [
+        "calais"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "carterra",
+      "modelName": "Carterra",
+      "modelNameTh": "Carterra",
+      "modelNameLo": "Carterra",
+      "searchNames": [
+        "carterra"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "celestiq",
+      "modelName": "CELESTIQ",
+      "modelNameTh": "CELESTIQ",
+      "modelNameLo": "CELESTIQ",
+      "searchNames": [
+        "celestiq"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cimarron",
+      "modelName": "Cimarron",
+      "modelNameTh": "Cimarron",
+      "modelNameLo": "Cimarron",
+      "searchNames": [
+        "cimarron"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "commercial-chassis",
+      "modelName": "Commercial Chassis",
+      "modelNameTh": "Commercial Chassis",
+      "modelNameLo": "Commercial Chassis",
+      "searchNames": [
+        "commercial chassis"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "ct4",
+      "modelName": "CT4",
+      "modelNameTh": "CT4",
+      "modelNameLo": "CT4",
+      "searchNames": [
+        "ct4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ct4-v",
+      "modelName": "CT4-V",
+      "modelNameTh": "CT4-V",
+      "modelNameLo": "CT4-V",
+      "searchNames": [
+        "ct4-v",
+        "ct4 v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ct4-v-blackwing",
+      "modelName": "CT4-V Blackwing",
+      "modelNameTh": "CT4-V Blackwing",
+      "modelNameLo": "CT4-V Blackwing",
+      "searchNames": [
+        "ct4-v blackwing",
+        "ct4 blackwing"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ct5",
+      "modelName": "CT5",
+      "modelNameTh": "CT5",
+      "modelNameLo": "CT5",
+      "searchNames": [
+        "ct5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ct5-v",
+      "modelName": "CT5-V",
+      "modelNameTh": "CT5-V",
+      "modelNameLo": "CT5-V",
+      "searchNames": [
+        "ct5-v",
+        "ct5 v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ct5-v-blackwing",
+      "modelName": "CT5-V Blackwing",
+      "modelNameTh": "CT5-V Blackwing",
+      "modelNameLo": "CT5-V Blackwing",
+      "searchNames": [
+        "ct5-v blackwing",
+        "ct5 blackwing"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ct6",
+      "modelName": "CT6",
+      "modelNameTh": "CT6",
+      "modelNameLo": "CT6",
+      "searchNames": [
+        "ct6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ct6-v",
+      "modelName": "CT6-V",
+      "modelNameTh": "CT6-V",
+      "modelNameLo": "CT6-V",
+      "searchNames": [
+        "ct6-v",
+        "ct6 v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cts",
+      "modelName": "CTS",
+      "modelNameTh": "CTS",
+      "modelNameLo": "CTS",
+      "searchNames": [
+        "cts"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cts-v",
+      "modelName": "CTS-V",
+      "modelNameTh": "CTS-V",
+      "modelNameLo": "CTS-V",
+      "searchNames": [
+        "cts-v",
+        "cts v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cts-coupe",
+      "modelName": "CTS Coupe",
+      "modelNameTh": "CTS Coupe",
+      "modelNameLo": "CTS Coupe",
+      "searchNames": [
+        "cts coupe"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cts-wagon",
+      "modelName": "CTS Wagon",
+      "modelNameTh": "CTS Wagon",
+      "modelNameLo": "CTS Wagon",
+      "searchNames": [
+        "cts wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "deville",
+      "modelName": "DeVille",
+      "modelNameTh": "DeVille",
+      "modelNameLo": "DeVille",
+      "searchNames": [
+        "deville",
+        "de ville"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dts",
+      "modelName": "DTS",
+      "modelNameTh": "DTS",
+      "modelNameLo": "DTS",
+      "searchNames": [
+        "dts"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "eldorado",
+      "modelName": "Eldorado",
+      "modelNameTh": "Eldorado",
+      "modelNameLo": "Eldorado",
+      "searchNames": [
+        "eldorado"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "elr",
+      "modelName": "ELR",
+      "modelNameTh": "ELR",
+      "modelNameLo": "ELR",
+      "searchNames": [
+        "elr"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "escalade",
+      "modelName": "Escalade",
+      "modelNameTh": "Escalade",
+      "modelNameLo": "Escalade",
+      "searchNames": [
+        "escalade"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "escalade-esv",
+      "modelName": "Escalade ESV",
+      "modelNameTh": "Escalade ESV",
+      "modelNameLo": "Escalade ESV",
+      "searchNames": [
+        "escalade esv"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "escalade-v",
+      "modelName": "Escalade-V",
+      "modelNameTh": "Escalade-V",
+      "modelNameLo": "Escalade-V",
+      "searchNames": [
+        "escalade-v",
+        "escalade v"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "escalade-iq",
+      "modelName": "Escalade IQ",
+      "modelNameTh": "Escalade IQ",
+      "modelNameLo": "Escalade IQ",
+      "searchNames": [
+        "escalade iq"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "escalade-iql",
+      "modelName": "Escalade IQL",
+      "modelNameTh": "Escalade IQL",
+      "modelNameLo": "Escalade IQL",
+      "searchNames": [
+        "escalade iql"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fleetwood",
+      "modelName": "Fleetwood",
+      "modelNameTh": "Fleetwood",
+      "modelNameLo": "Fleetwood",
+      "searchNames": [
+        "fleetwood"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "fleetwood-brougham",
+      "modelName": "Fleetwood Brougham",
+      "modelNameTh": "Fleetwood Brougham",
+      "modelNameLo": "Fleetwood Brougham",
+      "searchNames": [
+        "fleetwood brougham"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "gt4",
+      "modelName": "GT4",
+      "modelNameTh": "GT4",
+      "modelNameLo": "GT4",
+      "searchNames": [
+        "gt4"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "lse",
+      "modelName": "LSE",
+      "modelNameTh": "LSE",
+      "modelNameLo": "LSE",
+      "searchNames": [
+        "lse"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lyriq",
+      "modelName": "LYRIQ",
+      "modelNameTh": "LYRIQ",
+      "modelNameLo": "LYRIQ",
+      "searchNames": [
+        "lyriq"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lyriq-v",
+      "modelName": "LYRIQ-V",
+      "modelNameTh": "LYRIQ-V",
+      "modelNameLo": "LYRIQ-V",
+      "searchNames": [
+        "lyriq-v",
+        "lyriq v"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "model-a",
+      "modelName": "Model A",
+      "modelNameTh": "Model A",
+      "modelNameLo": "Model A",
+      "searchNames": [
+        "model a"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-b",
+      "modelName": "Model B",
+      "modelNameTh": "Model B",
+      "modelNameLo": "Model B",
+      "searchNames": [
+        "model b"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-c",
+      "modelName": "Model C",
+      "modelNameTh": "Model C",
+      "modelNameLo": "Model C",
+      "searchNames": [
+        "model c"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-d",
+      "modelName": "Model D",
+      "modelNameTh": "Model D",
+      "modelNameLo": "Model D",
+      "searchNames": [
+        "model d"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-e",
+      "modelName": "Model E",
+      "modelNameTh": "Model E",
+      "modelNameLo": "Model E",
+      "searchNames": [
+        "model e"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-f",
+      "modelName": "Model F",
+      "modelNameTh": "Model F",
+      "modelNameLo": "Model F",
+      "searchNames": [
+        "model f"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-g",
+      "modelName": "Model G",
+      "modelNameTh": "Model G",
+      "modelNameLo": "Model G",
+      "searchNames": [
+        "model g"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-h",
+      "modelName": "Model H",
+      "modelNameTh": "Model H",
+      "modelNameLo": "Model H",
+      "searchNames": [
+        "model h"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-k",
+      "modelName": "Model K",
+      "modelNameTh": "Model K",
+      "modelNameLo": "Model K",
+      "searchNames": [
+        "model k"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-l",
+      "modelName": "Model L",
+      "modelNameTh": "Model L",
+      "modelNameLo": "Model L",
+      "searchNames": [
+        "model l"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-m",
+      "modelName": "Model M",
+      "modelNameTh": "Model M",
+      "modelNameLo": "Model M",
+      "searchNames": [
+        "model m"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-s",
+      "modelName": "Model S",
+      "modelNameTh": "Model S",
+      "modelNameLo": "Model S",
+      "searchNames": [
+        "model s"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-t",
+      "modelName": "Model T",
+      "modelNameTh": "Model T",
+      "modelNameLo": "Model T",
+      "searchNames": [
+        "model t"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "model-thirty",
+      "modelName": "Model Thirty",
+      "modelNameTh": "Model Thirty",
+      "modelNameLo": "Model Thirty",
+      "searchNames": [
+        "model thirty"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "optiq",
+      "modelName": "OPTIQ",
+      "modelNameTh": "OPTIQ",
+      "modelNameLo": "OPTIQ",
+      "searchNames": [
+        "optiq"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "optiq-v",
+      "modelName": "OPTIQ-V",
+      "modelNameTh": "OPTIQ-V",
+      "modelNameLo": "OPTIQ-V",
+      "searchNames": [
+        "optiq-v",
+        "optiq v"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "runabout",
+      "modelName": "Runabout",
+      "modelNameTh": "Runabout",
+      "modelNameLo": "Runabout",
+      "searchNames": [
+        "runabout"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "seville",
+      "modelName": "Seville",
+      "modelNameTh": "Seville",
+      "modelNameLo": "Seville",
+      "searchNames": [
+        "seville"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-60",
+      "modelName": "Series 60",
+      "modelNameTh": "Series 60",
+      "modelNameLo": "Series 60",
+      "searchNames": [
+        "series 60"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-61",
+      "modelName": "Series 61",
+      "modelNameTh": "Series 61",
+      "modelNameLo": "Series 61",
+      "searchNames": [
+        "series 61"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-62",
+      "modelName": "Series 62",
+      "modelNameTh": "Series 62",
+      "modelNameLo": "Series 62",
+      "searchNames": [
+        "series 62"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-63",
+      "modelName": "Series 63",
+      "modelNameTh": "Series 63",
+      "modelNameLo": "Series 63",
+      "searchNames": [
+        "series 63"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-65",
+      "modelName": "Series 65",
+      "modelNameTh": "Series 65",
+      "modelNameLo": "Series 65",
+      "searchNames": [
+        "series 65"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-67",
+      "modelName": "Series 67",
+      "modelNameTh": "Series 67",
+      "modelNameLo": "Series 67",
+      "searchNames": [
+        "series 67"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-70",
+      "modelName": "Series 70",
+      "modelNameTh": "Series 70",
+      "modelNameLo": "Series 70",
+      "searchNames": [
+        "series 70"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-72",
+      "modelName": "Series 72",
+      "modelNameTh": "Series 72",
+      "modelNameLo": "Series 72",
+      "searchNames": [
+        "series 72"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-75",
+      "modelName": "Series 75",
+      "modelNameTh": "Series 75",
+      "modelNameLo": "Series 75",
+      "searchNames": [
+        "series 75"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-80",
+      "modelName": "Series 80",
+      "modelNameTh": "Series 80",
+      "modelNameLo": "Series 80",
+      "searchNames": [
+        "series 80"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-85",
+      "modelName": "Series 85",
+      "modelNameTh": "Series 85",
+      "modelNameLo": "Series 85",
+      "searchNames": [
+        "series 85"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-90",
+      "modelName": "Series 90",
+      "modelNameTh": "Series 90",
+      "modelNameLo": "Series 90",
+      "searchNames": [
+        "series 90"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "sixty-special",
+      "modelName": "Sixty Special",
+      "modelNameTh": "Sixty Special",
+      "modelNameLo": "Sixty Special",
+      "searchNames": [
+        "sixty special"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "sls",
+      "modelName": "SLS",
+      "modelNameTh": "SLS",
+      "modelNameLo": "SLS",
+      "searchNames": [
+        "sls"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "srx",
+      "modelName": "SRX",
+      "modelNameTh": "SRX",
+      "modelNameLo": "SRX",
+      "searchNames": [
+        "srx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sts",
+      "modelName": "STS",
+      "modelNameTh": "STS",
+      "modelNameLo": "STS",
+      "searchNames": [
+        "sts"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sts-v",
+      "modelName": "STS-V",
+      "modelNameTh": "STS-V",
+      "modelNameLo": "STS-V",
+      "searchNames": [
+        "sts-v",
+        "sts v"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tonneau",
+      "modelName": "Tonneau",
+      "modelNameTh": "Tonneau",
+      "modelNameLo": "Tonneau",
+      "searchNames": [
+        "tonneau"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "type-51",
+      "modelName": "Type 51",
+      "modelNameTh": "Type 51",
+      "modelNameLo": "Type 51",
+      "searchNames": [
+        "type 51"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "type-53",
+      "modelName": "Type 53",
+      "modelNameTh": "Type 53",
+      "modelNameLo": "Type 53",
+      "searchNames": [
+        "type 53"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "vistiq",
+      "modelName": "VISTIQ",
+      "modelNameTh": "VISTIQ",
+      "modelNameLo": "VISTIQ",
+      "searchNames": [
+        "vistiq"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "xlr",
+      "modelName": "XLR",
+      "modelNameTh": "XLR",
+      "modelNameLo": "XLR",
+      "searchNames": [
+        "xlr"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xlr-v",
+      "modelName": "XLR-V",
+      "modelNameTh": "XLR-V",
+      "modelNameLo": "XLR-V",
+      "searchNames": [
+        "xlr-v",
+        "xlr v"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xt4",
+      "modelName": "XT4",
+      "modelNameTh": "XT4",
+      "modelNameLo": "XT4",
+      "searchNames": [
+        "xt4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xt5",
+      "modelName": "XT5",
+      "modelNameTh": "XT5",
+      "modelNameLo": "XT5",
+      "searchNames": [
+        "xt5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xt6",
+      "modelName": "XT6",
+      "modelNameTh": "XT6",
+      "modelNameLo": "XT6",
+      "searchNames": [
+        "xt6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xts",
+      "modelName": "XTS",
+      "modelNameTh": "XTS",
+      "modelNameLo": "XTS",
+      "searchNames": [
+        "xts"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    }
+  ]
+}

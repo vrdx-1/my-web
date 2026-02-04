@@ -1,0 +1,904 @@
+{
+  "brandId": "baic",
+  "brandName": "BAIC",
+  "brandNameTh": "ไบค์",
+  "brandNameLo": "ໄບ້",
+  "models": [
+    {
+      "modelId": "a1",
+      "modelName": "A1",
+      "modelNameTh": "A1",
+      "modelNameLo": "A1",
+      "searchNames": [
+        "a1",
+        "a 1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a3",
+      "modelName": "A3",
+      "modelNameTh": "A3",
+      "modelNameLo": "A3",
+      "searchNames": [
+        "a3",
+        "a 3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a5",
+      "modelName": "A5",
+      "modelNameTh": "A5",
+      "modelNameLo": "A5",
+      "searchNames": [
+        "a5",
+        "a 5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a115",
+      "modelName": "A115",
+      "modelNameTh": "A115",
+      "modelNameLo": "A115",
+      "searchNames": [
+        "a115",
+        "a 115"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-alpha-s",
+      "modelName": "Arcfox Alpha S",
+      "modelNameTh": "Arcfox Alpha S",
+      "modelNameLo": "Arcfox Alpha S",
+      "searchNames": [
+        "arcfox alpha s",
+        "alpha s",
+        "arcfox alphas"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-alpha-s5",
+      "modelName": "Arcfox Alpha S5",
+      "modelNameTh": "Arcfox Alpha S5",
+      "modelNameLo": "Arcfox Alpha S5",
+      "searchNames": [
+        "arcfox alpha s5",
+        "alpha s5",
+        "arcfox alphas5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-alpha-t",
+      "modelName": "Arcfox Alpha T",
+      "modelNameTh": "Arcfox Alpha T",
+      "modelNameLo": "Arcfox Alpha T",
+      "searchNames": [
+        "arcfox alpha t",
+        "alpha t",
+        "arcfox alphat"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-alpha-t5",
+      "modelName": "Arcfox Alpha T5",
+      "modelNameTh": "Arcfox Alpha T5",
+      "modelNameLo": "Arcfox Alpha T5",
+      "searchNames": [
+        "arcfox alpha t5",
+        "alpha t5",
+        "arcfox alphat5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-gt",
+      "modelName": "Arcfox GT",
+      "modelNameTh": "Arcfox GT",
+      "modelNameLo": "Arcfox GT",
+      "searchNames": [
+        "arcfox gt",
+        "arcfoxgt"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "arcfox-kaola",
+      "modelName": "Arcfox Kaola",
+      "modelNameTh": "Arcfox Kaola",
+      "modelNameLo": "Arcfox Kaola",
+      "searchNames": [
+        "arcfox kaola",
+        "kaola"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b30",
+      "modelName": "B30",
+      "modelNameTh": "B30",
+      "modelNameLo": "B30",
+      "searchNames": [
+        "b30",
+        "b 30"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "b30e-dune",
+      "modelName": "B30e Dune",
+      "modelNameTh": "B30e Dune",
+      "modelNameLo": "B30e Dune",
+      "searchNames": [
+        "b30e dune",
+        "b30e",
+        "dune"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b40",
+      "modelName": "B40",
+      "modelNameTh": "B40",
+      "modelNameLo": "B40",
+      "searchNames": [
+        "b40",
+        "b 40"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "b40-plus",
+      "modelName": "B40 Plus",
+      "modelNameTh": "B40 Plus",
+      "modelNameLo": "B40 Plus",
+      "searchNames": [
+        "b40 plus",
+        "b40plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "b60",
+      "modelName": "B60",
+      "modelNameTh": "B60",
+      "modelNameLo": "B60",
+      "searchNames": [
+        "b60",
+        "b 60"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "b80",
+      "modelName": "B80",
+      "modelNameTh": "B80",
+      "modelNameLo": "B80",
+      "searchNames": [
+        "b80",
+        "b 80"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj20",
+      "modelName": "BJ20",
+      "modelNameTh": "BJ20",
+      "modelNameLo": "BJ20",
+      "searchNames": [
+        "bj20",
+        "bj 20"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj30",
+      "modelName": "BJ30",
+      "modelNameTh": "BJ30",
+      "modelNameLo": "BJ30",
+      "searchNames": [
+        "bj30",
+        "bj 30"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj40",
+      "modelName": "BJ40",
+      "modelNameTh": "BJ40",
+      "modelNameLo": "BJ40",
+      "searchNames": [
+        "bj40",
+        "bj 40"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj40-plus",
+      "modelName": "BJ40 Plus",
+      "modelNameTh": "BJ40 Plus",
+      "modelNameLo": "BJ40 Plus",
+      "searchNames": [
+        "bj40 plus",
+        "bj40plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj40-c",
+      "modelName": "BJ40 C",
+      "modelNameTh": "BJ40 C",
+      "modelNameLo": "BJ40 C",
+      "searchNames": [
+        "bj40 c",
+        "bj40c"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj40-se",
+      "modelName": "BJ40 SE",
+      "modelNameTh": "BJ40 SE",
+      "modelNameLo": "BJ40 SE",
+      "searchNames": [
+        "bj40 se",
+        "bj40se"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj60",
+      "modelName": "BJ60",
+      "modelNameTh": "BJ60",
+      "modelNameLo": "BJ60",
+      "searchNames": [
+        "bj60",
+        "bj 60"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj80",
+      "modelName": "BJ80",
+      "modelNameTh": "BJ80",
+      "modelNameLo": "BJ80",
+      "searchNames": [
+        "bj80",
+        "bj 80"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bj90",
+      "modelName": "BJ90",
+      "modelNameTh": "BJ90",
+      "modelNameLo": "BJ90",
+      "searchNames": [
+        "bj90",
+        "bj 90"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "d20",
+      "modelName": "D20",
+      "modelNameTh": "D20",
+      "modelNameLo": "D20",
+      "searchNames": [
+        "d20",
+        "d 20"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "d50",
+      "modelName": "D50",
+      "modelNameTh": "D50",
+      "modelNameLo": "D50",
+      "searchNames": [
+        "d50",
+        "d 50"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "d60",
+      "modelName": "D60",
+      "modelNameTh": "D60",
+      "modelNameLo": "D60",
+      "searchNames": [
+        "d60",
+        "d 60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "d70",
+      "modelName": "D70",
+      "modelNameTh": "D70",
+      "modelNameLo": "D70",
+      "searchNames": [
+        "d70",
+        "d 70"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "d80",
+      "modelName": "D80",
+      "modelNameTh": "D80",
+      "modelNameLo": "D80",
+      "searchNames": [
+        "d80",
+        "d 80"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eu5",
+      "modelName": "EU5",
+      "modelNameTh": "EU5",
+      "modelNameLo": "EU5",
+      "searchNames": [
+        "eu5",
+        "eu 5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eu5-plus",
+      "modelName": "EU5 Plus",
+      "modelNameTh": "EU5 Plus",
+      "modelNameLo": "EU5 Plus",
+      "searchNames": [
+        "eu5 plus",
+        "eu5plus"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eu7",
+      "modelName": "EU7",
+      "modelNameTh": "EU7",
+      "modelNameLo": "EU7",
+      "searchNames": [
+        "eu7",
+        "eu 7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev5",
+      "modelName": "EV5",
+      "modelNameTh": "EV5",
+      "modelNameLo": "EV5",
+      "searchNames": [
+        "ev5",
+        "ev 5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "f40",
+      "modelName": "F40",
+      "modelNameTh": "F40",
+      "modelNameLo": "F40",
+      "searchNames": [
+        "f40",
+        "f 40"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "jinn",
+      "modelName": "Jinn",
+      "modelNameTh": "Jinn",
+      "modelNameLo": "Jinn",
+      "searchNames": [
+        "jinn"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lulian",
+      "modelName": "Lulian",
+      "modelNameTh": "Lulian",
+      "modelNameLo": "Lulian",
+      "searchNames": [
+        "lulian"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m20",
+      "modelName": "M20",
+      "modelNameTh": "M20",
+      "modelNameLo": "M20",
+      "searchNames": [
+        "m20",
+        "m 20"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m50",
+      "modelName": "M50",
+      "modelNameTh": "M50",
+      "modelNameLo": "M50",
+      "searchNames": [
+        "m50",
+        "m 50"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m60",
+      "modelName": "M60",
+      "modelNameTh": "M60",
+      "modelNameLo": "M60",
+      "searchNames": [
+        "m60",
+        "m 60"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mz40",
+      "modelName": "MZ40",
+      "modelNameTh": "MZ40",
+      "modelNameLo": "MZ40",
+      "searchNames": [
+        "mz40",
+        "mz 40"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mz45",
+      "modelName": "MZ45",
+      "modelNameTh": "MZ45",
+      "modelNameLo": "MZ45",
+      "searchNames": [
+        "mz45",
+        "mz 45"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "q25",
+      "modelName": "Q25",
+      "modelNameTh": "Q25",
+      "modelNameLo": "Q25",
+      "searchNames": [
+        "q25",
+        "q 25"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q35",
+      "modelName": "Q35",
+      "modelNameTh": "Q35",
+      "modelNameLo": "Q35",
+      "searchNames": [
+        "q35",
+        "q 35"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "senova-cc",
+      "modelName": "Senova CC",
+      "modelNameTh": "Senova CC",
+      "modelNameLo": "Senova CC",
+      "searchNames": [
+        "senova cc",
+        "cc",
+        "senova"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "senova-d20",
+      "modelName": "Senova D20",
+      "modelNameTh": "Senova D20",
+      "modelNameLo": "Senova D20",
+      "searchNames": [
+        "senova d20",
+        "senova d 20"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "senova-d50",
+      "modelName": "Senova D50",
+      "modelNameTh": "Senova D50",
+      "modelNameLo": "Senova D50",
+      "searchNames": [
+        "senova d50",
+        "senova d 50"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "senova-d70",
+      "modelName": "Senova D70",
+      "modelNameTh": "Senova D70",
+      "modelNameLo": "Senova D70",
+      "searchNames": [
+        "senova d70",
+        "senova d 70"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "senova-x25",
+      "modelName": "Senova X25",
+      "modelNameTh": "Senova X25",
+      "modelNameLo": "Senova X25",
+      "searchNames": [
+        "senova x25",
+        "senova x 25"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "senova-x35",
+      "modelName": "Senova X35",
+      "modelNameTh": "Senova X35",
+      "modelNameLo": "Senova X35",
+      "searchNames": [
+        "senova x35",
+        "senova x 35"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "senova-x55",
+      "modelName": "Senova X55",
+      "modelNameTh": "Senova X55",
+      "modelNameLo": "Senova X55",
+      "searchNames": [
+        "senova x55",
+        "senova x 55"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "senova-x65",
+      "modelName": "Senova X65",
+      "modelNameTh": "Senova X65",
+      "modelNameLo": "Senova X65",
+      "searchNames": [
+        "senova x65",
+        "senova x 65"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "u5",
+      "modelName": "U5",
+      "modelNameTh": "U5",
+      "modelNameLo": "U5",
+      "searchNames": [
+        "u5",
+        "u 5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "u5-plus",
+      "modelName": "U5 Plus",
+      "modelNameTh": "U5 Plus",
+      "modelNameLo": "U5 Plus",
+      "searchNames": [
+        "u5 plus",
+        "u5plus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "u7",
+      "modelName": "U7",
+      "modelNameTh": "U7",
+      "modelNameLo": "U7",
+      "searchNames": [
+        "u7",
+        "u 7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "weiwang-m20",
+      "modelName": "Weiwang M20",
+      "modelNameTh": "Weiwang M20",
+      "modelNameLo": "Weiwang M20",
+      "searchNames": [
+        "weiwang m20",
+        "weiwang",
+        "m20"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "x3",
+      "modelName": "X3",
+      "modelNameTh": "X3",
+      "modelNameLo": "X3",
+      "searchNames": [
+        "x3",
+        "x 3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x5",
+      "modelName": "X5",
+      "modelNameTh": "X5",
+      "modelNameLo": "X5",
+      "searchNames": [
+        "x5",
+        "x 5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x6",
+      "modelName": "X6",
+      "modelNameTh": "X6",
+      "modelNameLo": "X6",
+      "searchNames": [
+        "x6",
+        "x 6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x7",
+      "modelName": "X7",
+      "modelNameTh": "X7",
+      "modelNameLo": "X7",
+      "searchNames": [
+        "x7",
+        "x 7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x25",
+      "modelName": "X25",
+      "modelNameTh": "X25",
+      "modelNameLo": "X25",
+      "searchNames": [
+        "x25",
+        "x 25"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x35",
+      "modelName": "X35",
+      "modelNameTh": "X35",
+      "modelNameLo": "X35",
+      "searchNames": [
+        "x35",
+        "x 35"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x55",
+      "modelName": "X55",
+      "modelNameTh": "X55",
+      "modelNameLo": "X55",
+      "searchNames": [
+        "x55",
+        "x 55"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x55-ii",
+      "modelName": "X55 II",
+      "modelNameTh": "X55 II",
+      "modelNameLo": "X55 II",
+      "searchNames": [
+        "x55 ii",
+        "x55 2",
+        "x55 ii"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x55-verve",
+      "modelName": "X55 Verve",
+      "modelNameTh": "X55 Verve",
+      "modelNameLo": "X55 Verve",
+      "searchNames": [
+        "x55 verve",
+        "x55verve",
+        "verve"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x65",
+      "modelName": "X65",
+      "modelNameTh": "X65",
+      "modelNameLo": "X65",
+      "searchNames": [
+        "x65",
+        "x 65"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x75",
+      "modelName": "X75",
+      "modelNameTh": "X75",
+      "modelNameLo": "X75",
+      "searchNames": [
+        "x75",
+        "x 75"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

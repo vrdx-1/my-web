@@ -1,0 +1,1007 @@
+{
+  "brandId": "changan",
+  "brandName": "Changan",
+  "brandNameTh": "ฉางอัน",
+  "brandNameLo": "ສາງອັນ",
+  "models": [
+    {
+      "modelId": "alsvin",
+      "modelName": "Alsvin",
+      "modelNameTh": "Alsvin",
+      "modelNameLo": "Alsvin",
+      "searchNames": [
+        "alsvin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "alsvin-v3",
+      "modelName": "Alsvin V3",
+      "modelNameTh": "Alsvin V3",
+      "modelNameLo": "Alsvin V3",
+      "searchNames": [
+        "alsvin v3",
+        "alsvinv3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "alsvin-v7",
+      "modelName": "Alsvin V7",
+      "modelNameTh": "Alsvin V7",
+      "modelNameLo": "Alsvin V7",
+      "searchNames": [
+        "alsvin v7",
+        "alsvinv7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "avatr-06",
+      "modelName": "Avatr 06",
+      "modelNameTh": "Avatr 06",
+      "modelNameLo": "Avatr 06",
+      "searchNames": [
+        "avatr 06",
+        "avatr06"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-07",
+      "modelName": "Avatr 07",
+      "modelNameTh": "Avatr 07",
+      "modelNameLo": "Avatr 07",
+      "searchNames": [
+        "avatr 07",
+        "avatr07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-11",
+      "modelName": "Avatr 11",
+      "modelNameTh": "Avatr 11",
+      "modelNameLo": "Avatr 11",
+      "searchNames": [
+        "avatr 11",
+        "avatr11"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-12",
+      "modelName": "Avatr 12",
+      "modelNameTh": "Avatr 12",
+      "modelNameLo": "Avatr 12",
+      "searchNames": [
+        "avatr 12",
+        "avatr12"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "benben",
+      "modelName": "BenBen",
+      "modelNameTh": "BenBen",
+      "modelNameLo": "BenBen",
+      "searchNames": [
+        "benben"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "benben-e-star",
+      "modelName": "BenBen E-Star",
+      "modelNameTh": "BenBen E-Star",
+      "modelNameLo": "BenBen E-Star",
+      "searchNames": [
+        "benben e-star",
+        "benbenestar"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "benni",
+      "modelName": "Benni",
+      "modelNameTh": "Benni",
+      "modelNameLo": "Benni",
+      "searchNames": [
+        "benni"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "benni-ec",
+      "modelName": "Benni EC/EV",
+      "modelNameTh": "Benni EC/EV",
+      "modelNameLo": "Benni EC/EV",
+      "searchNames": [
+        "benni ec",
+        "benni ev",
+        "benniec",
+        "benniev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cd701",
+      "modelName": "CD701",
+      "modelNameTh": "CD701",
+      "modelNameLo": "CD701",
+      "searchNames": [
+        "cd701"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cm-8",
+      "modelName": "CM-8",
+      "modelNameTh": "CM-8",
+      "modelNameLo": "CM-8",
+      "searchNames": [
+        "cm-8",
+        "cm8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cs15",
+      "modelName": "CS15",
+      "modelNameTh": "CS15",
+      "modelNameLo": "CS15",
+      "searchNames": [
+        "cs15"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs35",
+      "modelName": "CS35",
+      "modelNameTh": "CS35",
+      "modelNameLo": "CS35",
+      "searchNames": [
+        "cs35"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs35-plus",
+      "modelName": "CS35 Plus",
+      "modelNameTh": "CS35 Plus",
+      "modelNameLo": "CS35 Plus",
+      "searchNames": [
+        "cs35 plus",
+        "cs35plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs55",
+      "modelName": "CS55",
+      "modelNameTh": "CS55",
+      "modelNameLo": "CS55",
+      "searchNames": [
+        "cs55"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs55-plus",
+      "modelName": "CS55 Plus",
+      "modelNameTh": "CS55 Plus",
+      "modelNameLo": "CS55 Plus",
+      "searchNames": [
+        "cs55 plus",
+        "cs55plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs75",
+      "modelName": "CS75",
+      "modelNameTh": "CS75",
+      "modelNameLo": "CS75",
+      "searchNames": [
+        "cs75"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs75-plus",
+      "modelName": "CS75 Plus",
+      "modelNameTh": "CS75 Plus",
+      "modelNameLo": "CS75 Plus",
+      "searchNames": [
+        "cs75 plus",
+        "cs75plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs85",
+      "modelName": "CS85",
+      "modelNameTh": "CS85",
+      "modelNameLo": "CS85",
+      "searchNames": [
+        "cs85"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs95",
+      "modelName": "CS95",
+      "modelNameTh": "CS95",
+      "modelNameLo": "CS95",
+      "searchNames": [
+        "cs95"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cs95-plus",
+      "modelName": "CS95 Plus",
+      "modelNameTh": "CS95 Plus",
+      "modelNameLo": "CS95 Plus",
+      "searchNames": [
+        "cs95 plus",
+        "cs95plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx20",
+      "modelName": "CX20",
+      "modelNameTh": "CX20",
+      "modelNameLo": "CX20",
+      "searchNames": [
+        "cx20"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx30",
+      "modelName": "CX30",
+      "modelNameTh": "CX30",
+      "modelNameLo": "CX30",
+      "searchNames": [
+        "cx30"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx70",
+      "modelName": "CX70",
+      "modelNameTh": "CX70",
+      "modelNameLo": "CX70",
+      "searchNames": [
+        "cx70"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "deepal-e07",
+      "modelName": "Deepal E07",
+      "modelNameTh": "Deepal E07",
+      "modelNameLo": "Deepal E07",
+      "searchNames": [
+        "deepal e07",
+        "deepale07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-g318",
+      "modelName": "Deepal G318",
+      "modelNameTh": "Deepal G318",
+      "modelNameLo": "Deepal G318",
+      "searchNames": [
+        "deepal g318",
+        "deepalg318"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-l07",
+      "modelName": "Deepal L07",
+      "modelNameTh": "Deepal L07",
+      "modelNameLo": "Deepal L07",
+      "searchNames": [
+        "deepal l07",
+        "deepall07"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s05",
+      "modelName": "Deepal S05",
+      "modelNameTh": "Deepal S05",
+      "modelNameLo": "Deepal S05",
+      "searchNames": [
+        "deepal s05",
+        "deepals05"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s07",
+      "modelName": "Deepal S07",
+      "modelNameTh": "Deepal S07",
+      "modelNameLo": "Deepal S07",
+      "searchNames": [
+        "deepal s07",
+        "deepals07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s09",
+      "modelName": "Deepal S09",
+      "modelNameTh": "Deepal S09",
+      "modelNameLo": "Deepal S09",
+      "searchNames": [
+        "deepal s09",
+        "deepals09"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-sl03",
+      "modelName": "Deepal SL03",
+      "modelNameTh": "Deepal SL03",
+      "modelNameLo": "Deepal SL03",
+      "searchNames": [
+        "deepal sl03",
+        "deepalsl03"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eado",
+      "modelName": "Eado",
+      "modelNameTh": "Eado",
+      "modelNameLo": "Eado",
+      "searchNames": [
+        "eado"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eado-dt",
+      "modelName": "Eado DT",
+      "modelNameTh": "Eado DT",
+      "modelNameLo": "Eado DT",
+      "searchNames": [
+        "eado dt",
+        "eadodt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eado-ev",
+      "modelName": "Eado EV",
+      "modelNameTh": "Eado EV",
+      "modelNameLo": "Eado EV",
+      "searchNames": [
+        "eado ev",
+        "eadoev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eado-plus",
+      "modelName": "Eado Plus",
+      "modelNameTh": "Eado Plus",
+      "modelNameLo": "Eado Plus",
+      "searchNames": [
+        "eado plus",
+        "eadoplus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eado-xt",
+      "modelName": "Eado XT",
+      "modelNameTh": "Eado XT",
+      "modelNameLo": "Eado XT",
+      "searchNames": [
+        "eado xt",
+        "eadoxt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "explorer",
+      "modelName": "Explorer",
+      "modelNameTh": "Explorer",
+      "modelNameLo": "Explorer",
+      "searchNames": [
+        "explorer"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f70",
+      "modelName": "F70",
+      "modelNameTh": "F70",
+      "modelNameLo": "F70",
+      "searchNames": [
+        "f70",
+        "kaicene f70"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "g101",
+      "modelName": "G101",
+      "modelNameTh": "G101",
+      "modelNameLo": "G101",
+      "searchNames": [
+        "g101"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "honor",
+      "modelName": "Honor",
+      "modelNameTh": "Honor",
+      "modelNameLo": "Honor",
+      "searchNames": [
+        "honor"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hunter",
+      "modelName": "Hunter",
+      "modelNameTh": "Hunter",
+      "modelNameLo": "Hunter",
+      "searchNames": [
+        "hunter"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "hunter-k50",
+      "modelName": "Hunter K50",
+      "modelNameTh": "Hunter K50",
+      "modelNameLo": "Hunter K50",
+      "searchNames": [
+        "hunter k50",
+        "hunterk50"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "hunter-plus",
+      "modelName": "Hunter Plus",
+      "modelNameTh": "Hunter Plus",
+      "modelNameLo": "Hunter Plus",
+      "searchNames": [
+        "hunter plus",
+        "hunterplus"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "jinn",
+      "modelName": "Jinn",
+      "modelNameTh": "Jinn",
+      "modelNameLo": "Jinn",
+      "searchNames": [
+        "jinn"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "kaicene-f70",
+      "modelName": "Kaicene F70",
+      "modelNameTh": "Kaicene F70",
+      "modelNameLo": "Kaicene F70",
+      "searchNames": [
+        "kaicene f70",
+        "kaicenef70"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "kuayue",
+      "modelName": "Kuayue",
+      "modelNameTh": "Kuayue",
+      "modelNameLo": "Kuayue",
+      "searchNames": [
+        "kuayue"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "lamore",
+      "modelName": "Lamore",
+      "modelNameTh": "Lamore",
+      "modelNameLo": "Lamore",
+      "searchNames": [
+        "lamore"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "linmax",
+      "modelName": "Linmax",
+      "modelNameTh": "Linmax",
+      "modelNameLo": "Linmax",
+      "searchNames": [
+        "linmax"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "lumin",
+      "modelName": "LUMIN",
+      "modelNameTh": "LUMIN",
+      "modelNameLo": "LUMIN",
+      "searchNames": [
+        "lumin"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lumin-l",
+      "modelName": "LUMIN L",
+      "modelNameTh": "LUMIN L",
+      "modelNameLo": "LUMIN L",
+      "searchNames": [
+        "lumin l",
+        "luminl"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nevo-a05",
+      "modelName": "NEVO A05",
+      "modelNameTh": "NEVO A05",
+      "modelNameLo": "NEVO A05",
+      "searchNames": [
+        "nevo a05",
+        "nevoa05"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nevo-a07",
+      "modelName": "NEVO A07",
+      "modelNameTh": "NEVO A07",
+      "modelNameLo": "NEVO A07",
+      "searchNames": [
+        "nevo a07",
+        "nevoa07"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nevo-q05",
+      "modelName": "NEVO Q05",
+      "modelNameTh": "NEVO Q05",
+      "modelNameLo": "NEVO Q05",
+      "searchNames": [
+        "nevo q05",
+        "nevoq05"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "nevo-q07",
+      "modelName": "NEVO Q07",
+      "modelNameTh": "NEVO Q07",
+      "modelNameLo": "NEVO Q07",
+      "searchNames": [
+        "nevo q07",
+        "nevoq07"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "niou-ii",
+      "modelName": "Niou II",
+      "modelNameTh": "Niou II",
+      "modelNameLo": "Niou II",
+      "searchNames": [
+        "niou ii",
+        "niouii"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "oshan-cos1",
+      "modelName": "Oshan COS1°",
+      "modelNameTh": "Oshan COS1°",
+      "modelNameLo": "Oshan COS1°",
+      "searchNames": [
+        "oshan cos1",
+        "oshan cos1°",
+        "cos1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "oshan-cosmos",
+      "modelName": "Oshan Cosmos",
+      "modelNameTh": "Oshan Cosmos",
+      "modelNameLo": "Oshan Cosmos",
+      "searchNames": [
+        "oshan cosmos",
+        "oshancosmos"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "oshan-x5",
+      "modelName": "Oshan X5",
+      "modelNameTh": "Oshan X5",
+      "modelNameLo": "Oshan X5",
+      "searchNames": [
+        "oshan x5",
+        "oshanx5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "oshan-x7",
+      "modelName": "Oshan X7",
+      "modelNameTh": "Oshan X7",
+      "modelNameLo": "Oshan X7",
+      "searchNames": [
+        "oshan x7",
+        "oshanx7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "oshan-z6",
+      "modelName": "Oshan Z6",
+      "modelNameTh": "Oshan Z6",
+      "modelNameLo": "Oshan Z6",
+      "searchNames": [
+        "oshan z6",
+        "oshanz6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q07",
+      "modelName": "Q07",
+      "modelNameTh": "Q07",
+      "modelNameLo": "Q07",
+      "searchNames": [
+        "q07"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "raeton",
+      "modelName": "Raeton",
+      "modelNameTh": "Raeton",
+      "modelNameLo": "Raeton",
+      "searchNames": [
+        "raeton"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "raeton-plus",
+      "modelName": "Raeton Plus",
+      "modelNameTh": "Raeton Plus",
+      "modelNameLo": "Raeton Plus",
+      "searchNames": [
+        "raeton plus",
+        "raetonplus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ruixing",
+      "modelName": "Ruixing",
+      "modelNameTh": "Ruixing",
+      "modelNameLo": "Ruixing",
+      "searchNames": [
+        "ruixing"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "star",
+      "modelName": "Star",
+      "modelNameTh": "Star",
+      "modelNameLo": "Star",
+      "searchNames": [
+        "star"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "star-9",
+      "modelName": "Star 9",
+      "modelNameTh": "Star 9",
+      "modelNameLo": "Star 9",
+      "searchNames": [
+        "star 9",
+        "star9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "uni-k",
+      "modelName": "UNI-K",
+      "modelNameTh": "UNI-K",
+      "modelNameLo": "UNI-K",
+      "searchNames": [
+        "uni-k",
+        "unik"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "uni-s",
+      "modelName": "UNI-S",
+      "modelNameTh": "UNI-S",
+      "modelNameLo": "UNI-S",
+      "searchNames": [
+        "uni-s",
+        "unis"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "uni-t",
+      "modelName": "UNI-T",
+      "modelNameTh": "UNI-T",
+      "modelNameLo": "UNI-T",
+      "searchNames": [
+        "uni-t",
+        "unit"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "uni-v",
+      "modelName": "UNI-V",
+      "modelNameTh": "UNI-V",
+      "modelNameLo": "UNI-V",
+      "searchNames": [
+        "uni-v",
+        "univ"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "uni-z",
+      "modelName": "UNI-Z",
+      "modelNameTh": "UNI-Z",
+      "modelNameLo": "UNI-Z",
+      "searchNames": [
+        "uni-z",
+        "uniz"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "x5-plus",
+      "modelName": "X5 Plus",
+      "modelNameTh": "X5 Plus",
+      "modelNameLo": "X5 Plus",
+      "searchNames": [
+        "x5 plus",
+        "x5plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x7-plus",
+      "modelName": "X7 Plus",
+      "modelNameTh": "X7 Plus",
+      "modelNameLo": "X7 Plus",
+      "searchNames": [
+        "x7 plus",
+        "x7plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "yida",
+      "modelName": "Yida",
+      "modelNameTh": "Yida",
+      "modelNameLo": "Yida",
+      "searchNames": [
+        "yida"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "z-shine",
+      "modelName": "Z-Shine",
+      "modelNameTh": "Z-Shine",
+      "modelNameLo": "Z-Shine",
+      "searchNames": [
+        "z-shine",
+        "zshine"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    }
+  ]
+}

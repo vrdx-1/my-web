@@ -1,0 +1,768 @@
+{
+  "brandId": "gac",
+  "brandName": "GAC",
+  "brandNameTh": "จีเอซี",
+  "brandNameLo": "ຈີເອຊີ",
+  "models": [
+    {
+      "modelId": "aion-es",
+      "modelName": "Aion ES",
+      "modelNameTh": "Aion ES",
+      "modelNameLo": "Aion ES",
+      "searchNames": [
+        "aion es",
+        "aiones"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-lx",
+      "modelName": "Aion LX",
+      "modelNameTh": "Aion LX",
+      "modelNameLo": "Aion LX",
+      "searchNames": [
+        "aion lx",
+        "aionlx"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-lx-plus",
+      "modelName": "Aion LX Plus",
+      "modelNameTh": "Aion LX Plus",
+      "modelNameLo": "Aion LX Plus",
+      "searchNames": [
+        "aion lx plus",
+        "aionlxplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-rt",
+      "modelName": "Aion RT",
+      "modelNameTh": "Aion RT",
+      "modelNameLo": "Aion RT",
+      "searchNames": [
+        "aion rt",
+        "aionrt"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s",
+      "modelName": "Aion S",
+      "modelNameTh": "Aion S",
+      "modelNameLo": "Aion S",
+      "searchNames": [
+        "aion s",
+        "aions"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s-max",
+      "modelName": "Aion S Max",
+      "modelNameTh": "Aion S Max",
+      "modelNameLo": "Aion S Max",
+      "searchNames": [
+        "aion s max",
+        "aionsmax"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s-plus",
+      "modelName": "Aion S Plus",
+      "modelNameTh": "Aion S Plus",
+      "modelNameLo": "Aion S Plus",
+      "searchNames": [
+        "aion s plus",
+        "aionsplus"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-ut",
+      "modelName": "Aion UT",
+      "modelNameTh": "Aion UT",
+      "modelNameLo": "Aion UT",
+      "searchNames": [
+        "aion ut",
+        "aionut"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-v",
+      "modelName": "Aion V",
+      "modelNameTh": "Aion V",
+      "modelNameLo": "Aion V",
+      "searchNames": [
+        "aion v",
+        "aionv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-v-plus",
+      "modelName": "Aion V Plus",
+      "modelNameTh": "Aion V Plus",
+      "modelNameLo": "Aion V Plus",
+      "searchNames": [
+        "aion v plus",
+        "aionvplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-y",
+      "modelName": "Aion Y",
+      "modelNameTh": "Aion Y",
+      "modelNameLo": "Aion Y",
+      "searchNames": [
+        "aion y",
+        "aiony"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-y-plus",
+      "modelName": "Aion Y Plus",
+      "modelNameTh": "Aion Y Plus",
+      "modelNameLo": "Aion Y Plus",
+      "searchNames": [
+        "aion y plus",
+        "aionyplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e8",
+      "modelName": "E8",
+      "modelNameTh": "E8",
+      "modelNameLo": "E8",
+      "searchNames": [
+        "e8"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "e9",
+      "modelName": "E9",
+      "modelNameTh": "E9",
+      "modelNameLo": "E9",
+      "searchNames": [
+        "e9"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "emkoo",
+      "modelName": "Emkoo",
+      "modelNameTh": "Emkoo",
+      "modelNameLo": "Emkoo",
+      "searchNames": [
+        "emkoo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "empow",
+      "modelName": "Empow",
+      "modelNameTh": "Empow",
+      "modelNameLo": "Empow",
+      "searchNames": [
+        "empow"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "empow-r",
+      "modelName": "Empow R",
+      "modelNameTh": "Empow R",
+      "modelNameLo": "Empow R",
+      "searchNames": [
+        "empow r",
+        "empowr"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emzoom",
+      "modelName": "Emzoom",
+      "modelNameTh": "Emzoom",
+      "modelNameLo": "Emzoom",
+      "searchNames": [
+        "emzoom"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "es9",
+      "modelName": "ES9",
+      "modelNameTh": "ES9",
+      "modelNameLo": "ES9",
+      "searchNames": [
+        "es9"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ga3",
+      "modelName": "GA3",
+      "modelNameTh": "GA3",
+      "modelNameLo": "GA3",
+      "searchNames": [
+        "ga3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ga3s",
+      "modelName": "GA3S",
+      "modelNameTh": "GA3S",
+      "modelNameLo": "GA3S",
+      "searchNames": [
+        "ga3s"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ga4",
+      "modelName": "GA4",
+      "modelNameTh": "GA4",
+      "modelNameLo": "GA4",
+      "searchNames": [
+        "ga4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ga5",
+      "modelName": "GA5",
+      "modelNameTh": "GA5",
+      "modelNameLo": "GA5",
+      "searchNames": [
+        "ga5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ga6",
+      "modelName": "GA6",
+      "modelNameTh": "GA6",
+      "modelNameLo": "GA6",
+      "searchNames": [
+        "ga6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ga8",
+      "modelName": "GA8",
+      "modelNameTh": "GA8",
+      "modelNameLo": "GA8",
+      "searchNames": [
+        "ga8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ge3",
+      "modelName": "GE3",
+      "modelNameTh": "GE3",
+      "modelNameLo": "GE3",
+      "searchNames": [
+        "ge3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gn6",
+      "modelName": "GN6",
+      "modelNameTh": "GN6",
+      "modelNameLo": "GN6",
+      "searchNames": [
+        "gn6"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "gn8",
+      "modelName": "GN8",
+      "modelNameTh": "GN8",
+      "modelNameLo": "GN8",
+      "searchNames": [
+        "gn8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "gs3",
+      "modelName": "GS3",
+      "modelNameTh": "GS3",
+      "modelNameLo": "GS3",
+      "searchNames": [
+        "gs3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs3-emzoom",
+      "modelName": "GS3 Emzoom",
+      "modelNameTh": "GS3 Emzoom",
+      "modelNameLo": "GS3 Emzoom",
+      "searchNames": [
+        "gs3 emzoom",
+        "gs3emzoom"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs4",
+      "modelName": "GS4",
+      "modelNameTh": "GS4",
+      "modelNameLo": "GS4",
+      "searchNames": [
+        "gs4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs4-coupe",
+      "modelName": "GS4 Coupe",
+      "modelNameTh": "GS4 Coupe",
+      "modelNameLo": "GS4 Coupe",
+      "searchNames": [
+        "gs4 coupe",
+        "gs4coupe"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gs4-max",
+      "modelName": "GS4 Max",
+      "modelNameTh": "GS4 Max",
+      "modelNameLo": "GS4 Max",
+      "searchNames": [
+        "gs4 max",
+        "gs4max"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs4-plus",
+      "modelName": "GS4 Plus",
+      "modelNameTh": "GS4 Plus",
+      "modelNameLo": "GS4 Plus",
+      "searchNames": [
+        "gs4 plus",
+        "gs4plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs5",
+      "modelName": "GS5",
+      "modelNameTh": "GS5",
+      "modelNameLo": "GS5",
+      "searchNames": [
+        "gs5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs5-super",
+      "modelName": "GS5 Super",
+      "modelNameTh": "GS5 Super",
+      "modelNameLo": "GS5 Super",
+      "searchNames": [
+        "gs5 super",
+        "gs5super"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs7",
+      "modelName": "GS7",
+      "modelNameTh": "GS7",
+      "modelNameLo": "GS7",
+      "searchNames": [
+        "gs7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs8",
+      "modelName": "GS8",
+      "modelNameTh": "GS8",
+      "modelNameLo": "GS8",
+      "searchNames": [
+        "gs8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs8-traveller",
+      "modelName": "GS8 Traveller",
+      "modelNameTh": "GS8 Traveller",
+      "modelNameLo": "GS8 Traveller",
+      "searchNames": [
+        "gs8 traveller",
+        "gs8traveller"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hyper-gt",
+      "modelName": "Hyper GT",
+      "modelNameTh": "Hyper GT",
+      "modelNameLo": "Hyper GT",
+      "searchNames": [
+        "hyper gt",
+        "hyptec gt",
+        "hypergt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-hl",
+      "modelName": "Hyper HL",
+      "modelNameTh": "Hyper HL",
+      "modelNameLo": "Hyper HL",
+      "searchNames": [
+        "hyper hl",
+        "hyptec hl",
+        "hyperhl"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-ht",
+      "modelName": "Hyper HT",
+      "modelNameTh": "Hyper HT",
+      "modelNameLo": "Hyper HT",
+      "searchNames": [
+        "hyper ht",
+        "hyptec ht",
+        "hyperht"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-ssr",
+      "modelName": "Hyper SSR",
+      "modelNameTh": "Hyper SSR",
+      "modelNameLo": "Hyper SSR",
+      "searchNames": [
+        "hyper ssr",
+        "hyptec ssr",
+        "hyperssr"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m6",
+      "modelName": "M6",
+      "modelNameTh": "M6",
+      "modelNameLo": "M6",
+      "searchNames": [
+        "m6"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m6-pro",
+      "modelName": "M6 Pro",
+      "modelNameTh": "M6 Pro",
+      "modelNameLo": "M6 Pro",
+      "searchNames": [
+        "m6 pro",
+        "m6pro"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m7",
+      "modelName": "M7",
+      "modelNameTh": "M7",
+      "modelNameLo": "M7",
+      "searchNames": [
+        "m7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m8",
+      "modelName": "M8",
+      "modelNameTh": "M8",
+      "modelNameLo": "M8",
+      "searchNames": [
+        "m8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m8-phev",
+      "modelName": "M8 PHEV",
+      "modelNameTh": "M8 PHEV",
+      "modelNameLo": "M8 PHEV",
+      "searchNames": [
+        "m8 phev",
+        "m8phev"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "s7",
+      "modelName": "S7",
+      "modelNameTh": "S7",
+      "modelNameLo": "S7",
+      "searchNames": [
+        "s7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s9",
+      "modelName": "S9",
+      "modelNameTh": "S9",
+      "modelNameLo": "S9",
+      "searchNames": [
+        "s9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trumpchi-2u",
+      "modelName": "Trumpchi 2U",
+      "modelNameTh": "Trumpchi 2U",
+      "modelNameLo": "Trumpchi 2U",
+      "searchNames": [
+        "trumpchi 2u",
+        "trumpchi2u",
+        "2u"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "trumpchi-ga3",
+      "modelName": "Trumpchi GA3",
+      "modelNameTh": "Trumpchi GA3",
+      "modelNameLo": "Trumpchi GA3",
+      "searchNames": [
+        "trumpchi ga3",
+        "trumpchiga3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "trumpchi-ga4",
+      "modelName": "Trumpchi GA4",
+      "modelNameTh": "Trumpchi GA4",
+      "modelNameLo": "Trumpchi GA4",
+      "searchNames": [
+        "trumpchi ga4",
+        "trumpchiga4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "trumpchi-ga5",
+      "modelName": "Trumpchi GA5",
+      "modelNameTh": "Trumpchi GA5",
+      "modelNameLo": "Trumpchi GA5",
+      "searchNames": [
+        "trumpchi ga5",
+        "trumpchiga5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "trumpchi-gs3",
+      "modelName": "Trumpchi GS3",
+      "modelNameTh": "Trumpchi GS3",
+      "modelNameLo": "Trumpchi GS3",
+      "searchNames": [
+        "trumpchi gs3",
+        "trumpchigs3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trumpchi-gs4",
+      "modelName": "Trumpchi GS4",
+      "modelNameTh": "Trumpchi GS4",
+      "modelNameLo": "Trumpchi GS4",
+      "searchNames": [
+        "trumpchi gs4",
+        "trumpchigs4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trumpchi-gs5",
+      "modelName": "Trumpchi GS5",
+      "modelNameTh": "Trumpchi GS5",
+      "modelNameLo": "Trumpchi GS5",
+      "searchNames": [
+        "trumpchi gs5",
+        "trumpchigs5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trumpchi-gs8",
+      "modelName": "Trumpchi GS8",
+      "modelNameTh": "Trumpchi GS8",
+      "modelNameLo": "Trumpchi GS8",
+      "searchNames": [
+        "trumpchi gs8",
+        "trumpchigs8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

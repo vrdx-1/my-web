@@ -1,0 +1,721 @@
+{
+  "brandId": "wuling",
+  "brandName": "Wuling",
+  "brandNameTh": "หวู่หลิง",
+  "brandNameLo": "ວູລິງ",
+  "models": [
+    {
+      "modelId": "air-ev",
+      "modelName": "Air EV",
+      "modelNameTh": "Air EV",
+      "modelNameLo": "Air EV",
+      "searchNames": [
+        "air ev",
+        "airev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "almaz",
+      "modelName": "Almaz",
+      "modelNameTh": "Almaz",
+      "modelNameLo": "Almaz",
+      "searchNames": [
+        "almaz"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "almaz-rs",
+      "modelName": "Almaz RS",
+      "modelNameTh": "Almaz RS",
+      "modelNameLo": "Almaz RS",
+      "searchNames": [
+        "almaz rs",
+        "almazrs"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "alvez",
+      "modelName": "Alvez",
+      "modelNameTh": "Alvez",
+      "modelNameLo": "Alvez",
+      "searchNames": [
+        "alvez"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "asta",
+      "modelName": "Asta",
+      "modelNameTh": "Asta",
+      "modelNameLo": "Asta",
+      "searchNames": [
+        "asta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "binguo-ev",
+      "modelName": "Binguo EV",
+      "modelNameTh": "Binguo EV",
+      "modelNameLo": "Binguo EV",
+      "searchNames": [
+        "binguo ev",
+        "binguoev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "binguo-plus",
+      "modelName": "Binguo Plus",
+      "modelNameTh": "Binguo Plus",
+      "modelNameLo": "Binguo Plus",
+      "searchNames": [
+        "binguo plus",
+        "binguoplus"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "binguo-s",
+      "modelName": "Binguo S",
+      "modelNameTh": "Binguo S",
+      "modelNameLo": "Binguo S",
+      "searchNames": [
+        "binguo s",
+        "binguos"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cloud-ev",
+      "modelName": "Cloud EV",
+      "modelNameTh": "Cloud EV",
+      "modelNameLo": "Cloud EV",
+      "searchNames": [
+        "cloud ev",
+        "cloudev"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "confero",
+      "modelName": "Confero",
+      "modelNameTh": "Confero",
+      "modelNameLo": "Confero",
+      "searchNames": [
+        "confero"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "confero-s",
+      "modelName": "Confero S",
+      "modelNameTh": "Confero S",
+      "modelNameLo": "Confero S",
+      "searchNames": [
+        "confero s",
+        "conferos"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cortez",
+      "modelName": "Cortez",
+      "modelNameTh": "Cortez",
+      "modelNameLo": "Cortez",
+      "searchNames": [
+        "cortez"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cortez-s",
+      "modelName": "Cortez S",
+      "modelNameTh": "Cortez S",
+      "modelNameLo": "Cortez S",
+      "searchNames": [
+        "cortez s",
+        "cortezs"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "darion",
+      "modelName": "Darion",
+      "modelNameTh": "Darion",
+      "modelNameLo": "Darion",
+      "searchNames": [
+        "darion"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "dragon",
+      "modelName": "Dragon",
+      "modelNameTh": "Dragon",
+      "modelNameLo": "Dragon",
+      "searchNames": [
+        "dragon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "e10",
+      "modelName": "E10",
+      "modelNameTh": "E10",
+      "modelNameLo": "E10",
+      "searchNames": [
+        "e10"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev50",
+      "modelName": "EV50",
+      "modelNameTh": "EV50",
+      "modelNameLo": "EV50",
+      "searchNames": [
+        "ev50"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev80",
+      "modelName": "EV80",
+      "modelNameTh": "EV80",
+      "modelNameLo": "EV80",
+      "searchNames": [
+        "ev80"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "formo",
+      "modelName": "Formo",
+      "modelNameTh": "Formo",
+      "modelNameLo": "Formo",
+      "searchNames": [
+        "formo"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "formo-max",
+      "modelName": "Formo Max",
+      "modelNameTh": "Formo Max",
+      "modelNameLo": "Formo Max",
+      "searchNames": [
+        "formo max",
+        "formomax"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "formo-s",
+      "modelName": "Formo S",
+      "modelNameTh": "Formo S",
+      "modelNameLo": "Formo S",
+      "searchNames": [
+        "formo s",
+        "formos"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongguang",
+      "modelName": "Hongguang",
+      "modelNameTh": "Hongguang",
+      "modelNameLo": "Hongguang",
+      "searchNames": [
+        "hongguang"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongguang-mini-ev",
+      "modelName": "Hongguang Mini EV",
+      "modelNameTh": "Hongguang Mini EV",
+      "modelNameLo": "Hongguang Mini EV",
+      "searchNames": [
+        "hongguang mini ev",
+        "hongguangminiev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hongguang-plus",
+      "modelName": "Hongguang Plus",
+      "modelNameTh": "Hongguang Plus",
+      "modelNameLo": "Hongguang Plus",
+      "searchNames": [
+        "hongguang plus",
+        "hongguangplus"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongguang-s",
+      "modelName": "Hongguang S",
+      "modelNameTh": "Hongguang S",
+      "modelNameLo": "Hongguang S",
+      "searchNames": [
+        "hongguang s",
+        "hongguangs"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongguang-s1",
+      "modelName": "Hongguang S1",
+      "modelNameTh": "Hongguang S1",
+      "modelNameLo": "Hongguang S1",
+      "searchNames": [
+        "hongguang s1",
+        "hongguangs1"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongguang-s3",
+      "modelName": "Hongguang S3",
+      "modelNameTh": "Hongguang S3",
+      "modelNameLo": "Hongguang S3",
+      "searchNames": [
+        "hongguang s3",
+        "hongguangs3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hongguang-v",
+      "modelName": "Hongguang V",
+      "modelNameTh": "Hongguang V",
+      "modelNameLo": "Hongguang V",
+      "searchNames": [
+        "hongguang v",
+        "hongguangv"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hongtu",
+      "modelName": "Hongtu",
+      "modelNameTh": "Hongtu",
+      "modelNameLo": "Hongtu",
+      "searchNames": [
+        "hongtu"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "jiachen",
+      "modelName": "Jiachen",
+      "modelNameTh": "Jiachen",
+      "modelNameLo": "Jiachen",
+      "searchNames": [
+        "jiachen"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "journey",
+      "modelName": "Journey",
+      "modelNameTh": "Journey",
+      "modelNameLo": "Journey",
+      "searchNames": [
+        "journey"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "lzw7100",
+      "modelName": "LZW7100",
+      "modelNameTh": "LZW7100",
+      "modelNameLo": "LZW7100",
+      "searchNames": [
+        "lzw7100"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mini-ev-macaron",
+      "modelName": "Mini EV Macaron",
+      "modelNameTh": "Mini EV Macaron",
+      "modelNameLo": "Mini EV Macaron",
+      "searchNames": [
+        "mini ev macaron",
+        "minievmacaron"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mini-ev-gameboy",
+      "modelName": "Mini EV GameBoy",
+      "modelNameTh": "Mini EV GameBoy",
+      "modelNameLo": "Mini EV GameBoy",
+      "searchNames": [
+        "mini ev gameboy",
+        "minievgameboy"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mitra-ev",
+      "modelName": "Mitra EV",
+      "modelNameTh": "Mitra EV",
+      "modelNameLo": "Mitra EV",
+      "searchNames": [
+        "mitra ev",
+        "mitraev"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nano-ev",
+      "modelName": "Nano EV",
+      "modelNameTh": "Nano EV",
+      "modelNameLo": "Nano EV",
+      "searchNames": [
+        "nano ev",
+        "nanoev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nebula",
+      "modelName": "Nebula",
+      "modelNameTh": "Nebula",
+      "modelNameLo": "Nebula",
+      "searchNames": [
+        "nebula"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "porta-ev",
+      "modelName": "Porta EV",
+      "modelNameTh": "Porta EV",
+      "modelNameLo": "Porta EV",
+      "searchNames": [
+        "porta ev",
+        "portaev"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "rongguang",
+      "modelName": "Rongguang",
+      "modelNameTh": "Rongguang",
+      "modelNameLo": "Rongguang",
+      "searchNames": [
+        "rongguang"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "rongguang-s",
+      "modelName": "Rongguang S",
+      "modelNameTh": "Rongguang S",
+      "modelNameLo": "Rongguang S",
+      "searchNames": [
+        "rongguang s",
+        "rongguangs"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "rongguang-v",
+      "modelName": "Rongguang V",
+      "modelNameTh": "Rongguang V",
+      "modelNameLo": "Rongguang V",
+      "searchNames": [
+        "rongguang v",
+        "rongguangv"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "starlight",
+      "modelName": "Starlight",
+      "modelNameTh": "Starlight",
+      "modelNameLo": "Starlight",
+      "searchNames": [
+        "starlight"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "starlight-s",
+      "modelName": "Starlight S",
+      "modelNameTh": "Starlight S",
+      "modelNameLo": "Starlight S",
+      "searchNames": [
+        "starlight s",
+        "starlights"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sunshine",
+      "modelName": "Sunshine",
+      "modelNameTh": "Sunshine",
+      "modelNameLo": "Sunshine",
+      "searchNames": [
+        "sunshine"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sunshine-s",
+      "modelName": "Sunshine S",
+      "modelNameTh": "Sunshine S",
+      "modelNameLo": "Sunshine S",
+      "searchNames": [
+        "sunshine s",
+        "sunshines"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sunshine-v",
+      "modelName": "Sunshine V",
+      "modelNameTh": "Sunshine V",
+      "modelNameLo": "Sunshine V",
+      "searchNames": [
+        "sunshine v",
+        "sunshinev"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "victory",
+      "modelName": "Victory",
+      "modelNameTh": "Victory",
+      "modelNameLo": "Victory",
+      "searchNames": [
+        "victory"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "visa",
+      "modelName": "Visa",
+      "modelNameTh": "Visa",
+      "modelNameLo": "Visa",
+      "searchNames": [
+        "visa"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "xingchi",
+      "modelName": "Xingchi",
+      "modelNameTh": "Xingchi",
+      "modelNameLo": "Xingchi",
+      "searchNames": [
+        "xingchi"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingchen",
+      "modelName": "Xingchen",
+      "modelNameTh": "Xingchen",
+      "modelNameLo": "Xingchen",
+      "searchNames": [
+        "xingchen"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingwang",
+      "modelName": "Xingwang",
+      "modelNameTh": "Xingwang",
+      "modelNameLo": "Xingwang",
+      "searchNames": [
+        "xingwang"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "xingyun",
+      "modelName": "Xingyun",
+      "modelNameTh": "Xingyun",
+      "modelNameLo": "Xingyun",
+      "searchNames": [
+        "xingyun"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "yangguang",
+      "modelName": "Yangguang",
+      "modelNameTh": "Yangguang",
+      "modelNameLo": "Yangguang",
+      "searchNames": [
+        "yangguang"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "zhengcheng",
+      "modelName": "Zhengcheng",
+      "modelNameTh": "Zhengcheng",
+      "modelNameLo": "Zhengcheng",
+      "searchNames": [
+        "zhengcheng"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "zhengtu",
+      "modelName": "Zhengtu",
+      "modelNameTh": "Zhengtu",
+      "modelNameLo": "Zhengtu",
+      "searchNames": [
+        "zhengtu"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "zhiguang",
+      "modelName": "Zhiguang",
+      "modelNameTh": "Zhiguang",
+      "modelNameLo": "Zhiguang",
+      "searchNames": [
+        "zhiguang"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    }
+  ]
+}

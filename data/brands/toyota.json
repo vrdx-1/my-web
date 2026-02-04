@@ -1,0 +1,1191 @@
+{
+  "brandId": "toyota",
+  "brandName": "Toyota",
+  "brandNameTh": "โตโยต้า",
+  "brandNameLo": "ໂຕໂຍຕ້າ",
+  "models": [
+    {
+      "modelId": "vios",
+      "modelName": "Vios",
+      "modelNameTh": "วีออส",
+      "modelNameLo": "ວີອອສ",
+      "searchNames": [
+        "vios",
+        "วีออส",
+        "ວີອອສ",
+        "belta",
+        "echo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corolla",
+      "modelName": "Corolla",
+      "modelNameTh": "โคโรลล่า",
+      "modelNameLo": "ໂຄໂຣລ່າ",
+      "searchNames": [
+        "corolla",
+        "โคโรลล่า",
+        "ໂຄໂຣລ່າ"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corolla-altis",
+      "modelName": "Corolla Altis",
+      "modelNameTh": "โคโรลล่า อัลติส",
+      "modelNameLo": "ໂຄໂຣລ່າ ອັນຕິດ",
+      "searchNames": [
+        "altis",
+        "corolla altis",
+        "อัลติส",
+        "ອັນຕິດ"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "camry",
+      "modelName": "Camry",
+      "modelNameTh": "คัมรี่",
+      "modelNameLo": "ແຄມຣີ້",
+      "searchNames": [
+        "camry",
+        "คัมรี่",
+        "ແຄມຣີ້"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "fortuner",
+      "modelName": "Fortuner",
+      "modelNameTh": "ฟอร์จูนเนอร์",
+      "modelNameLo": "ຟໍຈູນເນີ້",
+      "searchNames": [
+        "fortuner",
+        "ฟอร์จูนเนอร์",
+        "ຟໍຈູນເນີ້",
+        "sw4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "land-cruiser",
+      "modelName": "Land Cruiser",
+      "modelNameTh": "แลนด์ครูเซอร์",
+      "modelNameLo": "ແລນກູເຊີ",
+      "searchNames": [
+        "land cruiser",
+        "landcruiser",
+        "แลนด์ครูเซอร์",
+        "lc40",
+        "lc60",
+        "lc70",
+        "lc80",
+        "lc100",
+        "lc200",
+        "lc300"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "land-cruiser-prado",
+      "modelName": "Land Cruiser Prado",
+      "modelNameTh": "แลนด์ครูเซอร์ พราโด้",
+      "modelNameLo": "ແລນກູເຊີ ປຣາໂດ້",
+      "searchNames": [
+        "prado",
+        "land cruiser prado",
+        "พราโด้",
+        "land cruiser 250"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hilux-vigo",
+      "modelName": "Hilux Vigo",
+      "modelNameTh": "ไฮลักซ์ วีโก้",
+      "modelNameLo": "ໄຮລັກ ວີໂກ້",
+      "searchNames": [
+        "hilux vigo",
+        "vigo",
+        "วีโก้",
+        "ວີໂກ້",
+        "hilux",
+        "ไฮลักซ์",
+        "ໄຮລັກ"
+      ],
+      "categoryIds": [
+        "pickup",
+        "hilux"
+      ]
+    },
+    {
+      "modelId": "hilux-revo",
+      "modelName": "Hilux Revo",
+      "modelNameTh": "ไฮลักซ์ รีโว่",
+      "modelNameLo": "ໄຮລັກ ລີໂວ້",
+      "searchNames": [
+        "hilux revo",
+        "revo",
+        "รีโว่",
+        "ລີໂວ້",
+        "hilux",
+        "ไฮลักซ์",
+        "ໄຮລັກ"
+      ],
+      "categoryIds": [
+        "pickup",
+        "hilux"
+      ]
+    },
+    {
+      "modelId": "hilux-champ",
+      "modelName": "Hilux Champ",
+      "modelNameTh": "ไฮลักซ์ แชมป์",
+      "modelNameLo": "ໄຮລັກ ແຊັ້ມ",
+      "searchNames": [
+        "hilux champ",
+        "champ",
+        "แชมป์",
+        "ແຊັ້ມ"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "alphard",
+      "modelName": "Alphard",
+      "modelNameTh": "อัลพาร์ด",
+      "modelNameLo": "ອາວພາດ",
+      "searchNames": [
+        "alphard",
+        "อัลพาร์ด",
+        "ອາວພາດ"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "yaris",
+      "modelName": "Yaris",
+      "modelNameTh": "Yaris",
+      "modelNameLo": "Yaris",
+      "searchNames": [
+        "yaris",
+        "vitz",
+        "platz"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "yaris-ativ",
+      "modelName": "Yaris ATIV",
+      "modelNameTh": "Yaris ATIV",
+      "modelNameLo": "Yaris ATIV",
+      "searchNames": [
+        "yaris ativ",
+        "ativ"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corolla-levin",
+      "modelName": "Corolla Levin",
+      "modelNameTh": "Corolla Levin",
+      "modelNameLo": "Corolla Levin",
+      "searchNames": [
+        "corolla levin",
+        "levin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sprinter-trueno",
+      "modelName": "Sprinter Trueno",
+      "modelNameTh": "Sprinter Trueno",
+      "modelNameLo": "Sprinter Trueno",
+      "searchNames": [
+        "sprinter trueno",
+        "trueno",
+        "ae86"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "corolla-axio",
+      "modelName": "Corolla Axio",
+      "modelNameTh": "Corolla Axio",
+      "modelNameLo": "Corolla Axio",
+      "searchNames": [
+        "corolla axio",
+        "axio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "camry-solara",
+      "modelName": "Camry Solara",
+      "modelNameTh": "Camry Solara",
+      "modelNameLo": "Camry Solara",
+      "searchNames": [
+        "camry solara",
+        "solara"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "aurion",
+      "modelName": "Aurion",
+      "modelNameTh": "Aurion",
+      "modelNameLo": "Aurion",
+      "searchNames": [
+        "aurion"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "crown",
+      "modelName": "Crown",
+      "modelNameTh": "Crown",
+      "modelNameLo": "Crown",
+      "searchNames": [
+        "crown"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "crown-majesta",
+      "modelName": "Crown Majesta",
+      "modelNameTh": "Crown Majesta",
+      "modelNameLo": "Crown Majesta",
+      "searchNames": [
+        "crown majesta",
+        "majesta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "crown-crossover",
+      "modelName": "Crown Crossover",
+      "modelNameTh": "Crown Crossover",
+      "modelNameLo": "Crown Crossover",
+      "searchNames": [
+        "crown crossover"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "crown-sport",
+      "modelName": "Crown Sport",
+      "modelNameTh": "Crown Sport",
+      "modelNameLo": "Crown Sport",
+      "searchNames": [
+        "crown sport"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "crown-sedan",
+      "modelName": "Crown Sedan",
+      "modelNameTh": "Crown Sedan",
+      "modelNameLo": "Crown Sedan",
+      "searchNames": [
+        "crown sedan"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "century",
+      "modelName": "Century",
+      "modelNameTh": "Century",
+      "modelNameLo": "Century",
+      "searchNames": [
+        "century"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "prius",
+      "modelName": "Prius",
+      "modelNameTh": "Prius",
+      "modelNameLo": "Prius",
+      "searchNames": [
+        "prius"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "prius-c",
+      "modelName": "Prius c",
+      "modelNameTh": "Prius c",
+      "modelNameLo": "Prius c",
+      "searchNames": [
+        "prius c",
+        "aqua"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "prius-v",
+      "modelName": "Prius v",
+      "modelNameTh": "Prius v",
+      "modelNameLo": "Prius v",
+      "searchNames": [
+        "prius v",
+        "prius α",
+        "prius alpha"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "mirai",
+      "modelName": "Mirai",
+      "modelNameTh": "Mirai",
+      "modelNameLo": "Mirai",
+      "searchNames": [
+        "mirai"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avalon",
+      "modelName": "Avalon",
+      "modelNameTh": "Avalon",
+      "modelNameLo": "Avalon",
+      "searchNames": [
+        "avalon"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "allion",
+      "modelName": "Allion",
+      "modelNameTh": "Allion",
+      "modelNameLo": "Allion",
+      "searchNames": [
+        "allion"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "premio",
+      "modelName": "Premio",
+      "modelNameTh": "Premio",
+      "modelNameLo": "Premio",
+      "searchNames": [
+        "premio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-x",
+      "modelName": "Mark X",
+      "modelNameTh": "Mark X",
+      "modelNameLo": "Mark X",
+      "searchNames": [
+        "mark x",
+        "markx"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-ii",
+      "modelName": "Mark II",
+      "modelNameTh": "Mark II",
+      "modelNameLo": "Mark II",
+      "searchNames": [
+        "mark ii",
+        "mark 2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "chaser",
+      "modelName": "Chaser",
+      "modelNameTh": "Chaser",
+      "modelNameLo": "Chaser",
+      "searchNames": [
+        "chaser"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cresta",
+      "modelName": "Cresta",
+      "modelNameTh": "Cresta",
+      "modelNameLo": "Cresta",
+      "searchNames": [
+        "cresta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cressida",
+      "modelName": "Cressida",
+      "modelNameTh": "Cressida",
+      "modelNameLo": "Cressida",
+      "searchNames": [
+        "cressida"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corona",
+      "modelName": "Corona",
+      "modelNameTh": "Corona",
+      "modelNameLo": "Corona",
+      "searchNames": [
+        "corona"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "carina",
+      "modelName": "Carina",
+      "modelNameTh": "Carina",
+      "modelNameLo": "Carina",
+      "searchNames": [
+        "carina"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "celica-sedan",
+      "modelName": "Celica",
+      "modelNameTh": "Celica",
+      "modelNameLo": "Celica",
+      "searchNames": [
+        "celica sedan",
+        "celica"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "etios",
+      "modelName": "Etios",
+      "modelNameTh": "Etios",
+      "modelNameLo": "Etios",
+      "searchNames": [
+        "etios"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "agya",
+      "modelName": "Agya",
+      "modelNameTh": "Agya",
+      "modelNameLo": "Agya",
+      "searchNames": [
+        "agya"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "wigo",
+      "modelName": "Wigo",
+      "modelNameTh": "Wigo",
+      "modelNameLo": "Wigo",
+      "searchNames": [
+        "wigo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aygo",
+      "modelName": "Aygo",
+      "modelNameTh": "Aygo",
+      "modelNameLo": "Aygo",
+      "searchNames": [
+        "aygo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aygo-x",
+      "modelName": "Aygo X",
+      "modelNameTh": "Aygo X",
+      "modelNameLo": "Aygo X",
+      "searchNames": [
+        "aygo x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "passo",
+      "modelName": "Passo",
+      "modelNameTh": "Passo",
+      "modelNameLo": "Passo",
+      "searchNames": [
+        "passo",
+        "duet"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "bz3",
+      "modelName": "bZ3",
+      "modelNameTh": "bZ3",
+      "modelNameLo": "bZ3",
+      "searchNames": [
+        "bz3",
+        "bZ3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "corolla-cross",
+      "modelName": "Corolla Cross",
+      "modelNameTh": "Corolla Cross",
+      "modelNameLo": "Corolla Cross",
+      "searchNames": [
+        "corolla cross",
+        "corolla-cross"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "yaris-cross",
+      "modelName": "Yaris Cross",
+      "modelNameTh": "Yaris Cross",
+      "modelNameLo": "Yaris Cross",
+      "searchNames": [
+        "yaris cross"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "rav4",
+      "modelName": "RAV4",
+      "modelNameTh": "RAV4",
+      "modelNameLo": "RAV4",
+      "searchNames": [
+        "rav4",
+        "rav-4",
+        "rav 4",
+        "vanguard",
+        "wildlander"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "harrier",
+      "modelName": "Harrier",
+      "modelNameTh": "Harrier",
+      "modelNameLo": "Harrier",
+      "searchNames": [
+        "harrier",
+        "venza"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "c-hr",
+      "modelName": "C-HR",
+      "modelNameTh": "C-HR",
+      "modelNameLo": "C-HR",
+      "searchNames": [
+        "c-hr",
+        "chr",
+        "c hr",
+        "izoa"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "bz4x",
+      "modelName": "bZ4X",
+      "modelNameTh": "bZ4X",
+      "modelNameLo": "bZ4X",
+      "searchNames": [
+        "bz4x",
+        "bZ4X",
+        "bZ3X"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "highlander",
+      "modelName": "Highlander",
+      "modelNameTh": "Highlander",
+      "modelNameLo": "Highlander",
+      "searchNames": [
+        "highlander",
+        "kluger",
+        "grand highlander"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sequoia",
+      "modelName": "Sequoia",
+      "modelNameTh": "Sequoia",
+      "modelNameLo": "Sequoia",
+      "searchNames": [
+        "sequoia"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "4runner",
+      "modelName": "4Runner",
+      "modelNameTh": "4Runner",
+      "modelNameLo": "4Runner",
+      "searchNames": [
+        "4runner",
+        "4 runner",
+        "hilux surf"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fj-cruiser",
+      "modelName": "FJ Cruiser",
+      "modelNameTh": "FJ Cruiser",
+      "modelNameLo": "FJ Cruiser",
+      "searchNames": [
+        "fj cruiser",
+        "fj"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "raize",
+      "modelName": "Raize",
+      "modelNameTh": "Raize",
+      "modelNameLo": "Raize",
+      "searchNames": [
+        "raize",
+        "rocky"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rush",
+      "modelName": "Rush",
+      "modelNameTh": "Rush",
+      "modelNameLo": "Rush",
+      "searchNames": [
+        "rush",
+        "terios"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "century-suv",
+      "modelName": "Century SUV",
+      "modelNameTh": "Century SUV",
+      "modelNameLo": "Century SUV",
+      "searchNames": [
+        "century suv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "crown-signia",
+      "modelName": "Crown Signia",
+      "modelNameTh": "Crown Signia",
+      "modelNameLo": "Crown Signia",
+      "searchNames": [
+        "crown signia"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "crown-estate",
+      "modelName": "Crown Estate",
+      "modelNameTh": "Crown Estate",
+      "modelNameLo": "Crown Estate",
+      "searchNames": [
+        "crown estate"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "tacoma",
+      "modelName": "Tacoma",
+      "modelNameTh": "Tacoma",
+      "modelNameLo": "Tacoma",
+      "searchNames": [
+        "tacoma"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tundra",
+      "modelName": "Tundra",
+      "modelNameTh": "Tundra",
+      "modelNameLo": "Tundra",
+      "searchNames": [
+        "tundra"
+      ],
+      "categoryIds": [
+        "pickup",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "t100",
+      "modelName": "T100",
+      "modelNameTh": "T100",
+      "modelNameLo": "T100",
+      "searchNames": [
+        "t100",
+        "t 100"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "stout",
+      "modelName": "Stout",
+      "modelNameTh": "Stout",
+      "modelNameLo": "Stout",
+      "searchNames": [
+        "stout"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "vellfire",
+      "modelName": "Vellfire",
+      "modelNameTh": "Vellfire",
+      "modelNameLo": "Vellfire",
+      "searchNames": [
+        "vellfire"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "hiace",
+      "modelName": "Hiace",
+      "modelNameTh": "Hiace",
+      "modelNameLo": "Hiace",
+      "searchNames": [
+        "hiace",
+        "majesty",
+        "granvia",
+        "commuter",
+        "quantum"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "innova",
+      "modelName": "Innova",
+      "modelNameTh": "Innova",
+      "modelNameLo": "Innova",
+      "searchNames": [
+        "innova",
+        "zenix",
+        "crysta"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "avanza",
+      "modelName": "Avanza",
+      "modelNameTh": "Avanza",
+      "modelNameLo": "Avanza",
+      "searchNames": [
+        "avanza",
+        "veloz"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sienta",
+      "modelName": "Sienta",
+      "modelNameTh": "Sienta",
+      "modelNameLo": "Sienta",
+      "searchNames": [
+        "sienta"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "voxy",
+      "modelName": "Voxy",
+      "modelNameTh": "Voxy",
+      "modelNameLo": "Voxy",
+      "searchNames": [
+        "voxy",
+        "noah",
+        "esquire"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sienna",
+      "modelName": "Sienna",
+      "modelNameTh": "Sienna",
+      "modelNameLo": "Sienna",
+      "searchNames": [
+        "sienna"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "previa",
+      "modelName": "Previa",
+      "modelNameTh": "Previa",
+      "modelNameLo": "Previa",
+      "searchNames": [
+        "previa",
+        "estima",
+        "tarago"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "wish",
+      "modelName": "Wish",
+      "modelNameTh": "Wish",
+      "modelNameLo": "Wish",
+      "searchNames": [
+        "wish"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "ipsum",
+      "modelName": "Ipsum",
+      "modelNameTh": "Ipsum",
+      "modelNameLo": "Ipsum",
+      "searchNames": [
+        "ipsum",
+        "picnic",
+        "avensis verso"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "calya",
+      "modelName": "Calya",
+      "modelNameTh": "Calya",
+      "modelNameLo": "Calya",
+      "searchNames": [
+        "calya"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "roomy",
+      "modelName": "Roomy",
+      "modelNameTh": "Roomy",
+      "modelNameLo": "Roomy",
+      "searchNames": [
+        "roomy",
+        "tank"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "proace",
+      "modelName": "ProAce",
+      "modelNameTh": "ProAce",
+      "modelNameLo": "ProAce",
+      "searchNames": [
+        "proace",
+        "proace city"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "gr-supra",
+      "modelName": "GR Supra",
+      "modelNameTh": "GR Supra",
+      "modelNameLo": "GR Supra",
+      "searchNames": [
+        "gr supra",
+        "supra",
+        "celica supra"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gr86",
+      "modelName": "GR 86",
+      "modelNameTh": "GR 86",
+      "modelNameLo": "GR 86",
+      "searchNames": [
+        "gr 86",
+        "gr86",
+        "gt86",
+        "ft-86",
+        "ft86",
+        "86"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gr-yaris",
+      "modelName": "GR Yaris",
+      "modelNameTh": "GR Yaris",
+      "modelNameLo": "GR Yaris",
+      "searchNames": [
+        "gr yaris"
+      ],
+      "categoryIds": [
+        "sport",
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gr-corolla",
+      "modelName": "GR Corolla",
+      "modelNameTh": "GR Corolla",
+      "modelNameLo": "GR Corolla",
+      "searchNames": [
+        "gr corolla"
+      ],
+      "categoryIds": [
+        "sport",
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "celica",
+      "modelName": "Celica",
+      "modelNameTh": "Celica",
+      "modelNameLo": "Celica",
+      "searchNames": [
+        "celica"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mr2",
+      "modelName": "MR2",
+      "modelNameTh": "MR2",
+      "modelNameLo": "MR2",
+      "searchNames": [
+        "mr2",
+        "mr-s",
+        "mrs",
+        "mr 2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "2000gt",
+      "modelName": "2000GT",
+      "modelNameTh": "2000GT",
+      "modelNameLo": "2000GT",
+      "searchNames": [
+        "2000gt",
+        "2000 gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sports-800",
+      "modelName": "Sports 800",
+      "modelNameTh": "Sports 800",
+      "modelNameLo": "Sports 800",
+      "searchNames": [
+        "sports 800",
+        "sport 800"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "soarer",
+      "modelName": "Soarer",
+      "modelNameTh": "Soarer",
+      "modelNameLo": "Soarer",
+      "searchNames": [
+        "soarer"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    }
+  ]
+}

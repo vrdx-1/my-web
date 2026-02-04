@@ -1,0 +1,1015 @@
+{
+  "brandId": "volkswagen",
+  "brandName": "Volkswagen",
+  "brandNameTh": "โฟล์คสวาเกน",
+  "brandNameLo": "ໂຟກສະວາເກັນ",
+  "models": [
+    {
+      "modelId": "181-thing",
+      "modelName": "181 (Thing)",
+      "modelNameTh": "181 (Thing)",
+      "modelNameLo": "181 (Thing)",
+      "searchNames": [
+        "181",
+        "thing",
+        "181 thing"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "amarok",
+      "modelName": "Amarok",
+      "modelNameTh": "Amarok",
+      "modelNameLo": "Amarok",
+      "searchNames": [
+        "amarok"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "ameo",
+      "modelName": "Ameo",
+      "modelNameTh": "Ameo",
+      "modelNameLo": "Ameo",
+      "searchNames": [
+        "ameo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arteon",
+      "modelName": "Arteon",
+      "modelNameTh": "Arteon",
+      "modelNameLo": "Arteon",
+      "searchNames": [
+        "arteon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arteon-shooting-brake",
+      "modelName": "Arteon Shooting Brake",
+      "modelNameTh": "Arteon Shooting Brake",
+      "modelNameLo": "Arteon Shooting Brake",
+      "searchNames": [
+        "arteon shooting brake",
+        "arteon wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "atlas",
+      "modelName": "Atlas",
+      "modelNameTh": "Atlas",
+      "modelNameLo": "Atlas",
+      "searchNames": [
+        "atlas"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "atlas-cross-sport",
+      "modelName": "Atlas Cross Sport",
+      "modelNameTh": "Atlas Cross Sport",
+      "modelNameLo": "Atlas Cross Sport",
+      "searchNames": [
+        "atlas cross sport",
+        "atlas cross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "beetle",
+      "modelName": "Beetle",
+      "modelNameTh": "Beetle",
+      "modelNameLo": "Beetle",
+      "searchNames": [
+        "beetle",
+        "bug"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "beetle-cabriolet",
+      "modelName": "Beetle Cabriolet",
+      "modelNameTh": "Beetle Cabriolet",
+      "modelNameLo": "Beetle Cabriolet",
+      "searchNames": [
+        "beetle cabriolet",
+        "beetle cabrio"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "bora",
+      "modelName": "Bora",
+      "modelNameTh": "Bora",
+      "modelNameLo": "Bora",
+      "searchNames": [
+        "bora"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "caddy",
+      "modelName": "Caddy",
+      "modelNameTh": "Caddy",
+      "modelNameLo": "Caddy",
+      "searchNames": [
+        "caddy"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "california",
+      "modelName": "California",
+      "modelNameTh": "California",
+      "modelNameLo": "California",
+      "searchNames": [
+        "california"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "caravelle",
+      "modelName": "Caravelle",
+      "modelNameTh": "Caravelle",
+      "modelNameLo": "Caravelle",
+      "searchNames": [
+        "caravelle"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cc",
+      "modelName": "CC",
+      "modelNameTh": "CC",
+      "modelNameLo": "CC",
+      "searchNames": [
+        "cc",
+        "passat cc"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corrado",
+      "modelName": "Corrado",
+      "modelNameTh": "Corrado",
+      "modelNameLo": "Corrado",
+      "searchNames": [
+        "corrado"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "crafter",
+      "modelName": "Crafter",
+      "modelNameTh": "Crafter",
+      "modelNameLo": "Crafter",
+      "searchNames": [
+        "crafter"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "crossfox",
+      "modelName": "CrossFox",
+      "modelNameTh": "CrossFox",
+      "modelNameLo": "CrossFox",
+      "searchNames": [
+        "crossfox",
+        "cross fox"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "eos",
+      "modelName": "Eos",
+      "modelNameTh": "Eos",
+      "modelNameLo": "Eos",
+      "searchNames": [
+        "eos"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "e-golf",
+      "modelName": "e-Golf",
+      "modelNameTh": "e-Golf",
+      "modelNameLo": "e-Golf",
+      "searchNames": [
+        "e-golf",
+        "egolf",
+        "e golf"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-up",
+      "modelName": "e-up!",
+      "modelNameTh": "e-up!",
+      "modelNameLo": "e-up!",
+      "searchNames": [
+        "e-up",
+        "e up",
+        "eup"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fox",
+      "modelName": "Fox",
+      "modelNameTh": "Fox",
+      "modelNameLo": "Fox",
+      "searchNames": [
+        "fox"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fusca",
+      "modelName": "Fusca",
+      "modelNameTh": "Fusca",
+      "modelNameLo": "Fusca",
+      "searchNames": [
+        "fusca"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gol",
+      "modelName": "GOL",
+      "modelNameTh": "GOL",
+      "modelNameLo": "GOL",
+      "searchNames": [
+        "gol"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "golf",
+      "modelName": "Golf",
+      "modelNameTh": "Golf",
+      "modelNameLo": "Golf",
+      "searchNames": [
+        "golf"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "golf-gti",
+      "modelName": "Golf GTI",
+      "modelNameTh": "Golf GTI",
+      "modelNameLo": "Golf GTI",
+      "searchNames": [
+        "golf gti",
+        "gti"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "golf-r",
+      "modelName": "Golf R",
+      "modelNameTh": "Golf R",
+      "modelNameLo": "Golf R",
+      "searchNames": [
+        "golf r"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "golf-sportsvan",
+      "modelName": "Golf Sportsvan",
+      "modelNameTh": "Golf Sportsvan",
+      "modelNameLo": "Golf Sportsvan",
+      "searchNames": [
+        "golf sportsvan",
+        "golf sports van"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "golf-variant",
+      "modelName": "Golf Variant",
+      "modelNameTh": "Golf Variant",
+      "modelNameLo": "Golf Variant",
+      "searchNames": [
+        "golf variant",
+        "golf wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "id-buzz",
+      "modelName": "ID. Buzz",
+      "modelNameTh": "ID. Buzz",
+      "modelNameLo": "ID. Buzz",
+      "searchNames": [
+        "id buzz",
+        "id. buzz",
+        "idbuzz"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-1",
+      "modelName": "ID.1",
+      "modelNameTh": "ID.1",
+      "modelNameLo": "ID.1",
+      "searchNames": [
+        "id.1",
+        "id 1",
+        "id1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-2all",
+      "modelName": "ID.2all",
+      "modelNameTh": "ID.2all",
+      "modelNameLo": "ID.2all",
+      "searchNames": [
+        "id.2all",
+        "id 2all",
+        "id2all"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-3",
+      "modelName": "ID.3",
+      "modelNameTh": "ID.3",
+      "modelNameLo": "ID.3",
+      "searchNames": [
+        "id.3",
+        "id 3",
+        "id3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-4",
+      "modelName": "ID.4",
+      "modelNameTh": "ID.4",
+      "modelNameLo": "ID.4",
+      "searchNames": [
+        "id.4",
+        "id 4",
+        "id4"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-5",
+      "modelName": "ID.5",
+      "modelNameTh": "ID.5",
+      "modelNameLo": "ID.5",
+      "searchNames": [
+        "id.5",
+        "id 5",
+        "id5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-6",
+      "modelName": "ID.6",
+      "modelNameTh": "ID.6",
+      "modelNameLo": "ID.6",
+      "searchNames": [
+        "id.6",
+        "id 6",
+        "id6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-7",
+      "modelName": "ID.7",
+      "modelNameTh": "ID.7",
+      "modelNameLo": "ID.7",
+      "searchNames": [
+        "id.7",
+        "id 7",
+        "id7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-7-tourer",
+      "modelName": "ID.7 Tourer",
+      "modelNameTh": "ID.7 Tourer",
+      "modelNameLo": "ID.7 Tourer",
+      "searchNames": [
+        "id.7 tourer",
+        "id 7 tourer",
+        "id7 tourer"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "id-unyx",
+      "modelName": "ID. UNYX",
+      "modelNameTh": "ID. UNYX",
+      "modelNameLo": "ID. UNYX",
+      "searchNames": [
+        "id unyx",
+        "id. unyx",
+        "unyx"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "jetta",
+      "modelName": "Jetta",
+      "modelNameTh": "Jetta",
+      "modelNameLo": "Jetta",
+      "searchNames": [
+        "jetta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "jetta-gli",
+      "modelName": "Jetta GLI",
+      "modelNameTh": "Jetta GLI",
+      "modelNameLo": "Jetta GLI",
+      "searchNames": [
+        "jetta gli",
+        "gli"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "karmann-ghia",
+      "modelName": "Karmann Ghia",
+      "modelNameTh": "Karmann Ghia",
+      "modelNameLo": "Karmann Ghia",
+      "searchNames": [
+        "karmann ghia",
+        "karmann"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "lavida",
+      "modelName": "Lavida",
+      "modelNameTh": "Lavida",
+      "modelNameLo": "Lavida",
+      "searchNames": [
+        "lavida"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lupo",
+      "modelName": "Lupo",
+      "modelNameTh": "Lupo",
+      "modelNameLo": "Lupo",
+      "searchNames": [
+        "lupo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "magotan",
+      "modelName": "Magotan",
+      "modelNameTh": "Magotan",
+      "modelNameLo": "Magotan",
+      "searchNames": [
+        "magotan"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "multivan",
+      "modelName": "Multivan",
+      "modelNameTh": "Multivan",
+      "modelNameLo": "Multivan",
+      "searchNames": [
+        "multivan"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "passat",
+      "modelName": "Passat",
+      "modelNameTh": "Passat",
+      "modelNameLo": "Passat",
+      "searchNames": [
+        "passat"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "passat-alltrack",
+      "modelName": "Passat Alltrack",
+      "modelNameTh": "Passat Alltrack",
+      "modelNameLo": "Passat Alltrack",
+      "searchNames": [
+        "passat alltrack",
+        "passat all track"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "passat-variant",
+      "modelName": "Passat Variant",
+      "modelNameTh": "Passat Variant",
+      "modelNameLo": "Passat Variant",
+      "searchNames": [
+        "passat variant",
+        "passat wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "phaeton",
+      "modelName": "Phaeton",
+      "modelNameTh": "Phaeton",
+      "modelNameLo": "Phaeton",
+      "searchNames": [
+        "phaeton"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "pointer",
+      "modelName": "Pointer",
+      "modelNameTh": "Pointer",
+      "modelNameLo": "Pointer",
+      "searchNames": [
+        "pointer"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "polo",
+      "modelName": "Polo",
+      "modelNameTh": "Polo",
+      "modelNameLo": "Polo",
+      "searchNames": [
+        "polo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "polo-gti",
+      "modelName": "Polo GTI",
+      "modelNameTh": "Polo GTI",
+      "modelNameLo": "Polo GTI",
+      "searchNames": [
+        "polo gti"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "quantum",
+      "modelName": "Quantum",
+      "modelNameTh": "Quantum",
+      "modelNameLo": "Quantum",
+      "searchNames": [
+        "quantum"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "rabbit",
+      "modelName": "Rabbit",
+      "modelNameTh": "Rabbit",
+      "modelNameLo": "Rabbit",
+      "searchNames": [
+        "rabbit"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "routan",
+      "modelName": "Routan",
+      "modelNameTh": "Routan",
+      "modelNameLo": "Routan",
+      "searchNames": [
+        "routan"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sagitar",
+      "modelName": "Sagitar",
+      "modelNameTh": "Sagitar",
+      "modelNameLo": "Sagitar",
+      "searchNames": [
+        "sagitar"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "santana",
+      "modelName": "Santana",
+      "modelNameTh": "Santana",
+      "modelNameLo": "Santana",
+      "searchNames": [
+        "santana"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "scirocco",
+      "modelName": "Scirocco",
+      "modelNameTh": "Scirocco",
+      "modelNameLo": "Scirocco",
+      "searchNames": [
+        "scirocco"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sharan",
+      "modelName": "Sharan",
+      "modelNameTh": "Sharan",
+      "modelNameLo": "Sharan",
+      "searchNames": [
+        "sharan"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "t-cross",
+      "modelName": "T-Cross",
+      "modelNameTh": "T-Cross",
+      "modelNameLo": "T-Cross",
+      "searchNames": [
+        "t-cross",
+        "t cross",
+        "tcross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "t-roc",
+      "modelName": "T-Roc",
+      "modelNameTh": "T-Roc",
+      "modelNameLo": "T-Roc",
+      "searchNames": [
+        "t-roc",
+        "t roc",
+        "troc"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "taigo",
+      "modelName": "Taigo",
+      "modelNameTh": "Taigo",
+      "modelNameLo": "Taigo",
+      "searchNames": [
+        "taigo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "taos",
+      "modelName": "Taos",
+      "modelNameTh": "Taos",
+      "modelNameLo": "Taos",
+      "searchNames": [
+        "taos"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tayron",
+      "modelName": "Tayron",
+      "modelNameTh": "Tayron",
+      "modelNameLo": "Tayron",
+      "searchNames": [
+        "tayron"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tayron-x",
+      "modelName": "Tayron X",
+      "modelNameTh": "Tayron X",
+      "modelNameLo": "Tayron X",
+      "searchNames": [
+        "tayron x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "teramont",
+      "modelName": "Teramont",
+      "modelNameTh": "Teramont",
+      "modelNameLo": "Teramont",
+      "searchNames": [
+        "teramont"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "teramont-x",
+      "modelName": "Teramont X",
+      "modelNameTh": "Teramont X",
+      "modelNameLo": "Teramont X",
+      "searchNames": [
+        "teramont x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tharu",
+      "modelName": "Tharu",
+      "modelNameTh": "Tharu",
+      "modelNameLo": "Tharu",
+      "searchNames": [
+        "tharu"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiguan",
+      "modelName": "Tiguan",
+      "modelNameTh": "Tiguan",
+      "modelNameLo": "Tiguan",
+      "searchNames": [
+        "tiguan"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiguan-allspace",
+      "modelName": "Tiguan Allspace",
+      "modelNameTh": "Tiguan Allspace",
+      "modelNameLo": "Tiguan Allspace",
+      "searchNames": [
+        "tiguan allspace",
+        "tiguan all space"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiguan-l",
+      "modelName": "Tiguan L",
+      "modelNameTh": "Tiguan L",
+      "modelNameLo": "Tiguan L",
+      "searchNames": [
+        "tiguan l",
+        "tiguanl"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "touareg",
+      "modelName": "Touareg",
+      "modelNameTh": "Touareg",
+      "modelNameLo": "Touareg",
+      "searchNames": [
+        "touareg"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "touran",
+      "modelName": "Touran",
+      "modelNameTh": "Touran",
+      "modelNameLo": "Touran",
+      "searchNames": [
+        "touran"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "transporter",
+      "modelName": "Transporter (T1-T7)",
+      "modelNameTh": "Transporter (T1-T7)",
+      "modelNameLo": "Transporter (T1-T7)",
+      "searchNames": [
+        "transporter",
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "up",
+      "modelName": "up!",
+      "modelNameTh": "up!",
+      "modelNameLo": "up!",
+      "searchNames": [
+        "up",
+        "up!"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "vento",
+      "modelName": "Vento",
+      "modelNameTh": "Vento",
+      "modelNameLo": "Vento",
+      "searchNames": [
+        "vento"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "virtus",
+      "modelName": "Virtus",
+      "modelNameTh": "Virtus",
+      "modelNameLo": "Virtus",
+      "searchNames": [
+        "virtus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xl1",
+      "modelName": "XL1",
+      "modelNameTh": "XL1",
+      "modelNameLo": "XL1",
+      "searchNames": [
+        "xl1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    }
+  ]
+}

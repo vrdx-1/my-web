@@ -1,0 +1,435 @@
+{
+  "brandId": "land-rover",
+  "brandName": "Land Rover",
+  "brandNameTh": "แลนด์โรเวอร์",
+  "brandNameLo": "ແລນໂຣເວີ",
+  "models": [
+    {
+      "modelId": "101-forward-control",
+      "modelName": "101 Forward Control",
+      "modelNameTh": "101 Forward Control",
+      "modelNameLo": "101 Forward Control",
+      "searchNames": [
+        "101",
+        "101 forward control",
+        "forward control"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "127",
+      "modelName": "127",
+      "modelNameTh": "127",
+      "modelNameLo": "127",
+      "searchNames": [
+        "127"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "defender",
+      "modelName": "Defender",
+      "modelNameTh": "Defender",
+      "modelNameLo": "Defender",
+      "searchNames": [
+        "defender"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "defender-90",
+      "modelName": "Defender 90",
+      "modelNameTh": "Defender 90",
+      "modelNameLo": "Defender 90",
+      "searchNames": [
+        "defender 90",
+        "defender90"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "defender-110",
+      "modelName": "Defender 110",
+      "modelNameTh": "Defender 110",
+      "modelNameLo": "Defender 110",
+      "searchNames": [
+        "defender 110",
+        "defender110"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "defender-130",
+      "modelName": "Defender 130",
+      "modelNameTh": "Defender 130",
+      "modelNameLo": "Defender 130",
+      "searchNames": [
+        "defender 130",
+        "defender130"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "defender-octa",
+      "modelName": "Defender OCTA",
+      "modelNameTh": "Defender OCTA",
+      "modelNameLo": "Defender OCTA",
+      "searchNames": [
+        "defender octa",
+        "octa"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "discovery",
+      "modelName": "Discovery",
+      "modelNameTh": "Discovery",
+      "modelNameLo": "Discovery",
+      "searchNames": [
+        "discovery"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-1",
+      "modelName": "Discovery 1",
+      "modelNameTh": "Discovery 1",
+      "modelNameLo": "Discovery 1",
+      "searchNames": [
+        "discovery 1",
+        "discovery i"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-2",
+      "modelName": "Discovery 2",
+      "modelNameTh": "Discovery 2",
+      "modelNameLo": "Discovery 2",
+      "searchNames": [
+        "discovery 2",
+        "discovery ii"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-3",
+      "modelName": "Discovery 3",
+      "modelNameTh": "Discovery 3",
+      "modelNameLo": "Discovery 3",
+      "searchNames": [
+        "discovery 3",
+        "discovery iii"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-4",
+      "modelName": "Discovery 4",
+      "modelNameTh": "Discovery 4",
+      "modelNameLo": "Discovery 4",
+      "searchNames": [
+        "discovery 4",
+        "discovery iv"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-5",
+      "modelName": "Discovery 5",
+      "modelNameTh": "Discovery 5",
+      "modelNameLo": "Discovery 5",
+      "searchNames": [
+        "discovery 5",
+        "discovery v"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "discovery-sport",
+      "modelName": "Discovery Sport",
+      "modelNameTh": "Discovery Sport",
+      "modelNameLo": "Discovery Sport",
+      "searchNames": [
+        "discovery sport",
+        "discoverysport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "freelander",
+      "modelName": "Freelander",
+      "modelNameTh": "Freelander",
+      "modelNameLo": "Freelander",
+      "searchNames": [
+        "freelander"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "freelander-2",
+      "modelName": "Freelander 2",
+      "modelNameTh": "Freelander 2",
+      "modelNameLo": "Freelander 2",
+      "searchNames": [
+        "freelander 2",
+        "freelander ii"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "llama",
+      "modelName": "Llama",
+      "modelNameTh": "Llama",
+      "modelNameLo": "Llama",
+      "searchNames": [
+        "llama"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "lightweight",
+      "modelName": "Lightweight",
+      "modelNameTh": "Lightweight",
+      "modelNameLo": "Lightweight",
+      "searchNames": [
+        "lightweight"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "lr2",
+      "modelName": "LR2",
+      "modelNameTh": "LR2",
+      "modelNameLo": "LR2",
+      "searchNames": [
+        "lr2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "lr3",
+      "modelName": "LR3",
+      "modelNameTh": "LR3",
+      "modelNameLo": "LR3",
+      "searchNames": [
+        "lr3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "lr4",
+      "modelName": "LR4",
+      "modelNameTh": "LR4",
+      "modelNameLo": "LR4",
+      "searchNames": [
+        "lr4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "range-rover",
+      "modelName": "Range Rover",
+      "modelNameTh": "Range Rover",
+      "modelNameLo": "Range Rover",
+      "searchNames": [
+        "range rover",
+        "rangerover"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "range-rover-classic",
+      "modelName": "Range Rover Classic",
+      "modelNameTh": "Range Rover Classic",
+      "modelNameLo": "Range Rover Classic",
+      "searchNames": [
+        "range rover classic",
+        "rangerover classic"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "range-rover-evoque",
+      "modelName": "Range Rover Evoque",
+      "modelNameTh": "Range Rover Evoque",
+      "modelNameLo": "Range Rover Evoque",
+      "searchNames": [
+        "range rover evoque",
+        "evoque"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "range-rover-evoque-convertible",
+      "modelName": "Range Rover Evoque Convertible",
+      "modelNameTh": "Range Rover Evoque Convertible",
+      "modelNameLo": "Range Rover Evoque Convertible",
+      "searchNames": [
+        "range rover evoque convertible",
+        "evoque convertible"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "range-rover-sport",
+      "modelName": "Range Rover Sport",
+      "modelNameTh": "Range Rover Sport",
+      "modelNameLo": "Range Rover Sport",
+      "searchNames": [
+        "range rover sport",
+        "rangerover sport"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "range-rover-velar",
+      "modelName": "Range Rover Velar",
+      "modelNameTh": "Range Rover Velar",
+      "modelNameLo": "Range Rover Velar",
+      "searchNames": [
+        "range rover velar",
+        "velar"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "series-i",
+      "modelName": "Series I",
+      "modelNameTh": "Series I",
+      "modelNameLo": "Series I",
+      "searchNames": [
+        "series i",
+        "series 1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "series-ii",
+      "modelName": "Series II",
+      "modelNameTh": "Series II",
+      "modelNameLo": "Series II",
+      "searchNames": [
+        "series ii",
+        "series 2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "series-iia",
+      "modelName": "Series IIA",
+      "modelNameTh": "Series IIA",
+      "modelNameLo": "Series IIA",
+      "searchNames": [
+        "series iia",
+        "series 2a"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "series-iib-forward-control",
+      "modelName": "Series IIB Forward Control",
+      "modelNameTh": "Series IIB Forward Control",
+      "modelNameLo": "Series IIB Forward Control",
+      "searchNames": [
+        "series iib forward control",
+        "series iib",
+        "series 2b"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "series-iii",
+      "modelName": "Series III",
+      "modelNameTh": "Series III",
+      "modelNameLo": "Series III",
+      "searchNames": [
+        "series iii",
+        "series 3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "wolf",
+      "modelName": "Wolf",
+      "modelNameTh": "Wolf",
+      "modelNameLo": "Wolf",
+      "searchNames": [
+        "wolf"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

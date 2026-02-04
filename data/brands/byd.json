@@ -1,0 +1,542 @@
+{
+  "brandId": "byd",
+  "brandName": "BYD",
+  "brandNameTh": "บีวายดี",
+  "brandNameLo": "ບີວາຍດີ",
+  "models": [
+    {
+      "modelId": "atto-1",
+      "modelName": "Atto 1",
+      "modelNameTh": "Atto 1",
+      "modelNameLo": "Atto 1",
+      "searchNames": [
+        "atto 1",
+        "atto1",
+        "seagull"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "atto-2",
+      "modelName": "Atto 2",
+      "modelNameTh": "Atto 2",
+      "modelNameLo": "Atto 2",
+      "searchNames": [
+        "atto 2",
+        "atto2",
+        "yuan up"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "atto-3",
+      "modelName": "Atto 3",
+      "modelNameTh": "Atto 3",
+      "modelNameLo": "Atto 3",
+      "searchNames": [
+        "atto 3",
+        "atto3",
+        "yuan plus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "dolphin",
+      "modelName": "Dolphin",
+      "modelNameTh": "Dolphin",
+      "modelNameLo": "Dolphin",
+      "searchNames": [
+        "dolphin"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "dolphin-mini",
+      "modelName": "Dolphin Mini",
+      "modelNameTh": "Dolphin Mini",
+      "modelNameLo": "Dolphin Mini",
+      "searchNames": [
+        "dolphin mini",
+        "dolphinmini"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seal",
+      "modelName": "Seal",
+      "modelNameTh": "Seal",
+      "modelNameLo": "Seal",
+      "searchNames": [
+        "seal"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seal-5-dmi",
+      "modelName": "Seal 5 DM-i",
+      "modelNameTh": "Seal 5 DM-i",
+      "modelNameLo": "Seal 5 DM-i",
+      "searchNames": [
+        "seal 5",
+        "seal 05",
+        "qin plus",
+        "seal 5 dmi"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "seal-06-dmi",
+      "modelName": "Seal 06 DM-i",
+      "modelNameTh": "Seal 06 DM-i",
+      "modelNameLo": "Seal 06 DM-i",
+      "searchNames": [
+        "seal 06",
+        "seal 06 dmi"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "seal-07",
+      "modelName": "Seal 07",
+      "modelNameTh": "Seal 07",
+      "modelNameLo": "Seal 07",
+      "searchNames": [
+        "seal 07",
+        "seal 7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seal-08",
+      "modelName": "Seal 08",
+      "modelNameTh": "Seal 08",
+      "modelNameLo": "Seal 08",
+      "searchNames": [
+        "seal 08",
+        "seal 8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seal-u",
+      "modelName": "Seal U",
+      "modelNameTh": "Seal U",
+      "modelNameLo": "Seal U",
+      "searchNames": [
+        "seal u",
+        "sealu",
+        "song plus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sealion-5",
+      "modelName": "Sealion 5",
+      "modelNameTh": "Sealion 5",
+      "modelNameLo": "Sealion 5",
+      "searchNames": [
+        "sealion 5",
+        "sealion5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sealion-6",
+      "modelName": "Sealion 6",
+      "modelNameTh": "Sealion 6",
+      "modelNameLo": "Sealion 6",
+      "searchNames": [
+        "sealion 6",
+        "sealion6",
+        "song plus dmi"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sealion-7",
+      "modelName": "Sealion 7",
+      "modelNameTh": "Sealion 7",
+      "modelNameLo": "Sealion 7",
+      "searchNames": [
+        "sealion 7",
+        "sealion7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sealion-08",
+      "modelName": "Sealion 08",
+      "modelNameTh": "Sealion 08",
+      "modelNameLo": "Sealion 08",
+      "searchNames": [
+        "sealion 08",
+        "sealion 8"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "shark-6",
+      "modelName": "Shark 6",
+      "modelNameTh": "Shark 6",
+      "modelNameLo": "Shark 6",
+      "searchNames": [
+        "shark 6",
+        "shark6"
+      ],
+      "categoryIds": [
+        "pickup",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "m6",
+      "modelName": "M6",
+      "modelNameTh": "M6",
+      "modelNameLo": "M6",
+      "searchNames": [
+        "m6",
+        "emax 7",
+        "eMAX 7"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "han",
+      "modelName": "Han",
+      "modelNameTh": "Han",
+      "modelNameLo": "Han",
+      "searchNames": [
+        "han"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "tang",
+      "modelName": "Tang",
+      "modelNameTh": "Tang",
+      "modelNameLo": "Tang",
+      "searchNames": [
+        "tang"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "qin-l",
+      "modelName": "Qin L",
+      "modelNameTh": "Qin L",
+      "modelNameLo": "Qin L",
+      "searchNames": [
+        "qin l",
+        "qinl"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "qin-pro",
+      "modelName": "Qin Pro",
+      "modelNameTh": "Qin Pro",
+      "modelNameLo": "Qin Pro",
+      "searchNames": [
+        "qin pro",
+        "qinpro"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "song-pro",
+      "modelName": "Song Pro",
+      "modelNameTh": "Song Pro",
+      "modelNameLo": "Song Pro",
+      "searchNames": [
+        "song pro",
+        "songpro"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "song-l",
+      "modelName": "Song L",
+      "modelNameTh": "Song L",
+      "modelNameLo": "Song L",
+      "searchNames": [
+        "song l",
+        "songl"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "song-max",
+      "modelName": "Song Max",
+      "modelNameTh": "Song Max",
+      "modelNameLo": "Song Max",
+      "searchNames": [
+        "song max",
+        "songmax"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "yuan-pro",
+      "modelName": "Yuan Pro",
+      "modelNameTh": "Yuan Pro",
+      "modelNameLo": "Yuan Pro",
+      "searchNames": [
+        "yuan pro",
+        "yuanpro"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "xia",
+      "modelName": "Xia",
+      "modelNameTh": "Xia",
+      "modelNameLo": "Xia",
+      "searchNames": [
+        "xia"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e6",
+      "modelName": "e6",
+      "modelNameTh": "e6",
+      "modelNameLo": "e6",
+      "searchNames": [
+        "e6"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "d1",
+      "modelName": "D1",
+      "modelNameTh": "D1",
+      "modelNameLo": "D1",
+      "searchNames": [
+        "d1"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "denza-d9",
+      "modelName": "Denza D9",
+      "modelNameTh": "Denza D9",
+      "modelNameLo": "Denza D9",
+      "searchNames": [
+        "denza d9",
+        "denza d 9",
+        "d9"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "denza-n7",
+      "modelName": "Denza N7",
+      "modelNameTh": "Denza N7",
+      "modelNameLo": "Denza N7",
+      "searchNames": [
+        "denza n7",
+        "denza n 7",
+        "n7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "denza-n8",
+      "modelName": "Denza N8",
+      "modelNameTh": "Denza N8",
+      "modelNameLo": "Denza N8",
+      "searchNames": [
+        "denza n8",
+        "denza n 8",
+        "n8"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "denza-z9-gt",
+      "modelName": "Denza Z9 GT",
+      "modelNameTh": "Denza Z9 GT",
+      "modelNameLo": "Denza Z9 GT",
+      "searchNames": [
+        "denza z9 gt",
+        "z9 gt",
+        "z9gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yangwang-u7",
+      "modelName": "Yangwang U7",
+      "modelNameTh": "Yangwang U7",
+      "modelNameLo": "Yangwang U7",
+      "searchNames": [
+        "yangwang u7",
+        "u7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yangwang-u8",
+      "modelName": "Yangwang U8",
+      "modelNameTh": "Yangwang U8",
+      "modelNameLo": "Yangwang U8",
+      "searchNames": [
+        "yangwang u8",
+        "u8"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yangwang-u9",
+      "modelName": "Yangwang U9",
+      "modelNameTh": "Yangwang U9",
+      "modelNameLo": "Yangwang U9",
+      "searchNames": [
+        "yangwang u9",
+        "u9"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "bao-5",
+      "modelName": "Fangchengbao Bao 5",
+      "modelNameTh": "Fangchengbao Bao 5",
+      "modelNameLo": "Fangchengbao Bao 5",
+      "searchNames": [
+        "bao 5",
+        "bao5",
+        "leopard 5",
+        "fangchengbao bao 5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "bao-8",
+      "modelName": "Fangchengbao Bao 8",
+      "modelNameTh": "Fangchengbao Bao 8",
+      "modelNameLo": "Fangchengbao Bao 8",
+      "searchNames": [
+        "bao 8",
+        "bao8",
+        "fangchengbao bao 8"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,612 @@
+{
+  "brandId": "jaguar",
+  "brandName": "Jaguar",
+  "brandNameTh": "จากัวร์",
+  "brandNameLo": "ຈາຣກົວ",
+  "models": [
+    {
+      "modelId": "2-4-mark-i",
+      "modelName": "2.4 Mark I",
+      "modelNameTh": "2.4 Mark I",
+      "modelNameLo": "2.4 Mark I",
+      "searchNames": [
+        "2.4 mark i",
+        "2.4 mark 1",
+        "mark i"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "3-4-mark-i",
+      "modelName": "3.4 Mark I",
+      "modelNameTh": "3.4 Mark I",
+      "modelNameLo": "3.4 Mark I",
+      "searchNames": [
+        "3.4 mark i",
+        "3.4 mark 1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "240",
+      "modelName": "240",
+      "modelNameTh": "240",
+      "modelNameLo": "240",
+      "searchNames": [
+        "240"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "340",
+      "modelName": "340",
+      "modelNameTh": "340",
+      "modelNameLo": "340",
+      "searchNames": [
+        "340"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "420",
+      "modelName": "420",
+      "modelNameTh": "420",
+      "modelNameLo": "420",
+      "searchNames": [
+        "420"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "420g",
+      "modelName": "420G",
+      "modelNameTh": "420G",
+      "modelNameLo": "420G",
+      "searchNames": [
+        "420g",
+        "420 g"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "c-type",
+      "modelName": "C-Type",
+      "modelNameTh": "C-Type",
+      "modelNameLo": "C-Type",
+      "searchNames": [
+        "c-type",
+        "ctype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "d-type",
+      "modelName": "D-Type",
+      "modelNameTh": "D-Type",
+      "modelNameLo": "D-Type",
+      "searchNames": [
+        "d-type",
+        "dtype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "e-type",
+      "modelName": "E-Type (XK-E)",
+      "modelNameTh": "E-Type (XK-E)",
+      "modelNameLo": "E-Type (XK-E)",
+      "searchNames": [
+        "e-type",
+        "etype",
+        "xk-e",
+        "xke"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "e-pace",
+      "modelName": "E-Pace",
+      "modelNameTh": "E-Pace",
+      "modelNameLo": "E-Pace",
+      "searchNames": [
+        "e-pace",
+        "epace"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f-pace",
+      "modelName": "F-Pace",
+      "modelNameTh": "F-Pace",
+      "modelNameLo": "F-Pace",
+      "searchNames": [
+        "f-pace",
+        "fpace"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f-pace-svr",
+      "modelName": "F-Pace SVR",
+      "modelNameTh": "F-Pace SVR",
+      "modelNameLo": "F-Pace SVR",
+      "searchNames": [
+        "f-pace svr",
+        "fpace svr"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f-type",
+      "modelName": "F-Type",
+      "modelNameTh": "F-Type",
+      "modelNameLo": "F-Type",
+      "searchNames": [
+        "f-type",
+        "ftype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f-type-svr",
+      "modelName": "F-Type SVR",
+      "modelNameTh": "F-Type SVR",
+      "modelNameLo": "F-Type SVR",
+      "searchNames": [
+        "f-type svr",
+        "ftype svr"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "i-pace",
+      "modelName": "I-Pace",
+      "modelNameTh": "I-Pace",
+      "modelNameLo": "I-Pace",
+      "searchNames": [
+        "i-pace",
+        "ipace"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mark-2",
+      "modelName": "Mark 2",
+      "modelNameTh": "Mark 2",
+      "modelNameLo": "Mark 2",
+      "searchNames": [
+        "mark 2",
+        "mark ii"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-v",
+      "modelName": "Mark V",
+      "modelNameTh": "Mark V",
+      "modelNameLo": "Mark V",
+      "searchNames": [
+        "mark v",
+        "mark 5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-vii",
+      "modelName": "Mark VII",
+      "modelNameTh": "Mark VII",
+      "modelNameLo": "Mark VII",
+      "searchNames": [
+        "mark vii",
+        "mark 7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-viii",
+      "modelName": "Mark VIII",
+      "modelNameTh": "Mark VIII",
+      "modelNameLo": "Mark VIII",
+      "searchNames": [
+        "mark viii",
+        "mark 8"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-ix",
+      "modelName": "Mark IX",
+      "modelNameTh": "Mark IX",
+      "modelNameLo": "Mark IX",
+      "searchNames": [
+        "mark ix",
+        "mark 9"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mark-x",
+      "modelName": "Mark X",
+      "modelNameTh": "Mark X",
+      "modelNameLo": "Mark X",
+      "searchNames": [
+        "mark x",
+        "mark 10"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s-type-classic",
+      "modelName": "S-Type (Classic)",
+      "modelNameTh": "S-Type (Classic)",
+      "modelNameLo": "S-Type (Classic)",
+      "searchNames": [
+        "s-type classic",
+        "s-type",
+        "stype classic"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s-type-modern",
+      "modelName": "S-Type (Modern)",
+      "modelNameTh": "S-Type (Modern)",
+      "modelNameLo": "S-Type (Modern)",
+      "searchNames": [
+        "s-type modern",
+        "stype modern"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ss90",
+      "modelName": "SS90",
+      "modelNameTh": "SS90",
+      "modelNameLo": "SS90",
+      "searchNames": [
+        "ss90",
+        "ss 90"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ss100",
+      "modelName": "SS100",
+      "modelNameTh": "SS100",
+      "modelNameLo": "SS100",
+      "searchNames": [
+        "ss100",
+        "ss 100"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "x-type",
+      "modelName": "X-Type",
+      "modelNameTh": "X-Type",
+      "modelNameLo": "X-Type",
+      "searchNames": [
+        "x-type",
+        "xtype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xe",
+      "modelName": "XE",
+      "modelNameTh": "XE",
+      "modelNameLo": "XE",
+      "searchNames": [
+        "xe"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xe-sv-project-8",
+      "modelName": "XE SV Project 8",
+      "modelNameTh": "XE SV Project 8",
+      "modelNameLo": "XE SV Project 8",
+      "searchNames": [
+        "xe sv project 8",
+        "xe project 8",
+        "project 8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xf",
+      "modelName": "XF",
+      "modelNameTh": "XF",
+      "modelNameLo": "XF",
+      "searchNames": [
+        "xf"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xf-sportbrake",
+      "modelName": "XF Sportbrake",
+      "modelNameTh": "XF Sportbrake",
+      "modelNameLo": "XF Sportbrake",
+      "searchNames": [
+        "xf sportbrake",
+        "xf wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xj",
+      "modelName": "XJ",
+      "modelNameTh": "XJ",
+      "modelNameLo": "XJ",
+      "searchNames": [
+        "xj"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xj6",
+      "modelName": "XJ6",
+      "modelNameTh": "XJ6",
+      "modelNameLo": "XJ6",
+      "searchNames": [
+        "xj6",
+        "xj 6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xj8",
+      "modelName": "XJ8",
+      "modelNameTh": "XJ8",
+      "modelNameLo": "XJ8",
+      "searchNames": [
+        "xj8",
+        "xj 8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xj12",
+      "modelName": "XJ12",
+      "modelNameTh": "XJ12",
+      "modelNameLo": "XJ12",
+      "searchNames": [
+        "xj12",
+        "xj 12"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xj220",
+      "modelName": "XJ220",
+      "modelNameTh": "XJ220",
+      "modelNameLo": "XJ220",
+      "searchNames": [
+        "xj220",
+        "xj 220"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "xjr",
+      "modelName": "XJR",
+      "modelNameTh": "XJR",
+      "modelNameLo": "XJR",
+      "searchNames": [
+        "xjr"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "xjr-15",
+      "modelName": "XJR-15",
+      "modelNameTh": "XJR-15",
+      "modelNameLo": "XJR-15",
+      "searchNames": [
+        "xjr-15",
+        "xjr 15"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "xjs",
+      "modelName": "XJS",
+      "modelNameTh": "XJS",
+      "modelNameLo": "XJS",
+      "searchNames": [
+        "xjs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xk",
+      "modelName": "XK",
+      "modelNameTh": "XK",
+      "modelNameLo": "XK",
+      "searchNames": [
+        "xk"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xk8",
+      "modelName": "XK8",
+      "modelNameTh": "XK8",
+      "modelNameLo": "XK8",
+      "searchNames": [
+        "xk8",
+        "xk 8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xk120",
+      "modelName": "XK120",
+      "modelNameTh": "XK120",
+      "modelNameLo": "XK120",
+      "searchNames": [
+        "xk120",
+        "xk 120"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xk140",
+      "modelName": "XK140",
+      "modelNameTh": "XK140",
+      "modelNameLo": "XK140",
+      "searchNames": [
+        "xk140",
+        "xk 140"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xk150",
+      "modelName": "XK150",
+      "modelNameTh": "XK150",
+      "modelNameLo": "XK150",
+      "searchNames": [
+        "xk150",
+        "xk 150"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xkr",
+      "modelName": "XKR",
+      "modelNameTh": "XKR",
+      "modelNameLo": "XKR",
+      "searchNames": [
+        "xkr"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "xkr-s",
+      "modelName": "XKR-S",
+      "modelNameTh": "XKR-S",
+      "modelNameLo": "XKR-S",
+      "searchNames": [
+        "xkr-s",
+        "xkr s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "jaguar-gt-electric",
+      "modelName": "Jaguar GT (Electric 2026)",
+      "modelNameTh": "Jaguar GT (Electric 2026)",
+      "modelNameLo": "Jaguar GT (Electric 2026)",
+      "searchNames": [
+        "jaguar gt",
+        "jaguar gt electric",
+        "gt 2026"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1120 @@
+{
+  "brandId": "geely",
+  "brandName": "Geely",
+  "brandNameTh": "จีลี่",
+  "brandNameLo": "ຈີລີ້",
+  "models": [
+    {
+      "modelId": "azkarra",
+      "modelName": "Azkarra",
+      "modelNameTh": "Azkarra",
+      "modelNameLo": "Azkarra",
+      "searchNames": [
+        "azkarra"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "beauty-leopard",
+      "modelName": "Beauty Leopard",
+      "modelNameTh": "Beauty Leopard",
+      "modelNameLo": "Beauty Leopard",
+      "searchNames": [
+        "beauty leopard",
+        "beautyleopard"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "binrui",
+      "modelName": "Binrui",
+      "modelNameTh": "Binrui",
+      "modelNameLo": "Binrui",
+      "searchNames": [
+        "binrui"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "binyue",
+      "modelName": "Binyue",
+      "modelNameTh": "Binyue",
+      "modelNameLo": "Binyue",
+      "searchNames": [
+        "binyue"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "borui",
+      "modelName": "Borui",
+      "modelNameTh": "Borui",
+      "modelNameLo": "Borui",
+      "searchNames": [
+        "borui"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "borui-ge",
+      "modelName": "Borui GE",
+      "modelNameTh": "Borui GE",
+      "modelNameLo": "Borui GE",
+      "searchNames": [
+        "borui ge",
+        "boruige"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "boyue",
+      "modelName": "Boyue",
+      "modelNameTh": "Boyue",
+      "modelNameLo": "Boyue",
+      "searchNames": [
+        "boyue"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "boyue-l",
+      "modelName": "Boyue L",
+      "modelNameTh": "Boyue L",
+      "modelNameLo": "Boyue L",
+      "searchNames": [
+        "boyue l",
+        "boyuel"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "boyue-x",
+      "modelName": "Boyue X",
+      "modelNameTh": "Boyue X",
+      "modelNameLo": "Boyue X",
+      "searchNames": [
+        "boyue x",
+        "boyuex"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cityray",
+      "modelName": "Cityray",
+      "modelNameTh": "Cityray",
+      "modelNameLo": "Cityray",
+      "searchNames": [
+        "cityray"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ck",
+      "modelName": "CK",
+      "modelNameTh": "CK",
+      "modelNameLo": "CK",
+      "searchNames": [
+        "ck"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "chinese-dragon",
+      "modelName": "Chinese Dragon",
+      "modelNameTh": "Chinese Dragon",
+      "modelNameLo": "Chinese Dragon",
+      "searchNames": [
+        "chinese dragon",
+        "chinesedragon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "coolray",
+      "modelName": "Coolray",
+      "modelNameTh": "Coolray",
+      "modelNameLo": "Coolray",
+      "searchNames": [
+        "coolray"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cowboy",
+      "modelName": "Cowboy",
+      "modelNameTh": "Cowboy",
+      "modelNameLo": "Cowboy",
+      "searchNames": [
+        "cowboy"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "emgrand",
+      "modelName": "Emgrand",
+      "modelNameTh": "Emgrand",
+      "modelNameLo": "Emgrand",
+      "searchNames": [
+        "emgrand"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "emgrand-ec7",
+      "modelName": "Emgrand EC7",
+      "modelNameTh": "Emgrand EC7",
+      "modelNameLo": "Emgrand EC7",
+      "searchNames": [
+        "emgrand ec7",
+        "emgrandec7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "emgrand-ec8",
+      "modelName": "Emgrand EC8",
+      "modelNameTh": "Emgrand EC8",
+      "modelNameLo": "Emgrand EC8",
+      "searchNames": [
+        "emgrand ec8",
+        "emgrandec8"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "emgrand-ev",
+      "modelName": "Emgrand EV",
+      "modelNameTh": "Emgrand EV",
+      "modelNameLo": "Emgrand EV",
+      "searchNames": [
+        "emgrand ev",
+        "emgrandev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "emgrand-gl",
+      "modelName": "Emgrand GL",
+      "modelNameTh": "Emgrand GL",
+      "modelNameLo": "Emgrand GL",
+      "searchNames": [
+        "emgrand gl",
+        "emgrandgl"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "emgrand-gs",
+      "modelName": "Emgrand GS",
+      "modelNameTh": "Emgrand GS",
+      "modelNameLo": "Emgrand GS",
+      "searchNames": [
+        "emgrand gs",
+        "emgrandgs"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "emgrand-gse",
+      "modelName": "Emgrand GSe",
+      "modelNameTh": "Emgrand GSe",
+      "modelNameLo": "Emgrand GSe",
+      "searchNames": [
+        "emgrand gse",
+        "emgrandgse"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "emgrand-gt",
+      "modelName": "Emgrand GT",
+      "modelNameTh": "Emgrand GT",
+      "modelNameLo": "Emgrand GT",
+      "searchNames": [
+        "emgrand gt",
+        "emgrandgt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emgrand-l",
+      "modelName": "Emgrand L",
+      "modelNameTh": "Emgrand L",
+      "modelNameLo": "Emgrand L",
+      "searchNames": [
+        "emgrand l",
+        "emgrandl"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "emgrand-s",
+      "modelName": "Emgrand S",
+      "modelNameTh": "Emgrand S",
+      "modelNameLo": "Emgrand S",
+      "searchNames": [
+        "emgrand s",
+        "emgrands"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ex2",
+      "modelName": "EX2",
+      "modelNameTh": "EX2",
+      "modelNameLo": "EX2",
+      "searchNames": [
+        "ex2"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex5",
+      "modelName": "EX5",
+      "modelNameTh": "EX5",
+      "modelNameLo": "EX5",
+      "searchNames": [
+        "ex5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "farizon-v6e",
+      "modelName": "Farizon V6E",
+      "modelNameTh": "Farizon V6E",
+      "modelNameLo": "Farizon V6E",
+      "searchNames": [
+        "farizon v6e",
+        "farizonv6e"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "galaxy-a7",
+      "modelName": "Galaxy A7",
+      "modelNameTh": "Galaxy A7",
+      "modelNameLo": "Galaxy A7",
+      "searchNames": [
+        "galaxy a7",
+        "galaxya7"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "galaxy-e5",
+      "modelName": "Galaxy E5",
+      "modelNameTh": "Galaxy E5",
+      "modelNameLo": "Galaxy E5",
+      "searchNames": [
+        "galaxy e5",
+        "galaxye5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "galaxy-e8",
+      "modelName": "Galaxy E8",
+      "modelNameTh": "Galaxy E8",
+      "modelNameLo": "Galaxy E8",
+      "searchNames": [
+        "galaxy e8",
+        "galaxye8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "galaxy-l6",
+      "modelName": "Galaxy L6",
+      "modelNameTh": "Galaxy L6",
+      "modelNameLo": "Galaxy L6",
+      "searchNames": [
+        "galaxy l6",
+        "galaxyl6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "galaxy-l7",
+      "modelName": "Galaxy L7",
+      "modelNameTh": "Galaxy L7",
+      "modelNameLo": "Galaxy L7",
+      "searchNames": [
+        "galaxy l7",
+        "galaxyl7"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "galaxy-m7",
+      "modelName": "Galaxy M7",
+      "modelNameTh": "Galaxy M7",
+      "modelNameLo": "Galaxy M7",
+      "searchNames": [
+        "galaxy m7",
+        "galaxym7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "galaxy-m9",
+      "modelName": "Galaxy M9",
+      "modelNameTh": "Galaxy M9",
+      "modelNameLo": "Galaxy M9",
+      "searchNames": [
+        "galaxy m9",
+        "galaxym9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "galaxy-starship-7",
+      "modelName": "Galaxy Starship 7",
+      "modelNameTh": "Galaxy Starship 7",
+      "modelNameLo": "Galaxy Starship 7",
+      "searchNames": [
+        "galaxy starship 7",
+        "galaxystarship7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "gc6",
+      "modelName": "GC6",
+      "modelNameTh": "GC6",
+      "modelNameLo": "GC6",
+      "searchNames": [
+        "gc6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gc9",
+      "modelName": "GC9",
+      "modelNameTh": "GC9",
+      "modelNameLo": "GC9",
+      "searchNames": [
+        "gc9"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "geometry-a",
+      "modelName": "Geometry A",
+      "modelNameTh": "Geometry A",
+      "modelNameLo": "Geometry A",
+      "searchNames": [
+        "geometry a",
+        "geometrya"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "geometry-c",
+      "modelName": "Geometry C",
+      "modelNameTh": "Geometry C",
+      "modelNameLo": "Geometry C",
+      "searchNames": [
+        "geometry c",
+        "geometryc"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "geometry-e",
+      "modelName": "Geometry E",
+      "modelNameTh": "Geometry E",
+      "modelNameLo": "Geometry E",
+      "searchNames": [
+        "geometry e",
+        "geometrye"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "geometry-g6",
+      "modelName": "Geometry G6",
+      "modelNameTh": "Geometry G6",
+      "modelNameLo": "Geometry G6",
+      "searchNames": [
+        "geometry g6",
+        "geometryg6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "geometry-m6",
+      "modelName": "Geometry M6",
+      "modelNameTh": "Geometry M6",
+      "modelNameLo": "Geometry M6",
+      "searchNames": [
+        "geometry m6",
+        "geometrym6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gx2",
+      "modelName": "GX2",
+      "modelNameTh": "GX2",
+      "modelNameLo": "GX2",
+      "searchNames": [
+        "gx2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gx3-pro",
+      "modelName": "GX3 Pro",
+      "modelNameTh": "GX3 Pro",
+      "modelNameLo": "GX3 Pro",
+      "searchNames": [
+        "gx3 pro",
+        "gx3pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gx7",
+      "modelName": "GX7",
+      "modelNameTh": "GX7",
+      "modelNameLo": "GX7",
+      "searchNames": [
+        "gx7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gx9",
+      "modelName": "GX9",
+      "modelNameTh": "GX9",
+      "modelNameLo": "GX9",
+      "searchNames": [
+        "gx9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "haoqing",
+      "modelName": "Haoqing",
+      "modelNameTh": "Haoqing",
+      "modelNameLo": "Haoqing",
+      "searchNames": [
+        "haoqing"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "haoyue",
+      "modelName": "Haoyue",
+      "modelNameTh": "Haoyue",
+      "modelNameLo": "Haoyue",
+      "searchNames": [
+        "haoyue"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "haoyue-l",
+      "modelName": "Haoyue L",
+      "modelNameTh": "Haoyue L",
+      "modelNameLo": "Haoyue L",
+      "searchNames": [
+        "haoyue l",
+        "haoyuel"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hi-p",
+      "modelName": "Hi-P",
+      "modelNameTh": "Hi-P",
+      "modelNameLo": "Hi-P",
+      "searchNames": [
+        "hi-p",
+        "hip"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "icon",
+      "modelName": "Icon",
+      "modelNameTh": "Icon",
+      "modelNameLo": "Icon",
+      "searchNames": [
+        "icon"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jiachen",
+      "modelName": "Jiachen",
+      "modelNameTh": "Jiachen",
+      "modelNameLo": "Jiachen",
+      "searchNames": [
+        "jiachen"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "jiaji",
+      "modelName": "Jiaji",
+      "modelNameTh": "Jiaji",
+      "modelNameLo": "Jiaji",
+      "searchNames": [
+        "jiaji"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "king-kong",
+      "modelName": "King Kong",
+      "modelNameTh": "King Kong",
+      "modelNameLo": "King Kong",
+      "searchNames": [
+        "king kong",
+        "kingkong"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lc",
+      "modelName": "LC",
+      "modelNameTh": "LC",
+      "modelNameLo": "LC",
+      "searchNames": [
+        "lc"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lc-cross",
+      "modelName": "LC Cross",
+      "modelNameTh": "LC Cross",
+      "modelNameLo": "LC Cross",
+      "searchNames": [
+        "lc cross",
+        "lccross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "maple",
+      "modelName": "Maple",
+      "modelNameTh": "Maple",
+      "modelNameLo": "Maple",
+      "searchNames": [
+        "maple"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "merrie",
+      "modelName": "Merrie",
+      "modelNameTh": "Merrie",
+      "modelNameLo": "Merrie",
+      "searchNames": [
+        "merrie"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mk",
+      "modelName": "MK",
+      "modelNameTh": "MK",
+      "modelNameLo": "MK",
+      "searchNames": [
+        "mk"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "monjaro",
+      "modelName": "Monjaro",
+      "modelNameTh": "Monjaro",
+      "modelNameLo": "Monjaro",
+      "searchNames": [
+        "monjaro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "okavango",
+      "modelName": "Okavango",
+      "modelNameTh": "Okavango",
+      "modelNameLo": "Okavango",
+      "searchNames": [
+        "okavango"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "panda",
+      "modelName": "Panda",
+      "modelNameTh": "Panda",
+      "modelNameLo": "Panda",
+      "searchNames": [
+        "panda"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "panda-mini-ev",
+      "modelName": "Panda Mini EV",
+      "modelNameTh": "Panda Mini EV",
+      "modelNameLo": "Panda Mini EV",
+      "searchNames": [
+        "panda mini ev",
+        "pandaminiev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "preface",
+      "modelName": "Preface",
+      "modelNameTh": "Preface",
+      "modelNameLo": "Preface",
+      "searchNames": [
+        "preface"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "preface-l",
+      "modelName": "Preface L",
+      "modelNameTh": "Preface L",
+      "modelNameLo": "Preface L",
+      "searchNames": [
+        "preface l",
+        "prefacel"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "riddara-rd6",
+      "modelName": "Riddara RD6",
+      "modelNameTh": "Riddara RD6",
+      "modelNameLo": "Riddara RD6",
+      "searchNames": [
+        "riddara rd6",
+        "riddarard6",
+        "rd6"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sc6",
+      "modelName": "SC6",
+      "modelNameTh": "SC6",
+      "modelNameLo": "SC6",
+      "searchNames": [
+        "sc6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sc7",
+      "modelName": "SC7",
+      "modelNameTh": "SC7",
+      "modelNameLo": "SC7",
+      "searchNames": [
+        "sc7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sl",
+      "modelName": "SL",
+      "modelNameTh": "SL",
+      "modelNameLo": "SL",
+      "searchNames": [
+        "sl"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "starry",
+      "modelName": "Starry",
+      "modelNameTh": "Starry",
+      "modelNameLo": "Starry",
+      "searchNames": [
+        "starry"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "starray",
+      "modelName": "Starray",
+      "modelNameTh": "Starray",
+      "modelNameLo": "Starray",
+      "searchNames": [
+        "starray"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "star-wish",
+      "modelName": "Star Wish",
+      "modelNameTh": "Star Wish",
+      "modelNameLo": "Star Wish",
+      "searchNames": [
+        "star wish",
+        "starwish"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sx7",
+      "modelName": "SX7",
+      "modelNameTh": "SX7",
+      "modelNameLo": "SX7",
+      "searchNames": [
+        "sx7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tugella",
+      "modelName": "Tugella",
+      "modelNameTh": "Tugella",
+      "modelNameLo": "Tugella",
+      "searchNames": [
+        "tugella"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "uliou",
+      "modelName": "Uliou",
+      "modelNameTh": "Uliou",
+      "modelNameLo": "Uliou",
+      "searchNames": [
+        "uliou"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vision",
+      "modelName": "Vision",
+      "modelNameTh": "Vision",
+      "modelNameLo": "Vision",
+      "searchNames": [
+        "vision"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "vision-s1",
+      "modelName": "Vision S1",
+      "modelNameTh": "Vision S1",
+      "modelNameLo": "Vision S1",
+      "searchNames": [
+        "vision s1",
+        "visions1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "vision-x1",
+      "modelName": "Vision X1",
+      "modelNameTh": "Vision X1",
+      "modelNameLo": "Vision X1",
+      "searchNames": [
+        "vision x1",
+        "visionx1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vision-x3",
+      "modelName": "Vision X3",
+      "modelNameTh": "Vision X3",
+      "modelNameLo": "Vision X3",
+      "searchNames": [
+        "vision x3",
+        "visionx3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vision-x6",
+      "modelName": "Vision X6",
+      "modelNameTh": "Vision X6",
+      "modelNameLo": "Vision X6",
+      "searchNames": [
+        "vision x6",
+        "visionx6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingchi",
+      "modelName": "Xingchi",
+      "modelNameTh": "Xingchi",
+      "modelNameLo": "Xingchi",
+      "searchNames": [
+        "xingchi"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingrui",
+      "modelName": "Xingrui",
+      "modelNameTh": "Xingrui",
+      "modelNameLo": "Xingrui",
+      "searchNames": [
+        "xingrui"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xingrui-l",
+      "modelName": "Xingrui L",
+      "modelNameTh": "Xingrui L",
+      "modelNameLo": "Xingrui L",
+      "searchNames": [
+        "xingrui l",
+        "xingruil"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xingyue",
+      "modelName": "Xingyue",
+      "modelNameTh": "Xingyue",
+      "modelNameLo": "Xingyue",
+      "searchNames": [
+        "xingyue"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingyue-l",
+      "modelName": "Xingyue L",
+      "modelNameTh": "Xingyue L",
+      "modelNameLo": "Xingyue L",
+      "searchNames": [
+        "xingyue l",
+        "xingyuel"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingyue-s",
+      "modelName": "Xingyue S",
+      "modelNameTh": "Xingyue S",
+      "modelNameLo": "Xingyue S",
+      "searchNames": [
+        "xingyue s",
+        "xingyues"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xingyuan",
+      "modelName": "Xingyuan",
+      "modelNameTh": "Xingyuan",
+      "modelNameLo": "Xingyuan",
+      "searchNames": [
+        "xingyuan"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

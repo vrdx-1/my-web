@@ -1,0 +1,993 @@
+{
+  "brandId": "honda",
+  "brandName": "Honda",
+  "brandNameTh": "ฮอนด้า",
+  "brandNameLo": "ຮອນດ້າ",
+  "models": [
+    {
+      "modelId": "accord",
+      "modelName": "Accord",
+      "modelNameTh": "Accord",
+      "modelNameLo": "Accord",
+      "searchNames": [
+        "accord"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "airwave",
+      "modelName": "Airwave",
+      "modelNameTh": "Airwave",
+      "modelNameLo": "Airwave",
+      "searchNames": [
+        "airwave"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "amaze",
+      "modelName": "Amaze",
+      "modelNameTh": "Amaze",
+      "modelNameLo": "Amaze",
+      "searchNames": [
+        "amaze"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ascot",
+      "modelName": "Ascot",
+      "modelNameTh": "Ascot",
+      "modelNameLo": "Ascot",
+      "searchNames": [
+        "ascot"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "avancier",
+      "modelName": "Avancier",
+      "modelNameTh": "Avancier",
+      "modelNameLo": "Avancier",
+      "searchNames": [
+        "avancier"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ballade",
+      "modelName": "Ballade",
+      "modelNameTh": "Ballade",
+      "modelNameLo": "Ballade",
+      "searchNames": [
+        "ballade"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "beat",
+      "modelName": "Beat",
+      "modelNameTh": "Beat",
+      "modelNameLo": "Beat",
+      "searchNames": [
+        "beat"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "br-v",
+      "modelName": "BR-V",
+      "modelNameTh": "BR-V",
+      "modelNameLo": "BR-V",
+      "searchNames": [
+        "br-v",
+        "brv"
+      ],
+      "categoryIds": [
+        "suv",
+        "van"
+      ]
+    },
+    {
+      "modelId": "brio",
+      "modelName": "Brio",
+      "modelNameTh": "Brio",
+      "modelNameLo": "Brio",
+      "searchNames": [
+        "brio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "capa",
+      "modelName": "Capa",
+      "modelNameTh": "Capa",
+      "modelNameLo": "Capa",
+      "searchNames": [
+        "capa"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "city",
+      "modelName": "City",
+      "modelNameTh": "City",
+      "modelNameLo": "City",
+      "searchNames": [
+        "city"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "city-hatchback",
+      "modelName": "City Hatchback",
+      "modelNameTh": "City Hatchback",
+      "modelNameLo": "City Hatchback",
+      "searchNames": [
+        "city hatchback",
+        "city hb"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "civic",
+      "modelName": "Civic",
+      "modelNameTh": "Civic",
+      "modelNameLo": "Civic",
+      "searchNames": [
+        "civic"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "clarity",
+      "modelName": "Clarity",
+      "modelNameTh": "Clarity",
+      "modelNameLo": "Clarity",
+      "searchNames": [
+        "clarity"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "concerto",
+      "modelName": "Concerto",
+      "modelNameTh": "Concerto",
+      "modelNameLo": "Concerto",
+      "searchNames": [
+        "concerto"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cr-v",
+      "modelName": "CR-V",
+      "modelNameTh": "CR-V",
+      "modelNameLo": "CR-V",
+      "searchNames": [
+        "cr-v",
+        "crv"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cr-x",
+      "modelName": "CR-X",
+      "modelNameTh": "CR-X",
+      "modelNameLo": "CR-X",
+      "searchNames": [
+        "cr-x",
+        "crx"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cr-z",
+      "modelName": "CR-Z",
+      "modelNameTh": "CR-Z",
+      "modelNameLo": "CR-Z",
+      "searchNames": [
+        "cr-z",
+        "crz"
+      ],
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "crosstour",
+      "modelName": "Crosstour",
+      "modelNameTh": "Crosstour",
+      "modelNameLo": "Crosstour",
+      "searchNames": [
+        "crosstour"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "domani",
+      "modelName": "Domani",
+      "modelNameTh": "Domani",
+      "modelNameLo": "Domani",
+      "searchNames": [
+        "domani"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "edix",
+      "modelName": "Edix",
+      "modelNameTh": "Edix",
+      "modelNameLo": "Edix",
+      "searchNames": [
+        "edix"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "element",
+      "modelName": "Element",
+      "modelNameTh": "Element",
+      "modelNameLo": "Element",
+      "searchNames": [
+        "element"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "elysion",
+      "modelName": "Elysion",
+      "modelNameTh": "Elysion",
+      "modelNameLo": "Elysion",
+      "searchNames": [
+        "elysion"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "envix",
+      "modelName": "Envix",
+      "modelNameTh": "Envix",
+      "modelNameLo": "Envix",
+      "searchNames": [
+        "envix"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ev-n",
+      "modelName": "EV-N",
+      "modelNameTh": "EV-N",
+      "modelNameLo": "EV-N",
+      "searchNames": [
+        "ev-n",
+        "evn"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fit",
+      "modelName": "Fit",
+      "modelNameTh": "Fit",
+      "modelNameLo": "Fit",
+      "searchNames": [
+        "fit",
+        "jazz"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fr-v",
+      "modelName": "FR-V",
+      "modelNameTh": "FR-V",
+      "modelNameLo": "FR-V",
+      "searchNames": [
+        "fr-v",
+        "frv"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "freed",
+      "modelName": "Freed",
+      "modelNameTh": "Freed",
+      "modelNameLo": "Freed",
+      "searchNames": [
+        "freed"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hr-v",
+      "modelName": "HR-V",
+      "modelNameTh": "HR-V",
+      "modelNameLo": "HR-V",
+      "searchNames": [
+        "hr-v",
+        "hrv",
+        "vezel"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "insight",
+      "modelName": "Insight",
+      "modelNameTh": "Insight",
+      "modelNameLo": "Insight",
+      "searchNames": [
+        "insight"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "inspire",
+      "modelName": "Inspire",
+      "modelNameTh": "Inspire",
+      "modelNameLo": "Inspire",
+      "searchNames": [
+        "inspire"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "integra",
+      "modelName": "Integra",
+      "modelNameTh": "Integra",
+      "modelNameLo": "Integra",
+      "searchNames": [
+        "integra"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "jade",
+      "modelName": "Jade",
+      "modelNameTh": "Jade",
+      "modelNameLo": "Jade",
+      "searchNames": [
+        "jade"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "jazz",
+      "modelName": "Jazz",
+      "modelNameTh": "Jazz",
+      "modelNameLo": "Jazz",
+      "searchNames": [
+        "jazz",
+        "fit"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "legend",
+      "modelName": "Legend",
+      "modelNameTh": "Legend",
+      "modelNameLo": "Legend",
+      "searchNames": [
+        "legend"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "life",
+      "modelName": "Life",
+      "modelNameTh": "Life",
+      "modelNameLo": "Life",
+      "searchNames": [
+        "life"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "logo",
+      "modelName": "Logo",
+      "modelNameTh": "Logo",
+      "modelNameLo": "Logo",
+      "searchNames": [
+        "logo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mobilio",
+      "modelName": "Mobilio",
+      "modelNameTh": "Mobilio",
+      "modelNameLo": "Mobilio",
+      "searchNames": [
+        "mobilio"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "nsx",
+      "modelName": "NSX",
+      "modelNameTh": "NSX",
+      "modelNameLo": "NSX",
+      "searchNames": [
+        "nsx"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "n-box",
+      "modelName": "N-Box",
+      "modelNameTh": "N-Box",
+      "modelNameLo": "N-Box",
+      "searchNames": [
+        "n-box",
+        "nbox"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "n-one",
+      "modelName": "N-One",
+      "modelNameTh": "N-One",
+      "modelNameLo": "N-One",
+      "searchNames": [
+        "n-one",
+        "none"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "n-van",
+      "modelName": "N-Van",
+      "modelNameTh": "N-Van",
+      "modelNameLo": "N-Van",
+      "searchNames": [
+        "n-van",
+        "nvan"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "n-wgn",
+      "modelName": "N-WGN",
+      "modelNameTh": "N-WGN",
+      "modelNameLo": "N-WGN",
+      "searchNames": [
+        "n-wgn",
+        "nwgn"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "odyssey",
+      "modelName": "Odyssey",
+      "modelNameTh": "Odyssey",
+      "modelNameLo": "Odyssey",
+      "searchNames": [
+        "odyssey"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "orthia",
+      "modelName": "Orthia",
+      "modelNameTh": "Orthia",
+      "modelNameLo": "Orthia",
+      "searchNames": [
+        "orthia"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "passport",
+      "modelName": "Passport",
+      "modelNameTh": "Passport",
+      "modelNameLo": "Passport",
+      "searchNames": [
+        "passport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pilot",
+      "modelName": "Pilot",
+      "modelNameTh": "Pilot",
+      "modelNameLo": "Pilot",
+      "searchNames": [
+        "pilot"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "prelude",
+      "modelName": "Prelude",
+      "modelNameTh": "Prelude",
+      "modelNameLo": "Prelude",
+      "searchNames": [
+        "prelude"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "quint",
+      "modelName": "Quint",
+      "modelNameTh": "Quint",
+      "modelNameLo": "Quint",
+      "searchNames": [
+        "quint"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "rafaga",
+      "modelName": "Rafaga",
+      "modelNameTh": "Rafaga",
+      "modelNameLo": "Rafaga",
+      "searchNames": [
+        "rafaga"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ridgeline",
+      "modelName": "Ridgeline",
+      "modelNameTh": "Ridgeline",
+      "modelNameLo": "Ridgeline",
+      "searchNames": [
+        "ridgeline"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "s2000",
+      "modelName": "S2000",
+      "modelNameTh": "S2000",
+      "modelNameLo": "S2000",
+      "searchNames": [
+        "s2000",
+        "s 2000"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s500",
+      "modelName": "S500",
+      "modelNameTh": "S500",
+      "modelNameLo": "S500",
+      "searchNames": [
+        "s500",
+        "s 500"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s600",
+      "modelName": "S600",
+      "modelNameTh": "S600",
+      "modelNameLo": "S600",
+      "searchNames": [
+        "s600",
+        "s 600"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s660",
+      "modelName": "S660",
+      "modelNameTh": "S660",
+      "modelNameLo": "S660",
+      "searchNames": [
+        "s660",
+        "s 660"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "saber",
+      "modelName": "Saber",
+      "modelNameTh": "Saber",
+      "modelNameLo": "Saber",
+      "searchNames": [
+        "saber"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "shuttle",
+      "modelName": "Shuttle",
+      "modelNameTh": "Shuttle",
+      "modelNameLo": "Shuttle",
+      "searchNames": [
+        "shuttle"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "spirior",
+      "modelName": "Spirior",
+      "modelNameTh": "Spirior",
+      "modelNameLo": "Spirior",
+      "searchNames": [
+        "spirior"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "stepwgn",
+      "modelName": "Stepwgn",
+      "modelNameTh": "Stepwgn",
+      "modelNameLo": "Stepwgn",
+      "searchNames": [
+        "stepwgn",
+        "step wagon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "stream",
+      "modelName": "Stream",
+      "modelNameTh": "Stream",
+      "modelNameLo": "Stream",
+      "searchNames": [
+        "stream"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "street",
+      "modelName": "Street",
+      "modelNameTh": "Street",
+      "modelNameLo": "Street",
+      "searchNames": [
+        "street"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "thats",
+      "modelName": "That's",
+      "modelNameTh": "That's",
+      "modelNameLo": "That's",
+      "searchNames": [
+        "thats",
+        "that s"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "torneo",
+      "modelName": "Torneo",
+      "modelNameTh": "Torneo",
+      "modelNameLo": "Torneo",
+      "searchNames": [
+        "torneo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ur-v",
+      "modelName": "UR-V",
+      "modelNameTh": "UR-V",
+      "modelNameLo": "UR-V",
+      "searchNames": [
+        "ur-v",
+        "urv"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vamos",
+      "modelName": "Vamos",
+      "modelNameTh": "Vamos",
+      "modelNameLo": "Vamos",
+      "searchNames": [
+        "vamos"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "vezel",
+      "modelName": "Vezel",
+      "modelNameTh": "Vezel",
+      "modelNameLo": "Vezel",
+      "searchNames": [
+        "vezel",
+        "hr-v"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "vigor",
+      "modelName": "Vigor",
+      "modelNameTh": "Vigor",
+      "modelNameLo": "Vigor",
+      "searchNames": [
+        "vigor"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "wr-v",
+      "modelName": "WR-V",
+      "modelNameTh": "WR-V",
+      "modelNameLo": "WR-V",
+      "searchNames": [
+        "wr-v",
+        "wrv"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "z",
+      "modelName": "Z",
+      "modelNameTh": "Z",
+      "modelNameLo": "Z",
+      "searchNames": [
+        "z",
+        "honda z"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "zest",
+      "modelName": "ZEST",
+      "modelNameTh": "ZEST",
+      "modelNameLo": "ZEST",
+      "searchNames": [
+        "zest"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "zr-v",
+      "modelName": "ZR-V",
+      "modelNameTh": "ZR-V",
+      "modelNameLo": "ZR-V",
+      "searchNames": [
+        "zr-v",
+        "zrv"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "enp1",
+      "modelName": "e:NP1",
+      "modelNameTh": "e:NP1",
+      "modelNameLo": "e:NP1",
+      "searchNames": [
+        "enp1",
+        "e np1",
+        "e:np1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "enp2",
+      "modelName": "e:NP2",
+      "modelNameTh": "e:NP2",
+      "modelNameLo": "e:NP2",
+      "searchNames": [
+        "enp2",
+        "e np2",
+        "e:np2"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ens1",
+      "modelName": "e:NS1",
+      "modelNameTh": "e:NS1",
+      "modelNameLo": "e:NS1",
+      "searchNames": [
+        "ens1",
+        "e ns1",
+        "e:ns1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ens2",
+      "modelName": "e:NS2",
+      "modelNameTh": "e:NS2",
+      "modelNameLo": "e:NS2",
+      "searchNames": [
+        "ens2",
+        "e ns2",
+        "e:ns2"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "en1",
+      "modelName": "e:N1",
+      "modelNameTh": "e:N1",
+      "modelNameLo": "e:N1",
+      "searchNames": [
+        "en1",
+        "e n1",
+        "e:n1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eny1",
+      "modelName": "e:Ny1",
+      "modelNameTh": "e:Ny1",
+      "modelNameLo": "e:Ny1",
+      "searchNames": [
+        "eny1",
+        "e ny1",
+        "e:ny1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    }
+  ]
+}

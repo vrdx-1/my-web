@@ -1,0 +1,204 @@
+{
+  "brandId": "vinfast",
+  "brandName": "Vinfast",
+  "brandNameTh": "วินฟาสต์",
+  "brandNameLo": "ວິນຟາດ",
+  "models": [
+    {
+      "modelId": "fadil",
+      "modelName": "Fadil",
+      "modelNameTh": "Fadil",
+      "modelNameLo": "Fadil",
+      "searchNames": [
+        "fadil"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lux-a20",
+      "modelName": "Lux A2.0",
+      "modelNameTh": "Lux A2.0",
+      "modelNameLo": "Lux A2.0",
+      "searchNames": [
+        "lux a2.0",
+        "lux a20",
+        "luxa20"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lux-sa20",
+      "modelName": "Lux SA2.0",
+      "modelNameTh": "Lux SA2.0",
+      "modelNameLo": "Lux SA2.0",
+      "searchNames": [
+        "lux sa2.0",
+        "lux sa20",
+        "luxsa20"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "president",
+      "modelName": "President",
+      "modelNameTh": "President",
+      "modelNameLo": "President",
+      "searchNames": [
+        "president"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "vf-3",
+      "modelName": "VF 3",
+      "modelNameTh": "VF 3",
+      "modelNameLo": "VF 3",
+      "searchNames": [
+        "vf 3",
+        "vf3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-5",
+      "modelName": "VF 5",
+      "modelNameTh": "VF 5",
+      "modelNameLo": "VF 5",
+      "searchNames": [
+        "vf 5",
+        "vf5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-5-plus",
+      "modelName": "VF 5 Plus",
+      "modelNameTh": "VF 5 Plus",
+      "modelNameLo": "VF 5 Plus",
+      "searchNames": [
+        "vf 5 plus",
+        "vf5plus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-6",
+      "modelName": "VF 6",
+      "modelNameTh": "VF 6",
+      "modelNameLo": "VF 6",
+      "searchNames": [
+        "vf 6",
+        "vf6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-7",
+      "modelName": "VF 7",
+      "modelNameTh": "VF 7",
+      "modelNameLo": "VF 7",
+      "searchNames": [
+        "vf 7",
+        "vf7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-8",
+      "modelName": "VF 8",
+      "modelNameTh": "VF 8",
+      "modelNameLo": "VF 8",
+      "searchNames": [
+        "vf 8",
+        "vf8"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-9",
+      "modelName": "VF 9",
+      "modelNameTh": "VF 9",
+      "modelNameLo": "VF 9",
+      "searchNames": [
+        "vf 9",
+        "vf9"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-e34",
+      "modelName": "VF e34",
+      "modelNameTh": "VF e34",
+      "modelNameLo": "VF e34",
+      "searchNames": [
+        "vf e34",
+        "vfe34",
+        "e34"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "vf-wild",
+      "modelName": "VF Wild (Pickup)",
+      "modelNameTh": "VF Wild (Pickup)",
+      "modelNameLo": "VF Wild (Pickup)",
+      "searchNames": [
+        "vf wild",
+        "vfwild",
+        "wild",
+        "pickup"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "limo-green",
+      "modelName": "Limo Green",
+      "modelNameTh": "Limo Green",
+      "modelNameLo": "Limo Green",
+      "searchNames": [
+        "limo green",
+        "limogreen"
+      ],
+      "categoryIds": [
+        "bus",
+        "electric"
+      ]
+    }
+  ]
+}

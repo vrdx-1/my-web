@@ -1,0 +1,375 @@
+{
+  "brandId": "kia",
+  "brandName": "Kia",
+  "brandNameTh": "เกีย",
+  "brandNameLo": "ເກຍ",
+  "models": [
+    {
+      "modelId": "carnival",
+      "modelName": "Carnival",
+      "modelNameTh": "Carnival",
+      "modelNameLo": "Carnival",
+      "searchNames": [
+        "carnival"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "ev3",
+      "modelName": "EV3",
+      "modelNameTh": "EV3",
+      "modelNameLo": "EV3",
+      "searchNames": [
+        "ev3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev4",
+      "modelName": "EV4",
+      "modelNameTh": "EV4",
+      "modelNameLo": "EV4",
+      "searchNames": [
+        "ev4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev5",
+      "modelName": "EV5",
+      "modelNameTh": "EV5",
+      "modelNameLo": "EV5",
+      "searchNames": [
+        "ev5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev6",
+      "modelName": "EV6",
+      "modelNameTh": "EV6",
+      "modelNameLo": "EV6",
+      "searchNames": [
+        "ev6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ev9",
+      "modelName": "EV9",
+      "modelNameTh": "EV9",
+      "modelNameLo": "EV9",
+      "searchNames": [
+        "ev9"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sorento",
+      "modelName": "Sorento",
+      "modelNameTh": "Sorento",
+      "modelNameLo": "Sorento",
+      "searchNames": [
+        "sorento"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sportage",
+      "modelName": "Sportage",
+      "modelNameTh": "Sportage",
+      "modelNameLo": "Sportage",
+      "searchNames": [
+        "sportage"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "seltos",
+      "modelName": "Seltos",
+      "modelNameTh": "Seltos",
+      "modelNameLo": "Seltos",
+      "searchNames": [
+        "seltos"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sonet",
+      "modelName": "Sonet",
+      "modelNameTh": "Sonet",
+      "modelNameLo": "Sonet",
+      "searchNames": [
+        "sonet"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "carens",
+      "modelName": "Carens",
+      "modelNameTh": "Carens",
+      "modelNameLo": "Carens",
+      "searchNames": [
+        "carens"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "soul",
+      "modelName": "Soul",
+      "modelNameTh": "Soul",
+      "modelNameLo": "Soul",
+      "searchNames": [
+        "soul"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "k3",
+      "modelName": "K3",
+      "modelNameTh": "K3",
+      "modelNameLo": "K3",
+      "searchNames": [
+        "k3",
+        "cerato",
+        "forte"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "k4",
+      "modelName": "K4",
+      "modelNameTh": "K4",
+      "modelNameLo": "K4",
+      "searchNames": [
+        "k4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "k5",
+      "modelName": "K5",
+      "modelNameTh": "K5",
+      "modelNameLo": "K5",
+      "searchNames": [
+        "k5",
+        "optima"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "k8",
+      "modelName": "K8",
+      "modelNameTh": "K8",
+      "modelNameLo": "K8",
+      "searchNames": [
+        "k8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "k9",
+      "modelName": "K9",
+      "modelNameTh": "K9",
+      "modelNameLo": "K9",
+      "searchNames": [
+        "k9",
+        "k900"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "picanto",
+      "modelName": "Picanto",
+      "modelNameTh": "Picanto",
+      "modelNameLo": "Picanto",
+      "searchNames": [
+        "picanto",
+        "morning"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "stonic",
+      "modelName": "Stonic",
+      "modelNameTh": "Stonic",
+      "modelNameLo": "Stonic",
+      "searchNames": [
+        "stonic"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "telluride",
+      "modelName": "Telluride",
+      "modelNameTh": "Telluride",
+      "modelNameLo": "Telluride",
+      "searchNames": [
+        "telluride"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xceed",
+      "modelName": "XCeed",
+      "modelNameTh": "XCeed",
+      "modelNameLo": "XCeed",
+      "searchNames": [
+        "xceed",
+        "x ceed"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ceed",
+      "modelName": "Ceed",
+      "modelNameTh": "Ceed",
+      "modelNameLo": "Ceed",
+      "searchNames": [
+        "ceed"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "proceed",
+      "modelName": "Proceed",
+      "modelNameTh": "Proceed",
+      "modelNameLo": "Proceed",
+      "searchNames": [
+        "proceed"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "niro",
+      "modelName": "Niro",
+      "modelNameTh": "Niro",
+      "modelNameLo": "Niro",
+      "searchNames": [
+        "niro"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ray",
+      "modelName": "Ray",
+      "modelNameTh": "Ray",
+      "modelNameLo": "Ray",
+      "searchNames": [
+        "ray"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "pegas",
+      "modelName": "Pegas",
+      "modelNameTh": "Pegas",
+      "modelNameLo": "Pegas",
+      "searchNames": [
+        "pegas"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "tasman",
+      "modelName": "Tasman",
+      "modelNameTh": "Tasman",
+      "modelNameLo": "Tasman",
+      "searchNames": [
+        "tasman"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "syros",
+      "modelName": "Syros",
+      "modelNameTh": "Syros",
+      "modelNameLo": "Syros",
+      "searchNames": [
+        "syros"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "k2500",
+      "modelName": "K2500",
+      "modelNameTh": "K2500",
+      "modelNameLo": "K2500",
+      "searchNames": [
+        "k2500",
+        "k 2500"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    }
+  ]
+}

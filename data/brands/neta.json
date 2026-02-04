@@ -1,0 +1,167 @@
+{
+  "brandId": "neta",
+  "brandName": "Neta",
+  "brandNameTh": "เนต้า",
+  "brandNameLo": "ເນຕ້າ",
+  "models": [
+    {
+      "modelId": "neta-aya",
+      "modelName": "Neta Aya",
+      "modelNameTh": "Neta Aya",
+      "modelNameLo": "Neta Aya",
+      "searchNames": [
+        "neta aya",
+        "netaaya",
+        "aya"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-gt",
+      "modelName": "Neta GT",
+      "modelNameTh": "Neta GT",
+      "modelNameLo": "Neta GT",
+      "searchNames": [
+        "neta gt",
+        "netagt",
+        "gt"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-l",
+      "modelName": "Neta L",
+      "modelNameTh": "Neta L",
+      "modelNameLo": "Neta L",
+      "searchNames": [
+        "neta l",
+        "netal"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-n01",
+      "modelName": "Neta N01",
+      "modelNameTh": "Neta N01",
+      "modelNameLo": "Neta N01",
+      "searchNames": [
+        "neta n01",
+        "netan01",
+        "n01"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-s",
+      "modelName": "Neta S",
+      "modelNameTh": "Neta S",
+      "modelNameLo": "Neta S",
+      "searchNames": [
+        "neta s",
+        "netas"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-u",
+      "modelName": "Neta U",
+      "modelNameTh": "Neta U",
+      "modelNameLo": "Neta U",
+      "searchNames": [
+        "neta u",
+        "netau"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-u-ii",
+      "modelName": "Neta U-II",
+      "modelNameTh": "Neta U-II",
+      "modelNameLo": "Neta U-II",
+      "searchNames": [
+        "neta u-ii",
+        "neta u ii",
+        "netauii"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-u-pro",
+      "modelName": "Neta U Pro",
+      "modelNameTh": "Neta U Pro",
+      "modelNameLo": "Neta U Pro",
+      "searchNames": [
+        "neta u pro",
+        "netaupro"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-v",
+      "modelName": "Neta V",
+      "modelNameTh": "Neta V",
+      "modelNameLo": "Neta V",
+      "searchNames": [
+        "neta v",
+        "netav"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-v-ii",
+      "modelName": "Neta V-II",
+      "modelNameTh": "Neta V-II",
+      "modelNameLo": "Neta V-II",
+      "searchNames": [
+        "neta v-ii",
+        "neta v ii",
+        "netavii"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "neta-x",
+      "modelName": "Neta X",
+      "modelNameTh": "Neta X",
+      "modelNameLo": "Neta X",
+      "searchNames": [
+        "neta x",
+        "netax"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    }
+  ]
+}

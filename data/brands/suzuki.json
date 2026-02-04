@@ -1,0 +1,553 @@
+{
+  "brandId": "suzuki",
+  "brandName": "Suzuki",
+  "brandNameTh": "ซูซูกิ",
+  "brandNameLo": "ຊູຊູກິ",
+  "models": [
+    {
+      "modelId": "aerio",
+      "modelName": "Aerio",
+      "modelNameTh": "Aerio",
+      "modelNameLo": "Aerio",
+      "searchNames": [
+        "aerio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "alto",
+      "modelName": "Alto",
+      "modelNameTh": "Alto",
+      "modelNameLo": "Alto",
+      "searchNames": [
+        "alto"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "apv",
+      "modelName": "APV",
+      "modelNameTh": "APV",
+      "modelNameLo": "APV",
+      "searchNames": [
+        "apv"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "baleno",
+      "modelName": "Baleno",
+      "modelNameTh": "Baleno",
+      "modelNameLo": "Baleno",
+      "searchNames": [
+        "baleno"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cappuccino",
+      "modelName": "Cappuccino",
+      "modelNameTh": "Cappuccino",
+      "modelNameLo": "Cappuccino",
+      "searchNames": [
+        "cappuccino"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "carry",
+      "modelName": "Carry",
+      "modelNameTh": "Carry",
+      "modelNameLo": "Carry",
+      "searchNames": [
+        "carry"
+      ],
+      "categoryIds": [
+        "van",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "celerio",
+      "modelName": "Celerio",
+      "modelNameTh": "Celerio",
+      "modelNameLo": "Celerio",
+      "searchNames": [
+        "celerio"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cervo",
+      "modelName": "Cervo",
+      "modelNameTh": "Cervo",
+      "modelNameLo": "Cervo",
+      "searchNames": [
+        "cervo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ciaz",
+      "modelName": "Ciaz",
+      "modelNameTh": "Ciaz",
+      "modelNameLo": "Ciaz",
+      "searchNames": [
+        "ciaz"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cultus",
+      "modelName": "Cultus",
+      "modelNameTh": "Cultus",
+      "modelNameLo": "Cultus",
+      "searchNames": [
+        "cultus",
+        "swift"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ertiga",
+      "modelName": "Ertiga",
+      "modelNameTh": "Ertiga",
+      "modelNameLo": "Ertiga",
+      "searchNames": [
+        "ertiga"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "escudo",
+      "modelName": "Escudo",
+      "modelNameTh": "Escudo",
+      "modelNameLo": "Escudo",
+      "searchNames": [
+        "escudo",
+        "vitara"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "esteem",
+      "modelName": "Esteem",
+      "modelNameTh": "Esteem",
+      "modelNameLo": "Esteem",
+      "searchNames": [
+        "esteem"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "every",
+      "modelName": "Every",
+      "modelNameTh": "Every",
+      "modelNameLo": "Every",
+      "searchNames": [
+        "every"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "forenza",
+      "modelName": "Forenza",
+      "modelNameTh": "Forenza",
+      "modelNameLo": "Forenza",
+      "searchNames": [
+        "forenza"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fronte",
+      "modelName": "Fronte",
+      "modelNameTh": "Fronte",
+      "modelNameLo": "Fronte",
+      "searchNames": [
+        "fronte"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fronx",
+      "modelName": "Fronx",
+      "modelNameTh": "Fronx",
+      "modelNameLo": "Fronx",
+      "searchNames": [
+        "fronx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "grand-vitara",
+      "modelName": "Grand Vitara",
+      "modelNameTh": "Grand Vitara",
+      "modelNameLo": "Grand Vitara",
+      "searchNames": [
+        "grand vitara",
+        "grandvitara"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ignis",
+      "modelName": "Ignis",
+      "modelNameTh": "Ignis",
+      "modelNameLo": "Ignis",
+      "searchNames": [
+        "ignis"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jimny",
+      "modelName": "Jimny",
+      "modelNameTh": "Jimny",
+      "modelNameLo": "Jimny",
+      "searchNames": [
+        "jimny",
+        "samurai"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "karimun",
+      "modelName": "Karimun",
+      "modelNameTh": "Karimun",
+      "modelNameLo": "Karimun",
+      "searchNames": [
+        "karimun"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "kizashi",
+      "modelName": "Kizashi",
+      "modelNameTh": "Kizashi",
+      "modelNameLo": "Kizashi",
+      "searchNames": [
+        "kizashi"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lapin",
+      "modelName": "Lapin",
+      "modelNameTh": "Lapin",
+      "modelNameLo": "Lapin",
+      "searchNames": [
+        "lapin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "liana",
+      "modelName": "Liana",
+      "modelNameTh": "Liana",
+      "modelNameLo": "Liana",
+      "searchNames": [
+        "liana"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mehran",
+      "modelName": "Mehran",
+      "modelNameTh": "Mehran",
+      "modelNameLo": "Mehran",
+      "searchNames": [
+        "mehran"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mighty-boy",
+      "modelName": "Mighty Boy",
+      "modelNameTh": "Mighty Boy",
+      "modelNameLo": "Mighty Boy",
+      "searchNames": [
+        "mighty boy",
+        "mightyboy"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "mr-wagon",
+      "modelName": "MR Wagon",
+      "modelNameTh": "MR Wagon",
+      "modelNameLo": "MR Wagon",
+      "searchNames": [
+        "mr wagon",
+        "mrwagon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "palette",
+      "modelName": "Palette",
+      "modelNameTh": "Palette",
+      "modelNameLo": "Palette",
+      "searchNames": [
+        "palette"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "reno",
+      "modelName": "Reno",
+      "modelNameTh": "Reno",
+      "modelNameLo": "Reno",
+      "searchNames": [
+        "reno"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "samurai",
+      "modelName": "Samurai",
+      "modelNameTh": "Samurai",
+      "modelNameLo": "Samurai",
+      "searchNames": [
+        "samurai",
+        "jimny"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sidekick",
+      "modelName": "Sidekick",
+      "modelNameTh": "Sidekick",
+      "modelNameLo": "Sidekick",
+      "searchNames": [
+        "sidekick"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "solio",
+      "modelName": "Solio",
+      "modelNameTh": "Solio",
+      "modelNameLo": "Solio",
+      "searchNames": [
+        "solio"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "spacia",
+      "modelName": "Spacia",
+      "modelNameTh": "Spacia",
+      "modelNameLo": "Spacia",
+      "searchNames": [
+        "spacia"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "splash",
+      "modelName": "Splash",
+      "modelNameTh": "Splash",
+      "modelNameLo": "Splash",
+      "searchNames": [
+        "splash"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "swace",
+      "modelName": "Swace",
+      "modelNameTh": "Swace",
+      "modelNameLo": "Swace",
+      "searchNames": [
+        "swace"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "swift",
+      "modelName": "Swift",
+      "modelNameTh": "Swift",
+      "modelNameLo": "Swift",
+      "searchNames": [
+        "swift"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sx4",
+      "modelName": "SX4",
+      "modelNameTh": "SX4",
+      "modelNameLo": "SX4",
+      "searchNames": [
+        "sx4",
+        "sx 4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sx4-s-cross",
+      "modelName": "SX4 S-Cross",
+      "modelNameTh": "SX4 S-Cross",
+      "modelNameLo": "SX4 S-Cross",
+      "searchNames": [
+        "sx4 s-cross",
+        "sx4 scross",
+        "s-cross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "twin",
+      "modelName": "Twin",
+      "modelNameTh": "Twin",
+      "modelNameLo": "Twin",
+      "searchNames": [
+        "twin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "verona",
+      "modelName": "Verona",
+      "modelNameTh": "Verona",
+      "modelNameLo": "Verona",
+      "searchNames": [
+        "verona"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "vitara",
+      "modelName": "Vitara",
+      "modelNameTh": "Vitara",
+      "modelNameLo": "Vitara",
+      "searchNames": [
+        "vitara",
+        "escudo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "wagon-r",
+      "modelName": "Wagon R",
+      "modelNameTh": "Wagon R",
+      "modelNameLo": "Wagon R",
+      "searchNames": [
+        "wagon r",
+        "wagonr"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "x-90",
+      "modelName": "X-90",
+      "modelNameTh": "X-90",
+      "modelNameLo": "X-90",
+      "searchNames": [
+        "x-90",
+        "x90"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xl-7",
+      "modelName": "XL-7",
+      "modelNameTh": "XL-7",
+      "modelNameLo": "XL-7",
+      "searchNames": [
+        "xl-7",
+        "xl7",
+        "xl 7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

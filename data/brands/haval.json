@@ -1,0 +1,432 @@
+{
+  "brandId": "haval",
+  "brandName": "Haval",
+  "brandNameTh": "ฮาวาล",
+  "brandNameLo": "ຮາວານ",
+  "models": [
+    {
+      "modelId": "chitu",
+      "modelName": "Chitu (Red Rabbit)",
+      "modelNameTh": "Chitu (Red Rabbit)",
+      "modelNameLo": "Chitu (Red Rabbit)",
+      "searchNames": [
+        "chitu",
+        "red rabbit",
+        "redrabbit"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cool-dog",
+      "modelName": "Cool Dog",
+      "modelNameTh": "Cool Dog",
+      "modelNameLo": "Cool Dog",
+      "searchNames": [
+        "cool dog",
+        "cooldog"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "dargo",
+      "modelName": "Dargo (Big Dog)",
+      "modelNameTh": "Dargo (Big Dog)",
+      "modelNameLo": "Dargo (Big Dog)",
+      "searchNames": [
+        "dargo",
+        "big dog",
+        "bigdog"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "dagou",
+      "modelName": "Dagou",
+      "modelNameTh": "Dagou",
+      "modelNameLo": "Dagou",
+      "searchNames": [
+        "dagou"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f5",
+      "modelName": "F5",
+      "modelNameTh": "F5",
+      "modelNameLo": "F5",
+      "searchNames": [
+        "f5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f7",
+      "modelName": "F7",
+      "modelNameTh": "F7",
+      "modelNameLo": "F7",
+      "searchNames": [
+        "f7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "f7x",
+      "modelName": "F7x",
+      "modelNameTh": "F7x",
+      "modelNameLo": "F7x",
+      "searchNames": [
+        "f7x"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "first-love",
+      "modelName": "First Love",
+      "modelNameTh": "First Love",
+      "modelNameLo": "First Love",
+      "searchNames": [
+        "first love",
+        "firstlove",
+        "jolion"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h1",
+      "modelName": "H1",
+      "modelNameTh": "H1",
+      "modelNameLo": "H1",
+      "searchNames": [
+        "h1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h2",
+      "modelName": "H2",
+      "modelNameTh": "H2",
+      "modelNameLo": "H2",
+      "searchNames": [
+        "h2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h2s",
+      "modelName": "H2s",
+      "modelNameTh": "H2s",
+      "modelNameLo": "H2s",
+      "searchNames": [
+        "h2s"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h4",
+      "modelName": "H4",
+      "modelNameTh": "H4",
+      "modelNameLo": "H4",
+      "searchNames": [
+        "h4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h5",
+      "modelName": "H5",
+      "modelNameTh": "H5",
+      "modelNameLo": "H5",
+      "searchNames": [
+        "h5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h6",
+      "modelName": "H6",
+      "modelNameTh": "H6",
+      "modelNameLo": "H6",
+      "searchNames": [
+        "h6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h6-coupe",
+      "modelName": "H6 Coupé",
+      "modelNameTh": "H6 Coupé",
+      "modelNameLo": "H6 Coupé",
+      "searchNames": [
+        "h6 coupe",
+        "h6coupe"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "h6-gt",
+      "modelName": "H6 GT",
+      "modelNameTh": "H6 GT",
+      "modelNameLo": "H6 GT",
+      "searchNames": [
+        "h6 gt",
+        "h6gt"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "h6-hybrid",
+      "modelName": "H6 Hybrid (HEV)",
+      "modelNameTh": "H6 Hybrid (HEV)",
+      "modelNameLo": "H6 Hybrid (HEV)",
+      "searchNames": [
+        "h6 hybrid",
+        "h6 hybrid hev",
+        "h6hev"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "h6-phev",
+      "modelName": "H6 Plug-in Hybrid (PHEV)",
+      "modelNameTh": "H6 Plug-in Hybrid (PHEV)",
+      "modelNameLo": "H6 Plug-in Hybrid (PHEV)",
+      "searchNames": [
+        "h6 phev",
+        "h6 plug-in hybrid",
+        "h6phev"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "h7",
+      "modelName": "H7",
+      "modelNameTh": "H7",
+      "modelNameLo": "H7",
+      "searchNames": [
+        "h7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h7l",
+      "modelName": "H7L",
+      "modelNameTh": "H7L",
+      "modelNameLo": "H7L",
+      "searchNames": [
+        "h7l"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h8",
+      "modelName": "H8",
+      "modelNameTh": "H8",
+      "modelNameLo": "H8",
+      "searchNames": [
+        "h8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h9",
+      "modelName": "H9",
+      "modelNameTh": "H9",
+      "modelNameLo": "H9",
+      "searchNames": [
+        "h9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jolion",
+      "modelName": "Jolion (First Love)",
+      "modelNameTh": "Jolion (First Love)",
+      "modelNameLo": "Jolion (First Love)",
+      "searchNames": [
+        "jolion",
+        "first love"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jolion-pro",
+      "modelName": "Jolion Pro",
+      "modelNameTh": "Jolion Pro",
+      "modelNameLo": "Jolion Pro",
+      "searchNames": [
+        "jolion pro",
+        "jolionpro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jolion-sport",
+      "modelName": "Jolion Sport",
+      "modelNameTh": "Jolion Sport",
+      "modelNameLo": "Jolion Sport",
+      "searchNames": [
+        "jolion sport",
+        "jolionsport"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m6",
+      "modelName": "M6",
+      "modelNameTh": "M6",
+      "modelNameLo": "M6",
+      "searchNames": [
+        "m6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "m6-plus",
+      "modelName": "M6 Plus",
+      "modelNameTh": "M6 Plus",
+      "modelNameLo": "M6 Plus",
+      "searchNames": [
+        "m6 plus",
+        "m6plus"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "monster",
+      "modelName": "Monster (Shenshou)",
+      "modelNameTh": "Monster (Shenshou)",
+      "modelNameLo": "Monster (Shenshou)",
+      "searchNames": [
+        "monster",
+        "shenshou"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "raptor",
+      "modelName": "Raptor",
+      "modelNameTh": "Raptor",
+      "modelNameLo": "Raptor",
+      "searchNames": [
+        "raptor"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "v7",
+      "modelName": "V7",
+      "modelNameTh": "V7",
+      "modelNameLo": "V7",
+      "searchNames": [
+        "v7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vision-2025",
+      "modelName": "Vision 2025",
+      "modelNameTh": "Vision 2025",
+      "modelNameLo": "Vision 2025",
+      "searchNames": [
+        "vision 2025",
+        "vision2025"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xiaolong",
+      "modelName": "Xiaolong",
+      "modelNameTh": "Xiaolong",
+      "modelNameLo": "Xiaolong",
+      "searchNames": [
+        "xiaolong"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "xiaolong-max",
+      "modelName": "Xiaolong Max",
+      "modelNameTh": "Xiaolong Max",
+      "modelNameLo": "Xiaolong Max",
+      "searchNames": [
+        "xiaolong max",
+        "xiaolongmax"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    }
+  ]
+}

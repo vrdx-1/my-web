@@ -1,0 +1,220 @@
+{
+  "brandId": "leapmotor",
+  "brandName": "Leapmotor",
+  "brandNameTh": "ลีปมอเตอร์",
+  "brandNameLo": "ລີບມໍເຕີ",
+  "models": [
+    {
+      "modelId": "a05",
+      "modelName": "A05",
+      "modelNameTh": "A05",
+      "modelNameLo": "A05",
+      "searchNames": [
+        "a05",
+        "a 05"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "a10",
+      "modelName": "A10",
+      "modelNameTh": "A10",
+      "modelNameLo": "A10",
+      "searchNames": [
+        "a10",
+        "a 10"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b01",
+      "modelName": "B01",
+      "modelNameTh": "B01",
+      "modelNameLo": "B01",
+      "searchNames": [
+        "b01",
+        "b 01"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b03x",
+      "modelName": "B03X",
+      "modelNameTh": "B03X",
+      "modelNameLo": "B03X",
+      "searchNames": [
+        "b03x",
+        "b03 x",
+        "b 03x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b05",
+      "modelName": "B05",
+      "modelNameTh": "B05",
+      "modelNameLo": "B05",
+      "searchNames": [
+        "b05",
+        "b 05"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "b10",
+      "modelName": "B10",
+      "modelNameTh": "B10",
+      "modelNameLo": "B10",
+      "searchNames": [
+        "b10",
+        "b 10"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "c01",
+      "modelName": "C01",
+      "modelNameTh": "C01",
+      "modelNameLo": "C01",
+      "searchNames": [
+        "c01",
+        "c 01"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "c10",
+      "modelName": "C10",
+      "modelNameTh": "C10",
+      "modelNameLo": "C10",
+      "searchNames": [
+        "c10",
+        "c 10"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "c11",
+      "modelName": "C11",
+      "modelNameTh": "C11",
+      "modelNameLo": "C11",
+      "searchNames": [
+        "c11",
+        "c 11"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "c16",
+      "modelName": "C16",
+      "modelNameTh": "C16",
+      "modelNameLo": "C16",
+      "searchNames": [
+        "c16",
+        "c 16"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "d19",
+      "modelName": "D19",
+      "modelNameTh": "D19",
+      "modelNameLo": "D19",
+      "searchNames": [
+        "d19",
+        "d 19"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "d99",
+      "modelName": "D99",
+      "modelNameTh": "D99",
+      "modelNameLo": "D99",
+      "searchNames": [
+        "d99",
+        "d 99"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lafa-5",
+      "modelName": "Lafa 5",
+      "modelNameTh": "Lafa 5",
+      "modelNameLo": "Lafa 5",
+      "searchNames": [
+        "lafa 5",
+        "lafa5",
+        "lafa"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "s01",
+      "modelName": "S01",
+      "modelNameTh": "S01",
+      "modelNameLo": "S01",
+      "searchNames": [
+        "s01",
+        "s 01"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "t03",
+      "modelName": "T03",
+      "modelNameTh": "T03",
+      "modelNameLo": "T03",
+      "searchNames": [
+        "t03",
+        "t 03"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    }
+  ]
+}

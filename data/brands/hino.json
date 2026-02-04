@@ -1,0 +1,675 @@
+{
+  "brandId": "hino",
+  "brandName": "Hino",
+  "brandNameTh": "ฮีโน่",
+  "brandNameLo": "ຮີໂນ້",
+  "models": [
+    {
+      "modelId": "300-innovator",
+      "modelName": "300 Innovator",
+      "modelNameTh": "300 Innovator",
+      "modelNameLo": "300 Innovator",
+      "searchNames": [
+        "300 innovator",
+        "300 series"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "300-atom",
+      "modelName": "300 Atom",
+      "modelNameTh": "300 Atom",
+      "modelNameLo": "300 Atom",
+      "searchNames": [
+        "300 atom"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "300-series-hybrid",
+      "modelName": "300 Series Hybrid",
+      "modelNameTh": "300 Series Hybrid",
+      "modelNameLo": "300 Series Hybrid",
+      "searchNames": [
+        "300 series hybrid",
+        "300 hybrid"
+      ],
+      "categoryIds": [
+        "truck",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "500-dominator",
+      "modelName": "500 Dominator",
+      "modelNameTh": "500 Dominator",
+      "modelNameLo": "500 Dominator",
+      "searchNames": [
+        "500 dominator"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "500-victor",
+      "modelName": "500 Victor",
+      "modelNameTh": "500 Victor",
+      "modelNameLo": "500 Victor",
+      "searchNames": [
+        "500 victor"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "500-series-wide-cab",
+      "modelName": "500 Series Wide Cab",
+      "modelNameTh": "500 Series Wide Cab",
+      "modelNameLo": "500 Series Wide Cab",
+      "searchNames": [
+        "500 series wide cab",
+        "500 wide cab"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "600-series",
+      "modelName": "600 Series",
+      "modelNameTh": "600 Series",
+      "modelNameLo": "600 Series",
+      "searchNames": [
+        "600 series"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "700-splendor",
+      "modelName": "700 Splendor",
+      "modelNameTh": "700 Splendor",
+      "modelNameLo": "700 Splendor",
+      "searchNames": [
+        "700 splendor"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "700-profia",
+      "modelName": "700 Profia",
+      "modelNameTh": "700 Profia",
+      "modelNameLo": "700 Profia",
+      "searchNames": [
+        "700 profia"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "blue-ribbon",
+      "modelName": "Blue Ribbon",
+      "modelNameTh": "Blue Ribbon",
+      "modelNameLo": "Blue Ribbon",
+      "searchNames": [
+        "blue ribbon"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "blue-ribbon-ii",
+      "modelName": "Blue Ribbon II",
+      "modelNameTh": "Blue Ribbon II",
+      "modelNameLo": "Blue Ribbon II",
+      "searchNames": [
+        "blue ribbon ii",
+        "blue ribbon 2"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "br10",
+      "modelName": "BR10",
+      "modelNameTh": "BR10",
+      "modelNameLo": "BR10",
+      "searchNames": [
+        "br10",
+        "br 10"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "contessa",
+      "modelName": "Contessa",
+      "modelNameTh": "Contessa",
+      "modelNameLo": "Contessa",
+      "searchNames": [
+        "contessa"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "cruising-ranger",
+      "modelName": "Cruising Ranger",
+      "modelNameTh": "Cruising Ranger",
+      "modelNameLo": "Cruising Ranger",
+      "searchNames": [
+        "cruising ranger"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "ds17",
+      "modelName": "DS17",
+      "modelNameTh": "DS17",
+      "modelNameLo": "DS17",
+      "searchNames": [
+        "ds17",
+        "ds 17"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "dutro",
+      "modelName": "Dutro",
+      "modelNameTh": "Dutro",
+      "modelNameLo": "Dutro",
+      "searchNames": [
+        "dutro"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "dutro-z-ev",
+      "modelName": "Dutro Z EV",
+      "modelNameTh": "Dutro Z EV",
+      "modelNameLo": "Dutro Z EV",
+      "searchNames": [
+        "dutro z ev",
+        "dutro ev"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eletra",
+      "modelName": "Eletra",
+      "modelNameTh": "Eletra",
+      "modelNameLo": "Eletra",
+      "searchNames": [
+        "eletra"
+      ],
+      "categoryIds": [
+        "bus",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fb",
+      "modelName": "FB",
+      "modelNameTh": "FB",
+      "modelNameLo": "FB",
+      "searchNames": [
+        "fb"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fc",
+      "modelName": "FC",
+      "modelNameTh": "FC",
+      "modelNameLo": "FC",
+      "searchNames": [
+        "fc"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fd",
+      "modelName": "FD",
+      "modelNameTh": "FD",
+      "modelNameLo": "FD",
+      "searchNames": [
+        "fd"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fe",
+      "modelName": "FE",
+      "modelNameTh": "FE",
+      "modelNameLo": "FE",
+      "searchNames": [
+        "fe"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fg",
+      "modelName": "FG",
+      "modelNameTh": "FG",
+      "modelNameLo": "FG",
+      "searchNames": [
+        "fg"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "ff",
+      "modelName": "FF",
+      "modelNameTh": "FF",
+      "modelNameLo": "FF",
+      "searchNames": [
+        "ff"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fl",
+      "modelName": "FL",
+      "modelNameTh": "FL",
+      "modelNameLo": "FL",
+      "searchNames": [
+        "fl"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "fm",
+      "modelName": "FM",
+      "modelNameTh": "FM",
+      "modelNameLo": "FM",
+      "searchNames": [
+        "fm"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "gd",
+      "modelName": "GD",
+      "modelNameTh": "GD",
+      "modelNameLo": "GD",
+      "searchNames": [
+        "gd"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "gh",
+      "modelName": "GH",
+      "modelNameTh": "GH",
+      "modelNameLo": "GH",
+      "searchNames": [
+        "gh"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "gt",
+      "modelName": "GT",
+      "modelNameTh": "GT",
+      "modelNameLo": "GT",
+      "searchNames": [
+        "gt"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "gy",
+      "modelName": "GY",
+      "modelNameTh": "GY",
+      "modelNameLo": "GY",
+      "searchNames": [
+        "gy"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "j05",
+      "modelName": "J05",
+      "modelNameTh": "J05",
+      "modelNameLo": "J05",
+      "searchNames": [
+        "j05",
+        "j 05"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "jumbo-ranger",
+      "modelName": "Jumbo Ranger",
+      "modelNameTh": "Jumbo Ranger",
+      "modelNameLo": "Jumbo Ranger",
+      "searchNames": [
+        "jumbo ranger"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "l-series",
+      "modelName": "L Series (L6, L7, L8)",
+      "modelNameTh": "L Series (L6, L7, L8)",
+      "modelNameLo": "L Series (L6, L7, L8)",
+      "searchNames": [
+        "l series",
+        "l6",
+        "l7",
+        "l8"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "liesse",
+      "modelName": "Liesse",
+      "modelNameTh": "Liesse",
+      "modelNameLo": "Liesse",
+      "searchNames": [
+        "liesse"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "liesse-ii",
+      "modelName": "Liesse II",
+      "modelNameTh": "Liesse II",
+      "modelNameLo": "Liesse II",
+      "searchNames": [
+        "liesse ii",
+        "liesse 2"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "melpha",
+      "modelName": "Melpha",
+      "modelNameTh": "Melpha",
+      "modelNameLo": "Melpha",
+      "searchNames": [
+        "melpha"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "poncho",
+      "modelName": "Poncho",
+      "modelNameTh": "Poncho",
+      "modelNameLo": "Poncho",
+      "searchNames": [
+        "poncho"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "profia",
+      "modelName": "Profia",
+      "modelNameTh": "Profia",
+      "modelNameLo": "Profia",
+      "searchNames": [
+        "profia"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "rainbow",
+      "modelName": "Rainbow",
+      "modelNameTh": "Rainbow",
+      "modelNameLo": "Rainbow",
+      "searchNames": [
+        "rainbow"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "rainbow-ii",
+      "modelName": "Rainbow II",
+      "modelNameTh": "Rainbow II",
+      "modelNameLo": "Rainbow II",
+      "searchNames": [
+        "rainbow ii",
+        "rainbow 2"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "ranger",
+      "modelName": "Ranger",
+      "modelNameTh": "Ranger",
+      "modelNameLo": "Ranger",
+      "searchNames": [
+        "ranger"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "ranger-2",
+      "modelName": "Ranger 2",
+      "modelNameTh": "Ranger 2",
+      "modelNameLo": "Ranger 2",
+      "searchNames": [
+        "ranger 2"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "ranger-pro",
+      "modelName": "Ranger Pro",
+      "modelNameTh": "Ranger Pro",
+      "modelNameLo": "Ranger Pro",
+      "searchNames": [
+        "ranger pro"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "rising-ranger",
+      "modelName": "Rising Ranger",
+      "modelNameTh": "Rising Ranger",
+      "modelNameLo": "Rising Ranger",
+      "searchNames": [
+        "rising ranger"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "rm",
+      "modelName": "RM",
+      "modelNameTh": "RM",
+      "modelNameLo": "RM",
+      "searchNames": [
+        "rm"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "rk",
+      "modelName": "RK",
+      "modelNameTh": "RK",
+      "modelNameLo": "RK",
+      "searchNames": [
+        "rk"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "ru",
+      "modelName": "RU",
+      "modelNameTh": "RU",
+      "modelNameLo": "RU",
+      "searchNames": [
+        "ru"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "selega",
+      "modelName": "S'elega",
+      "modelNameTh": "S'elega",
+      "modelNameLo": "S'elega",
+      "searchNames": [
+        "selega",
+        "s elega"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "super-dolphin",
+      "modelName": "Super Dolphin",
+      "modelNameTh": "Super Dolphin",
+      "modelNameLo": "Super Dolphin",
+      "searchNames": [
+        "super dolphin"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "super-dolphin-profia",
+      "modelName": "Super Dolphin Profia",
+      "modelNameTh": "Super Dolphin Profia",
+      "modelNameLo": "Super Dolphin Profia",
+      "searchNames": [
+        "super dolphin profia"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "th-series",
+      "modelName": "TH Series",
+      "modelNameTh": "TH Series",
+      "modelNameLo": "TH Series",
+      "searchNames": [
+        "th series"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "xl-series",
+      "modelName": "XL Series (XL7, XL8)",
+      "modelNameTh": "XL Series (XL7, XL8)",
+      "modelNameLo": "XL Series (XL7, XL8)",
+      "searchNames": [
+        "xl series",
+        "xl7",
+        "xl8"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "zs",
+      "modelName": "ZS",
+      "modelNameTh": "ZS",
+      "modelNameLo": "ZS",
+      "searchNames": [
+        "zs"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "zy",
+      "modelName": "ZY",
+      "modelNameTh": "ZY",
+      "modelNameLo": "ZY",
+      "searchNames": [
+        "zy"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    }
+  ]
+}

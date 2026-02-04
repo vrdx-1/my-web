@@ -1,0 +1,747 @@
+{
+  "brandId": "mitsubishi",
+  "brandName": "Mitsubishi",
+  "brandNameTh": "มิตซูบิชิ",
+  "brandNameLo": "ມິດຊູບິຊິ",
+  "models": [
+    {
+      "modelId": "airdrek",
+      "modelName": "Airdrek",
+      "modelNameTh": "Airdrek",
+      "modelNameLo": "Airdrek",
+      "searchNames": [
+        "airdrek"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aspire",
+      "modelName": "Aspire",
+      "modelNameTh": "Aspire",
+      "modelNameLo": "Aspire",
+      "searchNames": [
+        "aspire"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "asx",
+      "modelName": "ASX",
+      "modelNameTh": "ASX",
+      "modelNameLo": "ASX",
+      "searchNames": [
+        "asx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "attrage",
+      "modelName": "Attrage",
+      "modelNameTh": "Attrage",
+      "modelNameLo": "Attrage",
+      "searchNames": [
+        "attrage"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "carisma",
+      "modelName": "Carisma",
+      "modelNameTh": "Carisma",
+      "modelNameLo": "Carisma",
+      "searchNames": [
+        "carisma"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "celeste",
+      "modelName": "Celeste",
+      "modelNameTh": "Celeste",
+      "modelNameLo": "Celeste",
+      "searchNames": [
+        "celeste"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "chariot",
+      "modelName": "Chariot",
+      "modelNameTh": "Chariot",
+      "modelNameLo": "Chariot",
+      "searchNames": [
+        "chariot"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "colt",
+      "modelName": "Colt",
+      "modelNameTh": "Colt",
+      "modelNameLo": "Colt",
+      "searchNames": [
+        "colt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cordia",
+      "modelName": "Cordia",
+      "modelNameTh": "Cordia",
+      "modelNameLo": "Cordia",
+      "searchNames": [
+        "cordia"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "debonair",
+      "modelName": "Debonair",
+      "modelNameTh": "Debonair",
+      "modelNameLo": "Debonair",
+      "searchNames": [
+        "debonair"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "delica",
+      "modelName": "Delica",
+      "modelNameTh": "Delica",
+      "modelNameLo": "Delica",
+      "searchNames": [
+        "delica"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "diamante",
+      "modelName": "Diamante",
+      "modelNameTh": "Diamante",
+      "modelNameLo": "Diamante",
+      "searchNames": [
+        "diamante"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dignity",
+      "modelName": "Dignity",
+      "modelNameTh": "Dignity",
+      "modelNameLo": "Dignity",
+      "searchNames": [
+        "dignity"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "eclipse",
+      "modelName": "Eclipse",
+      "modelNameTh": "Eclipse",
+      "modelNameLo": "Eclipse",
+      "searchNames": [
+        "eclipse"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "eclipse-cross",
+      "modelName": "Eclipse Cross",
+      "modelNameTh": "Eclipse Cross",
+      "modelNameLo": "Eclipse Cross",
+      "searchNames": [
+        "eclipse cross",
+        "eclipsecross"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ek-wagon",
+      "modelName": "eK Wagon",
+      "modelNameTh": "eK Wagon",
+      "modelNameLo": "eK Wagon",
+      "searchNames": [
+        "ek wagon",
+        "ekwagon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "endeavor",
+      "modelName": "Endeavor",
+      "modelNameTh": "Endeavor",
+      "modelNameLo": "Endeavor",
+      "searchNames": [
+        "endeavor"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fto",
+      "modelName": "FTO",
+      "modelNameTh": "FTO",
+      "modelNameLo": "FTO",
+      "searchNames": [
+        "fto"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "galant",
+      "modelName": "Galant",
+      "modelNameTh": "Galant",
+      "modelNameLo": "Galant",
+      "searchNames": [
+        "galant"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "galant-fortis",
+      "modelName": "Galant Fortis",
+      "modelNameTh": "Galant Fortis",
+      "modelNameLo": "Galant Fortis",
+      "searchNames": [
+        "galant fortis",
+        "fortis"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "grandis",
+      "modelName": "Grandis",
+      "modelNameTh": "Grandis",
+      "modelNameLo": "Grandis",
+      "searchNames": [
+        "grandis"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "gto",
+      "modelName": "GTO",
+      "modelNameTh": "GTO",
+      "modelNameLo": "GTO",
+      "searchNames": [
+        "gto"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "i-miev",
+      "modelName": "i-MiEV",
+      "modelNameTh": "i-MiEV",
+      "modelNameLo": "i-MiEV",
+      "searchNames": [
+        "i-miev",
+        "imiev",
+        "miev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "jeep",
+      "modelName": "Jeep",
+      "modelNameTh": "Jeep",
+      "modelNameLo": "Jeep",
+      "searchNames": [
+        "jeep",
+        "mitsubishi jeep"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "l200",
+      "modelName": "L200",
+      "modelNameTh": "L200",
+      "modelNameLo": "L200",
+      "searchNames": [
+        "l200",
+        "l 200"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "lancer",
+      "modelName": "Lancer",
+      "modelNameTh": "Lancer",
+      "modelNameLo": "Lancer",
+      "searchNames": [
+        "lancer"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lancer-evolution",
+      "modelName": "Lancer Evolution",
+      "modelNameTh": "Lancer Evolution",
+      "modelNameLo": "Lancer Evolution",
+      "searchNames": [
+        "lancer evolution",
+        "evolution",
+        "evo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "lancer-ex",
+      "modelName": "Lancer EX",
+      "modelNameTh": "Lancer EX",
+      "modelNameLo": "Lancer EX",
+      "searchNames": [
+        "lancer ex",
+        "lancerex"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "legnum",
+      "modelName": "Legnum",
+      "modelNameTh": "Legnum",
+      "modelNameLo": "Legnum",
+      "searchNames": [
+        "legnum"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "libero",
+      "modelName": "Libero",
+      "modelNameTh": "Libero",
+      "modelNameLo": "Libero",
+      "searchNames": [
+        "libero"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "magna",
+      "modelName": "Magna",
+      "modelNameTh": "Magna",
+      "modelNameLo": "Magna",
+      "searchNames": [
+        "magna"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "minica",
+      "modelName": "Minica",
+      "modelNameTh": "Minica",
+      "modelNameLo": "Minica",
+      "searchNames": [
+        "minica"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "minicab",
+      "modelName": "Minicab",
+      "modelNameTh": "Minicab",
+      "modelNameLo": "Minicab",
+      "searchNames": [
+        "minicab"
+      ],
+      "categoryIds": [
+        "van",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "mirage",
+      "modelName": "Mirage",
+      "modelNameTh": "Mirage",
+      "modelNameLo": "Mirage",
+      "searchNames": [
+        "mirage"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "montero",
+      "modelName": "Montero",
+      "modelNameTh": "Montero",
+      "modelNameLo": "Montero",
+      "searchNames": [
+        "montero"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "outlander",
+      "modelName": "Outlander",
+      "modelNameTh": "Outlander",
+      "modelNameLo": "Outlander",
+      "searchNames": [
+        "outlander"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "outlander-sport",
+      "modelName": "Outlander Sport",
+      "modelNameTh": "Outlander Sport",
+      "modelNameLo": "Outlander Sport",
+      "searchNames": [
+        "outlander sport",
+        "outlandersport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pajero",
+      "modelName": "Pajero",
+      "modelNameTh": "Pajero",
+      "modelNameLo": "Pajero",
+      "searchNames": [
+        "pajero"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pajero-junior",
+      "modelName": "Pajero Junior",
+      "modelNameTh": "Pajero Junior",
+      "modelNameLo": "Pajero Junior",
+      "searchNames": [
+        "pajero junior",
+        "pajerojunior"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pajero-mini",
+      "modelName": "Pajero Mini",
+      "modelNameTh": "Pajero Mini",
+      "modelNameLo": "Pajero Mini",
+      "searchNames": [
+        "pajero mini",
+        "pageromini"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "pajero-sport",
+      "modelName": "Pajero Sport",
+      "modelNameTh": "Pajero Sport",
+      "modelNameLo": "Pajero Sport",
+      "searchNames": [
+        "pajero sport",
+        "pajerosport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "proudia",
+      "modelName": "Proudia",
+      "modelNameTh": "Proudia",
+      "modelNameLo": "Proudia",
+      "searchNames": [
+        "proudia"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "raider",
+      "modelName": "Raider",
+      "modelNameTh": "Raider",
+      "modelNameLo": "Raider",
+      "searchNames": [
+        "raider"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "rvr",
+      "modelName": "RVR",
+      "modelNameTh": "RVR",
+      "modelNameLo": "RVR",
+      "searchNames": [
+        "rvr"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sapporo",
+      "modelName": "Sapporo",
+      "modelNameTh": "Sapporo",
+      "modelNameLo": "Sapporo",
+      "searchNames": [
+        "sapporo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sigma",
+      "modelName": "Sigma",
+      "modelNameTh": "Sigma",
+      "modelNameLo": "Sigma",
+      "searchNames": [
+        "sigma"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "space-gear",
+      "modelName": "Space Gear",
+      "modelNameTh": "Space Gear",
+      "modelNameLo": "Space Gear",
+      "searchNames": [
+        "space gear",
+        "spacegear"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "space-runner",
+      "modelName": "Space Runner",
+      "modelNameTh": "Space Runner",
+      "modelNameLo": "Space Runner",
+      "searchNames": [
+        "space runner",
+        "spacerunner"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "space-star",
+      "modelName": "Space Star",
+      "modelNameTh": "Space Star",
+      "modelNameLo": "Space Star",
+      "searchNames": [
+        "space star",
+        "spacestar"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "space-wagon",
+      "modelName": "Space Wagon",
+      "modelNameTh": "Space Wagon",
+      "modelNameLo": "Space Wagon",
+      "searchNames": [
+        "space wagon",
+        "spacewagon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "starion",
+      "modelName": "Starion",
+      "modelNameTh": "Starion",
+      "modelNameLo": "Starion",
+      "searchNames": [
+        "starion"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "strada",
+      "modelName": "Strada",
+      "modelNameTh": "Strada",
+      "modelNameLo": "Strada",
+      "searchNames": [
+        "strada"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tredia",
+      "modelName": "Tredia",
+      "modelNameTh": "Tredia",
+      "modelNameLo": "Tredia",
+      "searchNames": [
+        "tredia"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "triton",
+      "modelName": "Triton",
+      "modelNameTh": "Triton",
+      "modelNameLo": "Triton",
+      "searchNames": [
+        "triton"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "verada",
+      "modelName": "Verada",
+      "modelNameTh": "Verada",
+      "modelNameLo": "Verada",
+      "searchNames": [
+        "verada"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xforce",
+      "modelName": "Xforce",
+      "modelNameTh": "Xforce",
+      "modelNameLo": "Xforce",
+      "searchNames": [
+        "xforce",
+        "x force"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xpander",
+      "modelName": "Xpander",
+      "modelNameTh": "Xpander",
+      "modelNameLo": "Xpander",
+      "searchNames": [
+        "xpander"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "xpander-cross",
+      "modelName": "Xpander Cross",
+      "modelNameTh": "Xpander Cross",
+      "modelNameLo": "Xpander Cross",
+      "searchNames": [
+        "xpander cross",
+        "xpandercross"
+      ],
+      "categoryIds": [
+        "van",
+        "suv"
+      ]
+    },
+    {
+      "modelId": "zinger",
+      "modelName": "Zinger",
+      "modelNameTh": "Zinger",
+      "modelNameLo": "Zinger",
+      "searchNames": [
+        "zinger"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

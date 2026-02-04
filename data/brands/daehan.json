@@ -1,0 +1,407 @@
+{
+  "brandId": "daehan",
+  "brandName": "Daehan",
+  "brandNameTh": "แดฮัน",
+  "brandNameLo": "ແດຮັນ",
+  "models": [
+    {
+      "modelId": "super-1",
+      "modelName": "Super 1",
+      "modelNameTh": "Super 1",
+      "modelNameLo": "Super 1",
+      "searchNames": [
+        "super 1",
+        "super1"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "new-super-1",
+      "modelName": "New Super 1",
+      "modelNameTh": "New Super 1",
+      "modelNameLo": "New Super 1",
+      "searchNames": [
+        "new super 1",
+        "new super1"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "d-150",
+      "modelName": "D-150",
+      "modelNameTh": "D-150",
+      "modelNameLo": "D-150",
+      "searchNames": [
+        "d-150",
+        "d150"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "d-220",
+      "modelName": "D-220",
+      "modelNameTh": "D-220",
+      "modelNameLo": "D-220",
+      "searchNames": [
+        "d-220",
+        "d220"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "d-t1",
+      "modelName": "D-T1",
+      "modelNameTh": "D-T1",
+      "modelNameLo": "D-T1",
+      "searchNames": [
+        "d-t1",
+        "dt1"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera100",
+      "modelName": "Tera100",
+      "modelNameTh": "Tera100",
+      "modelNameLo": "Tera100",
+      "searchNames": [
+        "tera100",
+        "tera 100"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera100s",
+      "modelName": "Tera100S",
+      "modelNameTh": "Tera100S",
+      "modelNameLo": "Tera100S",
+      "searchNames": [
+        "tera100s",
+        "tera 100s"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera150",
+      "modelName": "Tera150",
+      "modelNameTh": "Tera150",
+      "modelNameLo": "Tera150",
+      "searchNames": [
+        "tera150",
+        "tera 150"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera150s",
+      "modelName": "Tera150S",
+      "modelNameTh": "Tera150S",
+      "modelNameLo": "Tera150S",
+      "searchNames": [
+        "tera150s",
+        "tera 150s"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera180",
+      "modelName": "Tera180",
+      "modelNameTh": "Tera180",
+      "modelNameLo": "Tera180",
+      "searchNames": [
+        "tera180",
+        "tera 180"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera190sl",
+      "modelName": "Tera190SL",
+      "modelNameTh": "Tera190SL",
+      "modelNameLo": "Tera190SL",
+      "searchNames": [
+        "tera190sl",
+        "tera 190sl"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera190sl-plus",
+      "modelName": "Tera190SL Plus",
+      "modelNameTh": "Tera190SL Plus",
+      "modelNameLo": "Tera190SL Plus",
+      "searchNames": [
+        "tera190sl plus",
+        "tera 190sl plus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera245sl",
+      "modelName": "Tera245SL",
+      "modelNameTh": "Tera245SL",
+      "modelNameLo": "Tera245SL",
+      "searchNames": [
+        "tera245sl",
+        "tera 245sl"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera245sl-plus",
+      "modelName": "Tera245SL Plus",
+      "modelNameTh": "Tera245SL Plus",
+      "modelNameLo": "Tera245SL Plus",
+      "searchNames": [
+        "tera245sl plus",
+        "tera 245sl plus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera345sl",
+      "modelName": "Tera345SL",
+      "modelNameTh": "Tera345SL",
+      "modelNameLo": "Tera345SL",
+      "searchNames": [
+        "tera345sl",
+        "tera 345sl"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera345sl-plus",
+      "modelName": "Tera345SL Plus",
+      "modelNameTh": "Tera345SL Plus",
+      "modelNameLo": "Tera345SL Plus",
+      "searchNames": [
+        "tera345sl plus",
+        "tera 345sl plus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera350",
+      "modelName": "Tera350",
+      "modelNameTh": "Tera350",
+      "modelNameLo": "Tera350",
+      "searchNames": [
+        "tera350",
+        "tera 350"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera350-plus",
+      "modelName": "Tera350 Plus",
+      "modelNameTh": "Tera350 Plus",
+      "modelNameLo": "Tera350 Plus",
+      "searchNames": [
+        "tera350 plus",
+        "tera 350 plus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera-v",
+      "modelName": "Tera-V (Van)",
+      "modelNameTh": "Tera-V (Van)",
+      "modelNameLo": "Tera-V (Van)",
+      "searchNames": [
+        "tera-v",
+        "tera v",
+        "tera van"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "tera-v6",
+      "modelName": "Tera-V6",
+      "modelNameTh": "Tera-V6",
+      "modelNameLo": "Tera-V6",
+      "searchNames": [
+        "tera-v6",
+        "tera v6"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "tera-v8",
+      "modelName": "Tera-V8",
+      "modelNameTh": "Tera-V8",
+      "modelNameLo": "Tera-V8",
+      "searchNames": [
+        "tera-v8",
+        "tera v8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "tera-star",
+      "modelName": "Tera Star",
+      "modelNameTh": "Tera Star",
+      "modelNameLo": "Tera Star",
+      "searchNames": [
+        "tera star",
+        "terastar"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tera-star-plus",
+      "modelName": "Tera Star Plus",
+      "modelNameTh": "Tera Star Plus",
+      "modelNameLo": "Tera Star Plus",
+      "searchNames": [
+        "tera star plus",
+        "terastar plus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "maestro",
+      "modelName": "Maestro",
+      "modelNameTh": "Maestro",
+      "modelNameLo": "Maestro",
+      "searchNames": [
+        "maestro"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "megatron",
+      "modelName": "Megatron",
+      "modelNameTh": "Megatron",
+      "modelNameLo": "Megatron",
+      "searchNames": [
+        "megatron"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "prime",
+      "modelName": "Prime",
+      "modelNameTh": "Prime",
+      "modelNameLo": "Prime",
+      "searchNames": [
+        "prime"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "optimus",
+      "modelName": "Optimus",
+      "modelNameTh": "Optimus",
+      "modelNameLo": "Optimus",
+      "searchNames": [
+        "optimus"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "extreme",
+      "modelName": "Extreme",
+      "modelNameTh": "Extreme",
+      "modelNameLo": "Extreme",
+      "searchNames": [
+        "extreme"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "bravo",
+      "modelName": "Bravo",
+      "modelNameTh": "Bravo",
+      "modelNameLo": "Bravo",
+      "searchNames": [
+        "bravo"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "daehan-shehzore",
+      "modelName": "Daehan Shehzore (Pakistan)",
+      "modelNameTh": "Daehan Shehzore (Pakistan)",
+      "modelNameLo": "Daehan Shehzore (Pakistan)",
+      "searchNames": [
+        "shehzore",
+        "daehan shehzore"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "daehan-pick-up",
+      "modelName": "Daehan Pick-up",
+      "modelNameTh": "Daehan Pick-up",
+      "modelNameLo": "Daehan Pick-up",
+      "searchNames": [
+        "daehan pickup",
+        "daehan pick-up",
+        "pick-up"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    }
+  ]
+}

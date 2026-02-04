@@ -1,0 +1,524 @@
+{
+  "brandId": "mclaren",
+  "brandName": "McLaren",
+  "brandNameTh": "แมคลาเรน",
+  "brandNameLo": "ແມັກລາເຣນ",
+  "models": [
+    {
+      "modelId": "12c",
+      "modelName": "12C",
+      "modelNameTh": "12C",
+      "modelNameLo": "12C",
+      "searchNames": [
+        "12c",
+        "12 c"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "12c-spider",
+      "modelName": "12C Spider",
+      "modelNameTh": "12C Spider",
+      "modelNameLo": "12C Spider",
+      "searchNames": [
+        "12c spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "540c",
+      "modelName": "540C",
+      "modelNameTh": "540C",
+      "modelNameLo": "540C",
+      "searchNames": [
+        "540c",
+        "540 c"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "570gt",
+      "modelName": "570GT",
+      "modelNameTh": "570GT",
+      "modelNameLo": "570GT",
+      "searchNames": [
+        "570gt",
+        "570 gt"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "570s",
+      "modelName": "570S",
+      "modelNameTh": "570S",
+      "modelNameLo": "570S",
+      "searchNames": [
+        "570s",
+        "570 s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "570s-spider",
+      "modelName": "570S Spider",
+      "modelNameTh": "570S Spider",
+      "modelNameLo": "570S Spider",
+      "searchNames": [
+        "570s spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "600lt",
+      "modelName": "600LT",
+      "modelNameTh": "600LT",
+      "modelNameLo": "600LT",
+      "searchNames": [
+        "600lt",
+        "600 lt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "600lt-spider",
+      "modelName": "600LT Spider",
+      "modelNameTh": "600LT Spider",
+      "modelNameLo": "600LT Spider",
+      "searchNames": [
+        "600lt spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "620r",
+      "modelName": "620R",
+      "modelNameTh": "620R",
+      "modelNameLo": "620R",
+      "searchNames": [
+        "620r",
+        "620 r"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "625c",
+      "modelName": "625C",
+      "modelNameTh": "625C",
+      "modelNameLo": "625C",
+      "searchNames": [
+        "625c",
+        "625 c"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "650s",
+      "modelName": "650S",
+      "modelNameTh": "650S",
+      "modelNameLo": "650S",
+      "searchNames": [
+        "650s",
+        "650 s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "650s-spider",
+      "modelName": "650S Spider",
+      "modelNameTh": "650S Spider",
+      "modelNameLo": "650S Spider",
+      "searchNames": [
+        "650s spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "675lt",
+      "modelName": "675LT",
+      "modelNameTh": "675LT",
+      "modelNameLo": "675LT",
+      "searchNames": [
+        "675lt",
+        "675 lt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "675lt-spider",
+      "modelName": "675LT Spider",
+      "modelNameTh": "675LT Spider",
+      "modelNameLo": "675LT Spider",
+      "searchNames": [
+        "675lt spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "720s",
+      "modelName": "720S",
+      "modelNameTh": "720S",
+      "modelNameLo": "720S",
+      "searchNames": [
+        "720s",
+        "720 s"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "720s-spider",
+      "modelName": "720S Spider",
+      "modelNameTh": "720S Spider",
+      "modelNameLo": "720S Spider",
+      "searchNames": [
+        "720s spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "750s",
+      "modelName": "750S",
+      "modelNameTh": "750S",
+      "modelNameLo": "750S",
+      "searchNames": [
+        "750s",
+        "750 s"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "750s-spider",
+      "modelName": "750S Spider",
+      "modelNameTh": "750S Spider",
+      "modelNameLo": "750S Spider",
+      "searchNames": [
+        "750s spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "765lt",
+      "modelName": "765LT",
+      "modelNameTh": "765LT",
+      "modelNameLo": "765LT",
+      "searchNames": [
+        "765lt",
+        "765 lt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "765lt-spider",
+      "modelName": "765LT Spider",
+      "modelNameTh": "765LT Spider",
+      "modelNameLo": "765LT Spider",
+      "searchNames": [
+        "765lt spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "artura",
+      "modelName": "Artura",
+      "modelNameTh": "Artura",
+      "modelNameLo": "Artura",
+      "searchNames": [
+        "artura"
+      ],
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "artura-spider",
+      "modelName": "Artura Spider",
+      "modelNameTh": "Artura Spider",
+      "modelNameLo": "Artura Spider",
+      "searchNames": [
+        "artura spider"
+      ],
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "elva",
+      "modelName": "Elva",
+      "modelNameTh": "Elva",
+      "modelNameLo": "Elva",
+      "searchNames": [
+        "elva"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f1",
+      "modelName": "F1",
+      "modelNameTh": "F1",
+      "modelNameLo": "F1",
+      "searchNames": [
+        "f1"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f1-gt",
+      "modelName": "F1 GT",
+      "modelNameTh": "F1 GT",
+      "modelNameLo": "F1 GT",
+      "searchNames": [
+        "f1 gt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f1-lm",
+      "modelName": "F1 LM",
+      "modelNameTh": "F1 LM",
+      "modelNameLo": "F1 LM",
+      "searchNames": [
+        "f1 lm"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "gt",
+      "modelName": "GT",
+      "modelNameTh": "GT",
+      "modelNameLo": "GT",
+      "searchNames": [
+        "gt"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "gts",
+      "modelName": "GTS",
+      "modelNameTh": "GTS",
+      "modelNameLo": "GTS",
+      "searchNames": [
+        "gts"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "m6gt",
+      "modelName": "M6GT",
+      "modelNameTh": "M6GT",
+      "modelNameLo": "M6GT",
+      "searchNames": [
+        "m6gt",
+        "m6 gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mp4-12c",
+      "modelName": "MP4-12C",
+      "modelNameTh": "MP4-12C",
+      "modelNameLo": "MP4-12C",
+      "searchNames": [
+        "mp4-12c",
+        "mp4 12c"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "p1",
+      "modelName": "P1",
+      "modelNameTh": "P1",
+      "modelNameLo": "P1",
+      "searchNames": [
+        "p1"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "p1-gtr",
+      "modelName": "P1 GTR",
+      "modelNameTh": "P1 GTR",
+      "modelNameLo": "P1 GTR",
+      "searchNames": [
+        "p1 gtr"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "p1-gt",
+      "modelName": "P1 GT",
+      "modelNameTh": "P1 GT",
+      "modelNameLo": "P1 GT",
+      "searchNames": [
+        "p1 gt"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "p1-lm",
+      "modelName": "P1 LM",
+      "modelNameTh": "P1 LM",
+      "modelNameLo": "P1 LM",
+      "searchNames": [
+        "p1 lm"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "p1-spider",
+      "modelName": "P1 Spider",
+      "modelNameTh": "P1 Spider",
+      "modelNameLo": "P1 Spider",
+      "searchNames": [
+        "p1 spider"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sabre",
+      "modelName": "Sabre",
+      "modelNameTh": "Sabre",
+      "modelNameLo": "Sabre",
+      "searchNames": [
+        "sabre"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "senna",
+      "modelName": "Senna",
+      "modelNameTh": "Senna",
+      "modelNameLo": "Senna",
+      "searchNames": [
+        "senna"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "senna-gtr",
+      "modelName": "Senna GTR",
+      "modelNameTh": "Senna GTR",
+      "modelNameLo": "Senna GTR",
+      "searchNames": [
+        "senna gtr"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "solus-gt",
+      "modelName": "Solus GT",
+      "modelNameTh": "Solus GT",
+      "modelNameLo": "Solus GT",
+      "searchNames": [
+        "solus gt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "speedtail",
+      "modelName": "Speedtail",
+      "modelNameTh": "Speedtail",
+      "modelNameLo": "Speedtail",
+      "searchNames": [
+        "speedtail"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "w1",
+      "modelName": "W1",
+      "modelNameTh": "W1",
+      "modelNameLo": "W1",
+      "searchNames": [
+        "w1"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    }
+  ]
+}

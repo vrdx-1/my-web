@@ -1,0 +1,370 @@
+{
+  "brandId": "jmc",
+  "brandName": "JMC",
+  "brandNameTh": "เจเอ็มซี",
+  "brandNameLo": "ເຈເອັມຊີ",
+  "models": [
+    {
+      "id": "baodian",
+      "nameEn": "Baodian",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "baowei",
+      "nameEn": "Baowei",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "boarding",
+      "nameEn": "Boarding",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "carrying",
+      "nameEn": "Carrying",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "carrying-plus",
+      "nameEn": "Carrying Plus",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "conquer",
+      "nameEn": "Conquer",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "conquer-ev",
+      "nameEn": "Conquer EV",
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "id": "convey",
+      "nameEn": "Convey",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "costar",
+      "nameEn": "CoStar",
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "id": "dadao",
+      "nameEn": "Dadao",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "dadao-ev",
+      "nameEn": "Dadao EV",
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "id": "dadao-mohe",
+      "nameEn": "Dadao Mohe",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "e-fushun",
+      "nameEn": "E-Fushun",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "e-lushun",
+      "nameEn": "E-Lushun",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "e-lushun-v6",
+      "nameEn": "E-Lushun V6",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "fushun",
+      "nameEn": "Fushun",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "grand-avenue",
+      "nameEn": "Grand Avenue",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "grand-avenue-ev",
+      "nameEn": "Grand Avenue EV",
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "id": "grand-avenue-plus",
+      "nameEn": "Grand Avenue Plus",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "grand-avenue-pro",
+      "nameEn": "Grand Avenue Pro",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "hunter",
+      "nameEn": "Hunter",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "jmev-ev2",
+      "nameEn": "JMEV EV2",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "jmev-ev3",
+      "nameEn": "JMEV EV3",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "jmh",
+      "nameEn": "JMH",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "kaiwei",
+      "nameEn": "Kaiwei",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "kaiyun",
+      "nameEn": "Kaiyun",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "kairui",
+      "nameEn": "Kairui",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "orion",
+      "nameEn": "Orion",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "qingka",
+      "nameEn": "Qingka",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "shunda",
+      "nameEn": "Shunda",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "shunda-ev",
+      "nameEn": "Shunda EV",
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "id": "teshun",
+      "nameEn": "Teshun",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "touring",
+      "nameEn": "Touring",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "touring-ev",
+      "nameEn": "Touring EV",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "transspoter",
+      "nameEn": "Transspoter",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "vigor",
+      "nameEn": "Vigor",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "vigus",
+      "nameEn": "Vigus",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "vigus-5",
+      "nameEn": "Vigus 5",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "vigus-plus",
+      "nameEn": "Vigus Plus",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "vigus-pro",
+      "nameEn": "Vigus Pro",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "vigus-work",
+      "nameEn": "Vigus Work",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu",
+      "nameEn": "Yuhu",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu-3",
+      "nameEn": "Yuhu 3",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu-5",
+      "nameEn": "Yuhu 5",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu-7",
+      "nameEn": "Yuhu 7",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu-9",
+      "nameEn": "Yuhu 9",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "yuhu-ev",
+      "nameEn": "Yuhu EV",
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "id": "yunba",
+      "nameEn": "Yunba",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "yusheng-s330",
+      "nameEn": "Yusheng S330",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "yusheng-s350",
+      "nameEn": "Yusheng S350",
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

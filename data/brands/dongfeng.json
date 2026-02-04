@@ -1,0 +1,1050 @@
+{
+  "brandId": "dongfeng",
+  "brandName": "Dongfeng",
+  "brandNameTh": "ดงเฟง",
+  "brandNameLo": "ຕົງເຟິງ",
+  "models": [
+    {
+      "modelId": "a30",
+      "modelName": "A30",
+      "modelNameTh": "A30",
+      "modelNameLo": "A30",
+      "searchNames": [
+        "a30"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a60",
+      "modelName": "A60",
+      "modelNameTh": "A60",
+      "modelNameLo": "A60",
+      "searchNames": [
+        "a60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a60-max",
+      "modelName": "A60 Max",
+      "modelNameTh": "A60 Max",
+      "modelNameLo": "A60 Max",
+      "searchNames": [
+        "a60 max",
+        "a60max"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a9",
+      "modelName": "A9",
+      "modelNameTh": "A9",
+      "modelNameLo": "A9",
+      "searchNames": [
+        "a9"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ace-007",
+      "modelName": "Ace 007",
+      "modelNameTh": "Ace 007",
+      "modelNameLo": "Ace 007",
+      "searchNames": [
+        "ace 007",
+        "ace007"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aeolus-huge",
+      "modelName": "Aeolus Huge",
+      "modelNameTh": "Aeolus Huge",
+      "modelNameLo": "Aeolus Huge",
+      "searchNames": [
+        "aeolus huge",
+        "aeolushuge",
+        "huge"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "aeolus-mage",
+      "modelName": "Aeolus Mage",
+      "modelNameTh": "Aeolus Mage",
+      "modelNameLo": "Aeolus Mage",
+      "searchNames": [
+        "aeolus mage",
+        "aeolusmage"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aeolus-shine",
+      "modelName": "Aeolus Shine",
+      "modelNameTh": "Aeolus Shine",
+      "modelNameLo": "Aeolus Shine",
+      "searchNames": [
+        "aeolus shine",
+        "aeolusshine"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aeolus-shine-max",
+      "modelName": "Aeolus Shine Max",
+      "modelNameTh": "Aeolus Shine Max",
+      "modelNameLo": "Aeolus Shine Max",
+      "searchNames": [
+        "aeolus shine max",
+        "aeolusshinemax"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aeolus-yixuan",
+      "modelName": "Aeolus Yixuan",
+      "modelNameTh": "Aeolus Yixuan",
+      "modelNameLo": "Aeolus Yixuan",
+      "searchNames": [
+        "aeolus yixuan",
+        "aeolusyixuan"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aeolus-yixuan-gs",
+      "modelName": "Aeolus Yixuan GS",
+      "modelNameTh": "Aeolus Yixuan GS",
+      "modelNameLo": "Aeolus Yixuan GS",
+      "searchNames": [
+        "aeolus yixuan gs",
+        "aeolusyixuangs"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ax3",
+      "modelName": "AX3",
+      "modelNameTh": "AX3",
+      "modelNameLo": "AX3",
+      "searchNames": [
+        "ax3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ax4",
+      "modelName": "AX4",
+      "modelNameTh": "AX4",
+      "modelNameLo": "AX4",
+      "searchNames": [
+        "ax4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ax5",
+      "modelName": "AX5",
+      "modelNameTh": "AX5",
+      "modelNameLo": "AX5",
+      "searchNames": [
+        "ax5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ax7",
+      "modelName": "AX7",
+      "modelNameTh": "AX7",
+      "modelNameLo": "AX7",
+      "searchNames": [
+        "ax7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ax7-mach",
+      "modelName": "AX7 Mach",
+      "modelNameTh": "AX7 Mach",
+      "modelNameLo": "AX7 Mach",
+      "searchNames": [
+        "ax7 mach",
+        "ax7mach"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "box",
+      "modelName": "Box",
+      "modelNameTh": "Box",
+      "modelNameLo": "Box",
+      "searchNames": [
+        "box"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "captain-t",
+      "modelName": "Captain-T",
+      "modelNameTh": "Captain-T",
+      "modelNameLo": "Captain-T",
+      "searchNames": [
+        "captain-t",
+        "captaint"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "cm7",
+      "modelName": "CM7",
+      "modelNameTh": "CM7",
+      "modelNameLo": "CM7",
+      "searchNames": [
+        "cm7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "epi-007",
+      "modelName": "eπ 007",
+      "modelNameTh": "eπ 007",
+      "modelNameLo": "eπ 007",
+      "searchNames": [
+        "eπ 007",
+        "epi 007",
+        "epi007"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "epi-008",
+      "modelName": "eπ 008",
+      "modelNameTh": "eπ 008",
+      "modelNameLo": "eπ 008",
+      "searchNames": [
+        "eπ 008",
+        "epi 008",
+        "epi008"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e70",
+      "modelName": "E70",
+      "modelNameTh": "E70",
+      "modelNameLo": "E70",
+      "searchNames": [
+        "e70"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e70-pro",
+      "modelName": "E70 Pro",
+      "modelNameTh": "E70 Pro",
+      "modelNameLo": "E70 Pro",
+      "searchNames": [
+        "e70 pro",
+        "e70pro"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eq140",
+      "modelName": "EQ140",
+      "modelNameTh": "EQ140",
+      "modelNameLo": "EQ140",
+      "searchNames": [
+        "eq140"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "eq2050",
+      "modelName": "EQ2050",
+      "modelNameTh": "EQ2050",
+      "modelNameLo": "EQ2050",
+      "searchNames": [
+        "eq2050"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "es500",
+      "modelName": "ES500",
+      "modelNameTh": "ES500",
+      "modelNameLo": "ES500",
+      "searchNames": [
+        "es500"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex1",
+      "modelName": "EX1",
+      "modelNameTh": "EX1",
+      "modelNameLo": "EX1",
+      "searchNames": [
+        "ex1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "f600",
+      "modelName": "F600",
+      "modelNameTh": "F600",
+      "modelNameLo": "F600",
+      "searchNames": [
+        "f600"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "fengon-5",
+      "modelName": "Fengon 5",
+      "modelNameTh": "Fengon 5",
+      "modelNameLo": "Fengon 5",
+      "searchNames": [
+        "fengon 5",
+        "fengon5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-500",
+      "modelName": "Fengon 500",
+      "modelNameTh": "Fengon 500",
+      "modelNameLo": "Fengon 500",
+      "searchNames": [
+        "fengon 500",
+        "fengon500"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-580",
+      "modelName": "Fengon 580",
+      "modelNameTh": "Fengon 580",
+      "modelNameLo": "Fengon 580",
+      "searchNames": [
+        "fengon 580",
+        "fengon580"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-7",
+      "modelName": "Fengon 7",
+      "modelNameTh": "Fengon 7",
+      "modelNameLo": "Fengon 7",
+      "searchNames": [
+        "fengon 7",
+        "fengon7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "friday",
+      "modelName": "Friday",
+      "modelNameTh": "Friday",
+      "modelNameLo": "Friday",
+      "searchNames": [
+        "friday"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "g101",
+      "modelName": "G101",
+      "modelNameTh": "G101",
+      "modelNameLo": "G101",
+      "searchNames": [
+        "g101"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "glory-330",
+      "modelName": "Glory 330",
+      "modelNameTh": "Glory 330",
+      "modelNameLo": "Glory 330",
+      "searchNames": [
+        "glory 330",
+        "glory330"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-370",
+      "modelName": "Glory 370",
+      "modelNameTh": "Glory 370",
+      "modelNameLo": "Glory 370",
+      "searchNames": [
+        "glory 370",
+        "glory370"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-500",
+      "modelName": "Glory 500",
+      "modelNameTh": "Glory 500",
+      "modelNameLo": "Glory 500",
+      "searchNames": [
+        "glory 500",
+        "glory500"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-560",
+      "modelName": "Glory 560",
+      "modelNameTh": "Glory 560",
+      "modelNameLo": "Glory 560",
+      "searchNames": [
+        "glory 560",
+        "glory560"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-580",
+      "modelName": "Glory 580",
+      "modelNameTh": "Glory 580",
+      "modelNameLo": "Glory 580",
+      "searchNames": [
+        "glory 580",
+        "glory580"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-i-auto",
+      "modelName": "Glory i-Auto",
+      "modelNameTh": "Glory i-Auto",
+      "modelNameLo": "Glory i-Auto",
+      "searchNames": [
+        "glory i-auto",
+        "gloryiauto"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h30",
+      "modelName": "H30",
+      "modelNameTh": "H30",
+      "modelNameLo": "H30",
+      "searchNames": [
+        "h30"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "h30-cross",
+      "modelName": "H30 Cross",
+      "modelNameTh": "H30 Cross",
+      "modelNameLo": "H30 Cross",
+      "searchNames": [
+        "h30 cross",
+        "h30cross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "huge",
+      "modelName": "Huge",
+      "modelNameTh": "Huge",
+      "modelNameLo": "Huge",
+      "searchNames": [
+        "huge"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hunter",
+      "modelName": "Hunter",
+      "modelNameTh": "Hunter",
+      "modelNameLo": "Hunter",
+      "searchNames": [
+        "hunter"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "jingyi-s50",
+      "modelName": "Jingyi S50",
+      "modelNameTh": "Jingyi S50",
+      "modelNameLo": "Jingyi S50",
+      "searchNames": [
+        "jingyi s50",
+        "jingyis50"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "jingyi-x3",
+      "modelName": "Jingyi X3",
+      "modelNameTh": "Jingyi X3",
+      "modelNameLo": "Jingyi X3",
+      "searchNames": [
+        "jingyi x3",
+        "jingyix3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jingyi-x5",
+      "modelName": "Jingyi X5",
+      "modelNameTh": "Jingyi X5",
+      "modelNameLo": "Jingyi X5",
+      "searchNames": [
+        "jingyi x5",
+        "jingyix5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "jingyi-x6",
+      "modelName": "Jingyi X6",
+      "modelNameTh": "Jingyi X6",
+      "modelNameLo": "Jingyi X6",
+      "searchNames": [
+        "jingyi x6",
+        "jingyix6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "joyear",
+      "modelName": "Joyear",
+      "modelNameTh": "Joyear",
+      "modelNameLo": "Joyear",
+      "searchNames": [
+        "joyear"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "l60",
+      "modelName": "L60",
+      "modelNameTh": "L60",
+      "modelNameLo": "L60",
+      "searchNames": [
+        "l60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lingxi-l",
+      "modelName": "Lingxi L",
+      "modelNameTh": "Lingxi L",
+      "modelNameLo": "Lingxi L",
+      "searchNames": [
+        "lingxi l",
+        "lingxil"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m-hero-917",
+      "modelName": "M-Hero 917",
+      "modelNameTh": "M-Hero 917",
+      "modelNameLo": "M-Hero 917",
+      "searchNames": [
+        "m-hero 917",
+        "mhero917"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m6",
+      "modelName": "M6",
+      "modelNameTh": "M6",
+      "modelNameLo": "M6",
+      "searchNames": [
+        "m6"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mini-ev",
+      "modelName": "Mini EV",
+      "modelNameTh": "Mini EV",
+      "modelNameLo": "Mini EV",
+      "searchNames": [
+        "mini ev",
+        "miniev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nammi-01",
+      "modelName": "Nammi 01",
+      "modelNameTh": "Nammi 01",
+      "modelNameLo": "Nammi 01",
+      "searchNames": [
+        "nammi 01",
+        "nammi01"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "nano-box",
+      "modelName": "Nano Box",
+      "modelNameTh": "Nano Box",
+      "modelNameLo": "Nano Box",
+      "searchNames": [
+        "nano box",
+        "nanobox"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "oting",
+      "modelName": "Oting",
+      "modelNameTh": "Oting",
+      "modelNameLo": "Oting",
+      "searchNames": [
+        "oting"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "palasso",
+      "modelName": "Palasso",
+      "modelNameTh": "Palasso",
+      "modelNameLo": "Palasso",
+      "searchNames": [
+        "palasso"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "rich",
+      "modelName": "Rich",
+      "modelNameTh": "Rich",
+      "modelNameLo": "Rich",
+      "searchNames": [
+        "rich"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "rich-6",
+      "modelName": "Rich 6",
+      "modelNameTh": "Rich 6",
+      "modelNameLo": "Rich 6",
+      "searchNames": [
+        "rich 6",
+        "rich6"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "rich-7",
+      "modelName": "Rich 7",
+      "modelNameTh": "Rich 7",
+      "modelNameLo": "Rich 7",
+      "searchNames": [
+        "rich 7",
+        "rich7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s30",
+      "modelName": "S30",
+      "modelNameTh": "S30",
+      "modelNameLo": "S30",
+      "searchNames": [
+        "s30"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s500",
+      "modelName": "S500",
+      "modelNameTh": "S500",
+      "modelNameLo": "S500",
+      "searchNames": [
+        "s500"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s50-ev",
+      "modelName": "S50 EV",
+      "modelNameTh": "S50 EV",
+      "modelNameLo": "S50 EV",
+      "searchNames": [
+        "s50 ev",
+        "s50ev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sky-ev",
+      "modelName": "Sky EV",
+      "modelNameTh": "Sky EV",
+      "modelNameLo": "Sky EV",
+      "searchNames": [
+        "sky ev",
+        "skyev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sokon-c31",
+      "modelName": "Sokon C31",
+      "modelNameTh": "Sokon C31",
+      "modelNameLo": "Sokon C31",
+      "searchNames": [
+        "sokon c31",
+        "sokonc31"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "star",
+      "modelName": "Star",
+      "modelNameTh": "Star",
+      "modelNameLo": "Star",
+      "searchNames": [
+        "star"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sx5",
+      "modelName": "SX5",
+      "modelNameTh": "SX5",
+      "modelNameLo": "SX5",
+      "searchNames": [
+        "sx5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sx6",
+      "modelName": "SX6",
+      "modelNameTh": "SX6",
+      "modelNameLo": "SX6",
+      "searchNames": [
+        "sx6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "t5",
+      "modelName": "T5",
+      "modelNameTh": "T5",
+      "modelNameLo": "T5",
+      "searchNames": [
+        "t5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "t5-evo",
+      "modelName": "T5 EVO",
+      "modelNameTh": "T5 EVO",
+      "modelNameLo": "T5 EVO",
+      "searchNames": [
+        "t5 evo",
+        "t5evo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "t5l",
+      "modelName": "T5L",
+      "modelNameTh": "T5L",
+      "modelNameLo": "T5L",
+      "searchNames": [
+        "t5l"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "u-tour",
+      "modelName": "U-Tour",
+      "modelNameTh": "U-Tour",
+      "modelNameLo": "U-Tour",
+      "searchNames": [
+        "u-tour",
+        "utour"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v23",
+      "modelName": "V23",
+      "modelNameTh": "V23",
+      "modelNameLo": "V23",
+      "searchNames": [
+        "v23"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "v9",
+      "modelName": "V9",
+      "modelNameTh": "V9",
+      "modelNameLo": "V9",
+      "searchNames": [
+        "v9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "voyah-courage",
+      "modelName": "Voyah Courage",
+      "modelNameTh": "Voyah Courage",
+      "modelNameLo": "Voyah Courage",
+      "searchNames": [
+        "voyah courage",
+        "voyahcourage"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "voyah-dream",
+      "modelName": "Voyah Dream",
+      "modelNameTh": "Voyah Dream",
+      "modelNameLo": "Voyah Dream",
+      "searchNames": [
+        "voyah dream",
+        "voyahdream"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "voyah-free",
+      "modelName": "Voyah Free",
+      "modelNameTh": "Voyah Free",
+      "modelNameLo": "Voyah Free",
+      "searchNames": [
+        "voyah free",
+        "voyahfree"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "voyah-passion",
+      "modelName": "Voyah Passion",
+      "modelNameTh": "Voyah Passion",
+      "modelNameLo": "Voyah Passion",
+      "searchNames": [
+        "voyah passion",
+        "voyahpassion"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "xinghai-s7",
+      "modelName": "Xinghai S7",
+      "modelNameTh": "Xinghai S7",
+      "modelNameLo": "Xinghai S7",
+      "searchNames": [
+        "xinghai s7",
+        "xinghais7"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "z9",
+      "modelName": "Z9",
+      "modelNameTh": "Z9",
+      "modelNameLo": "Z9",
+      "searchNames": [
+        "z9"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    }
+  ]
+}

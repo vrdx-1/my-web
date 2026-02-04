@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LAO_FONT } from '@/utils/constants';
 import { supabase } from '@/lib/supabase';
 import { LAO_PROVINCES } from '@/utils/constants';
-import { getCarDictionarySuggestions } from '@/utils/carSearch';
+import { getCarDictionarySuggestions } from '@/utils/postUtils';
 
 interface SearchScreenProps {
   isOpen: boolean;

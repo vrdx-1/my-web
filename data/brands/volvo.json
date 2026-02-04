@@ -1,0 +1,287 @@
+{
+  "brandId": "volvo",
+  "brandName": "Volvo",
+  "brandNameTh": "วอลโว่",
+  "brandNameLo": "ວອນໂວ",
+  "models": [
+    {
+      "modelId": "c40",
+      "modelName": "C40",
+      "modelNameTh": "C40",
+      "modelNameLo": "C40",
+      "searchNames": [
+        "c40"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ec40",
+      "modelName": "EC40",
+      "modelNameTh": "EC40",
+      "modelNameLo": "EC40",
+      "searchNames": [
+        "ec40"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "es60",
+      "modelName": "ES60",
+      "modelNameTh": "ES60",
+      "modelNameLo": "ES60",
+      "searchNames": [
+        "es60"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "es90",
+      "modelName": "ES90",
+      "modelNameTh": "ES90",
+      "modelNameLo": "ES90",
+      "searchNames": [
+        "es90"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex30",
+      "modelName": "EX30",
+      "modelNameTh": "EX30",
+      "modelNameLo": "EX30",
+      "searchNames": [
+        "ex30"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex30-cross-country",
+      "modelName": "EX30 Cross Country",
+      "modelNameTh": "EX30 Cross Country",
+      "modelNameLo": "EX30 Cross Country",
+      "searchNames": [
+        "ex30 cross country",
+        "ex30cc"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex40",
+      "modelName": "EX40",
+      "modelNameTh": "EX40",
+      "modelNameLo": "EX40",
+      "searchNames": [
+        "ex40"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex60",
+      "modelName": "EX60",
+      "modelNameTh": "EX60",
+      "modelNameLo": "EX60",
+      "searchNames": [
+        "ex60"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ex90",
+      "modelName": "EX90",
+      "modelNameTh": "EX90",
+      "modelNameLo": "EX90",
+      "searchNames": [
+        "ex90"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "s60",
+      "modelName": "S60",
+      "modelNameTh": "S60",
+      "modelNameLo": "S60",
+      "searchNames": [
+        "s60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s80",
+      "modelName": "S80",
+      "modelNameTh": "S80",
+      "modelNameLo": "S80",
+      "searchNames": [
+        "s80"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s90",
+      "modelName": "S90",
+      "modelNameTh": "S90",
+      "modelNameLo": "S90",
+      "searchNames": [
+        "s90"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "v40",
+      "modelName": "V40",
+      "modelNameTh": "V40",
+      "modelNameLo": "V40",
+      "searchNames": [
+        "v40"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "v60",
+      "modelName": "V60",
+      "modelNameTh": "V60",
+      "modelNameLo": "V60",
+      "searchNames": [
+        "v60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "v60-cross-country",
+      "modelName": "V60 Cross Country",
+      "modelNameTh": "V60 Cross Country",
+      "modelNameLo": "V60 Cross Country",
+      "searchNames": [
+        "v60 cross country",
+        "v60 cc",
+        "v60crosscountry"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "v90",
+      "modelName": "V90",
+      "modelNameTh": "V90",
+      "modelNameLo": "V90",
+      "searchNames": [
+        "v90"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "v90-cross-country",
+      "modelName": "V90 Cross Country",
+      "modelNameTh": "V90 Cross Country",
+      "modelNameLo": "V90 Cross Country",
+      "searchNames": [
+        "v90 cross country",
+        "v90 cc",
+        "v90crosscountry"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xc40",
+      "modelName": "XC40",
+      "modelNameTh": "XC40",
+      "modelNameLo": "XC40",
+      "searchNames": [
+        "xc40"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xc60",
+      "modelName": "XC60",
+      "modelNameTh": "XC60",
+      "modelNameLo": "XC60",
+      "searchNames": [
+        "xc60"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xc70",
+      "modelName": "XC70",
+      "modelNameTh": "XC70",
+      "modelNameLo": "XC70",
+      "searchNames": [
+        "xc70"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xc90",
+      "modelName": "XC90",
+      "modelNameTh": "XC90",
+      "modelNameLo": "XC90",
+      "searchNames": [
+        "xc90"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "em90",
+      "modelName": "EM90",
+      "modelNameTh": "EM90",
+      "modelNameLo": "EM90",
+      "searchNames": [
+        "em90"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    }
+  ]
+}

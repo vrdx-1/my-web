@@ -1,0 +1,598 @@
+{
+  "brandId": "peugeot",
+  "brandName": "Peugeot",
+  "brandNameTh": "เปอโยต์",
+  "brandNameLo": "ເປີໂຢ",
+  "models": [
+    {
+      "id": "104",
+      "nameEn": "104",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "106",
+      "nameEn": "106",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "107",
+      "nameEn": "107",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "108",
+      "nameEn": "108",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "201",
+      "nameEn": "201",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "202",
+      "nameEn": "202",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "203",
+      "nameEn": "203",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "204",
+      "nameEn": "204",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "205",
+      "nameEn": "205",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "205-turbo-16",
+      "nameEn": "205 Turbo 16",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "206",
+      "nameEn": "206",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "206-cc",
+      "nameEn": "206 CC",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "206-sw",
+      "nameEn": "206 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "207",
+      "nameEn": "207",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "207-cc",
+      "nameEn": "207 CC",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "207-sw",
+      "nameEn": "207 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "208",
+      "nameEn": "208",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "e-208",
+      "nameEn": "e-208",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "301",
+      "nameEn": "301",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "302",
+      "nameEn": "302",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "304",
+      "nameEn": "304",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "305",
+      "nameEn": "305",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "306",
+      "nameEn": "306",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "307",
+      "nameEn": "307",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "307-cc",
+      "nameEn": "307 CC",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "307-sw",
+      "nameEn": "307 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "308",
+      "nameEn": "308",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "308-sw",
+      "nameEn": "308 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "e-308",
+      "nameEn": "e-308",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "309",
+      "nameEn": "309",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "401",
+      "nameEn": "401",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "402",
+      "nameEn": "402",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "403",
+      "nameEn": "403",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "404",
+      "nameEn": "404",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "405",
+      "nameEn": "405",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "406",
+      "nameEn": "406",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "406-coupe",
+      "nameEn": "406 Coupé",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "407",
+      "nameEn": "407",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "407-sw",
+      "nameEn": "407 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "407-coupe",
+      "nameEn": "407 Coupé",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "408",
+      "nameEn": "408",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "e-408",
+      "nameEn": "e-408",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "501",
+      "nameEn": "501",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "504",
+      "nameEn": "504",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "505",
+      "nameEn": "505",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "508",
+      "nameEn": "508",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "508-sw",
+      "nameEn": "508 SW",
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "id": "508-pse",
+      "nameEn": "508 PSE",
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "id": "601",
+      "nameEn": "601",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "604",
+      "nameEn": "604",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "605",
+      "nameEn": "605",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "607",
+      "nameEn": "607",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "806",
+      "nameEn": "806",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "807",
+      "nameEn": "807",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "905",
+      "nameEn": "905",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "907",
+      "nameEn": "907",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "908",
+      "nameEn": "908",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "1007",
+      "nameEn": "1007",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "2008",
+      "nameEn": "2008",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "e-2008",
+      "nameEn": "e-2008",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "3008",
+      "nameEn": "3008",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "e-3008",
+      "nameEn": "e-3008",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "4007",
+      "nameEn": "4007",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "4008",
+      "nameEn": "4008",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "5008",
+      "nameEn": "5008",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "e-5008",
+      "nameEn": "e-5008",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "bipper",
+      "nameEn": "Bipper",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "boxer",
+      "nameEn": "Boxer",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "e-boxer",
+      "nameEn": "e-Boxer",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "expert",
+      "nameEn": "Expert",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "e-expert",
+      "nameEn": "e-Expert",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "hoggar",
+      "nameEn": "Hoggar",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "ion",
+      "nameEn": "iOn",
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "id": "landtrek",
+      "nameEn": "Landtrek",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "partner",
+      "nameEn": "Partner",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "e-partner",
+      "nameEn": "e-Partner",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "id": "pick-up",
+      "nameEn": "Pick Up",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "rcz",
+      "nameEn": "RCZ",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "rcz-r",
+      "nameEn": "RCZ R",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "rifter",
+      "nameEn": "Rifter",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "traveller",
+      "nameEn": "Traveller",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "e-traveller",
+      "nameEn": "e-Traveller",
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    }
+  ]
+}

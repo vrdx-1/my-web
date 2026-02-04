@@ -1,0 +1,382 @@
+{
+  "brandId": "hyundai",
+  "brandName": "Hyundai",
+  "brandNameTh": "ฮุนได",
+  "brandNameLo": "ຮຸນໄດ",
+  "models": [
+    {
+      "modelId": "accent",
+      "modelName": "Accent",
+      "modelNameTh": "Accent",
+      "modelNameLo": "Accent",
+      "searchNames": [
+        "accent"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "i10",
+      "modelName": "i10",
+      "modelNameTh": "i10",
+      "modelNameLo": "i10",
+      "searchNames": [
+        "i10"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "i20",
+      "modelName": "i20",
+      "modelNameTh": "i20",
+      "modelNameLo": "i20",
+      "searchNames": [
+        "i20"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "i30",
+      "modelName": "i30",
+      "modelNameTh": "i30",
+      "modelNameLo": "i30",
+      "searchNames": [
+        "i30"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "elantra",
+      "modelName": "Elantra",
+      "modelNameTh": "Elantra",
+      "modelNameLo": "Elantra",
+      "searchNames": [
+        "elantra"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sonata",
+      "modelName": "Sonata",
+      "modelNameTh": "Sonata",
+      "modelNameLo": "Sonata",
+      "searchNames": [
+        "sonata"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "grandeur",
+      "modelName": "Grandeur",
+      "modelNameTh": "Grandeur",
+      "modelNameLo": "Grandeur",
+      "searchNames": [
+        "grandeur",
+        "azera"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ioniq-6",
+      "modelName": "Ioniq 6",
+      "modelNameTh": "Ioniq 6",
+      "modelNameLo": "Ioniq 6",
+      "searchNames": [
+        "ioniq 6",
+        "ioniq6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lafesta",
+      "modelName": "Lafesta",
+      "modelNameTh": "Lafesta",
+      "modelNameLo": "Lafesta",
+      "searchNames": [
+        "lafesta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "casper",
+      "modelName": "Casper",
+      "modelNameTh": "Casper",
+      "modelNameLo": "Casper",
+      "searchNames": [
+        "casper"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "venue",
+      "modelName": "Venue",
+      "modelNameTh": "Venue",
+      "modelNameLo": "Venue",
+      "searchNames": [
+        "venue"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bayon",
+      "modelName": "Bayon",
+      "modelNameTh": "Bayon",
+      "modelNameLo": "Bayon",
+      "searchNames": [
+        "bayon"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "creta",
+      "modelName": "Creta",
+      "modelNameTh": "Creta",
+      "modelNameLo": "Creta",
+      "searchNames": [
+        "creta"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "kona",
+      "modelName": "Kona",
+      "modelNameTh": "Kona",
+      "modelNameLo": "Kona",
+      "searchNames": [
+        "kona"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "tucson",
+      "modelName": "Tucson",
+      "modelNameTh": "Tucson",
+      "modelNameLo": "Tucson",
+      "searchNames": [
+        "tucson"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "nexo",
+      "modelName": "Nexo",
+      "modelNameTh": "Nexo",
+      "modelNameLo": "Nexo",
+      "searchNames": [
+        "nexo",
+        "hydrogen"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "santa-fe",
+      "modelName": "Santa Fe",
+      "modelNameTh": "Santa Fe",
+      "modelNameLo": "Santa Fe",
+      "searchNames": [
+        "santa fe",
+        "santafe"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "palisade",
+      "modelName": "Palisade",
+      "modelNameTh": "Palisade",
+      "modelNameLo": "Palisade",
+      "searchNames": [
+        "palisade"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ioniq-5",
+      "modelName": "Ioniq 5",
+      "modelNameTh": "Ioniq 5",
+      "modelNameLo": "Ioniq 5",
+      "searchNames": [
+        "ioniq 5",
+        "ioniq5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ioniq-7",
+      "modelName": "Ioniq 7",
+      "modelNameTh": "Ioniq 7",
+      "modelNameLo": "Ioniq 7",
+      "searchNames": [
+        "ioniq 7",
+        "ioniq7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "staria",
+      "modelName": "Staria",
+      "modelNameTh": "Staria",
+      "modelNameLo": "Staria",
+      "searchNames": [
+        "staria"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "starite",
+      "modelName": "Starite",
+      "modelNameTh": "Starite",
+      "modelNameLo": "Starite",
+      "searchNames": [
+        "starite"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "stargazer",
+      "modelName": "Stargazer",
+      "modelNameTh": "Stargazer",
+      "modelNameLo": "Stargazer",
+      "searchNames": [
+        "stargazer"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "h-1",
+      "modelName": "H-1",
+      "modelNameTh": "H-1",
+      "modelNameLo": "H-1",
+      "searchNames": [
+        "h-1",
+        "h1",
+        "starex"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "santa-cruz",
+      "modelName": "Santa Cruz",
+      "modelNameTh": "Santa Cruz",
+      "modelNameLo": "Santa Cruz",
+      "searchNames": [
+        "santa cruz",
+        "santacruz"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "i20-n",
+      "modelName": "i20 N",
+      "modelNameTh": "i20 N",
+      "modelNameLo": "i20 N",
+      "searchNames": [
+        "i20 n",
+        "i20n"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "i30-n",
+      "modelName": "i30 N",
+      "modelNameTh": "i30 N",
+      "modelNameLo": "i30 N",
+      "searchNames": [
+        "i30 n",
+        "i30n"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elantra-n",
+      "modelName": "Elantra N",
+      "modelNameTh": "Elantra N",
+      "modelNameLo": "Elantra N",
+      "searchNames": [
+        "elantra n",
+        "elantran"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ioniq-5-n",
+      "modelName": "Ioniq 5 N",
+      "modelNameTh": "Ioniq 5 N",
+      "modelNameLo": "Ioniq 5 N",
+      "searchNames": [
+        "ioniq 5 n",
+        "ioniq5n"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    }
+  ]
+}

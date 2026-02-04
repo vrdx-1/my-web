@@ -1,0 +1,616 @@
+{
+  "brandId": "bmw",
+  "brandName": "BMW",
+  "brandNameTh": "บีเอ็มดับเบิลยู",
+  "brandNameLo": "ບີເອັມດັບເບິລຢູ",
+  "models": [
+    {
+      "modelId": "1-series",
+      "modelName": "1 Series",
+      "modelNameTh": "1 Series",
+      "modelNameLo": "1 Series",
+      "searchNames": [
+        "1 series",
+        "1series",
+        "1-series"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "2-series-coupe",
+      "modelName": "2 Series Coupe",
+      "modelNameTh": "2 Series Coupe",
+      "modelNameLo": "2 Series Coupe",
+      "searchNames": [
+        "2 series coupe",
+        "2 series",
+        "2series coupe"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "2-series-gran-coupe",
+      "modelName": "2 Series Gran Coupe",
+      "modelNameTh": "2 Series Gran Coupe",
+      "modelNameLo": "2 Series Gran Coupe",
+      "searchNames": [
+        "2 series gran coupe",
+        "2 gran coupe"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "3-series",
+      "modelName": "3 Series",
+      "modelNameTh": "3 Series",
+      "modelNameLo": "3 Series",
+      "searchNames": [
+        "3 series",
+        "3series",
+        "3-series"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "3-series-gran-tourismo",
+      "modelName": "3 Series Gran Tourismo",
+      "modelNameTh": "3 Series Gran Tourismo",
+      "modelNameLo": "3 Series Gran Tourismo",
+      "searchNames": [
+        "3 series gran tourismo",
+        "3 gt",
+        "gran tourismo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "3-series-wagon",
+      "modelName": "3 Series Wagon",
+      "modelNameTh": "3 Series Wagon",
+      "modelNameLo": "3 Series Wagon",
+      "searchNames": [
+        "3 series wagon",
+        "3 wagon",
+        "3 touring"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "4-series-coupe",
+      "modelName": "4 Series Coupe",
+      "modelNameTh": "4 Series Coupe",
+      "modelNameLo": "4 Series Coupe",
+      "searchNames": [
+        "4 series coupe",
+        "4 series",
+        "4series coupe"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "4-series-convertible",
+      "modelName": "4 Series Convertible",
+      "modelNameTh": "4 Series Convertible",
+      "modelNameLo": "4 Series Convertible",
+      "searchNames": [
+        "4 series convertible",
+        "4 convertible"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "4-series-gran-coupe",
+      "modelName": "4 Series Gran Coupe",
+      "modelNameTh": "4 Series Gran Coupe",
+      "modelNameLo": "4 Series Gran Coupe",
+      "searchNames": [
+        "4 series gran coupe",
+        "4 gran coupe"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "5-series",
+      "modelName": "5 Series",
+      "modelNameTh": "5 Series",
+      "modelNameLo": "5 Series",
+      "searchNames": [
+        "5 series",
+        "5series",
+        "5-series"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "5-series-touring",
+      "modelName": "5 Series Touring",
+      "modelNameTh": "5 Series Touring",
+      "modelNameLo": "5 Series Touring",
+      "searchNames": [
+        "5 series touring",
+        "5 touring",
+        "5 wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "6-series-gran-turismo",
+      "modelName": "6 Series Gran Turismo",
+      "modelNameTh": "6 Series Gran Turismo",
+      "modelNameLo": "6 Series Gran Turismo",
+      "searchNames": [
+        "6 series gran turismo",
+        "6 gt",
+        "6 series gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "7-series",
+      "modelName": "7 Series",
+      "modelNameTh": "7 Series",
+      "modelNameLo": "7 Series",
+      "searchNames": [
+        "7 series",
+        "7series",
+        "7-series"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "8-series-coupe",
+      "modelName": "8 Series Coupe",
+      "modelNameTh": "8 Series Coupe",
+      "modelNameLo": "8 Series Coupe",
+      "searchNames": [
+        "8 series coupe",
+        "8 series",
+        "8series coupe"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "8-series-convertible",
+      "modelName": "8 Series Convertible",
+      "modelNameTh": "8 Series Convertible",
+      "modelNameLo": "8 Series Convertible",
+      "searchNames": [
+        "8 series convertible",
+        "8 convertible"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "8-series-gran-coupe",
+      "modelName": "8 Series Gran Coupe",
+      "modelNameTh": "8 Series Gran Coupe",
+      "modelNameLo": "8 Series Gran Coupe",
+      "searchNames": [
+        "8 series gran coupe",
+        "8 gran coupe"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "i3",
+      "modelName": "i3",
+      "modelNameTh": "i3",
+      "modelNameLo": "i3",
+      "searchNames": [
+        "i3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "i4",
+      "modelName": "i4",
+      "modelNameTh": "i4",
+      "modelNameLo": "i4",
+      "searchNames": [
+        "i4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "i5",
+      "modelName": "i5",
+      "modelNameTh": "i5",
+      "modelNameLo": "i5",
+      "searchNames": [
+        "i5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "i5-touring",
+      "modelName": "i5 Touring",
+      "modelNameTh": "i5 Touring",
+      "modelNameLo": "i5 Touring",
+      "searchNames": [
+        "i5 touring",
+        "i5 wagon"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "i7",
+      "modelName": "i7",
+      "modelNameTh": "i7",
+      "modelNameLo": "i7",
+      "searchNames": [
+        "i7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ix1",
+      "modelName": "iX1",
+      "modelNameTh": "iX1",
+      "modelNameLo": "iX1",
+      "searchNames": [
+        "ix1",
+        "i x1",
+        "ix 1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ix2",
+      "modelName": "iX2",
+      "modelNameTh": "iX2",
+      "modelNameLo": "iX2",
+      "searchNames": [
+        "ix2",
+        "i x2",
+        "ix 2"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ix3",
+      "modelName": "iX3",
+      "modelNameTh": "iX3",
+      "modelNameLo": "iX3",
+      "searchNames": [
+        "ix3",
+        "i x3",
+        "ix 3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ix",
+      "modelName": "iX",
+      "modelNameTh": "iX",
+      "modelNameLo": "iX",
+      "searchNames": [
+        "ix",
+        "i x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m2",
+      "modelName": "M2",
+      "modelNameTh": "M2",
+      "modelNameLo": "M2",
+      "searchNames": [
+        "m2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m2-cs",
+      "modelName": "M2 CS",
+      "modelNameTh": "M2 CS",
+      "modelNameLo": "M2 CS",
+      "searchNames": [
+        "m2 cs",
+        "m2cs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m3",
+      "modelName": "M3",
+      "modelNameTh": "M3",
+      "modelNameLo": "M3",
+      "searchNames": [
+        "m3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m3-touring",
+      "modelName": "M3 Touring",
+      "modelNameTh": "M3 Touring",
+      "modelNameLo": "M3 Touring",
+      "searchNames": [
+        "m3 touring",
+        "m3 wagon"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m4",
+      "modelName": "M4",
+      "modelNameTh": "M4",
+      "modelNameLo": "M4",
+      "searchNames": [
+        "m4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m4-cs",
+      "modelName": "M4 CS",
+      "modelNameTh": "M4 CS",
+      "modelNameLo": "M4 CS",
+      "searchNames": [
+        "m4 cs",
+        "m4cs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m4-convertible",
+      "modelName": "M4 Convertible",
+      "modelNameTh": "M4 Convertible",
+      "modelNameLo": "M4 Convertible",
+      "searchNames": [
+        "m4 convertible",
+        "m4 cabrio"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m5",
+      "modelName": "M5",
+      "modelNameTh": "M5",
+      "modelNameLo": "M5",
+      "searchNames": [
+        "m5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m5-touring",
+      "modelName": "M5 Touring",
+      "modelNameTh": "M5 Touring",
+      "modelNameLo": "M5 Touring",
+      "searchNames": [
+        "m5 touring",
+        "m5 wagon"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m8",
+      "modelName": "M8",
+      "modelNameTh": "M8",
+      "modelNameLo": "M8",
+      "searchNames": [
+        "m8"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "x1",
+      "modelName": "X1",
+      "modelNameTh": "X1",
+      "modelNameLo": "X1",
+      "searchNames": [
+        "x1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x2",
+      "modelName": "X2",
+      "modelNameTh": "X2",
+      "modelNameLo": "X2",
+      "searchNames": [
+        "x2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x3",
+      "modelName": "X3",
+      "modelNameTh": "X3",
+      "modelNameLo": "X3",
+      "searchNames": [
+        "x3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x4",
+      "modelName": "X4",
+      "modelNameTh": "X4",
+      "modelNameLo": "X4",
+      "searchNames": [
+        "x4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x5",
+      "modelName": "X5",
+      "modelNameTh": "X5",
+      "modelNameLo": "X5",
+      "searchNames": [
+        "x5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x6",
+      "modelName": "X6",
+      "modelNameTh": "X6",
+      "modelNameLo": "X6",
+      "searchNames": [
+        "x6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "x7",
+      "modelName": "X7",
+      "modelNameTh": "X7",
+      "modelNameLo": "X7",
+      "searchNames": [
+        "x7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "xm",
+      "modelName": "XM",
+      "modelNameTh": "XM",
+      "modelNameLo": "XM",
+      "searchNames": [
+        "xm"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "xm-label",
+      "modelName": "XM Label",
+      "modelNameTh": "XM Label",
+      "modelNameLo": "XM Label",
+      "searchNames": [
+        "xm label",
+        "xm label red",
+        "xm label red edition"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "z4",
+      "modelName": "Z4",
+      "modelNameTh": "Z4",
+      "modelNameLo": "Z4",
+      "searchNames": [
+        "z4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    }
+  ]
+}

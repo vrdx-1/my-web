@@ -1,0 +1,169 @@
+{
+  "brandId": "ora",
+  "brandName": "Ora",
+  "brandNameTh": "โอร่า",
+  "brandNameLo": "ໂອຣ່າ",
+  "models": [
+    {
+      "modelId": "ora-03",
+      "modelName": "03 (Good Cat)",
+      "modelNameTh": "03 (Good Cat)",
+      "modelNameLo": "03 (Good Cat)",
+      "searchNames": [
+        "03",
+        "good cat",
+        "goodcat"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ora-03-gt",
+      "modelName": "03 GT",
+      "modelNameTh": "03 GT",
+      "modelNameLo": "03 GT",
+      "searchNames": [
+        "03 gt",
+        "03gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ora-07",
+      "modelName": "07 (Lightning Cat)",
+      "modelNameTh": "07 (Lightning Cat)",
+      "modelNameLo": "07 (Lightning Cat)",
+      "searchNames": [
+        "07",
+        "lightning cat",
+        "lightningcat"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ballet-cat",
+      "modelName": "Ballet Cat",
+      "modelNameTh": "Ballet Cat",
+      "modelNameLo": "Ballet Cat",
+      "searchNames": [
+        "ballet cat",
+        "balletcat"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "big-cat",
+      "modelName": "Big Cat (Cherry Cat)",
+      "modelNameTh": "Big Cat (Cherry Cat)",
+      "modelNameLo": "Big Cat (Cherry Cat)",
+      "searchNames": [
+        "big cat",
+        "bigcat",
+        "cherry cat",
+        "cherrycat"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "black-cat",
+      "modelName": "Black Cat (R1)",
+      "modelNameTh": "Black Cat (R1)",
+      "modelNameLo": "Black Cat (R1)",
+      "searchNames": [
+        "black cat",
+        "blackcat",
+        "r1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "iq",
+      "modelName": "iQ",
+      "modelNameTh": "iQ",
+      "modelNameLo": "iQ",
+      "searchNames": [
+        "iq"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mecha-dragon",
+      "modelName": "Mecha Dragon",
+      "modelNameTh": "Mecha Dragon",
+      "modelNameLo": "Mecha Dragon",
+      "searchNames": [
+        "mecha dragon",
+        "mechadragon"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ora-5",
+      "modelName": "ORA 5 (SUV)",
+      "modelNameTh": "ORA 5 (SUV)",
+      "modelNameLo": "ORA 5 (SUV)",
+      "searchNames": [
+        "ora 5",
+        "ora5",
+        "5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "punk-cat",
+      "modelName": "Punk Cat",
+      "modelNameTh": "Punk Cat",
+      "modelNameLo": "Punk Cat",
+      "searchNames": [
+        "punk cat",
+        "punkcat"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "white-cat",
+      "modelName": "White Cat (R2)",
+      "modelNameTh": "White Cat (R2)",
+      "modelNameLo": "White Cat (R2)",
+      "searchNames": [
+        "white cat",
+        "whitecat",
+        "r2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    }
+  ]
+}

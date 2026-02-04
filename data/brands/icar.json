@@ -1,0 +1,115 @@
+{
+  "brandId": "icar",
+  "brandName": "iCar",
+  "brandNameTh": "ไอคาร์",
+  "brandNameLo": "ໄອຄາ",
+  "models": [
+    {
+      "modelId": "icar-03",
+      "modelName": "iCar 03",
+      "modelNameTh": "iCar 03",
+      "modelNameLo": "iCar 03",
+      "searchNames": [
+        "icar 03",
+        "icar03",
+        "03"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-03t",
+      "modelName": "iCar 03T",
+      "modelNameTh": "iCar 03T",
+      "modelNameLo": "iCar 03T",
+      "searchNames": [
+        "icar 03t",
+        "icar03t",
+        "03t"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-v23",
+      "modelName": "iCar V23",
+      "modelNameTh": "iCar V23",
+      "modelNameLo": "iCar V23",
+      "searchNames": [
+        "icar v23",
+        "icarv23",
+        "v23"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-v23s",
+      "modelName": "iCar V23S",
+      "modelNameTh": "iCar V23S",
+      "modelNameLo": "iCar V23S",
+      "searchNames": [
+        "icar v23s",
+        "icarv23s",
+        "v23s"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-v27",
+      "modelName": "iCar V27",
+      "modelNameTh": "iCar V27",
+      "modelNameLo": "iCar V27",
+      "searchNames": [
+        "icar v27",
+        "icarv27",
+        "v27"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-gt",
+      "modelName": "iCar GT (Concept)",
+      "modelNameTh": "iCar GT (Concept)",
+      "modelNameLo": "iCar GT (Concept)",
+      "searchNames": [
+        "icar gt",
+        "icargt",
+        "gt",
+        "concept"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "icar-x25",
+      "modelName": "iCar X25 (Concept)",
+      "modelNameTh": "iCar X25 (Concept)",
+      "modelNameLo": "iCar X25 (Concept)",
+      "searchNames": [
+        "icar x25",
+        "icarx25",
+        "x25",
+        "concept"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    }
+  ]
+}

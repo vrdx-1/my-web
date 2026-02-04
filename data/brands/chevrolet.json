@@ -1,0 +1,911 @@
+{
+  "brandId": "chevrolet",
+  "brandName": "Chevrolet",
+  "brandNameTh": "เชฟโรเลต",
+  "brandNameLo": "ເຊຟໂຣເລດ",
+  "models": [
+    {
+      "modelId": "agile",
+      "modelName": "Agile",
+      "modelNameTh": "Agile",
+      "modelNameLo": "Agile",
+      "searchNames": [
+        "agile"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "alero",
+      "modelName": "Alero",
+      "modelNameTh": "Alero",
+      "modelNameLo": "Alero",
+      "searchNames": [
+        "alero"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "apache",
+      "modelName": "Apache",
+      "modelNameTh": "Apache",
+      "modelNameLo": "Apache",
+      "searchNames": [
+        "apache"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "astra",
+      "modelName": "Astra",
+      "modelNameTh": "Astra",
+      "modelNameLo": "Astra",
+      "searchNames": [
+        "astra"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "astro",
+      "modelName": "Astro",
+      "modelNameTh": "Astro",
+      "modelNameLo": "Astro",
+      "searchNames": [
+        "astro"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "avalanche",
+      "modelName": "Avalanche",
+      "modelNameTh": "Avalanche",
+      "modelNameLo": "Avalanche",
+      "searchNames": [
+        "avalanche"
+      ],
+      "categoryIds": [
+        "pickup",
+        "suv"
+      ]
+    },
+    {
+      "modelId": "aveo",
+      "modelName": "Aveo",
+      "modelNameTh": "Aveo",
+      "modelNameLo": "Aveo",
+      "searchNames": [
+        "aveo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "bel-air",
+      "modelName": "Bel Air",
+      "modelNameTh": "Bel Air",
+      "modelNameLo": "Bel Air",
+      "searchNames": [
+        "bel air",
+        "belair"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "beretta",
+      "modelName": "Beretta",
+      "modelNameTh": "Beretta",
+      "modelNameLo": "Beretta",
+      "searchNames": [
+        "beretta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "blazer",
+      "modelName": "Blazer",
+      "modelNameTh": "Blazer",
+      "modelNameLo": "Blazer",
+      "searchNames": [
+        "blazer"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bolt-ev",
+      "modelName": "Bolt EV",
+      "modelNameTh": "Bolt EV",
+      "modelNameLo": "Bolt EV",
+      "searchNames": [
+        "bolt ev",
+        "boltev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "bolt-euv",
+      "modelName": "Bolt EUV",
+      "modelNameTh": "Bolt EUV",
+      "modelNameLo": "Bolt EUV",
+      "searchNames": [
+        "bolt euv",
+        "bolteuv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "brookwood",
+      "modelName": "Brookwood",
+      "modelNameTh": "Brookwood",
+      "modelNameLo": "Brookwood",
+      "searchNames": [
+        "brookwood"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "c-k",
+      "modelName": "C/K",
+      "modelNameTh": "C/K",
+      "modelNameLo": "C/K",
+      "searchNames": [
+        "c/k",
+        "ck",
+        "c k"
+      ],
+      "categoryIds": [
+        "pickup",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "camaro",
+      "modelName": "Camaro",
+      "modelNameTh": "Camaro",
+      "modelNameLo": "Camaro",
+      "searchNames": [
+        "camaro"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "caprice",
+      "modelName": "Caprice",
+      "modelNameTh": "Caprice",
+      "modelNameLo": "Caprice",
+      "searchNames": [
+        "caprice"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "captiva",
+      "modelName": "Captiva",
+      "modelNameTh": "Captiva",
+      "modelNameLo": "Captiva",
+      "searchNames": [
+        "captiva"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cavalier",
+      "modelName": "Cavalier",
+      "modelNameTh": "Cavalier",
+      "modelNameLo": "Cavalier",
+      "searchNames": [
+        "cavalier"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "celebrity",
+      "modelName": "Celebrity",
+      "modelNameTh": "Celebrity",
+      "modelNameLo": "Celebrity",
+      "searchNames": [
+        "celebrity"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "chevelle",
+      "modelName": "Chevelle",
+      "modelNameTh": "Chevelle",
+      "modelNameLo": "Chevelle",
+      "searchNames": [
+        "chevelle"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "chevette",
+      "modelName": "Chevette",
+      "modelNameTh": "Chevette",
+      "modelNameLo": "Chevette",
+      "searchNames": [
+        "chevette"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "chevy-ii",
+      "modelName": "Chevy II",
+      "modelNameTh": "Chevy II",
+      "modelNameLo": "Chevy II",
+      "searchNames": [
+        "chevy ii",
+        "chevy 2",
+        "nova"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "citation",
+      "modelName": "Citation",
+      "modelNameTh": "Citation",
+      "modelNameLo": "Citation",
+      "searchNames": [
+        "citation"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "city-express",
+      "modelName": "City Express",
+      "modelNameTh": "City Express",
+      "modelNameLo": "City Express",
+      "searchNames": [
+        "city express",
+        "cityexpress"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cobalt",
+      "modelName": "Cobalt",
+      "modelNameTh": "Cobalt",
+      "modelNameLo": "Cobalt",
+      "searchNames": [
+        "cobalt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "colorado",
+      "modelName": "Colorado",
+      "modelNameTh": "Colorado",
+      "modelNameLo": "Colorado",
+      "searchNames": [
+        "colorado"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "corsica",
+      "modelName": "Corsica",
+      "modelNameTh": "Corsica",
+      "modelNameLo": "Corsica",
+      "searchNames": [
+        "corsica"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corvair",
+      "modelName": "Corvair",
+      "modelNameTh": "Corvair",
+      "modelNameLo": "Corvair",
+      "searchNames": [
+        "corvair"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "corvette",
+      "modelName": "Corvette",
+      "modelNameTh": "Corvette",
+      "modelNameLo": "Corvette",
+      "searchNames": [
+        "corvette"
+      ],
+      "categoryIds": [
+        "sport",
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "cruze",
+      "modelName": "Cruze",
+      "modelNameTh": "Cruze",
+      "modelNameLo": "Cruze",
+      "searchNames": [
+        "cruze"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "el-camino",
+      "modelName": "El Camino",
+      "modelNameTh": "El Camino",
+      "modelNameLo": "El Camino",
+      "searchNames": [
+        "el camino",
+        "elcamino"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "enjoy",
+      "modelName": "Enjoy",
+      "modelNameTh": "Enjoy",
+      "modelNameLo": "Enjoy",
+      "searchNames": [
+        "enjoy"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "equinox",
+      "modelName": "Equinox",
+      "modelNameTh": "Equinox",
+      "modelNameLo": "Equinox",
+      "searchNames": [
+        "equinox"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "express",
+      "modelName": "Express",
+      "modelNameTh": "Express",
+      "modelNameLo": "Express",
+      "searchNames": [
+        "express"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "hhr",
+      "modelName": "HHR",
+      "modelNameTh": "HHR",
+      "modelNameLo": "HHR",
+      "searchNames": [
+        "hhr"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "impala",
+      "modelName": "Impala",
+      "modelNameTh": "Impala",
+      "modelNameLo": "Impala",
+      "searchNames": [
+        "impala"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "k5-blazer",
+      "modelName": "K5 Blazer",
+      "modelNameTh": "K5 Blazer",
+      "modelNameLo": "K5 Blazer",
+      "searchNames": [
+        "k5 blazer",
+        "k5blazer"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "lumina",
+      "modelName": "Lumina",
+      "modelNameTh": "Lumina",
+      "modelNameLo": "Lumina",
+      "searchNames": [
+        "lumina"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "luv",
+      "modelName": "LUV",
+      "modelNameTh": "LUV",
+      "modelNameLo": "LUV",
+      "searchNames": [
+        "luv"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "malibu",
+      "modelName": "Malibu",
+      "modelNameTh": "Malibu",
+      "modelNameLo": "Malibu",
+      "searchNames": [
+        "malibu"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "matiz",
+      "modelName": "Matiz",
+      "modelNameTh": "Matiz",
+      "modelNameLo": "Matiz",
+      "searchNames": [
+        "matiz",
+        "spark"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "menlo",
+      "modelName": "Menlo",
+      "modelNameTh": "Menlo",
+      "modelNameLo": "Menlo",
+      "searchNames": [
+        "menlo"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "metro",
+      "modelName": "Metro",
+      "modelNameTh": "Metro",
+      "modelNameLo": "Metro",
+      "searchNames": [
+        "metro"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "montana",
+      "modelName": "Montana",
+      "modelNameTh": "Montana",
+      "modelNameLo": "Montana",
+      "searchNames": [
+        "montana"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "monte-carlo",
+      "modelName": "Monte Carlo",
+      "modelNameTh": "Monte Carlo",
+      "modelNameLo": "Monte Carlo",
+      "searchNames": [
+        "monte carlo",
+        "montecarlo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "monza",
+      "modelName": "Monza",
+      "modelNameTh": "Monza",
+      "modelNameLo": "Monza",
+      "searchNames": [
+        "monza"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "nomad",
+      "modelName": "Nomad",
+      "modelNameTh": "Nomad",
+      "modelNameLo": "Nomad",
+      "searchNames": [
+        "nomad"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "nova",
+      "modelName": "Nova",
+      "modelNameTh": "Nova",
+      "modelNameLo": "Nova",
+      "searchNames": [
+        "nova"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "onix",
+      "modelName": "Onix",
+      "modelNameTh": "Onix",
+      "modelNameLo": "Onix",
+      "searchNames": [
+        "onix"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "optra",
+      "modelName": "Optra",
+      "modelNameTh": "Optra",
+      "modelNameLo": "Optra",
+      "searchNames": [
+        "optra"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "orlando",
+      "modelName": "Orlando",
+      "modelNameTh": "Orlando",
+      "modelNameLo": "Orlando",
+      "searchNames": [
+        "orlando"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "panther",
+      "modelName": "Panther",
+      "modelNameTh": "Panther",
+      "modelNameLo": "Panther",
+      "searchNames": [
+        "panther"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "prizm",
+      "modelName": "Prizm",
+      "modelNameTh": "Prizm",
+      "modelNameLo": "Prizm",
+      "searchNames": [
+        "prizm"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "s-10",
+      "modelName": "S-10",
+      "modelNameTh": "S-10",
+      "modelNameLo": "S-10",
+      "searchNames": [
+        "s-10",
+        "s10",
+        "s 10"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "sail",
+      "modelName": "Sail",
+      "modelNameTh": "Sail",
+      "modelNameLo": "Sail",
+      "searchNames": [
+        "sail"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "silverado",
+      "modelName": "Silverado",
+      "modelNameTh": "Silverado",
+      "modelNameLo": "Silverado",
+      "searchNames": [
+        "silverado"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "sonic",
+      "modelName": "Sonic",
+      "modelNameTh": "Sonic",
+      "modelNameLo": "Sonic",
+      "searchNames": [
+        "sonic"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "spark",
+      "modelName": "Spark",
+      "modelNameTh": "Spark",
+      "modelNameLo": "Spark",
+      "searchNames": [
+        "spark"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "spin",
+      "modelName": "Spin",
+      "modelNameTh": "Spin",
+      "modelNameLo": "Spin",
+      "searchNames": [
+        "spin"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "ss",
+      "modelName": "SS",
+      "modelNameTh": "SS",
+      "modelNameLo": "SS",
+      "searchNames": [
+        "ss",
+        "chevrolet ss"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ssr",
+      "modelName": "SSR",
+      "modelNameTh": "SSR",
+      "modelNameLo": "SSR",
+      "searchNames": [
+        "ssr"
+      ],
+      "categoryIds": [
+        "pickup",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "suburban",
+      "modelName": "Suburban",
+      "modelNameTh": "Suburban",
+      "modelNameLo": "Suburban",
+      "searchNames": [
+        "suburban"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tahoe",
+      "modelName": "Tahoe",
+      "modelNameTh": "Tahoe",
+      "modelNameLo": "Tahoe",
+      "searchNames": [
+        "tahoe"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tavera",
+      "modelName": "Tavera",
+      "modelNameTh": "Tavera",
+      "modelNameLo": "Tavera",
+      "searchNames": [
+        "tavera"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "tornado",
+      "modelName": "Tornado",
+      "modelNameTh": "Tornado",
+      "modelNameLo": "Tornado",
+      "searchNames": [
+        "tornado"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "trailblazer",
+      "modelName": "Trailblazer",
+      "modelNameTh": "Trailblazer",
+      "modelNameLo": "Trailblazer",
+      "searchNames": [
+        "trailblazer"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "traverse",
+      "modelName": "Traverse",
+      "modelNameTh": "Traverse",
+      "modelNameLo": "Traverse",
+      "searchNames": [
+        "traverse"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trax",
+      "modelName": "Trax",
+      "modelNameTh": "Trax",
+      "modelNameLo": "Trax",
+      "searchNames": [
+        "trax"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "uplander",
+      "modelName": "Uplander",
+      "modelNameTh": "Uplander",
+      "modelNameLo": "Uplander",
+      "searchNames": [
+        "uplander"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "vega",
+      "modelName": "Vega",
+      "modelNameTh": "Vega",
+      "modelNameLo": "Vega",
+      "searchNames": [
+        "vega"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "venture",
+      "modelName": "Venture",
+      "modelNameTh": "Venture",
+      "modelNameLo": "Venture",
+      "searchNames": [
+        "venture"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "volt",
+      "modelName": "Volt",
+      "modelNameTh": "Volt",
+      "modelNameLo": "Volt",
+      "searchNames": [
+        "volt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "zafira",
+      "modelName": "Zafira",
+      "modelNameTh": "Zafira",
+      "modelNameLo": "Zafira",
+      "searchNames": [
+        "zafira"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    }
+  ]
+}

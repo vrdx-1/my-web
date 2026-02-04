@@ -1,0 +1,117 @@
+{
+  "brandId": "avatr",
+  "brandName": "Avatr",
+  "brandNameTh": "อวาทาร์",
+  "brandNameLo": "ອະວາທາ",
+  "models": [
+    {
+      "modelId": "avatr-06",
+      "modelName": "Avatr 06",
+      "modelNameTh": "Avatr 06",
+      "modelNameLo": "Avatr 06",
+      "searchNames": [
+        "avatr 06",
+        "avatr06",
+        "06"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-06t",
+      "modelName": "Avatr 06T",
+      "modelNameTh": "Avatr 06T",
+      "modelNameLo": "Avatr 06T",
+      "searchNames": [
+        "avatr 06t",
+        "avatr06t",
+        "06t"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-07",
+      "modelName": "Avatr 07",
+      "modelNameTh": "Avatr 07",
+      "modelNameLo": "Avatr 07",
+      "searchNames": [
+        "avatr 07",
+        "avatr07",
+        "07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-11",
+      "modelName": "Avatr 11",
+      "modelNameTh": "Avatr 11",
+      "modelNameLo": "Avatr 11",
+      "searchNames": [
+        "avatr 11",
+        "avatr11",
+        "11"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-12",
+      "modelName": "Avatr 12",
+      "modelNameTh": "Avatr 12",
+      "modelNameLo": "Avatr 12",
+      "searchNames": [
+        "avatr 12",
+        "avatr12",
+        "12"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "avatr-011",
+      "modelName": "Avatr 011",
+      "modelNameTh": "Avatr 011",
+      "modelNameLo": "Avatr 011",
+      "searchNames": [
+        "avatr 011",
+        "avatr011",
+        "011",
+        "limited edition"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "avatr-012",
+      "modelName": "Avatr 012",
+      "modelNameTh": "Avatr 012",
+      "modelNameLo": "Avatr 012",
+      "searchNames": [
+        "avatr 012",
+        "avatr012",
+        "012",
+        "limited edition"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "luxury"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,991 @@
+{
+  "brandId": "porsche",
+  "brandName": "Porsche",
+  "brandNameTh": "พอร์เช่",
+  "brandNameLo": "ປໍເຊ",
+  "models": [
+    {
+      "modelId": "356",
+      "modelName": "356",
+      "modelNameTh": "356",
+      "modelNameLo": "356",
+      "searchNames": [
+        "356"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "550-spyder",
+      "modelName": "550 Spyder",
+      "modelNameTh": "550 Spyder",
+      "modelNameLo": "550 Spyder",
+      "searchNames": [
+        "550 spyder",
+        "550"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-boxster",
+      "modelName": "718 Boxster",
+      "modelNameTh": "718 Boxster",
+      "modelNameLo": "718 Boxster",
+      "searchNames": [
+        "718 boxster",
+        "718",
+        "boxster"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-boxster-s",
+      "modelName": "718 Boxster S",
+      "modelNameTh": "718 Boxster S",
+      "modelNameLo": "718 Boxster S",
+      "searchNames": [
+        "718 boxster s",
+        "boxster s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-boxster-gts-4-0",
+      "modelName": "718 Boxster GTS 4.0",
+      "modelNameTh": "718 Boxster GTS 4.0",
+      "modelNameLo": "718 Boxster GTS 4.0",
+      "searchNames": [
+        "718 boxster gts",
+        "boxster gts 4.0"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-boxster-style-edition",
+      "modelName": "718 Boxster Style Edition",
+      "modelNameTh": "718 Boxster Style Edition",
+      "modelNameLo": "718 Boxster Style Edition",
+      "searchNames": [
+        "718 boxster style edition",
+        "boxster style"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-cayman",
+      "modelName": "718 Cayman",
+      "modelNameTh": "718 Cayman",
+      "modelNameLo": "718 Cayman",
+      "searchNames": [
+        "718 cayman",
+        "cayman"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-cayman-s",
+      "modelName": "718 Cayman S",
+      "modelNameTh": "718 Cayman S",
+      "modelNameLo": "718 Cayman S",
+      "searchNames": [
+        "718 cayman s",
+        "cayman s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-cayman-gts-4-0",
+      "modelName": "718 Cayman GTS 4.0",
+      "modelNameTh": "718 Cayman GTS 4.0",
+      "modelNameLo": "718 Cayman GTS 4.0",
+      "searchNames": [
+        "718 cayman gts",
+        "cayman gts 4.0"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-cayman-gt4-rs",
+      "modelName": "718 Cayman GT4 RS",
+      "modelNameTh": "718 Cayman GT4 RS",
+      "modelNameLo": "718 Cayman GT4 RS",
+      "searchNames": [
+        "718 cayman gt4 rs",
+        "cayman gt4 rs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-cayman-style-edition",
+      "modelName": "718 Cayman Style Edition",
+      "modelNameTh": "718 Cayman Style Edition",
+      "modelNameLo": "718 Cayman Style Edition",
+      "searchNames": [
+        "718 cayman style edition",
+        "cayman style"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "718-spyder-rs",
+      "modelName": "718 Spyder RS",
+      "modelNameTh": "718 Spyder RS",
+      "modelNameLo": "718 Spyder RS",
+      "searchNames": [
+        "718 spyder rs",
+        "spyder rs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera",
+      "modelName": "911 Carrera",
+      "modelNameTh": "911 Carrera",
+      "modelNameLo": "911 Carrera",
+      "searchNames": [
+        "911 carrera",
+        "911",
+        "carrera"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-t",
+      "modelName": "911 Carrera T",
+      "modelNameTh": "911 Carrera T",
+      "modelNameLo": "911 Carrera T",
+      "searchNames": [
+        "911 carrera t",
+        "carrera t"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-s",
+      "modelName": "911 Carrera S",
+      "modelNameTh": "911 Carrera S",
+      "modelNameLo": "911 Carrera S",
+      "searchNames": [
+        "911 carrera s",
+        "carrera s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-4",
+      "modelName": "911 Carrera 4",
+      "modelNameTh": "911 Carrera 4",
+      "modelNameLo": "911 Carrera 4",
+      "searchNames": [
+        "911 carrera 4",
+        "carrera 4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-4s",
+      "modelName": "911 Carrera 4S",
+      "modelNameTh": "911 Carrera 4S",
+      "modelNameLo": "911 Carrera 4S",
+      "searchNames": [
+        "911 carrera 4s",
+        "carrera 4s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-gts",
+      "modelName": "911 Carrera GTS",
+      "modelNameTh": "911 Carrera GTS",
+      "modelNameLo": "911 Carrera GTS",
+      "searchNames": [
+        "911 carrera gts",
+        "carrera gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-carrera-4-gts",
+      "modelName": "911 Carrera 4 GTS",
+      "modelNameTh": "911 Carrera 4 GTS",
+      "modelNameLo": "911 Carrera 4 GTS",
+      "searchNames": [
+        "911 carrera 4 gts",
+        "carrera 4 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-targa-4",
+      "modelName": "911 Targa 4",
+      "modelNameTh": "911 Targa 4",
+      "modelNameLo": "911 Targa 4",
+      "searchNames": [
+        "911 targa 4",
+        "targa 4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-targa-4s",
+      "modelName": "911 Targa 4S",
+      "modelNameTh": "911 Targa 4S",
+      "modelNameLo": "911 Targa 4S",
+      "searchNames": [
+        "911 targa 4s",
+        "targa 4s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-targa-4-gts",
+      "modelName": "911 Targa 4 GTS",
+      "modelNameTh": "911 Targa 4 GTS",
+      "modelNameLo": "911 Targa 4 GTS",
+      "searchNames": [
+        "911 targa 4 gts",
+        "targa 4 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-turbo",
+      "modelName": "911 Turbo",
+      "modelNameTh": "911 Turbo",
+      "modelNameLo": "911 Turbo",
+      "searchNames": [
+        "911 turbo"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-turbo-s",
+      "modelName": "911 Turbo S",
+      "modelNameTh": "911 Turbo S",
+      "modelNameLo": "911 Turbo S",
+      "searchNames": [
+        "911 turbo s",
+        "911 turbos"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-gt3",
+      "modelName": "911 GT3",
+      "modelNameTh": "911 GT3",
+      "modelNameLo": "911 GT3",
+      "searchNames": [
+        "911 gt3",
+        "gt3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-gt3-rs",
+      "modelName": "911 GT3 RS",
+      "modelNameTh": "911 GT3 RS",
+      "modelNameLo": "911 GT3 RS",
+      "searchNames": [
+        "911 gt3 rs",
+        "gt3 rs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-dakar",
+      "modelName": "911 Dakar",
+      "modelNameTh": "911 Dakar",
+      "modelNameLo": "911 Dakar",
+      "searchNames": [
+        "911 dakar",
+        "dakar"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-st",
+      "modelName": "911 S/T",
+      "modelNameTh": "911 S/T",
+      "modelNameLo": "911 S/T",
+      "searchNames": [
+        "911 s/t",
+        "911 st"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "911-spirit-70",
+      "modelName": "911 Spirit 70",
+      "modelNameTh": "911 Spirit 70",
+      "modelNameLo": "911 Spirit 70",
+      "searchNames": [
+        "911 spirit 70",
+        "spirit 70"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "912",
+      "modelName": "912",
+      "modelNameTh": "912",
+      "modelNameLo": "912",
+      "searchNames": [
+        "912"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "914",
+      "modelName": "914",
+      "modelNameTh": "914",
+      "modelNameLo": "914",
+      "searchNames": [
+        "914"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "918-spyder",
+      "modelName": "918 Spyder",
+      "modelNameTh": "918 Spyder",
+      "modelNameLo": "918 Spyder",
+      "searchNames": [
+        "918 spyder",
+        "918"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "924",
+      "modelName": "924",
+      "modelNameTh": "924",
+      "modelNameLo": "924",
+      "searchNames": [
+        "924"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "928",
+      "modelName": "928",
+      "modelNameTh": "928",
+      "modelNameLo": "928",
+      "searchNames": [
+        "928"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "944",
+      "modelName": "944",
+      "modelNameTh": "944",
+      "modelNameLo": "944",
+      "searchNames": [
+        "944"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "959",
+      "modelName": "959",
+      "modelNameTh": "959",
+      "modelNameLo": "959",
+      "searchNames": [
+        "959"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "968",
+      "modelName": "968",
+      "modelNameTh": "968",
+      "modelNameLo": "968",
+      "searchNames": [
+        "968"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "carrera-gt",
+      "modelName": "Carrera GT",
+      "modelNameTh": "Carrera GT",
+      "modelNameLo": "Carrera GT",
+      "searchNames": [
+        "carrera gt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "cayenne",
+      "modelName": "Cayenne",
+      "modelNameTh": "Cayenne",
+      "modelNameLo": "Cayenne",
+      "searchNames": [
+        "cayenne"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cayenne-s",
+      "modelName": "Cayenne S",
+      "modelNameTh": "Cayenne S",
+      "modelNameLo": "Cayenne S",
+      "searchNames": [
+        "cayenne s"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cayenne-e-hybrid",
+      "modelName": "Cayenne E-Hybrid",
+      "modelNameTh": "Cayenne E-Hybrid",
+      "modelNameLo": "Cayenne E-Hybrid",
+      "searchNames": [
+        "cayenne e-hybrid",
+        "cayenne hybrid"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cayenne-turbo-e-hybrid",
+      "modelName": "Cayenne Turbo E-Hybrid",
+      "modelNameTh": "Cayenne Turbo E-Hybrid",
+      "modelNameLo": "Cayenne Turbo E-Hybrid",
+      "searchNames": [
+        "cayenne turbo e-hybrid",
+        "cayenne turbo hybrid"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cayenne-turbo-gt",
+      "modelName": "Cayenne Turbo GT",
+      "modelNameTh": "Cayenne Turbo GT",
+      "modelNameLo": "Cayenne Turbo GT",
+      "searchNames": [
+        "cayenne turbo gt"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cayenne-coupe",
+      "modelName": "Cayenne Coupé",
+      "modelNameTh": "Cayenne Coupé",
+      "modelNameLo": "Cayenne Coupé",
+      "searchNames": [
+        "cayenne coupe"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cayenne-s-coupe",
+      "modelName": "Cayenne S Coupé",
+      "modelNameTh": "Cayenne S Coupé",
+      "modelNameLo": "Cayenne S Coupé",
+      "searchNames": [
+        "cayenne s coupe"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cayenne-e-hybrid-coupe",
+      "modelName": "Cayenne E-Hybrid Coupé",
+      "modelNameTh": "Cayenne E-Hybrid Coupé",
+      "modelNameLo": "Cayenne E-Hybrid Coupé",
+      "searchNames": [
+        "cayenne e-hybrid coupe"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cayenne-turbo-e-hybrid-coupe",
+      "modelName": "Cayenne Turbo E-Hybrid Coupé",
+      "modelNameTh": "Cayenne Turbo E-Hybrid Coupé",
+      "modelNameLo": "Cayenne Turbo E-Hybrid Coupé",
+      "searchNames": [
+        "cayenne turbo e-hybrid coupe"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cayenne-electric",
+      "modelName": "Cayenne Electric (2026)",
+      "modelNameTh": "Cayenne Electric (2026)",
+      "modelNameLo": "Cayenne Electric (2026)",
+      "searchNames": [
+        "cayenne electric",
+        "cayenne ev",
+        "cayenne 2026"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "macan",
+      "modelName": "Macan",
+      "modelNameTh": "Macan",
+      "modelNameLo": "Macan",
+      "searchNames": [
+        "macan"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "macan-t",
+      "modelName": "Macan T",
+      "modelNameTh": "Macan T",
+      "modelNameLo": "Macan T",
+      "searchNames": [
+        "macan t"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "macan-s",
+      "modelName": "Macan S",
+      "modelNameTh": "Macan S",
+      "modelNameLo": "Macan S",
+      "searchNames": [
+        "macan s"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "macan-gts",
+      "modelName": "Macan GTS",
+      "modelNameTh": "Macan GTS",
+      "modelNameLo": "Macan GTS",
+      "searchNames": [
+        "macan gts"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "macan-electric",
+      "modelName": "Macan Electric",
+      "modelNameTh": "Macan Electric",
+      "modelNameLo": "Macan Electric",
+      "searchNames": [
+        "macan electric",
+        "macan ev"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "macan-4-electric",
+      "modelName": "Macan 4 Electric",
+      "modelNameTh": "Macan 4 Electric",
+      "modelNameLo": "Macan 4 Electric",
+      "searchNames": [
+        "macan 4 electric",
+        "macan 4"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "macan-4s-electric",
+      "modelName": "Macan 4S Electric",
+      "modelNameTh": "Macan 4S Electric",
+      "modelNameLo": "Macan 4S Electric",
+      "searchNames": [
+        "macan 4s electric",
+        "macan 4s"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "macan-turbo-electric",
+      "modelName": "Macan Turbo Electric",
+      "modelNameTh": "Macan Turbo Electric",
+      "modelNameLo": "Macan Turbo Electric",
+      "searchNames": [
+        "macan turbo electric",
+        "macan turbo ev"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "panamera",
+      "modelName": "Panamera",
+      "modelNameTh": "Panamera",
+      "modelNameLo": "Panamera",
+      "searchNames": [
+        "panamera"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "panamera-4",
+      "modelName": "Panamera 4",
+      "modelNameTh": "Panamera 4",
+      "modelNameLo": "Panamera 4",
+      "searchNames": [
+        "panamera 4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "panamera-4-e-hybrid",
+      "modelName": "Panamera 4 E-Hybrid",
+      "modelNameTh": "Panamera 4 E-Hybrid",
+      "modelNameLo": "Panamera 4 E-Hybrid",
+      "searchNames": [
+        "panamera 4 e-hybrid",
+        "panamera 4 hybrid"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "panamera-4s-e-hybrid",
+      "modelName": "Panamera 4S E-Hybrid",
+      "modelNameTh": "Panamera 4S E-Hybrid",
+      "modelNameLo": "Panamera 4S E-Hybrid",
+      "searchNames": [
+        "panamera 4s e-hybrid",
+        "panamera 4s hybrid"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "panamera-gts",
+      "modelName": "Panamera GTS",
+      "modelNameTh": "Panamera GTS",
+      "modelNameLo": "Panamera GTS",
+      "searchNames": [
+        "panamera gts"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "panamera-turbo-e-hybrid",
+      "modelName": "Panamera Turbo E-Hybrid",
+      "modelNameTh": "Panamera Turbo E-Hybrid",
+      "modelNameLo": "Panamera Turbo E-Hybrid",
+      "searchNames": [
+        "panamera turbo e-hybrid",
+        "panamera turbo hybrid"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "panamera-turbo-s-e-hybrid",
+      "modelName": "Panamera Turbo S E-Hybrid",
+      "modelNameTh": "Panamera Turbo S E-Hybrid",
+      "modelNameLo": "Panamera Turbo S E-Hybrid",
+      "searchNames": [
+        "panamera turbo s e-hybrid",
+        "panamera turbo s hybrid"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "taycan",
+      "modelName": "Taycan",
+      "modelNameTh": "Taycan",
+      "modelNameLo": "Taycan",
+      "searchNames": [
+        "taycan"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-4",
+      "modelName": "Taycan 4",
+      "modelNameTh": "Taycan 4",
+      "modelNameLo": "Taycan 4",
+      "searchNames": [
+        "taycan 4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-4s",
+      "modelName": "Taycan 4S",
+      "modelNameTh": "Taycan 4S",
+      "modelNameLo": "Taycan 4S",
+      "searchNames": [
+        "taycan 4s"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-gts",
+      "modelName": "Taycan GTS",
+      "modelNameTh": "Taycan GTS",
+      "modelNameLo": "Taycan GTS",
+      "searchNames": [
+        "taycan gts"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "taycan-turbo",
+      "modelName": "Taycan Turbo",
+      "modelNameTh": "Taycan Turbo",
+      "modelNameLo": "Taycan Turbo",
+      "searchNames": [
+        "taycan turbo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-turbo-s",
+      "modelName": "Taycan Turbo S",
+      "modelNameTh": "Taycan Turbo S",
+      "modelNameLo": "Taycan Turbo S",
+      "searchNames": [
+        "taycan turbo s"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-turbo-gt",
+      "modelName": "Taycan Turbo GT",
+      "modelNameTh": "Taycan Turbo GT",
+      "modelNameLo": "Taycan Turbo GT",
+      "searchNames": [
+        "taycan turbo gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "taycan-4-cross-turismo",
+      "modelName": "Taycan 4 Cross Turismo",
+      "modelNameTh": "Taycan 4 Cross Turismo",
+      "modelNameLo": "Taycan 4 Cross Turismo",
+      "searchNames": [
+        "taycan 4 cross turismo",
+        "taycan cross turismo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-4s-cross-turismo",
+      "modelName": "Taycan 4S Cross Turismo",
+      "modelNameTh": "Taycan 4S Cross Turismo",
+      "modelNameLo": "Taycan 4S Cross Turismo",
+      "searchNames": [
+        "taycan 4s cross turismo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-turbo-cross-turismo",
+      "modelName": "Taycan Turbo Cross Turismo",
+      "modelNameTh": "Taycan Turbo Cross Turismo",
+      "modelNameLo": "Taycan Turbo Cross Turismo",
+      "searchNames": [
+        "taycan turbo cross turismo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "taycan-turbo-s-cross-turismo",
+      "modelName": "Taycan Turbo S Cross Turismo",
+      "modelNameTh": "Taycan Turbo S Cross Turismo",
+      "modelNameLo": "Taycan Turbo S Cross Turismo",
+      "searchNames": [
+        "taycan turbo s cross turismo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mission-x-concept",
+      "modelName": "Mission X (Concept)",
+      "modelNameTh": "Mission X (Concept)",
+      "modelNameLo": "Mission X (Concept)",
+      "searchNames": [
+        "mission x",
+        "mission x concept"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,703 @@
+{
+  "brandId": "jac",
+  "brandName": "JAC",
+  "brandNameTh": "เจเอซี",
+  "brandNameLo": "ເຈເອຊີ",
+  "models": [
+    {
+      "modelId": "a13",
+      "modelName": "A13",
+      "modelNameTh": "A13",
+      "modelNameLo": "A13",
+      "searchNames": [
+        "a13"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a60",
+      "modelName": "A60",
+      "modelNameTh": "A60",
+      "modelNameLo": "A60",
+      "searchNames": [
+        "a60"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "b15",
+      "modelName": "B15",
+      "modelNameTh": "B15",
+      "modelNameLo": "B15",
+      "searchNames": [
+        "b15"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e30x",
+      "modelName": "E30X",
+      "modelNameTh": "E30X",
+      "modelNameLo": "E30X",
+      "searchNames": [
+        "e30x",
+        "e30 x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "heyue-a30",
+      "modelName": "Heyue A30",
+      "modelNameTh": "Heyue A30",
+      "modelNameLo": "Heyue A30",
+      "searchNames": [
+        "heyue a30",
+        "heyue"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ic5",
+      "modelName": "iC5",
+      "modelNameTh": "iC5",
+      "modelNameLo": "iC5",
+      "searchNames": [
+        "ic5",
+        "i c5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "iev4",
+      "modelName": "iEV4",
+      "modelNameTh": "iEV4",
+      "modelNameLo": "iEV4",
+      "searchNames": [
+        "iev4",
+        "i ev4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "iev6e",
+      "modelName": "iEV6E",
+      "modelNameTh": "iEV6E",
+      "modelNameLo": "iEV6E",
+      "searchNames": [
+        "iev6e",
+        "i ev6e"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "iev7",
+      "modelName": "iEV7",
+      "modelNameTh": "iEV7",
+      "modelNameLo": "iEV7",
+      "searchNames": [
+        "iev7",
+        "i ev7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "iev7s",
+      "modelName": "iEV7S",
+      "modelNameTh": "iEV7S",
+      "modelNameLo": "iEV7S",
+      "searchNames": [
+        "iev7s",
+        "i ev7s"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ieva50",
+      "modelName": "iEVA50",
+      "modelNameTh": "iEVA50",
+      "modelNameLo": "iEVA50",
+      "searchNames": [
+        "ieva50",
+        "i eva50"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ievs4",
+      "modelName": "iEVS4",
+      "modelNameTh": "iEVS4",
+      "modelNameLo": "iEVS4",
+      "searchNames": [
+        "ievs4",
+        "i evs4"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "j2",
+      "modelName": "J2",
+      "modelNameTh": "J2",
+      "modelNameLo": "J2",
+      "searchNames": [
+        "j2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j3",
+      "modelName": "J3",
+      "modelNameTh": "J3",
+      "modelNameLo": "J3",
+      "searchNames": [
+        "j3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j4",
+      "modelName": "J4",
+      "modelNameTh": "J4",
+      "modelNameLo": "J4",
+      "searchNames": [
+        "j4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j5",
+      "modelName": "J5",
+      "modelNameTh": "J5",
+      "modelNameLo": "J5",
+      "searchNames": [
+        "j5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j6",
+      "modelName": "J6",
+      "modelNameTh": "J6",
+      "modelNameLo": "J6",
+      "searchNames": [
+        "j6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j7",
+      "modelName": "J7",
+      "modelNameTh": "J7",
+      "modelNameLo": "J7",
+      "searchNames": [
+        "j7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j7-plus",
+      "modelName": "J7 Plus",
+      "modelNameTh": "J7 Plus",
+      "modelNameLo": "J7 Plus",
+      "searchNames": [
+        "j7 plus",
+        "j7plus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "js2",
+      "modelName": "JS2",
+      "modelNameTh": "JS2",
+      "modelNameLo": "JS2",
+      "searchNames": [
+        "js2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js3",
+      "modelName": "JS3",
+      "modelNameTh": "JS3",
+      "modelNameLo": "JS3",
+      "searchNames": [
+        "js3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js4",
+      "modelName": "JS4",
+      "modelNameTh": "JS4",
+      "modelNameLo": "JS4",
+      "searchNames": [
+        "js4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js6",
+      "modelName": "JS6",
+      "modelNameTh": "JS6",
+      "modelNameLo": "JS6",
+      "searchNames": [
+        "js6"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js6-pro",
+      "modelName": "JS6 Pro",
+      "modelNameTh": "JS6 Pro",
+      "modelNameLo": "JS6 Pro",
+      "searchNames": [
+        "js6 pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js6-phev",
+      "modelName": "JS6 PHEV",
+      "modelNameTh": "JS6 PHEV",
+      "modelNameLo": "JS6 PHEV",
+      "searchNames": [
+        "js6 phev",
+        "js6phev"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "js7",
+      "modelName": "JS7",
+      "modelNameTh": "JS7",
+      "modelNameLo": "JS7",
+      "searchNames": [
+        "js7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js8",
+      "modelName": "JS8",
+      "modelNameTh": "JS8",
+      "modelNameLo": "JS8",
+      "searchNames": [
+        "js8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "js8-pro",
+      "modelName": "JS8 Pro",
+      "modelNameTh": "JS8 Pro",
+      "modelNameLo": "JS8 Pro",
+      "searchNames": [
+        "js8 pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "m1",
+      "modelName": "M1",
+      "modelNameTh": "M1",
+      "modelNameLo": "M1",
+      "searchNames": [
+        "m1"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m2",
+      "modelName": "M2",
+      "modelNameTh": "M2",
+      "modelNameLo": "M2",
+      "searchNames": [
+        "m2"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m3",
+      "modelName": "M3",
+      "modelNameTh": "M3",
+      "modelNameLo": "M3",
+      "searchNames": [
+        "m3"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m4",
+      "modelName": "M4",
+      "modelNameTh": "M4",
+      "modelNameLo": "M4",
+      "searchNames": [
+        "m4"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m5",
+      "modelName": "M5",
+      "modelNameTh": "M5",
+      "modelNameLo": "M5",
+      "searchNames": [
+        "m5"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "m6",
+      "modelName": "M6",
+      "modelNameTh": "M6",
+      "modelNameLo": "M6",
+      "searchNames": [
+        "m6"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "qx",
+      "modelName": "QX",
+      "modelNameTh": "QX",
+      "modelNameLo": "QX",
+      "searchNames": [
+        "qx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "r3",
+      "modelName": "R3",
+      "modelNameTh": "R3",
+      "modelNameLo": "R3",
+      "searchNames": [
+        "r3"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "refine-s2",
+      "modelName": "Refine S2",
+      "modelNameTh": "Refine S2",
+      "modelNameLo": "Refine S2",
+      "searchNames": [
+        "refine s2"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "refine-s3",
+      "modelName": "Refine S3",
+      "modelNameTh": "Refine S3",
+      "modelNameLo": "Refine S3",
+      "searchNames": [
+        "refine s3"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "refine-s4",
+      "modelName": "Refine S4",
+      "modelNameTh": "Refine S4",
+      "modelNameLo": "Refine S4",
+      "searchNames": [
+        "refine s4"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "refine-s5",
+      "modelName": "Refine S5",
+      "modelNameTh": "Refine S5",
+      "modelNameLo": "Refine S5",
+      "searchNames": [
+        "refine s5"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "refine-s7",
+      "modelName": "Refine S7",
+      "modelNameTh": "Refine S7",
+      "modelNameLo": "Refine S7",
+      "searchNames": [
+        "refine s7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "rf8",
+      "modelName": "RF8",
+      "modelNameTh": "RF8",
+      "modelNameLo": "RF8",
+      "searchNames": [
+        "rf8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "s1",
+      "modelName": "S1",
+      "modelNameTh": "S1",
+      "modelNameLo": "S1",
+      "searchNames": [
+        "s1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s2",
+      "modelName": "S2",
+      "modelNameTh": "S2",
+      "modelNameLo": "S2",
+      "searchNames": [
+        "s2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s3",
+      "modelName": "S3",
+      "modelNameTh": "S3",
+      "modelNameLo": "S3",
+      "searchNames": [
+        "s3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s5",
+      "modelName": "S5",
+      "modelNameTh": "S5",
+      "modelNameLo": "S5",
+      "searchNames": [
+        "s5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s7",
+      "modelName": "S7",
+      "modelNameTh": "S7",
+      "modelNameLo": "S7",
+      "searchNames": [
+        "s7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "sunray",
+      "modelName": "Sunray",
+      "modelNameTh": "Sunray",
+      "modelNameLo": "Sunray",
+      "searchNames": [
+        "sunray"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "t6",
+      "modelName": "T6",
+      "modelNameTh": "T6",
+      "modelNameLo": "T6",
+      "searchNames": [
+        "t6"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "t8",
+      "modelName": "T8",
+      "modelNameTh": "T8",
+      "modelNameLo": "T8",
+      "searchNames": [
+        "t8"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "t8-pro",
+      "modelName": "T8 Pro",
+      "modelNameTh": "T8 Pro",
+      "modelNameLo": "T8 Pro",
+      "searchNames": [
+        "t8 pro"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "t9",
+      "modelName": "T9",
+      "modelNameTh": "T9",
+      "modelNameLo": "T9",
+      "searchNames": [
+        "t9"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "t9-ev",
+      "modelName": "T9 EV",
+      "modelNameTh": "T9 EV",
+      "modelNameLo": "T9 EV",
+      "searchNames": [
+        "t9 ev"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "x200",
+      "modelName": "X200",
+      "modelNameTh": "X200",
+      "modelNameLo": "X200",
+      "searchNames": [
+        "x200"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "yiwei-3",
+      "modelName": "Yiwei 3",
+      "modelNameTh": "Yiwei 3",
+      "modelNameLo": "Yiwei 3",
+      "searchNames": [
+        "yiwei 3",
+        "yiwei3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yueyue",
+      "modelName": "Yueyue",
+      "modelNameTh": "Yueyue",
+      "modelNameLo": "Yueyue",
+      "searchNames": [
+        "yueyue"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,995 @@
+{
+  "brandId": "mg",
+  "brandName": "MG",
+  "brandNameTh": "เอ็มจี",
+  "brandNameLo": "ເອັມຈີ",
+  "models": [
+    {
+      "modelId": "1100",
+      "modelName": "1100",
+      "modelNameTh": "1100",
+      "modelNameLo": "1100",
+      "searchNames": [
+        "1100"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "1300",
+      "modelName": "1300",
+      "modelNameTh": "1300",
+      "modelNameLo": "1300",
+      "searchNames": [
+        "1300"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "14-28",
+      "modelName": "14/28",
+      "modelNameTh": "14/28",
+      "modelNameLo": "14/28",
+      "searchNames": [
+        "14/28",
+        "14 28"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "14-40",
+      "modelName": "14/40",
+      "modelNameTh": "14/40",
+      "modelNameLo": "14/40",
+      "searchNames": [
+        "14/40",
+        "14 40"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "18-80",
+      "modelName": "18/80",
+      "modelNameTh": "18/80",
+      "modelNameLo": "18/80",
+      "searchNames": [
+        "18/80",
+        "18 80"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "3",
+      "modelName": "3",
+      "modelNameTh": "3",
+      "modelNameLo": "3",
+      "searchNames": [
+        "mg3",
+        "mg 3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "5",
+      "modelName": "5",
+      "modelNameTh": "5",
+      "modelNameLo": "5",
+      "searchNames": [
+        "mg5",
+        "mg 5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "6",
+      "modelName": "6",
+      "modelNameTh": "6",
+      "modelNameLo": "6",
+      "searchNames": [
+        "mg6",
+        "mg 6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "350",
+      "modelName": "350",
+      "modelNameTh": "350",
+      "modelNameLo": "350",
+      "searchNames": [
+        "350"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "360",
+      "modelName": "360",
+      "modelNameTh": "360",
+      "modelNameLo": "360",
+      "searchNames": [
+        "360"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "550",
+      "modelName": "550",
+      "modelNameTh": "550",
+      "modelNameLo": "550",
+      "searchNames": [
+        "550"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "750",
+      "modelName": "750",
+      "modelNameTh": "750",
+      "modelNameLo": "750",
+      "searchNames": [
+        "750"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "astor",
+      "modelName": "Astor",
+      "modelNameTh": "Astor",
+      "modelNameLo": "Astor",
+      "searchNames": [
+        "astor"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "c-type",
+      "modelName": "C-Type",
+      "modelNameTh": "C-Type",
+      "modelNameLo": "C-Type",
+      "searchNames": [
+        "c-type",
+        "ctype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "comet-ev",
+      "modelName": "Comet EV",
+      "modelNameTh": "Comet EV",
+      "modelNameLo": "Comet EV",
+      "searchNames": [
+        "comet ev",
+        "cometev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cyberster",
+      "modelName": "Cyberster",
+      "modelNameTh": "Cyberster",
+      "modelNameLo": "Cyberster",
+      "searchNames": [
+        "cyberster"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "d-type",
+      "modelName": "D-Type",
+      "modelNameTh": "D-Type",
+      "modelNameLo": "D-Type",
+      "searchNames": [
+        "d-type",
+        "dtype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "es",
+      "modelName": "ES",
+      "modelNameTh": "ES",
+      "modelNameLo": "ES",
+      "searchNames": [
+        "es",
+        "mg es"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "es5",
+      "modelName": "ES5",
+      "modelNameTh": "ES5",
+      "modelNameLo": "ES5",
+      "searchNames": [
+        "es5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e50",
+      "modelName": "E50",
+      "modelNameTh": "E50",
+      "modelNameLo": "E50",
+      "searchNames": [
+        "e50"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ep",
+      "modelName": "EP",
+      "modelNameTh": "EP",
+      "modelNameLo": "EP",
+      "searchNames": [
+        "ep"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ex120",
+      "modelName": "EX120",
+      "modelNameTh": "EX120",
+      "modelNameLo": "EX120",
+      "searchNames": [
+        "ex120"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "extender",
+      "modelName": "Extender",
+      "modelNameTh": "Extender",
+      "modelNameLo": "Extender",
+      "searchNames": [
+        "extender"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "f",
+      "modelName": "F",
+      "modelNameTh": "F",
+      "modelNameLo": "F",
+      "searchNames": [
+        "mg f",
+        "mgf"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f-type",
+      "modelName": "F-Type",
+      "modelNameTh": "F-Type",
+      "modelNameLo": "F-Type",
+      "searchNames": [
+        "f-type",
+        "ftype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "g-type",
+      "modelName": "G-Type",
+      "modelNameTh": "G-Type",
+      "modelNameLo": "G-Type",
+      "searchNames": [
+        "g-type",
+        "gtype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gloster",
+      "modelName": "Gloster",
+      "modelNameTh": "Gloster",
+      "modelNameLo": "Gloster",
+      "searchNames": [
+        "gloster"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gs",
+      "modelName": "GS",
+      "modelNameTh": "GS",
+      "modelNameLo": "GS",
+      "searchNames": [
+        "gs",
+        "mg gs"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gt",
+      "modelName": "GT",
+      "modelNameTh": "GT",
+      "modelNameLo": "GT",
+      "searchNames": [
+        "gt",
+        "mg gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "hector",
+      "modelName": "Hector",
+      "modelNameTh": "Hector",
+      "modelNameLo": "Hector",
+      "searchNames": [
+        "hector"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "hs",
+      "modelName": "HS",
+      "modelNameTh": "HS",
+      "modelNameLo": "HS",
+      "searchNames": [
+        "hs",
+        "mg hs"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "im5",
+      "modelName": "IM5",
+      "modelNameTh": "IM5",
+      "modelNameLo": "IM5",
+      "searchNames": [
+        "im5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "im6",
+      "modelName": "IM6",
+      "modelNameTh": "IM6",
+      "modelNameLo": "IM6",
+      "searchNames": [
+        "im6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "j-type",
+      "modelName": "J-Type",
+      "modelNameTh": "J-Type",
+      "modelNameLo": "J-Type",
+      "searchNames": [
+        "j-type",
+        "jtype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "k-type",
+      "modelName": "K-Type",
+      "modelNameTh": "K-Type",
+      "modelNameLo": "K-Type",
+      "searchNames": [
+        "k-type",
+        "ktype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "kn",
+      "modelName": "KN",
+      "modelNameTh": "KN",
+      "modelNameLo": "KN",
+      "searchNames": [
+        "kn"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "l-type",
+      "modelName": "L-Type",
+      "modelNameTh": "L-Type",
+      "modelNameLo": "L-Type",
+      "searchNames": [
+        "l-type",
+        "ltype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "m-type",
+      "modelName": "M-Type",
+      "modelNameTh": "M-Type",
+      "modelNameLo": "M-Type",
+      "searchNames": [
+        "m-type",
+        "mtype"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "m9",
+      "modelName": "M9",
+      "modelNameTh": "M9",
+      "modelNameLo": "M9",
+      "searchNames": [
+        "m9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "maestro",
+      "modelName": "Maestro",
+      "modelNameTh": "Maestro",
+      "modelNameLo": "Maestro",
+      "searchNames": [
+        "maestro"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "magnette",
+      "modelName": "Magnette",
+      "modelNameTh": "Magnette",
+      "modelNameLo": "Magnette",
+      "searchNames": [
+        "magnette"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "marvel-r",
+      "modelName": "Marvel R",
+      "modelNameTh": "Marvel R",
+      "modelNameLo": "Marvel R",
+      "searchNames": [
+        "marvel r",
+        "marvelr"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "maxus-7",
+      "modelName": "Maxus 7",
+      "modelNameTh": "Maxus 7",
+      "modelNameLo": "Maxus 7",
+      "searchNames": [
+        "maxus 7",
+        "maxus7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "maxus-9",
+      "modelName": "Maxus 9",
+      "modelNameTh": "Maxus 9",
+      "modelNameLo": "Maxus 9",
+      "searchNames": [
+        "maxus 9",
+        "maxus9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "metro",
+      "modelName": "Metro",
+      "modelNameTh": "Metro",
+      "modelNameLo": "Metro",
+      "searchNames": [
+        "metro"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mga",
+      "modelName": "MGA",
+      "modelNameTh": "MGA",
+      "modelNameLo": "MGA",
+      "searchNames": [
+        "mga"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mgb",
+      "modelName": "MGB",
+      "modelNameTh": "MGB",
+      "modelNameLo": "MGB",
+      "searchNames": [
+        "mgb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mgc",
+      "modelName": "MGC",
+      "modelNameTh": "MGC",
+      "modelNameLo": "MGC",
+      "searchNames": [
+        "mgc"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mg4-electric",
+      "modelName": "MG4 Electric",
+      "modelNameTh": "MG4 Electric",
+      "modelNameLo": "MG4 Electric",
+      "searchNames": [
+        "mg4",
+        "mg4 electric",
+        "mg 4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "midget",
+      "modelName": "Midget",
+      "modelNameTh": "Midget",
+      "modelNameLo": "Midget",
+      "searchNames": [
+        "midget"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "montego",
+      "modelName": "Montego",
+      "modelNameTh": "Montego",
+      "modelNameLo": "Montego",
+      "searchNames": [
+        "montego"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "n-type",
+      "modelName": "N-Type",
+      "modelNameTh": "N-Type",
+      "modelNameLo": "N-Type",
+      "searchNames": [
+        "n-type",
+        "ntype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "one",
+      "modelName": "One",
+      "modelNameTh": "One",
+      "modelNameLo": "One",
+      "searchNames": [
+        "one",
+        "mg one"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "p-type",
+      "modelName": "P-Type",
+      "modelNameTh": "P-Type",
+      "modelNameLo": "P-Type",
+      "searchNames": [
+        "p-type",
+        "ptype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "q-type",
+      "modelName": "Q-Type",
+      "modelNameTh": "Q-Type",
+      "modelNameLo": "Q-Type",
+      "searchNames": [
+        "q-type",
+        "qtype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "qs",
+      "modelName": "QS",
+      "modelNameTh": "QS",
+      "modelNameLo": "QS",
+      "searchNames": [
+        "qs"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "r-type",
+      "modelName": "R-Type",
+      "modelNameTh": "R-Type",
+      "modelNameLo": "R-Type",
+      "searchNames": [
+        "r-type",
+        "rtype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "rv8",
+      "modelName": "RV8",
+      "modelNameTh": "RV8",
+      "modelNameLo": "RV8",
+      "searchNames": [
+        "rv8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx5",
+      "modelName": "RX5",
+      "modelNameTh": "RX5",
+      "modelNameLo": "RX5",
+      "searchNames": [
+        "rx5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rx8",
+      "modelName": "RX8",
+      "modelNameTh": "RX8",
+      "modelNameLo": "RX8",
+      "searchNames": [
+        "rx8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rx9",
+      "modelName": "RX9",
+      "modelNameTh": "RX9",
+      "modelNameLo": "RX9",
+      "searchNames": [
+        "rx9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "s5",
+      "modelName": "S5",
+      "modelNameTh": "S5",
+      "modelNameLo": "S5",
+      "searchNames": [
+        "s5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sa",
+      "modelName": "SA",
+      "modelNameTh": "SA",
+      "modelNameLo": "SA",
+      "searchNames": [
+        "sa"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sv",
+      "modelName": "SV",
+      "modelNameTh": "SV",
+      "modelNameLo": "SV",
+      "searchNames": [
+        "sv"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "t-type",
+      "modelName": "T-Type",
+      "modelNameTh": "T-Type",
+      "modelNameLo": "T-Type",
+      "searchNames": [
+        "t-type",
+        "ttype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "tf",
+      "modelName": "TF",
+      "modelNameTh": "TF",
+      "modelNameLo": "TF",
+      "searchNames": [
+        "tf",
+        "mg tf"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v80",
+      "modelName": "V80",
+      "modelNameTh": "V80",
+      "modelNameLo": "V80",
+      "searchNames": [
+        "v80",
+        "maxus v80"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "va",
+      "modelName": "VA",
+      "modelNameTh": "VA",
+      "modelNameLo": "VA",
+      "searchNames": [
+        "va"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "vs",
+      "modelName": "VS",
+      "modelNameTh": "VS",
+      "modelNameLo": "VS",
+      "searchNames": [
+        "vs"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "wa",
+      "modelName": "WA",
+      "modelNameTh": "WA",
+      "modelNameLo": "WA",
+      "searchNames": [
+        "wa"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "windsor-ev",
+      "modelName": "Windsor EV",
+      "modelNameTh": "Windsor EV",
+      "modelNameLo": "Windsor EV",
+      "searchNames": [
+        "windsor ev",
+        "windsorev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "xpower-sv",
+      "modelName": "XPower SV",
+      "modelNameTh": "XPower SV",
+      "modelNameLo": "XPower SV",
+      "searchNames": [
+        "xpower sv",
+        "xpowersv"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "y-type",
+      "modelName": "Y-Type",
+      "modelNameTh": "Y-Type",
+      "modelNameLo": "Y-Type",
+      "searchNames": [
+        "y-type",
+        "ytype"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "zr",
+      "modelName": "ZR",
+      "modelNameTh": "ZR",
+      "modelNameLo": "ZR",
+      "searchNames": [
+        "zr",
+        "mg zr"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "zs",
+      "modelName": "ZS",
+      "modelNameTh": "ZS",
+      "modelNameLo": "ZS",
+      "searchNames": [
+        "zs",
+        "mg zs"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "zs-ev",
+      "modelName": "ZS EV",
+      "modelNameTh": "ZS EV",
+      "modelNameLo": "ZS EV",
+      "searchNames": [
+        "zs ev",
+        "zsev"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zt",
+      "modelName": "ZT",
+      "modelNameTh": "ZT",
+      "modelNameLo": "ZT",
+      "searchNames": [
+        "zt",
+        "mg zt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "zt-t",
+      "modelName": "ZT-T",
+      "modelNameTh": "ZT-T",
+      "modelNameLo": "ZT-T",
+      "searchNames": [
+        "zt-t",
+        "ztt"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    }
+  ]
+}

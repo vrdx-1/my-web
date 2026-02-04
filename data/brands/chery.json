@@ -1,0 +1,970 @@
+{
+  "brandId": "chery",
+  "brandName": "Chery",
+  "brandNameTh": "เชอรี่",
+  "brandNameLo": "ເຊີຣີ້",
+  "models": [
+    {
+      "modelId": "a1",
+      "modelName": "A1",
+      "modelNameTh": "A1",
+      "modelNameLo": "A1",
+      "searchNames": [
+        "a1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a3",
+      "modelName": "A3",
+      "modelNameTh": "A3",
+      "modelNameLo": "A3",
+      "searchNames": [
+        "a3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a5",
+      "modelName": "A5",
+      "modelNameTh": "A5",
+      "modelNameLo": "A5",
+      "searchNames": [
+        "a5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aika",
+      "modelName": "Aika",
+      "modelNameTh": "Aika",
+      "modelNameLo": "Aika",
+      "searchNames": [
+        "aika"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "amulet",
+      "modelName": "Amulet",
+      "modelNameTh": "Amulet",
+      "modelNameLo": "Amulet",
+      "searchNames": [
+        "amulet"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arauca",
+      "modelName": "Arauca",
+      "modelNameTh": "Arauca",
+      "modelNameLo": "Arauca",
+      "searchNames": [
+        "arauca"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "arrizo-3",
+      "modelName": "Arrizo 3",
+      "modelNameTh": "Arrizo 3",
+      "modelNameLo": "Arrizo 3",
+      "searchNames": [
+        "arrizo 3",
+        "arrizo3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-5",
+      "modelName": "Arrizo 5",
+      "modelNameTh": "Arrizo 5",
+      "modelNameLo": "Arrizo 5",
+      "searchNames": [
+        "arrizo 5",
+        "arrizo5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-5-plus",
+      "modelName": "Arrizo 5 Plus",
+      "modelNameTh": "Arrizo 5 Plus",
+      "modelNameLo": "Arrizo 5 Plus",
+      "searchNames": [
+        "arrizo 5 plus",
+        "arrizo5plus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-5-gt",
+      "modelName": "Arrizo 5 GT",
+      "modelNameTh": "Arrizo 5 GT",
+      "modelNameLo": "Arrizo 5 GT",
+      "searchNames": [
+        "arrizo 5 gt",
+        "arrizo5gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "arrizo-6",
+      "modelName": "Arrizo 6",
+      "modelNameTh": "Arrizo 6",
+      "modelNameLo": "Arrizo 6",
+      "searchNames": [
+        "arrizo 6",
+        "arrizo6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-7",
+      "modelName": "Arrizo 7",
+      "modelNameTh": "Arrizo 7",
+      "modelNameLo": "Arrizo 7",
+      "searchNames": [
+        "arrizo 7",
+        "arrizo7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-8",
+      "modelName": "Arrizo 8",
+      "modelNameTh": "Arrizo 8",
+      "modelNameLo": "Arrizo 8",
+      "searchNames": [
+        "arrizo 8",
+        "arrizo8"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "arrizo-m7",
+      "modelName": "Arrizo M7",
+      "modelNameTh": "Arrizo M7",
+      "modelNameLo": "Arrizo M7",
+      "searchNames": [
+        "arrizo m7",
+        "arrizom7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "b14",
+      "modelName": "B14",
+      "modelNameTh": "B14",
+      "modelNameLo": "B14",
+      "searchNames": [
+        "b14"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cowin",
+      "modelName": "Cowin",
+      "modelNameTh": "Cowin",
+      "modelNameLo": "Cowin",
+      "searchNames": [
+        "cowin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "crosseastar",
+      "modelName": "CrossEastar",
+      "modelNameTh": "CrossEastar",
+      "modelNameLo": "CrossEastar",
+      "searchNames": [
+        "crosseastar",
+        "cross eastar"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "duomi",
+      "modelName": "Duomi",
+      "modelNameTh": "Duomi",
+      "modelNameLo": "Duomi",
+      "searchNames": [
+        "duomi"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e3",
+      "modelName": "E3",
+      "modelNameTh": "E3",
+      "modelNameLo": "E3",
+      "searchNames": [
+        "e3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e5",
+      "modelName": "E5",
+      "modelNameTh": "E5",
+      "modelNameLo": "E5",
+      "searchNames": [
+        "e5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eastar",
+      "modelName": "Eastar",
+      "modelNameTh": "Eastar",
+      "modelNameLo": "Eastar",
+      "searchNames": [
+        "eastar"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eq",
+      "modelName": "eQ",
+      "modelNameTh": "eQ",
+      "modelNameLo": "eQ",
+      "searchNames": [
+        "eq"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eq1",
+      "modelName": "eQ1 (Little Ant)",
+      "modelNameTh": "eQ1 (Little Ant)",
+      "modelNameLo": "eQ1 (Little Ant)",
+      "searchNames": [
+        "eq1",
+        "eq 1",
+        "little ant",
+        "littleant"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eq2",
+      "modelName": "eQ2",
+      "modelNameTh": "eQ2",
+      "modelNameLo": "eQ2",
+      "searchNames": [
+        "eq2",
+        "eq 2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eq5",
+      "modelName": "eQ5 (Big Ant)",
+      "modelNameTh": "eQ5 (Big Ant)",
+      "modelNameLo": "eQ5 (Big Ant)",
+      "searchNames": [
+        "eq5",
+        "eq 5",
+        "big ant",
+        "bigant"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eq7",
+      "modelName": "eQ7",
+      "modelNameTh": "eQ7",
+      "modelNameLo": "eQ7",
+      "searchNames": [
+        "eq7",
+        "eq 7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "easter",
+      "modelName": "Easter",
+      "modelNameTh": "Easter",
+      "modelNameLo": "Easter",
+      "searchNames": [
+        "easter"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fora",
+      "modelName": "Fora",
+      "modelNameTh": "Fora",
+      "modelNameLo": "Fora",
+      "searchNames": [
+        "fora"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fulwin",
+      "modelName": "Fulwin",
+      "modelNameTh": "Fulwin",
+      "modelNameLo": "Fulwin",
+      "searchNames": [
+        "fulwin"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fulwin-2",
+      "modelName": "Fulwin 2",
+      "modelNameTh": "Fulwin 2",
+      "modelNameLo": "Fulwin 2",
+      "searchNames": [
+        "fulwin 2",
+        "fulwin2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fulwin-t9",
+      "modelName": "Fulwin T9",
+      "modelNameTh": "Fulwin T9",
+      "modelNameLo": "Fulwin T9",
+      "searchNames": [
+        "fulwin t9",
+        "fulwint9"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "fulwin-t10",
+      "modelName": "Fulwin T10",
+      "modelNameTh": "Fulwin T10",
+      "modelNameLo": "Fulwin T10",
+      "searchNames": [
+        "fulwin t10",
+        "fulwint10"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "icar-03",
+      "modelName": "iCar 03",
+      "modelNameTh": "iCar 03",
+      "modelNameLo": "iCar 03",
+      "searchNames": [
+        "icar 03",
+        "icar03"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "indis",
+      "modelName": "IndiS",
+      "modelNameTh": "IndiS",
+      "modelNameLo": "IndiS",
+      "searchNames": [
+        "indis"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j1",
+      "modelName": "J1",
+      "modelNameTh": "J1",
+      "modelNameLo": "J1",
+      "searchNames": [
+        "j1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j3",
+      "modelName": "J3",
+      "modelNameTh": "J3",
+      "modelNameLo": "J3",
+      "searchNames": [
+        "j3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "j11",
+      "modelName": "J11",
+      "modelNameTh": "J11",
+      "modelNameLo": "J11",
+      "searchNames": [
+        "j11"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "karry",
+      "modelName": "Karry",
+      "modelNameTh": "Karry",
+      "modelNameLo": "Karry",
+      "searchNames": [
+        "karry"
+      ],
+      "categoryIds": [
+        "van",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "kimo",
+      "modelName": "Kimo",
+      "modelNameTh": "Kimo",
+      "modelNameLo": "Kimo",
+      "searchNames": [
+        "kimo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "little-ant",
+      "modelName": "Little Ant",
+      "modelNameTh": "Little Ant",
+      "modelNameLo": "Little Ant",
+      "searchNames": [
+        "little ant",
+        "littleant",
+        "eq1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "luxeed-s7",
+      "modelName": "Luxeed S7",
+      "modelNameTh": "Luxeed S7",
+      "modelNameLo": "Luxeed S7",
+      "searchNames": [
+        "luxeed s7",
+        "luxeeds7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m11",
+      "modelName": "M11",
+      "modelNameTh": "M11",
+      "modelNameLo": "M11",
+      "searchNames": [
+        "m11"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "o5",
+      "modelName": "O5",
+      "modelNameTh": "O5",
+      "modelNameLo": "O5",
+      "searchNames": [
+        "o5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "omoda-5",
+      "modelName": "Omoda 5",
+      "modelNameTh": "Omoda 5",
+      "modelNameLo": "Omoda 5",
+      "searchNames": [
+        "omoda 5",
+        "omoda5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "omoda-e5",
+      "modelName": "Omoda E5",
+      "modelNameTh": "Omoda E5",
+      "modelNameLo": "Omoda E5",
+      "searchNames": [
+        "omoda e5",
+        "omodae5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "omoda-7",
+      "modelName": "Omoda 7",
+      "modelNameTh": "Omoda 7",
+      "modelNameLo": "Omoda 7",
+      "searchNames": [
+        "omoda 7",
+        "omoda7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "omoda-9",
+      "modelName": "Omoda 9",
+      "modelNameTh": "Omoda 9",
+      "modelNameLo": "Omoda 9",
+      "searchNames": [
+        "omoda 9",
+        "omoda9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "qq",
+      "modelName": "QQ",
+      "modelNameTh": "QQ",
+      "modelNameLo": "QQ",
+      "searchNames": [
+        "qq"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "qq3",
+      "modelName": "QQ3",
+      "modelNameTh": "QQ3",
+      "modelNameLo": "QQ3",
+      "searchNames": [
+        "qq3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "qq6",
+      "modelName": "QQ6",
+      "modelNameTh": "QQ6",
+      "modelNameLo": "QQ6",
+      "searchNames": [
+        "qq6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "qq-ice-cream",
+      "modelName": "QQ Ice Cream",
+      "modelNameTh": "QQ Ice Cream",
+      "modelNameLo": "QQ Ice Cream",
+      "searchNames": [
+        "qq ice cream",
+        "qqicecream"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "qq-me",
+      "modelName": "QQ me",
+      "modelNameTh": "QQ me",
+      "modelNameLo": "QQ me",
+      "searchNames": [
+        "qq me",
+        "qqme"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "riich",
+      "modelName": "Riich",
+      "modelNameTh": "Riich",
+      "modelNameLo": "Riich",
+      "searchNames": [
+        "riich"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "tiggo",
+      "modelName": "Tiggo",
+      "modelNameTh": "Tiggo",
+      "modelNameLo": "Tiggo",
+      "searchNames": [
+        "tiggo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-2",
+      "modelName": "Tiggo 2",
+      "modelNameTh": "Tiggo 2",
+      "modelNameLo": "Tiggo 2",
+      "searchNames": [
+        "tiggo 2",
+        "tiggo2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-3",
+      "modelName": "Tiggo 3",
+      "modelNameTh": "Tiggo 3",
+      "modelNameLo": "Tiggo 3",
+      "searchNames": [
+        "tiggo 3",
+        "tiggo3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-3x",
+      "modelName": "Tiggo 3x",
+      "modelNameTh": "Tiggo 3x",
+      "modelNameLo": "Tiggo 3x",
+      "searchNames": [
+        "tiggo 3x",
+        "tiggo3x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-4",
+      "modelName": "Tiggo 4",
+      "modelNameTh": "Tiggo 4",
+      "modelNameLo": "Tiggo 4",
+      "searchNames": [
+        "tiggo 4",
+        "tiggo4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-4-pro",
+      "modelName": "Tiggo 4 Pro",
+      "modelNameTh": "Tiggo 4 Pro",
+      "modelNameLo": "Tiggo 4 Pro",
+      "searchNames": [
+        "tiggo 4 pro",
+        "tiggo4pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-5",
+      "modelName": "Tiggo 5",
+      "modelNameTh": "Tiggo 5",
+      "modelNameLo": "Tiggo 5",
+      "searchNames": [
+        "tiggo 5",
+        "tiggo5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-5x",
+      "modelName": "Tiggo 5x",
+      "modelNameTh": "Tiggo 5x",
+      "modelNameLo": "Tiggo 5x",
+      "searchNames": [
+        "tiggo 5x",
+        "tiggo5x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-7",
+      "modelName": "Tiggo 7",
+      "modelNameTh": "Tiggo 7",
+      "modelNameLo": "Tiggo 7",
+      "searchNames": [
+        "tiggo 7",
+        "tiggo7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-7-pro",
+      "modelName": "Tiggo 7 Pro",
+      "modelNameTh": "Tiggo 7 Pro",
+      "modelNameLo": "Tiggo 7 Pro",
+      "searchNames": [
+        "tiggo 7 pro",
+        "tiggo7pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-7-pro-max",
+      "modelName": "Tiggo 7 Pro Max",
+      "modelNameTh": "Tiggo 7 Pro Max",
+      "modelNameLo": "Tiggo 7 Pro Max",
+      "searchNames": [
+        "tiggo 7 pro max",
+        "tiggo7promax"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-8",
+      "modelName": "Tiggo 8",
+      "modelNameTh": "Tiggo 8",
+      "modelNameLo": "Tiggo 8",
+      "searchNames": [
+        "tiggo 8",
+        "tiggo8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-8-pro",
+      "modelName": "Tiggo 8 Pro",
+      "modelNameTh": "Tiggo 8 Pro",
+      "modelNameLo": "Tiggo 8 Pro",
+      "searchNames": [
+        "tiggo 8 pro",
+        "tiggo8pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-8-pro-max",
+      "modelName": "Tiggo 8 Pro Max",
+      "modelNameTh": "Tiggo 8 Pro Max",
+      "modelNameLo": "Tiggo 8 Pro Max",
+      "searchNames": [
+        "tiggo 8 pro max",
+        "tiggo8promax"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-8-csh",
+      "modelName": "Tiggo 8 CSH",
+      "modelNameTh": "Tiggo 8 CSH",
+      "modelNameLo": "Tiggo 8 CSH",
+      "searchNames": [
+        "tiggo 8 csh",
+        "tiggo8csh"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-9",
+      "modelName": "Tiggo 9",
+      "modelNameTh": "Tiggo 9",
+      "modelNameLo": "Tiggo 9",
+      "searchNames": [
+        "tiggo 9",
+        "tiggo9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-9-pro",
+      "modelName": "Tiggo 9 Pro",
+      "modelNameTh": "Tiggo 9 Pro",
+      "modelNameLo": "Tiggo 9 Pro",
+      "searchNames": [
+        "tiggo 9 pro",
+        "tiggo9pro"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tiggo-cross",
+      "modelName": "Tiggo Cross",
+      "modelNameTh": "Tiggo Cross",
+      "modelNameLo": "Tiggo Cross",
+      "searchNames": [
+        "tiggo cross",
+        "tiggocross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "transcab",
+      "modelName": "Transcab",
+      "modelNameTh": "Transcab",
+      "modelNameLo": "Transcab",
+      "searchNames": [
+        "transcab"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v23",
+      "modelName": "V23",
+      "modelNameTh": "V23",
+      "modelNameLo": "V23",
+      "searchNames": [
+        "v23"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "v5",
+      "modelName": "V5",
+      "modelNameTh": "V5",
+      "modelNameLo": "V5",
+      "searchNames": [
+        "v5"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "windy",
+      "modelName": "Windy",
+      "modelNameTh": "Windy",
+      "modelNameLo": "Windy",
+      "searchNames": [
+        "windy"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    }
+  ]
+}

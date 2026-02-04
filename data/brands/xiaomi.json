@@ -1,0 +1,166 @@
+{
+  "brandId": "xiaomi",
+  "brandName": "Xiaomi",
+  "brandNameTh": "เสียวหมี่",
+  "brandNameLo": "ສຽວມີ້",
+  "models": [
+    {
+      "modelId": "su7",
+      "modelName": "SU7",
+      "modelNameTh": "SU7",
+      "modelNameLo": "SU7",
+      "searchNames": [
+        "su7",
+        "su 7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "su7-pro",
+      "modelName": "SU7 Pro",
+      "modelNameTh": "SU7 Pro",
+      "modelNameLo": "SU7 Pro",
+      "searchNames": [
+        "su7 pro",
+        "su7pro"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "su7-max",
+      "modelName": "SU7 Max",
+      "modelNameTh": "SU7 Max",
+      "modelNameLo": "SU7 Max",
+      "searchNames": [
+        "su7 max",
+        "su7max"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "su7-ultra",
+      "modelName": "SU7 Ultra",
+      "modelNameTh": "SU7 Ultra",
+      "modelNameLo": "SU7 Ultra",
+      "searchNames": [
+        "su7 ultra",
+        "su7ultra"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "su7-l",
+      "modelName": "SU7 L",
+      "modelNameTh": "SU7 L",
+      "modelNameLo": "SU7 L",
+      "searchNames": [
+        "su7 l",
+        "su7l"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yu7",
+      "modelName": "YU7 (MX11)",
+      "modelNameTh": "YU7 (MX11)",
+      "modelNameLo": "YU7 (MX11)",
+      "searchNames": [
+        "yu7",
+        "mx11",
+        "yu 7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yu7-pro",
+      "modelName": "YU7 Pro",
+      "modelNameTh": "YU7 Pro",
+      "modelNameLo": "YU7 Pro",
+      "searchNames": [
+        "yu7 pro",
+        "yu7pro"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yu7-max",
+      "modelName": "YU7 Max",
+      "modelNameTh": "YU7 Max",
+      "modelNameLo": "YU7 Max",
+      "searchNames": [
+        "yu7 max",
+        "yu7max"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "yu7-gt",
+      "modelName": "YU7 GT",
+      "modelNameTh": "YU7 GT",
+      "modelNameLo": "YU7 GT",
+      "searchNames": [
+        "yu7 gt",
+        "yu7gt"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "yu9",
+      "modelName": "YU9",
+      "modelNameTh": "YU9",
+      "modelNameLo": "YU9",
+      "searchNames": [
+        "yu9",
+        "yu 9"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "erev-suv",
+      "modelName": "Xiaomi EREV SUV",
+      "modelNameTh": "Xiaomi EREV SUV",
+      "modelNameLo": "Xiaomi EREV SUV",
+      "searchNames": [
+        "erev suv",
+        "xiaomi erev",
+        "erev"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,903 @@
+{
+  "brandId": "dfsk",
+  "brandName": "DFSK",
+  "brandNameTh": "ดีเอฟเอสเค",
+  "brandNameLo": "ດີເອຟເອສເຄ",
+  "models": [
+    {
+      "modelId": "330",
+      "modelName": "330",
+      "modelNameTh": "330",
+      "modelNameLo": "330",
+      "searchNames": [
+        "330"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "330s",
+      "modelName": "330S",
+      "modelNameTh": "330S",
+      "modelNameLo": "330S",
+      "searchNames": [
+        "330s",
+        "330 s"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "350",
+      "modelName": "350",
+      "modelNameTh": "350",
+      "modelNameLo": "350",
+      "searchNames": [
+        "350"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "360",
+      "modelName": "360",
+      "modelNameTh": "360",
+      "modelNameLo": "360",
+      "searchNames": [
+        "360"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "370",
+      "modelName": "370",
+      "modelNameTh": "370",
+      "modelNameLo": "370",
+      "searchNames": [
+        "370"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "380",
+      "modelName": "380",
+      "modelNameTh": "380",
+      "modelNameLo": "380",
+      "searchNames": [
+        "380"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "500",
+      "modelName": "500",
+      "modelNameTh": "500",
+      "modelNameLo": "500",
+      "searchNames": [
+        "500"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "560",
+      "modelName": "560",
+      "modelNameTh": "560",
+      "modelNameLo": "560",
+      "searchNames": [
+        "560"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "580",
+      "modelName": "580",
+      "modelNameTh": "580",
+      "modelNameLo": "580",
+      "searchNames": [
+        "580"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "600",
+      "modelName": "600",
+      "modelNameTh": "600",
+      "modelNameLo": "600",
+      "searchNames": [
+        "600"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "c31",
+      "modelName": "C31",
+      "modelNameTh": "C31",
+      "modelNameLo": "C31",
+      "searchNames": [
+        "c31",
+        "c 31"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c32",
+      "modelName": "C32",
+      "modelNameTh": "C32",
+      "modelNameLo": "C32",
+      "searchNames": [
+        "c32",
+        "c 32"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c35",
+      "modelName": "C35",
+      "modelNameTh": "C35",
+      "modelNameLo": "C35",
+      "searchNames": [
+        "c35",
+        "c 35"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c36",
+      "modelName": "C36",
+      "modelNameTh": "C36",
+      "modelNameLo": "C36",
+      "searchNames": [
+        "c36",
+        "c 36"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c37",
+      "modelName": "C37",
+      "modelNameTh": "C37",
+      "modelNameLo": "C37",
+      "searchNames": [
+        "c37",
+        "c 37"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c51",
+      "modelName": "C51",
+      "modelNameTh": "C51",
+      "modelNameLo": "C51",
+      "searchNames": [
+        "c51",
+        "c 51"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c52",
+      "modelName": "C52",
+      "modelNameTh": "C52",
+      "modelNameLo": "C52",
+      "searchNames": [
+        "c52",
+        "c 52"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c56",
+      "modelName": "C56",
+      "modelNameTh": "C56",
+      "modelNameLo": "C56",
+      "searchNames": [
+        "c56",
+        "c 56"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c71",
+      "modelName": "C71",
+      "modelNameTh": "C71",
+      "modelNameLo": "C71",
+      "searchNames": [
+        "c71",
+        "c 71"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c72",
+      "modelName": "C72",
+      "modelNameTh": "C72",
+      "modelNameLo": "C72",
+      "searchNames": [
+        "c72",
+        "c 72"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "candy-mini-ev",
+      "modelName": "Candy Mini EV",
+      "modelNameTh": "Candy Mini EV",
+      "modelNameLo": "Candy Mini EV",
+      "searchNames": [
+        "candy mini ev",
+        "candy",
+        "mini ev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "d1",
+      "modelName": "D1",
+      "modelNameTh": "D1",
+      "modelNameLo": "D1",
+      "searchNames": [
+        "d1",
+        "d 1"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "d51",
+      "modelName": "D51",
+      "modelNameTh": "D51",
+      "modelNameLo": "D51",
+      "searchNames": [
+        "d51",
+        "d 51"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "d52",
+      "modelName": "D52",
+      "modelNameTh": "D52",
+      "modelNameLo": "D52",
+      "searchNames": [
+        "d52",
+        "d 52"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "d71",
+      "modelName": "D71",
+      "modelNameTh": "D71",
+      "modelNameLo": "D71",
+      "searchNames": [
+        "d71",
+        "d 71"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "d72",
+      "modelName": "D72",
+      "modelNameTh": "D72",
+      "modelNameLo": "D72",
+      "searchNames": [
+        "d72",
+        "d 72"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "e3",
+      "modelName": "E3",
+      "modelNameTh": "E3",
+      "modelNameLo": "E3",
+      "searchNames": [
+        "e3",
+        "e 3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e5",
+      "modelName": "E5",
+      "modelNameTh": "E5",
+      "modelNameLo": "E5",
+      "searchNames": [
+        "e5",
+        "e 5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e5-plus",
+      "modelName": "E5 Plus",
+      "modelNameTh": "E5 Plus",
+      "modelNameLo": "E5 Plus",
+      "searchNames": [
+        "e5 plus",
+        "e5plus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e380",
+      "modelName": "E380",
+      "modelNameTh": "E380",
+      "modelNameLo": "E380",
+      "searchNames": [
+        "e380",
+        "e 380"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ec31",
+      "modelName": "EC31",
+      "modelNameTh": "EC31",
+      "modelNameLo": "EC31",
+      "searchNames": [
+        "ec31",
+        "ec 31"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ec35",
+      "modelName": "EC35",
+      "modelNameTh": "EC35",
+      "modelNameLo": "EC35",
+      "searchNames": [
+        "ec35",
+        "ec 35"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ec36",
+      "modelName": "EC36",
+      "modelNameTh": "EC36",
+      "modelNameLo": "EC36",
+      "searchNames": [
+        "ec36",
+        "ec 36"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ec75",
+      "modelName": "EC75",
+      "modelNameTh": "EC75",
+      "modelNameLo": "EC75",
+      "searchNames": [
+        "ec75",
+        "ec 75"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fengon-500",
+      "modelName": "Fengon 500",
+      "modelNameTh": "Fengon 500",
+      "modelNameLo": "Fengon 500",
+      "searchNames": [
+        "fengon 500",
+        "fengon500"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-580",
+      "modelName": "Fengon 580",
+      "modelNameTh": "Fengon 580",
+      "modelNameLo": "Fengon 580",
+      "searchNames": [
+        "fengon 580",
+        "fengon580"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-600",
+      "modelName": "Fengon 600",
+      "modelNameTh": "Fengon 600",
+      "modelNameLo": "Fengon 600",
+      "searchNames": [
+        "fengon 600",
+        "fengon600"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-e1",
+      "modelName": "Fengon E1",
+      "modelNameTh": "Fengon E1",
+      "modelNameLo": "Fengon E1",
+      "searchNames": [
+        "fengon e1",
+        "fengon e 1"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fengon-e3",
+      "modelName": "Fengon E3",
+      "modelNameTh": "Fengon E3",
+      "modelNameLo": "Fengon E3",
+      "searchNames": [
+        "fengon e3",
+        "fengon e 3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "fengon-ix5",
+      "modelName": "Fengon ix5",
+      "modelNameTh": "Fengon ix5",
+      "modelNameLo": "Fengon ix5",
+      "searchNames": [
+        "fengon ix5",
+        "fengon ix 5",
+        "ix5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fengon-ix7",
+      "modelName": "Fengon ix7",
+      "modelNameTh": "Fengon ix7",
+      "modelNameLo": "Fengon ix7",
+      "searchNames": [
+        "fengon ix7",
+        "fengon ix 7",
+        "ix7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gelora",
+      "modelName": "Gelora",
+      "modelNameTh": "Gelora",
+      "modelNameLo": "Gelora",
+      "searchNames": [
+        "gelora"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "glory-330",
+      "modelName": "Glory 330",
+      "modelNameTh": "Glory 330",
+      "modelNameLo": "Glory 330",
+      "searchNames": [
+        "glory 330",
+        "glory330"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-560",
+      "modelName": "Glory 560",
+      "modelNameTh": "Glory 560",
+      "modelNameLo": "Glory 560",
+      "searchNames": [
+        "glory 560",
+        "glory560"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-580",
+      "modelName": "Glory 580",
+      "modelNameTh": "Glory 580",
+      "modelNameLo": "Glory 580",
+      "searchNames": [
+        "glory 580",
+        "glory580"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glory-e3",
+      "modelName": "Glory E3",
+      "modelNameTh": "Glory E3",
+      "modelNameLo": "Glory E3",
+      "searchNames": [
+        "glory e3",
+        "glory e 3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "glory-i-auto",
+      "modelName": "Glory i-Auto",
+      "modelNameTh": "Glory i-Auto",
+      "modelNameLo": "Glory i-Auto",
+      "searchNames": [
+        "glory i-auto",
+        "glory iauto",
+        "i-auto"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "humsafar",
+      "modelName": "Humsafar",
+      "modelNameTh": "Humsafar",
+      "modelNameLo": "Humsafar",
+      "searchNames": [
+        "humsafar"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "k01",
+      "modelName": "K01",
+      "modelNameTh": "K01",
+      "modelNameLo": "K01",
+      "searchNames": [
+        "k01",
+        "k 01"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k02",
+      "modelName": "K02",
+      "modelNameTh": "K02",
+      "modelNameLo": "K02",
+      "searchNames": [
+        "k02",
+        "k 02"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k05",
+      "modelName": "K05",
+      "modelNameTh": "K05",
+      "modelNameLo": "K05",
+      "searchNames": [
+        "k05",
+        "k 05"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k05s",
+      "modelName": "K05S",
+      "modelNameTh": "K05S",
+      "modelNameLo": "K05S",
+      "searchNames": [
+        "k05s",
+        "k05 s"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k07",
+      "modelName": "K07",
+      "modelNameTh": "K07",
+      "modelNameLo": "K07",
+      "searchNames": [
+        "k07",
+        "k 07"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k07s",
+      "modelName": "K07S",
+      "modelNameTh": "K07S",
+      "modelNameLo": "K07S",
+      "searchNames": [
+        "k07s",
+        "k07 s"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k09",
+      "modelName": "K09",
+      "modelNameTh": "K09",
+      "modelNameLo": "K09",
+      "searchNames": [
+        "k09",
+        "k 09"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "k17",
+      "modelName": "K17",
+      "modelNameTh": "K17",
+      "modelNameLo": "K17",
+      "searchNames": [
+        "k17",
+        "k 17"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "mini-ev",
+      "modelName": "Mini EV",
+      "modelNameTh": "Mini EV",
+      "modelNameLo": "Mini EV",
+      "searchNames": [
+        "mini ev",
+        "miniev"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seres-3",
+      "modelName": "Seres 3",
+      "modelNameTh": "Seres 3",
+      "modelNameLo": "Seres 3",
+      "searchNames": [
+        "seres 3",
+        "seres3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seres-5",
+      "modelName": "Seres 5",
+      "modelNameTh": "Seres 5",
+      "modelNameLo": "Seres 5",
+      "searchNames": [
+        "seres 5",
+        "seres5"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seres-7",
+      "modelName": "Seres 7",
+      "modelNameTh": "Seres 7",
+      "modelNameLo": "Seres 7",
+      "searchNames": [
+        "seres 7",
+        "seres7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "seres-e1",
+      "modelName": "Seres E1",
+      "modelNameTh": "Seres E1",
+      "modelNameLo": "Seres E1",
+      "searchNames": [
+        "seres e1",
+        "seres e 1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "super-cab",
+      "modelName": "Super Cab",
+      "modelNameTh": "Super Cab",
+      "modelNameLo": "Super Cab",
+      "searchNames": [
+        "super cab",
+        "supercab"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "v21",
+      "modelName": "V21",
+      "modelNameTh": "V21",
+      "modelNameLo": "V21",
+      "searchNames": [
+        "v21",
+        "v 21"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v22",
+      "modelName": "V22",
+      "modelNameTh": "V22",
+      "modelNameLo": "V22",
+      "searchNames": [
+        "v22",
+        "v 22"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v25",
+      "modelName": "V25",
+      "modelNameTh": "V25",
+      "modelNameLo": "V25",
+      "searchNames": [
+        "v25",
+        "v 25"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v26",
+      "modelName": "V26",
+      "modelNameTh": "V26",
+      "modelNameLo": "V26",
+      "searchNames": [
+        "v26",
+        "v 26"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v27",
+      "modelName": "V27",
+      "modelNameTh": "V27",
+      "modelNameLo": "V27",
+      "searchNames": [
+        "v27",
+        "v 27"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v29",
+      "modelName": "V29",
+      "modelNameTh": "V29",
+      "modelNameLo": "V29",
+      "searchNames": [
+        "v29",
+        "v 29"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    }
+  ]
+}

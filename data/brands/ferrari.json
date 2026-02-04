@@ -1,0 +1,1279 @@
+{
+  "brandId": "ferrari",
+  "brandName": "Ferrari",
+  "brandNameTh": "เฟอร์รารี่",
+  "brandNameLo": "ເຟີຣາຣີ້",
+  "models": [
+    {
+      "modelId": "12cilindri",
+      "modelName": "12Cilindri",
+      "modelNameTh": "12Cilindri",
+      "modelNameLo": "12Cilindri",
+      "searchNames": [
+        "12cilindri",
+        "12 cilindri"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "12cilindri-spider",
+      "modelName": "12Cilindri Spider",
+      "modelNameTh": "12Cilindri Spider",
+      "modelNameLo": "12Cilindri Spider",
+      "searchNames": [
+        "12cilindri spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "166-inter",
+      "modelName": "166 Inter",
+      "modelNameTh": "166 Inter",
+      "modelNameLo": "166 Inter",
+      "searchNames": [
+        "166 inter"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "166-mm",
+      "modelName": "166 MM",
+      "modelNameTh": "166 MM",
+      "modelNameLo": "166 MM",
+      "searchNames": [
+        "166 mm"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "195-inter",
+      "modelName": "195 Inter",
+      "modelNameTh": "195 Inter",
+      "modelNameLo": "195 Inter",
+      "searchNames": [
+        "195 inter"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "212-inter",
+      "modelName": "212 Inter",
+      "modelNameTh": "212 Inter",
+      "modelNameLo": "212 Inter",
+      "searchNames": [
+        "212 inter"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "212-export",
+      "modelName": "212 Export",
+      "modelNameTh": "212 Export",
+      "modelNameLo": "212 Export",
+      "searchNames": [
+        "212 export"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "225-s",
+      "modelName": "225 S",
+      "modelNameTh": "225 S",
+      "modelNameLo": "225 S",
+      "searchNames": [
+        "225 s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "250-gto",
+      "modelName": "250 GTO",
+      "modelNameTh": "250 GTO",
+      "modelNameLo": "250 GTO",
+      "searchNames": [
+        "250 gto",
+        "gto"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "250-gt-california",
+      "modelName": "250 GT California",
+      "modelNameTh": "250 GT California",
+      "modelNameLo": "250 GT California",
+      "searchNames": [
+        "250 gt california",
+        "250 california"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "250-gt-lusso",
+      "modelName": "250 GT Lusso",
+      "modelNameTh": "250 GT Lusso",
+      "modelNameLo": "250 GT Lusso",
+      "searchNames": [
+        "250 gt lusso",
+        "250 lusso"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "250-testa-rossa",
+      "modelName": "250 Testa Rossa",
+      "modelNameTh": "250 Testa Rossa",
+      "modelNameLo": "250 Testa Rossa",
+      "searchNames": [
+        "250 testa rossa"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "275-gtb",
+      "modelName": "275 GTB",
+      "modelNameTh": "275 GTB",
+      "modelNameLo": "275 GTB",
+      "searchNames": [
+        "275 gtb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "288-gto",
+      "modelName": "288 GTO",
+      "modelNameTh": "288 GTO",
+      "modelNameLo": "288 GTO",
+      "searchNames": [
+        "288 gto"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "296-gtb",
+      "modelName": "296 GTB",
+      "modelNameTh": "296 GTB",
+      "modelNameLo": "296 GTB",
+      "searchNames": [
+        "296 gtb"
+      ],
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "296-gts",
+      "modelName": "296 GTS",
+      "modelNameTh": "296 GTS",
+      "modelNameLo": "296 GTS",
+      "searchNames": [
+        "296 gts"
+      ],
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "296-speciale",
+      "modelName": "296 Speciale",
+      "modelNameTh": "296 Speciale",
+      "modelNameLo": "296 Speciale",
+      "searchNames": [
+        "296 speciale"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "296-speciale-a",
+      "modelName": "296 Speciale A",
+      "modelNameTh": "296 Speciale A",
+      "modelNameLo": "296 Speciale A",
+      "searchNames": [
+        "296 speciale a",
+        "296 speciale aperta"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "308-gtb",
+      "modelName": "308 GTB",
+      "modelNameTh": "308 GTB",
+      "modelNameLo": "308 GTB",
+      "searchNames": [
+        "308 gtb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "308-gts",
+      "modelName": "308 GTS",
+      "modelNameTh": "308 GTS",
+      "modelNameLo": "308 GTS",
+      "searchNames": [
+        "308 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "328-gtb",
+      "modelName": "328 GTB",
+      "modelNameTh": "328 GTB",
+      "modelNameLo": "328 GTB",
+      "searchNames": [
+        "328 gtb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "328-gts",
+      "modelName": "328 GTS",
+      "modelNameTh": "328 GTS",
+      "modelNameLo": "328 GTS",
+      "searchNames": [
+        "328 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "330-gt",
+      "modelName": "330 GT",
+      "modelNameTh": "330 GT",
+      "modelNameLo": "330 GT",
+      "searchNames": [
+        "330 gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "340-america",
+      "modelName": "340 America",
+      "modelNameTh": "340 America",
+      "modelNameLo": "340 America",
+      "searchNames": [
+        "340 america"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "348-tb",
+      "modelName": "348 tb",
+      "modelNameTh": "348 tb",
+      "modelNameLo": "348 tb",
+      "searchNames": [
+        "348 tb",
+        "348tb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "348-ts",
+      "modelName": "348 ts",
+      "modelNameTh": "348 ts",
+      "modelNameLo": "348 ts",
+      "searchNames": [
+        "348 ts",
+        "348ts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "348-spider",
+      "modelName": "348 Spider",
+      "modelNameTh": "348 Spider",
+      "modelNameLo": "348 Spider",
+      "searchNames": [
+        "348 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "360-modena",
+      "modelName": "360 Modena",
+      "modelNameTh": "360 Modena",
+      "modelNameLo": "360 Modena",
+      "searchNames": [
+        "360 modena",
+        "360"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "360-spider",
+      "modelName": "360 Spider",
+      "modelNameTh": "360 Spider",
+      "modelNameLo": "360 Spider",
+      "searchNames": [
+        "360 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "360-challenge-stradale",
+      "modelName": "360 Challenge Stradale",
+      "modelNameTh": "360 Challenge Stradale",
+      "modelNameLo": "360 Challenge Stradale",
+      "searchNames": [
+        "360 challenge stradale",
+        "challenge stradale"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "365-gtb-4-daytona",
+      "modelName": "365 GTB/4 Daytona",
+      "modelNameTh": "365 GTB/4 Daytona",
+      "modelNameLo": "365 GTB/4 Daytona",
+      "searchNames": [
+        "365 gtb",
+        "daytona",
+        "365 daytona"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "400",
+      "modelName": "400",
+      "modelNameTh": "400",
+      "modelNameLo": "400",
+      "searchNames": [
+        "400"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "412",
+      "modelName": "412",
+      "modelNameTh": "412",
+      "modelNameLo": "412",
+      "searchNames": [
+        "412"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "430-scuderia",
+      "modelName": "430 Scuderia",
+      "modelNameTh": "430 Scuderia",
+      "modelNameLo": "430 Scuderia",
+      "searchNames": [
+        "430 scuderia",
+        "scuderia"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "456",
+      "modelName": "456",
+      "modelNameTh": "456",
+      "modelNameLo": "456",
+      "searchNames": [
+        "456"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "456m",
+      "modelName": "456M",
+      "modelNameTh": "456M",
+      "modelNameLo": "456M",
+      "searchNames": [
+        "456m",
+        "456 m"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "458-italia",
+      "modelName": "458 Italia",
+      "modelNameTh": "458 Italia",
+      "modelNameLo": "458 Italia",
+      "searchNames": [
+        "458 italia",
+        "458"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "458-spider",
+      "modelName": "458 Spider",
+      "modelNameTh": "458 Spider",
+      "modelNameLo": "458 Spider",
+      "searchNames": [
+        "458 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "458-speciale",
+      "modelName": "458 Speciale",
+      "modelNameTh": "458 Speciale",
+      "modelNameLo": "458 Speciale",
+      "searchNames": [
+        "458 speciale"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "458-speciale-a",
+      "modelName": "458 Speciale A",
+      "modelNameTh": "458 Speciale A",
+      "modelNameLo": "458 Speciale A",
+      "searchNames": [
+        "458 speciale a"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "488-gtb",
+      "modelName": "488 GTB",
+      "modelNameTh": "488 GTB",
+      "modelNameLo": "488 GTB",
+      "searchNames": [
+        "488 gtb",
+        "488"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "488-spider",
+      "modelName": "488 Spider",
+      "modelNameTh": "488 Spider",
+      "modelNameLo": "488 Spider",
+      "searchNames": [
+        "488 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "488-pista",
+      "modelName": "488 Pista",
+      "modelNameTh": "488 Pista",
+      "modelNameLo": "488 Pista",
+      "searchNames": [
+        "488 pista"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "488-pista-spider",
+      "modelName": "488 Pista Spider",
+      "modelNameTh": "488 Pista Spider",
+      "modelNameLo": "488 Pista Spider",
+      "searchNames": [
+        "488 pista spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "512-bb",
+      "modelName": "512 BB",
+      "modelNameTh": "512 BB",
+      "modelNameLo": "512 BB",
+      "searchNames": [
+        "512 bb"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "512-tr",
+      "modelName": "512 TR",
+      "modelNameTh": "512 TR",
+      "modelNameLo": "512 TR",
+      "searchNames": [
+        "512 tr"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "550-maranello",
+      "modelName": "550 Maranello",
+      "modelNameTh": "550 Maranello",
+      "modelNameLo": "550 Maranello",
+      "searchNames": [
+        "550 maranello",
+        "550"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "550-barchetta",
+      "modelName": "550 Barchetta",
+      "modelNameTh": "550 Barchetta",
+      "modelNameLo": "550 Barchetta",
+      "searchNames": [
+        "550 barchetta"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "575m-maranello",
+      "modelName": "575M Maranello",
+      "modelNameTh": "575M Maranello",
+      "modelNameLo": "575M Maranello",
+      "searchNames": [
+        "575m maranello",
+        "575 maranello"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "575-superamerica",
+      "modelName": "575 Superamerica",
+      "modelNameTh": "575 Superamerica",
+      "modelNameLo": "575 Superamerica",
+      "searchNames": [
+        "575 superamerica"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "599-gtb-fiorano",
+      "modelName": "599 GTB Fiorano",
+      "modelNameTh": "599 GTB Fiorano",
+      "modelNameLo": "599 GTB Fiorano",
+      "searchNames": [
+        "599 gtb",
+        "599 fiorano"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "599-gto",
+      "modelName": "599 GTO",
+      "modelNameTh": "599 GTO",
+      "modelNameLo": "599 GTO",
+      "searchNames": [
+        "599 gto"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "599-sa-aperta",
+      "modelName": "599 SA Aperta",
+      "modelNameTh": "599 SA Aperta",
+      "modelNameLo": "599 SA Aperta",
+      "searchNames": [
+        "599 sa aperta",
+        "599 aperta"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "612-scaglietti",
+      "modelName": "612 Scaglietti",
+      "modelNameTh": "612 Scaglietti",
+      "modelNameLo": "612 Scaglietti",
+      "searchNames": [
+        "612 scaglietti",
+        "612"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "812-superfast",
+      "modelName": "812 Superfast",
+      "modelNameTh": "812 Superfast",
+      "modelNameLo": "812 Superfast",
+      "searchNames": [
+        "812 superfast",
+        "812"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "812-gts",
+      "modelName": "812 GTS",
+      "modelNameTh": "812 GTS",
+      "modelNameLo": "812 GTS",
+      "searchNames": [
+        "812 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "812-competizione",
+      "modelName": "812 Competizione",
+      "modelNameTh": "812 Competizione",
+      "modelNameLo": "812 Competizione",
+      "searchNames": [
+        "812 competizione"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "812-competizione-a",
+      "modelName": "812 Competizione A",
+      "modelNameTh": "812 Competizione A",
+      "modelNameLo": "812 Competizione A",
+      "searchNames": [
+        "812 competizione a"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "849-testarossa",
+      "modelName": "849 Testarossa",
+      "modelNameTh": "849 Testarossa",
+      "modelNameLo": "849 Testarossa",
+      "searchNames": [
+        "849 testarossa"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "849-testarossa-spider",
+      "modelName": "849 Testarossa Spider",
+      "modelNameTh": "849 Testarossa Spider",
+      "modelNameLo": "849 Testarossa Spider",
+      "searchNames": [
+        "849 testarossa spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "amalfi",
+      "modelName": "Amalfi",
+      "modelNameTh": "Amalfi",
+      "modelNameLo": "Amalfi",
+      "searchNames": [
+        "amalfi"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "california",
+      "modelName": "California",
+      "modelNameTh": "California",
+      "modelNameLo": "California",
+      "searchNames": [
+        "california"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "california-t",
+      "modelName": "California T",
+      "modelNameTh": "California T",
+      "modelNameLo": "California T",
+      "searchNames": [
+        "california t"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "daytona-sp3",
+      "modelName": "Daytona SP3",
+      "modelNameTh": "Daytona SP3",
+      "modelNameLo": "Daytona SP3",
+      "searchNames": [
+        "daytona sp3",
+        "sp3"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "dino-206-gt",
+      "modelName": "Dino 206 GT",
+      "modelNameTh": "Dino 206 GT",
+      "modelNameLo": "Dino 206 GT",
+      "searchNames": [
+        "dino 206 gt",
+        "dino 206"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "dino-246-gt",
+      "modelName": "Dino 246 GT",
+      "modelNameTh": "Dino 246 GT",
+      "modelNameLo": "Dino 246 GT",
+      "searchNames": [
+        "dino 246 gt",
+        "dino 246"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "dino-246-gts",
+      "modelName": "Dino 246 GTS",
+      "modelNameTh": "Dino 246 GTS",
+      "modelNameLo": "Dino 246 GTS",
+      "searchNames": [
+        "dino 246 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "enzo-ferrari",
+      "modelName": "Enzo Ferrari",
+      "modelNameTh": "Enzo Ferrari",
+      "modelNameLo": "Enzo Ferrari",
+      "searchNames": [
+        "enzo",
+        "enzo ferrari"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f12berlinetta",
+      "modelName": "F12berlinetta",
+      "modelNameTh": "F12berlinetta",
+      "modelNameLo": "F12berlinetta",
+      "searchNames": [
+        "f12berlinetta",
+        "f12 berlinetta"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f12tdf",
+      "modelName": "F12tdf",
+      "modelNameTh": "F12tdf",
+      "modelNameLo": "F12tdf",
+      "searchNames": [
+        "f12tdf",
+        "f12 tdf"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f355-berlinetta",
+      "modelName": "F355 Berlinetta",
+      "modelNameTh": "F355 Berlinetta",
+      "modelNameLo": "F355 Berlinetta",
+      "searchNames": [
+        "f355 berlinetta",
+        "f355"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f355-spider",
+      "modelName": "F355 Spider",
+      "modelNameTh": "F355 Spider",
+      "modelNameLo": "F355 Spider",
+      "searchNames": [
+        "f355 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f355-gts",
+      "modelName": "F355 GTS",
+      "modelNameTh": "F355 GTS",
+      "modelNameLo": "F355 GTS",
+      "searchNames": [
+        "f355 gts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f40",
+      "modelName": "F40",
+      "modelNameTh": "F40",
+      "modelNameLo": "F40",
+      "searchNames": [
+        "f40"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f430",
+      "modelName": "F430",
+      "modelNameTh": "F430",
+      "modelNameLo": "F430",
+      "searchNames": [
+        "f430"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f430-spider",
+      "modelName": "F430 Spider",
+      "modelNameTh": "F430 Spider",
+      "modelNameLo": "F430 Spider",
+      "searchNames": [
+        "f430 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f50",
+      "modelName": "F50",
+      "modelNameTh": "F50",
+      "modelNameLo": "F50",
+      "searchNames": [
+        "f50"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "f512-m",
+      "modelName": "F512 M",
+      "modelNameTh": "F512 M",
+      "modelNameLo": "F512 M",
+      "searchNames": [
+        "f512 m",
+        "f512m"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f8-tributo",
+      "modelName": "F8 Tributo",
+      "modelNameTh": "F8 Tributo",
+      "modelNameLo": "F8 Tributo",
+      "searchNames": [
+        "f8 tributo",
+        "f8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f8-spider",
+      "modelName": "F8 Spider",
+      "modelNameTh": "F8 Spider",
+      "modelNameLo": "F8 Spider",
+      "searchNames": [
+        "f8 spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f80",
+      "modelName": "F80",
+      "modelNameTh": "F80",
+      "modelNameLo": "F80",
+      "searchNames": [
+        "f80"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "ff",
+      "modelName": "FF",
+      "modelNameTh": "FF",
+      "modelNameLo": "FF",
+      "searchNames": [
+        "ff"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gtc4lusso",
+      "modelName": "GTC4Lusso",
+      "modelNameTh": "GTC4Lusso",
+      "modelNameLo": "GTC4Lusso",
+      "searchNames": [
+        "gtc4lusso",
+        "gtc4 lusso"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "gtc4lusso-t",
+      "modelName": "GTC4Lusso T",
+      "modelNameTh": "GTC4Lusso T",
+      "modelNameLo": "GTC4Lusso T",
+      "searchNames": [
+        "gtc4lusso t",
+        "gtc4 lusso t"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "laferrari",
+      "modelName": "LaFerrari",
+      "modelNameTh": "LaFerrari",
+      "modelNameLo": "LaFerrari",
+      "searchNames": [
+        "laferrari",
+        "la ferrari"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "laferrari-aperta",
+      "modelName": "LaFerrari Aperta",
+      "modelNameTh": "LaFerrari Aperta",
+      "modelNameLo": "LaFerrari Aperta",
+      "searchNames": [
+        "laferrari aperta"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "mondial",
+      "modelName": "Mondial",
+      "modelNameTh": "Mondial",
+      "modelNameLo": "Mondial",
+      "searchNames": [
+        "mondial"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "monza-sp1",
+      "modelName": "Monza SP1",
+      "modelNameTh": "Monza SP1",
+      "modelNameLo": "Monza SP1",
+      "searchNames": [
+        "monza sp1",
+        "sp1"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "monza-sp2",
+      "modelName": "Monza SP2",
+      "modelNameTh": "Monza SP2",
+      "modelNameLo": "Monza SP2",
+      "searchNames": [
+        "monza sp2",
+        "sp2"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "portofino",
+      "modelName": "Portofino",
+      "modelNameTh": "Portofino",
+      "modelNameLo": "Portofino",
+      "searchNames": [
+        "portofino"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "portofino-m",
+      "modelName": "Portofino M",
+      "modelNameTh": "Portofino M",
+      "modelNameLo": "Portofino M",
+      "searchNames": [
+        "portofino m"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "purosangue",
+      "modelName": "Purosangue",
+      "modelNameTh": "Purosangue",
+      "modelNameLo": "Purosangue",
+      "searchNames": [
+        "purosangue"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "roma",
+      "modelName": "Roma",
+      "modelNameTh": "Roma",
+      "modelNameLo": "Roma",
+      "searchNames": [
+        "roma"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "roma-spider",
+      "modelName": "Roma Spider",
+      "modelNameTh": "Roma Spider",
+      "modelNameLo": "Roma Spider",
+      "searchNames": [
+        "roma spider"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sf90-stradale",
+      "modelName": "SF90 Stradale",
+      "modelNameTh": "SF90 Stradale",
+      "modelNameLo": "SF90 Stradale",
+      "searchNames": [
+        "sf90 stradale",
+        "sf90"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sf90-spider",
+      "modelName": "SF90 Spider",
+      "modelNameTh": "SF90 Spider",
+      "modelNameLo": "SF90 Spider",
+      "searchNames": [
+        "sf90 spider"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sf90-xx-stradale",
+      "modelName": "SF90 XX Stradale",
+      "modelNameTh": "SF90 XX Stradale",
+      "modelNameLo": "SF90 XX Stradale",
+      "searchNames": [
+        "sf90 xx stradale",
+        "sf90 xx"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "sf90-xx-spider",
+      "modelName": "SF90 XX Spider",
+      "modelNameTh": "SF90 XX Spider",
+      "modelNameLo": "SF90 XX Spider",
+      "searchNames": [
+        "sf90 xx spider"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "superamerica",
+      "modelName": "Superamerica",
+      "modelNameTh": "Superamerica",
+      "modelNameLo": "Superamerica",
+      "searchNames": [
+        "superamerica"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "testarossa",
+      "modelName": "Testarossa",
+      "modelNameTh": "Testarossa",
+      "modelNameLo": "Testarossa",
+      "searchNames": [
+        "testarossa"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ferrari-ev",
+      "modelName": "Ferrari EV (First Electric Model)",
+      "modelNameTh": "Ferrari EV (First Electric Model)",
+      "modelNameLo": "Ferrari EV (First Electric Model)",
+      "searchNames": [
+        "ferrari ev",
+        "ferrari electric"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    }
+  ]
+}

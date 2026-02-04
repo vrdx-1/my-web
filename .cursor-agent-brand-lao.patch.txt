@@ -1,0 +1,223 @@
+{"badBrands":73,"changes":73}
+*** Begin Patch
+*** Update File: /Users/a0000/Desktop/my-car-web/data/cars.json
+@@
+-      "brandNameLo": "GWM",
++      "brandNameLo": "ເກຣທ ວອລລ ມອເຕອຣ",
+@@
+-      "brandNameLo": "BMW",
++      "brandNameLo": "ບີເອມດັບເບິລຍູ",
+@@
+-      "brandNameLo": "Mercedes-Benz",
++      "brandNameLo": "ເມອຣເຊເດສ-ເບນຊ",
+@@
+-      "brandNameLo": "Volvo",
++      "brandNameLo": "ວອລໂວ",
+@@
+-      "brandNameLo": "Subaru",
++      "brandNameLo": "ຊູບາຣຸ",
+@@
+-      "brandNameLo": "Lexus",
++      "brandNameLo": "ເລກຊັສ",
+@@
+-      "brandNameLo": "Audi",
++      "brandNameLo": "ອາວດີ",
+@@
+-      "brandNameLo": "Volkswagen",
++      "brandNameLo": "ໂຟລຄສວາເກນ",
+@@
+-      "brandNameLo": "MINI",
++      "brandNameLo": "ມິນິ",
+@@
+-      "brandNameLo": "Porsche",
++      "brandNameLo": "ປອຣເຊ",
+@@
+-      "brandNameLo": "Land Rover",
++      "brandNameLo": "ແລນດໂຣເວອຣ",
+@@
+-      "brandNameLo": "Peugeot",
++      "brandNameLo": "ເປອໂຍຕ",
+@@
+-      "brandNameLo": "NETA",
++      "brandNameLo": "ເນຕາ",
+@@
+-      "brandNameLo": "AION",
++      "brandNameLo": "ໄອອອນ",
+@@
+-      "brandNameLo": "Chery",
++      "brandNameLo": "ເຊອຣີ",
+@@
+-      "brandNameLo": "Apollo Automobil",
++      "brandNameLo": "າພໂລລໂ າອຸຕໂມໂບອິລ",
+@@
+-      "brandNameLo": "Ariel",
++      "brandNameLo": "າຣອິເລ",
+@@
+-      "brandNameLo": "Aston Martin",
++      "brandNameLo": "າສຕໂນ ມາຣຕອິນ",
+@@
+-      "brandNameLo": "BAC (Briggs Automotive Company)",
++      "brandNameLo": "ບາຄ (ບຣອິກກສ າອຸຕໂມໂຕອິວເ ຄໂມພານຍ)",
+@@
+-      "brandNameLo": "Bentley",
++      "brandNameLo": "ບເນຕລເຍ",
+@@
+-      "brandNameLo": "Bugatti",
++      "brandNameLo": "ບອຸກາຕຕອິ",
+@@
+-      "brandNameLo": "Caterham",
++      "brandNameLo": "ຄາຕເຣຮາມ",
+@@
+-      "brandNameLo": "Czinger",
++      "brandNameLo": "ຄຊອິງເຣ",
+@@
+-      "brandNameLo": "Dallara",
++      "brandNameLo": "ດາລລາຣາ",
+@@
+-      "brandNameLo": "De Tomaso",
++      "brandNameLo": "ດເ ຕໂມາສໂ",
+@@
+-      "brandNameLo": "Donkervoort",
++      "brandNameLo": "ດໂນຄເຣວໂໂຣຕ",
+@@
+-      "brandNameLo": "Gumper",
++      "brandNameLo": "ກອຸມພເຣ",
+@@
+-      "brandNameLo": "Hennessey",
++      "brandNameLo": "ຮເນນເສສເຍ",
+@@
+-      "brandNameLo": "Koenigsegg",
++      "brandNameLo": "ຄໂເນອິກສເກກ",
+@@
+-      "brandNameLo": "KTM (X-Bow)",
++      "brandNameLo": "ຄຕມ (ກຊ-ບໂວ)",
+@@
+-      "brandNameLo": "Lamborghini",
++      "brandNameLo": "ລາມບໂຣກຮອິນອິ",
+@@
+-      "brandNameLo": "Lotus",
++      "brandNameLo": "ລໂຕອຸສ",
+@@
+-      "brandNameLo": "Maserati",
++      "brandNameLo": "ມາສເຣາຕອິ",
+@@
+-      "brandNameLo": "McLaren",
++      "brandNameLo": "ມຄລາຣເນ",
+@@
+-      "brandNameLo": "Morgan",
++      "brandNameLo": "ມໂຣການ",
+@@
+-      "brandNameLo": "Noble",
++      "brandNameLo": "ນໂບລເ",
+@@
+-      "brandNameLo": "Pagani",
++      "brandNameLo": "ພາການອິ",
+@@
+-      "brandNameLo": "Pininfarina",
++      "brandNameLo": "ພອິນອິນຟາຣອິນາ",
+@@
+-      "brandNameLo": "Praga",
++      "brandNameLo": "ພຣາກາ",
+@@
+-      "brandNameLo": "Radical",
++      "brandNameLo": "ຣາດອິຄາລ",
+@@
+-      "brandNameLo": "Rimac",
++      "brandNameLo": "ຣອິມາຄ",
+@@
+-      "brandNameLo": "RUF",
++      "brandNameLo": "ຣອຸຟ",
+@@
+-      "brandNameLo": "Saleen",
++      "brandNameLo": "ສາລເເນ",
+@@
+-      "brandNameLo": "Shelby",
++      "brandNameLo": "ຊເລບຍ",
+@@
+-      "brandNameLo": "SSC (Shelby SuperCars)",
++      "brandNameLo": "ສສຄ (ຊເລບຍ ສອຸພເຣຄາຣສ)",
+@@
+-      "brandNameLo": "TWR",
++      "brandNameLo": "ຕວຣ",
+@@
+-      "brandNameLo": "Ultima",
++      "brandNameLo": "ອຸລຕອິມາ",
+@@
+-      "brandNameLo": "W Motors",
++      "brandNameLo": "ວ ມໂຕໂຣສ",
+@@
+-      "brandNameLo": "Zenvo",
++      "brandNameLo": "ຊເນວໂ",
+@@
+-      "brandNameLo": "Ashok Leyland",
++      "brandNameLo": "າຊໂຄ ລເຍລານດ",
+@@
+-      "brandNameLo": "Force Motors",
++      "brandNameLo": "ຟໂຣຄເ ມໂຕໂຣສ",
+@@
+-      "brandNameLo": "Mahindra",
++      "brandNameLo": "ມາຮອິນດຣາ",
+@@
+-      "brandNameLo": "Aurus",
++      "brandNameLo": "າອຸຣອຸສ",
+@@
+-      "brandNameLo": "GAZ",
++      "brandNameLo": "ກາຊ",
+@@
+-      "brandNameLo": "Kamaz",
++      "brandNameLo": "ຄາມາຊ",
+@@
+-      "brandNameLo": "UAZ",
++      "brandNameLo": "ອຸາຊ",
+@@
+-      "brandNameLo": "Pyeonghwa Motors",
++      "brandNameLo": "ພຍເໂງຮວາ ມໂຕໂຣສ",
+@@
+-      "brandNameLo": "Iran Khodro",
++      "brandNameLo": "ອິຣານ ຄໂດຣໂ",
+@@
+-      "brandNameLo": "Saipa",
++      "brandNameLo": "ສາອິພາ",
+@@
+-      "brandNameLo": "Fisker",
++      "brandNameLo": "ຟອິສຄເຣ",
+@@
+-      "brandNameLo": "Karma",
++      "brandNameLo": "ຄາຣມາ",
+@@
+-      "brandNameLo": "Lordstown",
++      "brandNameLo": "ລໂຣດສຕໂວນ",
+@@
+-      "brandNameLo": "Nikola",
++      "brandNameLo": "ນອິຄໂລາ",
+@@
+-      "brandNameLo": "AITO",
++      "brandNameLo": "າອິຕໂ",
+@@
+-      "brandNameLo": "Deepal",
++      "brandNameLo": "ດເເພາລ",
+@@
+-      "brandNameLo": "Faraday Future",
++      "brandNameLo": "ຟາຣາດາຍ ຟອຸຕອຸຣເ",
+@@
+-      "brandNameLo": "Lightyear",
++      "brandNameLo": "ລອິກຮຕຍເາຣ",
+@@
+-      "brandNameLo": "M-Hero",
++      "brandNameLo": "ມ-ຮເຣໂ",
+@@
+-      "brandNameLo": "Nevo",
++      "brandNameLo": "ນເວໂ",
+@@
+-      "brandNameLo": "Onvo",
++      "brandNameLo": "ໂນວໂ",
+@@
+-      "brandNameLo": "Stelato",
++      "brandNameLo": "ສຕເລາຕໂ",
+@@
+-      "brandNameLo": "Togg",
++      "brandNameLo": "ຕໂກກ",
+@@
+-      "brandNameLo": "Zacua",
++      "brandNameLo": "ຊາຄອຸາ",
+*** End Patch

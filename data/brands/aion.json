@@ -1,0 +1,251 @@
+{
+  "brandId": "aion",
+  "brandName": "Aion",
+  "brandNameTh": "ไอออน",
+  "brandNameLo": "ໄອອອນ",
+  "models": [
+    {
+      "modelId": "aion-es",
+      "modelName": "Aion ES",
+      "modelNameTh": "Aion ES",
+      "modelNameLo": "Aion ES",
+      "searchNames": [
+        "aion es",
+        "aiones"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-lx",
+      "modelName": "Aion LX",
+      "modelNameTh": "Aion LX",
+      "modelNameLo": "Aion LX",
+      "searchNames": [
+        "aion lx",
+        "aionlx"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-lx-plus",
+      "modelName": "Aion LX Plus",
+      "modelNameTh": "Aion LX Plus",
+      "modelNameLo": "Aion LX Plus",
+      "searchNames": [
+        "aion lx plus",
+        "aionlxplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-rt",
+      "modelName": "Aion RT",
+      "modelNameTh": "Aion RT",
+      "modelNameLo": "Aion RT",
+      "searchNames": [
+        "aion rt",
+        "aionrt"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s",
+      "modelName": "Aion S",
+      "modelNameTh": "Aion S",
+      "modelNameLo": "Aion S",
+      "searchNames": [
+        "aion s",
+        "aions"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s-max",
+      "modelName": "Aion S Max",
+      "modelNameTh": "Aion S Max",
+      "modelNameLo": "Aion S Max",
+      "searchNames": [
+        "aion s max",
+        "aionsmax"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-s-plus",
+      "modelName": "Aion S Plus",
+      "modelNameTh": "Aion S Plus",
+      "modelNameLo": "Aion S Plus",
+      "searchNames": [
+        "aion s plus",
+        "aionsplus"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-ut",
+      "modelName": "Aion UT",
+      "modelNameTh": "Aion UT",
+      "modelNameLo": "Aion UT",
+      "searchNames": [
+        "aion ut",
+        "aionut"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-v",
+      "modelName": "Aion V",
+      "modelNameTh": "Aion V",
+      "modelNameLo": "Aion V",
+      "searchNames": [
+        "aion v",
+        "aionv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-v-plus",
+      "modelName": "Aion V Plus",
+      "modelNameTh": "Aion V Plus",
+      "modelNameLo": "Aion V Plus",
+      "searchNames": [
+        "aion v plus",
+        "aionvplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-y",
+      "modelName": "Aion Y",
+      "modelNameTh": "Aion Y",
+      "modelNameLo": "Aion Y",
+      "searchNames": [
+        "aion y",
+        "aiony"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "aion-y-plus",
+      "modelName": "Aion Y Plus",
+      "modelNameTh": "Aion Y Plus",
+      "modelNameLo": "Aion Y Plus",
+      "searchNames": [
+        "aion y plus",
+        "aionyplus"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-gt",
+      "modelName": "Hyper GT",
+      "modelNameTh": "Hyper GT",
+      "modelNameLo": "Hyper GT",
+      "searchNames": [
+        "hyper gt",
+        "hyptec gt",
+        "hypergt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-hl",
+      "modelName": "Hyper HL",
+      "modelNameTh": "Hyper HL",
+      "modelNameLo": "Hyper HL",
+      "searchNames": [
+        "hyper hl",
+        "hyptec hl",
+        "hyperhl"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-ht",
+      "modelName": "Hyper HT",
+      "modelNameTh": "Hyper HT",
+      "modelNameLo": "Hyper HT",
+      "searchNames": [
+        "hyper ht",
+        "hyptec ht",
+        "hyperht"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "hyper-ssr",
+      "modelName": "Hyper SSR",
+      "modelNameTh": "Hyper SSR",
+      "modelNameLo": "Hyper SSR",
+      "searchNames": [
+        "hyper ssr",
+        "hyptec ssr",
+        "hyperssr"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "m8-phev",
+      "modelName": "M8 PHEV",
+      "modelNameTh": "M8 PHEV",
+      "modelNameLo": "M8 PHEV",
+      "searchNames": [
+        "m8 phev",
+        "m8phev"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    }
+  ]
+}

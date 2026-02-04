@@ -1,0 +1,356 @@
+{
+  "brandId": "gmc",
+  "brandName": "GMC",
+  "brandNameTh": "จีเอ็มซี",
+  "brandNameLo": "ເຈເອັມຊີ",
+  "models": [
+    {
+      "id": "100",
+      "nameEn": "100",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "150",
+      "nameEn": "150",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "250",
+      "nameEn": "250",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "1000",
+      "nameEn": "1000",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "1500",
+      "nameEn": "1500",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "2500",
+      "nameEn": "2500",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "3500",
+      "nameEn": "3500",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "ac-454",
+      "nameEn": "AC 454",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "acadia",
+      "nameEn": "Acadia",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "astro",
+      "nameEn": "Astro",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "b-series",
+      "nameEn": "B-Series",
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "id": "blue-chip",
+      "nameEn": "Blue Chip",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "brigadier",
+      "nameEn": "Brigadier",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "c-k-series",
+      "nameEn": "C/K Series",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "caballero",
+      "nameEn": "Caballero",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "canyon",
+      "nameEn": "Canyon",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "cckw",
+      "nameEn": "CCKW",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "denali",
+      "nameEn": "Denali",
+      "categoryIds": [
+        "luxury"
+      ]
+    },
+    {
+      "id": "dukw",
+      "nameEn": "DUKW",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "envoy",
+      "nameEn": "Envoy",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "envoy-xl",
+      "nameEn": "Envoy XL",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "envoy-xuv",
+      "nameEn": "Envoy XUV",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "forward",
+      "nameEn": "Forward",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "general",
+      "nameEn": "General",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "g-series",
+      "nameEn": "G-Series (Vandura/Magnavan)",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "hummer-ev-pickup",
+      "nameEn": "Hummer EV Pickup",
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "id": "hummer-ev-suv",
+      "nameEn": "Hummer EV SUV",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "jimmy",
+      "nameEn": "Jimmy",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "jimmy-k5",
+      "nameEn": "Jimmy K5",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "l-series",
+      "nameEn": "L-Series",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "p-series",
+      "nameEn": "P-Series",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "s-15",
+      "nameEn": "S-15",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "s-15-jimmy",
+      "nameEn": "S-15 Jimmy",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "safari",
+      "nameEn": "Safari",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "savana",
+      "nameEn": "Savana",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "sierra",
+      "nameEn": "Sierra",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "sierra-ev",
+      "nameEn": "Sierra EV",
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "id": "sonoma",
+      "nameEn": "Sonoma",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "sprint",
+      "nameEn": "Sprint",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "suburban",
+      "nameEn": "Suburban",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "syclone",
+      "nameEn": "Syclone",
+      "categoryIds": [
+        "pickup",
+        "sport"
+      ]
+    },
+    {
+      "id": "t-series",
+      "nameEn": "T-Series",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "terrain",
+      "nameEn": "Terrain",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "topkick",
+      "nameEn": "TopKick",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "tracker",
+      "nameEn": "Tracker",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "typhoon",
+      "nameEn": "Typhoon",
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "id": "w-series",
+      "nameEn": "W-Series",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "yukon",
+      "nameEn": "Yukon",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "yukon-xl",
+      "nameEn": "Yukon XL",
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

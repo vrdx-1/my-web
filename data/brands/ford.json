@@ -1,0 +1,522 @@
+{
+  "brandId": "ford",
+  "brandName": "Ford",
+  "brandNameTh": "ฟอร์ด",
+  "brandNameLo": "ຟອດ",
+  "models": [
+    {
+      "modelId": "ranger",
+      "modelName": "Ranger",
+      "modelNameTh": "Ranger",
+      "modelNameLo": "Ranger",
+      "searchNames": [
+        "ranger"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "everest",
+      "modelName": "Everest",
+      "modelNameTh": "Everest",
+      "modelNameLo": "Everest",
+      "searchNames": [
+        "everest"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "mustang",
+      "modelName": "Mustang",
+      "modelNameTh": "Mustang",
+      "modelNameLo": "Mustang",
+      "searchNames": [
+        "mustang"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "f-150",
+      "modelName": "F-150",
+      "modelNameTh": "F-150",
+      "modelNameLo": "F-150",
+      "searchNames": [
+        "f-150",
+        "f150",
+        "f 150"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "explorer",
+      "modelName": "Explorer",
+      "modelNameTh": "Explorer",
+      "modelNameLo": "Explorer",
+      "searchNames": [
+        "explorer"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "expedition",
+      "modelName": "Expedition",
+      "modelNameTh": "Expedition",
+      "modelNameLo": "Expedition",
+      "searchNames": [
+        "expedition"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bronco",
+      "modelName": "Bronco",
+      "modelNameTh": "Bronco",
+      "modelNameLo": "Bronco",
+      "searchNames": [
+        "bronco"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bronco-sport",
+      "modelName": "Bronco Sport",
+      "modelNameTh": "Bronco Sport",
+      "modelNameLo": "Bronco Sport",
+      "searchNames": [
+        "bronco sport",
+        "broncosport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "maverick",
+      "modelName": "Maverick",
+      "modelNameTh": "Maverick",
+      "modelNameLo": "Maverick",
+      "searchNames": [
+        "maverick"
+      ],
+      "categoryIds": [
+        "pickup",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "puma",
+      "modelName": "Puma",
+      "modelNameTh": "Puma",
+      "modelNameLo": "Puma",
+      "searchNames": [
+        "puma"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "kuga",
+      "modelName": "Kuga",
+      "modelNameTh": "Kuga",
+      "modelNameLo": "Kuga",
+      "searchNames": [
+        "kuga"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "escape",
+      "modelName": "Escape",
+      "modelNameTh": "Escape",
+      "modelNameLo": "Escape",
+      "searchNames": [
+        "escape"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "edge",
+      "modelName": "Edge",
+      "modelNameTh": "Edge",
+      "modelNameLo": "Edge",
+      "searchNames": [
+        "edge"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "mach-e",
+      "modelName": "Mach-E",
+      "modelNameTh": "Mach-E",
+      "modelNameLo": "Mach-E",
+      "searchNames": [
+        "mach-e",
+        "mache",
+        "mustang mach-e"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "territory",
+      "modelName": "Territory",
+      "modelNameTh": "Territory",
+      "modelNameLo": "Territory",
+      "searchNames": [
+        "territory"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "fiesta",
+      "modelName": "Fiesta",
+      "modelNameTh": "Fiesta",
+      "modelNameLo": "Fiesta",
+      "searchNames": [
+        "fiesta"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "focus",
+      "modelName": "Focus",
+      "modelNameTh": "Focus",
+      "modelNameLo": "Focus",
+      "searchNames": [
+        "focus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mondeo",
+      "modelName": "Mondeo",
+      "modelNameTh": "Mondeo",
+      "modelNameLo": "Mondeo",
+      "searchNames": [
+        "mondeo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fusion",
+      "modelName": "Fusion",
+      "modelNameTh": "Fusion",
+      "modelNameLo": "Fusion",
+      "searchNames": [
+        "fusion"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "taurus",
+      "modelName": "Taurus",
+      "modelNameTh": "Taurus",
+      "modelNameLo": "Taurus",
+      "searchNames": [
+        "taurus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gt",
+      "modelName": "GT",
+      "modelNameTh": "GT",
+      "modelNameLo": "GT",
+      "searchNames": [
+        "ford gt",
+        "gt"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "ecosport",
+      "modelName": "EcoSport",
+      "modelNameTh": "EcoSport",
+      "modelNameLo": "EcoSport",
+      "searchNames": [
+        "ecosport",
+        "eco sport"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ka",
+      "modelName": "Ka",
+      "modelNameTh": "Ka",
+      "modelNameLo": "Ka",
+      "searchNames": [
+        "ka"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "figo",
+      "modelName": "Figo",
+      "modelNameTh": "Figo",
+      "modelNameLo": "Figo",
+      "searchNames": [
+        "figo"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "endeavour",
+      "modelName": "Endeavour",
+      "modelNameTh": "Endeavour",
+      "modelNameLo": "Endeavour",
+      "searchNames": [
+        "endeavour"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "transit",
+      "modelName": "Transit",
+      "modelNameTh": "Transit",
+      "modelNameLo": "Transit",
+      "searchNames": [
+        "transit"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "tourneo",
+      "modelName": "Tourneo",
+      "modelNameTh": "Tourneo",
+      "modelNameLo": "Tourneo",
+      "searchNames": [
+        "tourneo"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "e-series",
+      "modelName": "E-Series",
+      "modelNameTh": "E-Series",
+      "modelNameLo": "E-Series",
+      "searchNames": [
+        "e-series",
+        "eseries",
+        "e series"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "super-duty",
+      "modelName": "Super Duty",
+      "modelNameTh": "Super Duty",
+      "modelNameLo": "Super Duty",
+      "searchNames": [
+        "super duty",
+        "superduty"
+      ],
+      "categoryIds": [
+        "pickup",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "raptor",
+      "modelName": "Raptor",
+      "modelNameTh": "Raptor",
+      "modelNameLo": "Raptor",
+      "searchNames": [
+        "raptor",
+        "f-150 raptor"
+      ],
+      "categoryIds": [
+        "pickup",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "capri",
+      "modelName": "Capri",
+      "modelNameTh": "Capri",
+      "modelNameLo": "Capri",
+      "searchNames": [
+        "capri"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cortina",
+      "modelName": "Cortina",
+      "modelNameTh": "Cortina",
+      "modelNameLo": "Cortina",
+      "searchNames": [
+        "cortina"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "escort",
+      "modelName": "Escort",
+      "modelNameTh": "Escort",
+      "modelNameLo": "Escort",
+      "searchNames": [
+        "escort"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "sierra",
+      "modelName": "Sierra",
+      "modelNameTh": "Sierra",
+      "modelNameLo": "Sierra",
+      "searchNames": [
+        "sierra"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "granada",
+      "modelName": "Granada",
+      "modelNameTh": "Granada",
+      "modelNameLo": "Granada",
+      "searchNames": [
+        "granada"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "thunderbird",
+      "modelName": "Thunderbird",
+      "modelNameTh": "Thunderbird",
+      "modelNameLo": "Thunderbird",
+      "searchNames": [
+        "thunderbird",
+        "t-bird"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "crown-victoria",
+      "modelName": "Crown Victoria",
+      "modelNameTh": "Crown Victoria",
+      "modelNameLo": "Crown Victoria",
+      "searchNames": [
+        "crown victoria",
+        "crownvictoria"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "falcon",
+      "modelName": "Falcon",
+      "modelNameTh": "Falcon",
+      "modelNameLo": "Falcon",
+      "searchNames": [
+        "falcon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "laser",
+      "modelName": "Laser",
+      "modelNameTh": "Laser",
+      "modelNameLo": "Laser",
+      "searchNames": [
+        "laser"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "aspire",
+      "modelName": "Aspire",
+      "modelNameTh": "Aspire",
+      "modelNameLo": "Aspire",
+      "searchNames": [
+        "aspire"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "festiva",
+      "modelName": "Festiva",
+      "modelNameTh": "Festiva",
+      "modelNameLo": "Festiva",
+      "searchNames": [
+        "festiva"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,872 @@
+{
+  "brandId": "mazda",
+  "brandName": "Mazda",
+  "brandNameTh": "มาสด้า",
+  "brandNameLo": "ມາດສະດາ",
+  "models": [
+    {
+      "modelId": "121",
+      "modelName": "121",
+      "modelNameTh": "121",
+      "modelNameLo": "121",
+      "searchNames": [
+        "121"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "323",
+      "modelName": "323",
+      "modelNameTh": "323",
+      "modelNameLo": "323",
+      "searchNames": [
+        "323",
+        "familia"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "616",
+      "modelName": "616",
+      "modelNameTh": "616",
+      "modelNameLo": "616",
+      "searchNames": [
+        "616"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "626",
+      "modelName": "626",
+      "modelNameTh": "626",
+      "modelNameLo": "626",
+      "searchNames": [
+        "626",
+        "capella"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "808",
+      "modelName": "808",
+      "modelNameTh": "808",
+      "modelNameLo": "808",
+      "searchNames": [
+        "808"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "929",
+      "modelName": "929",
+      "modelNameTh": "929",
+      "modelNameLo": "929",
+      "searchNames": [
+        "929"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "astina",
+      "modelName": "Astina",
+      "modelNameTh": "Astina",
+      "modelNameLo": "Astina",
+      "searchNames": [
+        "astina"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "atenza",
+      "modelName": "Atenza",
+      "modelNameTh": "Atenza",
+      "modelNameLo": "Atenza",
+      "searchNames": [
+        "atenza",
+        "mazda6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "axela",
+      "modelName": "Axela",
+      "modelNameTh": "Axela",
+      "modelNameLo": "Axela",
+      "searchNames": [
+        "axela",
+        "mazda3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "az-offroad",
+      "modelName": "AZ-Offroad",
+      "modelNameTh": "AZ-Offroad",
+      "modelNameLo": "AZ-Offroad",
+      "searchNames": [
+        "az-offroad",
+        "azoffroad"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "az-wagon",
+      "modelName": "AZ-Wagon",
+      "modelNameTh": "AZ-Wagon",
+      "modelNameLo": "AZ-Wagon",
+      "searchNames": [
+        "az-wagon",
+        "azwagon"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "b-series",
+      "modelName": "B-Series",
+      "modelNameTh": "B-Series",
+      "modelNameLo": "B-Series",
+      "searchNames": [
+        "b-series",
+        "bseries",
+        "b series"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "biante",
+      "modelName": "Biante",
+      "modelNameTh": "Biante",
+      "modelNameLo": "Biante",
+      "searchNames": [
+        "biante"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "bongo",
+      "modelName": "Bongo",
+      "modelNameTh": "Bongo",
+      "modelNameLo": "Bongo",
+      "searchNames": [
+        "bongo"
+      ],
+      "categoryIds": [
+        "van",
+        "truck"
+      ]
+    },
+    {
+      "modelId": "bt-50",
+      "modelName": "BT-50",
+      "modelNameTh": "BT-50",
+      "modelNameLo": "BT-50",
+      "searchNames": [
+        "bt-50",
+        "bt50",
+        "bt 50"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "capella",
+      "modelName": "Capella",
+      "modelNameTh": "Capella",
+      "modelNameLo": "Capella",
+      "searchNames": [
+        "capella"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "carol",
+      "modelName": "Carol",
+      "modelNameTh": "Carol",
+      "modelNameLo": "Carol",
+      "searchNames": [
+        "carol"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cosmo",
+      "modelName": "Cosmo",
+      "modelNameTh": "Cosmo",
+      "modelNameLo": "Cosmo",
+      "searchNames": [
+        "cosmo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "cronos",
+      "modelName": "Cronos",
+      "modelNameTh": "Cronos",
+      "modelNameLo": "Cronos",
+      "searchNames": [
+        "cronos"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cx-3",
+      "modelName": "CX-3",
+      "modelNameTh": "CX-3",
+      "modelNameLo": "CX-3",
+      "searchNames": [
+        "cx-3",
+        "cx3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-30",
+      "modelName": "CX-30",
+      "modelNameTh": "CX-30",
+      "modelNameLo": "CX-30",
+      "searchNames": [
+        "cx-30",
+        "cx30"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-4",
+      "modelName": "CX-4",
+      "modelNameTh": "CX-4",
+      "modelNameLo": "CX-4",
+      "searchNames": [
+        "cx-4",
+        "cx4"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-5",
+      "modelName": "CX-5",
+      "modelNameTh": "CX-5",
+      "modelNameLo": "CX-5",
+      "searchNames": [
+        "cx-5",
+        "cx5"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cx-60",
+      "modelName": "CX-60",
+      "modelNameTh": "CX-60",
+      "modelNameLo": "CX-60",
+      "searchNames": [
+        "cx-60",
+        "cx60"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "cx-7",
+      "modelName": "CX-7",
+      "modelNameTh": "CX-7",
+      "modelNameLo": "CX-7",
+      "searchNames": [
+        "cx-7",
+        "cx7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-70",
+      "modelName": "CX-70",
+      "modelNameTh": "CX-70",
+      "modelNameLo": "CX-70",
+      "searchNames": [
+        "cx-70",
+        "cx70"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-8",
+      "modelName": "CX-8",
+      "modelNameTh": "CX-8",
+      "modelNameLo": "CX-8",
+      "searchNames": [
+        "cx-8",
+        "cx8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-80",
+      "modelName": "CX-80",
+      "modelNameTh": "CX-80",
+      "modelNameLo": "CX-80",
+      "searchNames": [
+        "cx-80",
+        "cx80"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-9",
+      "modelName": "CX-9",
+      "modelNameTh": "CX-9",
+      "modelNameLo": "CX-9",
+      "searchNames": [
+        "cx-9",
+        "cx9"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "cx-90",
+      "modelName": "CX-90",
+      "modelNameTh": "CX-90",
+      "modelNameLo": "CX-90",
+      "searchNames": [
+        "cx-90",
+        "cx90"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "demio",
+      "modelName": "Demio",
+      "modelNameTh": "Demio",
+      "modelNameLo": "Demio",
+      "searchNames": [
+        "demio",
+        "mazda2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e-series",
+      "modelName": "E-Series",
+      "modelNameTh": "E-Series",
+      "modelNameLo": "E-Series",
+      "searchNames": [
+        "e-series",
+        "eseries"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "etude",
+      "modelName": "Etude",
+      "modelNameTh": "Etude",
+      "modelNameLo": "Etude",
+      "searchNames": [
+        "etude"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "familia",
+      "modelName": "Familia",
+      "modelNameTh": "Familia",
+      "modelNameLo": "Familia",
+      "searchNames": [
+        "familia"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "fighter",
+      "modelName": "Fighter",
+      "modelNameTh": "Fighter",
+      "modelNameLo": "Fighter",
+      "searchNames": [
+        "fighter"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "flair",
+      "modelName": "Flair",
+      "modelNameTh": "Flair",
+      "modelNameLo": "Flair",
+      "searchNames": [
+        "flair"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "lantis",
+      "modelName": "Lantis",
+      "modelNameTh": "Lantis",
+      "modelNameLo": "Lantis",
+      "searchNames": [
+        "lantis"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "laputa",
+      "modelName": "Laputa",
+      "modelNameTh": "Laputa",
+      "modelNameLo": "Laputa",
+      "searchNames": [
+        "laputa"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "luce",
+      "modelName": "Luce",
+      "modelNameTh": "Luce",
+      "modelNameLo": "Luce",
+      "searchNames": [
+        "luce"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mazda2",
+      "modelName": "Mazda2",
+      "modelNameTh": "Mazda2",
+      "modelNameLo": "Mazda2",
+      "searchNames": [
+        "mazda2",
+        "mazda 2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mazda3",
+      "modelName": "Mazda3",
+      "modelNameTh": "Mazda3",
+      "modelNameLo": "Mazda3",
+      "searchNames": [
+        "mazda3",
+        "mazda 3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mazda5",
+      "modelName": "Mazda5",
+      "modelNameTh": "Mazda5",
+      "modelNameLo": "Mazda5",
+      "searchNames": [
+        "mazda5",
+        "mazda 5"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mazda6",
+      "modelName": "Mazda6",
+      "modelNameTh": "Mazda6",
+      "modelNameLo": "Mazda6",
+      "searchNames": [
+        "mazda6",
+        "mazda 6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "mazda8",
+      "modelName": "Mazda8",
+      "modelNameTh": "Mazda8",
+      "modelNameLo": "Mazda8",
+      "searchNames": [
+        "mazda8",
+        "mazda 8"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "millenia",
+      "modelName": "Millenia",
+      "modelNameTh": "Millenia",
+      "modelNameLo": "Millenia",
+      "searchNames": [
+        "millenia"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "mpv",
+      "modelName": "MPV",
+      "modelNameTh": "MPV",
+      "modelNameLo": "MPV",
+      "searchNames": [
+        "mpv",
+        "mazda mpv"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mx-3",
+      "modelName": "MX-3",
+      "modelNameTh": "MX-3",
+      "modelNameLo": "MX-3",
+      "searchNames": [
+        "mx-3",
+        "mx3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mx-30",
+      "modelName": "MX-30",
+      "modelNameTh": "MX-30",
+      "modelNameLo": "MX-30",
+      "searchNames": [
+        "mx-30",
+        "mx30"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mx-5",
+      "modelName": "MX-5",
+      "modelNameTh": "MX-5",
+      "modelNameLo": "MX-5",
+      "searchNames": [
+        "mx-5",
+        "mx5",
+        "miata",
+        "roadster"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mx-6",
+      "modelName": "MX-6",
+      "modelNameTh": "MX-6",
+      "modelNameLo": "MX-6",
+      "searchNames": [
+        "mx-6",
+        "mx6"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "navajo",
+      "modelName": "Navajo",
+      "modelNameTh": "Navajo",
+      "modelNameLo": "Navajo",
+      "searchNames": [
+        "navajo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "persona",
+      "modelName": "Persona",
+      "modelNameTh": "Persona",
+      "modelNameLo": "Persona",
+      "searchNames": [
+        "persona"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "premacy",
+      "modelName": "Premacy",
+      "modelNameTh": "Premacy",
+      "modelNameLo": "Premacy",
+      "searchNames": [
+        "premacy"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "proceed",
+      "modelName": "Proceed",
+      "modelNameTh": "Proceed",
+      "modelNameLo": "Proceed",
+      "searchNames": [
+        "proceed"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "revue",
+      "modelName": "Revue",
+      "modelNameTh": "Revue",
+      "modelNameLo": "Revue",
+      "searchNames": [
+        "revue"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "roadpacer",
+      "modelName": "Roadpacer",
+      "modelNameTh": "Roadpacer",
+      "modelNameLo": "Roadpacer",
+      "searchNames": [
+        "roadpacer"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "roadster",
+      "modelName": "Roadster",
+      "modelNameTh": "Roadster",
+      "modelNameLo": "Roadster",
+      "searchNames": [
+        "roadster",
+        "mx-5"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx-2",
+      "modelName": "RX-2",
+      "modelNameTh": "RX-2",
+      "modelNameLo": "RX-2",
+      "searchNames": [
+        "rx-2",
+        "rx2"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx-3",
+      "modelName": "RX-3",
+      "modelNameTh": "RX-3",
+      "modelNameLo": "RX-3",
+      "searchNames": [
+        "rx-3",
+        "rx3",
+        "savanna"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx-4",
+      "modelName": "RX-4",
+      "modelNameTh": "RX-4",
+      "modelNameLo": "RX-4",
+      "searchNames": [
+        "rx-4",
+        "rx4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx-7",
+      "modelName": "RX-7",
+      "modelNameTh": "RX-7",
+      "modelNameLo": "RX-7",
+      "searchNames": [
+        "rx-7",
+        "rx7"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx-8",
+      "modelName": "RX-8",
+      "modelNameTh": "RX-8",
+      "modelNameLo": "RX-8",
+      "searchNames": [
+        "rx-8",
+        "rx8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "savanna",
+      "modelName": "Savanna",
+      "modelNameTh": "Savanna",
+      "modelNameLo": "Savanna",
+      "searchNames": [
+        "savanna"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tribute",
+      "modelName": "Tribute",
+      "modelNameTh": "Tribute",
+      "modelNameLo": "Tribute",
+      "searchNames": [
+        "tribute"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "verisa",
+      "modelName": "Verisa",
+      "modelNameTh": "Verisa",
+      "modelNameLo": "Verisa",
+      "searchNames": [
+        "verisa"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xedos-6",
+      "modelName": "Xedos 6",
+      "modelNameTh": "Xedos 6",
+      "modelNameLo": "Xedos 6",
+      "searchNames": [
+        "xedos 6",
+        "xedos6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "xedos-9",
+      "modelName": "Xedos 9",
+      "modelNameTh": "Xedos 9",
+      "modelNameLo": "Xedos 9",
+      "searchNames": [
+        "xedos 9",
+        "xedos9"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    }
+  ]
+}

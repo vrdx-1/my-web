@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "split:cars": "node scripts/split-cars.mjs",
+    "split:cars:merge": "node scripts/split-cars.mjs --merge"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.15.0",

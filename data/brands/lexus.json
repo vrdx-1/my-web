@@ -1,0 +1,806 @@
+{
+  "brandId": "lexus",
+  "brandName": "Lexus",
+  "brandNameTh": "เลกซัส",
+  "brandNameLo": "ເລັກຊັດ",
+  "models": [
+    {
+      "modelId": "ct",
+      "modelName": "CT",
+      "modelNameTh": "CT",
+      "modelNameLo": "CT",
+      "searchNames": [
+        "ct"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "ct-200h",
+      "modelName": "CT 200h",
+      "modelNameTh": "CT 200h",
+      "modelNameLo": "CT 200h",
+      "searchNames": [
+        "ct 200h",
+        "ct200h",
+        "200h"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "es",
+      "modelName": "ES",
+      "modelNameTh": "ES",
+      "modelNameLo": "ES",
+      "searchNames": [
+        "es"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "es-300h",
+      "modelName": "ES 300h",
+      "modelNameTh": "ES 300h",
+      "modelNameLo": "ES 300h",
+      "searchNames": [
+        "es 300h",
+        "es300h",
+        "300h"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "es-350e",
+      "modelName": "ES 350e",
+      "modelNameTh": "ES 350e",
+      "modelNameLo": "ES 350e",
+      "searchNames": [
+        "es 350e",
+        "es350e",
+        "350e"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "es-500e",
+      "modelName": "ES 500e",
+      "modelNameTh": "ES 500e",
+      "modelNameLo": "ES 500e",
+      "searchNames": [
+        "es 500e",
+        "es500e",
+        "500e"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gs",
+      "modelName": "GS",
+      "modelNameTh": "GS",
+      "modelNameLo": "GS",
+      "searchNames": [
+        "gs"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gs-f",
+      "modelName": "GS F",
+      "modelNameTh": "GS F",
+      "modelNameLo": "GS F",
+      "searchNames": [
+        "gs f",
+        "gsf"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gx",
+      "modelName": "GX",
+      "modelNameTh": "GX",
+      "modelNameLo": "GX",
+      "searchNames": [
+        "gx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gx-550",
+      "modelName": "GX 550",
+      "modelNameTh": "GX 550",
+      "modelNameLo": "GX 550",
+      "searchNames": [
+        "gx 550",
+        "gx550"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hs",
+      "modelName": "HS",
+      "modelNameTh": "HS",
+      "modelNameLo": "HS",
+      "searchNames": [
+        "hs"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "is",
+      "modelName": "IS",
+      "modelNameTh": "IS",
+      "modelNameLo": "IS",
+      "searchNames": [
+        "is"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "is-300h",
+      "modelName": "IS 300h",
+      "modelNameTh": "IS 300h",
+      "modelNameLo": "IS 300h",
+      "searchNames": [
+        "is 300h",
+        "is300h"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "is-500",
+      "modelName": "IS 500",
+      "modelNameTh": "IS 500",
+      "modelNameLo": "IS 500",
+      "searchNames": [
+        "is 500",
+        "is500"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "lc",
+      "modelName": "LC",
+      "modelNameTh": "LC",
+      "modelNameLo": "LC",
+      "searchNames": [
+        "lc"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lc-500",
+      "modelName": "LC 500",
+      "modelNameTh": "LC 500",
+      "modelNameLo": "LC 500",
+      "searchNames": [
+        "lc 500",
+        "lc500"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lc-500h",
+      "modelName": "LC 500h",
+      "modelNameTh": "LC 500h",
+      "modelNameLo": "LC 500h",
+      "searchNames": [
+        "lc 500h",
+        "lc500h"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "lc-convertible",
+      "modelName": "LC Convertible",
+      "modelNameTh": "LC Convertible",
+      "modelNameLo": "LC Convertible",
+      "searchNames": [
+        "lc convertible",
+        "lc cabrio"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lfa",
+      "modelName": "LFA",
+      "modelNameTh": "LFA",
+      "modelNameLo": "LFA",
+      "searchNames": [
+        "lfa"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "lm",
+      "modelName": "LM",
+      "modelNameTh": "LM",
+      "modelNameLo": "LM",
+      "searchNames": [
+        "lm"
+      ],
+      "categoryIds": [
+        "van",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lm-350h",
+      "modelName": "LM 350h",
+      "modelNameTh": "LM 350h",
+      "modelNameLo": "LM 350h",
+      "searchNames": [
+        "lm 350h",
+        "lm350h"
+      ],
+      "categoryIds": [
+        "van",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "lm-500h",
+      "modelName": "LM 500h",
+      "modelNameTh": "LM 500h",
+      "modelNameLo": "LM 500h",
+      "searchNames": [
+        "lm 500h",
+        "lm500h"
+      ],
+      "categoryIds": [
+        "van",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ls",
+      "modelName": "LS",
+      "modelNameTh": "LS",
+      "modelNameLo": "LS",
+      "searchNames": [
+        "ls"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ls-500",
+      "modelName": "LS 500",
+      "modelNameTh": "LS 500",
+      "modelNameLo": "LS 500",
+      "searchNames": [
+        "ls 500",
+        "ls500"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "ls-500h",
+      "modelName": "LS 500h",
+      "modelNameTh": "LS 500h",
+      "modelNameLo": "LS 500h",
+      "searchNames": [
+        "ls 500h",
+        "ls500h"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "lx",
+      "modelName": "LX",
+      "modelNameTh": "LX",
+      "modelNameLo": "LX",
+      "searchNames": [
+        "lx"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lx-500d",
+      "modelName": "LX 500d",
+      "modelNameTh": "LX 500d",
+      "modelNameLo": "LX 500d",
+      "searchNames": [
+        "lx 500d",
+        "lx500d"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lx-600",
+      "modelName": "LX 600",
+      "modelNameTh": "LX 600",
+      "modelNameLo": "LX 600",
+      "searchNames": [
+        "lx 600",
+        "lx600"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lx-700h",
+      "modelName": "LX 700h",
+      "modelNameTh": "LX 700h",
+      "modelNameLo": "LX 700h",
+      "searchNames": [
+        "lx 700h",
+        "lx700h"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ly",
+      "modelName": "LY (Yacht)",
+      "modelNameTh": "LY (Yacht)",
+      "modelNameLo": "LY (Yacht)",
+      "searchNames": [
+        "ly",
+        "ly yacht",
+        "yacht"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "nx",
+      "modelName": "NX",
+      "modelNameTh": "NX",
+      "modelNameLo": "NX",
+      "searchNames": [
+        "nx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "nx-250",
+      "modelName": "NX 250",
+      "modelNameTh": "NX 250",
+      "modelNameLo": "NX 250",
+      "searchNames": [
+        "nx 250",
+        "nx250"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "nx-350",
+      "modelName": "NX 350",
+      "modelNameTh": "NX 350",
+      "modelNameLo": "NX 350",
+      "searchNames": [
+        "nx 350",
+        "nx350"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "nx-350h",
+      "modelName": "NX 350h",
+      "modelNameTh": "NX 350h",
+      "modelNameLo": "NX 350h",
+      "searchNames": [
+        "nx 350h",
+        "nx350h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "nx-450h-plus",
+      "modelName": "NX 450h+",
+      "modelNameTh": "NX 450h+",
+      "modelNameLo": "NX 450h+",
+      "searchNames": [
+        "nx 450h+",
+        "nx 450h plus",
+        "nx450h+"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "rc",
+      "modelName": "RC",
+      "modelNameTh": "RC",
+      "modelNameLo": "RC",
+      "searchNames": [
+        "rc"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rc-300",
+      "modelName": "RC 300",
+      "modelNameTh": "RC 300",
+      "modelNameLo": "RC 300",
+      "searchNames": [
+        "rc 300",
+        "rc300"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rc-350",
+      "modelName": "RC 350",
+      "modelNameTh": "RC 350",
+      "modelNameLo": "RC 350",
+      "searchNames": [
+        "rc 350",
+        "rc350"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rc-f",
+      "modelName": "RC F",
+      "modelNameTh": "RC F",
+      "modelNameLo": "RC F",
+      "searchNames": [
+        "rc f",
+        "rcf"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rx",
+      "modelName": "RX",
+      "modelNameTh": "RX",
+      "modelNameLo": "RX",
+      "searchNames": [
+        "rx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rx-350",
+      "modelName": "RX 350",
+      "modelNameTh": "RX 350",
+      "modelNameLo": "RX 350",
+      "searchNames": [
+        "rx 350",
+        "rx350"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rx-350h",
+      "modelName": "RX 350h",
+      "modelNameTh": "RX 350h",
+      "modelNameLo": "RX 350h",
+      "searchNames": [
+        "rx 350h",
+        "rx350h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "rx-450h-plus",
+      "modelName": "RX 450h+",
+      "modelNameTh": "RX 450h+",
+      "modelNameLo": "RX 450h+",
+      "searchNames": [
+        "rx 450h+",
+        "rx 450h plus",
+        "rx450h+"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "rx-500h",
+      "modelName": "RX 500h",
+      "modelNameTh": "RX 500h",
+      "modelNameLo": "RX 500h",
+      "searchNames": [
+        "rx 500h",
+        "rx500h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "rz",
+      "modelName": "RZ",
+      "modelNameTh": "RZ",
+      "modelNameLo": "RZ",
+      "searchNames": [
+        "rz"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "rz-300e",
+      "modelName": "RZ 300e",
+      "modelNameTh": "RZ 300e",
+      "modelNameLo": "RZ 300e",
+      "searchNames": [
+        "rz 300e",
+        "rz300e"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "rz-450e",
+      "modelName": "RZ 450e",
+      "modelNameTh": "RZ 450e",
+      "modelNameLo": "RZ 450e",
+      "searchNames": [
+        "rz 450e",
+        "rz450e"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "rz-500e",
+      "modelName": "RZ 500e",
+      "modelNameTh": "RZ 500e",
+      "modelNameLo": "RZ 500e",
+      "searchNames": [
+        "rz 500e",
+        "rz500e"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "sc",
+      "modelName": "SC",
+      "modelNameTh": "SC",
+      "modelNameLo": "SC",
+      "searchNames": [
+        "sc"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tx",
+      "modelName": "TX",
+      "modelNameTh": "TX",
+      "modelNameLo": "TX",
+      "searchNames": [
+        "tx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tx-350",
+      "modelName": "TX 350",
+      "modelNameTh": "TX 350",
+      "modelNameLo": "TX 350",
+      "searchNames": [
+        "tx 350",
+        "tx350"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tx-500h",
+      "modelName": "TX 500h",
+      "modelNameTh": "TX 500h",
+      "modelNameLo": "TX 500h",
+      "searchNames": [
+        "tx 500h",
+        "tx500h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "tx-550h-plus",
+      "modelName": "TX 550h+",
+      "modelNameTh": "TX 550h+",
+      "modelNameLo": "TX 550h+",
+      "searchNames": [
+        "tx 550h+",
+        "tx 550h plus",
+        "tx550h+"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ux",
+      "modelName": "UX",
+      "modelNameTh": "UX",
+      "modelNameLo": "UX",
+      "searchNames": [
+        "ux"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ux-200",
+      "modelName": "UX 200",
+      "modelNameTh": "UX 200",
+      "modelNameLo": "UX 200",
+      "searchNames": [
+        "ux 200",
+        "ux200"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ux-250h",
+      "modelName": "UX 250h",
+      "modelNameTh": "UX 250h",
+      "modelNameLo": "UX 250h",
+      "searchNames": [
+        "ux 250h",
+        "ux250h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ux-300h",
+      "modelName": "UX 300h",
+      "modelNameTh": "UX 300h",
+      "modelNameLo": "UX 300h",
+      "searchNames": [
+        "ux 300h",
+        "ux300h"
+      ],
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "ux-300e",
+      "modelName": "UX 300e",
+      "modelNameTh": "UX 300e",
+      "modelNameLo": "UX 300e",
+      "searchNames": [
+        "ux 300e",
+        "ux300e"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "lbx",
+      "modelName": "LBX",
+      "modelNameTh": "LBX",
+      "modelNameLo": "LBX",
+      "searchNames": [
+        "lbx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

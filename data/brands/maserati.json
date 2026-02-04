@@ -1,0 +1,573 @@
+{
+  "brandId": "maserati",
+  "brandName": "Maserati",
+  "brandNameTh": "มาเซราติ",
+  "brandNameLo": "ມາເຊຣາຕີ",
+  "models": [
+    {
+      "modelId": "222",
+      "modelName": "222",
+      "modelNameTh": "222",
+      "modelNameLo": "222",
+      "searchNames": [
+        "222"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "228",
+      "modelName": "228",
+      "modelNameTh": "228",
+      "modelNameLo": "228",
+      "searchNames": [
+        "228"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "3200-gt",
+      "modelName": "3200 GT",
+      "modelNameTh": "3200 GT",
+      "modelNameLo": "3200 GT",
+      "searchNames": [
+        "3200 gt",
+        "3200gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "3500-gt",
+      "modelName": "3500 GT",
+      "modelNameTh": "3500 GT",
+      "modelNameLo": "3500 GT",
+      "searchNames": [
+        "3500 gt",
+        "3500gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "420",
+      "modelName": "420",
+      "modelNameTh": "420",
+      "modelNameLo": "420",
+      "searchNames": [
+        "420"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "4200-gt",
+      "modelName": "4200 GT",
+      "modelNameTh": "4200 GT",
+      "modelNameLo": "4200 GT",
+      "searchNames": [
+        "4200 gt",
+        "4200gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "430",
+      "modelName": "430",
+      "modelNameTh": "430",
+      "modelNameLo": "430",
+      "searchNames": [
+        "430"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "5000-gt",
+      "modelName": "5000 GT",
+      "modelNameTh": "5000 GT",
+      "modelNameLo": "5000 GT",
+      "searchNames": [
+        "5000 gt",
+        "5000gt"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "a6",
+      "modelName": "A6",
+      "modelNameTh": "A6",
+      "modelNameLo": "A6",
+      "searchNames": [
+        "a6"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "a6gcs",
+      "modelName": "A6GCS",
+      "modelNameTh": "A6GCS",
+      "modelNameLo": "A6GCS",
+      "searchNames": [
+        "a6gcs",
+        "a6 gcs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "barchetta",
+      "modelName": "Barchetta",
+      "modelNameTh": "Barchetta",
+      "modelNameLo": "Barchetta",
+      "searchNames": [
+        "barchetta"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "biturbo",
+      "modelName": "Biturbo",
+      "modelNameTh": "Biturbo",
+      "modelNameLo": "Biturbo",
+      "searchNames": [
+        "biturbo"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "bora",
+      "modelName": "Bora",
+      "modelNameTh": "Bora",
+      "modelNameLo": "Bora",
+      "searchNames": [
+        "bora"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "ghibli",
+      "modelName": "Ghibli",
+      "modelNameTh": "Ghibli",
+      "modelNameLo": "Ghibli",
+      "searchNames": [
+        "ghibli"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "grancabrio",
+      "modelName": "GranCabrio",
+      "modelNameTh": "GranCabrio",
+      "modelNameLo": "GranCabrio",
+      "searchNames": [
+        "grancabrio",
+        "gran cabrio"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "grancabrio-folgore",
+      "modelName": "GranCabrio Folgore",
+      "modelNameTh": "GranCabrio Folgore",
+      "modelNameLo": "GranCabrio Folgore",
+      "searchNames": [
+        "grancabrio folgore",
+        "gran cabrio folgore"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gransport",
+      "modelName": "GranSport",
+      "modelNameTh": "GranSport",
+      "modelNameLo": "GranSport",
+      "searchNames": [
+        "gransport",
+        "gran sport"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "granturismo",
+      "modelName": "GranTurismo",
+      "modelNameTh": "GranTurismo",
+      "modelNameLo": "GranTurismo",
+      "searchNames": [
+        "granturismo",
+        "gran turismo"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "granturismo-folgore",
+      "modelName": "GranTurismo Folgore",
+      "modelNameTh": "GranTurismo Folgore",
+      "modelNameLo": "GranTurismo Folgore",
+      "searchNames": [
+        "granturismo folgore",
+        "gran turismo folgore"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "grecale",
+      "modelName": "Grecale",
+      "modelNameTh": "Grecale",
+      "modelNameLo": "Grecale",
+      "searchNames": [
+        "grecale"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "grecale-folgore",
+      "modelName": "Grecale Folgore",
+      "modelNameTh": "Grecale Folgore",
+      "modelNameLo": "Grecale Folgore",
+      "searchNames": [
+        "grecale folgore"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gt2",
+      "modelName": "GT2",
+      "modelNameTh": "GT2",
+      "modelNameLo": "GT2",
+      "searchNames": [
+        "gt2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "gt2-stradale",
+      "modelName": "GT2 Stradale",
+      "modelNameTh": "GT2 Stradale",
+      "modelNameLo": "GT2 Stradale",
+      "searchNames": [
+        "gt2 stradale"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "indy",
+      "modelName": "Indy",
+      "modelNameTh": "Indy",
+      "modelNameLo": "Indy",
+      "searchNames": [
+        "indy"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "karif",
+      "modelName": "Karif",
+      "modelNameTh": "Karif",
+      "modelNameLo": "Karif",
+      "searchNames": [
+        "karif"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "khamsin",
+      "modelName": "Khamsin",
+      "modelNameTh": "Khamsin",
+      "modelNameLo": "Khamsin",
+      "searchNames": [
+        "khamsin"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "kyalami",
+      "modelName": "Kyalami",
+      "modelNameTh": "Kyalami",
+      "modelNameLo": "Kyalami",
+      "searchNames": [
+        "kyalami"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "levante",
+      "modelName": "Levante",
+      "modelNameTh": "Levante",
+      "modelNameLo": "Levante",
+      "searchNames": [
+        "levante"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "mc12",
+      "modelName": "MC12",
+      "modelNameTh": "MC12",
+      "modelNameLo": "MC12",
+      "searchNames": [
+        "mc12",
+        "mc 12"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "mc20",
+      "modelName": "MC20",
+      "modelNameTh": "MC20",
+      "modelNameLo": "MC20",
+      "searchNames": [
+        "mc20",
+        "mc 20"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "mc20-cielo",
+      "modelName": "MC20 Cielo",
+      "modelNameTh": "MC20 Cielo",
+      "modelNameLo": "MC20 Cielo",
+      "searchNames": [
+        "mc20 cielo",
+        "mc20cielo"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "mcpura",
+      "modelName": "MCPURA",
+      "modelNameTh": "MCPURA",
+      "modelNameLo": "MCPURA",
+      "searchNames": [
+        "mcpura",
+        "mc pura"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mcpura-cielo",
+      "modelName": "MCPURA Cielo",
+      "modelNameTh": "MCPURA Cielo",
+      "modelNameLo": "MCPURA Cielo",
+      "searchNames": [
+        "mcpura cielo"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mcxtrema",
+      "modelName": "MCXtrema",
+      "modelNameTh": "MCXtrema",
+      "modelNameLo": "MCXtrema",
+      "searchNames": [
+        "mcxtrema",
+        "mc xtrema"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "merak",
+      "modelName": "Merak",
+      "modelNameTh": "Merak",
+      "modelNameLo": "Merak",
+      "searchNames": [
+        "merak"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mexico",
+      "modelName": "Mexico",
+      "modelNameTh": "Mexico",
+      "modelNameLo": "Mexico",
+      "searchNames": [
+        "mexico"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "mistral",
+      "modelName": "Mistral",
+      "modelNameTh": "Mistral",
+      "modelNameLo": "Mistral",
+      "searchNames": [
+        "mistral"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "nasim",
+      "modelName": "Nasim",
+      "modelNameTh": "Nasim",
+      "modelNameLo": "Nasim",
+      "searchNames": [
+        "nasim"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "quattroporte",
+      "modelName": "Quattroporte",
+      "modelNameTh": "Quattroporte",
+      "modelNameLo": "Quattroporte",
+      "searchNames": [
+        "quattroporte"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "sebring",
+      "modelName": "Sebring",
+      "modelNameTh": "Sebring",
+      "modelNameLo": "Sebring",
+      "searchNames": [
+        "sebring"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "shamal",
+      "modelName": "Shamal",
+      "modelNameTh": "Shamal",
+      "modelNameLo": "Shamal",
+      "searchNames": [
+        "shamal"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "spyder",
+      "modelName": "Spyder",
+      "modelNameTh": "Spyder",
+      "modelNameLo": "Spyder",
+      "searchNames": [
+        "spyder"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tipo-26",
+      "modelName": "Tipo 26",
+      "modelNameTh": "Tipo 26",
+      "modelNameLo": "Tipo 26",
+      "searchNames": [
+        "tipo 26",
+        "tipo26"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v8-riorda",
+      "modelName": "V8 Riorda",
+      "modelNameTh": "V8 Riorda",
+      "modelNameLo": "V8 Riorda",
+      "searchNames": [
+        "v8 riorda"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    }
+  ]
+}

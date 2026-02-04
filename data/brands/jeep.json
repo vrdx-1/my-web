@@ -1,0 +1,373 @@
+{
+  "brandId": "jeep",
+  "brandName": "Jeep",
+  "brandNameTh": "จี๊ป",
+  "brandNameLo": "ຈິບ",
+  "models": [
+    {
+      "id": "avenger",
+      "nameEn": "Avenger",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-2a",
+      "nameEn": "CJ-2A",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-3a",
+      "nameEn": "CJ-3A",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-3b",
+      "nameEn": "CJ-3B",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-5",
+      "nameEn": "CJ-5",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-6",
+      "nameEn": "CJ-6",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-7",
+      "nameEn": "CJ-7",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-8-scrambler",
+      "nameEn": "CJ-8 (Scrambler)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cj-10",
+      "nameEn": "CJ-10",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-sj",
+      "nameEn": "Cherokee (SJ)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-xj",
+      "nameEn": "Cherokee (XJ)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-kj",
+      "nameEn": "Cherokee (KJ)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-kk",
+      "nameEn": "Cherokee (KK)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-kl",
+      "nameEn": "Cherokee (KL)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "cherokee-2026-hybrid",
+      "nameEn": "Cherokee (2026 Hybrid)",
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "comanche",
+      "nameEn": "Comanche",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "commander",
+      "nameEn": "Commander",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "compass",
+      "nameEn": "Compass",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "dispatcher",
+      "nameEn": "Dispatcher",
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "id": "fc-150",
+      "nameEn": "FC-150",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "fc-170",
+      "nameEn": "FC-170",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "gladiator-classic",
+      "nameEn": "Gladiator (Classic)",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "gladiator-jt",
+      "nameEn": "Gladiator (JT)",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "grand-cherokee",
+      "nameEn": "Grand Cherokee",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "grand-cherokee-l",
+      "nameEn": "Grand Cherokee L",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "grand-cherokee-4xe",
+      "nameEn": "Grand Cherokee 4xe",
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "grand-commander",
+      "nameEn": "Grand Commander",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "grand-wagoneer-classic",
+      "nameEn": "Grand Wagoneer (Classic)",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "grand-wagoneer-modern",
+      "nameEn": "Grand Wagoneer (Modern)",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "honcho",
+      "nameEn": "Honcho",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "j-series-truck",
+      "nameEn": "J-Series Truck",
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "id": "jeepster",
+      "nameEn": "Jeepster",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "jeepster-commando",
+      "nameEn": "Jeepster Commando",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "liberty",
+      "nameEn": "Liberty",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "magneto-ev-concept",
+      "nameEn": "Magneto (EV Concept)",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "meridian",
+      "nameEn": "Meridian",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "patriot",
+      "nameEn": "Patriot",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "pickup",
+      "nameEn": "Pickup",
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "recon-ev",
+      "nameEn": "Recon EV",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "renegade",
+      "nameEn": "Renegade",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wagoneer-classic",
+      "nameEn": "Wagoneer (Classic)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wagoneer-modern",
+      "nameEn": "Wagoneer (Modern)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wagoneer-l",
+      "nameEn": "Wagoneer L",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wagoneer-s-ev",
+      "nameEn": "Wagoneer S (EV)",
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "id": "willys-mb",
+      "nameEn": "Willys MB",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "willys-wagon",
+      "nameEn": "Willys Wagon",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wrangler-yj",
+      "nameEn": "Wrangler (YJ)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wrangler-tj",
+      "nameEn": "Wrangler (TJ)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wrangler-jk",
+      "nameEn": "Wrangler (JK)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wrangler-jl",
+      "nameEn": "Wrangler (JL)",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "wrangler-4xe",
+      "nameEn": "Wrangler 4xe",
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    }
+  ]
+}

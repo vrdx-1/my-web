@@ -1,0 +1,807 @@
+{
+  "brandId": "audi",
+  "brandName": "Audi",
+  "brandNameTh": "ออดี้",
+  "brandNameLo": "ອໍດີ້",
+  "models": [
+    {
+      "modelId": "80",
+      "modelName": "80",
+      "modelNameTh": "80",
+      "modelNameLo": "80",
+      "searchNames": [
+        "80"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "90",
+      "modelName": "90",
+      "modelNameTh": "90",
+      "modelNameLo": "90",
+      "searchNames": [
+        "90"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "100",
+      "modelName": "100",
+      "modelNameTh": "100",
+      "modelNameLo": "100",
+      "searchNames": [
+        "100"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "200",
+      "modelName": "200",
+      "modelNameTh": "200",
+      "modelNameLo": "200",
+      "searchNames": [
+        "200"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a1",
+      "modelName": "A1",
+      "modelNameTh": "A1",
+      "modelNameLo": "A1",
+      "searchNames": [
+        "a1"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a2",
+      "modelName": "A2",
+      "modelNameTh": "A2",
+      "modelNameLo": "A2",
+      "searchNames": [
+        "a2"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a3",
+      "modelName": "A3",
+      "modelNameTh": "A3",
+      "modelNameLo": "A3",
+      "searchNames": [
+        "a3"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a3-e-tron",
+      "modelName": "A3 e-tron",
+      "modelNameTh": "A3 e-tron",
+      "modelNameLo": "A3 e-tron",
+      "searchNames": [
+        "a3 e-tron",
+        "a3 etron",
+        "a3 hybrid"
+      ],
+      "categoryIds": [
+        "sedan",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "a4",
+      "modelName": "A4",
+      "modelNameTh": "A4",
+      "modelNameLo": "A4",
+      "searchNames": [
+        "a4"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a4-allroad",
+      "modelName": "A4 allroad",
+      "modelNameTh": "A4 allroad",
+      "modelNameLo": "A4 allroad",
+      "searchNames": [
+        "a4 allroad",
+        "a4 all road"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "a5",
+      "modelName": "A5",
+      "modelNameTh": "A5",
+      "modelNameLo": "A5",
+      "searchNames": [
+        "a5"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a6",
+      "modelName": "A6",
+      "modelNameTh": "A6",
+      "modelNameLo": "A6",
+      "searchNames": [
+        "a6"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a6-e-tron",
+      "modelName": "A6 e-tron",
+      "modelNameTh": "A6 e-tron",
+      "modelNameLo": "A6 e-tron",
+      "searchNames": [
+        "a6 e-tron",
+        "a6 etron"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "a6-allroad",
+      "modelName": "A6 allroad",
+      "modelNameTh": "A6 allroad",
+      "modelNameLo": "A6 allroad",
+      "searchNames": [
+        "a6 allroad",
+        "a6 all road"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "a7",
+      "modelName": "A7",
+      "modelNameTh": "A7",
+      "modelNameLo": "A7",
+      "searchNames": [
+        "a7"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "a8",
+      "modelName": "A8",
+      "modelNameTh": "A8",
+      "modelNameLo": "A8",
+      "searchNames": [
+        "a8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "a8-l",
+      "modelName": "A8 L",
+      "modelNameTh": "A8 L",
+      "modelNameLo": "A8 L",
+      "searchNames": [
+        "a8 l",
+        "a8l"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "e-tron",
+      "modelName": "e-tron",
+      "modelNameTh": "e-tron",
+      "modelNameLo": "e-tron",
+      "searchNames": [
+        "e-tron",
+        "etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-tron-gt",
+      "modelName": "e-tron GT",
+      "modelNameTh": "e-tron GT",
+      "modelNameLo": "e-tron GT",
+      "searchNames": [
+        "e-tron gt",
+        "etron gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "e-tron-sportback",
+      "modelName": "e-tron Sportback",
+      "modelNameTh": "e-tron Sportback",
+      "modelNameLo": "e-tron Sportback",
+      "searchNames": [
+        "e-tron sportback",
+        "etron sportback"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "q2",
+      "modelName": "Q2",
+      "modelNameTh": "Q2",
+      "modelNameLo": "Q2",
+      "searchNames": [
+        "q2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q3",
+      "modelName": "Q3",
+      "modelNameTh": "Q3",
+      "modelNameLo": "Q3",
+      "searchNames": [
+        "q3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q3-sportback",
+      "modelName": "Q3 Sportback",
+      "modelNameTh": "Q3 Sportback",
+      "modelNameLo": "Q3 Sportback",
+      "searchNames": [
+        "q3 sportback"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q4-e-tron",
+      "modelName": "Q4 e-tron",
+      "modelNameTh": "Q4 e-tron",
+      "modelNameLo": "Q4 e-tron",
+      "searchNames": [
+        "q4 e-tron",
+        "q4 etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "q4-e-tron-sportback",
+      "modelName": "Q4 e-tron Sportback",
+      "modelNameTh": "Q4 e-tron Sportback",
+      "modelNameLo": "Q4 e-tron Sportback",
+      "searchNames": [
+        "q4 e-tron sportback",
+        "q4 etron sportback"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "q5",
+      "modelName": "Q5",
+      "modelNameTh": "Q5",
+      "modelNameLo": "Q5",
+      "searchNames": [
+        "q5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q5-sportback",
+      "modelName": "Q5 Sportback",
+      "modelNameTh": "Q5 Sportback",
+      "modelNameLo": "Q5 Sportback",
+      "searchNames": [
+        "q5 sportback"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q6-e-tron",
+      "modelName": "Q6 e-tron",
+      "modelNameTh": "Q6 e-tron",
+      "modelNameLo": "Q6 e-tron",
+      "searchNames": [
+        "q6 e-tron",
+        "q6 etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "q7",
+      "modelName": "Q7",
+      "modelNameTh": "Q7",
+      "modelNameLo": "Q7",
+      "searchNames": [
+        "q7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q8",
+      "modelName": "Q8",
+      "modelNameTh": "Q8",
+      "modelNameLo": "Q8",
+      "searchNames": [
+        "q8"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "q8-e-tron",
+      "modelName": "Q8 e-tron",
+      "modelNameTh": "Q8 e-tron",
+      "modelNameLo": "Q8 e-tron",
+      "searchNames": [
+        "q8 e-tron",
+        "q8 etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "q8-sportback-e-tron",
+      "modelName": "Q8 Sportback e-tron",
+      "modelNameTh": "Q8 Sportback e-tron",
+      "modelNameLo": "Q8 Sportback e-tron",
+      "searchNames": [
+        "q8 sportback e-tron",
+        "q8 sportback etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "r8",
+      "modelName": "R8",
+      "modelNameTh": "R8",
+      "modelNameLo": "R8",
+      "searchNames": [
+        "r8"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "rs-2",
+      "modelName": "RS 2",
+      "modelNameTh": "RS 2",
+      "modelNameLo": "RS 2",
+      "searchNames": [
+        "rs 2",
+        "rs2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-3",
+      "modelName": "RS 3",
+      "modelNameTh": "RS 3",
+      "modelNameLo": "RS 3",
+      "searchNames": [
+        "rs 3",
+        "rs3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-4",
+      "modelName": "RS 4",
+      "modelNameTh": "RS 4",
+      "modelNameLo": "RS 4",
+      "searchNames": [
+        "rs 4",
+        "rs4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-5",
+      "modelName": "RS 5",
+      "modelNameTh": "RS 5",
+      "modelNameLo": "RS 5",
+      "searchNames": [
+        "rs 5",
+        "rs5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-6",
+      "modelName": "RS 6",
+      "modelNameTh": "RS 6",
+      "modelNameLo": "RS 6",
+      "searchNames": [
+        "rs 6",
+        "rs6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-7",
+      "modelName": "RS 7",
+      "modelNameTh": "RS 7",
+      "modelNameLo": "RS 7",
+      "searchNames": [
+        "rs 7",
+        "rs7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-e-tron-gt",
+      "modelName": "RS e-tron GT",
+      "modelNameTh": "RS e-tron GT",
+      "modelNameLo": "RS e-tron GT",
+      "searchNames": [
+        "rs e-tron gt",
+        "rs etron gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-q3",
+      "modelName": "RS Q3",
+      "modelNameTh": "RS Q3",
+      "modelNameLo": "RS Q3",
+      "searchNames": [
+        "rs q3",
+        "rsq3"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "rs-q8",
+      "modelName": "RS Q8",
+      "modelNameTh": "RS Q8",
+      "modelNameLo": "RS Q8",
+      "searchNames": [
+        "rs q8",
+        "rsq8"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s1",
+      "modelName": "S1",
+      "modelNameTh": "S1",
+      "modelNameLo": "S1",
+      "searchNames": [
+        "s1"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s3",
+      "modelName": "S3",
+      "modelNameTh": "S3",
+      "modelNameLo": "S3",
+      "searchNames": [
+        "s3"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s4",
+      "modelName": "S4",
+      "modelNameTh": "S4",
+      "modelNameLo": "S4",
+      "searchNames": [
+        "s4"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s5",
+      "modelName": "S5",
+      "modelNameTh": "S5",
+      "modelNameLo": "S5",
+      "searchNames": [
+        "s5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s6",
+      "modelName": "S6",
+      "modelNameTh": "S6",
+      "modelNameLo": "S6",
+      "searchNames": [
+        "s6"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s6-e-tron",
+      "modelName": "S6 e-tron",
+      "modelNameTh": "S6 e-tron",
+      "modelNameLo": "S6 e-tron",
+      "searchNames": [
+        "s6 e-tron",
+        "s6 etron"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s7",
+      "modelName": "S7",
+      "modelNameTh": "S7",
+      "modelNameLo": "S7",
+      "searchNames": [
+        "s7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "s8",
+      "modelName": "S8",
+      "modelNameTh": "S8",
+      "modelNameLo": "S8",
+      "searchNames": [
+        "s8"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "sq2",
+      "modelName": "SQ2",
+      "modelNameTh": "SQ2",
+      "modelNameLo": "SQ2",
+      "searchNames": [
+        "sq2"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sq5",
+      "modelName": "SQ5",
+      "modelNameTh": "SQ5",
+      "modelNameLo": "SQ5",
+      "searchNames": [
+        "sq5"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sq6-e-tron",
+      "modelName": "SQ6 e-tron",
+      "modelNameTh": "SQ6 e-tron",
+      "modelNameLo": "SQ6 e-tron",
+      "searchNames": [
+        "sq6 e-tron",
+        "sq6 etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sq7",
+      "modelName": "SQ7",
+      "modelNameTh": "SQ7",
+      "modelNameLo": "SQ7",
+      "searchNames": [
+        "sq7"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sq8",
+      "modelName": "SQ8",
+      "modelNameTh": "SQ8",
+      "modelNameLo": "SQ8",
+      "searchNames": [
+        "sq8"
+      ],
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sq8-e-tron",
+      "modelName": "SQ8 e-tron",
+      "modelNameTh": "SQ8 e-tron",
+      "modelNameLo": "SQ8 e-tron",
+      "searchNames": [
+        "sq8 e-tron",
+        "sq8 etron"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tt",
+      "modelName": "TT",
+      "modelNameTh": "TT",
+      "modelNameLo": "TT",
+      "searchNames": [
+        "tt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tt-rs",
+      "modelName": "TT RS",
+      "modelNameTh": "TT RS",
+      "modelNameLo": "TT RS",
+      "searchNames": [
+        "tt rs",
+        "ttrs"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "tts",
+      "modelName": "TTS",
+      "modelNameTh": "TTS",
+      "modelNameLo": "TTS",
+      "searchNames": [
+        "tts"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v8",
+      "modelName": "V8",
+      "modelNameTh": "V8",
+      "modelNameLo": "V8",
+      "searchNames": [
+        "v8"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "quattro",
+      "modelName": "Quattro",
+      "modelNameTh": "Quattro",
+      "modelNameLo": "Quattro",
+      "searchNames": [
+        "quattro"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    }
+  ]
+}

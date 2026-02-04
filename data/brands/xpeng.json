@@ -1,0 +1,236 @@
+{
+  "brandId": "xpeng",
+  "brandName": "Xpeng",
+  "brandNameTh": "เสี่ยวเผิง",
+  "brandNameLo": "ສຽວເພິງ",
+  "models": [
+    {
+      "modelId": "g3",
+      "modelName": "G3",
+      "modelNameTh": "G3",
+      "modelNameLo": "G3",
+      "searchNames": [
+        "g3"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g3i",
+      "modelName": "G3i",
+      "modelNameTh": "G3i",
+      "modelNameLo": "G3i",
+      "searchNames": [
+        "g3i"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g6",
+      "modelName": "G6",
+      "modelNameTh": "G6",
+      "modelNameLo": "G6",
+      "searchNames": [
+        "g6"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g9",
+      "modelName": "G9",
+      "modelNameTh": "G9",
+      "modelNameLo": "G9",
+      "searchNames": [
+        "g9"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g9l",
+      "modelName": "G9L",
+      "modelNameTh": "G9L",
+      "modelNameLo": "G9L",
+      "searchNames": [
+        "g9l",
+        "g9 l"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g7",
+      "modelName": "G7",
+      "modelNameTh": "G7",
+      "modelNameLo": "G7",
+      "searchNames": [
+        "g7"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g01",
+      "modelName": "G01",
+      "modelNameTh": "G01",
+      "modelNameLo": "G01",
+      "searchNames": [
+        "g01"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "g02",
+      "modelName": "G02",
+      "modelNameTh": "G02",
+      "modelNameLo": "G02",
+      "searchNames": [
+        "g02"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "p5",
+      "modelName": "P5",
+      "modelNameTh": "P5",
+      "modelNameLo": "P5",
+      "searchNames": [
+        "p5"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "p7",
+      "modelName": "P7",
+      "modelNameTh": "P7",
+      "modelNameLo": "P7",
+      "searchNames": [
+        "p7"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "p7i",
+      "modelName": "P7i",
+      "modelNameTh": "P7i",
+      "modelNameLo": "P7i",
+      "searchNames": [
+        "p7i"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "p7-plus",
+      "modelName": "P7+",
+      "modelNameTh": "P7+",
+      "modelNameLo": "P7+",
+      "searchNames": [
+        "p7+",
+        "p7 plus"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mona-m03",
+      "modelName": "Mona M03",
+      "modelNameTh": "Mona M03",
+      "modelNameLo": "Mona M03",
+      "searchNames": [
+        "mona m03",
+        "monam03"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mona-d02",
+      "modelName": "Mona D02",
+      "modelNameTh": "Mona D02",
+      "modelNameLo": "Mona D02",
+      "searchNames": [
+        "mona d02",
+        "monad02"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mona-d03",
+      "modelName": "Mona D03",
+      "modelNameTh": "Mona D03",
+      "modelNameLo": "Mona D03",
+      "searchNames": [
+        "mona d03",
+        "monad03"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "x9",
+      "modelName": "X9",
+      "modelNameTh": "X9",
+      "modelNameLo": "X9",
+      "searchNames": [
+        "x9"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "x9-erev",
+      "modelName": "X9 EREV",
+      "modelNameTh": "X9 EREV",
+      "modelNameLo": "X9 EREV",
+      "searchNames": [
+        "x9 erev",
+        "x9erev",
+        "erev"
+      ],
+      "categoryIds": [
+        "van",
+        "hybrid"
+      ]
+    }
+  ]
+}

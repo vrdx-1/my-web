@@ -4,6 +4,405 @@
  */
 
 import { safeParseJSON } from './storageUtils';
+import carsData from '@/data';
+import categoriesData from '@/data/categories.json';
+
+// ---- Car dictionary search helpers (moved here to avoid extra files) ----
+// NOTE: This preserves existing UX/UI. Only module location changed.
+
+type CarsDictionary = typeof carsData;
+type CategoriesDictionary = typeof categoriesData;
+
+type EntityKey = `brand:${string}` | `model:${string}:${string}`;
+type CategoryId = string;
+
+const THAI_RE = /[\u0E00-\u0E7F]/;
+const LAO_RE = /[\u0E80-\u0EFF]/;
+const LATIN_RE = /[a-zA-Z0-9]/;
+
+function normalizeCarSearch(text: string): string {
+  return String(text ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .trim()
+    .replace(/[()[\]{}"“”'‘’]/g, ' ')
+    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function uniqStringsCarSearch(items: Array<string | null | undefined>): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    const v = String(item ?? '').trim();
+    if (!v) continue;
+    const k = normalizeCarSearch(v);
+    if (!k) continue;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+  }
+  return out;
+}
+
+function pickShortestMatching(items: string[], re: RegExp): string | null {
+  const matches = items.filter((s) => re.test(s));
+  if (matches.length === 0) return null;
+  matches.sort((a, b) => a.length - b.length);
+  return matches[0] ?? null;
+}
+
+function buildModelDisplay(searchNames: string[], modelName?: string, modelNameLo?: string, modelNameTh?: string): string {
+  const pool = uniqStringsCarSearch([...(searchNames ?? []), modelName, modelNameLo, modelNameTh]);
+  const bestEn = pickShortestMatching(pool, LATIN_RE) ?? modelName ?? pool[0] ?? '';
+  const bestLo = pickShortestMatching(pool, LAO_RE) ?? modelNameLo ?? '';
+  const bestTh = pickShortestMatching(pool, THAI_RE) ?? modelNameTh ?? '';
+  return uniqStringsCarSearch([bestEn, bestLo, bestTh]).join(', ');
+}
+
+type EntityInfo =
+  | { kind: 'brand'; brandId: string; brandName?: string; brandNameTh?: string; brandNameLo?: string }
+  | {
+      kind: 'model';
+      brandId: string;
+      modelId: string;
+      modelName?: string;
+      modelNameTh?: string;
+      modelNameLo?: string;
+      searchNames: string[];
+    };
+
+function buildIndexes(dict: CarsDictionary) {
+  const entityAliases = new Map<EntityKey, Set<string>>();
+  const aliasToEntities = new Map<string, Set<EntityKey>>();
+  const aliasNormToRaw = new Map<string, string>();
+  const entityInfo = new Map<EntityKey, EntityInfo>();
+  const brandToModelKeys = new Map<string, Set<EntityKey>>();
+  const modelToBrandKey = new Map<EntityKey, EntityKey>();
+
+  function addAlias(entity: EntityKey, raw: string) {
+    const alias = String(raw ?? '').trim();
+    if (!alias) return;
+    const key = normalizeCarSearch(alias);
+    if (!key) return;
+
+    if (!entityAliases.has(entity)) entityAliases.set(entity, new Set());
+    entityAliases.get(entity)!.add(alias);
+
+    if (!aliasToEntities.has(key)) aliasToEntities.set(key, new Set());
+    aliasToEntities.get(key)!.add(entity);
+
+    if (!aliasNormToRaw.has(key)) aliasNormToRaw.set(key, alias);
+  }
+
+  function addAliasWithTokens(entity: EntityKey, raw: string) {
+    const text = String(raw ?? '').trim();
+    if (!text) return;
+    addAlias(entity, text);
+
+    // Also index individual tokens so partial captions can match.
+    const tokens = normalizeCarSearch(text)
+      .split(' ')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const rawTokens = text.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+
+    for (let i = 0; i < Math.min(tokens.length, rawTokens.length); i++) {
+      const rawTok = rawTokens[i];
+      if (!rawTok) continue;
+      if (rawTok.length < 2) continue;
+      addAlias(entity, rawTok);
+    }
+  }
+
+  for (const brand of dict.brands ?? []) {
+    const brandKey: EntityKey = `brand:${brand.brandId}`;
+    brandToModelKeys.set(brandKey, new Set());
+    entityInfo.set(brandKey, {
+      kind: 'brand',
+      brandId: String(brand.brandId),
+      brandName: brand.brandName,
+      brandNameTh: brand.brandNameTh as any,
+      brandNameLo: brand.brandNameLo as any,
+    });
+    addAliasWithTokens(brandKey, brand.brandName);
+    addAliasWithTokens(brandKey, brand.brandNameTh as any);
+    addAliasWithTokens(brandKey, brand.brandNameLo as any);
+
+    for (const model of brand.models ?? []) {
+      const modelKey: EntityKey = `model:${brand.brandId}:${model.modelId}`;
+      brandToModelKeys.get(brandKey)!.add(modelKey);
+      modelToBrandKey.set(modelKey, brandKey);
+      entityInfo.set(modelKey, {
+        kind: 'model',
+        brandId: String(brand.brandId),
+        modelId: String(model.modelId),
+        modelName: model.modelName,
+        modelNameTh: (model as any).modelNameTh,
+        modelNameLo: (model as any).modelNameLo,
+        searchNames: ((model.searchNames ?? []) as any[]).map(String),
+      });
+
+      addAliasWithTokens(modelKey, model.modelName);
+      addAliasWithTokens(modelKey, (model as any).modelNameTh);
+      addAliasWithTokens(modelKey, (model as any).modelNameLo);
+      for (const s of (model.searchNames ?? []) as any[]) addAliasWithTokens(modelKey, String(s));
+    }
+  }
+
+  return { entityAliases, aliasToEntities, aliasNormToRaw, entityInfo, brandToModelKeys, modelToBrandKey };
+}
+
+function buildCategoryAliasIndex(dict: CategoriesDictionary) {
+  const aliasToCategoryIds = new Map<string, Set<CategoryId>>();
+
+  function addAlias(categoryId: string, raw: string) {
+    const v = String(raw ?? '').trim();
+    if (!v) return;
+    const k = normalizeCarSearch(v);
+    if (!k) return;
+    if (!aliasToCategoryIds.has(k)) aliasToCategoryIds.set(k, new Set());
+    aliasToCategoryIds.get(k)!.add(String(categoryId));
+  }
+
+  for (const group of (dict as any).categoryGroups ?? []) {
+    for (const cat of group.categories ?? []) {
+      const id = String(cat.id);
+      addAlias(id, id);
+      addAlias(id, cat.name);
+      addAlias(id, cat.nameLo);
+      addAlias(id, cat.nameEn);
+    }
+  }
+
+  // searchTermAliases from categories.json: family/ครอบครัว, delivery/รถขนของ, hilux/ไฮลักซ์
+  const searchTermAliases = (dict as any).searchTermAliases ?? [];
+  for (const entry of searchTermAliases) {
+    const terms = entry.terms ?? [];
+    const categoryIds = entry.categoryIds ?? [];
+    for (const term of terms) {
+      for (const cid of categoryIds) addAlias(String(cid), term);
+    }
+  }
+
+  // Extra common search words that users type (map to existing categories)
+  addAlias('offroad', 'jeep');
+  addAlias('offroad', 'จี๊ป');
+  addAlias('offroad', 'จิบ');
+  addAlias('offroad', 'ຈີບ');
+  addAlias('pickup', 'truck');
+  addAlias('pickup', 'รถกระบะ');
+  addAlias('van', 'รถตู้');
+  addAlias('sedan', 'รถเก๋ง');
+  addAlias('ev', 'electric');
+  addAlias('ev', 'electric car');
+  addAlias('ev', 'รถไฟฟ้า');
+
+  return { aliasToCategoryIds };
+}
+
+function buildCategoryToModelAliases(dict: CarsDictionary) {
+  const categoryToAliases = new Map<CategoryId, Set<string>>();
+
+  function add(categoryId: string, alias: string) {
+    const v = String(alias ?? '').trim();
+    if (!v) return;
+    if (!categoryToAliases.has(categoryId)) categoryToAliases.set(categoryId, new Set());
+    categoryToAliases.get(categoryId)!.add(v);
+  }
+
+  for (const brand of dict.brands ?? []) {
+    for (const model of brand.models ?? []) {
+      const categoryIds = (model.categoryIds ?? []) as string[];
+      if (!categoryIds || categoryIds.length === 0) continue;
+
+      const aliases = uniqStringsCarSearch([
+        model.modelName,
+        (model as any).modelNameTh,
+        (model as any).modelNameLo,
+        ...((model.searchNames ?? []) as any[]).map(String),
+      ]);
+
+      for (const cid of categoryIds) {
+        const catId = String(cid);
+        for (const a of aliases) add(catId, a);
+
+        // Special case: allow searching pickup by Ford brand name only (e.g. caption "ຟອດ").
+        // Keeps other categories unchanged.
+        if (catId === 'pickup' && String(brand.brandId) === 'ford') {
+          add('pickup', brand.brandName);
+          add('pickup', brand.brandNameTh as any);
+          add('pickup', brand.brandNameLo as any);
+        }
+      }
+    }
+  }
+
+  return { categoryToAliases };
+}
+
+const CAR_INDEX = buildIndexes(carsData);
+const CATEGORY_INDEX = buildCategoryAliasIndex(categoriesData);
+const CATEGORY_TO_MODEL_ALIASES = buildCategoryToModelAliases(carsData);
+
+export type SearchLanguage = 'lo' | 'th' | 'latin' | 'other';
+
+export function detectSearchLanguage(query: string): SearchLanguage {
+  const q = String(query ?? '');
+  if (LAO_RE.test(q)) return 'lo';
+  if (THAI_RE.test(q)) return 'th';
+  if (LATIN_RE.test(q)) return 'latin';
+  return 'other';
+}
+
+export function captionHasSearchLanguage(caption: string, lang: SearchLanguage): boolean {
+  const c = String(caption ?? '');
+  if (!c) return false;
+  if (lang === 'lo') return LAO_RE.test(c);
+  if (lang === 'th') return THAI_RE.test(c);
+  if (lang === 'latin') return /[a-zA-Z]/.test(c);
+  return true;
+}
+
+function levenshteinWithin(a: string, b: string, maxDist: number): number | null {
+  if (a === b) return 0;
+  if (maxDist < 0) return null;
+  const al = a.length;
+  const bl = b.length;
+  if (Math.abs(al - bl) > maxDist) return null;
+  if (al > bl) return levenshteinWithin(b, a, maxDist);
+
+  let prev = new Array(al + 1).fill(0).map((_, i) => i);
+  for (let j = 1; j <= bl; j++) {
+    const bj = b.charCodeAt(j - 1);
+    const cur = new Array(al + 1);
+    cur[0] = j;
+    let rowMin = cur[0];
+    for (let i = 1; i <= al; i++) {
+      const cost = a.charCodeAt(i - 1) === bj ? 0 : 1;
+      const del = prev[i] + 1;
+      const ins = cur[i - 1] + 1;
+      const sub = prev[i - 1] + cost;
+      const v = Math.min(del, ins, sub);
+      cur[i] = v;
+      if (v < rowMin) rowMin = v;
+    }
+    if (rowMin > maxDist) return null;
+    prev = cur;
+  }
+  return prev[al] <= maxDist ? prev[al] : null;
+}
+
+function scoreAliasForQuery(aliasNorm: string, queryNorm: string): number | null {
+  if (!aliasNorm || !queryNorm) return null;
+  if (aliasNorm.startsWith(queryNorm)) return 10000 - aliasNorm.length;
+  const idx = aliasNorm.indexOf(queryNorm);
+  if (idx >= 0) return 7000 - (idx * 50) - aliasNorm.length;
+  if (queryNorm.length >= 3) {
+    const dist = levenshteinWithin(aliasNorm, queryNorm, 1);
+    if (dist !== null) return 4000 - (dist * 200) - aliasNorm.length;
+  }
+  return null;
+}
+
+export function expandCarSearchAliases(query: string): string[] {
+  const qNorm = normalizeCarSearch(query);
+  if (!qNorm) return [];
+
+  const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
+  if (categoryIds && categoryIds.size > 0) {
+    const expanded: string[] = [query];
+    for (const cid of categoryIds) {
+      expanded.push(String(cid));
+      const aliases = CATEGORY_TO_MODEL_ALIASES.categoryToAliases.get(String(cid));
+      if (aliases) expanded.push(...aliases);
+    }
+    return uniqStringsCarSearch(expanded);
+  }
+
+  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
+  if (!entities || entities.size === 0) return [query];
+
+  const out: string[] = [query];
+  for (const entity of entities) {
+    const aliases = CAR_INDEX.entityAliases.get(entity);
+    if (aliases) out.push(...aliases);
+
+    const info = CAR_INDEX.entityInfo.get(entity);
+    if (!info) continue;
+
+    // If searching by BRAND: also expand to all MODELS under that brand,
+    // so a caption that contains only the model (no brand) still matches.
+    if (info.kind === 'brand') {
+      const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
+      if (modelKeys) {
+        for (const mk of modelKeys) {
+          const mAliases = CAR_INDEX.entityAliases.get(mk);
+          if (mAliases) out.push(...mAliases);
+        }
+      }
+    }
+
+    // If searching by MODEL: also include the BRAND aliases (best effort).
+    if (info.kind === 'model') {
+      const bk = CAR_INDEX.modelToBrandKey.get(entity);
+      if (bk) {
+        const bAliases = CAR_INDEX.entityAliases.get(bk);
+        if (bAliases) out.push(...bAliases);
+      }
+    }
+  }
+  return uniqStringsCarSearch(out);
+}
+
+export function captionMatchesAnyAlias(caption: string, queries: string[]): boolean {
+  const c = normalizeCarSearch(caption);
+  if (!c) return false;
+  for (const q of queries ?? []) {
+    const qn = normalizeCarSearch(q);
+    if (!qn) continue;
+    if (c.includes(qn)) return true;
+  }
+  return false;
+}
+
+export type CarSuggestionItem = { display: string; searchKey: string };
+
+export function getCarDictionarySuggestions(prefix: string, limit = 6): CarSuggestionItem[] {
+  const qNorm = normalizeCarSearch(prefix);
+  if (!qNorm) return [];
+
+  const bestByEntity = new Map<EntityKey, { score: number; matchedAliasNorm: string }>();
+
+  for (const [aliasNorm, entities] of CAR_INDEX.aliasToEntities.entries()) {
+    const score = scoreAliasForQuery(aliasNorm, qNorm);
+    if (score === null) continue;
+    for (const entity of entities) {
+      const prev = bestByEntity.get(entity);
+      if (!prev || score > prev.score) bestByEntity.set(entity, { score, matchedAliasNorm: aliasNorm });
+    }
+  }
+
+  const items: Array<CarSuggestionItem & { _score: number }> = [];
+
+  for (const [entity, m] of bestByEntity.entries()) {
+    const info = CAR_INDEX.entityInfo.get(entity);
+    if (!info) continue;
+
+    const matchedRaw = CAR_INDEX.aliasNormToRaw.get(m.matchedAliasNorm) ?? prefix;
+
+    const display =
+      info.kind === 'model'
+        ? buildModelDisplay(info.searchNames ?? [], info.modelName, info.modelNameLo, info.modelNameTh)
+        : uniqStringsCarSearch([info.brandName, info.brandNameLo, info.brandNameTh]).join(', ');
+
+    if (!display) continue;
+    items.push({ display, searchKey: matchedRaw, _score: m.score });
+  }
+
+  items.sort((a, b) => b._score - a._score);
+  return items.slice(0, Math.max(0, limit)).map(({ display, searchKey }) => ({ display, searchKey }));
+}
 
 export interface OnlineStatus {
   isOnline: boolean;

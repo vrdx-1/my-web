@@ -1,0 +1,158 @@
+{
+  "brandId": "deepal",
+  "brandName": "Deepal",
+  "brandNameTh": "ดีพอล",
+  "brandNameLo": "ດີພໍ",
+  "models": [
+    {
+      "modelId": "deepal-e07",
+      "modelName": "Deepal E07",
+      "modelNameTh": "Deepal E07",
+      "modelNameLo": "Deepal E07",
+      "searchNames": [
+        "deepal e07",
+        "deepale07",
+        "e07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-g318",
+      "modelName": "Deepal G318",
+      "modelNameTh": "Deepal G318",
+      "modelNameLo": "Deepal G318",
+      "searchNames": [
+        "deepal g318",
+        "deepalg318",
+        "g318"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-hunter-k50",
+      "modelName": "Deepal Hunter K50",
+      "modelNameTh": "Deepal Hunter K50",
+      "modelNameLo": "Deepal Hunter K50",
+      "searchNames": [
+        "deepal hunter k50",
+        "hunter k50",
+        "hunterk50"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-l06",
+      "modelName": "Deepal L06",
+      "modelNameTh": "Deepal L06",
+      "modelNameLo": "Deepal L06",
+      "searchNames": [
+        "deepal l06",
+        "deepall06",
+        "l06"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-l07",
+      "modelName": "Deepal L07",
+      "modelNameTh": "Deepal L07",
+      "modelNameLo": "Deepal L07",
+      "searchNames": [
+        "deepal l07",
+        "deepall07",
+        "l07"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s05",
+      "modelName": "Deepal S05",
+      "modelNameTh": "Deepal S05",
+      "modelNameLo": "Deepal S05",
+      "searchNames": [
+        "deepal s05",
+        "deepals05",
+        "s05"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s07",
+      "modelName": "Deepal S07",
+      "modelNameTh": "Deepal S07",
+      "modelNameLo": "Deepal S07",
+      "searchNames": [
+        "deepal s07",
+        "deepals07",
+        "s07"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s07-l",
+      "modelName": "Deepal S07 L",
+      "modelNameTh": "Deepal S07 L",
+      "modelNameLo": "Deepal S07 L",
+      "searchNames": [
+        "deepal s07 l",
+        "deepal s07 l",
+        "s07 l"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-s09",
+      "modelName": "Deepal S09",
+      "modelNameTh": "Deepal S09",
+      "modelNameLo": "Deepal S09",
+      "searchNames": [
+        "deepal s09",
+        "deepals09",
+        "s09"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "deepal-sl03",
+      "modelName": "Deepal SL03",
+      "modelNameTh": "Deepal SL03",
+      "modelNameLo": "Deepal SL03",
+      "searchNames": [
+        "deepal sl03",
+        "deepalsl03",
+        "sl03"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    }
+  ]
+}

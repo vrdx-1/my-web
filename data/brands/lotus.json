@@ -1,0 +1,826 @@
+{
+  "brandId": "lotus",
+  "brandName": "Lotus",
+  "brandNameTh": "โลตัส",
+  "brandNameLo": "ໂລຕັດ",
+  "models": [
+    {
+      "modelId": "2-eleven",
+      "modelName": "2-Eleven",
+      "modelNameTh": "2-Eleven",
+      "modelNameLo": "2-Eleven",
+      "searchNames": [
+        "2-eleven",
+        "2 eleven",
+        "211"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "3-eleven",
+      "modelName": "3-Eleven",
+      "modelNameTh": "3-Eleven",
+      "modelNameLo": "3-Eleven",
+      "searchNames": [
+        "3-eleven",
+        "3 eleven",
+        "311"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "340r",
+      "modelName": "340R",
+      "modelNameTh": "340R",
+      "modelNameLo": "340R",
+      "searchNames": [
+        "340r",
+        "340 r"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "30",
+      "modelName": "30",
+      "modelNameTh": "30",
+      "modelNameLo": "30",
+      "searchNames": [
+        "30"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "40",
+      "modelName": "40",
+      "modelNameTh": "40",
+      "modelNameLo": "40",
+      "searchNames": [
+        "40"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "seven",
+      "modelName": "Seven",
+      "modelNameTh": "Seven",
+      "modelNameLo": "Seven",
+      "searchNames": [
+        "seven",
+        "7"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "eclat",
+      "modelName": "Eclat",
+      "modelNameTh": "Eclat",
+      "modelNameLo": "Eclat",
+      "searchNames": [
+        "eclat"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan",
+      "modelName": "Elan",
+      "modelNameTh": "Elan",
+      "modelNameLo": "Elan",
+      "searchNames": [
+        "elan"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-m100",
+      "modelName": "Elan M100",
+      "modelNameTh": "Elan M100",
+      "modelNameLo": "Elan M100",
+      "searchNames": [
+        "elan m100",
+        "elanm100"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-se",
+      "modelName": "Elan SE",
+      "modelNameTh": "Elan SE",
+      "modelNameLo": "Elan SE",
+      "searchNames": [
+        "elan se"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-s2",
+      "modelName": "Elan S2",
+      "modelNameTh": "Elan S2",
+      "modelNameLo": "Elan S2",
+      "searchNames": [
+        "elan s2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-s3",
+      "modelName": "Elan S3",
+      "modelNameTh": "Elan S3",
+      "modelNameLo": "Elan S3",
+      "searchNames": [
+        "elan s3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-s4",
+      "modelName": "Elan S4",
+      "modelNameTh": "Elan S4",
+      "modelNameLo": "Elan S4",
+      "searchNames": [
+        "elan s4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elan-sprint",
+      "modelName": "Elan Sprint",
+      "modelNameTh": "Elan Sprint",
+      "modelNameLo": "Elan Sprint",
+      "searchNames": [
+        "elan sprint"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "electre",
+      "modelName": "Electre",
+      "modelNameTh": "Electre",
+      "modelNameLo": "Electre",
+      "searchNames": [
+        "electre"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eletre-s",
+      "modelName": "Eletre S",
+      "modelNameTh": "Eletre S",
+      "modelNameLo": "Eletre S",
+      "searchNames": [
+        "eletre s"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eletre-r",
+      "modelName": "Eletre R",
+      "modelNameTh": "Eletre R",
+      "modelNameLo": "Eletre R",
+      "searchNames": [
+        "eletre r"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "elise",
+      "modelName": "Elise",
+      "modelNameTh": "Elise",
+      "modelNameLo": "Elise",
+      "searchNames": [
+        "elise"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-s",
+      "modelName": "Elise S",
+      "modelNameTh": "Elise S",
+      "modelNameLo": "Elise S",
+      "searchNames": [
+        "elise s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-r",
+      "modelName": "Elise R",
+      "modelNameTh": "Elise R",
+      "modelNameLo": "Elise R",
+      "searchNames": [
+        "elise r"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-sc",
+      "modelName": "Elise SC",
+      "modelNameTh": "Elise SC",
+      "modelNameLo": "Elise SC",
+      "searchNames": [
+        "elise sc"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-sport-220",
+      "modelName": "Elise Sport 220",
+      "modelNameTh": "Elise Sport 220",
+      "modelNameLo": "Elise Sport 220",
+      "searchNames": [
+        "elise sport 220"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-cup-250",
+      "modelName": "Elise Cup 250",
+      "modelNameTh": "Elise Cup 250",
+      "modelNameLo": "Elise Cup 250",
+      "searchNames": [
+        "elise cup 250"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elise-final-edition",
+      "modelName": "Elise Final Edition",
+      "modelNameTh": "Elise Final Edition",
+      "modelNameLo": "Elise Final Edition",
+      "searchNames": [
+        "elise final edition"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elite",
+      "modelName": "Elite",
+      "modelNameTh": "Elite",
+      "modelNameLo": "Elite",
+      "searchNames": [
+        "elite"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elite-type-14",
+      "modelName": "Elite Type 14",
+      "modelNameTh": "Elite Type 14",
+      "modelNameLo": "Elite Type 14",
+      "searchNames": [
+        "elite type 14"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "elite-type-75",
+      "modelName": "Elite Type 75",
+      "modelNameTh": "Elite Type 75",
+      "modelNameLo": "Elite Type 75",
+      "searchNames": [
+        "elite type 75"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emeya",
+      "modelName": "Emeya",
+      "modelNameTh": "Emeya",
+      "modelNameLo": "Emeya",
+      "searchNames": [
+        "emeya"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "emeya-s",
+      "modelName": "Emeya S",
+      "modelNameTh": "Emeya S",
+      "modelNameLo": "Emeya S",
+      "searchNames": [
+        "emeya s"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "emeya-r",
+      "modelName": "Emeya R",
+      "modelNameTh": "Emeya R",
+      "modelNameLo": "Emeya R",
+      "searchNames": [
+        "emeya r"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "emira",
+      "modelName": "Emira",
+      "modelNameTh": "Emira",
+      "modelNameLo": "Emira",
+      "searchNames": [
+        "emira"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emira-v6",
+      "modelName": "Emira V6",
+      "modelNameTh": "Emira V6",
+      "modelNameLo": "Emira V6",
+      "searchNames": [
+        "emira v6"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emira-turbo",
+      "modelName": "Emira Turbo",
+      "modelNameTh": "Emira Turbo",
+      "modelNameLo": "Emira Turbo",
+      "searchNames": [
+        "emira turbo"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emira-first-edition",
+      "modelName": "Emira First Edition",
+      "modelNameTh": "Emira First Edition",
+      "modelNameLo": "Emira First Edition",
+      "searchNames": [
+        "emira first edition"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "emira-clark-edition",
+      "modelName": "Emira Clark Edition",
+      "modelNameTh": "Emira Clark Edition",
+      "modelNameLo": "Emira Clark Edition",
+      "searchNames": [
+        "emira clark edition"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit",
+      "modelName": "Esprit",
+      "modelNameTh": "Esprit",
+      "modelNameLo": "Esprit",
+      "searchNames": [
+        "esprit"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-s1",
+      "modelName": "Esprit S1",
+      "modelNameTh": "Esprit S1",
+      "modelNameLo": "Esprit S1",
+      "searchNames": [
+        "esprit s1"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-s2",
+      "modelName": "Esprit S2",
+      "modelNameTh": "Esprit S2",
+      "modelNameLo": "Esprit S2",
+      "searchNames": [
+        "esprit s2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-s3",
+      "modelName": "Esprit S3",
+      "modelNameTh": "Esprit S3",
+      "modelNameLo": "Esprit S3",
+      "searchNames": [
+        "esprit s3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-turbo",
+      "modelName": "Esprit Turbo",
+      "modelNameTh": "Esprit Turbo",
+      "modelNameLo": "Esprit Turbo",
+      "searchNames": [
+        "esprit turbo"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-v8",
+      "modelName": "Esprit V8",
+      "modelNameTh": "Esprit V8",
+      "modelNameLo": "Esprit V8",
+      "searchNames": [
+        "esprit v8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "esprit-final-edition",
+      "modelName": "Esprit Final Edition",
+      "modelNameTh": "Esprit Final Edition",
+      "modelNameLo": "Esprit Final Edition",
+      "searchNames": [
+        "esprit final edition"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "europa",
+      "modelName": "Europa",
+      "modelNameTh": "Europa",
+      "modelNameLo": "Europa",
+      "searchNames": [
+        "europa"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "europa-s",
+      "modelName": "Europa S",
+      "modelNameTh": "Europa S",
+      "modelNameLo": "Europa S",
+      "searchNames": [
+        "europa s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "europa-special",
+      "modelName": "Europa Special",
+      "modelNameTh": "Europa Special",
+      "modelNameLo": "Europa Special",
+      "searchNames": [
+        "europa special"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "evija",
+      "modelName": "Evija",
+      "modelNameTh": "Evija",
+      "modelNameLo": "Evija",
+      "searchNames": [
+        "evija"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "evija-fittipaldi",
+      "modelName": "Evija Fittipaldi",
+      "modelNameTh": "Evija Fittipaldi",
+      "modelNameLo": "Evija Fittipaldi",
+      "searchNames": [
+        "evija fittipaldi"
+      ],
+      "categoryIds": [
+        "supercar",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "evora",
+      "modelName": "Evora",
+      "modelNameTh": "Evora",
+      "modelNameLo": "Evora",
+      "searchNames": [
+        "evora"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "evora-s",
+      "modelName": "Evora S",
+      "modelNameTh": "Evora S",
+      "modelNameLo": "Evora S",
+      "searchNames": [
+        "evora s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "evora-400",
+      "modelName": "Evora 400",
+      "modelNameTh": "Evora 400",
+      "modelNameLo": "Evora 400",
+      "searchNames": [
+        "evora 400"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "evora-gt",
+      "modelName": "Evora GT",
+      "modelNameTh": "Evora GT",
+      "modelNameLo": "Evora GT",
+      "searchNames": [
+        "evora gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "evora-gt410",
+      "modelName": "Evora GT410",
+      "modelNameTh": "Evora GT410",
+      "modelNameLo": "Evora GT410",
+      "searchNames": [
+        "evora gt410",
+        "evora gt 410"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "exige",
+      "modelName": "Exige",
+      "modelNameTh": "Exige",
+      "modelNameLo": "Exige",
+      "searchNames": [
+        "exige"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "exige-s",
+      "modelName": "Exige S",
+      "modelNameTh": "Exige S",
+      "modelNameLo": "Exige S",
+      "searchNames": [
+        "exige s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "exige-cup-430",
+      "modelName": "Exige Cup 430",
+      "modelNameTh": "Exige Cup 430",
+      "modelNameLo": "Exige Cup 430",
+      "searchNames": [
+        "exige cup 430"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "exige-sport-410",
+      "modelName": "Exige Sport 410",
+      "modelNameTh": "Exige Sport 410",
+      "modelNameLo": "Exige Sport 410",
+      "searchNames": [
+        "exige sport 410"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "exige-final-edition",
+      "modelName": "Exige Final Edition",
+      "modelNameTh": "Exige Final Edition",
+      "modelNameLo": "Exige Final Edition",
+      "searchNames": [
+        "exige final edition"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-i",
+      "modelName": "Mark I",
+      "modelNameTh": "Mark I",
+      "modelNameLo": "Mark I",
+      "searchNames": [
+        "mark i",
+        "mark 1"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-ii",
+      "modelName": "Mark II",
+      "modelNameTh": "Mark II",
+      "modelNameLo": "Mark II",
+      "searchNames": [
+        "mark ii",
+        "mark 2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-iii",
+      "modelName": "Mark III",
+      "modelNameTh": "Mark III",
+      "modelNameLo": "Mark III",
+      "searchNames": [
+        "mark iii",
+        "mark 3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-vi",
+      "modelName": "Mark VI",
+      "modelNameTh": "Mark VI",
+      "modelNameLo": "Mark VI",
+      "searchNames": [
+        "mark vi",
+        "mark 6"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-viii",
+      "modelName": "Mark VIII",
+      "modelNameTh": "Mark VIII",
+      "modelNameLo": "Mark VIII",
+      "searchNames": [
+        "mark viii",
+        "mark 8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-ix",
+      "modelName": "Mark IX",
+      "modelNameTh": "Mark IX",
+      "modelNameLo": "Mark IX",
+      "searchNames": [
+        "mark ix",
+        "mark 9"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "mark-x",
+      "modelName": "Mark X",
+      "modelNameTh": "Mark X",
+      "modelNameLo": "Mark X",
+      "searchNames": [
+        "mark x",
+        "mark 10"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "type-66",
+      "modelName": "Type 66",
+      "modelNameTh": "Type 66",
+      "modelNameLo": "Type 66",
+      "searchNames": [
+        "type 66",
+        "type66"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "theory-1-concept",
+      "modelName": "Theory 1 (Concept)",
+      "modelNameTh": "Theory 1 (Concept)",
+      "modelNameLo": "Theory 1 (Concept)",
+      "searchNames": [
+        "theory 1",
+        "theory 1 concept"
+      ],
+      "categoryIds": [
+        "sport",
+        "electric"
+      ]
+    }
+  ]
+}

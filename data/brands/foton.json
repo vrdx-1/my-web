@@ -1,0 +1,847 @@
+{
+  "brandId": "foton",
+  "brandName": "Foton",
+  "brandNameTh": "โฟตอน",
+  "brandNameLo": "ໂຟຕອນ",
+  "models": [
+    {
+      "modelId": "auman",
+      "modelName": "Auman",
+      "modelNameTh": "Auman",
+      "modelNameLo": "Auman",
+      "searchNames": [
+        "auman"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-c",
+      "modelName": "Auman C",
+      "modelNameTh": "Auman C",
+      "modelNameLo": "Auman C",
+      "searchNames": [
+        "auman c"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-d",
+      "modelName": "Auman D",
+      "modelNameTh": "Auman D",
+      "modelNameLo": "Auman D",
+      "searchNames": [
+        "auman d"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-gtl",
+      "modelName": "Auman GTL",
+      "modelNameTh": "Auman GTL",
+      "modelNameLo": "Auman GTL",
+      "searchNames": [
+        "auman gtl"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-est",
+      "modelName": "Auman EST",
+      "modelNameTh": "Auman EST",
+      "modelNameLo": "Auman EST",
+      "searchNames": [
+        "auman est"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-est-m",
+      "modelName": "Auman EST-M",
+      "modelNameTh": "Auman EST-M",
+      "modelNameLo": "Auman EST-M",
+      "searchNames": [
+        "auman est-m",
+        "auman est m"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "auman-r",
+      "modelName": "Auman R",
+      "modelNameTh": "Auman R",
+      "modelNameLo": "Auman R",
+      "searchNames": [
+        "auman r"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "aumark",
+      "modelName": "Aumark",
+      "modelNameTh": "Aumark",
+      "modelNameLo": "Aumark",
+      "searchNames": [
+        "aumark"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "aumark-s",
+      "modelName": "Aumark S",
+      "modelNameTh": "Aumark S",
+      "modelNameLo": "Aumark S",
+      "searchNames": [
+        "aumark s"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "aumark-c",
+      "modelName": "Aumark C",
+      "modelNameTh": "Aumark C",
+      "modelNameLo": "Aumark C",
+      "searchNames": [
+        "aumark c"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "aumark-s1",
+      "modelName": "Aumark S1",
+      "modelNameTh": "Aumark S1",
+      "modelNameLo": "Aumark S1",
+      "searchNames": [
+        "aumark s1"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "aumark-flex",
+      "modelName": "Aumark Flex",
+      "modelNameTh": "Aumark Flex",
+      "modelNameLo": "Aumark Flex",
+      "searchNames": [
+        "aumark flex"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "e-auman",
+      "modelName": "e-Auman",
+      "modelNameTh": "e-Auman",
+      "modelNameLo": "e-Auman",
+      "searchNames": [
+        "e-auman",
+        "e auman"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-aumark",
+      "modelName": "e-Aumark",
+      "modelNameTh": "e-Aumark",
+      "modelNameLo": "e-Aumark",
+      "searchNames": [
+        "e-aumark",
+        "e aumark"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-aumark-cargo",
+      "modelName": "e-Aumark Cargo",
+      "modelNameTh": "e-Aumark Cargo",
+      "modelNameLo": "e-Aumark Cargo",
+      "searchNames": [
+        "e-aumark cargo"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-view",
+      "modelName": "e-View",
+      "modelNameTh": "e-View",
+      "modelNameLo": "e-View",
+      "searchNames": [
+        "e-view",
+        "e view"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "e-tunland",
+      "modelName": "e-Tunland",
+      "modelNameTh": "e-Tunland",
+      "modelNameLo": "e-Tunland",
+      "searchNames": [
+        "e-tunland",
+        "e tunland"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "forland",
+      "modelName": "Forland",
+      "modelNameTh": "Forland",
+      "modelNameLo": "Forland",
+      "searchNames": [
+        "forland"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "gratour",
+      "modelName": "Gratour",
+      "modelNameTh": "Gratour",
+      "modelNameLo": "Gratour",
+      "searchNames": [
+        "gratour"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "gratour-im6",
+      "modelName": "Gratour im6",
+      "modelNameTh": "Gratour im6",
+      "modelNameLo": "Gratour im6",
+      "searchNames": [
+        "gratour im6",
+        "im6"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "gratour-im8",
+      "modelName": "Gratour im8",
+      "modelNameTh": "Gratour im8",
+      "modelNameLo": "Gratour im8",
+      "searchNames": [
+        "gratour im8",
+        "im8"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "gratour-ix5",
+      "modelName": "Gratour ix5",
+      "modelNameTh": "Gratour ix5",
+      "modelNameLo": "Gratour ix5",
+      "searchNames": [
+        "gratour ix5",
+        "ix5"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gratour-ix7",
+      "modelName": "Gratour ix7",
+      "modelNameTh": "Gratour ix7",
+      "modelNameLo": "Gratour ix7",
+      "searchNames": [
+        "gratour ix7",
+        "ix7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gratour-tm-300",
+      "modelName": "Gratour TM 300",
+      "modelNameTh": "Gratour TM 300",
+      "modelNameLo": "Gratour TM 300",
+      "searchNames": [
+        "gratour tm 300",
+        "gratour tm300"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "harabas",
+      "modelName": "Harabas",
+      "modelNameTh": "Harabas",
+      "modelNameLo": "Harabas",
+      "searchNames": [
+        "harabas"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "harabas-miler",
+      "modelName": "Harabas Miler",
+      "modelNameTh": "Harabas Miler",
+      "modelNameLo": "Harabas Miler",
+      "searchNames": [
+        "harabas miler"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "harabas-tm-300",
+      "modelName": "Harabas TM 300",
+      "modelNameTh": "Harabas TM 300",
+      "modelNameLo": "Harabas TM 300",
+      "searchNames": [
+        "harabas tm 300"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "harabas-ev",
+      "modelName": "Harabas EV",
+      "modelNameTh": "Harabas EV",
+      "modelNameLo": "Harabas EV",
+      "searchNames": [
+        "harabas ev"
+      ],
+      "categoryIds": [
+        "truck",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "mars-7",
+      "modelName": "Mars 7",
+      "modelNameTh": "Mars 7",
+      "modelNameLo": "Mars 7",
+      "searchNames": [
+        "mars 7",
+        "mars7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "mars-9",
+      "modelName": "Mars 9",
+      "modelNameTh": "Mars 9",
+      "modelNameLo": "Mars 9",
+      "searchNames": [
+        "mars 9",
+        "mars9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "midi",
+      "modelName": "Midi",
+      "modelNameTh": "Midi",
+      "modelNameLo": "Midi",
+      "searchNames": [
+        "midi"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "miler",
+      "modelName": "Miler",
+      "modelNameTh": "Miler",
+      "modelNameLo": "Miler",
+      "searchNames": [
+        "miler"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "ollin",
+      "modelName": "Ollin",
+      "modelNameTh": "Ollin",
+      "modelNameLo": "Ollin",
+      "searchNames": [
+        "ollin"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ollin-beyond",
+      "modelName": "Ollin Beyond",
+      "modelNameTh": "Ollin Beyond",
+      "modelNameLo": "Ollin Beyond",
+      "searchNames": [
+        "ollin beyond"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ollin-mri",
+      "modelName": "Ollin MRI",
+      "modelNameTh": "Ollin MRI",
+      "modelNameLo": "Ollin MRI",
+      "searchNames": [
+        "ollin mri"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ollin-v",
+      "modelName": "Ollin V",
+      "modelNameTh": "Ollin V",
+      "modelNameLo": "Ollin V",
+      "searchNames": [
+        "ollin v"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ollin-tx",
+      "modelName": "Ollin TX",
+      "modelNameTh": "Ollin TX",
+      "modelNameLo": "Ollin TX",
+      "searchNames": [
+        "ollin tx"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "rowor",
+      "modelName": "Rowor",
+      "modelNameTh": "Rowor",
+      "modelNameLo": "Rowor",
+      "searchNames": [
+        "rowor"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sauvana",
+      "modelName": "Sauvana",
+      "modelNameTh": "Sauvana",
+      "modelNameLo": "Sauvana",
+      "searchNames": [
+        "sauvana"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "saga",
+      "modelName": "Saga",
+      "modelNameTh": "Saga",
+      "modelNameLo": "Saga",
+      "searchNames": [
+        "saga"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "sup",
+      "modelName": "SUP",
+      "modelNameTh": "SUP",
+      "modelNameLo": "SUP",
+      "searchNames": [
+        "sup"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "toano",
+      "modelName": "Toano",
+      "modelNameTh": "Toano",
+      "modelNameLo": "Toano",
+      "searchNames": [
+        "toano"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "toano-executive",
+      "modelName": "Toano Executive",
+      "modelNameTh": "Toano Executive",
+      "modelNameLo": "Toano Executive",
+      "searchNames": [
+        "toano executive"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "toplander",
+      "modelName": "Toplander",
+      "modelNameTh": "Toplander",
+      "modelNameLo": "Toplander",
+      "searchNames": [
+        "toplander"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "tornado",
+      "modelName": "Tornado",
+      "modelNameTh": "Tornado",
+      "modelNameLo": "Tornado",
+      "searchNames": [
+        "tornado"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tornado-m2-6c",
+      "modelName": "Tornado M2.6C",
+      "modelNameTh": "Tornado M2.6C",
+      "modelNameLo": "Tornado M2.6C",
+      "searchNames": [
+        "tornado m2.6c",
+        "tornado m2 6c"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tornado-m4-2c",
+      "modelName": "Tornado M4.2C",
+      "modelNameTh": "Tornado M4.2C",
+      "modelNameLo": "Tornado M4.2C",
+      "searchNames": [
+        "tornado m4.2c",
+        "tornado m4 2c"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "transvan",
+      "modelName": "Transvan",
+      "modelNameTh": "Transvan",
+      "modelNameLo": "Transvan",
+      "searchNames": [
+        "transvan"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "transvan-ev",
+      "modelName": "Transvan EV",
+      "modelNameTh": "Transvan EV",
+      "modelNameLo": "Transvan EV",
+      "searchNames": [
+        "transvan ev"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "traveller",
+      "modelName": "Traveller",
+      "modelNameTh": "Traveller",
+      "modelNameLo": "Traveller",
+      "searchNames": [
+        "traveller"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "traveller-xl",
+      "modelName": "Traveller XL",
+      "modelNameTh": "Traveller XL",
+      "modelNameLo": "Traveller XL",
+      "searchNames": [
+        "traveller xl"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "truck-mate",
+      "modelName": "Truck Mate",
+      "modelNameTh": "Truck Mate",
+      "modelNameLo": "Truck Mate",
+      "searchNames": [
+        "truck mate"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "truck-mate-tm-iblue45",
+      "modelName": "Truck Mate TM iBlue45",
+      "modelNameTh": "Truck Mate TM iBlue45",
+      "modelNameLo": "Truck Mate TM iBlue45",
+      "searchNames": [
+        "truck mate tm iblue45",
+        "iblue45"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "tunland",
+      "modelName": "Tunland",
+      "modelNameTh": "Tunland",
+      "modelNameLo": "Tunland",
+      "searchNames": [
+        "tunland"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-g7",
+      "modelName": "Tunland G7",
+      "modelNameTh": "Tunland G7",
+      "modelNameLo": "Tunland G7",
+      "searchNames": [
+        "tunland g7"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-g9",
+      "modelName": "Tunland G9",
+      "modelNameTh": "Tunland G9",
+      "modelNameLo": "Tunland G9",
+      "searchNames": [
+        "tunland g9"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-v7",
+      "modelName": "Tunland V7",
+      "modelNameTh": "Tunland V7",
+      "modelNameLo": "Tunland V7",
+      "searchNames": [
+        "tunland v7"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-v9",
+      "modelName": "Tunland V9",
+      "modelNameTh": "Tunland V9",
+      "modelNameLo": "Tunland V9",
+      "searchNames": [
+        "tunland v9"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-e5",
+      "modelName": "Tunland E5",
+      "modelNameTh": "Tunland E5",
+      "modelNameLo": "Tunland E5",
+      "searchNames": [
+        "tunland e5"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "tunland-yutu",
+      "modelName": "Tunland Yutu",
+      "modelNameTh": "Tunland Yutu",
+      "modelNameLo": "Tunland Yutu",
+      "searchNames": [
+        "tunland yutu",
+        "yutu"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "view",
+      "modelName": "View",
+      "modelNameTh": "View",
+      "modelNameLo": "View",
+      "searchNames": [
+        "view"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-cs2",
+      "modelName": "View CS2",
+      "modelNameTh": "View CS2",
+      "modelNameLo": "View CS2",
+      "searchNames": [
+        "view cs2"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-g7",
+      "modelName": "View G7",
+      "modelNameTh": "View G7",
+      "modelNameLo": "View G7",
+      "searchNames": [
+        "view g7"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-g9",
+      "modelName": "View G9",
+      "modelNameTh": "View G9",
+      "modelNameLo": "View G9",
+      "searchNames": [
+        "view g9"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-k1",
+      "modelName": "View K1",
+      "modelNameTh": "View K1",
+      "modelNameLo": "View K1",
+      "searchNames": [
+        "view k1"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-v3",
+      "modelName": "View V3",
+      "modelNameTh": "View V3",
+      "modelNameLo": "View V3",
+      "searchNames": [
+        "view v3"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "view-v5",
+      "modelName": "View V5",
+      "modelNameTh": "View V5",
+      "modelNameLo": "View V5",
+      "searchNames": [
+        "view v5"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "wonder",
+      "modelName": "Wonder",
+      "modelNameTh": "Wonder",
+      "modelNameLo": "Wonder",
+      "searchNames": [
+        "wonder"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    }
+  ]
+}

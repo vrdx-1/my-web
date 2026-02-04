@@ -1,0 +1,819 @@
+{
+  "brandId": "aston-martin",
+  "brandName": "Aston Martin",
+  "brandNameTh": "แอสตัน มาร์ติน",
+  "brandNameLo": "ແອດສະຕັນ ມາຕິນ",
+  "models": [
+    {
+      "modelId": "1-5-litre",
+      "modelName": "1.5-Litre",
+      "modelNameTh": "1.5-Litre",
+      "modelNameLo": "1.5-Litre",
+      "searchNames": [
+        "1.5 litre",
+        "1.5-liter"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "2-litre-sports-db1",
+      "modelName": "2-Litre Sports (DB1)",
+      "modelNameTh": "2-Litre Sports (DB1)",
+      "modelNameLo": "2-Litre Sports (DB1)",
+      "searchNames": [
+        "2 litre sports",
+        "db1"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "atom",
+      "modelName": "Atom",
+      "modelNameTh": "Atom",
+      "modelNameLo": "Atom",
+      "searchNames": [
+        "atom"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "bamford-and-martin",
+      "modelName": "Bamford and Martin",
+      "modelNameTh": "Bamford and Martin",
+      "modelNameLo": "Bamford and Martin",
+      "searchNames": [
+        "bamford and martin",
+        "bamford martin"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "bulldog",
+      "modelName": "Bulldog",
+      "modelNameTh": "Bulldog",
+      "modelNameLo": "Bulldog",
+      "searchNames": [
+        "bulldog"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cc100",
+      "modelName": "CC100",
+      "modelNameTh": "CC100",
+      "modelNameLo": "CC100",
+      "searchNames": [
+        "cc100",
+        "cc 100"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cygnet",
+      "modelName": "Cygnet",
+      "modelNameTh": "Cygnet",
+      "modelNameLo": "Cygnet",
+      "searchNames": [
+        "cygnet"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "db2",
+      "modelName": "DB2",
+      "modelNameTh": "DB2",
+      "modelNameLo": "DB2",
+      "searchNames": [
+        "db2"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db2-4",
+      "modelName": "DB2/4",
+      "modelNameTh": "DB2/4",
+      "modelNameLo": "DB2/4",
+      "searchNames": [
+        "db2/4",
+        "db2 4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db3s",
+      "modelName": "DB3S",
+      "modelNameTh": "DB3S",
+      "modelNameLo": "DB3S",
+      "searchNames": [
+        "db3s",
+        "db3 s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db4",
+      "modelName": "DB4",
+      "modelNameTh": "DB4",
+      "modelNameLo": "DB4",
+      "searchNames": [
+        "db4"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db4-gt-zagato",
+      "modelName": "DB4 GT Zagato",
+      "modelNameTh": "DB4 GT Zagato",
+      "modelNameLo": "DB4 GT Zagato",
+      "searchNames": [
+        "db4 gt zagato",
+        "db4 zagato"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db5",
+      "modelName": "DB5",
+      "modelNameTh": "DB5",
+      "modelNameLo": "DB5",
+      "searchNames": [
+        "db5"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db6",
+      "modelName": "DB6",
+      "modelNameTh": "DB6",
+      "modelNameLo": "DB6",
+      "searchNames": [
+        "db6"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db7",
+      "modelName": "DB7",
+      "modelNameTh": "DB7",
+      "modelNameLo": "DB7",
+      "searchNames": [
+        "db7"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db7-vantage",
+      "modelName": "DB7 Vantage",
+      "modelNameTh": "DB7 Vantage",
+      "modelNameLo": "DB7 Vantage",
+      "searchNames": [
+        "db7 vantage"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db7-zagato",
+      "modelName": "DB7 Zagato",
+      "modelNameTh": "DB7 Zagato",
+      "modelNameLo": "DB7 Zagato",
+      "searchNames": [
+        "db7 zagato"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db8",
+      "modelName": "DB8",
+      "modelNameTh": "DB8",
+      "modelNameLo": "DB8",
+      "searchNames": [
+        "db8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db9",
+      "modelName": "DB9",
+      "modelNameTh": "DB9",
+      "modelNameLo": "DB9",
+      "searchNames": [
+        "db9"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "db10",
+      "modelName": "DB10",
+      "modelNameTh": "DB10",
+      "modelNameLo": "DB10",
+      "searchNames": [
+        "db10"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db11",
+      "modelName": "DB11",
+      "modelNameTh": "DB11",
+      "modelNameLo": "DB11",
+      "searchNames": [
+        "db11"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "db12",
+      "modelName": "DB12",
+      "modelNameTh": "DB12",
+      "modelNameLo": "DB12",
+      "searchNames": [
+        "db12"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "db12-volante",
+      "modelName": "DB12 Volante",
+      "modelNameTh": "DB12 Volante",
+      "modelNameLo": "DB12 Volante",
+      "searchNames": [
+        "db12 volante"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "db12-s",
+      "modelName": "DB12 S",
+      "modelNameTh": "DB12 S",
+      "modelNameLo": "DB12 S",
+      "searchNames": [
+        "db12 s"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbs",
+      "modelName": "DBS",
+      "modelNameTh": "DBS",
+      "modelNameLo": "DBS",
+      "searchNames": [
+        "dbs"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbs-volante",
+      "modelName": "DBS Volante",
+      "modelNameTh": "DBS Volante",
+      "modelNameLo": "DBS Volante",
+      "searchNames": [
+        "dbs volante"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbs-superleggera",
+      "modelName": "DBS Superleggera",
+      "modelNameTh": "DBS Superleggera",
+      "modelNameLo": "DBS Superleggera",
+      "searchNames": [
+        "dbs superleggera"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbs-770-ultimate",
+      "modelName": "DBS 770 Ultimate",
+      "modelNameTh": "DBS 770 Ultimate",
+      "modelNameLo": "DBS 770 Ultimate",
+      "searchNames": [
+        "dbs 770 ultimate",
+        "dbs 770"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbx",
+      "modelName": "DBX",
+      "modelNameTh": "DBX",
+      "modelNameLo": "DBX",
+      "searchNames": [
+        "dbx"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbx707",
+      "modelName": "DBX707",
+      "modelNameTh": "DBX707",
+      "modelNameLo": "DBX707",
+      "searchNames": [
+        "dbx707",
+        "dbx 707"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "dbx-s",
+      "modelName": "DBX S",
+      "modelNameTh": "DBX S",
+      "modelNameLo": "DBX S",
+      "searchNames": [
+        "dbx s"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "dbr1",
+      "modelName": "DBR1",
+      "modelNameTh": "DBR1",
+      "modelNameLo": "DBR1",
+      "searchNames": [
+        "dbr1",
+        "dbr 1"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "dbr22",
+      "modelName": "DBR22",
+      "modelNameTh": "DBR22",
+      "modelNameLo": "DBR22",
+      "searchNames": [
+        "dbr22",
+        "dbr 22"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "db-mark-iii",
+      "modelName": "DB Mark III",
+      "modelNameTh": "DB Mark III",
+      "modelNameLo": "DB Mark III",
+      "searchNames": [
+        "db mark iii",
+        "db mark 3"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "lagonda",
+      "modelName": "Lagonda",
+      "modelNameTh": "Lagonda",
+      "modelNameLo": "Lagonda",
+      "searchNames": [
+        "lagonda"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "lagonda-taraf",
+      "modelName": "Lagonda Taraf",
+      "modelNameTh": "Lagonda Taraf",
+      "modelNameLo": "Lagonda Taraf",
+      "searchNames": [
+        "lagonda taraf",
+        "taraf"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "one-77",
+      "modelName": "One-77",
+      "modelNameTh": "One-77",
+      "modelNameLo": "One-77",
+      "searchNames": [
+        "one-77",
+        "one77"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "rapide",
+      "modelName": "Rapide",
+      "modelNameTh": "Rapide",
+      "modelNameLo": "Rapide",
+      "searchNames": [
+        "rapide"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "rapide-s",
+      "modelName": "Rapide S",
+      "modelNameTh": "Rapide S",
+      "modelNameLo": "Rapide S",
+      "searchNames": [
+        "rapide s"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "rapide-amr",
+      "modelName": "Rapide AMR",
+      "modelNameTh": "Rapide AMR",
+      "modelNameLo": "Rapide AMR",
+      "searchNames": [
+        "rapide amr"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "short-chassis-volante",
+      "modelName": "Short Chassis Volante",
+      "modelNameTh": "Short Chassis Volante",
+      "modelNameLo": "Short Chassis Volante",
+      "searchNames": [
+        "short chassis volante"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v8",
+      "modelName": "V8",
+      "modelNameTh": "V8",
+      "modelNameLo": "V8",
+      "searchNames": [
+        "v8"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v8-vantage",
+      "modelName": "V8 Vantage",
+      "modelNameTh": "V8 Vantage",
+      "modelNameLo": "V8 Vantage",
+      "searchNames": [
+        "v8 vantage"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v8-zagato",
+      "modelName": "V8 Zagato",
+      "modelNameTh": "V8 Zagato",
+      "modelNameLo": "V8 Zagato",
+      "searchNames": [
+        "v8 zagato"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "v12-speedster",
+      "modelName": "V12 Speedster",
+      "modelNameTh": "V12 Speedster",
+      "modelNameLo": "V12 Speedster",
+      "searchNames": [
+        "v12 speedster"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "v12-vanquish",
+      "modelName": "V12 Vanquish",
+      "modelNameTh": "V12 Vanquish",
+      "modelNameLo": "V12 Vanquish",
+      "searchNames": [
+        "v12 vanquish"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "v12-vantage",
+      "modelName": "V12 Vantage",
+      "modelNameTh": "V12 Vantage",
+      "modelNameLo": "V12 Vantage",
+      "searchNames": [
+        "v12 vantage"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "v12-zagato",
+      "modelName": "V12 Zagato",
+      "modelNameTh": "V12 Zagato",
+      "modelNameLo": "V12 Zagato",
+      "searchNames": [
+        "v12 zagato"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "valiant",
+      "modelName": "Valiant",
+      "modelNameTh": "Valiant",
+      "modelNameLo": "Valiant",
+      "searchNames": [
+        "valiant"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "valhalla",
+      "modelName": "Valhalla",
+      "modelNameTh": "Valhalla",
+      "modelNameLo": "Valhalla",
+      "searchNames": [
+        "valhalla"
+      ],
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "modelId": "valkyrie",
+      "modelName": "Valkyrie",
+      "modelNameTh": "Valkyrie",
+      "modelNameLo": "Valkyrie",
+      "searchNames": [
+        "valkyrie"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "valkyrie-amr-pro",
+      "modelName": "Valkyrie AMR Pro",
+      "modelNameTh": "Valkyrie AMR Pro",
+      "modelNameLo": "Valkyrie AMR Pro",
+      "searchNames": [
+        "valkyrie amr pro"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "valkyrie-spider",
+      "modelName": "Valkyrie Spider",
+      "modelNameTh": "Valkyrie Spider",
+      "modelNameLo": "Valkyrie Spider",
+      "searchNames": [
+        "valkyrie spider"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "modelId": "valour",
+      "modelName": "Valour",
+      "modelNameTh": "Valour",
+      "modelNameLo": "Valour",
+      "searchNames": [
+        "valour"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "vanquish",
+      "modelName": "Vanquish",
+      "modelNameTh": "Vanquish",
+      "modelNameLo": "Vanquish",
+      "searchNames": [
+        "vanquish"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "vanquish-s",
+      "modelName": "Vanquish S",
+      "modelNameTh": "Vanquish S",
+      "modelNameLo": "Vanquish S",
+      "searchNames": [
+        "vanquish s"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "vanquish-volante",
+      "modelName": "Vanquish Volante",
+      "modelNameTh": "Vanquish Volante",
+      "modelNameLo": "Vanquish Volante",
+      "searchNames": [
+        "vanquish volante"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "vanquish-volante-wave-edition",
+      "modelName": "Vanquish Volante Wave Edition",
+      "modelNameTh": "Vanquish Volante Wave Edition",
+      "modelNameLo": "Vanquish Volante Wave Edition",
+      "searchNames": [
+        "vanquish volante wave edition",
+        "wave edition"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "vantage",
+      "modelName": "Vantage",
+      "modelNameTh": "Vantage",
+      "modelNameLo": "Vantage",
+      "searchNames": [
+        "vantage"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "vantage-roadster",
+      "modelName": "Vantage Roadster",
+      "modelNameTh": "Vantage Roadster",
+      "modelNameLo": "Vantage Roadster",
+      "searchNames": [
+        "vantage roadster"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "vantage-s",
+      "modelName": "Vantage S",
+      "modelNameTh": "Vantage S",
+      "modelNameLo": "Vantage S",
+      "searchNames": [
+        "vantage s"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "victor",
+      "modelName": "Victor",
+      "modelNameTh": "Victor",
+      "modelNameLo": "Victor",
+      "searchNames": [
+        "victor"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "virage",
+      "modelName": "Virage",
+      "modelNameTh": "Virage",
+      "modelNameLo": "Virage",
+      "searchNames": [
+        "virage"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "vulcan",
+      "modelName": "Vulcan",
+      "modelNameTh": "Vulcan",
+      "modelNameLo": "Vulcan",
+      "searchNames": [
+        "vulcan"
+      ],
+      "categoryIds": [
+        "supercar"
+      ]
+    }
+  ]
+}

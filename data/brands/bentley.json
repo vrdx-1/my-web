@@ -1,0 +1,448 @@
+{
+  "brandId": "bentley",
+  "brandName": "Bentley",
+  "brandNameTh": "เบนท์ลีย์",
+  "brandNameLo": "ເບັນລີ",
+  "models": [
+    {
+      "id": "3-litre",
+      "nameEn": "3-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "4-1-2-litre",
+      "nameEn": "4½-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "6-1-2-litre",
+      "nameEn": "6½-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "8-litre",
+      "nameEn": "8-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "4-litre",
+      "nameEn": "4-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "3-1-2-litre",
+      "nameEn": "3½-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "4-1-4-litre",
+      "nameEn": "4¼-Litre",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "mark-v",
+      "nameEn": "Mark V",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "mark-vi",
+      "nameEn": "Mark VI",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "r-type",
+      "nameEn": "R-Type",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "r-type-continental",
+      "nameEn": "R-Type Continental",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s1",
+      "nameEn": "S1",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s1-continental",
+      "nameEn": "S1 Continental",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s2",
+      "nameEn": "S2",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s2-continental",
+      "nameEn": "S2 Continental",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s3",
+      "nameEn": "S3",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "s3-continental",
+      "nameEn": "S3 Continental",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "t1",
+      "nameEn": "T1",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "t2",
+      "nameEn": "T2",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "corniche",
+      "nameEn": "Corniche",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "camargue",
+      "nameEn": "Camargue",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "mulsanne-classic",
+      "nameEn": "Mulsanne (Classic)",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "eight",
+      "nameEn": "Eight",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "turbo-r",
+      "nameEn": "Turbo R",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-classic",
+      "nameEn": "Continental (Classic)",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-r",
+      "nameEn": "Continental R",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-s",
+      "nameEn": "Continental S",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-t",
+      "nameEn": "Continental T",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-sc",
+      "nameEn": "Continental SC",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "brooklands-classic",
+      "nameEn": "Brooklands (Classic)",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "azure",
+      "nameEn": "Azure",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "arnage",
+      "nameEn": "Arnage",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "state-limousine",
+      "nameEn": "State Limousine",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gt",
+      "nameEn": "Continental GT",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gt-speed",
+      "nameEn": "Continental GT Speed",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gt-mulliner",
+      "nameEn": "Continental GT Mulliner",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gtc",
+      "nameEn": "Continental GTC",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gtc-speed",
+      "nameEn": "Continental GTC Speed",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-gtc-mulliner",
+      "nameEn": "Continental GTC Mulliner",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "continental-flying-spur",
+      "nameEn": "Continental Flying Spur",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "flying-spur",
+      "nameEn": "Flying Spur",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "flying-spur-speed",
+      "nameEn": "Flying Spur Speed",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "flying-spur-mulliner",
+      "nameEn": "Flying Spur Mulliner",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "flying-spur-azure",
+      "nameEn": "Flying Spur Azure",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "flying-spur-s",
+      "nameEn": "Flying Spur S",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "mulsanne-modern",
+      "nameEn": "Mulsanne (Modern)",
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "id": "brooklands-modern",
+      "nameEn": "Brooklands (Modern)",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bentayga",
+      "nameEn": "Bentayga",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bentayga-s",
+      "nameEn": "Bentayga S",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bentayga-azure",
+      "nameEn": "Bentayga Azure",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bentayga-ewb",
+      "nameEn": "Bentayga EWB (Extended Wheelbase)",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bentayga-ewb-mulliner",
+      "nameEn": "Bentayga EWB Mulliner",
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "id": "bacalar",
+      "nameEn": "Bacalar",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "batur",
+      "nameEn": "Batur",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "batur-convertible",
+      "nameEn": "Batur Convertible",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    }
+  ]
+}

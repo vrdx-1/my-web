@@ -1,201 +1,149 @@
 {
+  "searchTermAliases": [
+    {
+      "terms": ["family", "ครอบครัว", "ຄອບຄົວ"],
+      "categoryIds": ["suv", "sedan", "pickup", "van"]
+    },
+    {
+      "terms": ["delivery", "รถขนของ", "ລົດຂົນເຄື່ອງ"],
+      "categoryIds": ["pickup"]
+    },
+    {
+      "terms": ["hilux", "ไฮลักซ์", "ໄຮລັກ"],
+      "categoryIds": ["hilux"]
+    }
+  ],
   "categoryGroups": [
     {
-      "groupId": "body",
-      "groupName": "ประเภทรถ (ตามทรงรถ)",
-      "groupNameLo": "ປະເພດລົດ (ຕາມຮູບຊົງ)",
+      "groupId": "car-categories",
+      "groupName": "หมวดหมู่รถ",
+      "groupNameLo": "ຫມວດຫມູ່ລົດ",
+      "groupNameEn": "Car categories",
       "categories": [
         {
-          "id": "suv",
-          "name": "SUV",
-          "nameLo": "SUV",
-          "description": "รถทรงสูง อเนกประสงค์",
-          "descriptionLo": "ລົດຊົງສູງ ອະເນກປະສົງ"
+          "id": "sedan",
+          "name": "รถเก๋ง",
+          "nameEn": "Sedan",
+          "nameLo": "ລົດເກັງ",
+          "description": "รถทรงเก๋งทั่วไป",
+          "descriptionLo": "ລົດເກັງທົ່ວໄປ",
+          "descriptionEn": "Sedan"
         },
         {
-          "id": "crossover",
-          "name": "ครอสโอเวอร์",
-          "nameLo": "ຄຣອສໂອເວີ",
-          "description": "รถกึ่ง SUV ขนาดเล็ก/กลาง เน้นใช้งานในเมือง",
-          "descriptionLo": "ລົດກຶ່ງ SUV ຂະໜາດນ້ອຍ/ກາງ ເນັ້ນໃຊ້ໃນເມືອງ"
+          "id": "suv",
+          "name": "รถอเนกประสงค์",
+          "nameEn": "SUV",
+          "nameLo": "ລົດອະເນກປະສົງ",
+          "description": "รถทรงสูง อเนกประสงค์",
+          "descriptionLo": "ລົດຊົງສູງ ອະເນກປະສົງ",
+          "descriptionEn": "Sports utility vehicle"
         },
         {
           "id": "pickup",
-          "name": "กระบะ",
+          "name": "รถกระบะ",
+          "nameEn": "Pickup",
           "nameLo": "ລົດກະບະ",
-          "description": "รถกระบะเพื่อบรรทุก/ใช้งาน",
-          "descriptionLo": "ລົດກະບະ ເພື່ອບັນທຸກ/ໃຊ້ງານ"
+          "description": "รถกระบะเพื่อบรรทุก/ขนของ",
+          "descriptionLo": "ລົດກະບະ ເພື່ອບັນທຸກ/ຂົນຂອງ",
+          "descriptionEn": "Pickup truck"
         },
         {
-          "id": "pickup-ppv",
-          "name": "PPV (SUV สายกระบะ)",
-          "nameLo": "PPV (SUV ສາຍກະບະ)",
-          "description": "SUV ที่พื้นฐานมาจากกระบะ (เช่น Fortuner, MU-X)",
-          "descriptionLo": "SUV ທີ່ພື້ນຖານມາຈາກລົດກະບະ (ເຊັ່ນ Fortuner, MU-X)"
-        },
-        {
-          "id": "sedan",
-          "name": "เก๋ง",
-          "nameLo": "ລົດເກັງ",
-          "description": "รถทรงเก๋งทั่วไป",
-          "descriptionLo": "ລົດເກັງທົ່ວໄປ"
-        },
-        {
-          "id": "hatchback",
-          "name": "แฮทช์แบ็ก",
-          "nameLo": "ແຮັດຊ໌ແບັກ",
-          "description": "รถท้ายตัด เปิดประตูท้ายได้",
-          "descriptionLo": "ລົດທ້າຍຕັດ ເປີດປະຕູທ້າຍໄດ້"
-        },
-        {
-          "id": "citycar",
-          "name": "รถเล็ก",
-          "nameLo": "ລົດນ້ອຍ",
-          "description": "รถเล็กสำหรับใช้งานในเมือง (กระป๋อง)",
-          "descriptionLo": "ລົດນ້ອຍໃຊ້ໃນເມືອງ (ກະປ໋ອງ)"
-        },
-        {
-          "id": "mpv",
-          "name": "รถครอบครัว/MPV",
-          "nameLo": "ລົດຄອບຄົວ/MPV",
-          "description": "รถหลายที่นั่ง เน้นครอบครัว",
-          "descriptionLo": "ລົດຫຼາຍບ່ອນນັ່ງ ເນັ້ນຄອບຄົວ"
-        },
-        {
-          "id": "van",
-          "name": "รถตู้/แวน",
-          "nameLo": "ລົດຕູ້/ແວນ",
-          "description": "รถตู้หรือรถแวนหลายที่นั่ง",
-          "descriptionLo": "ລົດຕູ້ ຫຼື ລົດແວນຫຼາຍບ່ອນນັ່ງ"
-        },
-        {
-          "id": "wagon",
-          "name": "แวกอน",
-          "nameLo": "ແວກອນ",
-          "description": "รถทรงยาว เน้นขนของ (คล้ายเก๋งท้ายยาว)",
-          "descriptionLo": "ລົດຊົງຍາວ ເນັ້ນຂົນຂອງ (ຄ້າຍລົດເກັງທ້າຍຍາວ)"
-        },
-        {
-          "id": "coupe",
-          "name": "คูเป้",
-          "nameLo": "ຄູເປ",
-          "description": "รถ 2 ประตู/ทรงสปอร์ต",
-          "descriptionLo": "ລົດ 2 ປະຕູ/ຊົງສະປອດ"
-        },
-        {
-          "id": "convertible",
-          "name": "เปิดประทุน",
-          "nameLo": "ເປີດປະທຸນ",
-          "description": "รถหลังคาเปิดได้",
-          "descriptionLo": "ລົດຫຼັງຄາເປີດໄດ້"
-        },
-        {
-          "id": "sport",
-          "name": "สปอร์ต",
-          "nameLo": "ສະປອດ",
-          "description": "รถเน้นสมรรถนะ/ทรงสปอร์ต",
-          "descriptionLo": "ລົດເນັ້ນສົມັດທະນະ/ຊົງສະປອດ"
-        },
-        {
-          "id": "offroad",
-          "name": "สายลุย/ออฟโรด",
-          "nameLo": "ສາຍລຸຍ/ອອບໂຣດ",
-          "description": "รถเน้นลุยทางฝุ่น/ทางยาก",
-          "descriptionLo": "ລົດເນັ້ນລຸຍທາງຝຸ່ນ/ທາງຍາກ"
-        },
-        {
-          "id": "commercial",
-          "name": "เชิงพาณิชย์",
-          "nameLo": "ເພື່ອການຄ້າ",
-          "description": "รถใช้งานธุรกิจ/ขนส่ง (เช่น รถตู้ส่งของ)",
-          "descriptionLo": "ລົດໃຊ້ທຸລະກິດ/ຂົນສົ່ງ (ເຊັ່ນ ລົດຕູ້ສົ່ງຂອງ)"
-        },
-        {
-          "id": "other-body",
-          "name": "อื่น ๆ (ทรงรถ)",
-          "nameLo": "ອື່ນໆ (ຮູບຊົງ)",
-          "description": "กรณีทรงรถไม่เข้ากลุ่มหลัก",
-          "descriptionLo": "ກໍລະນີຮູບຊົງບໍ່ເຂົ້າກຸ່ມຫຼັກ"
-        }
-      ]
-    },
-    {
-      "groupId": "power",
-      "groupName": "ประเภทพลังงาน",
-      "groupNameLo": "ປະເພດພະລັງງານ",
-      "categories": [
-        {
-          "id": "ev",
-          "name": "ไฟฟ้า",
-          "nameLo": "ໄຟຟ້າ",
-          "description": "ขับเคลื่อนด้วยไฟฟ้า",
-          "descriptionLo": "ຂັບເຄື່ອນດ້ວຍໄຟຟ້າ"
+          "id": "hilux",
+          "name": "ไฮลักซ์",
+          "nameEn": "Hilux",
+          "nameLo": "ໄຮລັກ",
+          "description": "โตโยต้า ฮิลักซ์ (Revo, Vigo)",
+          "descriptionLo": "ໂຕໂຍຕ້າ ໄຮລັກ (Revo, Vigo)",
+          "descriptionEn": "Toyota Hilux (Revo, Vigo)"
         },
         {
           "id": "hybrid",
-          "name": "ไฮบริด",
-          "nameLo": "ໄຮບຣິດ",
+          "name": "รถไฮบริด",
+          "nameEn": "Hybrid",
+          "nameLo": "ລົດໄຮບຣິດ",
           "description": "น้ำมัน + ไฟฟ้า",
-          "descriptionLo": "ນ້ຳມັນ + ໄຟຟ້າ"
+          "descriptionLo": "ນ້ຳມັນ + ໄຟຟ້າ",
+          "descriptionEn": "Hybrid (fuel + electric)"
         },
         {
-          "id": "phev",
-          "name": "ปลั๊กอินไฮบริด",
-          "nameLo": "ປລັກອິນ-ໄຮບຣິດ",
-          "description": "ไฮบริดที่ชาร์จไฟจากปลั๊กได้",
-          "descriptionLo": "ໄຮບຣິດທີ່ຊາຣ໌ຈາກປລັກໄດ້"
+          "id": "electric",
+          "name": "รถไฟฟ้า",
+          "nameEn": "Electric",
+          "nameLo": "ລົດໄຟຟ້າ",
+          "description": "ขับเคลื่อนด้วยไฟฟ้า 100%",
+          "descriptionLo": "ຂັບເຄື່ອນດ້ວຍໄຟຟ້າ 100%",
+          "descriptionEn": "Fully electric vehicle"
         },
         {
-          "id": "petrol",
-          "name": "เบนซิน",
-          "nameLo": "ແອັດຊັງ",
-          "description": "เครื่องยนต์เบนซิน",
-          "descriptionLo": "ເຄື່ອງຈັກແອັດຊັງ"
+          "id": "sport",
+          "name": "รถสปอร์ต",
+          "nameEn": "Sport",
+          "nameLo": "ລົດສະປອດ",
+          "description": "รถเน้นสมรรถนะ/ทรงสปอร์ต",
+          "descriptionLo": "ລົດເນັ້ນສົມັດທະນະ/ຊົງສະປອດ",
+          "descriptionEn": "Sports car"
         },
         {
-          "id": "diesel",
-          "name": "ดีเซล",
-          "nameLo": "ດີເຊວ",
-          "description": "เครื่องยนต์ดีเซล",
-          "descriptionLo": "ເຄື່ອງຈັກດີເຊວ"
+          "id": "supercar",
+          "name": "ซูเปอร์คาร์",
+          "nameEn": "Supercar",
+          "nameLo": "ລົດຊຸບເປີຄາ",
+          "description": "รถสมรรถนะสูงพิเศษ",
+          "descriptionLo": "ລົດສະມັດຖະນະສູງພິເສດ",
+          "descriptionEn": "High-performance supercar"
         },
         {
-          "id": "cng",
-          "name": "CNG",
-          "nameLo": "CNG",
-          "description": "เชื้อเพลิงก๊าซธรรมชาติอัด",
-          "descriptionLo": "ແກັສທຳມະຊາດອັດ (CNG)"
+          "id": "van",
+          "name": "รถตู้",
+          "nameEn": "Van",
+          "nameLo": "ລົດຕູ້",
+          "description": "รถตู้หรือรถแวนหลายที่นั่ง",
+          "descriptionLo": "ລົດຕູ້ ຫຼື ລົດແວນຫຼາຍບ່ອນນັ່ງ",
+          "descriptionEn": "Van"
         },
         {
-          "id": "lpg",
-          "name": "LPG",
-          "nameLo": "LPG",
-          "description": "เชื้อเพลิงก๊าซปิโตรเลียมเหลว",
-          "descriptionLo": "ແກັສປິໂຕຣເລຍມເຫຼວ (LPG)"
+          "id": "bus",
+          "name": "รถบัส (รถเมล์)",
+          "nameEn": "Bus",
+          "nameLo": "ລົດເມ",
+          "description": "รถโดยสารขนาดใหญ่",
+          "descriptionLo": "ລົດເມ/ລົດບັສ",
+          "descriptionEn": "Bus"
         },
         {
-          "id": "fuelcell",
-          "name": "ไฮโดรเจน",
-          "nameLo": "ໄຮໂດຣເຈນ",
-          "description": "ขับเคลื่อนด้วยเซลล์เชื้อเพลิงไฮโดรเจน",
-          "descriptionLo": "ຂັບເຄື່ອນດ້ວຍເຊວລ໌ເຊື້ອເພີງໄຮໂດຣເຈນ"
+          "id": "truck",
+          "name": "รถบรรทุก",
+          "nameEn": "Truck",
+          "nameLo": "ລົດບັນທຸກ",
+          "description": "รถบรรทุกขนาดใหญ่",
+          "descriptionLo": "ລົດບັນທຸກ",
+          "descriptionEn": "Truck"
         },
         {
-          "id": "other-power",
-          "name": "อื่น ๆ (พลังงาน)",
-          "nameLo": "ອື່ນໆ (ພະລັງງານ)",
-          "description": "กรณีพลังงานไม่เข้ากลุ่มหลัก",
-          "descriptionLo": "ກໍລະນີພະລັງງານບໍ່ເຂົ້າກຸ່ມຫຼັກ"
+          "id": "luxury",
+          "name": "รถหรู",
+          "nameEn": "Luxury car",
+          "nameLo": "ລົດຫລູ",
+          "description": "รถยนต์ระดับหรู",
+          "descriptionLo": "ລົດຍົນລະດັບຫລູ",
+          "descriptionEn": "Luxury car"
         }
       ]
     }
   ],
   "rules": {
     "howItWorks": [
-      "รถ 1 รุ่นสามารถมีได้หลายหมวด เช่น [suv, ev].",
-      "ค้นหา/กรองด้วยหมวดเดียว (เช่น suv) ให้แสดงรถทุกคันที่มี suv แม้จะมีหมวดอื่นร่วมด้วย (เช่น ev).",
-      "ค้นหา/กรองหลายหมวดพร้อมกัน (เช่น suv + ev) ให้แสดงเฉพาะรถที่มีครบทุกหมวดที่เลือก."
+      "รถ 1 รุ่นสามารถมีได้หลายหมวด เช่น [suv, electric].",
+      "ค้นหา/กรองด้วยหมวดเดียว (เช่น suv) ให้แสดงรถทุกคันที่มี suv แม้จะมีหมวดอื่นร่วมด้วย (เช่น electric).",
+      "ค้นหา/กรองหลายหมวดพร้อมกัน (เช่น suv + electric) ให้แสดงเฉพาะรถที่มีครบทุกหมวดที่เลือก.",
+      "family / ครอบครัว / ຄອບຄົວ = [suv, sedan, pickup, van].",
+      "Delivery / รถขนของ / ລົດຂົນເຄື່ອງ = [pickup].",
+      "hilux / ไฮลักซ์ / ໄຮລັກ = แสดงรถรุ่น Revo และ Vigo (Toyota).",
+      "พิเศษ: สำหรับการค้นหา 'รถหรู' ให้แสดงรถที่อยู่ในประเภท [luxury]."
     ],
-    "namingNote": "คำว่า “กระป๋อง” ถือเป็นคำค้นหา/คำเรียกของ “รถเล็ก” ไม่ควรเป็นชื่อหมวดหลักแยกต่างหาก"
+    "familyCategoryIds": ["suv", "sedan", "pickup", "van"],
+    "cargoCategoryIds": ["pickup"],
+    "luxuryCategoryIds": ["luxury"],
+    "namingNote": "โครงสร้างประเภทรถและพลังงานถูกปรับปรุงใหม่ตามความต้องการของผู้ใช้งาน"
   }
 }

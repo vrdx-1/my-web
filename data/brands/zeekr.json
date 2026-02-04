@@ -1,0 +1,221 @@
+{
+  "brandId": "zeekr",
+  "brandName": "Zeekr",
+  "brandNameTh": "ซีคเกอร์",
+  "brandNameLo": "ຊີເກີ",
+  "models": [
+    {
+      "modelId": "zeekr-001",
+      "modelName": "Zeekr 001",
+      "modelNameTh": "Zeekr 001",
+      "modelNameLo": "Zeekr 001",
+      "searchNames": [
+        "zeekr 001",
+        "zeekr001",
+        "001"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-001-fr",
+      "modelName": "Zeekr 001 FR",
+      "modelNameTh": "Zeekr 001 FR",
+      "modelNameLo": "Zeekr 001 FR",
+      "searchNames": [
+        "zeekr 001 fr",
+        "zeekr001fr",
+        "001 fr"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-007",
+      "modelName": "Zeekr 007",
+      "modelNameTh": "Zeekr 007",
+      "modelNameLo": "Zeekr 007",
+      "searchNames": [
+        "zeekr 007",
+        "zeekr007",
+        "007"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-007-gt",
+      "modelName": "Zeekr 007 GT",
+      "modelNameTh": "Zeekr 007 GT",
+      "modelNameLo": "Zeekr 007 GT",
+      "searchNames": [
+        "zeekr 007 gt",
+        "zeekr007gt",
+        "007 gt"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-007-station-wagon",
+      "modelName": "Zeekr 007 Station Wagon",
+      "modelNameTh": "Zeekr 007 Station Wagon",
+      "modelNameLo": "Zeekr 007 Station Wagon",
+      "searchNames": [
+        "zeekr 007 station wagon",
+        "zeekr 007 wagon",
+        "007 station wagon"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-009",
+      "modelName": "Zeekr 009",
+      "modelNameTh": "Zeekr 009",
+      "modelNameLo": "Zeekr 009",
+      "searchNames": [
+        "zeekr 009",
+        "zeekr009",
+        "009"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-009-grand",
+      "modelName": "Zeekr 009 Grand",
+      "modelNameTh": "Zeekr 009 Grand",
+      "modelNameLo": "Zeekr 009 Grand",
+      "searchNames": [
+        "zeekr 009 grand",
+        "zeekr009grand",
+        "009 grand"
+      ],
+      "categoryIds": [
+        "van",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "zeekr-7x",
+      "modelName": "Zeekr 7X",
+      "modelNameTh": "Zeekr 7X",
+      "modelNameLo": "Zeekr 7X",
+      "searchNames": [
+        "zeekr 7x",
+        "zeekr7x",
+        "7x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-8x",
+      "modelName": "Zeekr 8X",
+      "modelNameTh": "Zeekr 8X",
+      "modelNameLo": "Zeekr 8X",
+      "searchNames": [
+        "zeekr 8x",
+        "zeekr8x",
+        "8x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-9x",
+      "modelName": "Zeekr 9X",
+      "modelNameTh": "Zeekr 9X",
+      "modelNameLo": "Zeekr 9X",
+      "searchNames": [
+        "zeekr 9x",
+        "zeekr9x",
+        "9x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-mix",
+      "modelName": "Zeekr Mix",
+      "modelNameTh": "Zeekr Mix",
+      "modelNameLo": "Zeekr Mix",
+      "searchNames": [
+        "zeekr mix",
+        "zeekrmix",
+        "mix"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-x",
+      "modelName": "Zeekr X",
+      "modelNameTh": "Zeekr X",
+      "modelNameLo": "Zeekr X",
+      "searchNames": [
+        "zeekr x",
+        "zeekrx",
+        "x"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-beluga",
+      "modelName": "Zeekr Beluga",
+      "modelNameTh": "Zeekr Beluga",
+      "modelNameLo": "Zeekr Beluga",
+      "searchNames": [
+        "zeekr beluga",
+        "zeekrbeluga",
+        "beluga"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "zeekr-grampus",
+      "modelName": "Zeekr Grampus",
+      "modelNameTh": "Zeekr Grampus",
+      "modelNameLo": "Zeekr Grampus",
+      "searchNames": [
+        "zeekr grampus",
+        "zeekrgrampus",
+        "grampus"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    }
+  ]
+}

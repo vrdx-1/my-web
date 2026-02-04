@@ -1,0 +1,456 @@
+{
+  "brandId": "isuzu",
+  "brandName": "Isuzu",
+  "brandNameTh": "อีซูซุ",
+  "brandNameLo": "ອີຊູຊຸ",
+  "models": [
+    {
+      "modelId": "117-coupe",
+      "modelName": "117 Coupe",
+      "modelNameTh": "117 Coupe",
+      "modelNameLo": "117 Coupe",
+      "searchNames": [
+        "117 coupe",
+        "117"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "amigo",
+      "modelName": "Amigo",
+      "modelNameTh": "Amigo",
+      "modelNameLo": "Amigo",
+      "searchNames": [
+        "amigo"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "ascender",
+      "modelName": "Ascender",
+      "modelNameTh": "Ascender",
+      "modelNameLo": "Ascender",
+      "searchNames": [
+        "ascender"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "aska",
+      "modelName": "Aska",
+      "modelNameTh": "Aska",
+      "modelNameLo": "Aska",
+      "searchNames": [
+        "aska"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "axiom",
+      "modelName": "Axiom",
+      "modelNameTh": "Axiom",
+      "modelNameLo": "Axiom",
+      "searchNames": [
+        "axiom"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "bellel",
+      "modelName": "Bellel",
+      "modelNameTh": "Bellel",
+      "modelNameLo": "Bellel",
+      "searchNames": [
+        "bellel"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "bellett",
+      "modelName": "Bellett",
+      "modelNameTh": "Bellett",
+      "modelNameLo": "Bellett",
+      "searchNames": [
+        "bellett"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "bighorn",
+      "modelName": "Bighorn",
+      "modelNameTh": "Bighorn",
+      "modelNameLo": "Bighorn",
+      "searchNames": [
+        "bighorn"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "buddy",
+      "modelName": "Buddy",
+      "modelNameTh": "Buddy",
+      "modelNameLo": "Buddy",
+      "searchNames": [
+        "buddy"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "cameo",
+      "modelName": "Cameo",
+      "modelNameTh": "Cameo",
+      "modelNameLo": "Cameo",
+      "searchNames": [
+        "cameo"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "d-max",
+      "modelName": "D-Max",
+      "modelNameTh": "D-Max",
+      "modelNameLo": "D-Max",
+      "searchNames": [
+        "d-max",
+        "dmax",
+        "d max"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "faster",
+      "modelName": "Faster",
+      "modelNameTh": "Faster",
+      "modelNameLo": "Faster",
+      "searchNames": [
+        "faster"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "filly",
+      "modelName": "Filly",
+      "modelNameTh": "Filly",
+      "modelNameLo": "Filly",
+      "searchNames": [
+        "filly"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "florian",
+      "modelName": "Florian",
+      "modelNameTh": "Florian",
+      "modelNameLo": "Florian",
+      "searchNames": [
+        "florian"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "gemini",
+      "modelName": "Gemini",
+      "modelNameTh": "Gemini",
+      "modelNameLo": "Gemini",
+      "searchNames": [
+        "gemini"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "hi-lander",
+      "modelName": "Hi-Lander",
+      "modelNameTh": "Hi-Lander",
+      "modelNameLo": "Hi-Lander",
+      "searchNames": [
+        "hi-lander",
+        "hilander"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hombre",
+      "modelName": "Hombre",
+      "modelNameTh": "Hombre",
+      "modelNameLo": "Hombre",
+      "searchNames": [
+        "hombre"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "i-series",
+      "modelName": "i-Series",
+      "modelNameTh": "i-Series",
+      "modelNameLo": "i-Series",
+      "searchNames": [
+        "i-series",
+        "iseries"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "impulse",
+      "modelName": "Impulse",
+      "modelNameTh": "Impulse",
+      "modelNameLo": "Impulse",
+      "searchNames": [
+        "impulse"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "kb",
+      "modelName": "KB",
+      "modelNameTh": "KB",
+      "modelNameLo": "KB",
+      "searchNames": [
+        "kb"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "mu",
+      "modelName": "MU",
+      "modelNameTh": "MU",
+      "modelNameLo": "MU",
+      "searchNames": [
+        "mu"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "mu-7",
+      "modelName": "MU-7",
+      "modelNameTh": "MU-7",
+      "modelNameLo": "MU-7",
+      "searchNames": [
+        "mu-7",
+        "mu7",
+        "mu 7"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "mu-x",
+      "modelName": "MU-X",
+      "modelNameTh": "MU-X",
+      "modelNameLo": "MU-X",
+      "searchNames": [
+        "mu-x",
+        "mux",
+        "mu x"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "oasis",
+      "modelName": "Oasis",
+      "modelNameTh": "Oasis",
+      "modelNameLo": "Oasis",
+      "searchNames": [
+        "oasis"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "panther",
+      "modelName": "Panther",
+      "modelNameTh": "Panther",
+      "modelNameLo": "Panther",
+      "searchNames": [
+        "panther"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "piazza",
+      "modelName": "Piazza",
+      "modelNameTh": "Piazza",
+      "modelNameLo": "Piazza",
+      "searchNames": [
+        "piazza"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "pickup",
+      "modelName": "Pickup",
+      "modelNameTh": "Pickup",
+      "modelNameLo": "Pickup",
+      "searchNames": [
+        "pickup",
+        "isuzu pickup"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "rodeo",
+      "modelName": "Rodeo",
+      "modelNameTh": "Rodeo",
+      "modelNameLo": "Rodeo",
+      "searchNames": [
+        "rodeo"
+      ],
+      "categoryIds": [
+        "suv",
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "s-brw",
+      "modelName": "S-BRW",
+      "modelNameTh": "S-BRW",
+      "modelNameLo": "S-BRW",
+      "searchNames": [
+        "s-brw",
+        "sbrw"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "statesman",
+      "modelName": "Statesman",
+      "modelNameTh": "Statesman",
+      "modelNameLo": "Statesman",
+      "searchNames": [
+        "statesman"
+      ],
+      "categoryIds": [
+        "bus"
+      ]
+    },
+    {
+      "modelId": "stylus",
+      "modelName": "Stylus",
+      "modelNameTh": "Stylus",
+      "modelNameLo": "Stylus",
+      "searchNames": [
+        "stylus"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "trooper",
+      "modelName": "Trooper",
+      "modelNameTh": "Trooper",
+      "modelNameLo": "Trooper",
+      "searchNames": [
+        "trooper"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "trojan",
+      "modelName": "Trojan",
+      "modelNameTh": "Trojan",
+      "modelNameLo": "Trojan",
+      "searchNames": [
+        "trojan"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "vehicross",
+      "modelName": "VehiCROSS",
+      "modelNameTh": "VehiCROSS",
+      "modelNameLo": "VehiCROSS",
+      "searchNames": [
+        "vehicross",
+        "vehi cross"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "vertex",
+      "modelName": "Vertex",
+      "modelNameTh": "Vertex",
+      "modelNameLo": "Vertex",
+      "searchNames": [
+        "vertex"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "wizard",
+      "modelName": "Wizard",
+      "modelNameTh": "Wizard",
+      "modelNameLo": "Wizard",
+      "searchNames": [
+        "wizard"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    }
+  ]
+}

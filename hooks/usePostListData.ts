@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/carSearch';
+import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')

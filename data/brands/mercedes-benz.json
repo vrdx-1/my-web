@@ -1,0 +1,541 @@
+{
+  "brandId": "mercedes-benz",
+  "brandName": "Mercedes-Benz",
+  "brandNameTh": "เมอร์เซเดส-เบนซ์",
+  "brandNameLo": "ເມີເຊດີ ເບັ້ນ",
+  "models": [
+    {
+      "modelId": "a-class",
+      "modelName": "A-Class",
+      "modelNameTh": "A-Class",
+      "modelNameLo": "A-Class",
+      "searchNames": [
+        "a-class",
+        "a class",
+        "aclass"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "amg-gt",
+      "modelName": "AMG GT",
+      "modelNameTh": "AMG GT",
+      "modelNameLo": "AMG GT",
+      "searchNames": [
+        "amg gt",
+        "amg gt"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "amg-gt-4-door-coupe",
+      "modelName": "AMG GT 4-Door Coupé",
+      "modelNameTh": "AMG GT 4-Door Coupé",
+      "modelNameLo": "AMG GT 4-Door Coupé",
+      "searchNames": [
+        "amg gt 4-door",
+        "amg gt 4 door",
+        "amg gt coupe"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "b-class",
+      "modelName": "B-Class",
+      "modelNameTh": "B-Class",
+      "modelNameLo": "B-Class",
+      "searchNames": [
+        "b-class",
+        "b class",
+        "bclass"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "c-class",
+      "modelName": "C-Class",
+      "modelNameTh": "C-Class",
+      "modelNameLo": "C-Class",
+      "searchNames": [
+        "c-class",
+        "c class",
+        "cclass"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "c-class-eq",
+      "modelName": "C-Class EQ (Upcoming)",
+      "modelNameTh": "C-Class EQ (Upcoming)",
+      "modelNameLo": "C-Class EQ (Upcoming)",
+      "searchNames": [
+        "c-class eq",
+        "c class eq",
+        "c eq"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "cla",
+      "modelName": "CLA",
+      "modelNameTh": "CLA",
+      "modelNameLo": "CLA",
+      "searchNames": [
+        "cla"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cla-shooting-brake",
+      "modelName": "CLA Shooting Brake",
+      "modelNameTh": "CLA Shooting Brake",
+      "modelNameLo": "CLA Shooting Brake",
+      "searchNames": [
+        "cla shooting brake",
+        "cla wagon",
+        "cla sb"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "cle-coupe",
+      "modelName": "CLE Coupe",
+      "modelNameTh": "CLE Coupe",
+      "modelNameLo": "CLE Coupe",
+      "searchNames": [
+        "cle coupe",
+        "cle"
+      ],
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cle-cabriolet",
+      "modelName": "CLE Cabriolet",
+      "modelNameTh": "CLE Cabriolet",
+      "modelNameLo": "CLE Cabriolet",
+      "searchNames": [
+        "cle cabriolet",
+        "cle cabrio"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "cls",
+      "modelName": "CLS",
+      "modelNameTh": "CLS",
+      "modelNameLo": "CLS",
+      "searchNames": [
+        "cls"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "e-class",
+      "modelName": "E-Class",
+      "modelNameTh": "E-Class",
+      "modelNameLo": "E-Class",
+      "searchNames": [
+        "e-class",
+        "e class",
+        "eclass"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e-class-wagon",
+      "modelName": "E-Class Wagon",
+      "modelNameTh": "E-Class Wagon",
+      "modelNameLo": "E-Class Wagon",
+      "searchNames": [
+        "e-class wagon",
+        "e class wagon",
+        "e wagon"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "e-class-all-terrain",
+      "modelName": "E-Class All-Terrain",
+      "modelNameTh": "E-Class All-Terrain",
+      "modelNameLo": "E-Class All-Terrain",
+      "searchNames": [
+        "e-class all-terrain",
+        "e all terrain",
+        "e class all terrain"
+      ],
+      "categoryIds": [
+        "sedan"
+      ]
+    },
+    {
+      "modelId": "eqa",
+      "modelName": "EQA",
+      "modelNameTh": "EQA",
+      "modelNameLo": "EQA",
+      "searchNames": [
+        "eqa"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eqb",
+      "modelName": "EQB",
+      "modelNameTh": "EQB",
+      "modelNameLo": "EQB",
+      "searchNames": [
+        "eqb"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eqc",
+      "modelName": "EQC",
+      "modelNameTh": "EQC",
+      "modelNameLo": "EQC",
+      "searchNames": [
+        "eqc"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eqe",
+      "modelName": "EQE",
+      "modelNameTh": "EQE",
+      "modelNameLo": "EQE",
+      "searchNames": [
+        "eqe"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eqe-suv",
+      "modelName": "EQE SUV",
+      "modelNameTh": "EQE SUV",
+      "modelNameLo": "EQE SUV",
+      "searchNames": [
+        "eqe suv",
+        "eqesuv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "eqs",
+      "modelName": "EQS",
+      "modelNameTh": "EQS",
+      "modelNameLo": "EQS",
+      "searchNames": [
+        "eqs"
+      ],
+      "categoryIds": [
+        "sedan",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "eqs-suv",
+      "modelName": "EQS SUV",
+      "modelNameTh": "EQS SUV",
+      "modelNameLo": "EQS SUV",
+      "searchNames": [
+        "eqs suv",
+        "eqssuv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "g-class",
+      "modelName": "G-Class",
+      "modelNameTh": "G-Class",
+      "modelNameLo": "G-Class",
+      "searchNames": [
+        "g-class",
+        "g class",
+        "gclass",
+        "g wagon"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "g-class-ev",
+      "modelName": "G-Class EV (G 580)",
+      "modelNameTh": "G-Class EV (G 580)",
+      "modelNameLo": "G-Class EV (G 580)",
+      "searchNames": [
+        "g-class ev",
+        "g 580",
+        "g class electric"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gla",
+      "modelName": "GLA",
+      "modelNameTh": "GLA",
+      "modelNameLo": "GLA",
+      "searchNames": [
+        "gla"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glb",
+      "modelName": "GLB",
+      "modelNameTh": "GLB",
+      "modelNameLo": "GLB",
+      "searchNames": [
+        "glb"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glc",
+      "modelName": "GLC",
+      "modelNameTh": "GLC",
+      "modelNameLo": "GLC",
+      "searchNames": [
+        "glc"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "glc-coupe",
+      "modelName": "GLC Coupe",
+      "modelNameTh": "GLC Coupe",
+      "modelNameLo": "GLC Coupe",
+      "searchNames": [
+        "glc coupe",
+        "glccoupe"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gle",
+      "modelName": "GLE",
+      "modelNameTh": "GLE",
+      "modelNameLo": "GLE",
+      "searchNames": [
+        "gle"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gle-coupe",
+      "modelName": "GLE Coupe",
+      "modelNameTh": "GLE Coupe",
+      "modelNameLo": "GLE Coupe",
+      "searchNames": [
+        "gle coupe",
+        "glecoupe"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gls",
+      "modelName": "GLS",
+      "modelNameTh": "GLS",
+      "modelNameLo": "GLS",
+      "searchNames": [
+        "gls"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "maybach-s-class",
+      "modelName": "Maybach S-Class",
+      "modelNameTh": "Maybach S-Class",
+      "modelNameLo": "Maybach S-Class",
+      "searchNames": [
+        "maybach s-class",
+        "maybach s class",
+        "maybach s"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "maybach-gls",
+      "modelName": "Maybach GLS",
+      "modelNameTh": "Maybach GLS",
+      "modelNameLo": "Maybach GLS",
+      "searchNames": [
+        "maybach gls",
+        "maybachgls"
+      ],
+      "categoryIds": [
+        "suv",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "maybach-eqs-suv",
+      "modelName": "Maybach EQS SUV",
+      "modelNameTh": "Maybach EQS SUV",
+      "modelNameLo": "Maybach EQS SUV",
+      "searchNames": [
+        "maybach eqs suv",
+        "maybach eqs"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "maybach-sl",
+      "modelName": "Maybach SL",
+      "modelNameTh": "Maybach SL",
+      "modelNameLo": "Maybach SL",
+      "searchNames": [
+        "maybach sl",
+        "maybachsl"
+      ],
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "s-class",
+      "modelName": "S-Class",
+      "modelNameTh": "S-Class",
+      "modelNameLo": "S-Class",
+      "searchNames": [
+        "s-class",
+        "s class",
+        "sclass"
+      ],
+      "categoryIds": [
+        "sedan",
+        "luxury"
+      ]
+    },
+    {
+      "modelId": "sl-class",
+      "modelName": "SL-Class",
+      "modelNameTh": "SL-Class",
+      "modelNameLo": "SL-Class",
+      "searchNames": [
+        "sl-class",
+        "sl class",
+        "slclass",
+        "sl"
+      ],
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "modelId": "sprinter",
+      "modelName": "Sprinter",
+      "modelNameTh": "Sprinter",
+      "modelNameLo": "Sprinter",
+      "searchNames": [
+        "sprinter"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "v-class",
+      "modelName": "V-Class",
+      "modelNameTh": "V-Class",
+      "modelNameLo": "V-Class",
+      "searchNames": [
+        "v-class",
+        "v class",
+        "vclass"
+      ],
+      "categoryIds": [
+        "van"
+      ]
+    },
+    {
+      "modelId": "vle-eq",
+      "modelName": "VLE EQ (Upcoming)",
+      "modelNameTh": "VLE EQ (Upcoming)",
+      "modelNameLo": "VLE EQ (Upcoming)",
+      "searchNames": [
+        "vle eq",
+        "vle",
+        "vle electric"
+      ],
+      "categoryIds": [
+        "van",
+        "electric"
+      ]
+    }
+  ]
+}

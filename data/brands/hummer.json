@@ -1,0 +1,240 @@
+{
+  "brandId": "hummer",
+  "brandName": "Hummer",
+  "brandNameTh": "ฮัมเมอร์",
+  "brandNameLo": "ຮຳເມີ",
+  "models": [
+    {
+      "modelId": "humvee",
+      "modelName": "Humvee (M998 HMMWV)",
+      "modelNameTh": "Humvee (M998 HMMWV)",
+      "modelNameLo": "Humvee (M998 HMMWV)",
+      "searchNames": [
+        "humvee",
+        "m998",
+        "hmmwv"
+      ],
+      "categoryIds": [
+        "truck"
+      ]
+    },
+    {
+      "modelId": "h1",
+      "modelName": "Hummer H1",
+      "modelNameTh": "Hummer H1",
+      "modelNameLo": "Hummer H1",
+      "searchNames": [
+        "h1",
+        "hummer h1"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h1-alpha",
+      "modelName": "Hummer H1 Alpha",
+      "modelNameTh": "Hummer H1 Alpha",
+      "modelNameLo": "Hummer H1 Alpha",
+      "searchNames": [
+        "h1 alpha"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h2",
+      "modelName": "Hummer H2",
+      "modelNameTh": "Hummer H2",
+      "modelNameLo": "Hummer H2",
+      "searchNames": [
+        "h2",
+        "hummer h2"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h2-sut",
+      "modelName": "Hummer H2 SUT (Sport Utility Truck)",
+      "modelNameTh": "Hummer H2 SUT (Sport Utility Truck)",
+      "modelNameLo": "Hummer H2 SUT (Sport Utility Truck)",
+      "searchNames": [
+        "h2 sut",
+        "h2 sport utility truck",
+        "hummer h2 sut"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "h3",
+      "modelName": "Hummer H3",
+      "modelNameTh": "Hummer H3",
+      "modelNameLo": "Hummer H3",
+      "searchNames": [
+        "h3",
+        "hummer h3"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "h3t",
+      "modelName": "Hummer H3T (Pickup)",
+      "modelNameTh": "Hummer H3T (Pickup)",
+      "modelNameLo": "Hummer H3T (Pickup)",
+      "searchNames": [
+        "h3t",
+        "h3 t",
+        "hummer h3t"
+      ],
+      "categoryIds": [
+        "pickup"
+      ]
+    },
+    {
+      "modelId": "h3-alpha",
+      "modelName": "Hummer H3 Alpha",
+      "modelNameTh": "Hummer H3 Alpha",
+      "modelNameLo": "Hummer H3 Alpha",
+      "searchNames": [
+        "h3 alpha",
+        "hummer h3 alpha"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "hx-concept",
+      "modelName": "Hummer HX (Concept)",
+      "modelNameTh": "Hummer HX (Concept)",
+      "modelNameLo": "Hummer HX (Concept)",
+      "searchNames": [
+        "hx",
+        "hummer hx",
+        "hx concept"
+      ],
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-pickup",
+      "modelName": "GMC Hummer EV Pickup",
+      "modelNameTh": "GMC Hummer EV Pickup",
+      "modelNameLo": "GMC Hummer EV Pickup",
+      "searchNames": [
+        "hummer ev pickup",
+        "gmc hummer ev pickup"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-suv",
+      "modelName": "GMC Hummer EV SUV",
+      "modelNameTh": "GMC Hummer EV SUV",
+      "modelNameLo": "GMC Hummer EV SUV",
+      "searchNames": [
+        "hummer ev suv",
+        "gmc hummer ev suv"
+      ],
+      "categoryIds": [
+        "suv",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-edition-1",
+      "modelName": "GMC Hummer EV Edition 1",
+      "modelNameTh": "GMC Hummer EV Edition 1",
+      "modelNameLo": "GMC Hummer EV Edition 1",
+      "searchNames": [
+        "hummer ev edition 1",
+        "hummer ev edition one"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-2",
+      "modelName": "GMC Hummer EV 2",
+      "modelNameTh": "GMC Hummer EV 2",
+      "modelNameLo": "GMC Hummer EV 2",
+      "searchNames": [
+        "hummer ev 2",
+        "hummer ev2"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-2x",
+      "modelName": "GMC Hummer EV 2X",
+      "modelNameTh": "GMC Hummer EV 2X",
+      "modelNameLo": "GMC Hummer EV 2X",
+      "searchNames": [
+        "hummer ev 2x",
+        "hummer ev2x"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-3x",
+      "modelName": "GMC Hummer EV 3X",
+      "modelNameTh": "GMC Hummer EV 3X",
+      "modelNameLo": "GMC Hummer EV 3X",
+      "searchNames": [
+        "hummer ev 3x",
+        "hummer ev3x"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-omega-edition",
+      "modelName": "GMC Hummer EV Omega Edition",
+      "modelNameTh": "GMC Hummer EV Omega Edition",
+      "modelNameLo": "GMC Hummer EV Omega Edition",
+      "searchNames": [
+        "hummer ev omega edition",
+        "hummer ev omega"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    },
+    {
+      "modelId": "gmc-hummer-ev-carbon-fiber-edition",
+      "modelName": "GMC Hummer EV Carbon Fiber Edition (2026)",
+      "modelNameTh": "GMC Hummer EV Carbon Fiber Edition (2026)",
+      "modelNameLo": "GMC Hummer EV Carbon Fiber Edition (2026)",
+      "searchNames": [
+        "hummer ev carbon fiber",
+        "hummer ev carbon fiber edition"
+      ],
+      "categoryIds": [
+        "pickup",
+        "electric"
+      ]
+    }
+  ]
+}

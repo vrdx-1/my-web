@@ -1,0 +1,409 @@
+{
+  "brandId": "lamborghini",
+  "brandName": "Lamborghini",
+  "brandNameTh": "ลัมโบร์กินี",
+  "brandNameLo": "ແລັມໂບກີນີ",
+  "models": [
+    {
+      "id": "350-gt",
+      "nameEn": "350 GT",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "400-gt",
+      "nameEn": "400 GT",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "400-gt-2-2",
+      "nameEn": "400 GT 2+2",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "alar",
+      "nameEn": "Alar",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "asterion",
+      "nameEn": "Asterion",
+      "categoryIds": [
+        "sport",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "aventador",
+      "nameEn": "Aventador",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "aventador-s",
+      "nameEn": "Aventador S",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "aventador-svj",
+      "nameEn": "Aventador SVJ",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "aventador-ultimae",
+      "nameEn": "Aventador Ultimae",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "centenario",
+      "nameEn": "Centenario",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "centenario-roadster",
+      "nameEn": "Centenario Roadster",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "countach",
+      "nameEn": "Countach",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "countach-lpi-800-4",
+      "nameEn": "Countach LPI 800-4",
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "diablo",
+      "nameEn": "Diablo",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "diablo-vt",
+      "nameEn": "Diablo VT",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "diablo-sv",
+      "nameEn": "Diablo SV",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "diablo-gt",
+      "nameEn": "Diablo GT",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "espada",
+      "nameEn": "Espada",
+      "categoryIds": [
+        "sport",
+        "luxury"
+      ]
+    },
+    {
+      "id": "essenza-scv12",
+      "nameEn": "Essenza SCV12",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "fenomeno",
+      "nameEn": "Fenomeno",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "gallardo",
+      "nameEn": "Gallardo",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "gallardo-spyder",
+      "nameEn": "Gallardo Spyder",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "gallardo-superleggera",
+      "nameEn": "Gallardo Superleggera",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "huracan",
+      "nameEn": "Huracán",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "huracan-evo",
+      "nameEn": "Huracán EVO",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "huracan-sto",
+      "nameEn": "Huracán STO",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "huracan-tecnica",
+      "nameEn": "Huracán Tecnica",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "huracan-sterrato",
+      "nameEn": "Huracán Sterrato",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "islero",
+      "nameEn": "Islero",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "jalpa",
+      "nameEn": "Jalpa",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "jarama",
+      "nameEn": "Jarama",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "lanzador",
+      "nameEn": "Lanzador",
+      "categoryIds": [
+        "electric"
+      ]
+    },
+    {
+      "id": "lm002",
+      "nameEn": "LM002",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "miura",
+      "nameEn": "Miura",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "miura-sv",
+      "nameEn": "Miura SV",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "miura-s",
+      "nameEn": "Miura S",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "murcielago",
+      "nameEn": "Murciélago",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "murcielago-lp640",
+      "nameEn": "Murciélago LP640",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "murcielago-sv",
+      "nameEn": "Murciélago SV",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "reventon",
+      "nameEn": "Reventón",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "reventon-roadster",
+      "nameEn": "Reventón Roadster",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "revuelto",
+      "nameEn": "Revuelto",
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "sc18-alston",
+      "nameEn": "SC18 Alston",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "sc20",
+      "nameEn": "SC20",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "sesto-elemento",
+      "nameEn": "Sesto Elemento",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "sian-fkp-37",
+      "nameEn": "Sián FKP 37",
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "sian-roadster",
+      "nameEn": "Sián Roadster",
+      "categoryIds": [
+        "supercar",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "silhouette",
+      "nameEn": "Silhouette",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "temerario",
+      "nameEn": "Temerario",
+      "categoryIds": [
+        "sedan",
+        "sport"
+      ]
+    },
+    {
+      "id": "urus",
+      "nameEn": "Urus",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "urus-s",
+      "nameEn": "Urus S",
+      "categoryIds": [
+        "suv"
+      ]
+    },
+    {
+      "id": "urus-performante",
+      "nameEn": "Urus Performante",
+      "categoryIds": [
+        "suv",
+        "sport"
+      ]
+    },
+    {
+      "id": "urus-se",
+      "nameEn": "Urus SE",
+      "categoryIds": [
+        "suv",
+        "hybrid"
+      ]
+    },
+    {
+      "id": "urraco",
+      "nameEn": "Urraco",
+      "categoryIds": [
+        "sport"
+      ]
+    },
+    {
+      "id": "veneno",
+      "nameEn": "Veneno",
+      "categoryIds": [
+        "supercar"
+      ]
+    },
+    {
+      "id": "veneno-roadster",
+      "nameEn": "Veneno Roadster",
+      "categoryIds": [
+        "supercar"
+      ]
+    }
+  ]
+}
