@@ -335,6 +335,41 @@ export function expandCarSearchAliases(query: string): string[] {
   const qNorm = normalizeCarSearch(query);
   if (!qNorm) return [];
 
+  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
+  if (entities && entities.size > 0) {
+    const out: string[] = [query];
+    for (const entity of entities) {
+      const aliases = CAR_INDEX.entityAliases.get(entity);
+      if (aliases) out.push(...aliases);
+
+      const info = CAR_INDEX.entityInfo.get(entity);
+      if (!info) continue;
+
+      // If searching by BRAND: also expand to all MODELS under that brand,
+      // so a caption that contains only the model (no brand) still matches.
+      if (info.kind === 'brand') {
+        const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
+        if (modelKeys) {
+          for (const mk of modelKeys) {
+            const mAliases = CAR_INDEX.entityAliases.get(mk);
+            if (mAliases) out.push(...mAliases);
+          }
+        }
+      }
+
+      // If searching by MODEL: also include the BRAND aliases (best effort).
+      if (info.kind === 'model') {
+        const bk = CAR_INDEX.modelToBrandKey.get(entity);
+        if (bk) {
+          const bAliases = CAR_INDEX.entityAliases.get(bk);
+          if (bAliases) out.push(...bAliases);
+        }
+      }
+    }
+    return uniqStringsCarSearch(out);
+  }
+
+  // ถ้าไม่พบใน dictionary ของยี่ห้อ/รุ่นเลย ค่อย fallback ไปใช้ category (pickup/van/EV ฯลฯ)
   const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
   if (categoryIds && categoryIds.size > 0) {
     const expanded: string[] = [query];
@@ -346,39 +381,8 @@ export function expandCarSearchAliases(query: string): string[] {
     return uniqStringsCarSearch(expanded);
   }
 
-  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
-  if (!entities || entities.size === 0) return [query];
-
-  const out: string[] = [query];
-  for (const entity of entities) {
-    const aliases = CAR_INDEX.entityAliases.get(entity);
-    if (aliases) out.push(...aliases);
-
-    const info = CAR_INDEX.entityInfo.get(entity);
-    if (!info) continue;
-
-    // If searching by BRAND: also expand to all MODELS under that brand,
-    // so a caption that contains only the model (no brand) still matches.
-    if (info.kind === 'brand') {
-      const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
-      if (modelKeys) {
-        for (const mk of modelKeys) {
-          const mAliases = CAR_INDEX.entityAliases.get(mk);
-          if (mAliases) out.push(...mAliases);
-        }
-      }
-    }
-
-    // If searching by MODEL: also include the BRAND aliases (best effort).
-    if (info.kind === 'model') {
-      const bk = CAR_INDEX.modelToBrandKey.get(entity);
-      if (bk) {
-        const bAliases = CAR_INDEX.entityAliases.get(bk);
-        if (bAliases) out.push(...bAliases);
-      }
-    }
-  }
-  return uniqStringsCarSearch(out);
+  // ถ้าไม่เข้าเคสใดเลย ให้คืน query เดิมเพื่อไม่ให้เงียบหาย
+  return [query];
 }
 
 export function captionMatchesAnyAlias(caption: string, queries: string[]): boolean {

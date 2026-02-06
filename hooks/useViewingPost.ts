@@ -84,48 +84,15 @@ export function useViewingPost(): UseViewingPostReturn {
   }, [viewingModeTouchStart]);
 
   const handleViewingModeTouchEnd = useCallback((e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => {
+    // ปิดการปัดเพื่อออกจาก viewing mode ทั้งหมด
+    // ให้ผู้ใช้ปิดได้เฉพาะการกดปุ่ม back เท่านั้น
     if (!viewingModeTouchStart) return;
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - viewingModeTouchStart.x;
-    const dy = touch.clientY - viewingModeTouchStart.y;
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
 
-    const horizontalThreshold = typeof window !== 'undefined' ? Math.min(80, window.innerWidth * 0.18) : 80;
-
-    // 1) ปัดจากซ้ายไปขวาเพื่อปิด viewing mode (คล้าย gesture ถอยกลับที่ผู้ใช้คุ้นเคย)
-    if (absDx > absDy && dx > horizontalThreshold) {
-      setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
-      setViewingModeTouchStart(null);
-      closeViewingMode(setIsHeaderVisible);
-      return;
-    }
-
-    // 2) ปัดขึ้นตอนอยู่รูปสุดท้าย/ด้านล่างสุดของ content → ปิด viewing mode
-    let atBottom = false;
-    if (typeof document !== 'undefined') {
-      const container = document.getElementById('viewing-mode-container');
-      if (container) {
-        const { scrollTop, scrollHeight, clientHeight } = container;
-        const epsilon = 12; // เผื่อ margin/padding เล็กน้อย
-        atBottom = scrollTop + clientHeight >= scrollHeight - epsilon;
-      }
-    }
-
-    if (atBottom && absDy > absDx && dy < -40) {
-      setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
-      setViewingModeTouchStart(null);
-      closeViewingMode(setIsHeaderVisible);
-      return;
-    }
-
-    // 3) กรณี gesture อื่น ๆ → รีเซ็ตค่า drag กลับเหมือนเดิม
+    // รีเซ็ต gesture state กลับเหมือนเดิม โดยไม่ปิด viewing mode
     setViewingModeDragOffset(0);
     setViewingModeIsDragging(false);
     setViewingModeTouchStart(null);
-  }, [viewingModeTouchStart, closeViewingMode]);
+  }, [viewingModeTouchStart, setViewingModeDragOffset, setViewingModeIsDragging, setViewingModeTouchStart]);
 
   return {
     // State

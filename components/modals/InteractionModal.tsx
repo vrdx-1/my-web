@@ -61,9 +61,6 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
     >
       <div 
         onClick={e => e.stopPropagation()} 
-        onTouchStart={onSheetTouchStart} 
-        onTouchMove={onSheetTouchMove} 
-        onTouchEnd={onSheetTouchEnd} 
         style={{ 
           width: '100%', 
           background: '#fff', 
@@ -77,18 +74,25 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
           touchAction: 'auto' 
         }}
       >
+        {/* Drag handle และ header section - ใช้ touch handler เพื่อขยาย/ย่อ bottom sheet */}
         <div 
-          onClick={onClose} 
-          style={{ 
-            padding: '8px 0', 
-            display: 'flex', 
-            justifyContent: 'center', 
-            cursor: 'pointer' 
-          }}
+          onTouchStart={onSheetTouchStart} 
+          onTouchMove={onSheetTouchMove} 
+          onTouchEnd={onSheetTouchEnd}
+          style={{ flexShrink: 0 }}
         >
-          <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
-        </div>
-        <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#fff', zIndex: 10 }}>
+          <div 
+            onClick={onClose} 
+            style={{ 
+              padding: '8px 0', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              cursor: 'pointer' 
+            }}
+          >
+            <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
+          </div>
+          <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#fff', zIndex: 10 }}>
           <div 
             onClick={() => onFetchInteractions('likes', postId)} 
             style={{ 
@@ -130,7 +134,9 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
             <div style={{ width: '100%', height: '3px', background: type === 'saves' ? '#FFD700' : 'transparent', marginTop: '6px', borderRadius: '2px' }}></div>
           </div>
           <div style={{ position: 'absolute', bottom: '0px', left: 0, right: 0, height: '1px', background: '#f0f0f0' }}></div>
+          </div>
         </div>
+        {/* Scrollable content area - ไม่มี touch handler เพื่อป้องกันการขยาย bottom sheet ตอน scroll */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
           {interactionLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>

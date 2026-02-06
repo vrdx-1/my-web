@@ -459,13 +459,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         return;
       }
 
-      setHasMore(postIds.length === PREFETCH_COUNT);
-
-      // Reset posts if initial load
-      if (isInitial) {
-        setPosts([]);
-      }
-
       // Batch loading: ดึง posts ทั้งหมดในครั้งเดียวแทนการ loop
       // Optimize: Select เฉพาะ fields ที่จำเป็นเท่านั้น
       if (postIds.length > 0) {
@@ -536,9 +529,22 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
 
           // Add posts to state
           setPosts(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
+            const base = isInitial ? [] : prev;
+            const existingIds = new Set(base.map(p => p.id));
             const newPosts = filteredPosts.filter(p => !existingIds.has(p.id));
-            return [...prev, ...newPosts];
+
+            // ถ้าไม่มีโพสต์ใหม่เพิ่มเลย แสดงว่า "หมดแล้วจริงๆ" สำหรับลิสต์นี้
+            // ป้องกันไม่ให้ infinite scroll เรียกโหลดซ้ำและแสดงอนิเมชั่นโหลดค้าง
+            if (newPosts.length === 0) {
+              setHasMore(false);
+              return base;
+            }
+
+            // ถ้ายังได้จำนวน postIds เท่ากับ PREFETCH_COUNT แสดงว่ายังมีโอกาสมีหน้าถัดไป
+            // ถ้าน้อยกว่า แปลว่าถึงท้ายลิสต์แล้ว
+            setHasMore(postIds.length === PREFETCH_COUNT);
+
+            return [...base, ...newPosts];
           });
 
           // Update interaction status

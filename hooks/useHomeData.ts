@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import React from 'react';
 import { supabase } from '@/lib/supabase';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { expandCarSearchAliases, getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { safeParseJSON } from '@/utils/storageUtils';
-import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
 import { LAO_PROVINCES } from '@/utils/constants';
 
 function normalizeCaptionSearch(text: string): string {
@@ -136,36 +135,19 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const trimmedSearch = (searchTermRef.current ?? '').trim();
 
     if (trimmedSearch) {
-      // ให้ฐานข้อมูลค้นหา caption ตามคำค้นและคำพ้องจาก dictionary (หลายภาษา) โดยใช้ index (pg_trgm + GIN)
+      // ขยายคำค้นแบบเดียวกับ Suggestion (ไทย/ลาว/อังกฤษ) ส่งใน body เพื่อไม่ให้ unicode ผิดใน URL
       const expandedTerms = expandCarSearchAliases(trimmedSearch);
       const searchTerms = (expandedTerms.length > 0 ? expandedTerms : [trimmedSearch])
         .map((t) => String(t ?? '').trim())
         .filter(Boolean);
-
-      let query = supabase
-        .from('cars')
-        .select('id')
-        .eq('status', 'recommend')
-        .eq('is_hidden', false);
-
-      if (searchTerms.length === 1) {
-        // กรณีมีคำค้นเดียว ให้ใช้ ilike ปกติ
-        query = query.ilike('caption', `%${searchTerms[0]}%`);
-      } else if (searchTerms.length > 1) {
-        // กรณีมีหลายคำ (เช่น revo / รีโว้ / ລີໂວ້) ให้ OR กันในฐานข้อมูล
-        const orFilter = searchTerms
-          .map((term) => `caption.ilike.%${term}%`)
-          .join(',');
-        query = query.or(orFilter);
-      }
-
-      const { data, error } = await query
-        .order('is_boosted', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(startIndex, endIndex);
-
-      if (!error && data) {
-        postIds = data.map((p: any) => p.id);
+      const res = await fetch('/api/posts/feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerms, startIndex, endIndex }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        postIds = Array.isArray(json.postIds) ? json.postIds : [];
       }
     } else {
       const { data, error } = await supabase

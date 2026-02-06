@@ -73,7 +73,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           zIndex: 3000, 
           display: 'flex', 
           flexDirection: 'column', 
-          touchAction: 'auto' 
+          // ปิด gesture zoom/scroll พิเศษใน fullscreen ให้ควบคุมเอง
+          touchAction: 'none', 
         }} 
         onTouchStart={onTouchStart} 
         onTouchMove={onTouchMove} 
@@ -139,7 +140,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           <div style={{ 
             display: 'flex', 
             transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none', 
-            transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px)) translateY(${fullScreenVerticalDragOffset}px)`, 
+            // ลบการปัดขึ้น/ลงออก (ไม่มี translateY)
+            transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px))`, 
             width: '100%', 
             height: '100%' 
           }}>
@@ -151,9 +153,10 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                   display: 'flex', 
                   justifyContent: 'center', 
                   alignItems: 'center', 
-                  height: '100%', 
-                  transform: `scale(${fullScreenZoomScale || 1})`, 
-                  transformOrigin: fullScreenZoomOrigin || '50% 50%', 
+                  height: '100%',
+                  // ลบการ zoom ออกจาก fullscreen (scale คงที่)
+                  transform: 'scale(1)', 
+                  transformOrigin: '50% 50%', 
                   transition: 'none' 
                 }}
               >

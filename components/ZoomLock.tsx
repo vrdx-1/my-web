@@ -13,12 +13,12 @@ import { isFullScreenViewerOpen } from '@/utils/fullScreenMode';
 export default function ZoomLock() {
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (isFullScreenViewerOpen()) return;
+      // ปิดการ zoom ทุกรูปแบบ (รวมถึงตอน Full screen mode)
       if (e.ctrlKey || e.metaKey) e.preventDefault();
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isFullScreenViewerOpen()) return;
+      // ปิดการ zoom ทุกรูปแบบ (รวมถึงตอน Full screen mode)
       if (!(e.ctrlKey || e.metaKey)) return;
       const k = e.key;
       if (k === '+' || k === '=' || k === '-' || k === '_' || k === '0') {
@@ -27,7 +27,7 @@ export default function ZoomLock() {
     };
 
     const onGesture = (e: Event) => {
-      if (isFullScreenViewerOpen()) return;
+      // ปิดการ zoom ทุกรูปแบบ (รวมถึงตอน Full screen mode)
       e.preventDefault();
     };
 

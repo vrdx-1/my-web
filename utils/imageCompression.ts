@@ -13,7 +13,7 @@
 export async function compressImage(
   file: File,
   maxWidth: number = 1080,
-  quality: number = 0.8
+  quality: number = 0.7
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

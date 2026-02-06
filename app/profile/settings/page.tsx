@@ -1,7 +1,7 @@
 'use client'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 
@@ -9,15 +9,6 @@ export default function Settings() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-
-  // ปิดการ scroll ของหน้านี้
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prevOverflow
-    }
-  }, [])
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true)
@@ -46,8 +37,8 @@ export default function Settings() {
       maxWidth: '600px', 
       margin: '0 auto', 
       background: '#fff', 
-      height: '100vh', 
-      overflow: 'hidden',
+      minHeight: '100vh', 
+      overflowY: 'auto',
       fontFamily: LAO_FONT,
       display: 'flex',
       flexDirection: 'column' // กำหนดเป็น column เพื่อให้แยกส่วนบนกับส่วนล่างได้
@@ -154,8 +145,8 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* ปุ่มออกจากระบบ - ย้ายลงมาต่ำกว่าเดิม */}
-      <div style={{ padding: '420px 20px 20px 20px' }}>
+      {/* ปุ่มออกจากระบบ - ขยับขึ้นมาอีกนิด */}
+      <div style={{ padding: '380px 20px 20px 20px' }}>
         <button 
           onClick={handleLogoutClick} 
           disabled={loading}

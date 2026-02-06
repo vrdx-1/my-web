@@ -85,15 +85,31 @@ export function useInteractionModal(): UseInteractionModalReturn {
   }, []);
 
   const onSheetTouchStart = useCallback((e: React.TouchEvent) => {
+    // ตรวจสอบว่า touch เกิดขึ้นที่ scrollable area หรือไม่
+    const target = e.target as HTMLElement;
+    const scrollableArea = target.closest('[style*="overflowY"]') || target.closest('[style*="overflow-y"]');
+    // ถ้า touch เกิดขึ้นใน scrollable area ไม่ให้ track เพื่อป้องกันการขยาย bottom sheet ตอน scroll
+    if (scrollableArea && scrollableArea !== e.currentTarget) {
+      return;
+    }
     setStartY(e.touches[0].clientY);
   }, []);
 
   const onSheetTouchMove = useCallback((e: React.TouchEvent) => {
+    // ตรวจสอบว่า touch เกิดขึ้นที่ scrollable area หรือไม่
+    const target = e.target as HTMLElement;
+    const scrollableArea = target.closest('[style*="overflowY"]') || target.closest('[style*="overflow-y"]');
+    // ถ้า touch เกิดขึ้นใน scrollable area ไม่ให้ track เพื่อป้องกันการขยาย bottom sheet ตอน scroll
+    if (scrollableArea && scrollableArea !== e.currentTarget) {
+      return;
+    }
     const moveY = e.touches[0].clientY - startY;
     setCurrentY(moveY);
   }, [startY]);
 
   const onSheetTouchEnd = useCallback(() => {
+    // ป้องกันไม่ให้ bottom sheet ขยายใหญ่ขึ้นเมื่อ scroll ดูรายชื่อ
+    // ให้ขยายได้เฉพาะเมื่อ drag ที่ header หรือ drag handle เท่านั้น
     if (currentY < -50) {
       setInteractionSheetMode('full');
     } else if (currentY > 50) {

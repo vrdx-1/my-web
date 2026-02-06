@@ -30,6 +30,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useMenu } from '@/hooks/useMenu';
 import { usePostModals } from '@/hooks/usePostModals';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -47,12 +48,6 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
 const [tabRefreshing, setTabRefreshing] = useState(false);
 const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false);
 const initialFetchStartedRef = useRef(false);
-
-// Pull-to-refresh state
-const [pullDistance, setPullDistance] = useState(0);
-const [isPulling, setIsPulling] = useState(false);
-const [isRefreshing, setIsRefreshing] = useState(false);
-const pullStartYRef = useRef<number | null>(null);
  
  // Use home data hook
  const homeData = useHomeData(searchTerm);
@@ -260,61 +255,20 @@ useEffect(() => {
    setJustSavedPosts,
  });
 
- const handleTouchStart = (e: any) => {
-   if (typeof window === 'undefined') return;
-   if (window.scrollY === 0 && !isRefreshing && !homeData.loadingMore) {
-     if (e.touches && e.touches.length > 0) {
-       pullStartYRef.current = e.touches[0].clientY;
-       setIsPulling(true);
-       setPullDistance(0);
-     }
-   } else {
-     pullStartYRef.current = null;
-     setIsPulling(false);
-     setPullDistance(0);
-   }
- };
-
- const handleTouchMove = (e: any) => {
-   if (!isPulling || pullStartYRef.current === null) return;
-   if (typeof window !== 'undefined' && window.scrollY > 0) {
-     pullStartYRef.current = null;
-     setIsPulling(false);
-     setPullDistance(0);
-     return;
-   }
-   if (!e.touches || e.touches.length === 0) return;
-   const currentY = e.touches[0].clientY;
-   const diff = currentY - pullStartYRef.current;
-   if (diff <= 0) {
-     setPullDistance(0);
-     return;
-   }
-   const maxPull = 120;
-   setPullDistance(Math.min(diff, maxPull));
- };
-
- const handleTouchEnd = async () => {
-   if (!isPulling) {
-     setPullDistance(0);
-     return;
-   }
-   const threshold = 70;
-   const shouldRefresh = pullDistance >= threshold;
-   setIsPulling(false);
-   setPullDistance(0);
-   if (shouldRefresh && !isRefreshing) {
-     setIsRefreshing(true);
-     try {
-       await homeData.refreshData();
-       if (typeof window !== 'undefined') {
-         window.scrollTo({ top: 0 });
-       }
-     } finally {
-       setIsRefreshing(false);
-     }
-   }
- };
+const {
+  pullDistance,
+  isPulling,
+  isRefreshing,
+  handleTouchStart,
+  handleTouchMove,
+  handleTouchEnd,
+} = usePullToRefresh({
+  isLoading: homeData.loadingMore,
+  onRefresh: async () => {
+    // ปิดการ refresh หน้า Home ด้วยการดึงลง
+    // ไม่เรียก refreshData อีกต่อไป
+  },
+});
 
  // Use shared post feed handlers
  const handlers = usePostFeedHandlers({
@@ -335,9 +289,6 @@ useEffect(() => {
  return (
  <main
    style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
-   onTouchStart={handleTouchStart}
-   onTouchMove={handleTouchMove}
-   onTouchEnd={handleTouchEnd}
  >
  <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
@@ -376,19 +327,7 @@ useEffect(() => {
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
 
-<div
-  style={{
-    height: isRefreshing ? 50 : pullDistance > 0 ? Math.min(pullDistance, 80) : 0,
-    transition: isPulling ? 'none' : 'height 0.2s ease',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  }}
->
-  {(isRefreshing || pullDistance > 20) && <PageSpinner />}
-</div>
-
+{/* pull-to-refresh ถูกปิดการใช้งานแล้ว บนหน้า Home */}
  {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
      <PageSpinner />
@@ -463,7 +402,12 @@ useEffect(() => {
    viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
    savedScrollPosition={viewingPostHook.savedScrollPosition}
    onViewingPostClose={() => {
-     viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+     // ถ้าโพสต์ที่กำลังดูอยู่เป็นโพสต์แรกใน feed ให้แสดง header เสมอ
+     const isFirstPost = homeData.posts.length > 0 && viewingPostHook.viewingPost?.id === homeData.posts[0]?.id;
+     viewingPostHook.closeViewingMode();
+     if (isFirstPost) {
+       headerScroll.setIsHeaderVisible(true);
+     }
    }}
    onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
    onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

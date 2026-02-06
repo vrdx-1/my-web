@@ -32,7 +32,7 @@ export const TermsModal = React.memo<TermsModalProps>(({
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '30px 20px', position: 'relative', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '40px 0 30px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '40px 0 30px 0', flexWrap: 'wrap' }}>
           <input 
             type="checkbox" 
             id="modal-terms" 
@@ -44,8 +44,20 @@ export const TermsModal = React.memo<TermsModalProps>(({
             htmlFor="modal-terms" 
             style={{ fontSize: '15px', color: '#000', cursor: 'pointer' }}
           >
-            ຍອມຮັບ <Link href="/terms" style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}>ຂໍ້ກຳນົດແລະນະໂຍບາຍ</Link>
+            ຍອມຮັບ
           </label>
+          {/* ข้อความสีน้ำเงิน กดเข้าไปอ่านนโยบายได้ โดยไม่ยุ่งกับ checkbox */}
+          <Link 
+            href="/terms" 
+            style={{ 
+              color: '#1877f2', 
+              textDecoration: 'none', 
+              fontWeight: 'bold', 
+              cursor: 'pointer' 
+            }}
+          >
+            ຂໍ້ກຳນົດແລະນະໂຍບາຍ
+          </Link>
         </div>
         <button 
           onClick={onContinue} 

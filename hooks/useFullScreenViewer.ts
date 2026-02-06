@@ -126,7 +126,8 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, [onTouchStart, fullScreenZoomScale, setFullScreenZoomOrigin]);
 
   const fullScreenOnTouchMove = useCallback((e: React.TouchEvent) => {
-    // ถ้ามีหลายจุดสัมผัส ให้ปล่อยให้บราวเซอร์ handle pinch‑zoom เอง
+    // ปิดการปัดขึ้น/ลงใน Full screen mode
+    // ให้เหลือเฉพาะการปัดซ้าย/ขวาเพื่อเปลี่ยนรูปเท่านั้น
     if (e.touches.length >= 2) {
       return;
     }
@@ -135,41 +136,27 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     const n = fullScreenImages?.length ?? 0;
     if (n === 0 || e.touches.length === 0) return;
     const clientX = e.touches[0].clientX;
-    const clientY = e.touches[0].clientY;
-    
-    const deltaX = clientX - touchStart;
-    const deltaY = clientY - fullScreenTouchStartYRef.current;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    
-    if (absY > absX) {
-      let verticalDelta = deltaY;
-      const maxVerticalDrag = typeof window !== 'undefined' ? window.innerHeight * 0.6 : 500;
-      verticalDelta = Math.max(-maxVerticalDrag, Math.min(maxVerticalDrag, verticalDelta));
-      setFullScreenVerticalDragOffset(verticalDelta);
-      setFullScreenDragOffset(0);
-    } else {
-      let horizontalDelta = deltaX;
-      const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
 
-      // Popular "rubber-band" feel on edges (like common gallery apps).
-      if (currentImgIndex === 0 && horizontalDelta > 0) {
-        horizontalDelta = horizontalDelta * 0.35;
-      } else if (currentImgIndex === n - 1 && horizontalDelta < 0) {
-        horizontalDelta = horizontalDelta * 0.35;
-      } else {
-        horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
-      }
-      setFullScreenDragOffset(horizontalDelta);
-      setFullScreenVerticalDragOffset(0);
+    const deltaX = clientX - touchStart;
+    let horizontalDelta = deltaX;
+    const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
+
+    // Popular "rubber-band" feel on edges (เหมือนเดิม)
+    if (currentImgIndex === 0 && horizontalDelta > 0) {
+      horizontalDelta = horizontalDelta * 0.35;
+    } else if (currentImgIndex === n - 1 && horizontalDelta < 0) {
+      horizontalDelta = horizontalDelta * 0.35;
+    } else {
+      horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
     }
+    setFullScreenDragOffset(horizontalDelta);
+    setFullScreenVerticalDragOffset(0);
   }, [touchStart, currentImgIndex, fullScreenImages]);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
-    // ไม่จัดการ pinch‑zoom ด้วย custom logic แล้ว ปล่อยให้บราวเซอร์ทำเอง
+    // ไม่จัดการ pinch‑zoom ด้วย custom logic แล้ว
     isPinchingRef.current = false;
     pinchStartDistanceRef.current = null;
-    const startY = fullScreenTouchStartYRef.current;
 
     const t = (e.target as HTMLElement);
     if (!t.closest?.('[data-menu-button]') && !t.closest?.('[data-menu-container]')) {
@@ -180,37 +167,11 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
           setIsPhotoMenuAnimating(false);
         }, 300);
       }
-      if (_fullScreenTouchY != null && fullScreenTouchStartYRef.current !== 0) {
-        const ey = e.changedTouches[0].clientY;
-        const dy = Math.abs(ey - _fullScreenTouchY);
-        const dx = touchStart != null ? Math.abs(touchStart - e.changedTouches[0].clientX) : 0;
-        const verticalDelta = ey - fullScreenTouchStartYRef.current;
-        
-        if (dy > 40 && dy > dx) {
-          // ปัดขึ้น/ลงเพื่อปิด full screen (คุ้นเคยแบบ Instagram / Photos)
-          setFullScreenIsDragging(false);
-          setFullScreenDragOffset(0);
-          setFullScreenVerticalDragOffset(0);
-          setFullScreenTransitionDuration(0);
-          setTouchStart(null);
-          _fullScreenTouchY = null;
-          fullScreenTouchStartYRef.current = 0;
-          setFullScreenZoomScale(1);
-          setFullScreenZoomOrigin('50% 50%');
-          setFullScreenImages(null);
-          return;
-        } else if (Math.abs(fullScreenVerticalDragOffset) > 20) {
-          setFullScreenVerticalDragOffset(0);
-          setFullScreenIsDragging(false);
-          setFullScreenTransitionDuration(0);
-          setTouchStart(null);
-          _fullScreenTouchY = null;
-          fullScreenTouchStartYRef.current = 0;
-          return;
-        }
-      }
     }
+
+    // ปิดการปัดขึ้น/ลงเพื่อออกจาก Full screen mode
     _fullScreenTouchY = null;
+    const startY = fullScreenTouchStartYRef.current;
     fullScreenTouchStartYRef.current = 0;
 
     if (touchStart === null) {

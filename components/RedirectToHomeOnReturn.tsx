@@ -5,11 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 
 const HOME_PATH = '/';
 const LAST_HIDDEN_KEY = 'jutpai_last_hidden_ms';
-const MAX_INACTIVE_MS = 9 * 60 * 1000; // 9 นาที
+const MAX_INACTIVE_MS = 30 * 60 * 1000; // 30 นาที
 
 /**
- * ถ้ากลับเข้ามาในเว็บภายใน 9 นาที → อยู่หน้าปัจจุบัน
- * ถ้าออกจากเว็บ/เบราว์เซอร์เกิน 9 นาที → กลับมาแล้วเด้งไปหน้า home
+ * ถ้ากลับเข้ามาในเว็บภายใน 30 นาที → อยู่หน้าปัจจุบัน
+ * ถ้าออกจากเว็บ/เบราว์เซอร์เกิน 30 นาที → กลับมาแล้วเด้งไปหน้า home
  */
 export default function RedirectToHomeOnReturn() {
   const pathname = usePathname();

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
 import { PostCardMenu } from './PostCardMenu';
-import { ShareIconTraced } from './icons/ShareIconTraced';
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { formatCompactNumber } from '@/utils/currency';
@@ -328,26 +327,34 @@ export const PostCard = React.memo<PostCardProps>(({
             </div>
 
             {/* Share Button */}
-            <div 
-              onClick={() => onShare(post)} 
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onShare(post);
+              }}
               style={{
-                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
+                cursor: 'pointer',
                 padding: '6px 10px',
                 borderRadius: '999px',
                 minHeight: '34px',
               }}
             >
-              <ShareIconTraced size={34} style={{ color: '#4a4d52' }} />
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: '#4a4d52',
-                }}
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#4a4d52"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
+                <path d="M5 18c0-4 3-7 7-7h3V7l4 4-4 4v-3h-3c-3 0-5 1.5-5 5" />
+              </svg>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#4a4d52' }}>
                 {formatCompactNumber(post.shares || 0)}
               </span>
             </div>
@@ -372,10 +379,10 @@ export const PostCard = React.memo<PostCardProps>(({
                 }} 
                 style={{ 
                   background: isSoldPost ? '#e4e6eb' : '#e0245e', 
-                  padding: '6px 14px', 
-                  minHeight: '36px',
+                  padding: '6px 16px', 
+                  minHeight: '34px',
                   lineHeight: '20px',
-                  borderRadius: '999px', 
+                  borderRadius: '10px', 
                   border: 'none', 
                   color: isSoldPost ? '#666' : '#fff', 
                   fontWeight: 'bold', 
@@ -395,10 +402,10 @@ export const PostCard = React.memo<PostCardProps>(({
                   }}
                   style={{
                     background: '#e4e6eb',
-                    padding: '6px 14px',
-                    minHeight: '36px',
+                    padding: '6px 16px',
+                    minHeight: '34px',
                     lineHeight: '20px',
-                    borderRadius: '999px',
+                    borderRadius: '10px',
                     border: 'none',
                     color: '#666',
                     fontWeight: 'bold',

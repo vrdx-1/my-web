@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+import { InteractionModal } from '@/components/modals/InteractionModal';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -22,6 +23,7 @@ import { useViewingPost } from '@/hooks/useViewingPost';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
+import { useInteractionModal } from '@/hooks/useInteractionModal';
 
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
@@ -69,6 +71,9 @@ export function SavedPostsContent() {
 
   // Use header scroll hook
   const headerScroll = useHeaderScroll();
+
+  // Use interaction modal hook (bottom sheet for likes/saves)
+  const interactionModalHook = useInteractionModal();
 
   // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -177,9 +182,17 @@ export function SavedPostsContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    interactionModalShow: false,
+    interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
+
+  // Fetch interactions for bottom sheet (likes / saves)
+  const fetchInteractions = useCallback(
+    async (type: 'likes' | 'saves', postId: string) => {
+      await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
+    },
+    [interactionModalHook, postListData.posts],
+  );
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -223,8 +236,8 @@ export function SavedPostsContent() {
         onLike={toggleLike}
         onSave={toggleSave}
         onShare={handlers.handleShare}
-        onViewLikes={() => {}}
-        onViewSaves={() => {}}
+        onViewLikes={(postId) => fetchInteractions('likes', postId)}
+        onViewSaves={(postId) => fetchInteractions('saves', postId)}
         onTogglePostStatus={handlers.handleTogglePostStatus}
         onDeletePost={handlers.handleDeletePost}
         onReport={handlers.handleReport}
@@ -233,6 +246,24 @@ export function SavedPostsContent() {
         loadingMore={postListData.loadingMore}
         hasMore={postListData.hasMore}
         hideBoost={tab === 'sold'}
+      />
+
+      <InteractionModal
+        show={interactionModalHook.interactionModal.show}
+        type={interactionModalHook.interactionModal.type}
+        postId={interactionModalHook.interactionModal.postId}
+        posts={postListData.posts}
+        interactionUsers={interactionModalHook.interactionUsers}
+        interactionLoading={interactionModalHook.interactionLoading}
+        interactionSheetMode={interactionModalHook.interactionSheetMode}
+        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
+        startY={interactionModalHook.startY}
+        currentY={interactionModalHook.currentY}
+        onClose={interactionModalHook.closeModal}
+        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
+        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
+        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
+        onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
       />
 
       <PostFeedModals
