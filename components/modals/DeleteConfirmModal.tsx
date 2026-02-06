@@ -8,16 +8,14 @@ interface DeleteConfirmModalProps {
 }
 
 export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfirm, onCancel }) => {
-  // ปิด modal เมื่อเลื่อนหน้าจอ
   useEffect(() => {
-    const handleScroll = () => {
-      onCancel();
-    };
-    window.addEventListener('scroll', handleScroll, true);
+    if (typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
+      document.body.style.overflow = prevOverflow;
     };
-  }, [onCancel]);
+  }, []);
 
   return (
     <div
@@ -31,7 +29,6 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
         justifyContent: 'center',
         padding: '20px',
       }}
-      onClick={onCancel}
     >
       <div
         style={{

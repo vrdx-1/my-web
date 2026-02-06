@@ -46,6 +46,7 @@ export function EditProfileContent() {
  const [editingUsername, setEditingUsername] = useState('');
  const [editingPhone, setEditingPhone] = useState('');
  const [uploading, setUploading] = useState(false);
+ const [showPhoneCharWarning, setShowPhoneCharWarning] = useState(false);
 
  // Feed States
  const [tab, setTab] = useState('recommend');
@@ -187,26 +188,41 @@ const savePhone = async (phoneNum: string) => {
 
  // Removed duplicate downloadImage, onTouchStart, onTouchEnd - using from useFullScreenViewer hook
 
- // Use shared post modals hook for managing modal side effects
- usePostModals({
-   viewingPost: viewingPostHook.viewingPost,
-   isViewingModeOpen: viewingPostHook.isViewingModeOpen,
-   setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
-   setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
-   setViewingModeIsDragging: viewingPostHook.setViewingModeIsDragging,
-   initialImageIndex: viewingPostHook.initialImageIndex,
-   savedScrollPosition: viewingPostHook.savedScrollPosition,
-   fullScreenImages: fullScreenViewer.fullScreenImages,
-   setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
-   setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
-   setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
-   setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
-   setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
-   setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
-   setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-   interactionModalShow: false,
-   setIsHeaderVisible: headerScroll.setIsHeaderVisible,
- });
+// Use shared post modals hook for managing modal side effects
+usePostModals({
+  viewingPost: viewingPostHook.viewingPost,
+  isViewingModeOpen: viewingPostHook.isViewingModeOpen,
+  setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
+  setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
+  setViewingModeIsDragging: viewingPostHook.setViewingModeIsDragging,
+  initialImageIndex: viewingPostHook.initialImageIndex,
+  savedScrollPosition: viewingPostHook.savedScrollPosition,
+  fullScreenImages: fullScreenViewer.fullScreenImages,
+  setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
+  setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
+  setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
+  setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
+  setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
+  setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
+  setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
+  interactionModalShow: false,
+  setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+});
+
+// Lock background scroll while edit-name / edit-phone / phone-warning popup is open
+useEffect(() => {
+  if (typeof document === 'undefined') return;
+  const prevOverflow = document.body.style.overflow;
+  const shouldLock = isEditingName || isEditingPhone || showPhoneCharWarning;
+  if (shouldLock) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = prevOverflow;
+  }
+  return () => {
+    document.body.style.overflow = prevOverflow;
+  };
+}, [isEditingName, isEditingPhone, showPhoneCharWarning]);
 
  return (
  <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -219,8 +235,6 @@ const savePhone = async (phoneNum: string) => {
  <div
  role="button"
  tabIndex={0}
- onClick={() => { setIsEditingName(false); setIsEditingPhone(false); }}
- onKeyDown={e => { if (e.key === 'Escape') { setIsEditingName(false); setIsEditingPhone(false); } }}
  style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 999, cursor: 'pointer' }}
  aria-label="ปิด"
  />
@@ -232,21 +246,60 @@ const savePhone = async (phoneNum: string) => {
  onClick={e => e.stopPropagation()}
  style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '280px', maxWidth: '90vw' }}
  >
- <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
  <input 
    value={editingUsername} 
    maxLength={36}
    onChange={e => setEditingUsername(e.target.value.slice(0, 36))} 
    onPaste={(e) => {
-     e.preventDefault();
-     const pastedText = e.clipboardData.getData('text').slice(0, 36);
-     const newValue = (editingUsername + pastedText).slice(0, 36);
-     setEditingUsername(newValue);
+   e.preventDefault();
+   const pastedText = e.clipboardData.getData('text').slice(0, 36);
+   const newValue = (editingUsername + pastedText).slice(0, 36);
+   setEditingUsername(newValue);
    }}
    autoFocus 
    style={{ fontSize: '18px', fontWeight: 'bold', border: 'none', borderBottom: '2px solid #1877f2', outline: 'none', flex: 1, minWidth: 0, padding: '4px 0' }} 
  />
- <button disabled={editingUsername.trim().length < 1} onClick={() => editingUsername.trim().length >= 1 && saveUsername(editingUsername.trim())} style={{ padding: '4px 12px', background: editingUsername.trim().length >= 1 ? '#1877f2' : '#e4e6eb', color: editingUsername.trim().length >= 1 ? '#fff' : '#5c5c5c', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: editingUsername.trim().length >= 1 ? 'pointer' : 'not-allowed', flexShrink: 0 }}>ບັນທຶກ</button>
+ <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+   <button
+     type="button"
+     onClick={() => {
+       setIsEditingName(false);
+       setEditingUsername(username);
+     }}
+     style={{
+       flex: 1,
+       padding: '8px 12px',
+       background: '#e4e6eb',
+       color: '#1c1e21',
+       border: 'none',
+       borderRadius: '6px',
+       fontWeight: 'bold',
+       fontSize: '14px',
+       cursor: 'pointer',
+     }}
+   >
+     ຍົກເລີກ
+   </button>
+   <button
+     type="button"
+     disabled={editingUsername.trim().length < 1}
+     onClick={() => editingUsername.trim().length >= 1 && saveUsername(editingUsername.trim())}
+     style={{
+       flex: 1,
+       padding: '8px 12px',
+       background: editingUsername.trim().length >= 1 ? '#1877f2' : '#e4e6eb',
+       color: editingUsername.trim().length >= 1 ? '#fff' : '#5c5c5c',
+       border: 'none',
+       borderRadius: '6px',
+       fontWeight: 'bold',
+       fontSize: '14px',
+       cursor: editingUsername.trim().length >= 1 ? 'pointer' : 'not-allowed',
+     }}
+   >
+     ບັນທຶກ
+   </button>
+ </div>
  </div>
  </div>
  )}
@@ -257,13 +310,19 @@ const savePhone = async (phoneNum: string) => {
  onClick={e => e.stopPropagation()}
  style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '280px', maxWidth: '90vw' }}
  >
- <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <input 
       type="text"
       autoComplete="tel"
       value={editingPhone} 
       onChange={e => {
-      const inputValue = e.target.value.replace(/\D/g, '');
+      const rawValue = e.target.value;
+      const hasNonDigit = /[^\d]/.test(rawValue);
+      const inputValue = rawValue.replace(/\D/g, '');
+
+      if (hasNonDigit && !showPhoneCharWarning) {
+        setShowPhoneCharWarning(true);
+      }
       
      // บังคับให้เริ่มต้นด้วย 020 เสมอ และจำกัดความยาวที่ 11 หลัก (020 + 8 หลัก)
      if (inputValue.length === 0 || inputValue.length < 3) {
@@ -282,34 +341,55 @@ const savePhone = async (phoneNum: string) => {
       }
       // ถ้ายาวกว่า 11 หลัก ไม่ต้องอัพเดท (จำกัดไว้ที่ 11 หลัก)
       }} 
-      onFocus={e => {
-        // เมื่อ focus ให้เลือกข้อความทั้งหมดเพื่อให้พิมพ์ทับได้ง่าย
-        e.target.select();
-      }}
       autoFocus 
       placeholder="ເບີ WhatsApp" 
       style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} 
       />
-     <button 
-       type="button" 
-       disabled={!(editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11))} 
-       onClick={() => {
-         if (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) {
-           savePhone(editingPhone);
-         }
-       }} 
-       style={{ 
-         padding: '4px 12px', 
-         background: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#1877f2' : '#e4e6eb', 
-         color: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#fff' : '#5c5c5c', 
-         border: 'none', 
-         borderRadius: '6px', 
-         fontWeight: 'bold', 
-         fontSize: '13px', 
-         cursor: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? 'pointer' : 'not-allowed', 
-         flexShrink: 0 
-       }}
-     >ບັນທຶກ</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+        <button
+          type="button"
+          onClick={() => {
+            setIsEditingPhone(false);
+            const initialPhone = phone && phone.startsWith('020') ? phone : '020';
+            setEditingPhone(initialPhone);
+          }}
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            background: '#e4e6eb',
+            color: '#1c1e21',
+            border: 'none',
+            borderRadius: '6px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            cursor: 'pointer',
+          }}
+        >
+          ຍົກເລີກ
+        </button>
+        <button 
+          type="button" 
+          disabled={!(editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11))} 
+          onClick={() => {
+            if (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) {
+              savePhone(editingPhone);
+            }
+          }} 
+          style={{ 
+            flex: 1,
+            padding: '8px 12px', 
+            background: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#1877f2' : '#e4e6eb', 
+            color: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? '#fff' : '#5c5c5c', 
+            border: 'none', 
+            borderRadius: '6px', 
+            fontWeight: 'bold', 
+            fontSize: '14px', 
+            cursor: (editingPhone === '020' || (editingPhone.startsWith('020') && editingPhone.length === 11)) ? 'pointer' : 'not-allowed', 
+          }}
+        >
+          ບັນທຶກ
+        </button>
+      </div>
  </div>
  </div>
  )}
@@ -399,7 +479,8 @@ const savePhone = async (phoneNum: string) => {
    onReport={() => {}}
    onSetActiveMenu={menu.setActiveMenu}
    onSetMenuAnimating={menu.setIsMenuAnimating}
-   loadingMore={postListData.loadingMore}
+  loadingMore={postListData.loadingMore}
+  hasMore={postListData.hasMore}
    hideBoost={tab === 'sold'}
  />
 
@@ -463,6 +544,55 @@ const savePhone = async (phoneNum: string) => {
    }}
    onFullScreenImageForDownloadClose={() => fullScreenViewer.setShowImageForDownload(null)}
  />
+
+ {/* Popup เตือนให้ใส่เฉพาะตัวเลขสำหรับเบอร์ WhatsApp */}
+ {showPhoneCharWarning && (
+   <div
+     style={{
+       position: 'fixed',
+       inset: 0,
+       background: 'rgba(0,0,0,0.4)',
+       zIndex: 2000,
+       display: 'flex',
+       alignItems: 'center',
+       justifyContent: 'center',
+       padding: '20px',
+     }}
+   >
+     <div
+       style={{
+         background: '#fff',
+         borderRadius: '12px',
+         padding: '20px',
+         maxWidth: '320px',
+         width: '100%',
+         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+       }}
+       onClick={(e) => e.stopPropagation()}
+     >
+       <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
+         ສຳລັບຕົວເລກເທົ່ານັ້ນ
+       </h3>
+       <button
+         type="button"
+         onClick={() => setShowPhoneCharWarning(false)}
+         style={{
+           width: '100%',
+           padding: '10px 16px',
+           background: '#1877f2',
+           border: 'none',
+           borderRadius: '8px',
+           fontSize: '15px',
+           fontWeight: 'bold',
+           color: '#fff',
+           cursor: 'pointer',
+         }}
+       >
+         ຕົກລົງ
+       </button>
+     </div>
+   </div>
+ )}
 
    {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
    {handlers.showReportSuccess && (

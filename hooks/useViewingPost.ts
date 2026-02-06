@@ -49,11 +49,6 @@ export function useViewingPost(): UseViewingPostReturn {
     setInitialImageIndex(imageIndex);
     setIsViewingModeOpen(false);
     setViewingPost(post);
-    const { error } = await supabase.rpc('increment_views', { post_id: post.id });
-    if (error) {
-      await supabase.from('cars').update({ views: (post.views || 0) + 1 }).eq('id', post.id);
-    }
-    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, views: (p.views || 0) + 1 } : p));
   }, []);
 
   const closeViewingMode = useCallback((setIsHeaderVisible?: (visible: boolean) => void) => {
@@ -61,7 +56,6 @@ export function useViewingPost(): UseViewingPostReturn {
     setViewingModeDragOffset(0);
     setViewingModeIsDragging(false);
     setViewingModeTouchStart(null);
-    if (setIsHeaderVisible) setIsHeaderVisible(true);
     setViewingPost(null);
     window.scrollTo({ top: savedScrollPosition, behavior: 'auto' });
   }, [savedScrollPosition]);
@@ -73,18 +67,65 @@ export function useViewingPost(): UseViewingPostReturn {
   }, []);
 
   const handleViewingModeTouchMove = useCallback((e: React.TouchEvent) => {
-    // Disable horizontal swipe/drag in Viewing mode while scrolling images
     if (!viewingModeTouchStart) return;
-    setViewingModeDragOffset(0);
+    const touch = e.touches[0];
+    const dx = touch.clientX - viewingModeTouchStart.x;
+    const dy = touch.clientY - viewingModeTouchStart.y;
+
+    // ถ้า gesture เอียงไปทางขวา (ซ้าย → ขวา) มากกว่าแนวตั้ง ให้ลาก card ตามนิ้ว
+    if (Math.abs(dx) > Math.abs(dy) && dx > 0) {
+      const maxDrag = typeof window !== 'undefined' ? window.innerWidth : 375;
+      const drag = Math.min(maxDrag, Math.max(0, dx * 0.9));
+      setViewingModeDragOffset(drag);
+    } else {
+      // ให้ scroll แนวตั้งทำงานปกติ โดยไม่เลื่อน card ออกด้านข้าง
+      setViewingModeDragOffset(0);
+    }
   }, [viewingModeTouchStart]);
 
   const handleViewingModeTouchEnd = useCallback((e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => {
     if (!viewingModeTouchStart) return;
-    // Keep behavior: do not allow left-right swipe in Viewing mode
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - viewingModeTouchStart.x;
+    const dy = touch.clientY - viewingModeTouchStart.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    const horizontalThreshold = typeof window !== 'undefined' ? Math.min(80, window.innerWidth * 0.18) : 80;
+
+    // 1) ปัดจากซ้ายไปขวาเพื่อปิด viewing mode (คล้าย gesture ถอยกลับที่ผู้ใช้คุ้นเคย)
+    if (absDx > absDy && dx > horizontalThreshold) {
+      setViewingModeDragOffset(0);
+      setViewingModeIsDragging(false);
+      setViewingModeTouchStart(null);
+      closeViewingMode(setIsHeaderVisible);
+      return;
+    }
+
+    // 2) ปัดขึ้นตอนอยู่รูปสุดท้าย/ด้านล่างสุดของ content → ปิด viewing mode
+    let atBottom = false;
+    if (typeof document !== 'undefined') {
+      const container = document.getElementById('viewing-mode-container');
+      if (container) {
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const epsilon = 12; // เผื่อ margin/padding เล็กน้อย
+        atBottom = scrollTop + clientHeight >= scrollHeight - epsilon;
+      }
+    }
+
+    if (atBottom && absDy > absDx && dy < -40) {
+      setViewingModeDragOffset(0);
+      setViewingModeIsDragging(false);
+      setViewingModeTouchStart(null);
+      closeViewingMode(setIsHeaderVisible);
+      return;
+    }
+
+    // 3) กรณี gesture อื่น ๆ → รีเซ็ตค่า drag กลับเหมือนเดิม
     setViewingModeDragOffset(0);
     setViewingModeIsDragging(false);
     setViewingModeTouchStart(null);
-  }, [viewingModeTouchStart, viewingModeDragOffset, closeViewingMode]);
+  }, [viewingModeTouchStart, closeViewingMode]);
 
   return {
     // State

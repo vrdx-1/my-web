@@ -36,26 +36,18 @@ export const ReportModal = React.memo<ReportModalProps>(({
     }
   };
 
-  // ปิด modal เมื่อเลื่อนหน้าจอ (แต่ไม่ปิดเมื่อ scroll ใน textarea)
   useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
-      // ไม่ปิด modal ถ้า scroll เกิดขึ้นใน textarea
-      if (target?.tagName === 'TEXTAREA') {
-        return;
-      }
-      onClose();
-    };
-    window.addEventListener('scroll', handleScroll, true);
+    if (typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
+      document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div 
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-      onClick={onClose}
     >
       <div 
         style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}

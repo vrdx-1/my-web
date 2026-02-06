@@ -110,6 +110,24 @@ export default function Settings() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
 
+          {/* เมนู ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ */}
+          <div 
+            onClick={() => router.push('/terms')}
+            style={{ 
+              padding: '12px 15px', 
+              borderBottom: '1px solid #f0f0f0', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              height: '55px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <span style={{ fontSize: '16px', color: '#1c1e21', fontWeight: '500' }}>ຂໍ້ກຳນົດ ແລະ ນະໂຍບາຍ</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+
           {/* แก้ไขส่วน: ຕິດຕໍ່ທີມງານ Jutpai (กดได้ทั้งแถว) */}
           <a 
             href="https://wa.me/8562098859693" 
@@ -182,7 +200,6 @@ export default function Settings() {
             justifyContent: 'center',
             padding: '20px',
           }}
-          onClick={loading ? undefined : handleLogoutCancel}
         >
           <div
             style={{

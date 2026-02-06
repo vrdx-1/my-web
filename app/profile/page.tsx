@@ -276,7 +276,6 @@ export default function Profile() {
                   justifyContent: 'center',
                   padding: '20px',
                 }}
-                onClick={() => setShowValidationPopup(false)}
               >
                 <div
                   style={{
@@ -345,8 +344,8 @@ export default function Profile() {
                     width="28" 
                     height="28" 
                     viewBox="0 0 24 24" 
-                    fill="#e0245e" 
-                    stroke="#e0245e" 
+                    fill="none" 
+                    stroke="#000000" 
                     strokeWidth="2" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"
@@ -361,8 +360,8 @@ export default function Profile() {
                     width="28" 
                     height="28" 
                     viewBox="0 0 24 24" 
-                    fill="#FFD700" 
-                    stroke="#FFD700" 
+                    fill="none" 
+                    stroke="#000000" 
                     strokeWidth="2" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"

@@ -68,14 +68,6 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const pageRef = useRef(page);
   const loadingMoreRef = useRef(loadingMore);
   const searchTermRef = useRef(searchTerm);
-  const searchScanCacheRef = useRef<{
-    term: string;
-    scannedUntil: number;
-    sourceExhausted: boolean;
-    matchedIds: string[];
-    primaryCount: number;
-    provinceTerm: string | null;
-  } | null>(null);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -144,82 +136,37 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const trimmedSearch = (searchTermRef.current ?? '').trim();
 
     if (trimmedSearch) {
-      // Dictionary-assisted caption search (Thai/Lao/English aliases).
-      // We scan the feed in the same order, caching matches, so pagination still works.
-      const termKey = trimmedSearch;
-      const provinceTerm =
-        LAO_PROVINCES.find((p) => trimmedSearch.includes(p)) ?? null;
-      if (isInitial || !searchScanCacheRef.current || searchScanCacheRef.current.term !== termKey) {
-        searchScanCacheRef.current = {
-          term: termKey,
-          scannedUntil: 0,
-          sourceExhausted: false,
-          matchedIds: [],
-          primaryCount: 0,
-          provinceTerm,
-        };
-      }
-
-      const cache = searchScanCacheRef.current;
-      const neededEnd = endIndex + 1; // slice end (exclusive)
-      const batchSize = 80;
+      // ให้ฐานข้อมูลค้นหา caption ตามคำค้นและคำพ้องจาก dictionary (หลายภาษา) โดยใช้ index (pg_trgm + GIN)
       const expandedTerms = expandCarSearchAliases(trimmedSearch);
-      const searchLang = detectSearchLanguage(trimmedSearch);
+      const searchTerms = (expandedTerms.length > 0 ? expandedTerms : [trimmedSearch])
+        .map((t) => String(t ?? '').trim())
+        .filter(Boolean);
 
-      while (cache && cache.matchedIds.length < neededEnd && !cache.sourceExhausted) {
-        const from = cache.scannedUntil;
-        const to = from + batchSize - 1;
+      let query = supabase
+        .from('cars')
+        .select('id')
+        .eq('status', 'recommend')
+        .eq('is_hidden', false);
 
-        const { data, error } = await supabase
-          .from('cars')
-          .select('id, caption, province')
-          .eq('status', 'recommend')
-          .eq('is_hidden', false)
-          .order('is_boosted', { ascending: false })
-          .order('created_at', { ascending: false })
-          .range(from, to);
-
-        if (error || !data) {
-          cache.sourceExhausted = true;
-          break;
-        }
-
-        if (data.length < batchSize) cache.sourceExhausted = true;
-        cache.scannedUntil += batchSize;
-
-        for (const row of data as any[]) {
-          if (!cache) break;
-          const caption = String(row.caption ?? '');
-          const province = String(row.province ?? '');
-          // Keep legacy behavior as fallback if dictionary yields nothing.
-          const match = expandedTerms.length > 0
-            ? captionMatchesAnyAlias(caption, expandedTerms)
-            : captionIncludesSearch(caption, trimmedSearch);
-          if (match) {
-            const id = String(row.id);
-            const isLangPrimary =
-              searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
-
-            const provinceTerm = cache.provinceTerm;
-            const isProvincePrimary = !!provinceTerm && province === provinceTerm;
-
-            if (isProvincePrimary) {
-              // รถในแขวงที่ผู้ใช้พิมพ์ → ดันขึ้นบนสุด
-              cache.matchedIds.splice(0, 0, id);
-              cache.primaryCount += 1;
-            } else if (isLangPrimary) {
-              // รถที่ภาษาตรงกับที่ผู้ใช้พิมพ์ → ตามหลังกลุ่มแขวงนั้น
-              cache.matchedIds.splice(cache.primaryCount, 0, id);
-              cache.primaryCount += 1;
-            } else {
-              // ที่เหลือทั้งหมด
-              cache.matchedIds.push(id);
-            }
-          }
-        }
+      if (searchTerms.length === 1) {
+        // กรณีมีคำค้นเดียว ให้ใช้ ilike ปกติ
+        query = query.ilike('caption', `%${searchTerms[0]}%`);
+      } else if (searchTerms.length > 1) {
+        // กรณีมีหลายคำ (เช่น revo / รีโว้ / ລີໂວ້) ให้ OR กันในฐานข้อมูล
+        const orFilter = searchTerms
+          .map((term) => `caption.ilike.%${term}%`)
+          .join(',');
+        query = query.or(orFilter);
       }
 
-      postIds = (cache?.matchedIds ?? []).slice(startIndex, neededEnd);
+      const { data, error } = await query
+        .order('is_boosted', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(startIndex, endIndex);
+
+      if (!error && data) {
+        postIds = data.map((p: any) => p.id);
+      }
     } else {
       const { data, error } = await supabase
         .from('cars')
@@ -238,13 +185,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     // hasMore ควรเป็น true ถ้ามี post เท่ากับ PREFETCH_COUNT (แสดงว่ายังมี post ให้โหลดต่อ)
     // ถ้ามี post น้อยกว่า PREFETCH_COUNT แสดงว่าโหลดหมดแล้ว
     // ใช้ >= แทน === เพื่อให้แน่ใจว่าถ้ามี post มากกว่าหรือเท่ากับ PREFETCH_COUNT จะยังโหลดต่อ
-    const newHasMore = trimmedSearch
-      ? (() => {
-          const cache = searchScanCacheRef.current;
-          const neededEnd = endIndex + 1;
-          return !!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd));
-        })()
-      : (postIds.length >= PREFETCH_COUNT);
+    const newHasMore = postIds.length >= PREFETCH_COUNT;
 
     if (isInitial) {
       setPosts([]);
@@ -261,16 +202,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         .order('created_at', { ascending: false });
 
       if (!postsError && postsData) {
-        const orderedPostsData = trimmedSearch
-          ? (() => {
-              const order = new Map<string, number>(postIds.map((id, idx) => [String(id), idx]));
-              return [...postsData].sort((a: any, b: any) => {
-                const ai = order.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
-                const bi = order.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
-                return ai - bi;
-              });
-            })()
-          : postsData;
+        const orderedPostsData = postsData;
         // ใช้ requestAnimationFrame เพื่อ batch state updates และลดการกระตุก
         requestAnimationFrame(() => {
           setPosts(prev => {

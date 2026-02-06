@@ -211,6 +211,7 @@ export function LikedPostsContent() {
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
         loadingMore={postListData.loadingMore}
+        hasMore={postListData.hasMore}
         hideBoost={tab === 'sold'}
       />
 

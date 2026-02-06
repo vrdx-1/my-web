@@ -73,7 +73,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
           zIndex: 3000, 
           display: 'flex', 
           flexDirection: 'column', 
-          touchAction: 'none' 
+          touchAction: 'auto' 
         }} 
         onTouchStart={onTouchStart} 
         onTouchMove={onTouchMove} 
@@ -138,7 +138,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
         >
           <div style={{ 
             display: 'flex', 
-          transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none', 
+            transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none', 
             transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px)) translateY(${fullScreenVerticalDragOffset}px)`, 
             width: '100%', 
             height: '100%' 
@@ -152,9 +152,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                   justifyContent: 'center', 
                   alignItems: 'center', 
                   height: '100%', 
-                  // Zoom disabled: always render at scale(1)
-                  transform: 'scale(1)', 
-                  transformOrigin: 'center center', 
+                  transform: `scale(${fullScreenZoomScale || 1})`, 
+                  transformOrigin: fullScreenZoomOrigin || '50% 50%', 
                   transition: 'none' 
                 }}
               >

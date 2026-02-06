@@ -31,6 +31,7 @@ interface PostFeedProps {
   loadingMore?: boolean;
   emptyMessage?: string;
   hideBoost?: boolean;
+  hasMore?: boolean;
 }
 
 /**
@@ -63,6 +64,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   loadingMore = false,
   emptyMessage = 'ຍັງບໍ່ມີລາຍການ',
   hideBoost = false,
+  hasMore = true,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (
@@ -108,7 +110,13 @@ export const PostFeed = React.memo<PostFeedProps>(({
 
       {/* จองพื้นที่คงที่ ไม่ให้ layout shift ตอนโหลดโพสต์ถัดไป (ลดการกระตุก/กระพริบ) */}
       <div style={{ minHeight: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {loadingMore ? <LoadingSpinner /> : null}
+        {loadingMore ? (
+          <LoadingSpinner />
+        ) : !hasMore ? (
+          <span style={{ fontSize: '13px', color: '#6b7280' }}>
+            ບໍ່ມີລາຍການເພີ່ມເຕີມ
+          </span>
+        ) : null}
       </div>
     </>
   );

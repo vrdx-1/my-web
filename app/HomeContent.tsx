@@ -47,6 +47,12 @@ const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>
 const [tabRefreshing, setTabRefreshing] = useState(false);
 const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false);
 const initialFetchStartedRef = useRef(false);
+
+// Pull-to-refresh state
+const [pullDistance, setPullDistance] = useState(0);
+const [isPulling, setIsPulling] = useState(false);
+const [isRefreshing, setIsRefreshing] = useState(false);
+const pullStartYRef = useRef<number | null>(null);
  
  // Use home data hook
  const homeData = useHomeData(searchTerm);
@@ -90,8 +96,8 @@ const initialFetchStartedRef = useRef(false);
  // Use menu hook
  const menu = useMenu();
  
- // Use header scroll hook (ไม่ให้ header เลื่อนลงมาตอนโหลดโพสต์ถัดไป)
- const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore, disableScrollHide: true });
+// Use header scroll hook (ซ่อน header ตอนเลื่อนลง และแสดงเมื่อเลื่อนขึ้น)
+const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore });
 
  // Use fullScreen viewer hook
  const fullScreenViewer = useFullScreenViewer();
@@ -254,6 +260,62 @@ useEffect(() => {
    setJustSavedPosts,
  });
 
+ const handleTouchStart = (e: any) => {
+   if (typeof window === 'undefined') return;
+   if (window.scrollY === 0 && !isRefreshing && !homeData.loadingMore) {
+     if (e.touches && e.touches.length > 0) {
+       pullStartYRef.current = e.touches[0].clientY;
+       setIsPulling(true);
+       setPullDistance(0);
+     }
+   } else {
+     pullStartYRef.current = null;
+     setIsPulling(false);
+     setPullDistance(0);
+   }
+ };
+
+ const handleTouchMove = (e: any) => {
+   if (!isPulling || pullStartYRef.current === null) return;
+   if (typeof window !== 'undefined' && window.scrollY > 0) {
+     pullStartYRef.current = null;
+     setIsPulling(false);
+     setPullDistance(0);
+     return;
+   }
+   if (!e.touches || e.touches.length === 0) return;
+   const currentY = e.touches[0].clientY;
+   const diff = currentY - pullStartYRef.current;
+   if (diff <= 0) {
+     setPullDistance(0);
+     return;
+   }
+   const maxPull = 120;
+   setPullDistance(Math.min(diff, maxPull));
+ };
+
+ const handleTouchEnd = async () => {
+   if (!isPulling) {
+     setPullDistance(0);
+     return;
+   }
+   const threshold = 70;
+   const shouldRefresh = pullDistance >= threshold;
+   setIsPulling(false);
+   setPullDistance(0);
+   if (shouldRefresh && !isRefreshing) {
+     setIsRefreshing(true);
+     try {
+       await homeData.refreshData();
+       if (typeof window !== 'undefined') {
+         window.scrollTo({ top: 0 });
+       }
+     } finally {
+       setIsRefreshing(false);
+     }
+   }
+ };
+
  // Use shared post feed handlers
  const handlers = usePostFeedHandlers({
    session: homeData.session,
@@ -271,14 +333,25 @@ useEffect(() => {
  });
 
  return (
- <main style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
+ <main
+   style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
+   onTouchStart={handleTouchStart}
+   onTouchMove={handleTouchMove}
+   onTouchEnd={handleTouchEnd}
+ >
  <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
- <HomeHeader
-   searchTerm={searchTerm}
-   onSearchChange={setSearchTerm}
-   onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
-   onNotificationClick={() => router.push('/notification')}
+  <HomeHeader
+  searchTerm={searchTerm}
+  onSearchChange={setSearchTerm}
+  onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
+  onNotificationClick={() => {
+    if (!homeData.session) {
+      router.push('/profile');
+      return;
+    }
+    router.push('/notification');
+  }}
    unreadCount={unreadCount}
    userProfile={homeData.userProfile}
    session={homeData.session}
@@ -302,6 +375,19 @@ useEffect(() => {
  />
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
+
+<div
+  style={{
+    height: isRefreshing ? 50 : pullDistance > 0 ? Math.min(pullDistance, 80) : 0,
+    transition: isPulling ? 'none' : 'height 0.2s ease',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  }}
+>
+  {(isRefreshing || pullDistance > 20) && <PageSpinner />}
+</div>
 
  {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -331,7 +417,8 @@ useEffect(() => {
      onReport={handlers.handleReport}
      onSetActiveMenu={menu.setActiveMenu}
      onSetMenuAnimating={menu.setIsMenuAnimating}
-     loadingMore={homeData.loadingMore}
+    loadingMore={homeData.loadingMore}
+    hasMore={homeData.hasMore}
    />
  )}
 

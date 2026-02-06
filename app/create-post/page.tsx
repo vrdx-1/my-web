@@ -64,14 +64,20 @@ export default function CreatePost() {
  };
  checkUser();
 
-// โหลดข้อมูลจาก sessionStorage
+// โหลดข้อมูลจาก sessionStorage (ถ้าไม่มี ค่อย fallback จาก localStorage)
 const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
 const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
 const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
-// ไม่ต้องโหลด savedImages ที่นี่ เพราะจะโหลดใน loadSavedImages แทน
- 
+
 // โหลด caption, province, step
-if (savedCaption) setCaption(savedCaption);
+if (savedCaption) {
+  setCaption(savedCaption);
+} else {
+  // fallback caption จาก localStorage (กันข้อมูลหายกรณีบาง browser ล้าง sessionStorage ตอน refresh)
+  const lsCaption = safeParseJSON<string>('create_post_caption_ls', '');
+  if (lsCaption) setCaption(lsCaption);
+}
+
 if (savedProvince) {
   setProvince(savedProvince);
 } else {
@@ -79,7 +85,13 @@ if (savedProvince) {
   const lastProvince = safeParseJSON<string>('last_selected_province', '');
   if (lastProvince) setProvince(lastProvince);
 }
-if (savedStep) setStep(savedStep);
+
+if (savedStep) {
+  setStep(savedStep);
+} else {
+  const lsStep = safeParseJSON<number>('create_post_step_ls', 2);
+  if (lsStep) setStep(lsStep);
+}
 
  // ดึงข้อมูลจากหน้าโฮม
  const pendingImages = safeParseSessionJSON<string[]>('pending_images', []);
@@ -137,34 +149,46 @@ if (savedStep) setStep(savedStep);
      } catch (e) {
        console.error("Error processing pending images", e);
      }
-   } 
-   // โหลดรูปภาพจาก sessionStorage (base64)
-   else {
+  } 
+  // โหลดรูปภาพจาก sessionStorage (base64) หรือ fallback จาก localStorage
+  else {
      try {
-       // ตรวจสอบว่ามี base64 data หรือไม่
-       const savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
-       
-       if (savedBase64.length > 0) {
-         // จำกัดสูงสุด 15 รูป (ถ้ามาเกิน เอาแค่ 15 รูปแรก)
-         const limitedBase64 = savedBase64.slice(0, 15);
+      // ตรวจสอบว่ามี base64 data หรือไม่
+      let savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
 
-         // แปลง base64 กลับเป็น File objects
-         const files = limitedBase64.map((base64, index) => 
-           base64ToFile(base64, `image-${Date.now()}-${index}.webp`)
-         );
-         
-         // สร้าง Blob URL สำหรับ preview
-         const previewUrls = files.map(file => URL.createObjectURL(file));
-         
-         imageUpload.setPreviews(previewUrls);
-         // IMPORTANT: set ทับเพื่อป้องกันการซ้ำจากการ mount ซ้ำใน dev/StrictMode
-         imageUpload.setSelectedFiles(files);
-       } else {
-         // ถ้าไม่มี base64 data แต่มี Blob URLs (กรณีเก่า) ให้ลบออก
-         if (typeof window !== 'undefined') {
-           sessionStorage.removeItem('create_post_images');
-         }
-       }
+      // ถ้า sessionStorage ไม่มี ให้ลอง fallback จาก localStorage
+      if (!savedBase64 || savedBase64.length === 0) {
+        const lsBase64 = safeParseJSON<string[]>('create_post_images_base64_ls', []);
+        if (lsBase64 && lsBase64.length > 0) {
+          savedBase64 = lsBase64;
+          // sync กลับเข้า sessionStorage ด้วย
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('create_post_images_base64', JSON.stringify(lsBase64));
+          }
+        }
+      }
+
+      if (savedBase64 && savedBase64.length > 0) {
+        // จำกัดสูงสุด 15 รูป (ถ้ามาเกิน เอาแค่ 15 รูปแรก)
+        const limitedBase64 = savedBase64.slice(0, 15);
+
+        // แปลง base64 กลับเป็น File objects
+        const files = limitedBase64.map((base64, index) => 
+          base64ToFile(base64, `image-${Date.now()}-${index}.webp`)
+        );
+        
+        // สร้าง Blob URL สำหรับ preview
+        const previewUrls = files.map(file => URL.createObjectURL(file));
+        
+        imageUpload.setPreviews(previewUrls);
+        // IMPORTANT: set ทับเพื่อป้องกันการซ้ำจากการ mount ซ้ำใน dev/StrictMode
+        imageUpload.setSelectedFiles(files);
+      } else {
+        // ถ้าไม่มี base64 data แต่มี Blob URLs (กรณีเก่า) ให้ลบออก
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('create_post_images');
+        }
+      }
      } catch (e) {
        console.error("Error loading saved images", e);
        if (typeof window !== 'undefined') {
@@ -191,56 +215,64 @@ if (savedStep) setStep(savedStep);
 
  // บันทึก caption ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
  useEffect(() => {
-   if (!isInitialized) return;
-   if (typeof window !== 'undefined') {
-     if (caption) {
-       sessionStorage.setItem('create_post_caption', JSON.stringify(caption));
-     } else {
-       sessionStorage.removeItem('create_post_caption');
-     }
-   }
+  if (!isInitialized) return;
+  if (typeof window !== 'undefined') {
+    if (caption) {
+      sessionStorage.setItem('create_post_caption', JSON.stringify(caption));
+      // backup ลง localStorage เพื่อกันข้อมูลหายกรณี refresh แล้ว sessionStorage หาย
+      localStorage.setItem('create_post_caption_ls', JSON.stringify(caption));
+    } else {
+      sessionStorage.removeItem('create_post_caption');
+      localStorage.removeItem('create_post_caption_ls');
+    }
+  }
  }, [caption, isInitialized]);
 
  // บันทึก province ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
  useEffect(() => {
-   if (!isInitialized) return;
-   if (typeof window !== 'undefined') {
-     if (province) {
-       sessionStorage.setItem('create_post_province', JSON.stringify(province));
-     } else {
-       sessionStorage.removeItem('create_post_province');
-     }
-   }
+  if (!isInitialized) return;
+  if (typeof window !== 'undefined') {
+    if (province) {
+      sessionStorage.setItem('create_post_province', JSON.stringify(province));
+      localStorage.setItem('create_post_province_ls', JSON.stringify(province));
+    } else {
+      sessionStorage.removeItem('create_post_province');
+      localStorage.removeItem('create_post_province_ls');
+    }
+  }
  }, [province, isInitialized]);
 
  // บันทึก step ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
  useEffect(() => {
-   if (!isInitialized) return;
-   if (typeof window !== 'undefined') {
-     sessionStorage.setItem('create_post_step', JSON.stringify(step));
-   }
+  if (!isInitialized) return;
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('create_post_step', JSON.stringify(step));
+    localStorage.setItem('create_post_step_ls', JSON.stringify(step));
+  }
  }, [step, isInitialized]);
 
  // บันทึกรูปภาพลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
  useEffect(() => {
-   if (!isInitialized) return;
-   if (typeof window !== 'undefined' && imageUpload.selectedFiles.length > 0) {
-     // แปลง File objects เป็น base64 และเก็บใน sessionStorage
-     const saveImagesAsBase64 = async () => {
-       try {
-         const base64Promises = imageUpload.selectedFiles.map(file => fileToBase64(file));
-         const base64Strings = await Promise.all(base64Promises);
-         sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
-       } catch (error) {
-         console.error('Error saving images as base64:', error);
-       }
-     };
-     saveImagesAsBase64();
-   } else if (typeof window !== 'undefined' && imageUpload.selectedFiles.length === 0) {
-     // ลบข้อมูลรูปภาพออกเมื่อไม่มีรูปแล้ว
-     sessionStorage.removeItem('create_post_images');
-     sessionStorage.removeItem('create_post_images_base64');
-   }
+  if (!isInitialized) return;
+  if (typeof window !== 'undefined' && imageUpload.selectedFiles.length > 0) {
+    // แปลง File objects เป็น base64 และเก็บใน sessionStorage + localStorage
+    const saveImagesAsBase64 = async () => {
+      try {
+        const base64Promises = imageUpload.selectedFiles.map(file => fileToBase64(file));
+        const base64Strings = await Promise.all(base64Promises);
+        sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
+        localStorage.setItem('create_post_images_base64_ls', JSON.stringify(base64Strings));
+      } catch (error) {
+        console.error('Error saving images as base64:', error);
+      }
+    };
+    saveImagesAsBase64();
+  } else if (typeof window !== 'undefined' && imageUpload.selectedFiles.length === 0) {
+    // ลบข้อมูลรูปภาพออกเมื่อไม่มีรูปแล้ว
+    sessionStorage.removeItem('create_post_images');
+    sessionStorage.removeItem('create_post_images_base64');
+    localStorage.removeItem('create_post_images_base64_ls');
+  }
  }, [imageUpload.selectedFiles, isInitialized]); 
 
  // Removed duplicate functions - using from hooks/useImageUpload.ts and utils/imageCompression.ts
@@ -306,33 +338,33 @@ if (savedStep) setStep(savedStep);
      sessionStorage.removeItem('create_post_step');
      sessionStorage.removeItem('create_post_images');
      sessionStorage.removeItem('create_post_images_base64');
+    localStorage.removeItem('create_post_caption_ls');
+    localStorage.removeItem('create_post_province_ls');
+    localStorage.removeItem('create_post_step_ls');
+    localStorage.removeItem('create_post_images_base64_ls');
    }
    setShowLeaveConfirm(false);
    router.push('/');
  };
 
- const handleLeaveCancel = () => {
-   setShowLeaveConfirm(false);
- };
+const handleLeaveCancel = () => {
+  setShowLeaveConfirm(false);
+};
 
- // ปิด modal เมื่อกด Escape
- useEffect(() => {
-   if (!showLeaveConfirm) return;
-   const onKey = (e: KeyboardEvent) => {
-     if (e.key === 'Escape') handleLeaveCancel();
-   };
-   window.addEventListener('keydown', onKey);
-   return () => window.removeEventListener('keydown', onKey);
- }, [showLeaveConfirm]);
-
- useEffect(() => {
-   if (!showVideoAlert) return;
-   const onKey = (e: KeyboardEvent) => {
-     if (e.key === 'Escape') setShowVideoAlert(false);
-   };
-   window.addEventListener('keydown', onKey);
-   return () => window.removeEventListener('keydown', onKey);
- }, [showVideoAlert]);
+// Lock background scroll when overlay layers are open
+useEffect(() => {
+  if (typeof document === 'undefined') return;
+  const prevOverflow = document.body.style.overflow;
+  const shouldLock = isViewing || showLeaveConfirm || showVideoAlert;
+  if (shouldLock) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = prevOverflow;
+  }
+  return () => {
+    document.body.style.overflow = prevOverflow;
+  };
+}, [isViewing, showLeaveConfirm, showVideoAlert]);
 
  // Removed duplicate PhotoPreviewGrid - using from components/PhotoPreviewGrid.tsx
 
@@ -423,13 +455,17 @@ if (typeof window !== 'undefined' && province) {
   localStorage.setItem('last_selected_province', JSON.stringify(province));
 }
 
-// ลบข้อมูลจาก sessionStorage เมื่อโพสต์สำเร็จ
+// ลบข้อมูลจาก sessionStorage / localStorage เมื่อโพสต์สำเร็จ
 if (typeof window !== 'undefined') {
   sessionStorage.removeItem('create_post_caption');
   sessionStorage.removeItem('create_post_province');
   sessionStorage.removeItem('create_post_step');
   sessionStorage.removeItem('create_post_images');
   sessionStorage.removeItem('create_post_images_base64');
+  localStorage.removeItem('create_post_caption_ls');
+  localStorage.removeItem('create_post_province_ls');
+  localStorage.removeItem('create_post_step_ls');
+  localStorage.removeItem('create_post_images_base64_ls');
 }
 
  router.push('/');
@@ -700,9 +736,8 @@ if (typeof window !== 'undefined') {
        alignItems: 'center',
        justifyContent: 'center',
        padding: '20px',
-     }}
-     onClick={handleLeaveCancel}
-   >
+    }}
+  >
      <div
        style={{
          background: '#fff',
@@ -769,9 +804,8 @@ if (typeof window !== 'undefined') {
        alignItems: 'center',
        justifyContent: 'center',
        padding: '20px',
-     }}
-     onClick={() => setShowVideoAlert(false)}
-   >
+    }}
+  >
      <div
        style={{
          background: '#fff',

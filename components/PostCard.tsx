@@ -70,6 +70,7 @@ export const PostCard = React.memo<PostCardProps>(({
 }) => {
   const router = useRouter();
   const status = getOnlineStatus(post.profiles?.last_seen);
+  const statusLabel = status.text ? (status.isOnline ? 'ອອນລາຍ' : status.text) : '';
   const isOwner = isPostOwner(post, session);
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
@@ -78,15 +79,14 @@ export const PostCard = React.memo<PostCardProps>(({
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef<Set<string>>(new Set());
 
-  // Close popups on scroll (feed scroll)
   React.useEffect(() => {
-    if (!showMarkSoldConfirm && !showSoldInfo) return;
-    const handleScroll = () => {
-      setShowMarkSoldConfirm(false);
-      setShowSoldInfo(false);
+    const anyModalOpen = showMarkSoldConfirm || showSoldInfo;
+    if (typeof document === 'undefined' || !anyModalOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, [showMarkSoldConfirm, showSoldInfo]);
 
   React.useEffect(() => {
@@ -132,22 +132,61 @@ export const PostCard = React.memo<PostCardProps>(({
             {status.isOnline ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                 <div style={{ ...commonStyles.onlineIndicator, width: '11px', height: '11px', marginTop: '2px' }}></div>
-                <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
+                <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal' }}>{statusLabel}</span>
               </div>
             ) : (
-              status.text && <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
+              statusLabel && (
+                <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>
+                  {statusLabel}
+                </span>
+              )
             )}
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
             {post.is_boosted ? (
               <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', color: '#4a4d52' }}>• Ad</span> 
-                <span style={{ marginLeft: '4px' }}>{formatTime(post.created_at)}</span>
-                <span style={{ margin: '0 4px' }}>•</span>
-                {post.province}
+                <span style={{ fontSize: '13px', color: '#4a4d52' }}>Ad</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: '#9ca3af',
+                    margin: '0 6px',
+                    transform: 'translateY(1px)',
+                  }}
+                />
+                <span>{formatTime(post.created_at)}</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: '#9ca3af',
+                    margin: '0 6px',
+                    transform: 'translateY(1px)',
+                  }}
+                />
+                <span>{post.province}</span>
               </span>
             ) : (
-              <>{formatTime(post.created_at)} · {post.province}</>
+              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <span>{formatTime(post.created_at)}</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: '#9ca3af',
+                    margin: '0 6px',
+                    transform: 'translateY(1px)',
+                  }}
+                />
+                <span>{post.province}</span>
+              </span>
             )}
           </div>
         </div>
@@ -179,16 +218,31 @@ export const PostCard = React.memo<PostCardProps>(({
 
       {/* Post Actions */}
       <div style={{ borderTop: '1px solid #f0f2f5' }}>
-        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        <div
+          style={{
+            padding: '10px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {/* Like Button */}
             <div 
               onClick={() => onViewLikes?.(post.id)} 
-              style={{ display: 'flex', alignItems: 'center', gap: '7px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', minHeight: '30px' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                padding: '6px 10px',
+                borderRadius: '999px',
+                minHeight: '34px',
+              }}
             >
               <svg 
-                width="20" 
-                height="20" 
+                width="22" 
+                height="22" 
                 viewBox="0 0 24 24" 
                 className={justLikedPosts[post.id] ? "animate-pop" : ""} 
                 fill={likedPosts[post.id] ? "#e0245e" : "none"} 
@@ -211,11 +265,19 @@ export const PostCard = React.memo<PostCardProps>(({
             {/* Save Button */}
             <div 
               onClick={() => onViewSaves?.(post.id)} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', borderRadius: '4px', minHeight: '30px' }}
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 10px',
+                borderRadius: '999px',
+                minHeight: '34px',
+              }}
             >
               <svg 
-                width="20" 
-                height="20" 
+                width="22" 
+                height="22" 
                 viewBox="0 0 24 24" 
                 className={justSavedPosts[post.id] ? "animate-pop" : ""} 
                 fill={savedPosts[post.id] ? "#FFD700" : "none"} 
@@ -236,10 +298,20 @@ export const PostCard = React.memo<PostCardProps>(({
             </div>
 
             {/* View Count */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#4a4d52', padding: '4px 8px', borderRadius: '4px', minHeight: '30px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#4a4d52',
+                padding: '6px 10px',
+                borderRadius: '999px',
+                minHeight: '34px',
+              }}
+            >
               <svg 
-                width="20" 
-                height="20" 
+                width="22" 
+                height="22" 
                 viewBox="0 0 24 24" 
                 fill="none" 
                 stroke="#4a4d52" 
@@ -250,16 +322,34 @@ export const PostCard = React.memo<PostCardProps>(({
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span style={{ fontSize: '13px', fontWeight: '600' }}>{formatCompactNumber(post.views || 0)}</span>
+              <span style={{ fontSize: '13px', fontWeight: '600' }}>
+                {formatCompactNumber(post.views || 0)}
+              </span>
             </div>
 
             {/* Share Button */}
             <div 
               onClick={() => onShare(post)} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 8px', borderRadius: '4px', minHeight: '30px', marginLeft: '-12px', marginTop: '-4px' }}
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 10px',
+                borderRadius: '999px',
+                minHeight: '34px',
+              }}
             >
-              <ShareIconTraced size={36} style={{ color: '#4a4d52' }} />
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{formatCompactNumber(post.shares || 0)}</span>
+              <ShareIconTraced size={34} style={{ color: '#4a4d52' }} />
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: '#4a4d52',
+                }}
+              >
+                {formatCompactNumber(post.shares || 0)}
+              </span>
             </div>
 
           </div>
@@ -282,10 +372,10 @@ export const PostCard = React.memo<PostCardProps>(({
                 }} 
                 style={{ 
                   background: isSoldPost ? '#e4e6eb' : '#e0245e', 
-                  padding: '4px 12px', 
-                  minHeight: '30px',
-                  lineHeight: '18px',
-                  borderRadius: '6px', 
+                  padding: '6px 14px', 
+                  minHeight: '36px',
+                  lineHeight: '20px',
+                  borderRadius: '999px', 
                   border: 'none', 
                   color: isSoldPost ? '#666' : '#fff', 
                   fontWeight: 'bold', 
@@ -305,10 +395,10 @@ export const PostCard = React.memo<PostCardProps>(({
                   }}
                   style={{
                     background: '#e4e6eb',
-                    padding: '4px 12px',
-                    minHeight: '30px',
-                    lineHeight: '18px',
-                    borderRadius: '6px',
+                    padding: '6px 14px',
+                    minHeight: '36px',
+                    lineHeight: '20px',
+                    borderRadius: '999px',
                     border: 'none',
                     color: '#666',
                     fontWeight: 'bold',
@@ -333,8 +423,8 @@ export const PostCard = React.memo<PostCardProps>(({
                     alignItems: 'center', 
                     justifyContent: 'center', 
                     background: '#25D366', 
-                    width: '36px', 
-                    height: '36px', 
+                    width: '40px', 
+                    height: '40px', 
                     borderRadius: '50%', 
                     textDecoration: 'none', 
                     color: '#fff', 
@@ -365,7 +455,6 @@ export const PostCard = React.memo<PostCardProps>(({
             justifyContent: 'center',
             padding: '20px',
           }}
-          onClick={() => setShowMarkSoldConfirm(false)}
         >
           <div
             style={{
@@ -447,7 +536,6 @@ export const PostCard = React.memo<PostCardProps>(({
             justifyContent: 'center',
             padding: '20px',
           }}
-          onClick={() => setShowSoldInfo(false)}
         >
           <div
             style={{

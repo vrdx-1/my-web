@@ -4,9 +4,12 @@ import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const HOME_PATH = '/';
+const LAST_HIDDEN_KEY = 'jutpai_last_hidden_ms';
+const MAX_INACTIVE_MS = 9 * 60 * 1000; // 9 นาที
 
 /**
- * ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามาใหม่ → อยู่หน้า home เท่านั้น
+ * ถ้ากลับเข้ามาในเว็บภายใน 9 นาที → อยู่หน้าปัจจุบัน
+ * ถ้าออกจากเว็บ/เบราว์เซอร์เกิน 9 นาที → กลับมาแล้วเด้งไปหน้า home
  */
 export default function RedirectToHomeOnReturn() {
   const pathname = usePathname();
@@ -14,20 +17,45 @@ export default function RedirectToHomeOnReturn() {
   const wasHiddenRef = useRef(false);
 
   useEffect(() => {
+    const getLastHidden = (): number | null => {
+      if (typeof window === 'undefined') return null;
+      const raw = window.sessionStorage.getItem(LAST_HIDDEN_KEY);
+      if (!raw) return null;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const setLastHidden = (ts: number) => {
+      if (typeof window === 'undefined') return;
+      try {
+        window.sessionStorage.setItem(LAST_HIDDEN_KEY, String(ts));
+      } catch {
+        // ignore
+      }
+    };
+
+    const maybeRedirectHome = () => {
+      const lastHidden = getLastHidden();
+      if (!lastHidden) return;
+      const diff = Date.now() - lastHidden;
+      if (diff > MAX_INACTIVE_MS && pathname !== HOME_PATH) {
+        router.push(HOME_PATH);
+      }
+    };
+
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         wasHiddenRef.current = true;
+        setLastHidden(Date.now());
       } else if (document.visibilityState === 'visible' && wasHiddenRef.current) {
         wasHiddenRef.current = false;
-        if (pathname !== HOME_PATH) {
-          router.push(HOME_PATH);
-        }
+        maybeRedirectHome();
       }
     };
 
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted && pathname !== HOME_PATH) {
-        router.push(HOME_PATH);
+      if (e.persisted) {
+        maybeRedirectHome();
       }
     };
 

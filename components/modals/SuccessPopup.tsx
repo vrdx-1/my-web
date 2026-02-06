@@ -8,16 +8,14 @@ interface SuccessPopupProps {
 }
 
 export const SuccessPopup = React.memo<SuccessPopupProps>(({ message, onClose }) => {
-  // ปิด modal เมื่อเลื่อนหน้าจอ
   useEffect(() => {
-    const handleScroll = () => {
-      onClose();
-    };
-    window.addEventListener('scroll', handleScroll, true);
+    if (typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
+      document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div
@@ -31,39 +29,67 @@ export const SuccessPopup = React.memo<SuccessPopupProps>(({ message, onClose })
         justifyContent: 'center',
         padding: '20px',
       }}
-      onClick={onClose}
     >
       <div
         style={{
           background: '#fff',
           borderRadius: '12px',
-          padding: '14px 18px',
-          maxWidth: '240px',
-          width: 'fit-content',
+          padding: '18px 20px 16px 20px',
+          maxWidth: '260px',
+          width: '100%',
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '10px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <span style={{ fontSize: '18px', fontWeight: '500', color: '#1c1e21' }}>
-          {message}
-        </span>
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#31a24c"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0 }}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            marginBottom: '6px',
+          }}
         >
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+          <span style={{ fontSize: '18px', fontWeight: '500', color: '#1c1e21' }}>
+            {message}
+          </span>
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#31a24c"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ flexShrink: 0 }}
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            marginTop: '4px',
+            width: '100%',
+            padding: '10px 16px',
+            background: '#1877f2',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            fontWeight: 'bold',
+            color: '#fff',
+            cursor: 'pointer',
+          }}
+        >
+          ຕົກລົງ
+        </button>
       </div>
     </div>
   );

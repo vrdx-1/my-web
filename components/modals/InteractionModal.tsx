@@ -48,13 +48,14 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
       style={{ 
         position: 'fixed', 
         inset: 0, 
-        background: interactionSheetMode === 'full' ? '#fff' : 'rgba(0,0,0,0.5)', 
+        background: 'rgba(0,0,0,0.5)', 
         zIndex: 10000, 
         display: 'flex', 
         alignItems: 'flex-end', 
         transition: 'background 0.3s', 
         touchAction: 'none', 
-        overflow: 'hidden' 
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
       }} 
       onClick={onClose}
     >
@@ -67,7 +68,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
           width: '100%', 
           background: '#fff', 
           borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', 
-          height: interactionSheetMode === 'full' ? 'calc(100% - 110px)' : '70%', 
+          height: interactionSheetMode === 'full' ? '100%' : '70%', 
           transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', 
           transition: 'transform 0.3s ease-out', 
           display: 'flex', 

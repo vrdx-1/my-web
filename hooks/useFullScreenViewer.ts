@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 let _fullScreenTouchY: number | null = null;
 
@@ -60,9 +60,8 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const [fullScreenIsDragging, setFullScreenIsDragging] = useState(false);
   const [fullScreenTransitionDuration, setFullScreenTransitionDuration] = useState(200);
   const [fullScreenShowDetails, setFullScreenShowDetails] = useState(true);
-  // Zoom is disabled in full screen viewer. Keep state for API compatibility but hard-lock to default values.
-  const [fullScreenZoomScale, _setFullScreenZoomScale] = useState(1);
-  const [fullScreenZoomOrigin, _setFullScreenZoomOrigin] = useState<string>('50% 50%');
+  const [fullScreenZoomScale, setFullScreenZoomScale] = useState(1);
+  const [fullScreenZoomOrigin, setFullScreenZoomOrigin] = useState<string>('50% 50%');
   const [showImageForDownload, setShowImageForDownload] = useState<string | null>(null);
   const [showDownloadBottomSheet, setShowDownloadBottomSheet] = useState(false);
   const [isDownloadBottomSheetAnimating, setIsDownloadBottomSheetAnimating] = useState(false);
@@ -71,15 +70,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const fullScreenImageContainerRef = useRef<HTMLDivElement | null>(null);
   const fullScreenTouchStartTimeRef = useRef<number>(0);
   const fullScreenTouchStartYRef = useRef<number>(0);
-  // (Zoom refs removed)
-
-  const setFullScreenZoomScale = useCallback((_: number | ((prev: number) => number)) => {
-    _setFullScreenZoomScale(1);
-  }, []);
-
-  const setFullScreenZoomOrigin = useCallback((_: string) => {
-    _setFullScreenZoomOrigin('50% 50%');
-  }, []);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
+  const isPinchingRef = useRef(false);
 
   const downloadImage = useCallback(async (url: string) => {
     try {
@@ -106,24 +99,41 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, []);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
+    if (e.touches.length === 1) {
+      setTouchStart(e.touches[0].clientX);
+    }
   }, []);
 
   const fullScreenOnTouchStart = useCallback((e: React.TouchEvent) => {
-    onTouchStart(e);
-    _fullScreenTouchY = e.touches[0].clientY;
-    fullScreenTouchStartYRef.current = e.touches[0].clientY;
-    fullScreenTouchStartTimeRef.current = Date.now();
-    setFullScreenIsDragging(true);
-    setFullScreenDragOffset(0);
-    setFullScreenVerticalDragOffset(0);
-    setFullScreenTransitionDuration(0);
-  }, [onTouchStart]);
+    if (e.touches.length >= 2) {
+      // ปล่อยให้บราวเซอร์จัดการ pinch-zoom เอง (ไม่ใช้ custom zoom)
+      isPinchingRef.current = false;
+      pinchStartDistanceRef.current = null;
+      return;
+    }
+
+    isPinchingRef.current = false;
+    if (e.touches.length === 1) {
+      onTouchStart(e);
+      _fullScreenTouchY = e.touches[0].clientY;
+      fullScreenTouchStartYRef.current = e.touches[0].clientY;
+      fullScreenTouchStartTimeRef.current = Date.now();
+      setFullScreenIsDragging(true);
+      setFullScreenDragOffset(0);
+      setFullScreenVerticalDragOffset(0);
+      setFullScreenTransitionDuration(0);
+    }
+  }, [onTouchStart, fullScreenZoomScale, setFullScreenZoomOrigin]);
 
   const fullScreenOnTouchMove = useCallback((e: React.TouchEvent) => {
+    // ถ้ามีหลายจุดสัมผัส ให้ปล่อยให้บราวเซอร์ handle pinch‑zoom เอง
+    if (e.touches.length >= 2) {
+      return;
+    }
+
     if (touchStart === null || fullScreenTouchStartYRef.current === 0) return;
     const n = fullScreenImages?.length ?? 0;
-    if (n === 0) return;
+    if (n === 0 || e.touches.length === 0) return;
     const clientX = e.touches[0].clientX;
     const clientY = e.touches[0].clientY;
     
@@ -156,6 +166,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, [touchStart, currentImgIndex, fullScreenImages]);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
+    // ไม่จัดการ pinch‑zoom ด้วย custom logic แล้ว ปล่อยให้บราวเซอร์ทำเอง
+    isPinchingRef.current = false;
+    pinchStartDistanceRef.current = null;
     const startY = fullScreenTouchStartYRef.current;
 
     const t = (e.target as HTMLElement);
@@ -174,8 +187,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
         const verticalDelta = ey - fullScreenTouchStartYRef.current;
         
         if (dy > 40 && dy > dx) {
-          // Full screen should only be closed via the Back button.
-          // If user swipes vertically, just reset the drag state (do not close).
+          // ปัดขึ้น/ลงเพื่อปิด full screen (คุ้นเคยแบบ Instagram / Photos)
           setFullScreenIsDragging(false);
           setFullScreenDragOffset(0);
           setFullScreenVerticalDragOffset(0);
@@ -183,6 +195,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
           setTouchStart(null);
           _fullScreenTouchY = null;
           fullScreenTouchStartYRef.current = 0;
+          setFullScreenZoomScale(1);
+          setFullScreenZoomOrigin('50% 50%');
+          setFullScreenImages(null);
           return;
         } else if (Math.abs(fullScreenVerticalDragOffset) > 20) {
           setFullScreenVerticalDragOffset(0);
@@ -241,7 +256,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, [touchStart, currentImgIndex, fullScreenImages, activePhotoMenu]);
 
   const fullScreenOnClick = useCallback((e: React.MouseEvent) => {
-    const t = (e.target as HTMLElement);
+    const t = e.target as HTMLElement;
     if (t.closest('button') || t.closest('[data-menu-container]') || t.closest('[data-menu-button]')) return;
     if (activePhotoMenu !== null) {
       setIsPhotoMenuAnimating(true);
@@ -251,8 +266,9 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       }, 300);
       return;
     }
+    // แตะครั้งเดียว (หรือหลายครั้งติดกัน) ให้ทำเหมือนเดิม: toggle แสดง/ซ่อนรายละเอียด
     setFullScreenShowDetails((prev) => !prev);
-  }, [activePhotoMenu]);
+  }, [activePhotoMenu, setIsPhotoMenuAnimating, setActivePhotoMenu, setFullScreenShowDetails]);
 
   return {
     // State

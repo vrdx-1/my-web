@@ -242,7 +242,13 @@ export function SoldPageContent() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
-        onNotificationClick={() => router.push('/notification')}
+        onNotificationClick={() => {
+          if (!homeData.session) {
+            router.push('/profile');
+            return;
+          }
+          router.push('/notification');
+        }}
         unreadCount={unreadCount}
         userProfile={homeData.userProfile}
         session={homeData.session}
@@ -289,6 +295,7 @@ export function SoldPageContent() {
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
         loadingMore={postListData.loadingMore}
+        hasMore={postListData.hasMore}
         hideBoost
       />
 

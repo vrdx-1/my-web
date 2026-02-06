@@ -104,12 +104,12 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   };
 
   useEffect(() => {
-    if (!showLeaveConfirm) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleLeaveCancel();
+    if (!showLeaveConfirm || typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, [showLeaveConfirm]);
 
   useEffect(() => {
@@ -271,7 +271,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               minHeight: '24px',
               border: 'none',
               outline: 'none',
-              fontSize: '15px',
+              fontSize: '16px',
               lineHeight: '1.4',
               padding: 0,
               resize: 'none',
@@ -362,7 +362,6 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             justifyContent: 'center',
             padding: '20px',
           }}
-          onClick={handleLeaveCancel}
         >
           <div
             style={{
