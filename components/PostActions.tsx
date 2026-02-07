@@ -116,7 +116,7 @@ export const PostActions = React.memo<PostActionsProps>(({
             onClick={() => onShare(post)} 
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '-12px', marginTop: '-4px' }}
           >
-            <ShareIconTraced size={36} style={{ color: '#4a4d52' }} />
+            <ShareIconTraced size={22} style={{ color: '#4a4d52' }} />
             <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', marginLeft: '-5px', marginTop: '3px' }}>{formatCompactNumber(post.shares || 0)}</span>
           </div>
         </div>
