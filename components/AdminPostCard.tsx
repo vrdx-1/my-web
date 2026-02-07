@@ -50,8 +50,8 @@ export const AdminPostCard = React.memo<AdminPostCardProps>(({
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-              {post.profiles?.username || 'User'}
+<span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
+            {post.profiles?.username || 'User'}
             </span>
             {status.isOnline ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>

@@ -96,6 +96,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
               fontSize: '18px',
               fontWeight: 'bold',
               minWidth: 0,
+              color: '#111111',
             }}
           >
             {title}
@@ -145,6 +146,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
               fontSize: '18px',
               fontWeight: 'bold',
               minWidth: 0,
+              color: '#111111',
             }}
           >
             {title}
@@ -154,7 +156,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
       ) : (
         <>
           {backButton}
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#111111' }}>
             {title}
           </h1>
         </>

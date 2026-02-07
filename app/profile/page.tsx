@@ -148,7 +148,7 @@ export default function Profile() {
                   setEmail(val);
                   updatePendingData({ email: val });
                 }}
-                style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none' }}
+                style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none', color: '#111111' }}
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <div style={{ position: 'relative' }}>
@@ -259,7 +259,7 @@ export default function Profile() {
 
             <button 
               onClick={() => router.push('/login')}
-              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '200px' }}
+              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '80px' }}
             >
               ເຂົ້າສູ່ລະບົບ
             </button>

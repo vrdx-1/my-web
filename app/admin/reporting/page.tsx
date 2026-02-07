@@ -168,9 +168,9 @@ export default function AdminReportingPage() {
  </div>
  <div style={{ flex: 1, minWidth: 0 }}>
  <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
- <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
- {post.profiles?.username || 'User'}
- </span>
+<span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
+              {post.profiles?.username || 'User'}
+            </span>
  {status.isOnline ? (
  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
  <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>

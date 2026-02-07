@@ -250,7 +250,8 @@ export default function Register() {
                 background: '#fff', 
                 outline: 'none', 
                 fontSize: '16px',
-                textAlign: 'left'
+                textAlign: 'left',
+                color: '#111111'
               }}
               required
             />

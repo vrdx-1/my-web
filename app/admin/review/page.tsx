@@ -217,8 +217,8 @@ export default function AdminReviewPage() {
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 2000, overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ padding: '10px 15px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
-              <span style={{ fontWeight: 'bold' }}>ລາຍລະອຽດໂພສ</span>
-              <button onClick={() => setViewingPost(null)} style={{ background: '#f0f2f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>✕</button>
+              <span style={{ fontWeight: 'bold', color: '#111111' }}>ລາຍລະອຽດໂພສ</span>
+              <button onClick={() => setViewingPost(null)} style={{ background: '#f0f2f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', color: '#111111' }}>✕</button>
             </div>
             
             {/* Header ใน Modal: แสดงโปรไฟล์ครบถ้วนแบบหน้าฟีด */}
@@ -228,7 +228,7 @@ export default function AdminReviewPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
                         {viewingPost.profiles?.username || 'User'}
                       </span>
                       {(() => {

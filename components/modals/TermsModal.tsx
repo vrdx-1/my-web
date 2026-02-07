@@ -18,16 +18,16 @@ export const TermsModal = React.memo<TermsModalProps>(({
   onAcceptChange,
   onContinue,
 }) => {
-  if (!show) return null;
-
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (!show || typeof document === 'undefined') return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, []);
+  }, [show]);
+
+  if (!show) return null;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

@@ -199,6 +199,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
                   background: selectedProvince === p ? '#e7f3ff' : '#fff',
                   cursor: 'pointer',
                   fontFamily: LAO_FONT,
+                  color: '#111111',
                 }}
               >
                 {p} {selectedProvince === p && '✓'}
@@ -225,6 +226,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
             cursor: 'pointer',
             touchAction: 'manipulation',
             fontFamily: LAO_FONT,
+            color: '#111111',
           }}
         >
           {selectedProvince || 'ເລືອກແຂວງ'}

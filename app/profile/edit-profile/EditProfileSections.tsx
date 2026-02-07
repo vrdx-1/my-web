@@ -182,6 +182,7 @@ const EditPhoneModalComponent = ({
             border: '1px solid #ddd',
             outline: 'none',
             fontSize: '16px',
+            color: '#111111',
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>

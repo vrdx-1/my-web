@@ -132,14 +132,15 @@ export class ErrorBoundary extends Component<Props, State> {
                 fontSize: '12px',
                 color: '#666'
               }}>
-                <summary style={{ cursor: 'pointer', marginBottom: '8px', fontWeight: 'bold' }}>
+                <summary style={{ cursor: 'pointer', marginBottom: '8px', fontWeight: 'bold', color: '#111111' }}>
                   Error Details (Development Only)
                 </summary>
                 <pre style={{
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
                   marginTop: '8px',
-                  fontSize: '11px'
+                  fontSize: '11px',
+                  color: '#111111'
                 }}>
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}

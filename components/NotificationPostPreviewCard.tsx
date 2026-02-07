@@ -395,7 +395,7 @@ export const NotificationPostPreviewCard = React.memo<{
           }}
         >
           <span style={{ fontSize: '17px', fontWeight: '600', color: '#4a4d52' }}>{interactionTotal}</span>
-          <span>ຄົນມັກໂພສຂອງທ່ານ</span>
+          <span style={{ color: '#050505' }}>ຄົນມັກໂພສຂອງທ່ານ</span>
           <AvatarGroup avatars={notification.interaction_avatars || []} totalCount={interactionTotal} />
         </div>
         {boostBadgeConfig && (

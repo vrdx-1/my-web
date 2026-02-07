@@ -119,7 +119,8 @@ export default function ChangePassword() {
                 fontSize: '16px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                background: '#e0e0e0'
+                background: '#e0e0e0',
+                color: '#111111'
               }}
             />
             <button
@@ -173,7 +174,8 @@ export default function ChangePassword() {
                 fontSize: '16px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                background: '#e0e0e0'
+                background: '#e0e0e0',
+                color: '#111111'
               }}
             />
             <button
@@ -224,7 +226,8 @@ export default function ChangePassword() {
                 fontSize: '16px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                background: '#e0e0e0'
+                background: '#e0e0e0',
+                color: '#111111'
               }}
             />
             <button

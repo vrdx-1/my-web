@@ -105,12 +105,17 @@ export function usePostFeedHandlers({
 
   const handleReport = useCallback(
     (post: any) => {
+      if (!session) {
+        menu?.setActiveMenu(null);
+        router.push('/register');
+        return;
+      }
       if (setReportingPost) {
         openReportModal(post, session, setReportingPost);
         menu?.setActiveMenu(null);
       }
     },
-    [session, setReportingPost, menu]
+    [session, setReportingPost, menu, router]
   );
 
   const [showReportSuccess, setShowReportSuccess] = useState(false);

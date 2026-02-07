@@ -96,7 +96,7 @@ export default function Login() {
               placeholder="ອີເມລ" 
               value={email}
               onChange={(e) => setEmail(e.target.value)} 
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px' }}
+              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px', color: '#111111' }}
               required
             />
             <div style={{ position: 'relative' }}>
@@ -105,7 +105,7 @@ export default function Login() {
                 placeholder="ລະຫັດຜ່ານ" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)} 
-                style={{ width: '100%', padding: '15px 45px 15px 15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px' }}
+                style={{ width: '100%', padding: '15px 45px 15px 15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', outline: 'none', fontSize: '16px', color: '#111111' }}
                 required
               />
               <button

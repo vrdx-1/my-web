@@ -43,8 +43,8 @@ function renderHighlighted(text: string, query: string) {
   return (
     <>
       {before}
-      <span style={{ fontWeight: 700 }}>{match}</span>
-      <span style={{ opacity: 0.65 }}>{after}</span>
+      <span style={{ fontWeight: 700, color: '#111111' }}>{match}</span>
+      <span style={{ opacity: 0.65, color: '#111111' }}>{after}</span>
     </>
   );
 }
@@ -302,6 +302,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
                 background: 'transparent',
                 outline: 'none',
                 fontSize: '16px',
+                color: '#111111',
               }}
             />
             {searchTerm && (

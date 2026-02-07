@@ -148,7 +148,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           <Avatar avatarUrl={viewingPost.profiles?.avatar_url} size={38} session={session} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, color: '#111111' }}>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
                 {viewingPost.profiles?.username || 'User'}
               </span>
               {status.isOnline ? (
@@ -162,10 +162,10 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </div>
             <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
               {viewingPost.is_boosted ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
                   <span style={{ fontWeight: 'bold', color: '#4a4d52' }}>• Ad</span> 
-                  <span style={{ marginLeft: '4px' }}>{formatTime(viewingPost.created_at)}</span>
-                  <span style={{ margin: '0 4px' }}>•</span>
+                  <span style={{ marginLeft: '4px', color: '#4a4d52' }}>{formatTime(viewingPost.created_at)}</span>
+                  <span style={{ margin: '0 4px', color: '#4a4d52' }}>•</span>
                   {viewingPost.province}
                 </span>
               ) : (

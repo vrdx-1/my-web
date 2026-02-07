@@ -114,8 +114,8 @@ export function SoldPageContent() {
   // Use file upload hook
   const fileUpload = useFileUpload();
 
-  // Use header scroll hook
-  const headerScroll = useHeaderScroll({ disableScrollHide: true });
+  // Use header scroll hook (ให้ header ซ่อน/แสดงตามการเลื่อนเหมือนแท็บ ພ້ອມຂາຍ)
+  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore });
 
   // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -227,9 +227,13 @@ export function SoldPageContent() {
   }, [fullScreenViewer.fullScreenImages]);
   useEffect(() => {
     if (!viewingPostHook.viewingPost) return;
-    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    const close = () => {
+      const isFirstPost = postListData.posts.length > 0 && viewingPostHook.viewingPost?.id === postListData.posts[0]?.id;
+      viewingPostHook.closeViewingMode();
+      if (isFirstPost) headerScroll.setIsHeaderVisible(true);
+    };
     return addBackStep(close);
-  }, [viewingPostHook.viewingPost]);
+  }, [viewingPostHook.viewingPost?.id ?? null, postListData.posts.length]);
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -338,7 +342,9 @@ export function SoldPageContent() {
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
-          viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+          const isFirstPost = postListData.posts.length > 0 && viewingPostHook.viewingPost?.id === postListData.posts[0]?.id;
+          viewingPostHook.closeViewingMode();
+          if (isFirstPost) headerScroll.setIsHeaderVisible(true);
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

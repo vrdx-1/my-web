@@ -28,6 +28,7 @@ export const EmptyState = React.memo<EmptyStateProps>(({
           textAlign: 'center' as const,
           borderRadius: '8px',
           fontFamily: LAO_FONT,
+          color: '#111111',
         };
       case 'minimal':
         return {
