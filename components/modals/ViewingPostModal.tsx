@@ -147,7 +147,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           </button>
           <Avatar avatarUrl={viewingPost.profiles?.avatar_url} size={38} session={session} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+            <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, color: '#111111' }}>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                 {viewingPost.profiles?.username || 'User'}
               </span>

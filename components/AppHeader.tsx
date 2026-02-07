@@ -140,7 +140,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               e.stopPropagation();
               if (onSearchClick) onSearchClick();
             }}
-            style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer' }} 
+            style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer', color: '#111111' }} 
           />
         </div>
 
@@ -261,7 +261,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                 {isLoading ? (
                   <TabSpinner />
                 ) : (
-                  <span style={{ fontSize: '14px', lineHeight: 1.25 }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
+                  <span style={{ fontSize: '14px', lineHeight: 1.25, color: '#111111' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
                 )}
                 {isActive && (
                   <div

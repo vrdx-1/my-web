@@ -165,7 +165,7 @@ export default function AdminReviewPage() {
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>
       
       <div style={{ width: '100%' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px' }}>Review Posts (24h) - {posts.length}</h2>
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>Review Posts (24h) - {posts.length}</h2>
         {posts.length === 0 && <EmptyState message="ບໍ່ມີໂພສໃໝ່ໃນ 24 ຊົ່ວໂມງນີ້" variant="card" />}
         
         {posts.map((post, index) => {
@@ -227,7 +227,7 @@ export default function AdminReviewPage() {
                     {viewingPost.profiles?.avatar_url && <img src={viewingPost.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                         {viewingPost.profiles?.username || 'User'}
                       </span>
@@ -249,7 +249,7 @@ export default function AdminReviewPage() {
                 </div>
             </div>
 
-            <div style={{ padding: '10px 15px 20px 15px', fontSize: '16px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+            <div style={{ padding: '10px 15px 20px 15px', fontSize: '16px', lineHeight: '1.5', whiteSpace: 'pre-wrap', color: '#111111' }}>
               {viewingPost.caption}
             </div>
 

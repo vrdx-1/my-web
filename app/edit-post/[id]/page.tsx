@@ -252,7 +252,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#111111' }}>
               {userProfile?.username || 'User'}
             </div>
             <ProvinceDropdown
@@ -379,7 +379,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
                 <div style={{ padding: '5px', width: 24, height: 24 }} aria-hidden />
               </div>
-              <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0 }}>ແກ້ໄຂ</h3>
+              <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0, color: '#111111' }}>ແກ້ໄຂ</h3>
               <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={() => setIsViewing(false)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ສຳເລັດ</button>
               </div>
@@ -436,7 +436,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
               ທ່ານຕ້ອງການຖິ້ມການແກ້ໄຂບໍ?
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>

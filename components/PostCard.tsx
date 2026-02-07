@@ -322,7 +322,7 @@ export const PostCard = React.memo<PostCardProps>(({
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span style={{ fontSize: '13px', fontWeight: '600' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#111111' }}>
                 {formatCompactNumber(post.views || 0)}
               </span>
             </div>
@@ -463,7 +463,7 @@ export const PostCard = React.memo<PostCardProps>(({
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             }}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
               ລົດຄັນນີ້ຖືກຂາຍແລ້ວບໍ?
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
@@ -544,7 +544,7 @@ export const PostCard = React.memo<PostCardProps>(({
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             }}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
               ລົດຄັນນີ້ຖືກຂາຍແລ້ວ
             </h3>
             <button

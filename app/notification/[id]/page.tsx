@@ -291,7 +291,7 @@ export default function NotificationDetail() {
            <polyline points="15 18 9 12 15 6"></polyline>
          </svg>
        </button>
-       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>ລາຍລະອຽດໂພສ</h1>
+       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#111111' }}>ລາຍລະອຽດໂພສ</h1>
      </div>
 
      <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
@@ -340,7 +340,7 @@ export default function NotificationDetail() {
            <polyline points="15 18 9 12 15 6"></polyline>
          </svg>
        </button>
-       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>ລາຍລະອຽດໂພສ</h1>
+       <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#111111' }}>ລາຍລະອຽດໂພສ</h1>
      </div>
 
      {/* PostCard - ใช้ shared component แบบเดียวกับหน้าโฮม */}

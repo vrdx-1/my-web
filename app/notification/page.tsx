@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
@@ -98,16 +98,25 @@ export default function NotificationPage() {
   // เก็บข้อมูลว่า user ดูแจ้งเตือนของ post ไหน "ถึงเวลาไหนแล้ว"
   // key = post_id, value = created_at ล่าสุดที่ผู้ใช้เปิดดู
   const [clearedPostMap, setClearedPostMap] = useState<Record<string, string>>({});
+  // โหลดข้อมูลจากเครื่องเสร็จแล้วจึงค่อยโหลดรายการ (เลี่ยง race)
+  const [clearedMapReady, setClearedMapReady] = useState(false);
+  const clearedPostMapRef = useRef<Record<string, string>>({});
 
-  // โหลดโพสต์ที่เคยถูกเคลียร์ตัวเลขแจ้งเตือนไว้แล้วจาก localStorage
+  // อัปเดต ref ให้ตรงกับ state เสมอ (ให้ fetch อ่านค่าล่าสุดได้โดยไม่ต้อง refetch เมื่อกดดู)
+  useEffect(() => {
+    clearedPostMapRef.current = clearedPostMap;
+  }, [clearedPostMap]);
+
+  // โหลดโพสต์ที่เคยถูกเคลียร์จาก localStorage ก่อน แล้วค่อยให้โหลดรายการ
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const raw = window.localStorage.getItem('notification_cleared_posts');
-    if (!raw) return;
     try {
+      if (!raw) {
+        setClearedMapReady(true);
+        return;
+      }
       const parsed = JSON.parse(raw);
-      // backward compatible:
-      // เดิมเก็บเป็น array ของ post_id → แปลงเป็น object โดยถือว่าเคลียร์ "ถึงตอนนี้"
       if (Array.isArray(parsed)) {
         const now = new Date().toISOString();
         const obj: Record<string, string> = {};
@@ -118,140 +127,136 @@ export default function NotificationPage() {
       } else if (parsed && typeof parsed === 'object') {
         setClearedPostMap(parsed as Record<string, string>);
       }
+      setClearedMapReady(true);
     } catch {
-      // ignore parse error
+      setClearedMapReady(true);
     }
   }, []);
 
-  const fetchNotifications = useCallback(
-    async (userId: string) => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.rpc('get_notifications_feed', {
-          p_owner_id: userId,
-        });
+  const fetchNotifications = useCallback(async (userId: string) => {
+    setLoading(true);
+    const clearedMap = clearedPostMapRef.current;
+    try {
+      const { data, error } = await supabase.rpc('get_notifications_feed', {
+        p_owner_id: userId,
+      });
 
-        if (error) {
-          console.error('Supabase Error:', error);
-          throw error;
+      if (error) {
+        console.error('Supabase Error:', error);
+        throw error;
+      }
+
+      if (data) {
+        try {
+          if (data.length > 0) {
+            await supabase
+              .from('notification_reads')
+              .upsert(
+                data.map((n: any) => ({
+                  user_id: userId,
+                  notification_id: n.id,
+                })),
+                { onConflict: 'user_id,notification_id' }
+              );
+          }
+        } catch {
+          // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
         }
 
-        if (data) {
-          // mark ทั้งหมดว่าอ่านแล้วเพื่อให้ badge หน้า Home หายทันที
-          try {
-            if (data.length > 0) {
-              await supabase
-                .from('notification_reads')
-                .upsert(
-                  data.map((n: any) => ({
-                    user_id: userId,
-                    notification_id: n.id,
-                  })),
-                  { onConflict: 'user_id,notification_id' }
-                );
+        const formatted: NotificationItem[] = (data as any[]).map((item) => ({
+          id: item.id,
+          type: item.type,
+          post_id: item.post_id,
+          created_at: item.created_at,
+          sender_name: item.username || 'User',
+          sender_avatar: item.avatar_url,
+          post_caption: item.car_data?.caption || '',
+          post_images: item.car_data?.images || [],
+          likes: item.likes_count || 0,
+          saves: item.saves_count || 0,
+          interaction_avatars: item.interaction_avatars || [],
+          interaction_total: item.interaction_total || 0,
+        }));
+
+        const perPost = new Map<string, { notif: NotificationItem; count: number }>();
+        formatted.forEach((notif) => {
+          const existing = perPost.get(notif.post_id);
+          const clearedAt = clearedMap[notif.post_id];
+          const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
+          const notifTime = new Date(notif.created_at).getTime();
+          const isNewForUser = notifTime > clearedTime;
+
+          if (!existing) {
+            perPost.set(notif.post_id, {
+              notif,
+              count: isNewForUser ? 1 : 0,
+            });
+          } else {
+            const existingDate = new Date(existing.notif.created_at).getTime();
+            if (notifTime > existingDate) {
+              existing.notif = notif;
             }
-          } catch {
-            // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
+            if (isNewForUser) {
+              existing.count += 1;
+            }
           }
+        });
 
-          const formatted: NotificationItem[] = (data as any[]).map((item) => ({
-            id: item.id,
-            type: item.type,
-            post_id: item.post_id,
-            created_at: item.created_at,
-            sender_name: item.username || 'User',
-            sender_avatar: item.avatar_url,
-            post_caption: item.car_data?.caption || '',
-            post_images: item.car_data?.images || [],
-            likes: item.likes_count || 0,
-            saves: item.saves_count || 0,
-            interaction_avatars: item.interaction_avatars || [],
-            interaction_total: item.interaction_total || 0,
-          }));
+        const uniqueList: NotificationItem[] = Array.from(perPost.values())
+          .map(({ notif, count }) => ({
+            ...notif,
+            notification_count: count,
+          }))
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          );
 
-          // รวมแจ้งเตือนตามโพสต์:
-          // - นับ "จำนวนแจ้งเตือนใหม่" ต่อ post_id โดยเทียบกับเวลาที่ user เคยเปิดดูโพสต์นั้นล่าสุด
-          // - เก็บเฉพาะ notification ล่าสุดของแต่ละโพสต์เพื่อแสดง
-          const perPost = new Map<string, { notif: NotificationItem; count: number }>();
-          formatted.forEach((notif) => {
-            const existing = perPost.get(notif.post_id);
-            const clearedAt = clearedPostMap[notif.post_id];
-            const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
-            const notifTime = new Date(notif.created_at).getTime();
-            const isNewForUser = notifTime > clearedTime;
+        try {
+          const postIds = uniqueList.map((n) => n.post_id);
+          if (postIds.length > 0) {
+            const { data: boostsData, error: boostsError } = await supabase
+              .from('post_boosts')
+              .select('post_id, status, created_at')
+              .in('post_id', postIds)
+              .order('created_at', { ascending: false });
 
-            if (!existing) {
-              perPost.set(notif.post_id, {
-                notif,
-                count: isNewForUser ? 1 : 0,
+            if (!boostsError && boostsData) {
+              const statusByPostId = new Map<string, string>();
+              (boostsData as any[]).forEach((b) => {
+                const pid = String(b.post_id);
+                if (!statusByPostId.has(pid)) {
+                  statusByPostId.set(pid, String(b.status));
+                }
               });
-            } else {
-              const existingDate = new Date(existing.notif.created_at).getTime();
-              if (notifTime > existingDate) {
-                existing.notif = notif;
-              }
-              if (isNewForUser) {
-                existing.count += 1;
-              }
-            }
-          });
-
-          const uniqueList: NotificationItem[] = Array.from(perPost.values())
-            .map(({ notif, count }) => ({
-              ...notif,
-              notification_count: count,
-            }))
-            .sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
-            );
-
-          // Add boost status label (for boosted posts only)
-          try {
-            const postIds = uniqueList.map((n) => n.post_id);
-            if (postIds.length > 0) {
-              const { data: boostsData, error: boostsError } = await supabase
-                .from('post_boosts')
-                .select('post_id, status, created_at')
-                .in('post_id', postIds)
-                .order('created_at', { ascending: false });
-
-              if (!boostsError && boostsData) {
-                const statusByPostId = new Map<string, string>();
-                (boostsData as any[]).forEach((b) => {
-                  const pid = String(b.post_id);
-                  if (!statusByPostId.has(pid)) {
-                    statusByPostId.set(pid, String(b.status));
-                  }
-                });
-                setNotifications(
-                  uniqueList.map((n) => ({
-                    ...n,
-                    boost_status: statusByPostId.get(String(n.post_id)) ?? null,
-                  }))
-                );
-              } else {
-                setNotifications(uniqueList);
-              }
+              setNotifications(
+                uniqueList.map((n) => ({
+                  ...n,
+                  boost_status: statusByPostId.get(String(n.post_id)) ?? null,
+                }))
+              );
             } else {
               setNotifications(uniqueList);
             }
-          } catch {
+          } else {
             setNotifications(uniqueList);
           }
+        } catch {
+          setNotifications(uniqueList);
         }
-      } catch (err) {
-        console.error('Fetch Error:', err);
-        setNotifications([]);
-      } finally {
-        setLoading(false);
       }
-    },
-    [clearedPostMap]
-  );
+    } catch (err) {
+      console.error('Fetch Error:', err);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  // โหลดรายการเมื่อโหลดข้อมูลจากเครื่องเสร็จแล้ว (ไม่โหลดก่อน จะได้สถานะ "อ่านแล้ว" ตรง)
   useEffect(() => {
+    if (!clearedMapReady) return;
     const checkSession = async () => {
       try {
         const {
@@ -267,7 +272,7 @@ export default function NotificationPage() {
       }
     };
     checkSession();
-  }, [fetchNotifications]);
+  }, [clearedMapReady, fetchNotifications]);
 
   const handleNotificationClick = useCallback(
     (notification: NotificationItem) => {
@@ -285,18 +290,13 @@ export default function NotificationPage() {
         return next;
       });
 
-      // 2) อัปเดตรายการปัจจุบันให้ตัวเลขของโพสต์นี้กลายเป็น 0 ทันที (แจ้งเตือนที่มีอยู่ก่อนหน้านี้ถือว่าอ่านแล้ว)
+      // 2) อัปเดตแถวที่กดเป็น "อ่านแล้ว" ทันที (ไม่โหลดรายการใหม่)
       setNotifications((current) =>
-        current.map((n) => {
-          if (n.post_id !== notification.post_id) return n;
-          const clearedTime = new Date(lastSeen).getTime();
-          const isNewForUser =
-            new Date(n.created_at).getTime() > clearedTime;
-          return {
-            ...n,
-            notification_count: isNewForUser ? n.notification_count : 0,
-          };
-        })
+        current.map((n) =>
+          n.post_id === notification.post_id
+            ? { ...n, notification_count: 0 }
+            : n
+        )
       );
 
       router.push(`/notification/${notification.post_id}`);
@@ -338,7 +338,7 @@ export default function NotificationPage() {
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>ການແຈ້ງເຕືອນ</h1>
+        <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#111111' }}>ການແຈ້ງເຕືອນ</h1>
       </div>
 
       {/* Notification List */}

@@ -14,7 +14,7 @@ export async function generateMetadata({
   if (!postId) return {};
   return {
     openGraph: {
-      images: [{ url: `${baseUrl}/api/og?post=${postId}`, width: 1200, height: 630 }],
+      images: [{ url: `${baseUrl}/api/og?post=${postId}`, width: 600, height: 600 }],
     },
     twitter: {
       card: 'summary_large_image',

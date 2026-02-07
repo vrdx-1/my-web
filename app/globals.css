@@ -68,6 +68,24 @@ body[data-viewing-mode="open"]::-webkit-scrollbar {
   display: none;
 }
 
+/* ซ่อน scrollbar หน้าโฮม (รวม iOS) */
+body[data-page="home"] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+body[data-page="home"]::-webkit-scrollbar,
+html:has(body[data-page="home"])::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+body[data-page="home"]::-webkit-scrollbar-track,
+body[data-page="home"]::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
 /* Loading Spinner Animation */
 @keyframes fadeColor {
   0%, 100% { background: #f0f0f0; }
@@ -169,3 +187,13 @@ body[data-viewing-mode="open"]::-webkit-scrollbar {
 .loading-spinner-circle-btn div:nth-child(8),
 .app-header-tab-spinner div:nth-child(8),
 .tab-nav-loading-spinner div:nth-child(8) { transform: rotate(315deg); animation-delay: 0.875s; }
+
+/* กำหนดสีตัวอักษรชัดเจน (ไม่ใช้ default ของ browser) โดยเฉพาะ Android */
+input,
+textarea {
+  color: #111111;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #555555;
+}

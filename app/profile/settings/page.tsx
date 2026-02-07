@@ -203,7 +203,7 @@ export default function Settings() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
               ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ?
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>

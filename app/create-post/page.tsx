@@ -198,7 +198,7 @@ if (isUploading) {
  </svg>
  </button>
  </div>
- <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0 }}>
+ <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0, color: '#111111' }}>
  {step === 2 && 'ສ້າງໂພສ'}
  {step === 3 && 'ລົດຢູ່ແຂວງ'}
  </h3>

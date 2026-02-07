@@ -52,7 +52,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               {isLoading ? (
                 <TabNavSpinner />
               ) : (
-                <span style={{ fontSize: '17px', lineHeight: 1.25 }}>{tab.label}</span>
+                <span style={{ fontSize: '17px', lineHeight: 1.25, color: '#111111' }}>{tab.label}</span>
               )}
               {isActive && (
                 <div

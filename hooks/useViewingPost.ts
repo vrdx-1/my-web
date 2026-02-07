@@ -66,22 +66,10 @@ export function useViewingPost(): UseViewingPostReturn {
     setViewingModeDragOffset(0);
   }, []);
 
-  const handleViewingModeTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!viewingModeTouchStart) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - viewingModeTouchStart.x;
-    const dy = touch.clientY - viewingModeTouchStart.y;
-
-    // ถ้า gesture เอียงไปทางขวา (ซ้าย → ขวา) มากกว่าแนวตั้ง ให้ลาก card ตามนิ้ว
-    if (Math.abs(dx) > Math.abs(dy) && dx > 0) {
-      const maxDrag = typeof window !== 'undefined' ? window.innerWidth : 375;
-      const drag = Math.min(maxDrag, Math.max(0, dx * 0.9));
-      setViewingModeDragOffset(drag);
-    } else {
-      // ให้ scroll แนวตั้งทำงานปกติ โดยไม่เลื่อน card ออกด้านข้าง
-      setViewingModeDragOffset(0);
-    }
-  }, [viewingModeTouchStart]);
+  const handleViewingModeTouchMove = useCallback((_e: React.TouchEvent) => {
+    // ไม่อนุญาตให้ปัดซ้ายขวา — คง offset แนวนอนเป็น 0 เสมอ (scroll แนวตั้งยังทำงานปกติใน container)
+    setViewingModeDragOffset(0);
+  }, []);
 
   const handleViewingModeTouchEnd = useCallback((e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => {
     // ปิดการปัดเพื่อออกจาก viewing mode ทั้งหมด

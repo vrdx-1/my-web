@@ -81,9 +81,16 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const fullScreenImageContainerRef = useRef<HTMLDivElement | null>(null);
   const fullScreenTouchStartTimeRef = useRef<number>(0);
   const fullScreenTouchStartYRef = useRef<number>(0);
+  const fullScreenTouchStartXRef = useRef<number>(0);
+  const fullScreenDragOffsetRef = useRef<number>(0);
+  const fullScreenCurrentIndexRef = useRef<number>(0);
   const pinchStartDistanceRef = useRef<number | null>(null);
   const pinchStartScaleRef = useRef<number>(1);
   const isPinchingRef = useRef(false);
+
+  useEffect(() => {
+    fullScreenCurrentIndexRef.current = currentImgIndex;
+  }, [currentImgIndex]);
 
   const downloadImage = useCallback(async (url: string) => {
     try {
@@ -128,9 +135,11 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       onTouchStart(e);
       _fullScreenTouchY = e.touches[0].clientY;
       fullScreenTouchStartYRef.current = e.touches[0].clientY;
+      fullScreenTouchStartXRef.current = e.touches[0].clientX;
       fullScreenTouchStartTimeRef.current = Date.now();
       setFullScreenIsDragging(true);
       setFullScreenDragOffset(0);
+      fullScreenDragOffsetRef.current = 0;
       setFullScreenVerticalDragOffset(0);
       setFullScreenTransitionDuration(0);
     }
@@ -138,10 +147,19 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
 
   const fullScreenOnTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length >= 2) return;
-    // ปิดการปัดซ้าย/ขวา: ไม่ให้เปลี่ยนรูปด้วย swipe
-    setFullScreenDragOffset(0);
+    const n = fullScreenImages?.length ?? 0;
+    if (n <= 1) return;
+    const currentX = e.touches[0].clientX;
+    const startX = fullScreenTouchStartXRef.current;
+    let deltaX = currentX - startX;
+    const idx = fullScreenCurrentIndexRef.current;
+    const w = typeof window !== 'undefined' ? window.innerWidth : 400;
+    if (idx === 0 && deltaX > 0) deltaX = deltaX * 0.35;
+    if (idx === n - 1 && deltaX < 0) deltaX = deltaX * 0.35;
+    fullScreenDragOffsetRef.current = deltaX;
+    setFullScreenDragOffset(deltaX);
     setFullScreenVerticalDragOffset(0);
-  }, []);
+  }, [fullScreenImages?.length]);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
     // ไม่จัดการ pinch‑zoom ด้วย custom logic แล้ว
@@ -172,16 +190,23 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       return;
     }
     const dur = 200;
-
-    // ปิดการปัดซ้าย/ขวา: ไม่เปลี่ยนรูปจาก swipe (nextIndex คงที่)
-    const nextIndex = currentImgIndex;
+    const dragOffset = fullScreenDragOffsetRef.current;
+    const idx = fullScreenCurrentIndexRef.current;
+    const w = typeof window !== 'undefined' ? window.innerWidth : 400;
+    const threshold = Math.min(w * 0.2, 80);
+    let nextIndex = idx;
+    if (n > 1) {
+      if (dragOffset < -threshold && idx < n - 1) nextIndex = idx + 1;
+      else if (dragOffset > threshold && idx > 0) nextIndex = idx - 1;
+    }
 
     setFullScreenTransitionDuration(dur);
     setFullScreenDragOffset(0);
+    fullScreenDragOffsetRef.current = 0;
     setFullScreenVerticalDragOffset(0);
     setFullScreenZoomScale(1);
     setFullScreenIsDragging(false);
-    if (nextIndex !== currentImgIndex) setCurrentImgIndex(nextIndex);
+    if (nextIndex !== idx) setCurrentImgIndex(nextIndex);
 
     setTouchStart(null);
   }, [touchStart, currentImgIndex, fullScreenImages, activePhotoMenu]);

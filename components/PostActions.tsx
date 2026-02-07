@@ -108,7 +108,7 @@ export const PostActions = React.memo<PostActionsProps>(({
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <span style={{ fontSize: '14px', fontWeight: '600' }}>{formatCompactNumber(post.views || 0)}</span>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#111111' }}>{formatCompactNumber(post.views || 0)}</span>
           </div>
 
           {/* Share Button */}

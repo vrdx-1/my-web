@@ -2,9 +2,10 @@ import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-const W = 1200;
-const H = 630;
-const GAP = 8;
+// Mini photo grid เหมือนในการแจ้งเตือน (NotificationPostPreviewCard) – สี่เหลี่ยมจัตุรัส สำหรับ thumbnail ลิงก์แชร์
+const S = 600;
+const GAP = 4;
+const BR = 20;
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,12 +30,13 @@ export async function GET(request: NextRequest) {
     const placeholder = (
       <div
         style={{
-          width: '100%',
-          height: '100%',
+          width: S,
+          height: S,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#f0f0f0',
+          borderRadius: BR,
         }}
       >
         <div
@@ -49,109 +51,113 @@ export async function GET(request: NextRequest) {
     );
 
     if (count === 0) {
-      return new ImageResponse(placeholder, { width: W, height: H });
+      return new ImageResponse(placeholder, { width: S, height: S });
     }
 
+    // 1 รูป – เต็มกริด (เหมือน MiniPostImage)
     if (count === 1) {
       return new ImageResponse(
         (
           <div
             style={{
-              width: W,
-              height: H,
+              width: S,
+              height: S,
               display: 'flex',
               overflow: 'hidden',
-              borderRadius: 12,
+              borderRadius: BR,
             }}
           >
             <img
               src={images[0]}
               alt=""
-              width={W}
-              height={H}
-              style={{ objectFit: 'cover', width: W, height: H }}
+              width={S}
+              height={S}
+              style={{ objectFit: 'cover', width: S, height: S }}
             />
           </div>
         ),
-        { width: W, height: H }
+        { width: S, height: S }
       );
     }
 
+    // 2 รูป – 2 คอลัมน์ (เหมือน MiniPostImage)
     if (count === 2) {
-      const half = (W - GAP) / 2;
+      const half = (S - GAP) / 2;
       return new ImageResponse(
         (
           <div
             style={{
-              width: W,
-              height: H,
+              width: S,
+              height: S,
               display: 'flex',
               flexDirection: 'row',
               gap: GAP,
               overflow: 'hidden',
-              borderRadius: 12,
+              borderRadius: BR,
             }}
           >
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ width: half, height: S, display: 'flex', overflow: 'hidden' }}>
               <img
                 src={images[0]}
                 alt=""
                 width={half}
-                height={H}
+                height={S}
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ width: half, height: S, display: 'flex', overflow: 'hidden' }}>
               <img
                 src={images[1]}
                 alt=""
                 width={half}
-                height={H}
+                height={S}
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
           </div>
         ),
-        { width: W, height: H }
+        { width: S, height: S }
       );
     }
 
+    // 3 รูป – ซ้ายใหญ่ ขวา 2 รูปซ้อน (เหมือน MiniPostImage)
     if (count === 3) {
-      const leftW = (W - GAP) / 2;
+      const leftW = (S - GAP) / 2;
       const rightW = leftW;
-      const rightH = (H - GAP) / 2;
+      const rightH = (S - GAP) / 2;
       return new ImageResponse(
         (
           <div
             style={{
-              width: W,
-              height: H,
+              width: S,
+              height: S,
               display: 'flex',
               flexDirection: 'row',
               gap: GAP,
               overflow: 'hidden',
-              borderRadius: 12,
+              borderRadius: BR,
             }}
           >
-            <div style={{ width: leftW, height: H, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ width: leftW, height: S, display: 'flex', overflow: 'hidden' }}>
               <img
                 src={images[0]}
                 alt=""
                 width={leftW}
-                height={H}
+                height={S}
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
             <div
               style={{
-                flex: 1,
+                width: rightW,
+                height: S,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: GAP,
                 overflow: 'hidden',
               }}
             >
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+              <div style={{ height: rightH, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[1]}
                   alt=""
@@ -160,7 +166,7 @@ export async function GET(request: NextRequest) {
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </div>
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+              <div style={{ height: rightH, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[2]}
                   alt=""
@@ -172,93 +178,93 @@ export async function GET(request: NextRequest) {
             </div>
           </div>
         ),
-        { width: W, height: H }
+        { width: S, height: S }
       );
     }
 
+    // 4 รูป – 2x2 (เหมือน MiniPostImage)
     if (count === 4) {
-      const cellW = (W - GAP) / 2;
-      const cellH = (H - GAP) / 2;
+      const cell = (S - GAP) / 2;
       return new ImageResponse(
         (
           <div
             style={{
-              width: W,
-              height: H,
+              width: S,
+              height: S,
               display: 'flex',
               flexDirection: 'column',
               gap: GAP,
               overflow: 'hidden',
-              borderRadius: 12,
+              borderRadius: BR,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, flex: 1 }}>
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, height: cell }}>
+              <div style={{ width: cell, height: cell, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[0]}
                   alt=""
-                  width={cellW}
-                  height={cellH}
+                  width={cell}
+                  height={cell}
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </div>
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+              <div style={{ width: cell, height: cell, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[1]}
                   alt=""
-                  width={cellW}
-                  height={cellH}
+                  width={cell}
+                  height={cell}
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, flex: 1 }}>
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, height: cell }}>
+              <div style={{ width: cell, height: cell, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[2]}
                   alt=""
-                  width={cellW}
-                  height={cellH}
+                  width={cell}
+                  height={cell}
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </div>
-              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+              <div style={{ width: cell, height: cell, display: 'flex', overflow: 'hidden' }}>
                 <img
                   src={images[3]}
                   alt=""
-                  width={cellW}
-                  height={cellH}
+                  width={cell}
+                  height={cell}
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </div>
             </div>
           </div>
         ),
-        { width: W, height: H }
+        { width: S, height: S }
       );
     }
 
-    // 5+ images: 2 on top, 3 on bottom (layout 5 and 6+)
-    const topH = (H - GAP) * (2 / 5);
-    const bottomH = (H - GAP) * (3 / 5);
-    const topCellW = (W - GAP) / 2;
-    const bottomCellW = (W - GAP * 2) / 3;
+    // 5+ รูป – 2 บน, 3 ล่าง (เหมือน MiniPostImage)
+    const topH = (S - GAP) * (2 / 5);
+    const bottomH = (S - GAP) * (3 / 5);
+    const topCellW = (S - GAP) / 2;
+    const bottomCellW = (S - GAP * 2) / 3;
 
     return new ImageResponse(
       (
         <div
           style={{
-            width: W,
-            height: H,
+            width: S,
+            height: S,
             display: 'flex',
             flexDirection: 'column',
             gap: GAP,
             overflow: 'hidden',
-            borderRadius: 12,
+            borderRadius: BR,
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, height: topH }}>
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ width: topCellW, height: topH, display: 'flex', overflow: 'hidden' }}>
               <img
                 src={images[0]}
                 alt=""
@@ -267,7 +273,7 @@ export async function GET(request: NextRequest) {
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ width: topCellW, height: topH, display: 'flex', overflow: 'hidden' }}>
               <img
                 src={images[1]}
                 alt=""
@@ -277,12 +283,13 @@ export async function GET(request: NextRequest) {
               />
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: GAP, height: bottomH }}>
             {[images[2], images[3], images[4]].map((src, i) => (
               <div
                 key={i}
                 style={{
-                  flex: 1,
+                  width: bottomCellW,
+                  height: bottomH,
                   display: 'flex',
                   overflow: 'hidden',
                   position: 'relative',
@@ -305,7 +312,7 @@ export async function GET(request: NextRequest) {
                       justifyContent: 'center',
                       backgroundColor: 'rgba(0,0,0,0.5)',
                       color: 'white',
-                      fontSize: 48,
+                      fontSize: 36,
                       fontWeight: 'bold',
                     }}
                   >
@@ -317,7 +324,7 @@ export async function GET(request: NextRequest) {
           </div>
         </div>
       ),
-      { width: W, height: H }
+      { width: S, height: S }
     );
   } catch (e) {
     console.error('OG image error:', e);

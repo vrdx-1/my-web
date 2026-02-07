@@ -53,7 +53,7 @@ export const ReportModal = React.memo<ReportModalProps>(({
         style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>ລາຍງານໂພສ</h3>
+        <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center', color: '#111111' }}>ລາຍງານໂພສ</h3>
         <textarea 
           value={reportReason} 
           onChange={handleTextChange}
@@ -66,6 +66,7 @@ export const ReportModal = React.memo<ReportModalProps>(({
           }}
           placeholder="ຄຳອະທິບາຍ…" 
           rows={6}
+          className="report-modal-textarea"
           style={{ 
             width: '100%', 
             padding: '12px', 
@@ -76,7 +77,8 @@ export const ReportModal = React.memo<ReportModalProps>(({
             marginBottom: '20px', 
             outline: 'none',
             resize: 'none',
-            overflowY: 'hidden'
+            overflowY: 'hidden',
+            color: '#111111'
           }} 
         />
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -88,7 +90,8 @@ export const ReportModal = React.memo<ReportModalProps>(({
               borderRadius: '8px', 
               border: '1px solid #ddd', 
               background: '#f0f2f5', 
-              fontWeight: 'bold' 
+              fontWeight: 'bold',
+              color: '#111111'
             }}
           >
             ຍົກເລີກ

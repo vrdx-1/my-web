@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     metadataBase: base,
     openGraph: {
-      images: [{ url: imagePath, width: 1200, height: 630 }],
+      images: [{ url: imagePath, width: 600, height: 600 }],
     },
     twitter: {
       card: 'summary_large_image',

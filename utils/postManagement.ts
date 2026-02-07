@@ -94,9 +94,8 @@ export async function sharePost(
   const shareUrl = `${window.location.origin}/post/${post.id}`;
   const shareData = { url: shareUrl };
 
-  // นับยอดแชร์ทันทีทุกครั้งที่กด (ไม่สามารถยกเลิกได้, คนเดิมกดหลายครั้งก็นับเพิ่ม)
+  // นับยอดแชร์ลง DB ทันที (ยอดบน UI อัพเดทหลัง refresh เท่านั้น)
   await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
-  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares: (p.shares || 0) + 1 } : p));
 
   try {
     if (navigator.share) {

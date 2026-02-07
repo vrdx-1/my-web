@@ -288,7 +288,7 @@ export default function Profile() {
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center', color: '#111111' }}>
                     ກະລຸນາໃສ່ຂໍ້ມູນໃຫ້ຄົບຖ້ວນ
                   </h3>
                   <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px', fontSize: '15px', color: '#1c1e21', lineHeight: 1.6 }}>

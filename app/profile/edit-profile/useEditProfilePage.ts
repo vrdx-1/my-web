@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -22,6 +22,7 @@ export function useEditProfilePage() {
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editingUsername, setEditingUsername] = useState('');
@@ -81,9 +82,11 @@ export function useEditProfilePage() {
       } = await supabase.auth.getSession();
 
       if (currentSession) {
+        const uid = currentSession.user.id;
+        userIdRef.current = uid;
         setSession(currentSession);
-        setUserId(currentSession.user.id);
-        fetchProfile(currentSession.user.id);
+        setUserId(uid);
+        await fetchProfile(uid);
       } else {
         router.push('/register');
       }
@@ -129,17 +132,19 @@ export function useEditProfilePage() {
   };
 
   const uploadAvatar = async (event: any) => {
+    const uid = userId ?? userIdRef.current;
+    if (!uid) return;
     try {
       setUploading(true);
       const file = event.target.files[0];
       if (!file) return;
-      const filePath = `avatars/${userId}-${Date.now()}`;
+      const filePath = `avatars/${uid}-${Date.now()}`;
       await supabase.storage.from('car-images').upload(filePath, file);
       const {
         data: { publicUrl },
       } = supabase.storage.from('car-images').getPublicUrl(filePath);
 
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId);
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', uid);
       setAvatarUrl(publicUrl);
     } finally {
       setUploading(false);
@@ -147,18 +152,24 @@ export function useEditProfilePage() {
   };
 
   const saveUsername = async (name: string) => {
-    const { error } = await supabase.from('profiles').update({ username: name }).eq('id', userId);
+    const uid = userId ?? userIdRef.current;
+    if (!uid) return;
+    const { error } = await supabase.from('profiles').update({ username: name }).eq('id', uid);
     if (!error) {
       setUsername(name);
       setIsEditingName(false);
+      if (typeof document !== 'undefined') document.body.style.overflow = '';
     }
   };
 
   const savePhone = async (phoneNum: string) => {
-    const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', userId);
+    const uid = userId ?? userIdRef.current;
+    if (!uid) return;
+    const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', uid);
     if (!error) {
       setPhone(phoneNum);
       setIsEditingPhone(false);
+      if (typeof document !== 'undefined') document.body.style.overflow = '';
     }
   };
 
@@ -230,11 +241,13 @@ export function useEditProfilePage() {
     setIsEditingPhone(false);
     const initialPhone = phone && phone.startsWith('020') ? phone : '020';
     setEditingPhone(initialPhone);
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
   }, [phone]);
 
   const handleCloseNameModal = useCallback(() => {
     setIsEditingName(false);
     setEditingUsername(username);
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
   }, [username]);
 
   const handleSaveUsername = useCallback((name: string) => {

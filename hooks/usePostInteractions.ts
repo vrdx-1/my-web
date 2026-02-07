@@ -60,7 +60,7 @@ export const usePostInteractions = ({
     if (isCurrentlyLiked) {
       const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
       if (!error) {
-        await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+        // cars.likes อัปเดตโดย trigger ใน DB
       } else {
         // Rollback on error
         setLikedPosts(prev => ({ ...prev, [postId]: true }));
@@ -79,7 +79,7 @@ export const usePostInteractions = ({
       if (!checkError && !existing) {
         const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
         if (!error) {
-          await supabase.from('cars').update({ likes: newLikesCount }).eq('id', postId);
+          // cars.likes อัปเดตโดย trigger ใน DB
         } else {
           // Rollback on error
           setLikedPosts(prev => ({ ...prev, [postId]: false }));
@@ -127,7 +127,7 @@ export const usePostInteractions = ({
     if (isCurrentlySaved) {
       const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
       if (!error) {
-        await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+        // cars.saves อัปเดตโดย trigger ใน DB
       } else {
         // Rollback on error
         setSavedPosts(prev => ({ ...prev, [postId]: true }));
@@ -146,7 +146,7 @@ export const usePostInteractions = ({
       if (!checkError && !existing) {
         const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
         if (!error) {
-          await supabase.from('cars').update({ saves: newSavesCount }).eq('id', postId);
+          // cars.saves อัปเดตโดย trigger ใน DB
         } else {
           // Rollback on error
           setSavedPosts(prev => ({ ...prev, [postId]: false }));

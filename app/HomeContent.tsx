@@ -86,7 +86,13 @@ const initialFetchStartedRef = useRef(false);
      document.removeEventListener('visibilitychange', onVisibility);
    };
  }, [pathname, fetchUnreadCount]);
- 
+
+ /* ใส่ data-page="home" เพื่อให้ CSS ซ่อน scrollbar เฉพาะหน้าโฮม (รวมถึง iOS) */
+ useEffect(() => {
+   document.body.setAttribute('data-page', 'home');
+   return () => document.body.removeAttribute('data-page');
+ }, []);
+
  // Use viewing post hook
  const viewingPostHook = useViewingPost();
  // Use menu hook

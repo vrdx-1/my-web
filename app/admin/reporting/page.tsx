@@ -148,7 +148,7 @@ export default function AdminReportingPage() {
  <main style={LAYOUT_CONSTANTS.ADMIN_CONTAINER}>
  
  <div style={{ width: '100%' }}>
- <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px' }}>ລາຍງານທັງໝົດ ( {reports.length} )</h2>
+ <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>ລາຍງານທັງໝົດ ( {reports.length} )</h2>
  {reports.length === 0 && <EmptyState message="ບໍ່ມີລາຍງານຄ້າງຢູ່" variant="card" />}
  
  {reports.map((report) => {
@@ -167,7 +167,7 @@ export default function AdminReportingPage() {
  {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
  </div>
  <div style={{ flex: 1, minWidth: 0 }}>
- <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+ <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
  {post.profiles?.username || 'User'}
  </span>
@@ -187,7 +187,7 @@ export default function AdminReportingPage() {
  </div>
 
  {/* Caption */}
- <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{post.caption}</div>
+ <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap', color: '#111111' }}>{post.caption}</div>
  
  {/* Media */}
  <PhotoGrid images={post.images || []} onPostClick={() => setViewingPost(post)} />
@@ -197,19 +197,19 @@ export default function AdminReportingPage() {
  <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4a4d52' }}>
  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
- <span style={{ fontSize: '14px', fontWeight: '600' }}>{formatCompactNumber(post.likes || 0)}</span>
+ <span style={{ fontSize: '14px', fontWeight: '600', color: '#111111' }}>{formatCompactNumber(post.likes || 0)}</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4a4d52' }}>
  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
- <span style={{ fontSize: '14px', fontWeight: '500' }}>{formatCompactNumber(post.views || 0)}</span>
+ <span style={{ fontSize: '14px', fontWeight: '500', color: '#111111' }}>{formatCompactNumber(post.views || 0)}</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4a4d52' }}>
  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
- <span style={{ fontSize: '14px', fontWeight: '600' }}>{formatCompactNumber(post.saves || 0)}</span>
+ <span style={{ fontSize: '14px', fontWeight: '600', color: '#111111' }}>{formatCompactNumber(post.saves || 0)}</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', color: '#4a4d52' }}>
  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14L21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
- <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '4px' }}>{formatCompactNumber(post.shares || 0)}</span>
+ <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '4px', color: '#111111' }}>{formatCompactNumber(post.shares || 0)}</span>
  </div>
  </div>
  </div>
@@ -222,7 +222,7 @@ export default function AdminReportingPage() {
  </h3>
  <div style={{ marginBottom: '15px' }}>
  <p style={{ fontSize: '13px', color: '#4a4d52', marginBottom: '2px' }}>ຜູ້ລາຍງານ:</p>
- <p style={{ fontSize: '14px', fontWeight: '500' }}>{report.reporter_email}</p>
+ <p style={{ fontSize: '14px', fontWeight: '500', color: '#111111' }}>{report.reporter_email}</p>
  </div>
  <div style={{ background: '#fff5f5', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #d33', marginBottom: '20px' }}>
  <p style={{ fontWeight: 'bold', color: '#d33', fontSize: '13px', marginBottom: '4px' }}>ສາເຫດ:</p>
@@ -231,7 +231,7 @@ export default function AdminReportingPage() {
  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
  <button 
  onClick={() => handleIgnore(report.id)} 
- style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: '#f0f2f5', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+ style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: '#f0f2f5', cursor: 'pointer', fontWeight: '600', fontSize: '14px', color: '#111111' }}
  >
  Remove
  </button>
