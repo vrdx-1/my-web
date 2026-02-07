@@ -59,25 +59,41 @@ export function usePostModals({
       setViewingModeDragOffset(0);
       setViewingModeIsDragging(false);
       document.body.style.overflow = '';
+      document.body.style.scrollbarWidth = '';
+      document.body.style.msOverflowStyle = '';
+      document.body.removeAttribute('data-viewing-mode');
       window.scrollTo(0, savedScrollPosition);
     } else if (viewingPost.images) {
       document.body.style.overflow = 'hidden';
+      document.body.style.scrollbarWidth = 'none';
+      document.body.style.msOverflowStyle = 'none';
+      document.body.setAttribute('data-viewing-mode', 'open');
       setViewingModeDragOffset(0);
       setViewingModeIsDragging(false);
       setIsViewingModeOpen(true);
-      setTimeout(() => {
-        const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
-        const container = document.getElementById('viewing-mode-container');
-        if (imageElement && container) {
-          const headerHeight = 60;
-          const imageTop = imageElement.offsetTop - headerHeight;
-          container.scrollTop = imageTop;
-        }
-      }, 10);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
+          const container = document.getElementById('viewing-mode-container');
+          if (imageElement && container) {
+            const imageTop = imageElement.offsetTop;
+            const imageHeight = imageElement.offsetHeight;
+            const containerHeight = container.clientHeight;
+            const scrollTop = Math.max(0, Math.min(
+              imageTop - containerHeight / 2 + imageHeight / 2,
+              container.scrollHeight - containerHeight
+            ));
+            container.scrollTop = scrollTop;
+          }
+        });
+      });
     }
     return () => {
       if (!viewingPost) {
         document.body.style.overflow = '';
+        document.body.style.scrollbarWidth = '';
+        document.body.style.msOverflowStyle = '';
+        document.body.removeAttribute('data-viewing-mode');
       }
     };
   }, [viewingPost, setIsViewingModeOpen, setViewingModeDragOffset, setViewingModeIsDragging, initialImageIndex, savedScrollPosition]);

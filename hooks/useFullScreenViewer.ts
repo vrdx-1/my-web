@@ -12,6 +12,7 @@ interface UseFullScreenViewerReturn {
   activePhotoMenu: number | null;
   isPhotoMenuAnimating: boolean;
   fullScreenDragOffset: number;
+  fullScreenEntranceOffset: number;
   fullScreenVerticalDragOffset: number;
   fullScreenIsDragging: boolean;
   fullScreenTransitionDuration: number;
@@ -50,12 +51,13 @@ interface UseFullScreenViewerReturn {
 }
 
 export function useFullScreenViewer(): UseFullScreenViewerReturn {
-  const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
+  const [fullScreenImages, setFullScreenImagesBase] = useState<string[] | null>(null);
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [activePhotoMenu, setActivePhotoMenu] = useState<number | null>(null);
   const [isPhotoMenuAnimating, setIsPhotoMenuAnimating] = useState(false);
   const [fullScreenDragOffset, setFullScreenDragOffset] = useState(0);
+  const [fullScreenEntranceOffset, setFullScreenEntranceOffset] = useState(0);
   const [fullScreenVerticalDragOffset, setFullScreenVerticalDragOffset] = useState(0);
   const [fullScreenIsDragging, setFullScreenIsDragging] = useState(false);
   const [fullScreenTransitionDuration, setFullScreenTransitionDuration] = useState(200);
@@ -65,6 +67,15 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const [showImageForDownload, setShowImageForDownload] = useState<string | null>(null);
   const [showDownloadBottomSheet, setShowDownloadBottomSheet] = useState(false);
   const [isDownloadBottomSheetAnimating, setIsDownloadBottomSheetAnimating] = useState(false);
+
+  // Full screen mode: เปิดดูสลับหน้าให้ทันที ไม่มี animation
+  const setFullScreenImages = useCallback((images: string[] | null) => {
+    setFullScreenImagesBase(images);
+    setFullScreenEntranceOffset(0);
+    if (images && images.length > 0) {
+      setFullScreenTransitionDuration(0);
+    }
+  }, []);
 
   // Refs
   const fullScreenImageContainerRef = useRef<HTMLDivElement | null>(null);
@@ -126,32 +137,11 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, [onTouchStart, fullScreenZoomScale, setFullScreenZoomOrigin]);
 
   const fullScreenOnTouchMove = useCallback((e: React.TouchEvent) => {
-    // ปิดการปัดขึ้น/ลงใน Full screen mode
-    // ให้เหลือเฉพาะการปัดซ้าย/ขวาเพื่อเปลี่ยนรูปเท่านั้น
-    if (e.touches.length >= 2) {
-      return;
-    }
-
-    if (touchStart === null || fullScreenTouchStartYRef.current === 0) return;
-    const n = fullScreenImages?.length ?? 0;
-    if (n === 0 || e.touches.length === 0) return;
-    const clientX = e.touches[0].clientX;
-
-    const deltaX = clientX - touchStart;
-    let horizontalDelta = deltaX;
-    const maxDrag = typeof window !== 'undefined' ? window.innerWidth * 0.85 : 400;
-
-    // Popular "rubber-band" feel on edges (เหมือนเดิม)
-    if (currentImgIndex === 0 && horizontalDelta > 0) {
-      horizontalDelta = horizontalDelta * 0.35;
-    } else if (currentImgIndex === n - 1 && horizontalDelta < 0) {
-      horizontalDelta = horizontalDelta * 0.35;
-    } else {
-      horizontalDelta = Math.max(-maxDrag, Math.min(maxDrag, horizontalDelta));
-    }
-    setFullScreenDragOffset(horizontalDelta);
+    if (e.touches.length >= 2) return;
+    // ปิดการปัดซ้าย/ขวา: ไม่ให้เปลี่ยนรูปด้วย swipe
+    setFullScreenDragOffset(0);
     setFullScreenVerticalDragOffset(0);
-  }, [touchStart, currentImgIndex, fullScreenImages]);
+  }, []);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
     // ไม่จัดการ pinch‑zoom ด้วย custom logic แล้ว
@@ -169,9 +159,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       }
     }
 
-    // ปิดการปัดขึ้น/ลงเพื่อออกจาก Full screen mode
     _fullScreenTouchY = null;
-    const startY = fullScreenTouchStartYRef.current;
     fullScreenTouchStartYRef.current = 0;
 
     if (touchStart === null) {
@@ -183,28 +171,10 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       setTouchStart(null);
       return;
     }
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const endTime = Date.now();
-    const elapsed = Math.max(1, endTime - fullScreenTouchStartTimeRef.current);
-    const velocity = (endX - touchStart) / elapsed;
-    const diff = endX - touchStart;
-    const moveX = Math.abs(diff);
-    const moveY = Math.abs(endY - startY);
-    const fast = Math.abs(velocity) > 0.5;
-    const dur = fast ? 120 : 200;
+    const dur = 200;
 
-    // Horizontal swipe: follow finger, then snap with animation (common gallery behavior).
-    const screenW = typeof window !== 'undefined' ? window.innerWidth : 375;
-    const threshold = Math.min(80, screenW * 0.18); // typical paging threshold
-    const shouldGoNext = diff < -threshold || (velocity < -0.35 && diff < -15);
-    const shouldGoPrev = diff > threshold || (velocity > 0.35 && diff > 15);
-
-    let nextIndex = currentImgIndex;
-    if (moveX > moveY * 1.2) {
-      if (shouldGoNext) nextIndex = Math.min(n - 1, currentImgIndex + 1);
-      else if (shouldGoPrev) nextIndex = Math.max(0, currentImgIndex - 1);
-    }
+    // ปิดการปัดซ้าย/ขวา: ไม่เปลี่ยนรูปจาก swipe (nextIndex คงที่)
+    const nextIndex = currentImgIndex;
 
     setFullScreenTransitionDuration(dur);
     setFullScreenDragOffset(0);
@@ -239,6 +209,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     activePhotoMenu,
     isPhotoMenuAnimating,
     fullScreenDragOffset,
+    fullScreenEntranceOffset,
     fullScreenVerticalDragOffset,
     fullScreenIsDragging,
     fullScreenTransitionDuration,

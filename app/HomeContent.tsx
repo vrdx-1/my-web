@@ -31,6 +31,7 @@ import { useMenu } from '@/hooks/useMenu';
 import { usePostModals } from '@/hooks/usePostModals';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -136,9 +137,6 @@ useEffect(() => {
   }
 }, []);
 
-// Track processed postId to avoid re-running when posts change
-const processedPostIdRef = useRef<string | null>(null);
-
 // Use shared post modals hook for managing modal side effects
 usePostModals({
   viewingPost: viewingPostHook.viewingPost,
@@ -159,62 +157,6 @@ usePostModals({
   interactionModalShow: interactionModalHook.interactionModal.show,
   setIsHeaderVisible: headerScroll.setIsHeaderVisible,
 });
-
-useEffect(() => {
-const postId = searchParams.get('post');
-if (!postId) {
-  processedPostIdRef.current = null;
-  return;
-}
-
-// Skip if we already processed this postId
-if (processedPostIdRef.current === postId) {
-  return;
-}
-
-// Try to find post in current posts
-if (homeData.posts.length > 0) {
-  const sharedPost = homeData.posts.find(p => p.id === postId);
-  if (sharedPost) {
-    processedPostIdRef.current = postId;
-    viewingPostHook.setInitialImageIndex(0);
-    viewingPostHook.setIsViewingModeOpen(false);
-    viewingPostHook.setViewingPost(sharedPost);
-    router.replace(window.location.pathname, { scroll: false });
-    return;
-  }
-}
-
-// If post not found in current posts, fetch it
-const checkPost = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('cars')
-      .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
-      .eq('id', postId)
-      .single();
-    if (error) {
-      console.error('Error fetching post:', error);
-      return;
-    }
-    if (data) {
-      processedPostIdRef.current = postId;
-      viewingPostHook.setInitialImageIndex(0);
-      viewingPostHook.setIsViewingModeOpen(false);
-      viewingPostHook.setViewingPost(data);
-      router.replace(window.location.pathname, { scroll: false });
-    }
-  } catch (err) {
-    console.error('Error in checkPost:', err);
-  }
-};
-
-// Only fetch if posts are loaded (to avoid duplicate fetches)
-if (homeData.posts.length > 0 || !homeData.loadingMore) {
-  checkPost();
-}
-}, [searchParams, router, viewingPostHook, homeData.posts, homeData.loadingMore]);
-
 
  const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string) => {
    await interactionModalHook.fetchInteractions(type, postId, homeData.posts);
@@ -285,6 +227,32 @@ const {
    isSubmittingReport,
    setIsSubmittingReport,
  });
+
+ const { addBackStep } = useBackHandler();
+ // กดย้อนกลับบนมือถือ: ปิด fullscreen / viewing ตามสเต็ป
+ useEffect(() => {
+   if (!fullScreenViewer.fullScreenImages) return;
+   const close = () => {
+     fullScreenViewer.setFullScreenImages(null);
+     if (fullScreenViewer.activePhotoMenu !== null) {
+       fullScreenViewer.setIsPhotoMenuAnimating(true);
+       setTimeout(() => {
+         fullScreenViewer.setActivePhotoMenu(null);
+         fullScreenViewer.setIsPhotoMenuAnimating(false);
+       }, 300);
+     }
+   };
+   return addBackStep(close);
+ }, [fullScreenViewer.fullScreenImages]);
+ useEffect(() => {
+   if (!viewingPostHook.viewingPost) return;
+   const close = () => {
+     const isFirstPost = homeData.posts.length > 0 && viewingPostHook.viewingPost?.id === homeData.posts[0]?.id;
+     viewingPostHook.closeViewingMode();
+     if (isFirstPost) headerScroll.setIsHeaderVisible(true);
+   };
+   return addBackStep(close);
+ }, [viewingPostHook.viewingPost]);
 
  return (
  <main
@@ -401,6 +369,7 @@ const {
    viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
    viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
    savedScrollPosition={viewingPostHook.savedScrollPosition}
+   initialImageIndex={viewingPostHook.initialImageIndex}
    onViewingPostClose={() => {
      // ถ้าโพสต์ที่กำลังดูอยู่เป็นโพสต์แรกใน feed ให้แสดง header เสมอ
      const isFirstPost = homeData.posts.length > 0 && viewingPostHook.viewingPost?.id === homeData.posts[0]?.id;
@@ -419,6 +388,7 @@ const {
    fullScreenImages={fullScreenViewer.fullScreenImages}
    currentImgIndex={fullScreenViewer.currentImgIndex}
    fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+   fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
    fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
    fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
    fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}

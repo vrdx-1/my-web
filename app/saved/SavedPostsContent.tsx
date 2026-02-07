@@ -24,6 +24,7 @@ import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useInteractionModal } from '@/hooks/useInteractionModal';
+import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
@@ -186,6 +187,27 @@ export function SavedPostsContent() {
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
 
+  const { addBackStep } = useBackHandler();
+  useEffect(() => {
+    if (!fullScreenViewer.fullScreenImages) return;
+    const close = () => {
+      fullScreenViewer.setFullScreenImages(null);
+      if (fullScreenViewer.activePhotoMenu !== null) {
+        fullScreenViewer.setIsPhotoMenuAnimating(true);
+        setTimeout(() => {
+          fullScreenViewer.setActivePhotoMenu(null);
+          fullScreenViewer.setIsPhotoMenuAnimating(false);
+        }, 300);
+      }
+    };
+    return addBackStep(close);
+  }, [fullScreenViewer.fullScreenImages]);
+  useEffect(() => {
+    if (!viewingPostHook.viewingPost) return;
+    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    return addBackStep(close);
+  }, [viewingPostHook.viewingPost]);
+
   // Fetch interactions for bottom sheet (likes / saves)
   const fetchInteractions = useCallback(
     async (type: 'likes' | 'saves', postId: string) => {
@@ -273,6 +295,7 @@ export function SavedPostsContent() {
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
+        initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
           viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
         }}
@@ -286,6 +309,7 @@ export function SavedPostsContent() {
         fullScreenImages={fullScreenViewer.fullScreenImages}
         currentImgIndex={fullScreenViewer.currentImgIndex}
         fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+        fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
         fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
         fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
         fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}

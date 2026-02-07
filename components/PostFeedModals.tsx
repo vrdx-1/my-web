@@ -19,6 +19,7 @@ interface PostFeedModalsProps {
   viewingModeDragOffset: number;
   viewingModeIsDragging: boolean;
   savedScrollPosition: number;
+  initialImageIndex?: number;
   onViewingPostClose: () => void;
   onViewingPostTouchStart: (e: React.TouchEvent) => void;
   onViewingPostTouchMove: (e: React.TouchEvent) => void;
@@ -29,6 +30,7 @@ interface PostFeedModalsProps {
   fullScreenImages: string[] | null;
   currentImgIndex: number;
   fullScreenDragOffset: number;
+  fullScreenEntranceOffset: number;
   fullScreenVerticalDragOffset: number;
   fullScreenIsDragging: boolean;
   fullScreenTransitionDuration: number;
@@ -72,6 +74,7 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
   viewingModeDragOffset,
   viewingModeIsDragging,
   savedScrollPosition,
+  initialImageIndex = 0,
   onViewingPostClose,
   onViewingPostTouchStart,
   onViewingPostTouchMove,
@@ -80,6 +83,7 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
   fullScreenImages,
   currentImgIndex,
   fullScreenDragOffset,
+  fullScreenEntranceOffset,
   fullScreenVerticalDragOffset,
   fullScreenIsDragging,
   fullScreenTransitionDuration,
@@ -121,6 +125,7 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
             viewingModeDragOffset={viewingModeDragOffset}
             viewingModeIsDragging={viewingModeIsDragging}
             savedScrollPosition={savedScrollPosition}
+            initialImageIndex={initialImageIndex}
             onClose={onViewingPostClose}
             onTouchStart={onViewingPostTouchStart}
             onTouchMove={onViewingPostTouchMove}
@@ -137,6 +142,7 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
             images={fullScreenImages}
             currentImgIndex={currentImgIndex}
             fullScreenDragOffset={fullScreenDragOffset}
+            fullScreenEntranceOffset={fullScreenEntranceOffset}
             fullScreenVerticalDragOffset={fullScreenVerticalDragOffset}
             fullScreenIsDragging={fullScreenIsDragging}
             fullScreenTransitionDuration={fullScreenTransitionDuration}

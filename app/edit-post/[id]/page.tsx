@@ -58,7 +58,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         return;
       }
 
-      const cap = post.caption || '';
+      const capRaw = post.caption || '';
+      const cap = capRaw.split('\n').slice(0, 15).join('\n');
       const prov = post.province || '';
       const imgs = post.images || [];
       setCaption(cap);
@@ -262,7 +263,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
 
-        {/* Caption: แสดงทั้งหมด ขยายตามเนื้อหา ไม่มี scroll */}
+        {/* Caption: สูงสุด 15 แถว เหมือนสร้างโพสต์ */}
         <div style={{ padding: '0 15px 10px 15px' }}>
           <textarea
             ref={captionRef}
@@ -284,11 +285,72 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             }}
             placeholder="ໃສ່ລາຍລະອຽດລົດ..."
             value={caption}
+            onKeyDown={(e) => {
+              const currentLines = caption.split('\n');
+              const currentLineCount = currentLines.length;
+              if (currentLineCount >= 15) {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  return;
+                }
+                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
+                const isModifierKey = e.ctrlKey || e.metaKey || e.altKey;
+                if (!allowedKeys.includes(e.key) && !isModifierKey && e.key.length === 1) {
+                  e.preventDefault();
+                  return;
+                }
+              }
+            }}
+            onPaste={(e) => {
+              const currentLines = caption.split('\n');
+              if (currentLines.length >= 15) {
+                e.preventDefault();
+                return;
+              }
+              e.preventDefault();
+              const target = e.target as HTMLTextAreaElement;
+              const start = target.selectionStart;
+              const end = target.selectionEnd;
+              const pastedText = e.clipboardData.getData('text');
+              const newText = caption.substring(0, start) + pastedText + caption.substring(end);
+              const finalLines = newText.split('\n').slice(0, 15);
+              const finalText = finalLines.join('\n');
+              setCaption(finalText);
+              if (captionRef.current) {
+                captionRef.current.value = finalText;
+                adjustCaptionHeight();
+                const newCursorPosition = Math.min(start + pastedText.length, finalText.length);
+                setTimeout(() => {
+                  if (captionRef.current) {
+                    captionRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+                  }
+                }, 0);
+              }
+            }}
             onChange={(e) => {
-              setCaption(e.target.value);
+              const newValue = e.target.value;
+              const lines = newValue.split('\n');
+              const limitedLines = lines.slice(0, 15);
+              const limitedValue = limitedLines.join('\n');
+              setCaption(limitedValue);
+              if (captionRef.current && captionRef.current.value !== limitedValue) {
+                const cursorPosition = captionRef.current.selectionStart;
+                captionRef.current.value = limitedValue;
+                const newCursorPosition = Math.min(cursorPosition, limitedValue.length);
+                setTimeout(() => {
+                  if (captionRef.current) {
+                    captionRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+                  }
+                }, 0);
+              }
               setTimeout(adjustCaptionHeight, 0);
             }}
           />
+          {caption.split('\n').length >= 15 && (
+            <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '5px' }}>
+              ສູງສຸດ 15 ແຖວ
+            </div>
+          )}
         </div>
 
             <PhotoPreviewGrid

@@ -22,6 +22,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { usePostModals } from '@/hooks/usePostModals';
+import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
@@ -86,6 +87,27 @@ export default function PostDetail() {
     interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
+
+  const { addBackStep } = useBackHandler();
+  useEffect(() => {
+    if (!fullScreenViewer.fullScreenImages) return;
+    const close = () => {
+      fullScreenViewer.setFullScreenImages(null);
+      if (fullScreenViewer.activePhotoMenu !== null) {
+        fullScreenViewer.setIsPhotoMenuAnimating(true);
+        setTimeout(() => {
+          fullScreenViewer.setActivePhotoMenu(null);
+          fullScreenViewer.setIsPhotoMenuAnimating(false);
+        }, 300);
+      }
+    };
+    return addBackStep(close);
+  }, [fullScreenViewer.fullScreenImages]);
+  useEffect(() => {
+    if (!viewingPostHook.viewingPost) return;
+    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    return addBackStep(close);
+  }, [viewingPostHook.viewingPost]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -362,6 +384,7 @@ export default function PostDetail() {
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
+        initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
           viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
         }}
@@ -375,6 +398,7 @@ export default function PostDetail() {
         fullScreenImages={fullScreenViewer.fullScreenImages}
         currentImgIndex={fullScreenViewer.currentImgIndex}
         fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+        fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
         fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
         fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
         fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}

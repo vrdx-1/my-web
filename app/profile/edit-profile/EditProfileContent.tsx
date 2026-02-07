@@ -1,5 +1,5 @@
 'use client'
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
@@ -13,6 +13,7 @@ import {
 } from './EditProfileSections';
 import { EditProfilePostOverlays } from './EditProfilePostOverlays';
 import { useEditProfilePage } from './useEditProfilePage';
+import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils (kept for consistency with other pages, even if not used directly here)
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
@@ -29,6 +30,8 @@ export function EditProfileContent() {
    isEditingPhone,
    editingUsername,
    editingPhone,
+   setEditingUsername,
+   setEditingPhone,
    showPhoneCharWarning,
    setShowPhoneCharWarning,
    tab,
@@ -57,6 +60,27 @@ export function EditProfileContent() {
    handleSavePhone,
  } = useEditProfilePage();
 
+ const { addBackStep } = useBackHandler();
+ useEffect(() => {
+   if (!fullScreenViewer.fullScreenImages) return;
+   const close = () => {
+     fullScreenViewer.setFullScreenImages(null);
+     if (fullScreenViewer.activePhotoMenu !== null) {
+       fullScreenViewer.setIsPhotoMenuAnimating(true);
+       setTimeout(() => {
+         fullScreenViewer.setActivePhotoMenu(null);
+         fullScreenViewer.setIsPhotoMenuAnimating(false);
+       }, 300);
+     }
+   };
+   return addBackStep(close);
+ }, [fullScreenViewer.fullScreenImages]);
+ useEffect(() => {
+   if (!viewingPostHook.viewingPost) return;
+   const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+   return addBackStep(close);
+ }, [viewingPostHook.viewingPost]);
+
  return (
  <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
@@ -78,7 +102,7 @@ export function EditProfileContent() {
    isOpen={isEditingName}
    editingUsername={editingUsername}
    username={username}
-   setEditingUsername={() => {}}
+   setEditingUsername={setEditingUsername}
    onClose={handleCloseNameModal}
    onSave={handleSaveUsername}
  />
@@ -88,7 +112,7 @@ export function EditProfileContent() {
    isOpen={isEditingPhone}
    editingPhone={editingPhone}
    phone={phone}
-   setEditingPhone={() => {}}
+   setEditingPhone={setEditingPhone}
    onCancel={handleCancelPhoneEdit}
    onSave={handleSavePhone}
    showPhoneCharWarning={showPhoneCharWarning}
@@ -156,8 +180,7 @@ export function EditProfileContent() {
    onSetMenuAnimating={menu.setIsMenuAnimating}
   // สำหรับหน้าโปรไฟล์ ซ่อนอนิเมชั่นโหลดด้านล่างฟีด (ไม่ให้หมุนค้าง)
   loadingMore={false}
-  // และไม่แสดงข้อความ "ไม่มีรายการเพิ่มเติม" ที่ก้นหน้าโปรไฟล์
-  hasMore={true}
+  hasMore={false}
    hideBoost={tab === 'sold'}
  />
 

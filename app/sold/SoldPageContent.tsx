@@ -32,6 +32,7 @@ import { useHomeData } from '@/hooks/useHomeData';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
+import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
@@ -156,31 +157,6 @@ export function SoldPageContent() {
     }
   }, [postListData.page, postListData.session]);
 
-  // Handle shared post from URL
-  useEffect(() => {
-    const postId = searchParams.get('post');
-    if (postId && postListData.posts.length > 0) {
-      const sharedPost = postListData.posts.find(p => p.id === postId);
-      if (sharedPost) {
-        viewingPostHook.setInitialImageIndex(0);
-        viewingPostHook.setIsViewingModeOpen(false);
-        viewingPostHook.setViewingPost(sharedPost);
-        router.replace(window.location.pathname, { scroll: false });
-      }
-    } else if (postId && postListData.posts.length === 0) {
-      const checkPost = async () => {
-        const { data } = await supabase.from('cars').select('*, profiles!cars_user_id_fkey(*)').eq('id', postId).single();
-        if (data) {
-          viewingPostHook.setInitialImageIndex(0);
-          viewingPostHook.setIsViewingModeOpen(false);
-          viewingPostHook.setViewingPost(data);
-          router.replace(window.location.pathname, { scroll: false });
-        }
-      };
-      checkPost();
-    }
-  }, [searchParams, postListData.posts, router, viewingPostHook]);
-
   // Fetch interactions
   const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string) => {
     await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
@@ -233,6 +209,27 @@ export function SoldPageContent() {
     interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
+
+  const { addBackStep } = useBackHandler();
+  useEffect(() => {
+    if (!fullScreenViewer.fullScreenImages) return;
+    const close = () => {
+      fullScreenViewer.setFullScreenImages(null);
+      if (fullScreenViewer.activePhotoMenu !== null) {
+        fullScreenViewer.setIsPhotoMenuAnimating(true);
+        setTimeout(() => {
+          fullScreenViewer.setActivePhotoMenu(null);
+          fullScreenViewer.setIsPhotoMenuAnimating(false);
+        }, 300);
+      }
+    };
+    return addBackStep(close);
+  }, [fullScreenViewer.fullScreenImages]);
+  useEffect(() => {
+    if (!viewingPostHook.viewingPost) return;
+    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    return addBackStep(close);
+  }, [viewingPostHook.viewingPost]);
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -339,6 +336,7 @@ export function SoldPageContent() {
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
         viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
+        initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
           viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
         }}
@@ -352,6 +350,7 @@ export function SoldPageContent() {
         fullScreenImages={fullScreenViewer.fullScreenImages}
         currentImgIndex={fullScreenViewer.currentImgIndex}
         fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+        fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
         fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
         fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
         fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}

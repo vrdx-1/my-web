@@ -7,6 +7,7 @@ interface FullScreenImageViewerProps {
   images: string[] | null;
   currentImgIndex: number;
   fullScreenDragOffset: number;
+  fullScreenEntranceOffset?: number;
   fullScreenVerticalDragOffset: number;
   fullScreenIsDragging: boolean;
   fullScreenTransitionDuration: number;
@@ -35,6 +36,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   images,
   currentImgIndex,
   fullScreenDragOffset,
+  fullScreenEntranceOffset = 0,
   fullScreenVerticalDragOffset,
   fullScreenIsDragging,
   fullScreenTransitionDuration,
@@ -141,7 +143,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
             display: 'flex', 
             transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none', 
             // ลบการปัดขึ้น/ลงออก (ไม่มี translateY)
-            transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px))`, 
+            transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px + ${fullScreenEntranceOffset}px))`, 
             width: '100%', 
             height: '100%' 
           }}>

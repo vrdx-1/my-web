@@ -11,6 +11,7 @@ interface ViewingPostModalProps {
   viewingModeDragOffset: number;
   viewingModeIsDragging: boolean;
   savedScrollPosition: number;
+  initialImageIndex?: number;
   onClose: () => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchMove: (e: React.TouchEvent) => void;
@@ -25,6 +26,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   viewingModeDragOffset,
   viewingModeIsDragging,
   savedScrollPosition,
+  initialImageIndex = 0,
   onClose,
   onTouchStart,
   onTouchMove,
@@ -41,35 +43,76 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     setEnterPhase('offscreen');
   }, [viewingPost?.id]);
 
+  // ให้ paint เฟรม offscreen (ด้านขวา) ก่อน แล้วค่อย slide เข้ามา
   useEffect(() => {
     if (!isViewingModeOpen) return;
     if (enterPhase !== 'offscreen') return;
 
-    setEnterPhase('animating');
-    const t = window.setTimeout(() => {
-      setEnterPhase('entered');
-    }, 220);
-
-    return () => window.clearTimeout(t);
+    let tId: ReturnType<typeof setTimeout>;
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setEnterPhase('animating');
+        tId = window.setTimeout(() => setEnterPhase('entered'), 220);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (tId != null) clearTimeout(tId);
+    };
   }, [isViewingModeOpen, enterPhase]);
 
+  // 1) แสดงรูปที่คลิกก่อน  2) รูปนั้นอยู่ตรงกลางจอ ทุกครั้งรวมหลัง refresh (รอ layout แล้ว scroll, ไม่เจอ element ให้ retry)
+  useEffect(() => {
+    if (enterPhase !== 'entered') return;
+    const idx = Math.min(initialImageIndex, (viewingPost.images?.length ?? 1) - 1);
+    const scrollToImage = () => {
+      const el = document.getElementById(`viewing-image-${idx}`);
+      if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'auto' });
+        return true;
+      }
+      return false;
+    };
+    let rafId1: number;
+    let rafId2: number;
+    let t1: ReturnType<typeof setTimeout>;
+    let t2: ReturnType<typeof setTimeout>;
+    rafId1 = requestAnimationFrame(() => {
+      rafId2 = requestAnimationFrame(() => {
+        if (scrollToImage()) return;
+        t1 = window.setTimeout(() => {
+          if (scrollToImage()) return;
+          t2 = window.setTimeout(() => scrollToImage(), 80);
+        }, 50);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(rafId1);
+      cancelAnimationFrame(rafId2);
+      if (t1 != null) clearTimeout(t1);
+      if (t2 != null) clearTimeout(t2);
+    };
+  }, [enterPhase, initialImageIndex, viewingPost?.images?.length]);
+
   return (
-    <div 
-      style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0, 
-        background: '#fff', 
-        zIndex: 2000, 
-        transform: `translateX(calc(${enterPhase === 'offscreen' ? '100vw' : '0px'} + ${viewingModeDragOffset}px))`,
-        transition: enterPhase === 'animating' ? 'transform 220ms ease-out' : 'none',
-      }} 
-      onTouchStart={onTouchStart} 
-      onTouchMove={onTouchMove} 
-      onTouchEnd={onTouchEnd}
-    >
+    <>
+      <style dangerouslySetInnerHTML={{ __html: '#viewing-mode-container::-webkit-scrollbar{display:none}' }} />
+      <div 
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          background: '#fff', 
+          zIndex: 2000, 
+          transform: `translateX(calc(${enterPhase === 'offscreen' ? '100vw' : '0px'} + ${viewingModeDragOffset}px))`,
+          transition: enterPhase === 'animating' ? 'transform 220ms ease-out' : 'none',
+        }} 
+        onTouchStart={onTouchStart} 
+        onTouchMove={onTouchMove} 
+        onTouchEnd={onTouchEnd}
+      >
       <div 
         id="viewing-mode-container" 
         style={{ 
@@ -80,6 +123,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           overflowY: 'auto',
           scrollBehavior: 'auto',
           WebkitOverflowScrolling: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
         }}
       >
         <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001 }}>
@@ -163,7 +208,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    </>
   );
 });
 

@@ -28,6 +28,8 @@ html, body {
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -51,6 +53,18 @@ body {
   -ms-overflow-style: none;
 }
 *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb {
+  display: none;
+  background: transparent;
+}
+
+/* ซ่อน scrollbar ของ feed หลักเมื่อเปิด viewing mode */
+body[data-viewing-mode="open"]::-webkit-scrollbar {
   display: none;
 }
 

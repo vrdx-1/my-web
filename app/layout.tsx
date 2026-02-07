@@ -4,6 +4,7 @@ import "./globals.css";
 // เพิ่มการนำเข้า Component สำหรับ Track Visitor
 import VisitorTracker from "@/components/VisitorTracker";
 import BackHandler from "@/components/BackHandler";
+import { BackHandlerProvider } from "@/components/BackHandlerContext";
 import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider"; 
@@ -42,13 +43,15 @@ export default function RootLayout({
           <SWRProvider>
             {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
             <VisitorTracker />
-            {/* กดย้อนกลับ (browser/มือถือ) ไม่ให้เด้งออกจากเว็บ back ตามสเต็ป */}
-            <BackHandler />
-            {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
-            <RedirectToHomeOnReturn />
-            {/* ป๊อบอัพยอมรับ ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ สำหรับผู้ใช้ใหม่ */}
-            <GlobalTermsConsent />
-            {children}
+            {/* กดย้อนกลับ (browser/มือถือ) ปิด overlay ตามสเต็ป แล้ว back ตามสเต็ป */}
+            <BackHandlerProvider>
+              <BackHandler />
+              {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
+              <RedirectToHomeOnReturn />
+              {/* ป๊อบอัพยอมรับ ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ สำหรับผู้ใช้ใหม่ */}
+              <GlobalTermsConsent />
+              {children}
+            </BackHandlerProvider>
           </SWRProvider>
         </ErrorBoundaryWrapper>
       </body>

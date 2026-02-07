@@ -81,6 +81,7 @@ const EditProfilePostOverlaysComponent = ({
       viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
       viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
       savedScrollPosition={viewingPostHook.savedScrollPosition}
+      initialImageIndex={viewingPostHook.initialImageIndex}
       onViewingPostClose={() => {
         viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
       }}
@@ -96,6 +97,7 @@ const EditProfilePostOverlaysComponent = ({
       fullScreenImages={fullScreenViewer.fullScreenImages}
       currentImgIndex={fullScreenViewer.currentImgIndex}
       fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+      fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
       fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
       fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
       fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}

@@ -25,9 +25,9 @@ const EditNameModalComponent = ({
       onClick={e => e.stopPropagation()}
       style={{
         position: 'fixed',
-        top: '50%',
+        top: '15%',
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate(-50%, 0)',
         zIndex: 1001,
         background: '#fff',
         borderRadius: '12px',
@@ -136,9 +136,9 @@ const EditPhoneModalComponent = ({
       onClick={e => e.stopPropagation()}
       style={{
         position: 'fixed',
-        top: '50%',
+        top: '15%',
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate(-50%, 0)',
         zIndex: 1001,
         background: '#fff',
         borderRadius: '12px',

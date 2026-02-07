@@ -204,15 +204,14 @@ export function useEditProfilePage() {
   // Lock background scroll while edit-name / edit-phone / phone-warning popup is open
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const prevOverflow = document.body.style.overflow;
     const shouldLock = isEditingName || isEditingPhone || showPhoneCharWarning;
     if (shouldLock) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = '';
     };
   }, [isEditingName, isEditingPhone, showPhoneCharWarning]);
 
@@ -259,6 +258,8 @@ export function useEditProfilePage() {
     isEditingPhone,
     editingUsername,
     editingPhone,
+    setEditingUsername,
+    setEditingPhone,
     uploading,
     showPhoneCharWarning,
     setShowPhoneCharWarning,
