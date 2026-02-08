@@ -20,19 +20,19 @@ export const BoostHowToModal = React.memo<BoostHowToModalProps>(({ show, onClose
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="font-bold text-lg">ວິທີຍິງໂຄສະນາ</div>
+          <div className="font-bold text-lg text-gray-900">ວິທີສ້າງໂຄສະນາ</div>
         </div>
 
         <div className="px-5 py-4 text-sm text-gray-700 space-y-3">
           <div className="font-bold text-gray-900">ຂັ້ນຕອນ</div>
           <ol className="list-decimal pl-5 space-y-2">
-            <li>ເລືອກ Package ທີ່ຕ້ອງການ Boost.</li>
-            <li>ສະແກນ QR ແລະໂອນເງິນຕາມຈຳນວນທີ່ສະແດງ.</li>
-            <li>ກົດ “ແຈ້ງສະລິບການໂອນ” ແລະອັບໂຫຼດຮູບສະລິບ.</li>
-            <li>ລໍຖ້າລະບົບກວດສອບ ແລະຢືນຢັນ.</li>
+            <li>ເລືອກ Package ທີ່ທ່ານຕ້ອງການ boost</li>
+            <li>ສະແກນ QR ແລະໂອນເງິນຕາມຈຳນວນທີ່ສະແດງ</li>
+            <li>ແຈ້ງສະລິບການໂອນ</li>
+            <li>ຢືນຢັນສະລິບການໂອນ ແລະ ລໍຖ້າລະບົບກວດສອບຄວາມຖືກຕ້ອງຂອງໂຄສະນາ</li>
           </ol>
           <div className="text-xs text-gray-500">
-            * ຫາກມີບັນຫາ ກະລຸນາກວດສອບຄວາມຊັດເຈນຂອງຮູບສະລິບ.
+            *ຫາກມີບັນຫາ ກະລຸນາຕິດຕໍ່ທີມງານ 02098859693
           </div>
         </div>
 

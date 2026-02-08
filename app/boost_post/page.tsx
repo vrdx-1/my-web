@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react"; // เพิ่ม Suspense
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
-import { X, CheckCircle2 } from "lucide-react";
 import { PageSpinner } from "@/components/LoadingSpinner";
 import { BoostAdDetailsPopup } from "@/components/modals/BoostAdDetailsPopup";
 import { BoostHowToModal } from "@/components/modals/BoostHowToModal";
 import { BOOST_PACKAGES } from "@/data/boostPackages";
+import { BoostQRStep } from "./BoostQRStep";
+import { useBoostSlip } from "./BoostSlipContext";
 
 // สร้าง Component แยกเพื่อจัดการ Logic เดิมทั้งหมด
 function BoostPostContent() {
@@ -15,6 +16,7 @@ function BoostPostContent() {
   const searchParams = useSearchParams();
   const postId = searchParams.get("id");
   const supabase = supabaseClient;
+  const { boostResult, setBoostResult } = useBoostSlip();
 
   const [step, setStep] = useState(0); 
   const [loading, setLoading] = useState(false);
@@ -28,6 +30,26 @@ function BoostPostContent() {
   const [isRedirectingToRegister, setIsRedirectingToRegister] = useState(false);
 
   const packages = BOOST_PACKAGES;
+  const cameBackFromSlipRef = useRef(false);
+
+  // เมื่อกดย้อนกลับจากหน้าสลิป (browser back) ให้โชว์หน้า QR ทันที
+  useEffect(() => {
+    if (!postId || searchParams.get("from_slip")) return;
+    if (typeof localStorage === "undefined") return;
+    const returnPkg = localStorage.getItem("boost_return_pkg");
+    const returnPostId = localStorage.getItem("boost_return_post_id");
+    if (returnPkg && returnPostId === postId) {
+      const pkgFound = BOOST_PACKAGES.find((p) => p.name === returnPkg);
+      if (pkgFound) {
+        setSelectedPkg(pkgFound);
+        setStep(2);
+        setCheckingStatus(false);
+        cameBackFromSlipRef.current = true;
+      }
+      localStorage.removeItem("boost_return_pkg");
+      localStorage.removeItem("boost_return_post_id");
+    }
+  }, [postId, searchParams]);
 
   useEffect(() => {
     async function checkExistingBoost() {
@@ -69,97 +91,112 @@ function BoostPostContent() {
           setStep(3); 
         } else {
           console.log("ไม่พบข้อมูลการ Boost เดิม");
-          setStep(1); 
+          const fromSlip = searchParams.get("from_slip");
+          const pkg = searchParams.get("pkg");
+          const returnPkg =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("boost_return_pkg")
+              : null;
+          const returnPostId =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("boost_return_post_id")
+              : null;
+          if (fromSlip === "1" && pkg) {
+            const pkgFound = BOOST_PACKAGES.find(
+              (p) => p.name === decodeURIComponent(pkg)
+            );
+            if (pkgFound) {
+              setSelectedPkg(pkgFound);
+              setStep(2);
+            } else {
+              setStep(1);
+            }
+          } else if (returnPkg && returnPostId === postId) {
+            const pkgFound = BOOST_PACKAGES.find((p) => p.name === returnPkg);
+            if (pkgFound) {
+              setSelectedPkg(pkgFound);
+              setStep(2);
+            } else {
+              setStep(1);
+            }
+            localStorage.removeItem("boost_return_pkg");
+            localStorage.removeItem("boost_return_post_id");
+          } else if (!cameBackFromSlipRef.current) {
+            setStep(1);
+          }
         }
       } catch (err) {
         console.error("เกิดข้อผิดพลาด:", err);
-        setStep(1);
+        const fromSlip = searchParams.get("from_slip");
+        const pkg = searchParams.get("pkg");
+        const returnPkg =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("boost_return_pkg")
+            : null;
+        const returnPostId =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("boost_return_post_id")
+            : null;
+        if (fromSlip === "1" && pkg) {
+          const pkgFound = BOOST_PACKAGES.find(
+            (p) => p.name === decodeURIComponent(pkg)
+          );
+          if (pkgFound) {
+            setSelectedPkg(pkgFound);
+            setStep(2);
+          } else {
+            setStep(1);
+          }
+        } else if (returnPkg && returnPostId === postId) {
+          const pkgFound = BOOST_PACKAGES.find((p) => p.name === returnPkg);
+          if (pkgFound) {
+            setSelectedPkg(pkgFound);
+            setStep(2);
+          } else {
+            setStep(1);
+          }
+          localStorage.removeItem("boost_return_pkg");
+          localStorage.removeItem("boost_return_post_id");
+        } else if (!cameBackFromSlipRef.current) {
+          setStep(1);
+        }
       } finally {
         setCheckingStatus(false);
       }
     }
     checkExistingBoost();
-  }, [postId, router, supabase]);
+  }, [postId, router, supabase, searchParams]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Allow selecting the same file again (some browsers won't fire onChange if the same file is chosen)
-    e.target.value = "";
-    if (!file || !postId || !selectedPkg) return;
-
-    setLoading(true);
-    setSubmitError(null);
-    try {
-      // If admin already rejected this post, block further submissions (anti-spam)
-      const { data: latestBoost, error: latestBoostError } = await supabase
-        .from("post_boosts")
-        .select("status")
-        .eq("post_id", postId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (latestBoostError) throw latestBoostError;
-      if (latestBoost && latestBoost[0]?.status === "reject") {
-        setDbStatus("reject");
-        setExpiresAt(null);
-        setJustSubmitted(false);
-        setStep(3);
-        return;
+  useEffect(() => {
+    const fromSlip = searchParams.get("from_slip");
+    const pkg = searchParams.get("pkg");
+    if (fromSlip === "1" && pkg && postId) {
+      const pkgFound = BOOST_PACKAGES.find(
+        (p) => p.name === decodeURIComponent(pkg)
+      );
+      if (pkgFound) {
+        setSelectedPkg(pkgFound);
+        setStep(2);
       }
-
-      // Allow both logged-in and guest submissions (user_id is nullable in DB)
-      const { data: sessionData } = await supabase.auth.getSession();
-      let userId = sessionData.session?.user?.id ?? null;
-      if (!userId) {
-        // If user is actually logged in but session isn't loaded yet, try refresh once.
-        const { data: refreshed } = await supabase.auth.refreshSession();
-        userId = refreshed.session?.user?.id ?? null;
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("boost_return_pkg");
+        localStorage.removeItem("boost_return_post_id");
       }
-      if (!userId) {
-        setIsRedirectingToRegister(true);
-        router.replace("/register");
-        return;
-      }
-
-      // Use a unique name to avoid "already exists" upload errors
-      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${postId}.jpg`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("slips")
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { error: dbError } = await supabase.from("post_boosts").insert({
-        post_id: postId,
-        user_id: userId,
-        package_name: selectedPkg.name,
-        boost_days: selectedPkg.days, 
-        price: parseInt(selectedPkg.price.replace(/\D/g, "")),
-        slip_url: fileName,
-        status: "pending",
+      router.replace(`/boost_post?id=${encodeURIComponent(postId)}`, {
+        scroll: false,
       });
-
-      if (dbError) {
-        // Cleanup uploaded file ถ้า insert ล้มเหลว
-        if (uploadData?.path) {
-          await supabase.storage.from("slips").remove([uploadData.path]).catch(() => {});
-        }
-        throw dbError;
-      }
-
-      setDbStatus("pending");
-      setExpiresAt(null);
-      setJustSubmitted(true);
-      setStep(3);
-    } catch (error: any) {
-      console.error(error);
-      setDbStatus("error");
-      setSubmitError(error?.message || "UNKNOWN_ERROR");
-      setJustSubmitted(false);
-      setStep(3);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [searchParams, postId, router]);
+
+  useEffect(() => {
+    if (!boostResult) return;
+    setDbStatus(boostResult.dbStatus);
+    setExpiresAt(boostResult.expiresAt);
+    setJustSubmitted(boostResult.justSubmitted);
+    setSubmitError(boostResult.submitError ?? null);
+    setStep(3);
+    setBoostResult(null);
+  }, [boostResult, setBoostResult]);
 
   if (isRedirectingToRegister) {
     return (
@@ -169,10 +206,10 @@ function BoostPostContent() {
     );
   }
 
-  if (checkingStatus) return <div className="p-10 text-center font-bold">ກຳລັງກວດສອບຂໍ້ມູນ...</div>;
+  if (checkingStatus) return <div className="p-10 text-center font-bold text-gray-900">ກຳລັງກວດສອບຂໍ້ມູນ...</div>;
 
   return (
-    <div className="min-h-screen bg-white pb-10">
+    <div className="min-h-screen bg-white pb-10 text-gray-900">
       <div
         style={{
           padding: "10px 15px",
@@ -230,9 +267,10 @@ function BoostPostContent() {
             fontSize: "18px",
             fontWeight: "bold",
             minWidth: 0,
+            color: "#1c1e21",
           }}
         >
-          ຍິງໂຄສະນາ
+          {step === 2 ? "ຊຳລະຄ່າໂຄສະນາ" : "ສ້າງໂຄສະນາ"}
         </h3>
         <div style={{ width: "72px", flexShrink: 0 }} aria-hidden />
       </div>
@@ -247,9 +285,9 @@ function BoostPostContent() {
                   setSelectedPkg(pkg);
                   setStep(2);
                 }}
-                className="w-full bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md hover:border-violet-300 transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                className="w-full bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md hover:border-violet-300 transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 text-gray-900"
               >
-                <span className="text-base font-semibold">{pkg.name}</span>
+                <span className="text-base font-semibold text-gray-900">{pkg.name}</span>
                 <span className="text-base font-bold text-violet-600">{pkg.price}</span>
               </button>
             ))}
@@ -257,26 +295,7 @@ function BoostPostContent() {
         )}
 
         {step === 2 && selectedPkg && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border mt-4 text-center">
-            <div className="w-64 h-64 mx-auto mb-6 flex items-center justify-center rounded-lg overflow-hidden border">
-              <img 
-                src={selectedPkg.qr_url} 
-                alt={`QR Code ${selectedPkg.name}`} 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <p className="text-gray-600 mb-8 text-sm">ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກທ່ານໂອນສຳເລັດ</p>
-            <label className="block w-full bg-blue-600 text-white py-4 rounded-xl font-bold cursor-pointer hover:bg-blue-700 transition-colors relative overflow-hidden">
-              {loading ? "ກຳລັງສົ່ງ..." : "ແຈ້ງສະລິບການໂອນ"}
-              <input
-                type="file"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={handleFileUpload}
-                accept="image/*"
-                disabled={loading}
-              />
-            </label>
-          </div>
+          <BoostQRStep selectedPkg={selectedPkg} postId={postId} />
         )}
 
         {step === 3 && (
@@ -298,7 +317,7 @@ function BoostPostContent() {
         onClick={() => setShowHowTo(true)}
         className="fixed bottom-5 right-5 z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl ring-2 ring-blue-200 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
       >
-        ວິທີຍິງໂຄສະນາ
+        ວິທີສ້າງໂຄສະນາ
       </button>
 
       {/* Modal อธิบายขั้นตอน */}

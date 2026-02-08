@@ -80,7 +80,7 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
       ].join(' ')}
       style={{ zIndex }}
     >
-      <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center bg-white">
+      <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center bg-white text-gray-900">
         {status === 'pending' ? (
           <>
             <h2 className="text-2xl font-bold mb-3 text-green-600">
@@ -129,7 +129,7 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
             {submitError && (
               <div className="mt-3 text-left text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-3">
                 <div className="font-bold text-gray-700 mb-1">Error</div>
-                <div className="break-words">{submitError}</div>
+                <div className="break-words text-gray-700">{submitError}</div>
               </div>
             )}
             <button
