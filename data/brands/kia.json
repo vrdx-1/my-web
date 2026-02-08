@@ -1,8 +1,7 @@
 {
   "brandId": "kia",
   "brandName": "Kia",
-  "brandNameTh": "เกีย",
-  "brandNameLo": "ເກຍ",
+
   "models": [
     {
       "modelId": "carnival",

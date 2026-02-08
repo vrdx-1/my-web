@@ -99,15 +99,25 @@ function expandWithoutBrandAliases(query: string): string[] {
   }
 
   // กรองให้เหลือเฉพาะ aliases ที่เป็นของ matching entities เท่านั้น
+  // และเพิ่ม token ของแต่ละ alias (แบบเดียวกับ postUtils addAliasWithTokens) เพื่อให้ caption ที่เขียนแค่คำเดียวเช่น "รีโว่" ก็ match
   const validAliases = new Set<string>();
   validAliases.add(query); // เก็บ query เดิมเสมอ
+
+  function addAliasAndTokens(alias: string, isAllowed: (a: string) => boolean) {
+    const a = String(alias ?? '').trim();
+    if (!a) return;
+    if (isAllowed(a)) validAliases.add(a);
+    const rawTokens = a.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+    for (const rawTok of rawTokens) {
+      if (rawTok.length >= 2 && isAllowed(rawTok)) validAliases.add(rawTok);
+    }
+  }
 
   for (const brand of carsData.brands ?? []) {
     for (const model of brand.models ?? []) {
       const entityKey = `model:${brand.brandId}:${model.modelId}`;
       if (!matchingEntities.has(entityKey)) continue;
 
-      // เก็บ aliases ของ model นี้ (เฉพาะที่ไม่ได้เป็น aliases ของ model อื่น)
       const modelAliases = [
         model.modelName,
         (model as any).modelNameTh,
@@ -117,35 +127,19 @@ function expandWithoutBrandAliases(query: string): string[] {
       for (const alias of modelAliases) {
         const a = String(alias ?? '').trim();
         if (!a) continue;
-        
         const aNorm = normalizeCarSearch(a);
         const queryNorm = normalizeCarSearch(query);
-        
-        // เก็บถ้า: เป็น query เดิม หรือไม่ได้เป็น aliases ของ model อื่น
-        if (queryNorm === aNorm || (!otherModelAliases.has(a) && !otherModelAliases.has(aNorm))) {
-          validAliases.add(a);
-        }
+        const isAllowed = (t: string) =>
+          normalizeCarSearch(t) === queryNorm ||
+          (!otherModelAliases.has(t) && !otherModelAliases.has(normalizeCarSearch(t)));
+        addAliasAndTokens(a, isAllowed);
       }
     }
   }
 
-  // กรอง expanded ให้เหลือเฉพาะ aliases ที่อยู่ใน validAliases เท่านั้น
-  const filtered = expanded.filter(term => {
-    const termStr = String(term ?? '').trim();
-    if (!termStr) return false;
-    
-    // เก็บถ้า: อยู่ใน validAliases (ตรงเป๊ะหรือ normalized ตรงกัน)
-    if (validAliases.has(termStr)) return true;
-    
-    const termNorm = normalizeCarSearch(termStr);
-    for (const alias of validAliases) {
-      if (normalizeCarSearch(alias) === termNorm) return true;
-    }
-    
-    return false;
-  });
-
-  return filtered.length > 0 ? filtered : [query];
+  // ส่งชุดคำจาก validAliases โดยตรง (ไม่กรองจาก expanded) เพื่อให้รุ่นที่มี 3 ภาษาได้คำครบไทย/ลาว/อังกฤษเสมอ
+  const result = Array.from(validAliases).filter(Boolean);
+  return result.length > 0 ? result : [query];
 }
 
 /**
@@ -205,71 +199,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const rawTerms = body.searchTerms;
-    let searchTerms = Array.isArray(rawTerms)
+    const searchTerms = Array.isArray(rawTerms)
       ? rawTerms.map((t: unknown) => String(t ?? '').trim()).filter(Boolean)
       : [];
     const startIndex = parseInt(String(body.startIndex ?? 0));
     const endIndex = parseInt(String(body.endIndex ?? PREFETCH_COUNT - 1));
 
-    // ขยายทุกคำที่ client ส่งมา (แม้หลายคำ) เพื่อให้แน่ใจว่าได้ผลครบทุกครั้ง
-    // เพราะ client expansion อาจไม่เสถียร (race condition, dictionary load timing)
-    // ใช้ expandWithoutBrandAliases เพื่อกรอง brand aliases ออกเมื่อค้น model (ให้ได้ผลที่ตรงคำค้น)
-    const allExpanded = new Set<string>();
-    for (const term of searchTerms) {
-      const expanded = expandWithoutBrandAliases(String(term).trim());
-      if (expanded.length > 0) {
-        for (const e of expanded) allExpanded.add(String(e).trim());
-      } else {
-        allExpanded.add(String(term).trim());
-      }
-    }
-    searchTerms = Array.from(allExpanded).filter(Boolean);
-    
-    // ถ้ายังได้คำเดียว ใช้ fallback สำหรับคำที่รู้จัก (ทั้งอังกฤษ/ไทย/ลาว)
-    // และพยายาม expand อีกครั้งด้วย original query เพื่อให้แน่ใจว่าได้ผลครบ
-    if (searchTerms.length === 1) {
-      const one = searchTerms[0];
-      const fallback: Record<string, string[]> = {
-        revo: ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-        'รีโว่': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-        'รีโว้': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-        'ລີໂວ້': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-        vigo: ['vigo', 'วีโก้', 'ວີໂກ້'],
-        'วีโก้': ['vigo', 'วีโก้', 'ວີໂກ້'],
-        'ວີໂກ້': ['vigo', 'วีโก้', 'ວີໂກ້'],
-        vios: ['vios', 'วีออส', 'ວີອອສ'],
-        'วีออส': ['vios', 'วีออส', 'ວີອອສ'],
-        'ວີອອສ': ['vios', 'วีออส', 'ວີອອສ'],
-        fortuner: ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-        'ฟอร์จูนเนอร์': ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-        'ຟໍຈູນເນີ້': ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-        camry: ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-        'คัมรี่': ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-        'ແຄມຣີ້': ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-        hilux: ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-        'ไฮลักซ์': ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-        'ໄຮລັກ': ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-      };
-      const key = normalizeForFallback(one);
-      if (fallback[key]) {
-        searchTerms = fallback[key].map((t) => String(t ?? '').trim()).filter(Boolean);
-      } else {
-        // ถ้าไม่มีใน fallback แต่ได้คำเดียว → พยายาม expand อีกครั้งด้วย original query จาก client
-        // เพื่อให้แน่ใจว่าได้ผลครบ (กรณี dictionary index ไม่เสถียร)
-        const originalQuery = rawTerms && Array.isArray(rawTerms) && rawTerms.length > 0 
-          ? String(rawTerms[0]).trim() 
-          : one;
-        if (originalQuery) {
-          const reExpanded = expandWithoutBrandAliases(originalQuery);
-          if (reExpanded.length > 1) {
-            const reExpandedSet = new Set<string>();
-            for (const e of reExpanded) reExpandedSet.add(String(e).trim());
-            searchTerms = Array.from(reExpandedSet).filter(Boolean);
-          }
-        }
-      }
-    }
-
+    // ฝั่ง frontend เป็นผู้เลือกชุดคำส่งมาแล้ว — backend แค่ส่งโพสที่ caption ตรงตามคำที่ให้ไป
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

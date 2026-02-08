@@ -220,9 +220,9 @@ function buildCategoryAliasIndex(dict: CategoriesDictionary) {
   addAlias('pickup', 'รถกระบะ');
   addAlias('van', 'รถตู้');
   addAlias('sedan', 'รถเก๋ง');
-  addAlias('ev', 'electric');
-  addAlias('ev', 'electric car');
-  addAlias('ev', 'รถไฟฟ้า');
+  addAlias('electric', 'ev');
+  addAlias('electric', 'electric car');
+  addAlias('electric', 'รถไฟฟ้า');
 
   return { aliasToCategoryIds };
 }
@@ -251,7 +251,11 @@ function buildCategoryToModelAliases(dict: CarsDictionary) {
 
       for (const cid of categoryIds) {
         const catId = String(cid);
-        for (const a of aliases) add(catId, a);
+        for (const a of aliases) {
+          add(catId, a);
+          const tokens = a.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+          for (const tok of tokens) if (tok.length >= 2) add(catId, tok);
+        }
 
         // Special case: allow searching pickup by Ford brand name only (e.g. caption "ຟອດ").
         // Keeps other categories unchanged.
@@ -373,16 +377,221 @@ export function expandCarSearchAliases(query: string): string[] {
   const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
   if (categoryIds && categoryIds.size > 0) {
     const expanded: string[] = [query];
+    const groups = (categoriesData as any).categoryGroups ?? [];
     for (const cid of categoryIds) {
       expanded.push(String(cid));
+      for (const g of groups) {
+        for (const cat of g.categories ?? []) {
+          if (String(cat.id) === String(cid)) {
+            if (cat.name) expanded.push(String(cat.name).trim());
+            if (cat.nameEn) expanded.push(String(cat.nameEn).trim());
+            if (cat.nameLo) expanded.push(String(cat.nameLo).trim());
+            break;
+          }
+        }
+      }
+      // ดูรุ่นไหนมีหมวด cid แล้วใส่ชื่อรุ่นครบ 3 ภาษา (modelName, modelNameTh, modelNameLo, searchNames) จากต้นทาง
+      for (const brand of carsData.brands ?? []) {
+        for (const model of brand.models ?? []) {
+          const modelCats = (model.categoryIds ?? []) as string[];
+          if (!modelCats.includes(String(cid))) continue;
+          const terms = [
+            model.modelName,
+            (model as any).modelNameTh,
+            (model as any).modelNameLo,
+            ...((model.searchNames ?? []) as any[]).map(String),
+          ];
+          for (const t of terms) {
+            const s = String(t ?? '').trim();
+            if (!s) continue;
+            expanded.push(s);
+            const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+            for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+          }
+        }
+      }
       const aliases = CATEGORY_TO_MODEL_ALIASES.categoryToAliases.get(String(cid));
-      if (aliases) expanded.push(...aliases);
+      if (aliases) {
+        expanded.push(...aliases);
+        for (const a of aliases) {
+          const tokens = String(a ?? '').split(/\s+/).map((t) => t.trim()).filter(Boolean);
+          for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+        }
+      }
     }
     return uniqStringsCarSearch(expanded);
   }
 
   // ถ้าไม่เข้าเคสใดเลย ให้คืน query เดิมเพื่อไม่ให้เงียบหาย
   return [query];
+}
+
+function normalizeForFallback(text: string): string {
+  return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+const BRAND_NAMES_SET = (() => {
+  const set = new Set<string>();
+  for (const brand of carsData.brands ?? []) {
+    const en = String(brand.brandName ?? '').trim();
+    const th = String((brand as any).brandNameTh ?? '').trim();
+    const lo = String((brand as any).brandNameLo ?? '').trim();
+    if (en) set.add(normalizeForFallback(en));
+    if (th) set.add(normalizeForFallback(th));
+    if (lo) set.add(normalizeForFallback(lo));
+  }
+  return set;
+})();
+
+/**
+ * ขยายคำค้นโดยกรอง brand aliases และ model อื่นออกเมื่อค้นรุ่น (ให้ผลตรงคำค้น)
+ * ใช้ฝั่ง frontend เพื่อเลือกชุดคำส่งให้ API/DB
+ */
+export function expandWithoutBrandAliases(query: string): string[] {
+  const expanded = expandCarSearchAliases(query);
+  if (expanded.length <= 1) return expanded;
+
+  const queryNorm = normalizeCarSearch(query);
+  if (BRAND_NAMES_SET.has(normalizeForFallback(query))) return expanded;
+
+  // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ใส่เฉพาะชื่อหมวด + ชื่อรุ่นครบ 3 ภาษา + searchNames (ไม่แยก token จากชื่อเต็ม เพื่อไม่ให้คำเช่น Ford ไป match โพสอื่น)
+  const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(queryNorm);
+  if (categoryIds && categoryIds.size > 0) {
+    const currentCids = new Set(Array.from(categoryIds).map(String));
+    // ไม่ใส่คำที่ตรงกับ alias ของหมวดอื่น (เช่น "sport" จะไม่ใส่ตอนค้น suv เพื่อไม่ให้โพสที่พูดแค่รถสปอร์ตโผล่)
+    const isOtherCategoryAlias = (termNorm: string): boolean => {
+      const ids = CATEGORY_INDEX.aliasToCategoryIds.get(termNorm);
+      if (!ids || ids.size === 0) return false;
+      for (const id of ids) if (currentCids.has(String(id))) return false;
+      return true;
+    };
+    const out = new Set<string>();
+    out.add(query);
+    const groups = (categoriesData as any).categoryGroups ?? [];
+    const queryFallback = normalizeForFallback(query);
+    for (const cid of categoryIds) {
+      out.add(String(cid));
+      for (const g of groups) {
+        for (const cat of g.categories ?? []) {
+          if (String(cat.id) !== String(cid)) continue;
+          if (cat.name) out.add(String(cat.name).trim());
+          if (cat.nameEn) out.add(String(cat.nameEn).trim());
+          if (cat.nameLo) out.add(String(cat.nameLo).trim());
+          break;
+        }
+      }
+      for (const brand of carsData.brands ?? []) {
+        for (const model of brand.models ?? []) {
+          const modelCats = (model.categoryIds ?? []) as string[];
+          if (!modelCats.includes(String(cid))) continue;
+          const terms = [
+            model.modelName,
+            (model as any).modelNameTh,
+            (model as any).modelNameLo,
+            ...((model.searchNames ?? []) as any[]).map(String),
+          ];
+          for (const t of terms) {
+            const s = String(t ?? '').trim();
+            if (!s) continue;
+            if (BRAND_NAMES_SET.has(normalizeForFallback(s))) continue;
+            const sNorm = normalizeCarSearch(s);
+            if (sNorm && isOtherCategoryAlias(sNorm)) continue;
+            out.add(s);
+          }
+        }
+      }
+    }
+    const filtered = Array.from(out).filter((term) => {
+      const termNorm = normalizeForFallback(term);
+      return !BRAND_NAMES_SET.has(termNorm) || termNorm === queryFallback;
+    });
+    return filtered.length > 0 ? filtered : [query];
+  }
+
+  const expandedNormSet = new Set(expanded.map((t) => normalizeCarSearch(t)));
+  const matchingEntities = new Set<string>();
+  for (const brand of carsData.brands ?? []) {
+    for (const model of brand.models ?? []) {
+      const modelAliases = [
+        model.modelName,
+        (model as any).modelNameTh,
+        (model as any).modelNameLo,
+        ...((model.searchNames ?? []) as any[]).map(String),
+      ];
+      const modelAliasesNorm = modelAliases.map((a) => normalizeCarSearch(String(a ?? ''))).filter(Boolean);
+      const matchByQuery = modelAliasesNorm.includes(queryNorm);
+      const matchByExpanded = modelAliasesNorm.some((n) => expandedNormSet.has(n));
+      if (matchByQuery || matchByExpanded) {
+        matchingEntities.add(`model:${brand.brandId}:${model.modelId}`);
+      }
+    }
+  }
+
+  if (matchingEntities.size === 0) {
+    const filtered = expanded.filter((term) => {
+      const termNorm = normalizeForFallback(term);
+      return !BRAND_NAMES_SET.has(termNorm) || termNorm === normalizeForFallback(query);
+    });
+    return filtered.length > 0 ? filtered : [query];
+  }
+
+  const otherModelAliases = new Set<string>();
+  for (const brand of carsData.brands ?? []) {
+    for (const model of brand.models ?? []) {
+      const entityKey = `model:${brand.brandId}:${model.modelId}`;
+      if (matchingEntities.has(entityKey)) continue;
+      const modelAliases = [
+        model.modelName,
+        (model as any).modelNameTh,
+        (model as any).modelNameLo,
+        ...((model.searchNames ?? []) as any[]).map(String),
+      ];
+      for (const alias of modelAliases) {
+        const a = String(alias ?? '').trim();
+        if (a) {
+          otherModelAliases.add(a);
+          otherModelAliases.add(normalizeCarSearch(a));
+        }
+      }
+    }
+  }
+
+  const validAliases = new Set<string>();
+  validAliases.add(query);
+
+  function addAliasAndTokens(alias: string, isAllowed: (a: string) => boolean) {
+    const a = String(alias ?? '').trim();
+    if (!a) return;
+    if (isAllowed(a)) validAliases.add(a);
+    const rawTokens = a.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+    for (const rawTok of rawTokens) {
+      if (rawTok.length >= 2 && isAllowed(rawTok)) validAliases.add(rawTok);
+    }
+  }
+
+  for (const brand of carsData.brands ?? []) {
+    for (const model of brand.models ?? []) {
+      const entityKey = `model:${brand.brandId}:${model.modelId}`;
+      if (!matchingEntities.has(entityKey)) continue;
+      const modelAliases = [
+        model.modelName,
+        (model as any).modelNameTh,
+        (model as any).modelNameLo,
+        ...((model.searchNames ?? []) as any[]).map(String),
+      ];
+      for (const alias of modelAliases) {
+        const a = String(alias ?? '').trim();
+        if (!a) continue;
+        const isAllowed = (t: string) =>
+          normalizeCarSearch(t) === queryNorm ||
+          (!otherModelAliases.has(t) && !otherModelAliases.has(normalizeCarSearch(t)));
+        addAliasAndTokens(a, isAllowed);
+      }
+    }
+  }
+
+  const result = Array.from(validAliases).filter(Boolean);
+  return result.length > 0 ? result : [query];
 }
 
 export function captionMatchesAnyAlias(caption: string, queries: string[]): boolean {

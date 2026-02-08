@@ -163,10 +163,31 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
               {viewingPost.is_boosted ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
-                  <span style={{ fontWeight: 'bold', color: '#4a4d52' }}>• Ad</span> 
-                  <span style={{ marginLeft: '4px', color: '#4a4d52' }}>{formatTime(viewingPost.created_at)}</span>
-                  <span style={{ margin: '0 4px', color: '#4a4d52' }}>•</span>
-                  {viewingPost.province}
+                  <span style={{ fontSize: '12px', color: '#4a4d52' }}>Ad</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      backgroundColor: '#9ca3af',
+                      margin: '0 6px',
+                      transform: 'translateY(1px)',
+                    }}
+                  />
+                  <span style={{ color: '#4a4d52' }}>{formatTime(viewingPost.created_at)}</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      backgroundColor: '#9ca3af',
+                      margin: '0 6px',
+                      transform: 'translateY(1px)',
+                    }}
+                  />
+                  <span style={{ color: '#4a4d52' }}>{viewingPost.province}</span>
                 </span>
               ) : (
                 <>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>

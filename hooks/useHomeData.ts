@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import React from 'react';
 import { supabase } from '@/lib/supabase';
-import { expandCarSearchAliases, getPrimaryGuestToken } from '@/utils/postUtils';
+import { getPrimaryGuestToken, expandWithoutBrandAliases } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_PROVINCES } from '@/utils/constants';
@@ -123,21 +123,23 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (loadingMoreRef.current) return;
-    
+
+    // เก็บคำค้นตอนเริ่ม request เพื่อเช็กตอนได้ response ว่าไม่ stale
+    const trimmedSearch = String(searchTermRef.current ?? '')
+      .normalize('NFKC')
+      .trim();
+
     setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
     const startIndex = currentPage * PAGE_SIZE;
-    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex is inclusive, so this will fetch PREFETCH_COUNT items
+    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex is inclusive
 
     let postIds: string[] = [];
 
-    // ดึงข้อมูลเฉพาะสถานะ recommend เท่านั้น
-    const trimmedSearch = (searchTermRef.current ?? '').trim();
-
     if (trimmedSearch) {
-      // ขยายคำค้นแบบเดียวกับ Suggestion (ไทย/ลาว/อังกฤษ) ส่งใน body เพื่อไม่ให้ unicode ผิดใน URL
-      const expandedTerms = expandCarSearchAliases(trimmedSearch);
-      const searchTerms = (expandedTerms.length > 0 ? expandedTerms : [trimmedSearch])
+      // ฝั่ง frontend เลือกชุดคำค้น (ขยายเป็นไทย/ลาว/อังกฤษ เฉพาะรุ่นนั้น) แล้วส่งให้ API
+      const expanded = expandWithoutBrandAliases(trimmedSearch);
+      const searchTerms = (expanded.length > 0 ? expanded : [trimmedSearch])
         .map((t) => String(t ?? '').trim())
         .filter(Boolean);
       const res = await fetch('/api/posts/feed', {
@@ -164,17 +166,22 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       }
     }
 
-    // hasMore ควรเป็น true ถ้ามี post เท่ากับ PREFETCH_COUNT (แสดงว่ายังมี post ให้โหลดต่อ)
-    // ถ้ามี post น้อยกว่า PREFETCH_COUNT แสดงว่าโหลดหมดแล้ว
-    // ใช้ >= แทน === เพื่อให้แน่ใจว่าถ้ามี post มากกว่าหรือเท่ากับ PREFETCH_COUNT จะยังโหลดต่อ
+    // ถ้าคำค้นเปลี่ยนไปแล้ว (มี request ใหม่ไปแล้ว) ไม่นำผลนี้มาใช้ — ลดอาการบางครั้งได้บางครั้งไม่ได้
+    const currentSearch = String(searchTermRef.current ?? '').normalize('NFKC').trim();
+    const isStale = currentSearch !== trimmedSearch;
+
     const newHasMore = postIds.length >= PREFETCH_COUNT;
+
+    if (isStale) {
+      setLoadingMore(false);
+      return;
+    }
 
     if (isInitial) {
       setPosts([]);
     }
 
     // Batch loading: ดึง posts ทั้งหมดในครั้งเดียวแทนการ loop
-    // Optimize: Select เฉพาะ fields ที่จำเป็นเท่านั้น
     if (postIds.length > 0) {
       const { data: postsData, error: postsError } = await supabase
         .from('cars')
@@ -185,8 +192,12 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
       if (!postsError && postsData) {
         const orderedPostsData = postsData;
-        // ใช้ requestAnimationFrame เพื่อ batch state updates และลดการกระตุก
+        const stillCurrent = String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch;
         requestAnimationFrame(() => {
+          if (!stillCurrent) {
+            setLoadingMore(false);
+            return;
+          }
           setPosts(prev => {
             const existingIds = new Set(prev.map(p => p.id));
             const newPosts = orderedPostsData.filter(p => !existingIds.has(p.id));
@@ -269,16 +280,20 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     };
   }, [handleActiveStatus, updateLastSeen]);
 
-  // Fetch posts when search term changes
+  // Fetch posts when search term changes (debounce เพื่อไม่ยิง request ทุก keystroke — ลด race ให้ smooth)
+  const SEARCH_DEBOUNCE_MS = 350;
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    fetchPosts(true);
+    const t = setTimeout(() => {
+      fetchPosts(true);
+    }, SEARCH_DEBOUNCE_MS);
     if (searchTerm) {
       localStorage.setItem('last_searched_province', searchTerm);
     }
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]); // Only depend on searchTerm
+  }, [searchTerm]);
 
   // Fetch posts when page changes
   useEffect(() => {
