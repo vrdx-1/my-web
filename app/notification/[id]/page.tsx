@@ -397,7 +397,7 @@ export default function NotificationDetail() {
              boxShadow: '0 2px 10px rgba(24, 119, 242, 0.20)',
            }}
          >
-           ລາຍລະອຽດຂອງໂຄສະນາ
+           ສະຖານະໂຄສະນາ
          </button>
        </div>
      )}

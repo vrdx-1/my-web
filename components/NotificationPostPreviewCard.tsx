@@ -12,6 +12,7 @@ export interface NotificationPostPreviewItem {
   saves?: number;
   interaction_avatars?: (string | null)[];
   boost_status?: 'pending' | 'reject' | 'success' | string | null;
+  boost_expires_at?: string | null;
 }
 
 // Mini PostCard Image Component - Layout เหมือน PhotoGrid แต่ขนาดเล็ก
@@ -320,13 +321,19 @@ export const NotificationPostPreviewCard = React.memo<{
       ? notification.interaction_total
       : (notification.likes || 0) + (notification.saves || 0);
 
+  const isBoostExpired =
+    notification.boost_status === 'success' &&
+    notification.boost_expires_at &&
+    new Date(notification.boost_expires_at).getTime() <= Date.now();
   const boostBadgeConfig =
     notification.boost_status === 'pending'
-      ? { text: 'ລະບົບກຳລັງກວດສອບໂຄສະນາ', bg: '#fffbeb', border: '#fcd34d', color: '#92400e' }
+      ? { text: 'ກຳລັງກວດສອບ', bg: '#fffbeb', border: '#fcd34d', color: '#92400e' }
       : notification.boost_status === 'reject'
-        ? { text: 'ໂຄສະນາຖືກປະຕິເສດ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
+        ? { text: 'ຖືກປະຕິເສດ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
         : notification.boost_status === 'success'
-          ? { text: 'ໂຄສະນາໄດ້ຮັບການອະນຸມັດແລ້ວ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
+          ? isBoostExpired
+            ? { text: 'ໂຄສະນາຫມົດອາຍຸ', bg: '#f3f4f6', border: '#d1d5db', color: '#4b5563' }
+            : { text: 'ກຳລັງໂຄສະນາ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
           : null;
 
   return (
@@ -399,7 +406,8 @@ export const NotificationPostPreviewCard = React.memo<{
           <AvatarGroup avatars={notification.interaction_avatars || []} totalCount={interactionTotal} />
         </div>
         {boostBadgeConfig && (
-          <div style={{ marginTop: '8px' }}>
+          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: '#6b6b6b', fontWeight: 600 }}>ສະຖານະໂຄສະນາ:</span>
             <div
               style={{
                 display: 'inline-block',

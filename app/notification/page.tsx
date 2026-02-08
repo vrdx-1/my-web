@@ -6,8 +6,9 @@ import { EmptyState } from '@/components/EmptyState';
 import { LAO_FONT } from '@/utils/constants';
 import { PageSpinner } from '@/components/LoadingSpinner';
 import { NotificationPostPreviewCard } from '../../components/NotificationPostPreviewCard';
+import { fetchNotificationFeed } from '@/utils/notificationFeed';
 
-interface NotificationItem {
+export interface NotificationItem {
   id: string;
   post_id: string;
   type: string;
@@ -23,6 +24,7 @@ interface NotificationItem {
   interaction_avatars?: (string | null)[];
   interaction_total?: number;
   boost_status?: 'pending' | 'reject' | 'success' | string | null;
+  boost_expires_at?: string | null;
 }
 
 // Helper function to format time ago
@@ -137,115 +139,23 @@ export default function NotificationPage() {
     setLoading(true);
     const clearedMap = clearedPostMapRef.current;
     try {
-      const { data, error } = await supabase.rpc('get_notifications_feed', {
-        p_owner_id: userId,
-      });
-
-      if (error) {
-        console.error('Supabase Error:', error);
-        throw error;
-      }
-
-      if (data) {
-        try {
-          if (data.length > 0) {
-            await supabase
-              .from('notification_reads')
-              .upsert(
-                data.map((n: any) => ({
-                  user_id: userId,
-                  notification_id: n.id,
-                })),
-                { onConflict: 'user_id,notification_id' }
-              );
-          }
-        } catch {
-          // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
+      const { list, rawFeed } = await fetchNotificationFeed(userId, clearedMap);
+      try {
+        if (rawFeed.length > 0) {
+          await supabase
+            .from('notification_reads')
+            .upsert(
+              rawFeed.map((n: any) => ({
+                user_id: userId,
+                notification_id: n.id,
+              })),
+              { onConflict: 'user_id,notification_id' }
+            );
         }
-
-        const formatted: NotificationItem[] = (data as any[]).map((item) => ({
-          id: item.id,
-          type: item.type,
-          post_id: item.post_id,
-          created_at: item.created_at,
-          sender_name: item.username || 'User',
-          sender_avatar: item.avatar_url,
-          post_caption: item.car_data?.caption || '',
-          post_images: item.car_data?.images || [],
-          likes: item.likes_count || 0,
-          saves: item.saves_count || 0,
-          interaction_avatars: item.interaction_avatars || [],
-          interaction_total: item.interaction_total || 0,
-        }));
-
-        const perPost = new Map<string, { notif: NotificationItem; count: number }>();
-        formatted.forEach((notif) => {
-          const existing = perPost.get(notif.post_id);
-          const clearedAt = clearedMap[notif.post_id];
-          const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
-          const notifTime = new Date(notif.created_at).getTime();
-          const isNewForUser = notifTime > clearedTime;
-
-          if (!existing) {
-            perPost.set(notif.post_id, {
-              notif,
-              count: isNewForUser ? 1 : 0,
-            });
-          } else {
-            const existingDate = new Date(existing.notif.created_at).getTime();
-            if (notifTime > existingDate) {
-              existing.notif = notif;
-            }
-            if (isNewForUser) {
-              existing.count += 1;
-            }
-          }
-        });
-
-        const uniqueList: NotificationItem[] = Array.from(perPost.values())
-          .map(({ notif, count }) => ({
-            ...notif,
-            notification_count: count,
-          }))
-          .sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-          );
-
-        try {
-          const postIds = uniqueList.map((n) => n.post_id);
-          if (postIds.length > 0) {
-            const { data: boostsData, error: boostsError } = await supabase
-              .from('post_boosts')
-              .select('post_id, status, created_at')
-              .in('post_id', postIds)
-              .order('created_at', { ascending: false });
-
-            if (!boostsError && boostsData) {
-              const statusByPostId = new Map<string, string>();
-              (boostsData as any[]).forEach((b) => {
-                const pid = String(b.post_id);
-                if (!statusByPostId.has(pid)) {
-                  statusByPostId.set(pid, String(b.status));
-                }
-              });
-              setNotifications(
-                uniqueList.map((n) => ({
-                  ...n,
-                  boost_status: statusByPostId.get(String(n.post_id)) ?? null,
-                }))
-              );
-            } else {
-              setNotifications(uniqueList);
-            }
-          } else {
-            setNotifications(uniqueList);
-          }
-        } catch {
-          setNotifications(uniqueList);
-        }
+      } catch {
+        // ถ้า mark read ล้มเหลว ไม่ต้องกระทบ UI
       }
+      setNotifications(list);
     } catch (err) {
       console.error('Fetch Error:', err);
       setNotifications([]);

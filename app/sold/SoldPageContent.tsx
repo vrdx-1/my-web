@@ -37,6 +37,7 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 // Shared Utils
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { fetchNotificationFeed } from '@/utils/notificationFeed';
 
 export function SoldPageContent() {
   const router = useRouter();
@@ -65,10 +66,13 @@ export function SoldPageContent() {
       setUnreadCount(0);
       return;
     }
-    const { data, error } = await supabase.rpc('get_unread_notifications_count', { p_user_id: String(userId) });
-    if (!error) {
-      const n = typeof data === 'number' ? data : Number(data);
-      setUnreadCount(Number.isFinite(n) ? n : 0);
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('notification_cleared_posts') : null;
+      const clearedMap: Record<string, string> = raw ? (() => { try { return JSON.parse(raw); } catch { return {}; } })() : {};
+      const { totalUnread } = await fetchNotificationFeed(userId, clearedMap);
+      setUnreadCount(totalUnread);
+    } catch {
+      setUnreadCount(0);
     }
   }, [homeData.session]);
 

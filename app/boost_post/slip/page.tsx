@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { BOOST_PACKAGES } from "@/data/boostPackages";
 import { useBoostSlip } from "../BoostSlipContext";
+import { compressImage } from "@/utils/imageCompression";
 
 function BoostSlipPageContent() {
   const router = useRouter();
@@ -78,10 +79,11 @@ function BoostSlipPageContent() {
         return;
       }
 
-      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${postId}.jpg`;
+      const compressedFile = await compressImage(file, 1200, 0.7);
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${postId}.webp`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("slips")
-        .upload(fileName, file);
+        .upload(fileName, compressedFile);
 
       if (uploadError) throw uploadError;
 
