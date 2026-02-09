@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_FONT } from '@/utils/constants';
@@ -10,6 +10,7 @@ import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 export default function Profile() {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
@@ -25,6 +26,7 @@ export default function Profile() {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [session, setSession] = useState<any>(null);
+  const [enterPhase, setEnterPhase] = useState<'offscreen' | 'animating' | 'entered'>('offscreen');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,6 +57,30 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
+  // Slide-in animation for logged-in users (from right) - same pattern as viewing mode
+  // Slide-in only when opening. Closing remains instant (unmount).
+  useEffect(() => {
+    setEnterPhase('offscreen');
+  }, [pathname]);
+
+  // ให้ paint เฟรม offscreen (ด้านขวา) ก่อน แล้วค่อย slide เข้ามา
+  useEffect(() => {
+    if (!session) return;
+    if (enterPhase !== 'offscreen') return;
+
+    let tId: ReturnType<typeof window.setTimeout>;
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setEnterPhase('animating');
+        tId = window.setTimeout(() => setEnterPhase('entered'), 220);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (tId != null) window.clearTimeout(tId);
+    };
+  }, [session, enterPhase]);
+
   // ปิดการ scroll ของหน้านี้
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
@@ -63,6 +89,8 @@ export default function Profile() {
       document.body.style.overflow = prevOverflow;
     };
   }, []);
+
+  const shouldAnimateProfile = !!session;
 
   // ฟังก์ชันช่วยบันทึกข้อมูลลง localStorage ทันทีที่มีการเปลี่ยนแปลง
   const updatePendingData = (updates: any) => {
@@ -99,22 +127,38 @@ export default function Profile() {
     }
   };
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: LAO_FONT }}>
-      <PageSpinner />
-    </div>
-  );
+  if (loading)
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: LAO_FONT }}>
+        <PageSpinner />
+      </div>
+    );
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
+    <main
+      style={{
+        maxWidth: '600px',
+        margin: '0 auto',
+        background: '#fff',
+        minHeight: '100vh',
+        fontFamily: LAO_FONT,
+        transform: shouldAnimateProfile ? `translateX(${enterPhase === 'offscreen' ? '100vw' : '0px'})` : 'none',
+        transition: shouldAnimateProfile && enterPhase === 'animating' ? 'transform 220ms ease-out' : 'none',
+      }}
+    >
       
       {/* Header */}
       <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
-        <button 
+        <button
           onClick={() => {
-            if (!session) localStorage.removeItem('pending_registration');
-            router.push('/');
-          }} 
+            if (!session) {
+              localStorage.removeItem('pending_registration');
+              router.push('/');
+            } else {
+              // ผู้ใช้ที่ลงทะเบียนแล้ว: เปลี่ยนหน้าทันทีเหมือน viewing mode (ไม่ต้อง slide ออก)
+              router.push('/');
+            }
+          }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

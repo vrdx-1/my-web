@@ -28,8 +28,8 @@ export const LAO_PROVINCES = [
 ] as const;
 
 // Pagination Constants
-export const PAGE_SIZE = 12;
-export const PREFETCH_COUNT = 10;
+export const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว
+export const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items เพื่อให้ smooth เหมือน Facebook
 
 // Post Status Types
 export const POST_STATUS = {

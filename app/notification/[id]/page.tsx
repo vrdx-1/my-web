@@ -47,6 +47,12 @@ export default function NotificationDetail() {
  const [boostInfo, setBoostInfo] = useState<{ status: string; expiresAt: string | null } | null>(null);
  const [showBoostDetails, setShowBoostDetails] = useState(false);
 
+ const isBoostExpired =
+   !!boostInfo &&
+   boostInfo.status === 'success' &&
+   !!boostInfo.expiresAt &&
+   new Date(boostInfo.expiresAt).getTime() <= Date.now();
+
  // Use shared hooks
  const menu = useMenu();
  const viewingPostHook = useViewingPost();
@@ -373,8 +379,8 @@ export default function NotificationDetail() {
       />
      )}
 
-     {/* Boost ad details tab (for posts that ever requested boosting) */}
-     {boostInfo && (
+    {/* Boost ad details tab (for posts that ever requested boosting andยังไม่หมดอายุ) */}
+    {boostInfo && !isBoostExpired && (
        <div style={{ padding: '12px 15px 0 15px', display: 'flex', justifyContent: 'center' }}>
          <button
            type="button"

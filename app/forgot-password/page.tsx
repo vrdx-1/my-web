@@ -115,7 +115,7 @@ export default function ForgotPassword() {
             textAlign: 'center',
           }}
         >
-          ໃສ່ອີເມວທີ່ໃຊ້ລົງທະບຽນ ເຮົາຈະສົ່ງລະຫັດໄປໃຫ້ທ່ານ
+          ໃສ່ອີເມວທີ່ທ່ານໃຊ້ລົງທະບຽນ ລະບົບຈະສົ່ງ OTP ໄປໃຫ້ທ່ານ
         </p>
 
         {message.text && (

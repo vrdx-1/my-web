@@ -36,7 +36,7 @@ export const useInfiniteScroll = ({
         },
         { 
           threshold,
-          rootMargin: '100px' // Preload 100px before element is visible
+          rootMargin: '200px' // เพิ่ม rootMargin เพื่อ preload ล่วงหน้ามากขึ้น ให้รู้สึก smooth กว่า
         }
       );
       

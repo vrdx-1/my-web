@@ -48,9 +48,18 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, loadingMore, disableScrollHide]);
 
+  // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
+  const wrappedSetIsHeaderVisible = (visible: boolean) => {
+    if (disableScrollHide) {
+      // ไม่ให้เปลี่ยนค่า header เมื่อ disableScrollHide เป็น true
+      return;
+    }
+    setIsHeaderVisible(visible);
+  };
+
   return {
-    isHeaderVisible,
+    isHeaderVisible: disableScrollHide ? true : isHeaderVisible,
     lastScrollY,
-    setIsHeaderVisible,
+    setIsHeaderVisible: wrappedSetIsHeaderVisible,
   };
 }

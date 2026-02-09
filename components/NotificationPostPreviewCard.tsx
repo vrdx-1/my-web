@@ -358,32 +358,9 @@ export const NotificationPostPreviewCard = React.memo<{
         e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
       }}
     >
-      {/* Post Image + per-post notification count badge */}
+      {/* Post Image */}
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <MiniPostImage images={notification.post_images || []} />
-        {typeof notification.notification_count === 'number' && notification.notification_count > 0 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '-4px',
-              right: '-4px',
-              minWidth: '16px',
-              height: '16px',
-              padding: '0 4px',
-              borderRadius: '999px',
-              background: '#e0245e',
-              color: '#fff',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              lineHeight: '16px',
-            }}
-          >
-            {notification.notification_count > 99 ? '99+' : notification.notification_count}
-          </div>
-        )}
       </div>
 
       {/* Notification Content */}

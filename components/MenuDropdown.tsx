@@ -85,7 +85,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             </div>
             {showBoost && (
               <div onClick={onBoost} style={commonStyles.menuItemLast}>
-                Boost
+                boost ໂພສ
               </div>
             )}
           </>

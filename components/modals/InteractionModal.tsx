@@ -1,10 +1,12 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Avatar } from '../Avatar';
 import { LoadingSpinner } from '../LoadingSpinner';
 import { EmptyState } from '../EmptyState';
 import { GuestAvatarIcon } from '../GuestAvatarIcon';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 
 interface InteractionModalProps {
   show: boolean;
@@ -41,7 +43,43 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
   onSheetTouchEnd,
   onFetchInteractions,
 }) => {
-  if (!show || !postId) return null;
+  const shouldHide = !show || !postId;
+
+  // Lazy load รายชื่อใน bottom sheet ให้ใช้ pattern เดียวกับ feed หน้า Home
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
+
+  // รีเซ็ตจำนวนที่แสดงเมื่อโพสต์หรือประเภทเปลี่ยน หรือจำนวนผู้ใช้เปลี่ยน
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [postId, type, interactionUsers.length]);
+
+  const hasMore = useMemo(
+    () => visibleCount < interactionUsers.length,
+    [visibleCount, interactionUsers.length]
+  );
+
+  const { lastElementRef } = useInfiniteScroll({
+    loadingMore: localLoadingMore,
+    hasMore,
+    onLoadMore: () => {
+      if (localLoadingMore) return;
+      if (!hasMore) return;
+      setLocalLoadingMore(true);
+      setVisibleCount(prev =>
+        Math.min(prev + PREFETCH_COUNT, interactionUsers.length)
+      );
+      setLocalLoadingMore(false);
+    },
+    threshold: 0.2,
+  });
+
+  const visibleUsers = useMemo(
+    () => interactionUsers.slice(0, visibleCount),
+    [interactionUsers, visibleCount]
+  );
+
+  if (shouldHide) return null;
 
   return (
     <div 
@@ -142,9 +180,15 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
               <LoadingSpinner />
             </div>
-          ) : interactionUsers.length > 0 ? (
-            interactionUsers.map((u, i) => (
-              <div key={i} style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          ) : visibleUsers.length > 0 ? (
+            visibleUsers.map((u, i) => {
+              const isLast = i === visibleUsers.length - 1;
+              return (
+              <div
+                key={i}
+                ref={isLast ? lastElementRef : undefined}
+                style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}
+              >
                 {u.avatar_url ? (
                   <Avatar avatarUrl={u.avatar_url} size={40} session={null} />
                 ) : (
@@ -170,7 +214,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
                   </div>
                 </div>
               </div>
-            ))
+            );})
           ) : (
             <EmptyState message="ບໍ່ມີລາຍຊື່" variant="minimal" />
           )}

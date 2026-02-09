@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
@@ -7,6 +7,8 @@ import { LAO_FONT } from '@/utils/constants';
 import { PageSpinner } from '@/components/LoadingSpinner';
 import { NotificationPostPreviewCard } from '../../components/NotificationPostPreviewCard';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 
 export interface NotificationItem {
   id: string;
@@ -104,6 +106,40 @@ export default function NotificationPage() {
   const [clearedMapReady, setClearedMapReady] = useState(false);
   const clearedPostMapRef = useRef<Record<string, string>>({});
 
+  // --- Lazy load notification list: ใช้ pattern เดียวกับ feed หน้า Home ---
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
+
+  // รีเซ็ตจำนวนที่แสดงเมื่อชุด notification เปลี่ยน (fetch ใหม่)
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [notifications.length]);
+
+  const hasMore = useMemo(
+    () => visibleCount < notifications.length,
+    [visibleCount, notifications.length]
+  );
+
+  const { lastElementRef } = useInfiniteScroll({
+    loadingMore: localLoadingMore,
+    hasMore,
+    onLoadMore: () => {
+      if (localLoadingMore) return;
+      if (!hasMore) return;
+      setLocalLoadingMore(true);
+      setVisibleCount(prev =>
+        Math.min(prev + PREFETCH_COUNT, notifications.length)
+      );
+      setLocalLoadingMore(false);
+    },
+    threshold: 0.2,
+  });
+
+  const visibleNotifications = useMemo(
+    () => notifications.slice(0, visibleCount),
+    [notifications, visibleCount]
+  );
+
   // อัปเดต ref ให้ตรงกับ state เสมอ (ให้ fetch อ่านค่าล่าสุดได้โดยไม่ต้อง refetch เมื่อกดดู)
   useEffect(() => {
     clearedPostMapRef.current = clearedPostMap;
@@ -173,7 +209,18 @@ export default function NotificationPage() {
           data: { session },
         } = await supabase.auth.getSession();
         if (session) {
-          fetchNotifications(session.user.id);
+          await fetchNotifications(session.user.id);
+          // ผู้ใช้เข้า "หน้าแจ้งเตือน" แล้ว ให้ถือว่า bell บนหน้าโฮมถูกเคลียร์ถึงเวลานี้
+          if (typeof window !== 'undefined') {
+            try {
+              window.localStorage.setItem(
+                'notification_home_last_opened_at',
+                new Date().toISOString()
+              );
+            } catch {
+              // ถ้า localStorage ใช้ไม่ได้ ไม่ต้องกระทบ logic เดิม
+            }
+          }
         } else {
           setLoading(false);
         }
@@ -262,21 +309,31 @@ export default function NotificationPage() {
         </div>
       ) : (
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {notifications.map((notification) => {
+          {visibleNotifications.map((notification, index) => {
             // ถ้ามีตัวเลขแจ้งเตือน (notification_count > 0) ให้ถือว่ายัง "มีแจ้งเตือนใหม่" → ใช้พื้นหลังแบบยังไม่อ่าน
             const hasNewNotifications =
               typeof notification.notification_count === 'number' &&
               notification.notification_count > 0;
             const isReadStyle = !hasNewNotifications;
-            return (
-            <NotificationPostPreviewCard
-              key={notification.id}
-              notification={notification}
-              isReadStyle={isReadStyle}
-              timeAgoText={formatTimeAgo(notification.created_at)}
-              onClick={() => handleNotificationClick(notification)}
-            />
-          )})}
+            const isLast = index === visibleNotifications.length - 1;
+            const card = (
+              <NotificationPostPreviewCard
+                key={notification.id}
+                notification={notification}
+                isReadStyle={isReadStyle}
+                timeAgoText={formatTimeAgo(notification.created_at)}
+                onClick={() => handleNotificationClick(notification)}
+              />
+            );
+            if (isLast) {
+              return (
+                <div key={notification.id} ref={lastElementRef}>
+                  {card}
+                </div>
+              );
+            }
+            return card;
+          })}
         </div>
       )}
     </main>

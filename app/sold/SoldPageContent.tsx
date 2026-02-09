@@ -119,14 +119,14 @@ export function SoldPageContent() {
   const fileUpload = useFileUpload();
 
   // Use header scroll hook (ให้ header ซ่อน/แสดงตามการเลื่อนเหมือนแท็บ ພ້ອມຂາຍ)
-  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore });
+  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore, disableScrollHide: true });
 
   // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.1,
+    threshold: 0.2, // ลด threshold เพื่อให้ trigger เร็วขึ้นเล็กน้อย เมื่อเห็น 20% ของ element สุดท้าย
   });
 
   // Use shared post interactions hook

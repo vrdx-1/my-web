@@ -145,18 +145,6 @@ export const PostCard = React.memo<PostCardProps>(({
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
             {post.is_boosted ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
-                <span style={{ fontSize: '13px', color: '#4a4d52' }}>Ad</span>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '5px',
-                    height: '5px',
-                    borderRadius: '50%',
-                    backgroundColor: '#9ca3af',
-                    margin: '0 6px',
-                    transform: 'translateY(1px)',
-                  }}
-                />
                 <span style={{ color: '#4a4d52' }}>{formatTime(post.created_at)}</span>
                 <span
                   style={{
@@ -170,6 +158,18 @@ export const PostCard = React.memo<PostCardProps>(({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: '#9ca3af',
+                    margin: '0 6px',
+                    transform: 'translateY(1px)',
+                  }}
+                />
+                <span style={{ fontSize: '13px', color: '#4a4d52' }}>Ad</span>
               </span>
             ) : (
               <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
@@ -368,13 +368,13 @@ export const PostCard = React.memo<PostCardProps>(({
                   onTogglePostStatus(post.id, post.status);
                 }} 
                 style={{ 
-                  background: isSoldPost ? '#e4e6eb' : '#e0245e', 
+                  background: '#e0245e', 
                   padding: '4px 12px', 
                   minHeight: '28px',
                   lineHeight: '18px',
                   borderRadius: '10px', 
                   border: 'none', 
-                  color: isSoldPost ? '#666' : '#fff', 
+                  color: '#fff', 
                   fontWeight: 'bold', 
                   fontSize: '12px', 
                   cursor: 'pointer',
@@ -391,13 +391,13 @@ export const PostCard = React.memo<PostCardProps>(({
                     setShowSoldInfo(true);
                   }}
                   style={{
-                    background: '#e4e6eb',
+                    background: '#e0245e',
                     padding: '4px 12px',
                     minHeight: '28px',
                     lineHeight: '18px',
                     borderRadius: '10px',
                     border: 'none',
-                    color: '#666',
+                    color: '#fff',
                     fontWeight: 'bold',
                     fontSize: '12px',
                     display: 'flex',

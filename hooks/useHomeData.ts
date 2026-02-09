@@ -269,8 +269,8 @@ interface UseHomeDataReturn {
   refreshData: () => Promise<void>;
 }
 
-const PAGE_SIZE = 10;
-const PREFETCH_COUNT = 10;
+const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว
+const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items เพื่อให้ smooth เหมือน Facebook
 
 export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const [posts, setPosts] = useState<any[]>([]);
@@ -429,6 +429,23 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
             orderedPostsData = postsData.filter((p: any) =>
               captionHasReasonableMatch(p?.caption ?? '', searchTermsForFilter)
             );
+          }
+        } else {
+          // กรณีไม่มีคำค้น (หน้า Home ปกติ): ถ้าเพิ่งโพสต์สำเร็จ ให้เลื่อนโพสต์นั้นขึ้นมาไว้บนสุดหนึ่งครั้ง
+          if (typeof window !== 'undefined') {
+            try {
+              const justPostedId = window.localStorage.getItem('just_posted_post_id');
+              if (justPostedId) {
+                const idx = orderedPostsData.findIndex((p: any) => String(p.id) === justPostedId);
+                if (idx > -1) {
+                  const [justPost] = orderedPostsData.splice(idx, 1);
+                  orderedPostsData.unshift(justPost);
+                }
+                window.localStorage.removeItem('just_posted_post_id');
+              }
+            } catch {
+              // ถ้า localStorage ใช้งานไม่ได้ ให้ข้ามโดยไม่กระทบลำดับ algorithm เดิม
+            }
           }
         }
         const stillCurrent = String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch;

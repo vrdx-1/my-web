@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Avatar } from '../Avatar';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 
 interface ViewingPostModalProps {
   viewingPost: any | null;
@@ -33,10 +35,51 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   onTouchEnd,
   onImageClick,
 }) => {
-  if (!viewingPost) return null;
+  const shouldHide = !viewingPost;
 
-  const status = getOnlineStatus(viewingPost.profiles?.last_seen);
+  const status = getOnlineStatus(viewingPost?.profiles?.last_seen);
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'animating' | 'entered'>('offscreen');
+
+  const images: string[] = Array.isArray(viewingPost?.images) ? viewingPost.images : [];
+
+  // Lazy load รูปใน viewing mode ให้ใช้ pattern เดียวกับ feed หน้า Home
+  const initialVisible = useMemo(
+    () => Math.max(PAGE_SIZE, Math.min((initialImageIndex ?? 0) + 1, images.length || 0)),
+    [initialImageIndex, images.length]
+  );
+  const [visibleCount, setVisibleCount] = useState<number>(initialVisible || PAGE_SIZE);
+  const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
+
+  useEffect(() => {
+    // เมื่อเปลี่ยนโพสต์ หรือ index ที่เปิด ให้แน่ใจว่าเห็นรูปที่เปิดแน่ ๆ
+    const nextInitialVisible = Math.max(PAGE_SIZE, Math.min((initialImageIndex ?? 0) + 1, images.length || 0));
+    setVisibleCount(nextInitialVisible || PAGE_SIZE);
+  }, [viewingPost?.id, initialImageIndex, images.length]);
+
+  const hasMore = useMemo(
+    () => visibleCount < images.length,
+    [visibleCount, images.length]
+  );
+
+  const { lastElementRef } = useInfiniteScroll({
+    loadingMore: localLoadingMore,
+    hasMore,
+    onLoadMore: () => {
+      if (localLoadingMore) return;
+      if (!hasMore) return;
+      setLocalLoadingMore(true);
+      setVisibleCount(prev =>
+        Math.min(prev + PREFETCH_COUNT, images.length)
+      );
+      setLocalLoadingMore(false);
+    },
+    threshold: 0.2,
+  });
+
+  const visibleImages = useMemo(
+    () => images.slice(0, visibleCount),
+    [images, visibleCount]
+  );
 
   // Slide-in only when opening. Closing remains instant (unmount).
   useEffect(() => {
@@ -64,7 +107,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   // 1) แสดงรูปที่คลิกก่อน  2) รูปนั้นอยู่ตรงกลางจอ ทุกครั้งรวมหลัง refresh (รอ layout แล้ว scroll, ไม่เจอ element ให้ retry)
   useEffect(() => {
     if (enterPhase !== 'entered') return;
-    const idx = Math.min(initialImageIndex, (viewingPost.images?.length ?? 1) - 1);
+    const idx = Math.min(initialImageIndex, (images.length ?? 1) - 1);
     const scrollToImage = () => {
       const el = document.getElementById(`viewing-image-${idx}`);
       if (el) {
@@ -92,7 +135,9 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
       if (t1 != null) clearTimeout(t1);
       if (t2 != null) clearTimeout(t2);
     };
-  }, [enterPhase, initialImageIndex, viewingPost?.images?.length]);
+  }, [enterPhase, initialImageIndex, images.length]);
+
+  if (shouldHide) return null;
 
   return (
     <>
@@ -163,18 +208,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
               {viewingPost.is_boosted ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
-                  <span style={{ fontSize: '12px', color: '#4a4d52' }}>Ad</span>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: '5px',
-                      height: '5px',
-                      borderRadius: '50%',
-                      backgroundColor: '#9ca3af',
-                      margin: '0 6px',
-                      transform: 'translateY(1px)',
-                    }}
-                  />
                   <span style={{ color: '#4a4d52' }}>{formatTime(viewingPost.created_at)}</span>
                   <span
                     style={{
@@ -188,6 +221,18 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                     }}
                   />
                   <span style={{ color: '#4a4d52' }}>{viewingPost.province}</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      backgroundColor: '#9ca3af',
+                      margin: '0 6px',
+                      transform: 'translateY(1px)',
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#4a4d52' }}>Ad</span>
                 </span>
               ) : (
                 <>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>
@@ -195,10 +240,13 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </div>
           </div>
         </div>
-        {viewingPost.images.map((img: string, idx: number) => (
+        {visibleImages.map((img: string, idx: number) => {
+          const isLast = idx === visibleImages.length - 1;
+          return (
           <div 
             key={idx} 
             id={`viewing-image-${idx}`} 
+            ref={isLast ? lastElementRef : undefined}
             style={{ 
               position: 'relative', 
               background: '#fff', 
@@ -215,7 +263,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                 src={img} 
                 loading={idx === 0 ? 'eager' : 'lazy'}
                 decoding="async"
-                onClick={() => onImageClick(viewingPost.images, idx)} 
+                onClick={() => onImageClick(images, idx)} 
                 style={{ 
                   width: '100%', 
                   height: 'auto', 
@@ -227,7 +275,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
               />
             </div>
           </div>
-        ))}
+        );})}
       </div>
       </div>
     </>

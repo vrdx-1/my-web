@@ -130,6 +130,15 @@ export function useCreatePostUpload({
         localStorage.setItem('my_guest_posts', JSON.stringify(myPosts));
       }
 
+      // บันทึก ID ของโพสต์ที่เพิ่งสร้าง เพื่อให้หน้า Home ดึงมาแสดงไว้บนสุดชั่วคราว
+      if (typeof window !== 'undefined' && data && data.length > 0) {
+        try {
+          window.localStorage.setItem('just_posted_post_id', String(data[0].id));
+        } catch {
+          // ถ้า localStorage ใช้งานไม่ได้ ให้ข้ามโดยไม่กระทบ flow เดิม
+        }
+      }
+
       // บันทึกแขวงที่เลือกไว้ล่าสุดใน localStorage
       if (typeof window !== 'undefined' && province) {
         localStorage.setItem('last_selected_province', JSON.stringify(province));

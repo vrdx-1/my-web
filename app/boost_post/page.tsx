@@ -82,15 +82,8 @@ function BoostPostContent() {
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-          const currentStatus = data[0].status;
-          console.log("พบข้อมูลสถานะในระบบ:", currentStatus);
-          setDbStatus(currentStatus);
-          setExpiresAt((data[0] as any)?.expires_at ?? null);
-          setJustSubmitted(false);
-          setStep(3); 
-        } else {
-          console.log("ไม่พบข้อมูลการ Boost เดิม");
+        const handleNoExistingBoost = () => {
+          console.log("ไม่พบข้อมูลการ Boost เดิม หรือ Boost เดิมหมดอายุแล้ว");
           const fromSlip = searchParams.get("from_slip");
           const pkg = searchParams.get("pkg");
           const returnPkg =
@@ -124,6 +117,28 @@ function BoostPostContent() {
           } else if (!cameBackFromSlipRef.current) {
             setStep(1);
           }
+        };
+
+        if (data && data.length > 0) {
+          const latest = data[0] as any;
+          const currentStatus = latest.status;
+          const latestExpiresAt: string | null = latest.expires_at ?? null;
+          const isBoostExpired =
+            currentStatus === "success" &&
+            !!latestExpiresAt &&
+            new Date(latestExpiresAt).getTime() <= Date.now();
+
+          if (isBoostExpired) {
+            handleNoExistingBoost();
+          } else {
+            console.log("พบข้อมูลสถานะในระบบ:", currentStatus);
+            setDbStatus(currentStatus);
+            setExpiresAt(latestExpiresAt);
+            setJustSubmitted(false);
+            setStep(3); 
+          }
+        } else {
+          handleNoExistingBoost();
         }
       } catch (err) {
         console.error("เกิดข้อผิดพลาด:", err);
