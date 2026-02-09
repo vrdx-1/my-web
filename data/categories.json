@@ -31,11 +31,9 @@
       "categoryIds": ["pickup"]
     },
     {
-      "terms": ["hilux", "ไฮลักซ์", "ໄຮລັກ"],
-      "categoryIds": ["hilux"]
     },
     {
-      "terms": ["ລົດໄຟຟ້າ", "ລົດອີວີ", "ລົດ EV", "รถไฟฟ้า", "รถอีวี"],
+      "terms": ["ໄຟຟ້າ", "ອີວີ", "ລົດ EV", "รถไฟฟ้า", "รถอีวี"],
       "categoryIds": ["electric"]
     }
   ],
@@ -50,27 +48,19 @@
           "id": "sedan",
           "name": "รถเก๋ง",
           "nameEn": "Sedan",
-          "nameLo": "ລົດເກັງ",
+          "nameLo": "ເກັງ",
           "description": "รถทรงเก๋งทั่วไป",
-          "descriptionLo": "ລົດເກັງທົ່ວໄປ",
           "descriptionEn": "Sedan"
         },
         {
-          "id": "suv",
-          "name": "รถอเนกประสงค์",
-          "nameEn": "SUV",
-          "nameLo": "ລົດອະເນກປະສົງ",
-          "description": "รถทรงสูง อเนกประสงค์",
-          "descriptionLo": "ລົດຊົງສູງ ອະເນກປະສົງ",
-          "descriptionEn": "Sports utility vehicle"
+          "id": "suv"
         },
         {
           "id": "pickup",
           "name": "รถกระบะ",
           "nameEn": "Pickup",
-          "nameLo": "ລົດກະບະ",
+          "nameLo": "ກະບະ",
           "description": "รถกระบะเพื่อบรรทุก/ขนของ",
-          "descriptionLo": "ລົດກະບະ ເພື່ອບັນທຸກ/ຂົນຂອງ",
           "descriptionEn": "Pickup truck"
         },
         {
@@ -86,7 +76,7 @@
           "id": "hybrid",
           "name": "รถไฮบริด",
           "nameEn": "Hybrid",
-          "nameLo": "ລົດໄຮບຣິດ",
+          "nameLo": "ໄຮບຣິດ",
           "description": "น้ำมัน + ไฟฟ้า",
           "descriptionLo": "ນ້ຳມັນ + ໄຟຟ້າ",
           "descriptionEn": "Hybrid (fuel + electric)"
@@ -95,18 +85,16 @@
           "id": "electric",
           "name": "รถไฟฟ้า",
           "nameEn": "Electric",
-          "nameLo": "ລົດໄຟຟ້າ",
+          "nameLo": "ໄຟຟ້າ",
           "description": "ขับเคลื่อนด้วยไฟฟ้า 100%",
-          "descriptionLo": "ຂັບເຄື່ອນດ້ວຍໄຟຟ້າ 100%",
           "descriptionEn": "Fully electric vehicle"
         },
         {
           "id": "sport",
           "name": "รถสปอร์ต",
           "nameEn": "Sport",
-          "nameLo": "ລົດສະປອດ",
+          "nameLo": "ສະປອດ",
           "description": "รถเน้นสมรรถนะ/ทรงสปอร์ต",
-          "descriptionLo": "ລົດເນັ້ນສົມັດທະນະ/ຊົງສະປອດ",
           "descriptionEn": "Sports car"
         },
         {
@@ -115,43 +103,42 @@
           "nameEn": "Supercar",
           "nameLo": "ລົດຊຸບເປີຄາ",
           "description": "รถสมรรถนะสูงพิเศษ",
-          "descriptionLo": "ລົດສະມັດຖະນະສູງພິເສດ",
           "descriptionEn": "High-performance supercar"
         },
         {
           "id": "van",
           "name": "รถตู้",
           "nameEn": "Van",
-          "nameLo": "ລົດຕູ້",
+          "nameLo": "ຕູ້",
           "description": "รถตู้หรือรถแวนหลายที่นั่ง",
-          "descriptionLo": "ລົດຕູ້ ຫຼື ລົດແວນຫຼາຍບ່ອນນັ່ງ",
+          "descriptionLo": "ຕູ້ ຫຼື ແວນຫຼາຍບ່ອນນັ່ງ",
           "descriptionEn": "Van"
         },
         {
           "id": "bus",
           "name": "รถบัส (รถเมล์)",
           "nameEn": "Bus",
-          "nameLo": "ລົດເມ",
+          "nameLo": "ເມ",
           "description": "รถโดยสารขนาดใหญ่",
-          "descriptionLo": "ລົດເມ/ລົດບັສ",
+          "descriptionLo": "ເມ/ບັສ",
           "descriptionEn": "Bus"
         },
         {
           "id": "truck",
           "name": "รถบรรทุก",
           "nameEn": "Truck",
-          "nameLo": "ລົດບັນທຸກ",
+          "nameLo": "ບັນທຸກ",
           "description": "รถบรรทุกขนาดใหญ่",
-          "descriptionLo": "ລົດບັນທຸກ",
+          "descriptionLo": "ບັນທຸກ",
           "descriptionEn": "Truck"
         },
         {
           "id": "luxury",
           "name": "รถหรู",
           "nameEn": "Luxury car",
-          "nameLo": "ລົດຫລູ",
+          "nameLo": "ຫລູ",
           "description": "รถยนต์ระดับหรู",
-          "descriptionLo": "ລົດຍົນລະດັບຫລູ",
+          "descriptionLo": "ຫລູ",
           "descriptionEn": "Luxury car"
         }
       ]

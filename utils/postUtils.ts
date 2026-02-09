@@ -454,7 +454,7 @@ export function expandWithoutBrandAliases(query: string): string[] {
   const queryNorm = normalizeCarSearch(query);
   if (BRAND_NAMES_SET.has(normalizeForFallback(query))) return expanded;
 
-  // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ใส่เฉพาะชื่อหมวด + ชื่อรุ่นครบ 3 ภาษา + searchNames (ไม่แยก token จากชื่อเต็ม เพื่อไม่ให้คำเช่น Ford ไป match โพสอื่น)
+  // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ส่งเฉพาะชื่อรุ่นจากพจนานุกรม (data/brands) ครบ 3 ภาษา + searchNames ไม่ใส่ชื่อหมวดจาก categories
   const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(queryNorm);
   if (categoryIds && categoryIds.size > 0) {
     const currentCids = new Set(Array.from(categoryIds).map(String));
@@ -466,20 +466,7 @@ export function expandWithoutBrandAliases(query: string): string[] {
       return true;
     };
     const out = new Set<string>();
-    out.add(query);
-    const groups = (categoriesData as any).categoryGroups ?? [];
-    const queryFallback = normalizeForFallback(query);
     for (const cid of categoryIds) {
-      out.add(String(cid));
-      for (const g of groups) {
-        for (const cat of g.categories ?? []) {
-          if (String(cat.id) !== String(cid)) continue;
-          if (cat.name) out.add(String(cat.name).trim());
-          if (cat.nameEn) out.add(String(cat.nameEn).trim());
-          if (cat.nameLo) out.add(String(cat.nameLo).trim());
-          break;
-        }
-      }
       for (const brand of carsData.brands ?? []) {
         for (const model of brand.models ?? []) {
           const modelCats = (model.categoryIds ?? []) as string[];
@@ -503,7 +490,7 @@ export function expandWithoutBrandAliases(query: string): string[] {
     }
     const filtered = Array.from(out).filter((term) => {
       const termNorm = normalizeForFallback(term);
-      return !BRAND_NAMES_SET.has(termNorm) || termNorm === queryFallback;
+      return !BRAND_NAMES_SET.has(termNorm);
     });
     return filtered.length > 0 ? filtered : [query];
   }

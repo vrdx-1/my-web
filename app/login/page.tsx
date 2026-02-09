@@ -139,6 +139,26 @@ export default function Login() {
               </button>
             </div>
 
+            {/* ລິ້ງສຳລັບຜູ້ໃຊ້ທີ່ລືມລະຫັດຜ່ານ */}
+            <button
+              type="button"
+              onClick={() => router.push('/forgot-password')}
+              style={{
+                alignSelf: 'flex-end',
+                marginTop: '4px',
+                marginBottom: '4px',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: '#1877f2',
+                fontSize: '14px',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
+            >
+              ລືມລະຫັດຜ່ານ?
+            </button>
+
             <button 
               type="submit" 
               disabled={loading}
