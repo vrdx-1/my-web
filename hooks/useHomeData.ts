@@ -9,6 +9,7 @@ import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_PROVINCES } from '@/utils/constants';
 import categoriesData from '@/data/categories.json';
 import { CATEGORY_MODELS } from '@/data/category-models';
+import carsData from '@/data';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -82,37 +83,33 @@ function buildCategoryAliasIndex() {
 
 const CATEGORY_INDEX = buildCategoryAliasIndex();
 
-/** รายการชื่อรุ่น (normalize แล้ว, กรอง noisy ออก) จากทุกหมวดยกเว้น SUV — ใช้กรองโพสเมื่อค้นหาหมวด SUV */
-const NON_SUV_MODEL_NAMES_NORMALIZED: string[] = (() => {
-  const out: string[] = [];
-  for (const [cid, names] of Object.entries(CATEGORY_MODELS)) {
-    if (cid === 'suv') continue;
-    if (Array.isArray(names)) {
-      for (const n of names) {
-        const s = String(n ?? '').trim();
-        if (!s) continue;
-        const norm = normalizeCaptionSearch(s);
-        if (!norm || norm.length < 2 || /^\d+$/.test(norm)) continue;
-        out.push(norm);
+// Helper: normalize สำหรับ fallback lookup (ใช้เช็กคำค้นว่าเป็นชื่อยี่ห้อหรือไม่)
+function normalizeForFallback(text: string): string {
+  return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// Helper: ข้อมูลยี่ห้อสำหรับตรวจว่าคำค้นเป็น brand หรือไม่ + ดึงชื่อยี่ห้อทุกภาษาอย่างรวดเร็ว
+const BRAND_NAMES_SET = new Set<string>();
+const BRAND_ALIAS_MAP = new Map<string, string[]>();
+
+(() => {
+  for (const brand of (carsData as any).brands ?? []) {
+    const en = String((brand as any).brandName ?? '').trim();
+    const th = String((brand as any).brandNameTh ?? '').trim();
+    const lo = String((brand as any).brandNameLo ?? '').trim();
+    const aliases = [en, th, lo].filter(Boolean);
+    if (aliases.length === 0) continue;
+
+    for (const name of aliases) {
+      const key = normalizeForFallback(name);
+      if (!key) continue;
+      BRAND_NAMES_SET.add(key);
+      if (!BRAND_ALIAS_MAP.has(key)) {
+        BRAND_ALIAS_MAP.set(key, aliases);
       }
     }
   }
-  return out;
 })();
-
-/**
- * เช็กว่า caption มีชื่อเต็มของรุ่นที่อยู่หมวดอื่น (ไม่ใช่ SUV) หรือไม่ — ใช้กรองโพสออกเมื่อค้นหาหมวด SUV
- */
-function captionContainsNonSuvModelName(caption: string): boolean {
-  const cap = normalizeCaptionSearch(caption);
-  if (!cap) return false;
-  for (const termNorm of NON_SUV_MODEL_NAMES_NORMALIZED) {
-    const idx = cap.indexOf(termNorm);
-    if (idx === -1) continue;
-    if (hasWordBoundary(cap, termNorm, idx)) return true;
-  }
-  return false;
-}
 
 /**
  * ดึงรายการชื่อรุ่นจาก data/category-models สำหรับหมวดที่ระบุ
@@ -306,6 +303,49 @@ interface UseHomeDataReturn {
 const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว
 const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items เพื่อให้ smooth เหมือน Facebook
 
+// Simple search result cache ต่อคำค้น (ฝั่ง frontend เท่านั้น)
+const SEARCH_CACHE_STORAGE_KEY = 'home_search_cache_v1';
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000; // เก็บผลค้นหาไว้ 5 นาที
+
+type SearchCacheEntry = { posts: any[]; hasMore: boolean; timestamp: number };
+
+function loadSearchCache(): Record<string, SearchCacheEntry> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(SEARCH_CACHE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, SearchCacheEntry>;
+    const now = Date.now();
+    const fresh: Record<string, SearchCacheEntry> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v && typeof v.timestamp === 'number' && now - v.timestamp <= SEARCH_CACHE_TTL_MS) {
+        fresh[k] = v;
+      }
+    }
+    return fresh;
+  } catch {
+    return {};
+  }
+}
+
+function getCachedSearchResult(normKey: string): SearchCacheEntry | null {
+  if (!normKey) return null;
+  const cache = loadSearchCache();
+  return cache[normKey] ?? null;
+}
+
+function saveSearchResultToCache(normKey: string, posts: any[], hasMore: boolean) {
+  if (typeof window === 'undefined') return;
+  if (!normKey) return;
+  try {
+    const cache = loadSearchCache();
+    cache[normKey] = { posts, hasMore, timestamp: Date.now() };
+    window.localStorage.setItem(SEARCH_CACHE_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // ถ้า localStorage ใช้งานไม่ได้ ให้ข้ามไปโดยไม่กระทบ logic หลัก
+  }
+}
+
 export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const [posts, setPosts] = useState<any[]>([]);
   const [session, setSession] = useState<any>(null);
@@ -382,6 +422,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const trimmedSearch = String(searchTermRef.current ?? '')
       .normalize('NFKC')
       .trim();
+    const normalizedSearchKey = normalizeCarSearch(trimmedSearch);
 
     setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
@@ -391,10 +432,19 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     let postIds: string[] = [];
     let categoryModelNamesForFilter: string[] = [];
 
+    // ถ้าเป็นการค้นคำใหม่รอบแรก และมีผลค้นหาใน cache แล้ว ให้แสดงผลเก่าทันทีระหว่างที่รอผลใหม่
+    if (isInitial && trimmedSearch && normalizedSearchKey) {
+      const cached = getCachedSearchResult(normalizedSearchKey);
+      if (cached && Array.isArray(cached.posts) && cached.posts.length > 0) {
+        setPosts(cached.posts);
+        setHasMore(cached.hasMore);
+      }
+    }
+
     if (trimmedSearch) {
       // ค้นหาหมวดหมู่: ใช้ชื่อรุ่นจาก category-models ส่งให้ API (ตัดคำสั้น/ตัวเลขล้วนออกเพื่อลดโพสมั่ว)
       categoryModelNamesForFilter = getModelNamesFromCategory(trimmedSearch);
-      const searchTerms = categoryModelNamesForFilter.length > 0
+      let searchTerms = categoryModelNamesForFilter.length > 0
         ? (() => {
             const filtered = categoryModelNamesForFilter.filter((n) => {
               const t = normalizeCaptionSearch(String(n ?? '').trim());
@@ -404,10 +454,13 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
           })()
         : (() => {
             const expanded = expandWithoutBrandAliases(trimmedSearch);
-            return (expanded.length > 0 ? expanded : [trimmedSearch])
+            const base = (expanded.length > 0 ? expanded : [trimmedSearch])
               .map((t) => String(t ?? '').trim())
               .filter(Boolean);
+            return Array.from(new Set(base));
           })();
+      // ลบคำซ้ำ ลดงานฝั่ง DB โดยไม่กระทบผลลัพธ์
+      searchTerms = Array.from(new Set(searchTerms));
       const res = await fetch('/api/posts/feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -468,43 +521,132 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
               const termNorm = normalizeCaptionSearch(String(name ?? '').trim());
               if (termNorm && !isTermTooNoisy(termNorm)) categoryTermsNorm.push(termNorm);
             }
-            // Single pass: กรอง caption ตรงรุ่นในหมวด + คำนวณ score ครั้งเดียวต่อโพส แล้วเรียงตาม score
-            const withScore: { post: any; score: number }[] = [];
+            // Single pass:
+            // - โพสที่มีคำตรงเป๊ะ (ขอบคำครบ) ในหมวดนั้น → ขึ้นบนสุด เรียงตามความยาวชื่อรุ่นที่ตรงที่สุด
+            // - โพสที่มีคำใกล้เคียงแต่ไม่ตรงเป๊ะ → แสดงได้ แต่ให้ไปอยู่ล่างสุด
+            const withScore: { post: any; score: number; exact: boolean }[] = [];
             for (const p of postsData) {
               const cap = normalizeCaptionSearch(p?.caption ?? '');
               if (!cap) continue;
-              let maxLen = 0;
-              let hasMatch = false;
+              let maxLenExact = 0;
+              let hasExact = false;
+              let hasAny = false;
               for (const termNorm of categoryTermsNorm) {
                 const idx = cap.indexOf(termNorm);
                 if (idx === -1) continue;
+                hasAny = true;
                 if (hasWordBoundary(cap, termNorm, idx)) {
-                  hasMatch = true;
-                  if (termNorm.length > maxLen) maxLen = termNorm.length;
+                  hasExact = true;
+                  if (termNorm.length > maxLenExact) maxLenExact = termNorm.length;
                 }
               }
-              if (hasMatch) withScore.push({ post: p, score: maxLen });
+              if (!hasAny) continue;
+              withScore.push({ post: p, score: hasExact ? maxLenExact : 0, exact: hasExact });
             }
             orderedPostsData = withScore
-              .sort((a, b) => b.score - a.score)
+              .sort((a, b) => {
+                if (a.exact !== b.exact) return a.exact ? -1 : 1; // exact match มาก่อน near match
+                return b.score - a.score;
+              })
               .map((x) => x.post);
-            // เฉพาะหมวด SUV: กรองโพสที่ caption มีชื่อเต็มของรุ่นที่อยู่หมวดอื่นออก
-            const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(normalizeCarSearch(trimmedSearch));
-            const isSuvOnly = categoryIds && categoryIds.size === 1 && categoryIds.has('suv');
-            if (isSuvOnly) {
-              orderedPostsData = orderedPostsData.filter(
-                (p: any) => !captionContainsNonSuvModelName(p?.caption ?? '')
-              );
-            }
           } else {
-            // ถ้าไม่ใช่หมวดหมู่: ใช้วิธีเดิม
+            // ถ้าไม่ใช่หมวดหมู่: ใช้วิธีเดิม แต่เพิ่มกรณีค้นหายี่ห้อให้ใช้ระบบคะแนนเหมือนหมวด
             const expanded = expandWithoutBrandAliases(trimmedSearch);
             const searchTermsForFilter = (expanded.length > 0 ? expanded : [trimmedSearch])
               .map((t) => String(t ?? '').trim())
               .filter(Boolean);
-            orderedPostsData = postsData.filter((p: any) =>
-              captionHasReasonableMatch(p?.caption ?? '', searchTermsForFilter)
-            );
+
+            const isBrandSearch = BRAND_NAMES_SET.has(normalizeForFallback(trimmedSearch));
+
+            if (isBrandSearch) {
+              // แบรนด์: โพสที่มีชื่อยี่ห้อ (Toyota/โตโยต้า/ໂຕໂຢຕ້າ) ตรงที่สุดขึ้นก่อน
+              // แล้วตามด้วยโพสที่มีแค่รุ่น/คำใกล้เคียง
+
+              // หา brand เดียวกับคำค้น เพื่อดึงชื่อยี่ห้อทุกภาษา (ใช้จากแผนที่ที่เตรียมไว้)
+              const qNorm = normalizeForFallback(trimmedSearch);
+              const brandAliases: string[] = BRAND_ALIAS_MAP.get(qNorm) ?? [];
+
+              const brandTermsNorm = brandAliases
+                .map((name) => normalizeCaptionSearch(name))
+                .filter(Boolean);
+
+              const allTermsNorm: string[] = [];
+              for (const term of searchTermsForFilter) {
+                const n = normalizeCaptionSearch(term);
+                if (n && !isTermTooNoisy(n)) allTermsNorm.push(n);
+              }
+
+              const brandSet = new Set(brandTermsNorm);
+              const modelTermsNorm = allTermsNorm.filter((t) => !brandSet.has(t));
+
+              const withScore: { post: any; score: number; group: number }[] = [];
+
+              for (const p of postsData) {
+                const cap = normalizeCaptionSearch(p?.caption ?? '');
+                if (!cap) continue;
+
+                let hasBrandExact = false;
+                let hasBrandAny = false;
+                let brandScoreLen = 0;
+
+                for (const termNorm of brandTermsNorm) {
+                  const idx = cap.indexOf(termNorm);
+                  if (idx === -1) continue;
+                  hasBrandAny = true;
+                  if (hasWordBoundary(cap, termNorm, idx)) {
+                    hasBrandExact = true;
+                    if (termNorm.length > brandScoreLen) brandScoreLen = termNorm.length;
+                  }
+                }
+
+                let hasModelExact = false;
+                let hasModelAny = false;
+                let modelScoreLen = 0;
+
+                for (const termNorm of modelTermsNorm) {
+                  const idx = cap.indexOf(termNorm);
+                  if (idx === -1) continue;
+                  hasModelAny = true;
+                  if (hasWordBoundary(cap, termNorm, idx)) {
+                    hasModelExact = true;
+                    if (termNorm.length > modelScoreLen) modelScoreLen = termNorm.length;
+                  }
+                }
+
+                if (!hasBrandAny && !hasModelAny) continue;
+
+                let group = 3;
+                let score = 0;
+
+                if (hasBrandExact) {
+                  group = 0; // ยี่ห้อตรงเป๊ะ: ขึ้นก่อนสุด
+                  score = modelScoreLen > 0 ? modelScoreLen : brandScoreLen; // รุ่นที่ตรงยาวกว่าช่วยดันขึ้น
+                } else if (hasModelExact) {
+                  group = 1; // มีรุ่นตรงเป๊ะ แต่ไม่มีชื่อยี่ห้อแบบคำเต็ม
+                  score = modelScoreLen;
+                } else if (hasBrandAny) {
+                  group = 2; // มียี่ห้อแบบใกล้เคียง (ไม่ขอบคำ)
+                  score = brandScoreLen;
+                } else {
+                  group = 3; // มีแต่รุ่น/คำใกล้เคียง
+                  score = modelScoreLen;
+                }
+
+                withScore.push({ post: p, score, group });
+              }
+
+              orderedPostsData = withScore
+                .sort((a, b) => {
+                  if (a.group !== b.group) return a.group - b.group; // group เล็กกว่ามาก่อน
+                  return b.score - a.score;
+                })
+                .map((x) => x.post);
+            } else {
+              // คำค้นทั่วไป: ใช้การกรองเดิม
+              orderedPostsData = postsData.filter((p: any) =>
+                captionHasReasonableMatch(p?.caption ?? '', searchTermsForFilter)
+              );
+            }
           }
         } else {
           // กรณีไม่มีคำค้น (หน้า Home ปกติ): ถ้าเพิ่งโพสต์สำเร็จ ให้เลื่อนโพสต์นั้นขึ้นมาไว้บนสุดหนึ่งครั้ง
@@ -525,6 +667,10 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
           }
         }
         const stillCurrent = String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch;
+        // เก็บผลค้นหาที่ผ่านการกรองแล้วลง cache เพื่อใช้ครั้งถัดไปให้แสดงทันที
+        if (trimmedSearch && normalizedSearchKey) {
+          saveSearchResultToCache(normalizedSearchKey, orderedPostsData, newHasMore);
+        }
         requestAnimationFrame(() => {
           if (!stillCurrent) {
             setLoadingMore(false);

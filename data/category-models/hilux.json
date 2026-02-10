@@ -1,23 +1,5 @@
 {
   "categoryId": "hilux",
-  "modelNames": [
-    "hilux",
-    "hilux revo",
-    "Hilux Revo",
-    "hilux vigo",
-    "Hilux Vigo",
-    "revo",
-    "vigo",
-    "รีโว่",
-    "รีโว้",
-    "วีโก้",
-    "ไฮลักซ์",
-    "ไฮลักซ์ รีโว่",
-    "ไฮลักซ์ วีโก้",
-    "ລີໂວ້",
-    "ວີໂກ້",
-    "ໄຮລັກ",
-    "ໄຮລັກ ລີໂວ້",
-    "ໄຮລັກ ວີໂກ້"
-  ]
+  "modelNames": []
 }
+

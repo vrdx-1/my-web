@@ -495,7 +495,6 @@ export function expandWithoutBrandAliases(query: string): string[] {
     return filtered.length > 0 ? filtered : [query];
   }
 
-  const expandedNormSet = new Set(expanded.map((t) => normalizeCarSearch(t)));
   const matchingEntities = new Set<string>();
   for (const brand of carsData.brands ?? []) {
     for (const model of brand.models ?? []) {
@@ -507,8 +506,8 @@ export function expandWithoutBrandAliases(query: string): string[] {
       ];
       const modelAliasesNorm = modelAliases.map((a) => normalizeCarSearch(String(a ?? ''))).filter(Boolean);
       const matchByQuery = modelAliasesNorm.includes(queryNorm);
-      const matchByExpanded = modelAliasesNorm.some((n) => expandedNormSet.has(n));
-      if (matchByQuery || matchByExpanded) {
+      // จำกัดให้จับแค่รุ่นที่ตรงกับคำค้นเองเท่านั้น (ไม่ดึงรุ่นอื่นที่แชร์คำกว้าง ๆ ร่วมกัน เช่น "hilux")
+      if (matchByQuery) {
         matchingEntities.add(`model:${brand.brandId}:${model.modelId}`);
       }
     }
