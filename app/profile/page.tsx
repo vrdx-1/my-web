@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_FONT } from '@/utils/constants';
@@ -10,7 +10,6 @@ import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 export default function Profile() {
   const router = useRouter();
-  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
@@ -26,7 +25,6 @@ export default function Profile() {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [session, setSession] = useState<any>(null);
-  const [enterPhase, setEnterPhase] = useState<'offscreen' | 'animating' | 'entered'>('offscreen');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,7 +40,8 @@ export default function Profile() {
         setSession(currentSession);
         const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          // ดึงเฉพาะข้อมูลที่ใช้แสดงจริง ๆ เพื่อลดงานโหลดหน้า (ลดอาการกระตุก)
+          .select('username, avatar_url')
           .eq('id', currentSession.user.id)
           .single();
 
@@ -56,41 +55,6 @@ export default function Profile() {
 
     fetchProfile();
   }, []);
-
-  // Slide-in animation for logged-in users (from right) - same pattern as viewing mode
-  // Slide-in only when opening. Closing remains instant (unmount).
-  useEffect(() => {
-    setEnterPhase('offscreen');
-  }, [pathname]);
-
-  // ให้ paint เฟรม offscreen (ด้านขวา) ก่อน แล้วค่อย slide เข้ามา
-  useEffect(() => {
-    if (!session) return;
-    if (enterPhase !== 'offscreen') return;
-
-    let tId: ReturnType<typeof window.setTimeout>;
-    const rafId = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setEnterPhase('animating');
-        tId = window.setTimeout(() => setEnterPhase('entered'), 220);
-      });
-    });
-    return () => {
-      cancelAnimationFrame(rafId);
-      if (tId != null) window.clearTimeout(tId);
-    };
-  }, [session, enterPhase]);
-
-  // ปิดการ scroll ของหน้านี้
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, []);
-
-  const shouldAnimateProfile = !!session;
 
   // ฟังก์ชันช่วยบันทึกข้อมูลลง localStorage ทันทีที่มีการเปลี่ยนแปลง
   const updatePendingData = (updates: any) => {
@@ -142,8 +106,6 @@ export default function Profile() {
         background: '#fff',
         minHeight: '100vh',
         fontFamily: LAO_FONT,
-        transform: shouldAnimateProfile ? `translateX(${enterPhase === 'offscreen' ? '100vw' : '0px'})` : 'none',
-        transition: shouldAnimateProfile && enterPhase === 'animating' ? 'transform 220ms ease-out' : 'none',
       }}
     >
       
@@ -177,6 +139,8 @@ export default function Profile() {
               <img 
                 src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/9a8595cc-bfa6-407d-94d4-67e2e82523e5/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
                 alt="Logo" 
+                loading="lazy"
+                decoding="async"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
@@ -368,7 +332,13 @@ export default function Profile() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '25px', cursor: 'pointer' }}>
                 <div style={{ position: 'relative', width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5' }}>
                   {avatarUrl ? (
-                    <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar"
+                      loading="lazy"
+                      decoding="async"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
                       <GuestAvatarIcon size={40} />
