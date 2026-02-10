@@ -48,9 +48,10 @@ export function useCreatePostUpload({
       const uploadFolder = session ? session.user.id : 'guest-uploads';
       const totalFiles = files.length;
 
-      // บีบอัดรูปทั้งหมดก่อนอัปโหลด (quality: 0.7, maxWidth: 1200)
+      // บีบอัดรูปทั้งหมดก่อนอัปโหลด (ลดขนาดไฟล์มาก แต่ยังพอชัดอยู่)
+      // ใช้ maxWidth ประมาณ 720px และ quality 0.5
       const compressedFiles = await Promise.all(
-        files.map((file) => compressImage(file, 1200, 0.7)),
+        files.map((file) => compressImage(file, 720, 0.5)),
       );
 
       for (let i = 0; i < totalFiles; i++) {

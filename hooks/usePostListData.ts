@@ -7,6 +7,7 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
 import { LAO_PROVINCES } from '@/utils/constants';
+import { sequentialAppendItems } from '@/utils/preloadSequential';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -512,7 +513,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 })()
               : postsData;
 
-          // Filter logic for saved/liked pages
+          // Filter logic for saved/liked/sold pages
           const filteredPosts = orderedPostsData.filter(postData => {
             if (type === 'saved' || type === 'liked') {
               const isNotHidden = !postData.is_hidden;
@@ -527,37 +528,58 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             return true;
           });
 
-          // Add posts to state
-          setPosts(prev => {
-            const base = isInitial ? [] : prev;
-            const existingIds = new Set(base.map(p => p.id));
-            const newPosts = filteredPosts.filter(p => !existingIds.has(p.id));
+          // เตรียมชุดโพสต์ใหม่สำหรับเติมเข้า state แบบ sequential
+          const existingIds = new Set((isInitial ? [] : posts).map(p => p.id));
+          const newPosts = filteredPosts.filter((p) => {
+            if (existingIds.has(p.id)) return false;
+            existingIds.add(p.id);
+            return true;
+          });
 
-            // ถ้าไม่มีโพสต์ใหม่เพิ่มเลย แสดงว่า "หมดแล้วจริงๆ" สำหรับลิสต์นี้
-            // ป้องกันไม่ให้ infinite scroll เรียกโหลดซ้ำและแสดงอนิเมชั่นโหลดค้าง
-            if (newPosts.length === 0) {
-              setHasMore(false);
-              return base;
-            }
-
+          // ถ้าไม่มีโพสต์ใหม่เพิ่มเลย แสดงว่า "หมดแล้วจริงๆ" สำหรับลิสต์นี้
+          // ป้องกันไม่ให้ infinite scroll เรียกโหลดซ้ำและแสดงอนิเมชั่นโหลดค้าง
+          if (newPosts.length === 0) {
+            setHasMore(false);
+          } else {
             // ถ้ายังได้จำนวน postIds เท่ากับ PREFETCH_COUNT แสดงว่ายังมีโอกาสมีหน้าถัดไป
             // ถ้าน้อยกว่า แปลว่าถึงท้ายลิสต์แล้ว
             setHasMore(postIds.length === PREFETCH_COUNT);
+          }
 
-            return [...base, ...newPosts];
+          // ถ้าเป็นการโหลดใหม่ ให้ล้างรายการเก่าก่อน
+          if (isInitial) {
+            setPosts([]);
+          }
+
+          // เติมโพสต์ทีละรายการแบบเดียวกับหน้า Home
+          sequentialAppendItems<any>({
+            items: newPosts,
+            append: (post) => {
+              setPosts((prev) => {
+                if (prev.some((p: any) => p.id === post.id)) return prev;
+                return [...prev, post];
+              });
+            },
+            onDone: () => {
+              // ไม่มีอะไรเพิ่มเติมเป็นพิเศษที่ต้องทำหลัง append จบ
+            },
           });
 
           // Update interaction status
-          if (type === 'saved') {
+        if (type === 'saved') {
             setSavedPosts(prev => {
               const updated = { ...prev };
-              filteredPosts.forEach(p => updated[p.id] = true);
+              filteredPosts.forEach(p => {
+                updated[p.id] = true;
+              });
               return updated;
             });
           } else if (type === 'liked') {
             setLikedPosts(prev => {
               const updated = { ...prev };
-              filteredPosts.forEach(p => updated[p.id] = true);
+              filteredPosts.forEach(p => {
+                updated[p.id] = true;
+              });
               return updated;
             });
           }

@@ -34,7 +34,12 @@ export default function CreatePost() {
   const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
-  const imageUpload = useImageUpload({ maxFiles: 15 });
+  // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
+  const imageUpload = useImageUpload({
+    maxFiles: 15,
+    compressMaxWidth: 720,
+    compressQuality: 0.5,
+  });
   const [session, setSession] = useState<any>(null);
   const [isViewing, setIsViewing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);

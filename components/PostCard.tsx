@@ -112,7 +112,7 @@ export const PostCard = React.memo<PostCardProps>(({
         cardRef.current = node;
         if (isLastElement && lastPostElementRef) lastPostElementRef(node);
       }}
-      style={{ borderBottom: '8px solid #d1d5db', position: 'relative' }}
+      style={{ borderBottom: '1px solid #6b6b6b', position: 'relative' }}
     >
       {/* Post Header */}
       <div style={{ ...commonStyles.postHeader, gap: '10px' }}>
@@ -149,10 +149,10 @@ export const PostCard = React.memo<PostCardProps>(({
                 <span
                   style={{
                     display: 'inline-block',
-                    width: '5px',
-                    height: '5px',
+                    width: '3px',
+                    height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#9ca3af',
+                    backgroundColor: '#4a4d52',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}
@@ -161,10 +161,10 @@ export const PostCard = React.memo<PostCardProps>(({
                 <span
                   style={{
                     display: 'inline-block',
-                    width: '5px',
-                    height: '5px',
+                    width: '3px',
+                    height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#9ca3af',
+                    backgroundColor: '#4a4d52',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}
@@ -177,10 +177,10 @@ export const PostCard = React.memo<PostCardProps>(({
                 <span
                   style={{
                     display: 'inline-block',
-                    width: '5px',
-                    height: '5px',
+                    width: '3px',
+                    height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#9ca3af',
+                    backgroundColor: '#4a4d52',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}

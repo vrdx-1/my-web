@@ -10,6 +10,7 @@ import { LAO_PROVINCES } from '@/utils/constants';
 import categoriesData from '@/data/categories.json';
 import { CATEGORY_MODELS } from '@/data/category-models';
 import carsData from '@/data';
+import { sequentialAppendItems } from '@/utils/preloadSequential';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -671,18 +672,23 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         if (trimmedSearch && normalizedSearchKey) {
           saveSearchResultToCache(normalizedSearchKey, orderedPostsData, newHasMore);
         }
-        requestAnimationFrame(() => {
-          if (!stillCurrent) {
+
+        // ใช้ shared helper เพื่อแทรกโพสต์ทีละรายการแบบ sequential
+        sequentialAppendItems<any>({
+          items: orderedPostsData,
+          shouldContinue: () =>
+            String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch,
+          append: (post) => {
+            setPosts((prev) => {
+              // กันไม่ให้โพสต์ซ้ำ ถ้ามีอยู่แล้วให้ข้าม
+              if (prev.some((p: any) => p.id === post.id)) return prev;
+              return [...prev, post];
+            });
+          },
+          onDone: () => {
+            setHasMore(newHasMore);
             setLoadingMore(false);
-            return;
-          }
-          setPosts(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newPosts = orderedPostsData.filter((p: any) => !existingIds.has(p.id));
-            return [...prev, ...newPosts];
-          });
-          setHasMore(newHasMore);
-          setLoadingMore(false);
+          },
         });
       } else {
         setHasMore(newHasMore);

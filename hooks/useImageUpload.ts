@@ -7,6 +7,9 @@ interface UseImageUploadProps {
   maxFiles?: number;
   onFilesChange?: (files: File[]) => void;
   onPreviewsChange?: (previews: string[]) => void;
+  /** ตัวเลือกสำหรับการบีบอัดรูป (ใช้เฉพาะบางหน้าที่ต้องการบีบอัดแรงเป็นพิเศษ) */
+  compressMaxWidth?: number;
+  compressQuality?: number;
 }
 
 interface UseImageUploadReturn {
@@ -29,6 +32,8 @@ export function useImageUpload({
   maxFiles = 15,
   onFilesChange,
   onPreviewsChange,
+  compressMaxWidth,
+  compressQuality,
 }: UseImageUploadProps = {}): UseImageUploadReturn {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -50,7 +55,10 @@ export function useImageUpload({
       setLoading(true);
       try {
         const compressedFiles = await Promise.all(
-          incomingFiles.map((file) => compressImage(file))
+          incomingFiles.map((file) =>
+            // ถ้า caller ไม่กำหนดค่า จะใช้ default (1080, 0.7) จาก compressImage
+            compressImage(file, compressMaxWidth, compressQuality)
+          )
         );
 
         const newFiles = [...selectedFiles, ...compressedFiles];
@@ -74,7 +82,7 @@ export function useImageUpload({
         setLoading(false);
       }
     },
-    [selectedFiles, previews, maxFiles, onFilesChange, onPreviewsChange]
+    [selectedFiles, previews, maxFiles, onFilesChange, onPreviewsChange, compressMaxWidth, compressQuality]
   );
 
   const removeImage = useCallback(

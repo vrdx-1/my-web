@@ -39,8 +39,24 @@ export default function BackHandler() {
       const current = window.location.pathname;
       const last = lastPathnameRef.current;
 
+      // ถ้า "ก่อนกด back" อยู่ที่หน้า root (/) → ห้ามย้อนกลับไปหน้าอื่นในเว็บ
+      // เช่น จากหน้า Home ห้ามเด้งกลับไปหน้า Notification/Profile ฯลฯ
+      if (last === ROOT_PATH && current !== ROOT_PATH) {
+        history.pushState(
+          { backHandler: 'stay-on-root' },
+          '',
+          ROOT_PATH + window.location.search + window.location.hash
+        );
+        lastPathnameRef.current = ROOT_PATH;
+        return;
+      }
+
       if (current === ROOT_PATH && last === ROOT_PATH) {
-        history.pushState({ backHandler: 'buffer' }, '', window.location.pathname + window.location.search + window.location.hash);
+        history.pushState(
+          { backHandler: 'buffer' },
+          '',
+          window.location.pathname + window.location.search + window.location.hash
+        );
         lastPathnameRef.current = ROOT_PATH;
         return;
       }

@@ -9,6 +9,7 @@ import { NotificationPostPreviewCard } from '../../components/NotificationPostPr
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
+import { sequentialIncreaseCount } from '@/utils/preloadSequential';
 
 export interface NotificationItem {
   id: string;
@@ -127,10 +128,14 @@ export default function NotificationPage() {
       if (localLoadingMore) return;
       if (!hasMore) return;
       setLocalLoadingMore(true);
-      setVisibleCount(prev =>
-        Math.min(prev + PREFETCH_COUNT, notifications.length)
-      );
-      setLocalLoadingMore(false);
+      sequentialIncreaseCount({
+        maxSteps: PREFETCH_COUNT,
+        setValue: setVisibleCount,
+        getLimit: () => notifications.length,
+        onDone: () => {
+          setLocalLoadingMore(false);
+        },
+      });
     },
     threshold: 0.2,
   });

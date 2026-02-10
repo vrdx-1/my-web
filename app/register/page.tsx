@@ -14,6 +14,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [showValidationPopup, setShowValidationPopup] = useState(false)
+  const [validationMessage, setValidationMessage] = useState('')
   const router = useRouter()
 
   // ตรวจสอบความพร้อมของข้อมูล (ต้องมีทั้งชื่อและรูป)
@@ -82,11 +84,26 @@ export default function Register() {
 
   const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Validation เพิ่มเติมเพื่อความปลอดภัย
-    if (!username.trim()) return
-    if (!avatarUrl) return
-    
+
+    // ถ้ายังไม่กรอกชื่อ หรือยังไม่เลือกรูปโปรไฟล์ → แสดงป๊อบอัพแจ้งเตือน แทนการส่งฟอร์ม
+    const missingName = !username.trim()
+    const missingAvatar = !avatarUrl
+
+    if (missingName || missingAvatar) {
+      if (missingAvatar && !missingName) {
+        // กรณีขาดเฉพาะรูปโปรไฟล์
+        setValidationMessage('ກະລຸນາໃສ່ຮູບໂປຣຟາຍ')
+      } else if (missingName && !missingAvatar) {
+        // กรณีขาดเฉพาะชื่อ
+        setValidationMessage('ກະລຸນາໃສ່ຊື່')
+      } else {
+        // กรณีขาดทั้งชื่อและรูปโปรไฟล์
+        setValidationMessage('ກະລຸນາໃສ່ຊື່ ແລະ ຮູບໂປຣຟາຍ')
+      }
+      setShowValidationPopup(true)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -253,24 +270,23 @@ export default function Register() {
                 textAlign: 'left',
                 color: '#111111'
               }}
-              required
             />
           </div>
 
           {/* ปุ่มสำเร็จ - บังคับให้ Valid ข้อมูลก่อน */}
           <button 
             type="submit" 
-            disabled={loading || uploading || !isFormValid}
+            disabled={loading || uploading}
             style={{ 
               width: '100%', 
               padding: '16px', 
-              background: (loading || uploading || !isFormValid) ? '#e4e6eb' : '#1877f2', 
-              color: (loading || uploading || !isFormValid) ? '#000' : '#fff', 
+              background: (loading || uploading) ? '#e4e6eb' : '#1877f2', 
+              color: (loading || uploading) ? '#000' : '#fff', 
               border: 'none', 
               borderRadius: '30px', 
               fontSize: '20px', 
               fontWeight: 'bold', 
-              cursor: (loading || uploading || !isFormValid) ? 'not-allowed' : 'pointer',
+              cursor: (loading || uploading) ? 'not-allowed' : 'pointer',
               transition: '0.3s'
             }}
           >
@@ -280,6 +296,54 @@ export default function Register() {
               </span>
             ) : 'ສຳເລັດ'}
           </button>
+
+          {showValidationPopup && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.4)',
+                zIndex: 2500,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+              }}
+            >
+              <div
+                style={{
+                  background: '#fff',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  maxWidth: '320px',
+                  width: '100%',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center', color: '#111111' }}>
+                  {validationMessage}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowValidationPopup(false)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 16px',
+                    background: '#1877f2',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ຕົກລົງ
+                </button>
+              </div>
+            </div>
+          )}
 
         </form>
       </div>

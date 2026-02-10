@@ -60,6 +60,7 @@ export function SoldPageContent() {
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
+  // ใช้ระบบนับการแจ้งเตือนแบบเดียวกับหน้า Home (1 ต่อ 1 โพสต์, อิงเวลาที่เปิดหน้าแจ้งเตือนล่าสุด)
   const fetchUnreadCount = useCallback(async () => {
     const userId = homeData.session?.user?.id;
     if (!userId) {
@@ -69,8 +70,59 @@ export function SoldPageContent() {
     try {
       const raw = typeof window !== 'undefined' ? window.localStorage.getItem('notification_cleared_posts') : null;
       const clearedMap: Record<string, string> = raw ? (() => { try { return JSON.parse(raw); } catch { return {}; } })() : {};
-      const { totalUnread } = await fetchNotificationFeed(userId, clearedMap);
-      setUnreadCount(totalUnread);
+      const { list } = await fetchNotificationFeed(userId, clearedMap);
+
+      let finalUnread = 0;
+      if (typeof window !== 'undefined') {
+        const lastOpenedRaw = window.localStorage.getItem('notification_home_last_opened_at');
+        if (lastOpenedRaw) {
+          const lastOpenedTime = new Date(lastOpenedRaw).getTime();
+          if (!Number.isNaN(lastOpenedTime) && lastOpenedTime > 0) {
+            // นับเฉพาะโพสต์ที่มีแจ้งเตือนใหม่หลังจากผู้ใช้เคยเข้า "หน้าแจ้งเตือน" ครั้งล่าสุด (1 ต่อโพสต์)
+            const postIdsWithNewNotifications = new Set<string>();
+            list.forEach((n) => {
+              const createdTime = new Date(n.created_at).getTime();
+              const count = n.notification_count ?? 0;
+              if (createdTime > lastOpenedTime && count > 0) {
+                postIdsWithNewNotifications.add(n.post_id);
+              }
+            });
+            finalUnread = postIdsWithNewNotifications.size;
+          } else {
+            // ถ้าเวลาไม่ถูกต้อง → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
+            const postIdsWithNotifications = new Set<string>();
+            list.forEach((n) => {
+              const count = n.notification_count ?? 0;
+              if (count > 0) {
+                postIdsWithNotifications.add(n.post_id);
+              }
+            });
+            finalUnread = postIdsWithNotifications.size;
+          }
+        } else {
+          // ยังไม่เคยเข้าไปหน้าแจ้งเตือน → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
+          const postIdsWithNotifications = new Set<string>();
+          list.forEach((n) => {
+            const count = n.notification_count ?? 0;
+            if (count > 0) {
+              postIdsWithNotifications.add(n.post_id);
+            }
+          });
+          finalUnread = postIdsWithNotifications.size;
+        }
+      } else {
+        // กรณีไม่มี window (SSR) → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
+        const postIdsWithNotifications = new Set<string>();
+        list.forEach((n) => {
+          const count = n.notification_count ?? 0;
+          if (count > 0) {
+            postIdsWithNotifications.add(n.post_id);
+          }
+        });
+        finalUnread = postIdsWithNotifications.size;
+      }
+
+      setUnreadCount(finalUnread);
     } catch {
       setUnreadCount(0);
     }

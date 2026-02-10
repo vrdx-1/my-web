@@ -5,6 +5,7 @@ import { Avatar } from '../Avatar';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
+import { sequentialIncreaseCount } from '@/utils/preloadSequential';
 
 interface ViewingPostModalProps {
   viewingPost: any | null;
@@ -68,10 +69,14 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
       if (localLoadingMore) return;
       if (!hasMore) return;
       setLocalLoadingMore(true);
-      setVisibleCount(prev =>
-        Math.min(prev + PREFETCH_COUNT, images.length)
-      );
-      setLocalLoadingMore(false);
+      sequentialIncreaseCount({
+        maxSteps: PREFETCH_COUNT,
+        setValue: setVisibleCount,
+        getLimit: () => images.length,
+        onDone: () => {
+          setLocalLoadingMore(false);
+        },
+      });
     },
     threshold: 0.2,
   });
@@ -212,10 +217,10 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                   <span
                     style={{
                       display: 'inline-block',
-                      width: '5px',
-                      height: '5px',
+                      width: '3px',
+                      height: '3px',
                       borderRadius: '50%',
-                      backgroundColor: '#9ca3af',
+                      backgroundColor: '#4a4d52',
                       margin: '0 6px',
                       transform: 'translateY(1px)',
                     }}
@@ -224,10 +229,10 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                   <span
                     style={{
                       display: 'inline-block',
-                      width: '5px',
-                      height: '5px',
+                      width: '3px',
+                      height: '3px',
                       borderRadius: '50%',
-                      backgroundColor: '#9ca3af',
+                      backgroundColor: '#4a4d52',
                       margin: '0 6px',
                       transform: 'translateY(1px)',
                     }}
