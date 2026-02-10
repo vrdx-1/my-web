@@ -7,8 +7,8 @@ import { getPrimaryGuestToken, expandWithoutBrandAliases } from '@/utils/postUti
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { LAO_PROVINCES } from '@/utils/constants';
-import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
+import { CATEGORY_MODELS } from '@/data/category-models';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -82,8 +82,40 @@ function buildCategoryAliasIndex() {
 
 const CATEGORY_INDEX = buildCategoryAliasIndex();
 
+/** รายการชื่อรุ่น (normalize แล้ว, กรอง noisy ออก) จากทุกหมวดยกเว้น SUV — ใช้กรองโพสเมื่อค้นหาหมวด SUV */
+const NON_SUV_MODEL_NAMES_NORMALIZED: string[] = (() => {
+  const out: string[] = [];
+  for (const [cid, names] of Object.entries(CATEGORY_MODELS)) {
+    if (cid === 'suv') continue;
+    if (Array.isArray(names)) {
+      for (const n of names) {
+        const s = String(n ?? '').trim();
+        if (!s) continue;
+        const norm = normalizeCaptionSearch(s);
+        if (!norm || norm.length < 2 || /^\d+$/.test(norm)) continue;
+        out.push(norm);
+      }
+    }
+  }
+  return out;
+})();
+
 /**
- * ดึงรายการชื่อรุ่นจาก data/brands สำหรับหมวดที่ระบุ (ส่งเฉพาะชื่อรุ่นจากพจนานุกรม)
+ * เช็กว่า caption มีชื่อเต็มของรุ่นที่อยู่หมวดอื่น (ไม่ใช่ SUV) หรือไม่ — ใช้กรองโพสออกเมื่อค้นหาหมวด SUV
+ */
+function captionContainsNonSuvModelName(caption: string): boolean {
+  const cap = normalizeCaptionSearch(caption);
+  if (!cap) return false;
+  for (const termNorm of NON_SUV_MODEL_NAMES_NORMALIZED) {
+    const idx = cap.indexOf(termNorm);
+    if (idx === -1) continue;
+    if (hasWordBoundary(cap, termNorm, idx)) return true;
+  }
+  return false;
+}
+
+/**
+ * ดึงรายการชื่อรุ่นจาก data/category-models สำหรับหมวดที่ระบุ
  */
 function getModelNamesFromCategory(query: string): string[] {
   const queryNorm = normalizeCarSearch(query);
@@ -93,44 +125,15 @@ function getModelNamesFromCategory(query: string): string[] {
   if (!categoryIds || categoryIds.size === 0) return [];
 
   const out = new Set<string>();
-  const BRAND_NAMES_SET = (() => {
-    const set = new Set<string>();
-    for (const brand of carsData.brands ?? []) {
-      const en = String(brand.brandName ?? '').trim();
-      const th = String((brand as any).brandNameTh ?? '').trim();
-      const lo = String((brand as any).brandNameLo ?? '').trim();
-      if (en) set.add(en.toLowerCase().replace(/\s+/g, ' ').trim());
-      if (th) set.add(th.toLowerCase().replace(/\s+/g, ' ').trim());
-      if (lo) set.add(lo.toLowerCase().replace(/\s+/g, ' ').trim());
-    }
-    return set;
-  })();
-
-  function normalizeForFallback(text: string): string {
-    return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
-  }
-
   for (const cid of categoryIds) {
-    for (const brand of carsData.brands ?? []) {
-      for (const model of brand.models ?? []) {
-        const modelCats = (model.categoryIds ?? []) as string[];
-        if (!modelCats.includes(String(cid))) continue;
-        const terms = [
-          model.modelName,
-          (model as any).modelNameTh,
-          (model as any).modelNameLo,
-          ...((model.searchNames ?? []) as any[]).map(String),
-        ];
-        for (const t of terms) {
-          const s = String(t ?? '').trim();
-          if (!s) continue;
-          if (BRAND_NAMES_SET.has(normalizeForFallback(s))) continue;
-          out.add(s);
-        }
+    const names = CATEGORY_MODELS[String(cid)];
+    if (Array.isArray(names)) {
+      for (const n of names) {
+        const s = String(n ?? '').trim();
+        if (s) out.add(s);
       }
     }
   }
-
   return Array.from(out).filter(Boolean);
 }
 
@@ -230,19 +233,50 @@ function captionHasReasonableMatch(caption: string, searchTerms: string[]): bool
 }
 
 /**
+ * คำที่สั้นเกินไปหรือเป็นตัวเลขล้วนไม่นำมาใช้จับ caption (ลดโพสมั่วในหมวด SUV/sedan)
+ */
+function isTermTooNoisy(termNorm: string): boolean {
+  if (!termNorm || termNorm.length < 2) return true;
+  if (/^\d+$/.test(termNorm)) return true; // ตัวเลขล้วน เช่น 5, 03, 500, 127
+  return false;
+}
+
+/**
  * ใช้สำหรับกรอง "หมวดหมู่" โดยตรง:
- * caption ต้องมีชื่อรุ่นที่มาจาก data/brands อย่างน้อย 1 ชื่อ (หลัง normalize แล้วเป็น substring)
- * ไม่ใช้ heuristics อื่นเลย เพื่อให้ตรงกับพจนานุกรม 100%
+ * caption ต้องมีชื่อรุ่นจาก category-models อย่างน้อย 1 ชื่อ ที่ปรากฏเป็นคำเต็ม (มีขอบคำ)
+ * ไม่ใช้คำที่สั้นเกินไปหรือเป็นตัวเลขล้วน เพื่อไม่ให้โพสมั่ว
  */
 function captionHasDictionaryModelMatch(caption: string, modelNames: string[]): boolean {
   const cap = normalizeCaptionSearch(caption);
   if (!cap) return false;
   for (const name of modelNames) {
     const termNorm = normalizeCaptionSearch(String(name ?? '').trim());
-    if (!termNorm) continue;
-    if (cap.includes(termNorm)) return true;
+    if (!termNorm || isTermTooNoisy(termNorm)) continue;
+    const idx = cap.indexOf(termNorm);
+    if (idx === -1) continue;
+    if (hasWordBoundary(cap, termNorm, idx)) return true;
   }
   return false;
+}
+
+/**
+ * คืนความยาวของชื่อรุ่นที่ยาวที่สุดที่ปรากฏใน caption แบบตรง 100% (มีขอบคำ ตัวอักษรเรียงกันเป๊ะ)
+ * ไม่นับคำที่สั้นเกินไปหรือตัวเลขล้วน
+ */
+function getExactMatchScore(caption: string, modelNames: string[]): number {
+  const cap = normalizeCaptionSearch(caption);
+  if (!cap) return 0;
+  let maxLen = 0;
+  for (const name of modelNames) {
+    const termNorm = normalizeCaptionSearch(String(name ?? '').trim());
+    if (!termNorm || isTermTooNoisy(termNorm)) continue;
+    const idx = cap.indexOf(termNorm);
+    if (idx === -1) continue;
+    if (hasWordBoundary(cap, termNorm, idx) && termNorm.length > maxLen) {
+      maxLen = termNorm.length;
+    }
+  }
+  return maxLen;
 }
 
 interface UseHomeDataReturn {
@@ -355,13 +389,25 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex is inclusive
 
     let postIds: string[] = [];
+    let categoryModelNamesForFilter: string[] = [];
 
     if (trimmedSearch) {
-      // ฝั่ง frontend เลือกชุดคำค้น (ขยายเป็นไทย/ลาว/อังกฤษ เฉพาะรุ่นนั้น) แล้วส่งให้ API
-      const expanded = expandWithoutBrandAliases(trimmedSearch);
-      const searchTerms = (expanded.length > 0 ? expanded : [trimmedSearch])
-        .map((t) => String(t ?? '').trim())
-        .filter(Boolean);
+      // ค้นหาหมวดหมู่: ใช้ชื่อรุ่นจาก category-models ส่งให้ API (ตัดคำสั้น/ตัวเลขล้วนออกเพื่อลดโพสมั่ว)
+      categoryModelNamesForFilter = getModelNamesFromCategory(trimmedSearch);
+      const searchTerms = categoryModelNamesForFilter.length > 0
+        ? (() => {
+            const filtered = categoryModelNamesForFilter.filter((n) => {
+              const t = normalizeCaptionSearch(String(n ?? '').trim());
+              return t && !isTermTooNoisy(t);
+            });
+            return filtered.length > 0 ? filtered : categoryModelNamesForFilter;
+          })()
+        : (() => {
+            const expanded = expandWithoutBrandAliases(trimmedSearch);
+            return (expanded.length > 0 ? expanded : [trimmedSearch])
+              .map((t) => String(t ?? '').trim())
+              .filter(Boolean);
+          })();
       const res = await fetch('/api/posts/feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -413,13 +459,43 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       if (!postsError && postsData) {
         let orderedPostsData = postsData;
         if (trimmedSearch) {
-          // เช็กว่าเป็นการค้นหาหมวดหมู่หรือไม่
-          const categoryModelNames = getModelNamesFromCategory(trimmedSearch);
+          // เช็กว่าเป็นการค้นหาหมวดหมู่หรือไม่ (ใช้ผลที่ cache ไว้จากตอนเรียก API)
+          const categoryModelNames = categoryModelNamesForFilter;
           if (categoryModelNames.length > 0) {
-            // ถ้าเป็นหมวดหมู่: ใช้เฉพาะชื่อรุ่นจาก data/brands
-            orderedPostsData = postsData.filter((p: any) =>
-              captionHasDictionaryModelMatch(p?.caption ?? '', categoryModelNames)
-            );
+            // Pre-normalize ชื่อรุ่นของหมวดนี้ครั้งเดียว — ใช้ใน single pass กรอง+คะแนน
+            const categoryTermsNorm: string[] = [];
+            for (const name of categoryModelNames) {
+              const termNorm = normalizeCaptionSearch(String(name ?? '').trim());
+              if (termNorm && !isTermTooNoisy(termNorm)) categoryTermsNorm.push(termNorm);
+            }
+            // Single pass: กรอง caption ตรงรุ่นในหมวด + คำนวณ score ครั้งเดียวต่อโพส แล้วเรียงตาม score
+            const withScore: { post: any; score: number }[] = [];
+            for (const p of postsData) {
+              const cap = normalizeCaptionSearch(p?.caption ?? '');
+              if (!cap) continue;
+              let maxLen = 0;
+              let hasMatch = false;
+              for (const termNorm of categoryTermsNorm) {
+                const idx = cap.indexOf(termNorm);
+                if (idx === -1) continue;
+                if (hasWordBoundary(cap, termNorm, idx)) {
+                  hasMatch = true;
+                  if (termNorm.length > maxLen) maxLen = termNorm.length;
+                }
+              }
+              if (hasMatch) withScore.push({ post: p, score: maxLen });
+            }
+            orderedPostsData = withScore
+              .sort((a, b) => b.score - a.score)
+              .map((x) => x.post);
+            // เฉพาะหมวด SUV: กรองโพสที่ caption มีชื่อเต็มของรุ่นที่อยู่หมวดอื่นออก
+            const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(normalizeCarSearch(trimmedSearch));
+            const isSuvOnly = categoryIds && categoryIds.size === 1 && categoryIds.has('suv');
+            if (isSuvOnly) {
+              orderedPostsData = orderedPostsData.filter(
+                (p: any) => !captionContainsNonSuvModelName(p?.caption ?? '')
+              );
+            }
           } else {
             // ถ้าไม่ใช่หมวดหมู่: ใช้วิธีเดิม
             const expanded = expandWithoutBrandAliases(trimmedSearch);

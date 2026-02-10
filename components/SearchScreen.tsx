@@ -369,9 +369,9 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
           {/* Suggestions */}
           {suggestions.length > 0 && (
             <div style={{ paddingTop: '6px' }}>
-              {suggestions.map((item) => (
+              {suggestions.map((item, index) => (
                 <div
-                  key={`suggest-${item.searchKey}-${item.display}`}
+                  key={`suggest-${item.searchKey}-${item.display}-${index}`}
                   onClick={() => handleSuggestionClick(item.searchKey)}
                   style={{
                     padding: '12px 15px',
