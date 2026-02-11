@@ -18,8 +18,7 @@ export default function Settings() {
     setLoading(true)
     const { error } = await supabase.auth.signOut()
     if (!error) {
-      router.push('/')
-      router.refresh()
+      window.location.href = '/'
     } else {
       setLoading(false)
       setShowLogoutConfirm(false)
