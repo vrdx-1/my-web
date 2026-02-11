@@ -82,24 +82,6 @@ export default function Settings() {
         
         <div style={{ background: '#e0e0e0', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
           
-          {/* เมนูป່ຽນລະຫັດຜ່ານ - ใช้แบบเดิมไม่ต้องแก้ */}
-          <div 
-            onClick={() => router.push('/profile/settings/change-password')}
-            style={{ 
-              padding: '12px 15px', 
-              borderBottom: '1px solid #f0f0f0', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              cursor: 'pointer',
-              height: '55px',
-              boxSizing: 'border-box'
-            }}
-          >
-            <span style={{ fontSize: '16px', color: '#1c1e21', fontWeight: '500' }}>ປ່ຽນລະຫັດຜ່ານ</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </div>
-
           {/* เมนู ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ */}
           <div 
             onClick={() => router.push('/terms')}

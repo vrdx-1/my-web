@@ -130,24 +130,6 @@ export default function Register() {
         throw profileError;
       }
 
-      const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
-      const deviceToken = localStorage.getItem('device_guest_token');
-      const guestTokens = Array.from(new Set([
-        ...storedPosts.map((p: any) => p.token),
-        deviceToken
-      ].filter(t => t !== null)));
-
-      if (guestTokens.length > 0) {
-        for (const token of guestTokens) {
-          await supabase.from('cars').update({ user_id: newUser.id }).eq('user_id', token);
-          await supabase.from('liked_posts').update({ user_id: newUser.id }).eq('user_id', token);
-          await supabase.from('saved_posts').update({ user_id: newUser.id }).eq('user_id', token);
-          await supabase.from('profiles').update({ id: newUser.id }).eq('id', token);
-        }
-        localStorage.removeItem('my_guest_posts');
-        localStorage.removeItem('device_guest_token');
-      }
-
       localStorage.removeItem('pending_registration');
       localStorage.setItem('show_registration_success', 'true');
       router.push('/');

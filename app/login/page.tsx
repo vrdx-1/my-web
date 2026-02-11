@@ -78,36 +78,6 @@ export default function Login() {
       setShowErrorPopup(true)
       setLoading(false)
     } else {
-      // --- จุดที่เพิ่ม: ระบบโอนย้ายข้อมูลจาก Guest ไปยังบัญชีที่ Login ---
-      const loggedInUser = data.user;
-      if (loggedInUser) {
-        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
-        const deviceToken = localStorage.getItem('device_guest_token');
-        
-        const guestTokens = Array.from(new Set([
-          ...storedPosts.map((p: any) => p.token),
-          deviceToken
-        ].filter(t => t !== null)));
-
-        if (guestTokens.length > 0) {
-          try {
-            for (const token of guestTokens) {
-              // โอนย้ายข้อมูลทุกอย่างที่เคยทำไว้ตอนเป็น Guest มาเป็นของ User ID นี้
-              await supabase.from('cars').update({ user_id: loggedInUser.id }).eq('user_id', token);
-              await supabase.from('liked_posts').update({ user_id: loggedInUser.id }).eq('user_id', token);
-              await supabase.from('saved_posts').update({ user_id: loggedInUser.id }).eq('user_id', token);
-              await supabase.from('profiles').update({ id: loggedInUser.id }).eq('id', token);
-            }
-            // ล้าง Token ชั่วคราวออกจากเครื่อง
-            localStorage.removeItem('my_guest_posts');
-            localStorage.removeItem('device_guest_token');
-          } catch (migrateError) {
-            console.error("Migration error during login:", migrateError);
-          }
-        }
-      }
-      // -------------------------------------------------------
-
       // บันทึกบัญชีที่เคย Login ไว้ในเครื่อง (จำอีเมลเหมือน TikTok)
       try {
         const existing = safeParseJSON<SavedAccount[]>('saved_login_accounts', [])
@@ -186,27 +156,6 @@ export default function Login() {
         setOtpValue('')
         setLoading(false)
         return
-      }
-
-      // โอนย้ายข้อมูลจาก Guest → User เหมือน handleLogin เดิม
-      const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', [])
-      const deviceToken = localStorage.getItem('device_guest_token')
-      const guestTokens = Array.from(
-        new Set([...storedPosts.map((p: any) => p.token), deviceToken].filter((t) => t !== null))
-      )
-      if (guestTokens.length > 0) {
-        try {
-          for (const token of guestTokens) {
-            await supabase.from('cars').update({ user_id: loggedInUser.id }).eq('user_id', token)
-            await supabase.from('liked_posts').update({ user_id: loggedInUser.id }).eq('user_id', token)
-            await supabase.from('saved_posts').update({ user_id: loggedInUser.id }).eq('user_id', token)
-            await supabase.from('profiles').update({ id: loggedInUser.id }).eq('id', token)
-          }
-          localStorage.removeItem('my_guest_posts')
-          localStorage.removeItem('device_guest_token')
-        } catch (migrateError) {
-          console.error('Migration error during login via OTP:', migrateError)
-        }
       }
 
       // บันทึกบัญชีที่เคย Login ไว้ในเครื่อง (จำอีเมลเหมือนเดิม)

@@ -11,7 +11,6 @@ import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
 
 // Modal Components (Static - used frequently)
-import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -163,11 +162,7 @@ const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore, disabl
  // Use interaction modal hook
  const interactionModalHook = useInteractionModal();
 
- // --- State สำหรับ Pop-up เงื่อนไข ---
- const [showTermsModal, setShowTermsModal] = useState(false);
- const [acceptedTerms, setAcceptedTerms] = useState(false);
- 
- // --- State สำหรับ Pop-up ลงทะเบียนสำเร็จ ---
+// --- State สำหรับ Pop-up ลงทะเบียนสำเร็จ ---
  const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
 
  // Use file upload hook
@@ -325,7 +320,7 @@ const {
   <HomeHeader
   searchTerm={searchTerm}
   onSearchChange={setSearchTerm}
-  onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
+  onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session)}
   onNotificationClick={() => {
     if (!homeData.session) {
       router.push('/profile');
@@ -410,19 +405,6 @@ const {
  />
 
  {/* Loading spinner is handled by PostFeed component */}
-
- <TermsModal
-   show={showTermsModal}
-   acceptedTerms={acceptedTerms}
-   onClose={() => setShowTermsModal(false)}
-   onAcceptChange={setAcceptedTerms}
-   onContinue={() => {
-     if (acceptedTerms) {
-       setShowTermsModal(false);
-       fileUpload.hiddenFileInputRef.current?.click();
-     }
-   }}
- />
 
  <PostFeedModals
    viewingPost={viewingPostHook.viewingPost}

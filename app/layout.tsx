@@ -7,8 +7,7 @@ import BackHandler from "@/components/BackHandler";
 import { BackHandlerProvider } from "@/components/BackHandlerContext";
 import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
-import { SWRProvider } from "@/components/SWRProvider"; 
-import { GlobalTermsConsent } from "@/components/GlobalTermsConsent";
+import { SWRProvider } from "@/components/SWRProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,8 +47,6 @@ export default function RootLayout({
               <BackHandler />
               {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
               <RedirectToHomeOnReturn />
-              {/* ป๊อบอัพยอมรับ ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ สำหรับผู้ใช้ใหม่ */}
-              <GlobalTermsConsent />
               {children}
             </BackHandlerProvider>
           </SWRProvider>

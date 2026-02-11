@@ -81,7 +81,13 @@ export default function Profile() {
   // Social / OAuth login (Facebook, Apple, Google)
   const handleOAuthLogin = async (provider: 'facebook' | 'apple' | 'google') => {
     try {
-      await supabase.auth.signInWithOAuth({ provider });
+      await supabase.auth.signInWithOAuth({
+        provider,
+        // กรณีกด "ລົງທະບຽນດ້ວຍ Google" ให้ Callback กลับมาที่หน้าตั้งชื่อ+รูปโปรไฟล์ (/register)
+        ...(provider === 'google'
+          ? { options: { redirectTo: `${window.location.origin}/register` } }
+          : {}),
+      });
     } catch (err) {
       console.error('OAuth login error', err);
     }
@@ -176,25 +182,7 @@ export default function Profile() {
         updatePendingData({ email: email.trim(), acceptedTerms });
         router.push('/register');
       } else if (hasCompleteProfile) {
-        // ถ้ามีโปรไฟล์ครบแล้ว (เคยลงทะเบียนแล้ว) → เข้า Home ทันที พร้อมโอนโพสต์ Guest
-        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
-        const deviceToken = localStorage.getItem('device_guest_token');
-        const guestTokens = Array.from(new Set([
-          ...storedPosts.map((p: any) => p.token),
-          deviceToken
-        ].filter(t => t !== null)));
-        if (guestTokens.length > 0) {
-          try {
-            for (const token of guestTokens) {
-              await supabase.from('cars').update({ user_id: user.id }).eq('user_id', token);
-              await supabase.from('liked_posts').update({ user_id: user.id }).eq('user_id', token);
-              await supabase.from('saved_posts').update({ user_id: user.id }).eq('user_id', token);
-              await supabase.from('profiles').update({ id: user.id }).eq('id', token);
-            }
-            localStorage.removeItem('my_guest_posts');
-            localStorage.removeItem('device_guest_token');
-          } catch (_) {}
-        }
+        // ถ้ามีโปรไฟล์ครบแล้ว (เคยลงทะเบียนแล้ว) → เข้า Home ทันที
         localStorage.removeItem('pending_registration');
         router.push('/');
       } else {
@@ -498,7 +486,21 @@ export default function Profile() {
                       color: '#111111',
                     }}
                   >
-                    <span style={{ fontSize: '18px', color: '#ea4335' }}>G</span>
+                    <span
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google"
+                        style={{ width: '20px', height: '20px' }}
+                      />
+                    </span>
                     <span>ລົງທະບຽນດ້ວຍ Google</span>
                   </button>
                 </div>

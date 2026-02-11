@@ -14,7 +14,6 @@ import { Avatar } from '@/components/Avatar';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-import { TermsModal } from '@/components/modals/TermsModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
@@ -51,8 +50,6 @@ export function SoldPageContent() {
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const hasFetchedRef = useRef(false);
 
   // Use home data hook for user profile and session management
@@ -298,7 +295,7 @@ export function SoldPageContent() {
       <HomeHeader
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session, showTermsModal, setShowTermsModal)}
+        onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session)}
         onNotificationClick={() => {
           if (!homeData.session) {
             router.push('/profile');
@@ -354,20 +351,6 @@ export function SoldPageContent() {
         loadingMore={postListData.loadingMore}
         hasMore={postListData.hasMore}
         hideBoost
-      />
-
-      {/* Terms Modal */}
-      <TermsModal
-        show={showTermsModal}
-        acceptedTerms={acceptedTerms}
-        onAcceptChange={setAcceptedTerms}
-        onClose={() => setShowTermsModal(false)}
-        onContinue={() => {
-          if (acceptedTerms) {
-            setShowTermsModal(false);
-            fileUpload.hiddenFileInputRef.current?.click();
-          }
-        }}
       />
 
       {/* Interaction Modal */}

@@ -7,7 +7,7 @@ import { safeParseSessionJSON } from '@/utils/storageUtils';
 interface UseFileUploadReturn {
   hiddenFileInputRef: React.RefObject<HTMLInputElement>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleCreatePostClick: (session: any, showTermsModal: boolean, setShowTermsModal: (show: boolean) => void) => void;
+  handleCreatePostClick: (session: any) => void;
 }
 
 export function useFileUpload(): UseFileUploadReturn {
@@ -26,9 +26,7 @@ export function useFileUpload(): UseFileUploadReturn {
   }, [router]);
 
   const handleCreatePostClick = useCallback((
-    session: any,
-    showTermsModal: boolean,
-    setShowTermsModal: (show: boolean) => void
+    session: any
   ) => {
     if (session) {
       hiddenFileInputRef.current?.click();
