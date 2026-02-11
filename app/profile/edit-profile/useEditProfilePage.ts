@@ -96,26 +96,27 @@ export function useEditProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initialize data when tab changes
+  // Initialize data when tab changes (ไม่ใส่ postListData ใน deps เพื่อไม่ให้ effect รันทุก re-render)
   useEffect(() => {
     if (userId && session) {
       postListData.setPage(0);
       postListData.setHasMore(true);
       postListData.fetchPosts(true);
     }
-  }, [tab, userId, session, postListData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ใช้ postListData จาก closure เฉพาะเมื่อ tab/userId/session เปลี่ยน
+  }, [tab, userId, session]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
   }, [postListData.loadingMore]);
 
-  // Load more when page changes
+  // Load more when page changes (ไม่ใส่ postListData ทั้งก้อนใน deps เพื่อลดการรัน effect ซ้ำ)
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && userId && session) {
-      // ให้พฤติกรรมการโหลดหน้าเพิ่มเติมเหมือนกับหน้า Liked/Saved
       postListData.fetchPosts(false, postListData.page);
     }
-  }, [postListData.page, postListData.loadingMore, userId, session, postListData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ใช้ postListData จาก closure เฉพาะเมื่อ page/loadingMore/userId/session เปลี่ยน
+  }, [postListData.page, postListData.loadingMore, userId, session]);
 
   const fetchProfile = async (uid: string) => {
     const { data } = await supabase

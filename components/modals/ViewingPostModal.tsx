@@ -240,7 +240,21 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
                   <span style={{ fontSize: '12px', color: '#4a4d52' }}>Ad</span>
                 </span>
               ) : (
-                <>{formatTime(viewingPost.created_at)} · {viewingPost.province}</>
+                <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
+                  <span style={{ color: '#4a4d52' }}>{formatTime(viewingPost.created_at)}</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '3px',
+                      height: '3px',
+                      borderRadius: '50%',
+                      backgroundColor: '#4a4d52',
+                      margin: '0 6px',
+                      transform: 'translateY(1px)',
+                    }}
+                  />
+                  <span style={{ color: '#4a4d52' }}>{viewingPost.province}</span>
+                </span>
               )}
             </div>
           </div>
