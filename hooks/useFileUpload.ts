@@ -33,9 +33,9 @@ export function useFileUpload(): UseFileUploadReturn {
     if (session) {
       hiddenFileInputRef.current?.click();
     } else {
-      setShowTermsModal(true);
+      router.push('/profile');
     }
-  }, []);
+  }, [router]);
 
   return {
     hiddenFileInputRef,

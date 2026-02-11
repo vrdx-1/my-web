@@ -159,14 +159,8 @@ export default function Register() {
   return (
     <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
       
-      {/* Header - ปุ่มย้อนกลับแบบหน้า Edit Profile */}
-      <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-      </div>
+      {/* Header - หน้าตั้งชื่อและรูปโปรไฟล์ (ไม่มีปุ่มย้อนกลับ) */}
+      <div style={{ padding: '15px 15px 5px 15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }} />
 
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <form onSubmit={handleCompleteProfile} style={{ textAlign: 'center' }}>
