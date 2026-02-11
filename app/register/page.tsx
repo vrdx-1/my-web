@@ -23,22 +23,19 @@ export default function Register() {
 
   useEffect(() => {
     const checkRegistrationData = async () => {
-      // ตรวจสอบว่ามีข้อมูลอีเมล/รหัสผ่านที่ฝากมาจากหน้า profile หรือไม่
-      const pendingData = localStorage.getItem('pending_registration');
-      if (!pendingData) {
-        router.push('/profile');
-        return;
-      }
-
-      // ดึงข้อมูลชื่อและรูปภาพที่เคยกรอกค้างไว้ (ถ้ามี)
-      const parsed = JSON.parse(pendingData);
-      if (parsed.username) setUsername(parsed.username);
-      if (parsed.avatarUrl) setAvatarUrl(parsed.avatarUrl);
-      
-      // ตรวจสอบ Session เดิม (ถ้ามีอยู่แล้วให้เซ็ต userId)
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUserId(session.user.id);
+      }
+      const pendingData = localStorage.getItem('pending_registration');
+      if (!pendingData && !session) {
+        router.push('/profile');
+        return;
+      }
+      if (pendingData) {
+        const parsed = JSON.parse(pendingData);
+        if (parsed.username) setUsername(parsed.username);
+        if (parsed.avatarUrl) setAvatarUrl(parsed.avatarUrl);
       }
     }
     checkRegistrationData();
@@ -107,73 +104,53 @@ export default function Register() {
     setLoading(true)
 
     try {
-      // 1. ดึงข้อมูล Email/Password จาก localStorage
-      const pendingData = safeParseJSON<{ email?: string; password?: string; avatarUrl?: string }>('pending_registration', {});
-      if (!pendingData.email || !pendingData.password) {
-        throw new Error('ບໍ່ພົບຂໍ້ມູນການລົງທະບຽນ');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        router.push('/profile');
+        return;
       }
+      const newUser = session.user;
 
-      // ตรวจสอบความยาวรหัสผ่าน (ต้องมีอย่างน้อย 6 ตัวอักษร)
-      if (pendingData.password.length < 6) {
-        throw new Error('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
-      }
+      const avatarPath = avatarUrl ? avatarUrl.split('/').slice(-2).join('/') : null;
 
-      // 2. ทำการสร้างบัญชีจริง (Sign Up) ที่นี่
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: pendingData.email,
-        password: pendingData.password,
-      });
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: newUser.id,
+          username: username,
+          avatar_url: avatarUrl,
+          updated_at: new Date(),
+        });
 
-      if (authError) throw authError;
-
-      const newUser = authData.user;
-      if (newUser) {
-        // Extract avatar path from URL for cleanup if needed
-        const avatarPath = avatarUrl ? avatarUrl.split('/').slice(-2).join('/') : null;
-        
-        // 3. บันทึกลงตาราง profiles
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: newUser.id,
-            username: username,
-            avatar_url: avatarUrl,
-            updated_at: new Date(),
-          });
-
-        if (profileError) {
-          // ถ้า profile upsert ล้มเหลว ให้ cleanup avatar file (ถ้ามี)
-          if (avatarPath) {
-            await supabase.storage.from('car-images').remove([avatarPath]).catch(() => {});
-          }
-          throw profileError;
+      if (profileError) {
+        if (avatarPath) {
+          await supabase.storage.from('car-images').remove([avatarPath]).catch(() => {});
         }
-
-        // 4. Logic การโอนย้ายข้อมูลจาก Guest
-        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
-        const deviceToken = localStorage.getItem('device_guest_token');
-        const guestTokens = Array.from(new Set([
-          ...storedPosts.map((p: any) => p.token),
-          deviceToken
-        ].filter(t => t !== null)));
-
-        if (guestTokens.length > 0) {
-          for (const token of guestTokens) {
-            await supabase.from('cars').update({ user_id: newUser.id }).eq('user_id', token);
-            await supabase.from('liked_posts').update({ user_id: newUser.id }).eq('user_id', token);
-            await supabase.from('saved_posts').update({ user_id: newUser.id }).eq('user_id', token);
-            await supabase.from('profiles').update({ id: newUser.id }).eq('id', token);
-          }
-          localStorage.removeItem('my_guest_posts');
-          localStorage.removeItem('device_guest_token');
-        }
-
-        // 5. ล้างข้อมูลชั่วคราวทั้งหมดและเสร็จสิ้น
-        localStorage.removeItem('pending_registration');
-        // บันทึก flag เพื่อแสดง popup ที่หน้า home
-        localStorage.setItem('show_registration_success', 'true');
-        router.push('/');
+        throw profileError;
       }
+
+      const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
+      const deviceToken = localStorage.getItem('device_guest_token');
+      const guestTokens = Array.from(new Set([
+        ...storedPosts.map((p: any) => p.token),
+        deviceToken
+      ].filter(t => t !== null)));
+
+      if (guestTokens.length > 0) {
+        for (const token of guestTokens) {
+          await supabase.from('cars').update({ user_id: newUser.id }).eq('user_id', token);
+          await supabase.from('liked_posts').update({ user_id: newUser.id }).eq('user_id', token);
+          await supabase.from('saved_posts').update({ user_id: newUser.id }).eq('user_id', token);
+          await supabase.from('profiles').update({ id: newUser.id }).eq('id', token);
+        }
+        localStorage.removeItem('my_guest_posts');
+        localStorage.removeItem('device_guest_token');
+      }
+
+      localStorage.removeItem('pending_registration');
+      localStorage.setItem('show_registration_success', 'true');
+      router.push('/');
     } catch (error: any) {
       setLoading(false);
     }

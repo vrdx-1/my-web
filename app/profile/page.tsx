@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,11 +15,13 @@ export default function Profile() {
   const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [validationMessages, setValidationMessages] = useState<string[]>([]);
   
-  // Register State
+  // Register State (OTP flow: ไม่ใช้รหัสผ่าน)
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [acceptedTerms, setAcceptedTerms] = useState(false); // เพิ่มสถานะ Checkbox
-  const [showPassword, setShowPassword] = useState(true); // Default แสดงรหัสผ่าน
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // User Data State
   const [username, setUsername] = useState('');
@@ -29,9 +31,8 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       // ตรวจสอบข้อมูลที่ค้างอยู่ใน localStorage ทันทีที่โหลดหน้า
-      const pendingData = safeParseJSON<{ email?: string; password?: string; acceptedTerms?: boolean }>('pending_registration', {});
+      const pendingData = safeParseJSON<{ email?: string; acceptedTerms?: boolean }>('pending_registration', {});
       if (pendingData.email) setEmail(pendingData.email);
-      if (pendingData.password) setPassword(pendingData.password);
       if (pendingData.acceptedTerms) setAcceptedTerms(pendingData.acceptedTerms);
 
       const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -65,16 +66,13 @@ export default function Profile() {
     }));
   };
 
-  // Logic การลงทะเบียนที่ปรับปรุงใหม่ (ยังไม่เรียก signUp)
-  const handleRegister = async (e: React.FormEvent) => {
+  // ส่ง OTP ไปอีเมล (ສ້າງບັນຊີໃໝ່ - ไม่ใช้รหัสผ่าน)
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (registerLoading) return;
 
     const missing: string[] = [];
     if (!email.trim()) missing.push('ກະລຸນາໃສ່ອີເມລ');
-    if (!password.trim()) missing.push('ກະລຸນາໃສ່ລະຫັດຜ່ານ');
-    else if (password.length < 6) missing.push('ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ');
-    if (!acceptedTerms) missing.push('ກະລຸນາຍອມຮັບຂໍ້ກຳນົດແລະນະໂຍບາຍ');
 
     if (missing.length > 0) {
       setValidationMessages(missing);
@@ -83,12 +81,93 @@ export default function Profile() {
     }
 
     setRegisterLoading(true);
+    setOtpError('');
     try {
-      updatePendingData({ email, password, acceptedTerms });
-      router.push('/register');
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: true },
+      });
+      if (error) {
+        setOtpError(error.message || 'ບໍ່ສາມາດສົ່ງ OTP ໄດ້');
+        setRegisterLoading(false);
+        return;
+      }
+      updatePendingData({ email: email.trim() });
+      setOtpSent(true);
     } catch (err) {
+      setOtpError('ບໍ່ສາມາດສົ່ງ OTP ໄດ້');
       setRegisterLoading(false);
+      return;
     }
+    setRegisterLoading(false);
+  };
+
+  // หลังกรอก OTP: ถ้าเป็นผู้ใช้ใหม่ → ไปหน้าใส่ชื่อ+รูป, ถ้าเคยมีบัญชี → ไป home
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (registerLoading) return;
+    if (!otpValue.trim()) {
+      setOtpError('ກະລຸນາໃສ່ OTP ທີ່ໄດ້ຮັບ');
+      return;
+    }
+
+    setRegisterLoading(true);
+    setOtpError('');
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otpValue.trim(),
+        type: 'email',
+      });
+      if (error) {
+        setOtpError('OTP ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸແລ້ວ');
+        setOtpValue('');
+        setRegisterLoading(false);
+        return;
+      }
+      const user = data?.user;
+      if (!user) {
+        setOtpError('ບໍ່ສາມາດຢືນຢັນໄດ້');
+        setOtpValue('');
+        setRegisterLoading(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .maybeSingle();
+      const hasCompleteProfile = profile?.username && profile.username.trim() !== '' && profile.username !== 'Guest User';
+      if (hasCompleteProfile) {
+        const storedPosts = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
+        const deviceToken = localStorage.getItem('device_guest_token');
+        const guestTokens = Array.from(new Set([
+          ...storedPosts.map((p: any) => p.token),
+          deviceToken
+        ].filter(t => t !== null)));
+        if (guestTokens.length > 0) {
+          try {
+            for (const token of guestTokens) {
+              await supabase.from('cars').update({ user_id: user.id }).eq('user_id', token);
+              await supabase.from('liked_posts').update({ user_id: user.id }).eq('user_id', token);
+              await supabase.from('saved_posts').update({ user_id: user.id }).eq('user_id', token);
+              await supabase.from('profiles').update({ id: user.id }).eq('id', token);
+            }
+            localStorage.removeItem('my_guest_posts');
+            localStorage.removeItem('device_guest_token');
+          } catch (_) {}
+        }
+        localStorage.removeItem('pending_registration');
+        router.push('/');
+      } else {
+        updatePendingData({ email: email.trim(), acceptedTerms });
+        router.push('/register');
+      }
+    } catch (_) {
+      setOtpError('ບໍ່ສາມາດຢືນຢັນໄດ້');
+      setOtpValue('');
+    }
+    setRegisterLoading(false);
   };
 
   if (loading)
@@ -145,132 +224,137 @@ export default function Profile() {
               />
             </div>
 
-            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <input 
-                type="email" 
-                placeholder="ອີເມລ" 
-                value={email}
-                maxLength={50}
-                onChange={(e) => {
-                  const val = e.target.value.slice(0, 50);
-                  setEmail(val);
-                  updatePendingData({ email: val });
-                }}
-                style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none', color: '#111111' }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    placeholder="ລະຫັດຜ່ານ" 
-                    value={password}
-                    maxLength={50}
-                    onChange={(e) => {
-                      const val = e.target.value.slice(0, 50);
-                      setPassword(val);
-                      updatePendingData({ password: val });
-                    }}
-                    style={{ 
-                      width: '100%', 
-                      padding: '15px 45px 15px 15px', 
-                      borderRadius: '12px', 
-                      border: password.length > 0 && password.length < 6 ? '1px solid #e0245e' : '1px solid #ddd', 
-                      background: '#f9f9f9', 
-                      fontSize: '16px', 
-                      outline: 'none' 
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '5px'
-                    }}
-                  >
-                    {showPassword ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                {password.length > 0 && password.length < 6 && (
-                  <div style={{ fontSize: '13px', color: '#e0245e', textAlign: 'left' }}>
-                    ລະຫັດຜ່ານຕ້ອງມີຂັ້ນຕ່ຳ 6 ຕົວ
-                  </div>
-                )}
-              </div>
-
-              {/* เพิ่มส่วน Checkbox ยอมรับเงื่อนไข */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', margin: '0' }}>
+            {!otpSent ? (
+              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <input 
-                  type="checkbox" 
-                  id="profile-terms"
-                  checked={acceptedTerms}
+                  type="email" 
+                  placeholder="ອີເມລ" 
+                  value={email}
+                  maxLength={50}
                   onChange={(e) => {
-                    const val = e.target.checked;
-                    setAcceptedTerms(val);
-                    updatePendingData({ acceptedTerms: val });
+                    const val = e.target.value.slice(0, 50);
+                    setEmail(val);
+                    updatePendingData({ email: val });
                   }}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none', color: '#111111' }}
                 />
-                <div style={{ fontSize: '14px', color: '#000' }}>
-                  ຍອມຮັບ <Link 
-                    href="/terms" 
-                    onClick={(e) => e.stopPropagation()} 
-                    style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}
-                  >
-                    ຂໍ້ກຳນົດແລະນະໂຍບາຍ
-                  </Link>
+                {otpError && (
+                  <div style={{ fontSize: '14px', color: '#e0245e', textAlign: 'center' }}>{otpError}</div>
+                )}
+                <button 
+                  type="submit" 
+                  disabled={registerLoading}
+                  style={{ 
+                    width: '100%', 
+                    padding: '15px', 
+                    background: '#1877f2', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    fontSize: '18px', 
+                    cursor: registerLoading ? 'not-allowed' : 'pointer', 
+                    marginTop: '5px' 
+                  }}
+                >
+                  {registerLoading ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <ButtonSpinner />
+                    </span>
+                  ) : 'ສົ່ງ OTP'}
+                </button>
+                <p style={{ fontSize: '13px', color: '#65676b', textAlign: 'center', lineHeight: 1.5, marginTop: '12px', padding: '0 8px' }}>
+                  ໂດຍການສືບຕໍ່ນຳໃຊ້ບັນຊີທ່ານຕົກລົງເຫັນດີຕໍ່ ຂໍ້ກຳນົດການບໍລິການ ຂອງພວກເຮົາ ແລະ ຮັບຊາບວ່າທ່ານໄດ້ອ່ານ ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ ຂອງພວກເຮົາແລ້ວ.
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <p style={{ fontSize: '14px', color: '#65676b', textAlign: 'center', marginBottom: '8px' }}>
+                  ກະລຸນາໃສ່ OTP ທີ່ສົ່ງໄປຫາ {email}
+                </p>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '4px' }}>
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { otpInputRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otpValue[i] ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, '').slice(-1);
+                        const next = (otpValue.slice(0, i) + v + otpValue.slice(i + 1)).slice(0, 6);
+                        setOtpValue(next);
+                        if (v && i < 5) otpInputRefs.current[i + 1]?.focus();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !otpValue[i] && i > 0) {
+                          setOtpValue((prev) => prev.slice(0, i - 1) + prev.slice(i));
+                          otpInputRefs.current[i - 1]?.focus();
+                        } else if (e.key === 'Backspace' && otpValue[i]) {
+                          setOtpValue((prev) => prev.slice(0, i) + prev.slice(i + 1));
+                        }
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                        if (pasted.length > 0) {
+                          const next = (otpValue.slice(0, i) + pasted).slice(0, 6);
+                          setOtpValue(next);
+                          const focusIdx = Math.min(i + pasted.length, 5);
+                          otpInputRefs.current[focusIdx]?.focus();
+                        }
+                      }}
+                      style={{
+                        width: '44px',
+                        height: '52px',
+                        padding: 0,
+                        borderRadius: '12px',
+                        border: '1px solid #ddd',
+                        background: '#f9f9f9',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        outline: 'none',
+                        color: '#111111',
+                        textAlign: 'center',
+                      }}
+                    />
+                  ))}
                 </div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={registerLoading}
-                style={{ 
-                  width: '100%', 
-                  padding: '15px', 
-                  background: '#1877f2', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '12px', 
-                  fontWeight: 'bold', 
-                  fontSize: '18px', 
-                  cursor: registerLoading ? 'not-allowed' : 'pointer', 
-                  marginTop: '5px' 
-                }}
-              >
-                {registerLoading ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <ButtonSpinner />
-                  </span>
-                ) : 'ສ້າງບັນຊີໃໝ່'}
-              </button>
-            </form>
-
-            <button 
-              onClick={() => router.push('/login')}
-              style={{ width: '100%', padding: '15px', background: '#e0e0e0', color: '#1c1e21', border: '1px solid #ddd', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '80px' }}
-            >
-              ເຂົ້າສູ່ລະບົບ
-            </button>
+                {otpError && (
+                  <div style={{ fontSize: '14px', color: '#e0245e', textAlign: 'center' }}>{otpError}</div>
+                )}
+                <button 
+                  type="submit" 
+                  disabled={registerLoading}
+                  style={{ 
+                    width: '100%', 
+                    padding: '15px', 
+                    background: '#1877f2', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    fontSize: '18px', 
+                    cursor: registerLoading ? 'not-allowed' : 'pointer', 
+                    marginTop: '5px' 
+                  }}
+                >
+                  {registerLoading ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <ButtonSpinner />
+                    </span>
+                  ) : 'ຢືນຢັນ OTP'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setOtpSent(false); setOtpValue(''); setOtpError(''); }}
+                  style={{ background: 'none', border: 'none', color: '#1877f2', fontSize: '14px', cursor: 'pointer', marginTop: '4px' }}
+                >
+                  ສົ່ງ OTP ໃໝ່
+                </button>
+              </form>
+            )}
 
             {showValidationPopup && (
               <div
