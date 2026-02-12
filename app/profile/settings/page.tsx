@@ -16,7 +16,7 @@ export default function Settings() {
 
   const handleLogoutConfirm = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
     if (!error) {
       window.location.href = '/'
     } else {

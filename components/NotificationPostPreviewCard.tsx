@@ -368,7 +368,7 @@ export const NotificationPostPreviewCard = React.memo<{
         {/* แถวบนสุด: x ຄົນມັກໂພສຂອງທ່ານ + Avatar */}
         <div
           style={{
-            fontSize: '17px',
+            fontSize: '14px',
             lineHeight: '1.4',
             color: '#050505',
             display: 'flex',
@@ -377,7 +377,7 @@ export const NotificationPostPreviewCard = React.memo<{
             marginBottom: '6px',
           }}
         >
-          <span style={{ fontSize: '17px', fontWeight: '600', color: '#4a4d52' }}>{interactionTotal}</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52' }}>{interactionTotal}</span>
           <span style={{ color: '#050505' }}>ຄົນມັກໂພສຂອງທ່ານ</span>
           <AvatarGroup avatars={notification.interaction_avatars || []} totalCount={interactionTotal} />
         </div>
@@ -385,11 +385,11 @@ export const NotificationPostPreviewCard = React.memo<{
         {/* กลาง: ສະຖານະໂຄສະນາ (เฉพาะโพสต์ที่มี boost) */}
         {boostBadgeConfig && (
           <div style={{ marginTop: '2px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#6b6b6b', fontWeight: 600 }}>ສະຖານະໂຄສະນາ:</span>
+            <span style={{ fontSize: '11px', color: '#6b6b6b', fontWeight: 600 }}>ສະຖານະໂຄສະນາ:</span>
             <div
               style={{
                 display: 'inline-block',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 700,
                 padding: '3px 8px',
                 borderRadius: '999px',
@@ -405,7 +405,7 @@ export const NotificationPostPreviewCard = React.memo<{
         )}
 
         {/* ล่างสุด: เวลาแจ้งเตือน (ใช้รูปแบบเดียวกับ postcard) */}
-        <div style={{ fontSize: '12px', color: '#6b6b6b', fontWeight: 600, marginTop: boostBadgeConfig ? '4px' : '0' }}>
+        <div style={{ fontSize: '11px', color: '#6b6b6b', fontWeight: 600, marginTop: boostBadgeConfig ? '4px' : '0' }}>
           {timeAgoText}
         </div>
       </div>
