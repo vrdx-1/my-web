@@ -50,7 +50,13 @@ export default function Profile() {
 
         if (profile) {
           setUsername(profile.username || '');
-          setAvatarUrl(profile.avatar_url || '');
+
+          const rawAvatar = profile.avatar_url || '';
+          const isDefaultAvatar =
+            typeof rawAvatar === 'string' && rawAvatar.includes('100x100');
+
+          // ถ้าเป็นรูป default 100×100 ให้ใช้ Avatar เงาคนสีเทาเหมือนหน้า Home แทน
+          setAvatarUrl(isDefaultAvatar ? '' : rawAvatar);
         }
       }
       setLoading(false);
@@ -177,10 +183,37 @@ export default function Profile() {
         !!profile.avatar_url &&
         String(profile.avatar_url).trim() !== '';
 
-      // ถ้า email นี้เพิ่งถูกสร้างเป็น user ครั้งแรก → บังคับไปกรอกชื่อ/รูปโปรไฟล์ก่อนเสมอ
+      // ถ้า email นี้เพิ่งถูกสร้างเป็น user ครั้งแรก → ตั้งค่าชื่อและ avatar เอง แล้วเข้า Home ทันที
       if (isNewEmailUser) {
-        updatePendingData({ email: email.trim(), acceptedTerms });
-        router.push('/register');
+        const meta = user.user_metadata || {};
+        const displayName =
+          meta.full_name ||
+          meta.name ||
+          meta.display_name ||
+          '';
+
+        const emailStr = user.email ?? email.trim();
+        const emailFallback = emailStr.replace(/@gmail\.com$/i, '');
+
+        const defaultName = (displayName || emailFallback || 'Guest User').trim();
+
+        try {
+          await supabase
+            .from('profiles')
+            .upsert(
+              {
+                id: user.id,
+                username: defaultName,
+                // ไม่กำหนด avatar_url เพื่อให้ UI ใช้ Avatar เริ่มต้นเหมือนปุ่มโปรไฟล์หน้า Home
+              },
+              { onConflict: 'id' }
+            );
+        } catch {
+          // ถ้า upsert โปรไฟล์พัง ให้ข้ามไปไม่ให้มีผลกับการ login
+        }
+
+        localStorage.removeItem('pending_registration');
+        router.push('/');
       } else if (hasCompleteProfile) {
         // ถ้ามีโปรไฟล์ครบแล้ว (เคยลงทะเบียนแล้ว) → เข้า Home ทันที
         localStorage.removeItem('pending_registration');
@@ -452,28 +485,6 @@ export default function Profile() {
 
                   <button
                     type="button"
-                    onClick={() => handleOAuthLogin('apple')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      borderRadius: '999px',
-                      border: 'none',
-                      background: '#f0f2f5',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      color: '#111111',
-                    }}
-                  >
-                    <span style={{ fontSize: '16px' }}></span>
-                    <span>ລົງທະບຽນດ້ວຍ Apple</span>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => handleOAuthLogin('google')}
                     style={{
                       width: '100%',
@@ -510,7 +521,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
+              <div style={{ marginTop: '40px', marginBottom: '24px' }}>
                 <p style={{ fontSize: '13px', color: '#65676b', textAlign: 'center', lineHeight: 1.5, marginTop: '0', marginBottom: '20px', padding: '0 8px' }}>
                   ການສ້າງບັນຊີໝາຍຄວາມວ່າທ່ານຍອມຮັບ{' '}
                   <Link
@@ -522,7 +533,7 @@ export default function Profile() {
                   </Link>
                 </p>
 
-                <p style={{ fontSize: '15px', color: '#1c1e21', textAlign: 'center', marginTop: '4px', fontWeight: '600' }}>
+                <p style={{ fontSize: '18px', color: '#1c1e21', textAlign: 'center', marginTop: '4px', fontWeight: '700' }}>
                   ທ່ານມີບັນຊີແລ້ວບໍ?{' '}
                   <button
                     type="button"
@@ -534,7 +545,7 @@ export default function Profile() {
                       margin: 0,
                       color: '#1877f2',
                       cursor: 'pointer',
-                      fontSize: '15px',
+                      fontSize: '16px',
                       fontWeight: '700',
                     }}
                   >

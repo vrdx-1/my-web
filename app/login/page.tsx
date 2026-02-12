@@ -187,6 +187,18 @@ export default function Login() {
     await verifyOtpCode(otpValue.trim())
   }
 
+  const handleOAuthLogin = async (provider: 'facebook' | 'google') => {
+    try {
+      if (typeof window === 'undefined') return
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/register` },
+      })
+    } catch (err) {
+      console.error('OAuth login error', err)
+    }
+  }
+
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
       
@@ -257,45 +269,7 @@ export default function Login() {
                   </div>
                 ))}
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0 12px' }}>
-                <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
-                <span style={{ margin: '0 10px', fontSize: '13px', color: '#65676b' }}>ຫຼື</span>
-                <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
-              </div>
             </div>
-          )}
-
-          {!otpSent && !hideSavedAccounts && savedAccounts.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(true)
-                setHideSavedAccounts(true)
-                setEmail('')
-                setOtpError('')
-                setOtpSent(false)
-                setOtpValue('')
-              }}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '999px',
-                border: '1px solid #e0e0e0',
-                background: '#f9f9f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                color: '#111111',
-                marginBottom: '18px',
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>+</span>
-              <span>ເຂົ້າບັນຊີອື່ນ</span>
-            </button>
           )}
 
           {!otpSent && showForm && (
@@ -449,6 +423,113 @@ export default function Login() {
                 ສົ່ງ OTP ໃໝ່{resendSeconds > 0 ? ` (${resendSeconds})` : ''}
               </button>
             </form>
+          )}
+
+          {!otpSent && (
+            <div style={{ marginTop: '30px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
+                <span style={{ margin: '0 10px', fontSize: '13px', color: '#65676b' }}>ຫຼື</span>
+                <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleOAuthLogin('facebook')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '999px',
+                    border: 'none',
+                    background: '#f0f2f5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    color: '#111111',
+                  }}
+                >
+                  <span style={{ width: '20px', height: '20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </span>
+                  <span>ເຂົ້າສູ່ລະບົບດ້ວຍ Facebook</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOAuthLogin('google')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '999px',
+                    border: 'none',
+                    background: '#f0f2f5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    color: '#111111',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt="Google"
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                  </span>
+                  <span>ເຂົ້າສູ່ລະບົບດ້ວຍ Google</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!otpSent && !hideSavedAccounts && savedAccounts.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(true)
+                setHideSavedAccounts(true)
+                setEmail('')
+                setOtpError('')
+                setOtpSent(false)
+                setOtpValue('')
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: '999px',
+                border: '1px solid #e0e0e0',
+                background: '#f9f9f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#111111',
+                marginTop: '16px',
+                marginBottom: '18px',
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>+</span>
+              <span>ເຂົ້າບັນຊີອື່ນ</span>
+            </button>
           )}
         </div>
       </div>
