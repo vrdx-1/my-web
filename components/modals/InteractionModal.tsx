@@ -49,9 +49,21 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
   useEffect(() => {
     if (show && !shouldHide) {
       const originalOverflow = document.body.style.overflow;
+      const originalPosition = document.body.style.position;
+      const originalTop = document.body.style.top;
+      const scrollY = window.scrollY;
+      
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
       return () => {
         document.body.style.overflow = originalOverflow;
+        document.body.style.position = originalPosition;
+        document.body.style.top = originalTop;
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
       };
     }
   }, [show, shouldHide]);
@@ -97,7 +109,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
       style={{ 
         position: 'fixed', 
         inset: 0, 
-        background: 'rgba(0,0,0,0.5)', 
+        background: 'rgba(0,0,0,0.6)', 
         zIndex: 10000, 
         display: 'flex', 
         alignItems: 'flex-end', 
@@ -105,8 +117,13 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
         touchAction: 'none', 
         overflow: 'hidden',
         overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
       }} 
       onClick={onClose}
+      onTouchMove={(e) => {
+        // Prevent background scrolling when touching overlay
+        e.preventDefault();
+      }}
     >
       <div 
         onClick={e => e.stopPropagation()} 
