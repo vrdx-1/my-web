@@ -45,6 +45,17 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
 }) => {
   const shouldHide = !show || !postId;
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (show && !shouldHide) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [show, shouldHide]);
+
   // Lazy load รายชื่อใน bottom sheet ให้ใช้ pattern เดียวกับ feed หน้า Home
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);

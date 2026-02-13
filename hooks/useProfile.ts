@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { isProviderDefaultAvatar } from '@/utils/avatarUtils';
 
 interface Profile {
   username: string;
@@ -54,9 +55,15 @@ export function useProfile(userId?: string): UseProfileReturn {
       if (fetchError) throw fetchError;
 
       if (data) {
+        let avatarUrl: string | null = data.avatar_url || null;
+        // ถ้าเป็นรูป default จาก OAuth ให้ลบออกจาก DB เพื่อใช้รูป default ของระบบ
+        if (avatarUrl && isProviderDefaultAvatar(avatarUrl)) {
+          await supabase.from('profiles').update({ avatar_url: null }).eq('id', uid);
+          avatarUrl = null;
+        }
         setProfile({
           username: data.username || 'User',
-          avatar_url: data.avatar_url || null,
+          avatar_url: avatarUrl,
           phone: data.phone || null,
           last_seen: data.last_seen || null,
         });

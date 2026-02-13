@@ -110,9 +110,8 @@ export function useInteractionModal(): UseInteractionModalReturn {
   const onSheetTouchEnd = useCallback(() => {
     // ป้องกันไม่ให้ bottom sheet ขยายใหญ่ขึ้นเมื่อ scroll ดูรายชื่อ
     // ให้ขยายได้เฉพาะเมื่อ drag ที่ header หรือ drag handle เท่านั้น
-    if (currentY < -50) {
-      setInteractionSheetMode('full');
-    } else if (currentY > 50) {
+    // ไม่ให้ขยายใหญ่ขึ้น - ปิดได้เฉพาะเมื่อลากลง
+    if (currentY > 50) {
       if (interactionSheetMode === 'full') {
         setInteractionSheetMode('half');
       } else {

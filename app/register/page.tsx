@@ -7,6 +7,7 @@ import { safeParseJSON } from '@/utils/storageUtils'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
+import { isProviderDefaultAvatar } from '@/utils/avatarUtils'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -26,6 +27,26 @@ export default function Register() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUserId(session.user.id);
+        // บัญชีที่มีอยู่แล้ว Login ผ่านหน้าลงทะเบียนได้ → ส่งเข้า Home
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        const hasExistingAccount =
+          profile &&
+          profile.username &&
+          String(profile.username).trim() !== '' &&
+          profile.username !== 'Guest User';
+        if (hasExistingAccount) {
+          localStorage.removeItem('pending_registration');
+          router.push('/');
+          return;
+        }
+        // ตรวจสอบรูป default (100×100) จาก OAuth และลบออก
+        if (profile?.avatar_url && isProviderDefaultAvatar(profile.avatar_url)) {
+          await supabase.from('profiles').update({ avatar_url: null }).eq('id', session.user.id);
+        }
       }
       const pendingData = localStorage.getItem('pending_registration');
       if (!pendingData && !session) {
@@ -35,7 +56,15 @@ export default function Register() {
       if (pendingData) {
         const parsed = JSON.parse(pendingData);
         if (parsed.username) setUsername(parsed.username);
-        if (parsed.avatarUrl) setAvatarUrl(parsed.avatarUrl);
+        if (parsed.avatarUrl) {
+          // ตรวจสอบว่า avatarUrl จาก localStorage เป็น default avatar หรือไม่
+          const avatarUrl = parsed.avatarUrl;
+          if (isProviderDefaultAvatar(avatarUrl)) {
+            setAvatarUrl(''); // ถ้าเป็น default avatar ให้ล้างออก
+          } else {
+            setAvatarUrl(avatarUrl);
+          }
+        }
       }
     }
     checkRegistrationData();
@@ -112,14 +141,36 @@ export default function Register() {
       }
       const newUser = session.user;
 
+      // บัญชีที่มีอยู่แล้ว Login ผ่านหน้าลงทะเบียนได้ → ส่งเข้า Home
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', newUser.id)
+        .single();
+      const hasExistingAccount =
+        existingProfile &&
+        existingProfile.username &&
+        String(existingProfile.username).trim() !== '' &&
+        existingProfile.username !== 'Guest User';
+      if (hasExistingAccount) {
+        setLoading(false);
+        localStorage.removeItem('pending_registration');
+        router.push('/');
+        return;
+      }
+
       const avatarPath = avatarUrl ? avatarUrl.split('/').slice(-2).join('/') : null;
+
+      // ตรวจสอบรูป default (100×100) และลบออกหลังลงทะเบียนเสร็จ
+      // ถ้าเป็นรูป default ให้ตั้งเป็น null เพื่อใช้รูป default ของระบบแทน
+      const finalAvatarUrl = avatarUrl && isProviderDefaultAvatar(avatarUrl) ? null : avatarUrl;
 
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
           id: newUser.id,
           username: username,
-          avatar_url: avatarUrl,
+          avatar_url: finalAvatarUrl,
           updated_at: new Date(),
         });
 

@@ -116,7 +116,7 @@ export default function Login() {
       })
       if (error) {
         if (error.message === 'Signups not allowed for otp') {
-          setOtpError('ອີເມລນີ້ຍັງບໍ່ເຄີຍລົງທະບຽນ ກະລຸນາລົງທະບຽນກ່ອນ')
+          setOtpError('ອີເມລນີ້ຍັງບໍ່ເຄີຍລົງທະບຽນ ກະລຸນາໄປໜ້າສ້າງບັນຊີໃໝ່')
         } else {
           setOtpError(error.message || 'ບໍ່ສາມາດສົ່ງ OTP ໄດ້')
         }
@@ -187,12 +187,13 @@ export default function Login() {
     await verifyOtpCode(otpValue.trim())
   }
 
+  // หน้าเข้าสู่ระบบ: ไม่สร้างบัญชีใหม่ → OAuth กลับมา Home เลย
   const handleOAuthLogin = async (provider: 'facebook' | 'google') => {
     try {
       if (typeof window === 'undefined') return
       await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/register` },
+        options: { redirectTo: `${window.location.origin}/` },
       })
     } catch (err) {
       console.error('OAuth login error', err)
@@ -397,7 +398,7 @@ export default function Login() {
                     })
                     if (error) {
                       if (error.message === 'Signups not allowed for otp') {
-                        setOtpError('ອີເມລນີ້ຍັງບໍ່ເຄີຍລົງທະບຽນ ກະລຸນາລົງທະບຽນກ່ອນ')
+                        setOtpError('ອີເມລນີ້ຍັງບໍ່ເຄີຍລົງທະບຽນ ກະລຸນາໄປໜ້າສ້າງບັນຊີໃໝ່')
                       } else {
                         setOtpError(error.message || 'ບໍ່ສາມາດສົ່ງ OTP ໃໝ່ໄດ້')
                       }

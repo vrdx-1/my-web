@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { TabSpinner } from '@/components/LoadingSpinner';
-import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
+import { Avatar } from '@/components/Avatar';
 
 interface AppHeaderProps {
   searchTerm: string;
@@ -220,15 +220,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           )}
         </button>
 
-        {/* Profile Avatar */}
+        {/* Profile Avatar (รูป OAuth 100x100/s100 แสดงเป็นไอคอนเงา) */}
         <Link href="/profile" style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
-          <div style={{ width: `${controlSize}px`, height: `${controlSize}px`, borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {userProfile?.avatar_url ? (
-              <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <GuestAvatarIcon size={iconSize} />
-            )}
-          </div>
+          <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
         </Link>
       </div>
 

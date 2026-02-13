@@ -3,6 +3,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 // Shared Hooks
+import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useMenu } from '@/hooks/useMenu';
@@ -75,6 +77,30 @@ export function useEditProfilePage() {
     setJustSavedPosts,
   });
 
+  // Fetch liked status for all posts (like home page)
+  const fetchLikedStatus = useCallback(async (userIdOrToken: string, currentSession: any) => {
+    const table = currentSession ? 'post_likes' : 'post_likes_guest';
+    const column = currentSession ? 'user_id' : 'guest_token';
+    const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
+    if (data) {
+      const likedMap: { [key: string]: boolean } = {};
+      data.forEach(item => likedMap[item.post_id] = true);
+      postListData.setLikedPosts(likedMap);
+    }
+  }, [postListData.setLikedPosts]);
+
+  // Fetch saved status for all posts (like home page)
+  const fetchSavedStatus = useCallback(async (userIdOrToken: string, currentSession: any) => {
+    const table = currentSession ? 'post_saves' : 'post_saves_guest';
+    const column = currentSession ? 'user_id' : 'guest_token';
+    const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
+    if (data) {
+      const savedMap: { [key: string]: boolean } = {};
+      data.forEach(item => savedMap[item.post_id] = true);
+      postListData.setSavedPosts(savedMap);
+    }
+  }, [postListData.setSavedPosts]);
+
   useEffect(() => {
     const checkUser = async () => {
       const {
@@ -102,9 +128,12 @@ export function useEditProfilePage() {
       postListData.setPage(0);
       postListData.setHasMore(true);
       postListData.fetchPosts(true);
+      // Fetch liked and saved status when tab changes (like home page)
+      fetchLikedStatus(userId, session);
+      fetchSavedStatus(userId, session);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ใช้ postListData จาก closure เฉพาะเมื่อ tab/userId/session เปลี่ยน
-  }, [tab, userId, session]);
+  }, [tab, userId, session, fetchLikedStatus, fetchSavedStatus]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
@@ -127,7 +156,13 @@ export function useEditProfilePage() {
 
     if (data) {
       setUsername(data.username || '');
-      setAvatarUrl(data.avatar_url || '');
+      const rawAvatar = data.avatar_url || '';
+      if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+        await supabase.from('profiles').update({ avatar_url: null }).eq('id', uid);
+        setAvatarUrl('');
+      } else {
+        setAvatarUrl(getDisplayAvatarUrl(rawAvatar) || '');
+      }
       setPhone(data.phone || '');
     }
   };
@@ -204,6 +239,14 @@ export function useEditProfilePage() {
     interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
+
+  // Fetch liked and saved status when session is available (like home page)
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchLikedStatus(session.user.id, session);
+      fetchSavedStatus(session.user.id, session);
+    }
+  }, [session, fetchLikedStatus, fetchSavedStatus]);
 
   // Fetch interactions for bottom sheet (likes / saves)
   const fetchInteractions = useCallback(

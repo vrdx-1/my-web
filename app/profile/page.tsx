@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { safeParseJSON } from '@/utils/storageUtils';
+import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { LAO_FONT } from '@/utils/constants';
 import { ButtonSpinner, PageSpinner } from '@/components/LoadingSpinner';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
@@ -41,29 +42,147 @@ export default function Profile() {
       
       if (currentSession) {
         setSession(currentSession);
+        const user = currentSession.user;
+        
+        // ตรวจสอบว่าเป็นบัญชีใหม่จาก OAuth (Google/Facebook) หรือไม่
+        const createdAtMs = user.created_at ? new Date(user.created_at).getTime() : NaN;
+        const isNewEmailUser =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs < 1 * 60 * 1000; // ภายใน 1 นาทีถือว่าเป็น email ใหม่ที่เพิ่งสมัคร
+
         const { data: profile } = await supabase
           .from('profiles')
           // ดึงเฉพาะข้อมูลที่ใช้แสดงจริง ๆ เพื่อลดงานโหลดหน้า (ลดอาการกระตุก)
           .select('username, avatar_url')
-          .eq('id', currentSession.user.id)
-          .single();
+          .eq('id', user.id)
+          .maybeSingle();
 
+        // ถ้าเป็นบัญชีใหม่จาก OAuth → auto-setup เหมือน email (upsert ทุกครั้ง)
+        // แต่ต้อง redirect เฉพาะเมื่อเป็น OAuth callback เท่านั้น
+        // ถ้าผู้ใช้กดเข้าหน้า profile เอง (มี username อยู่แล้ว) → แสดง profile ตามปกติ
+        if (isNewEmailUser) {
+          // ตรวจสอบว่าผู้ใช้กดเข้าหน้า profile เองหรือไม่ (มี username ที่ไม่ใช่ Guest User)
+          const hasRealUsername =
+            !!profile &&
+            !!profile.username &&
+            profile.username.trim() !== '' &&
+            profile.username !== 'Guest User';
+
+          // ตรวจสอบว่าเป็น OAuth provider หรือไม่
+          const isOAuthProvider = user.app_metadata?.provider && 
+            (user.app_metadata.provider === 'google' || user.app_metadata.provider === 'facebook');
+
+          // ถ้าเป็น OAuth callback (เป็น OAuth provider และยังไม่มี username) → auto-setup และ redirect
+          // ถ้าผู้ใช้กดเข้าหน้า profile เอง (มี username อยู่แล้ว) → ข้าม auto-setup
+          if (isOAuthProvider && !hasRealUsername) {
+            // ตรวจสอบรูป default (100×100) และลบออก
+            const rawAvatar = profile?.avatar_url || '';
+            if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+              await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
+            }
+
+            // ตั้ง default name และ avatar_url: null ทุกครั้ง
+            const meta = user.user_metadata || {};
+            // ลองหา Display name จาก metadata (full_name, name, display_name)
+            const displayName =
+              meta.full_name ||
+              meta.name ||
+              meta.display_name ||
+              '';
+
+            // ถ้าไม่เจอ Display name → ใช้ชื่อจากอีเมลแต่ตัด "@gmail.com" หรือ domain อื่นๆ ออก
+            const emailStr = user.email || '';
+            // ตัด domain ออก (เช่น @gmail.com, @outlook.com, @yahoo.com เป็นต้น)
+            const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
+
+            // ใช้ Display name แทนอีเมล (ถ้ามี) ถ้าไม่มีค่อยใช้อีเมลที่ตัด domain ออก
+            const defaultName = (displayName || emailFallback || 'Guest User').trim();
+
+            try {
+              await supabase
+                .from('profiles')
+                .upsert(
+                  {
+                    id: user.id,
+                    username: defaultName,
+                    avatar_url: null, // ตั้ง default รูป Avatar (null = รูป default ของระบบ) ทุกครั้ง
+                  },
+                  { onConflict: 'id' }
+                );
+              
+              // อัพเดท state เพื่อแสดงผล
+              setUsername(defaultName);
+              setAvatarUrl('');
+              
+              // ลบ pending registration และ redirect ไปหน้า home
+              localStorage.removeItem('pending_registration');
+              router.push('/');
+              return;
+            } catch {
+              // ถ้า upsert โปรไฟล์พัง ให้ข้ามไป
+            }
+          } else if (isOAuthProvider && hasRealUsername) {
+            // เป็น OAuth provider แต่มี username อยู่แล้ว (ผู้ใช้กดเข้าหน้า profile เอง) → แสดง profile ตามปกติ
+            // ไม่ต้อง redirect
+          } else if (!isOAuthProvider) {
+            // ไม่ใช่ OAuth provider (เป็น email registration) → auto-setup แต่ไม่ redirect (ให้แสดง profile ตามปกติ)
+            // ตรวจสอบรูป default (100×100) และลบออก
+            const rawAvatar = profile?.avatar_url || '';
+            if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+              await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
+            }
+
+            // ตั้ง default name และ avatar_url: null ทุกครั้ง
+            const meta = user.user_metadata || {};
+            const displayName =
+              meta.full_name ||
+              meta.name ||
+              meta.display_name ||
+              '';
+            const emailStr = user.email || '';
+            const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
+            const defaultName = (displayName || emailFallback || 'Guest User').trim();
+
+            try {
+              await supabase
+                .from('profiles')
+                .upsert(
+                  {
+                    id: user.id,
+                    username: defaultName,
+                    avatar_url: null,
+                  },
+                  { onConflict: 'id' }
+                );
+              
+              // อัพเดท state เพื่อแสดงผล
+              setUsername(defaultName);
+              setAvatarUrl('');
+            } catch {
+              // ถ้า upsert โปรไฟล์พัง ให้ข้ามไป
+            }
+          }
+        }
+
+        // กรณีปกติ (ไม่ใช่บัญชีใหม่) → แสดง profile ตามปกติ
         if (profile) {
           setUsername(profile.username || '');
 
           const rawAvatar = profile.avatar_url || '';
-          const isDefaultAvatar =
-            typeof rawAvatar === 'string' && rawAvatar.includes('100x100');
-
-          // ถ้าเป็นรูป default 100×100 ให้ใช้ Avatar เงาคนสีเทาเหมือนหน้า Home แทน
-          setAvatarUrl(isDefaultAvatar ? '' : rawAvatar);
+          // ถ้าเป็นรูป default จาก OAuth ให้ลบออกจาก DB เพื่อใช้รูป default ของระบบ
+          if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+            await supabase.from('profiles').update({ avatar_url: null }).eq('id', currentSession.user.id);
+            setAvatarUrl('');
+          } else {
+            setAvatarUrl(getDisplayAvatarUrl(rawAvatar));
+          }
         }
       }
       setLoading(false);
     };
 
     fetchProfile();
-  }, []);
+  }, [router]);
 
   // นับเวลาถอยหลัง 60 วิ สำหรับปุ่มສົ່ງ OTP ໃໝ່
   useEffect(() => {
@@ -89,9 +208,9 @@ export default function Profile() {
     try {
       await supabase.auth.signInWithOAuth({
         provider,
-        // กรณีลงทะเบียนด้วย Google หรือ Facebook → Callback กลับมาที่หน้าตั้งชื่อ+รูปโปรไฟล์ (/register)
+        // กรณีลงทะเบียนด้วย Google หรือ Facebook → Callback กลับมาที่หน้า profile เพื่อตรวจสอบและ auto-setup
         ...(provider === 'google' || provider === 'facebook'
-          ? { options: { redirectTo: `${window.location.origin}/register` } }
+          ? { options: { redirectTo: `${window.location.origin}/profile` } }
           : {}),
       });
     } catch (err) {
@@ -99,7 +218,7 @@ export default function Profile() {
     }
   };
 
-  // ส่ง OTP ไปอีเมล (ສ້າງບັນຊີໃໝ່ - ไม่ใช้รหัสผ่าน)
+  // ส่ง OTP ไปอีเมล (ສ້າງບັນຊີໃໝ່ - ไม่ใช้รหัสผ่าน) | บัญชีที่มีอยู่แล้วก็สามารถ Login ผ่านหน้านี้ได้
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (registerLoading) return;
@@ -168,33 +287,55 @@ export default function Profile() {
       const createdAtMs = user.created_at ? new Date(user.created_at).getTime() : NaN;
       const isNewEmailUser =
         Number.isFinite(createdAtMs) &&
-        Date.now() - createdAtMs < 5 * 60 * 1000; // ภายใน 5 นาทีถือว่าเป็น email ใหม่ที่เพิ่งสมัคร
+        Date.now() - createdAtMs < 1 * 60 * 1000; // ภายใน 1 นาทีถือว่าเป็น email ใหม่ที่เพิ่งสมัคร
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('username, avatar_url')
         .eq('id', user.id)
         .maybeSingle();
+      
+      // ตรวจสอบรูป default (100×100) และลบออกหลังลงทะเบียนเสร็จ
+      const rawAvatar = profile?.avatar_url || '';
+      if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+        await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
+        // ดึง profile ใหม่หลังลบรูป default เพื่อใช้ค่า avatar_url ที่เป็น null
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (updatedProfile) {
+          profile = updatedProfile;
+        }
+      }
+      
+      const displayAvatar = getDisplayAvatarUrl(profile?.avatar_url);
       const hasCompleteProfile =
         !!profile &&
         !!profile.username &&
         profile.username.trim() !== '' &&
         profile.username !== 'Guest User' &&
-        !!profile.avatar_url &&
-        String(profile.avatar_url).trim() !== '';
+        displayAvatar !== '';
 
-      // ถ้า email นี้เพิ่งถูกสร้างเป็น user ครั้งแรก → ตั้งค่าชื่อและ avatar เอง แล้วเข้า Home ทันที
+      // ถ้า email นี้เพิ่งถูกสร้างเป็น user ครั้งแรก (isNewEmailUser) → upsert profile ด้วย defaultName และ avatar_url: null ทุกครั้ง
+      // (แม้ผู้ใช้เก่าที่มีชื่ออยู่แล้ว แต่ระบบยังถือว่าเป็น "new" ก็จะเขียนทับชื่อด้วย defaultName)
       if (isNewEmailUser) {
+        // ผู้ใช้ลงทะเบียนใหม่ผ่าน OTP → ตั้ง default รูป Avatar และใช้ชื่อจาก Display name หรืออีเมล
         const meta = user.user_metadata || {};
+        // ลองหา Display name จาก metadata (full_name, name, display_name)
         const displayName =
           meta.full_name ||
           meta.name ||
           meta.display_name ||
           '';
 
+        // ถ้าไม่เจอ Display name → ใช้ชื่อจากอีเมลแต่ตัด "@gmail.com" หรือ domain อื่นๆ ออก
         const emailStr = user.email ?? email.trim();
-        const emailFallback = emailStr.replace(/@gmail\.com$/i, '');
+        // ตัด domain ออก (เช่น @gmail.com, @outlook.com, @yahoo.com เป็นต้น)
+        const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
 
+        // ใช้ Display name แทนอีเมล (ถ้ามี) ถ้าไม่มีค่อยใช้อีเมลที่ตัด domain ออก
         const defaultName = (displayName || emailFallback || 'Guest User').trim();
 
         try {
@@ -204,7 +345,7 @@ export default function Profile() {
               {
                 id: user.id,
                 username: defaultName,
-                // ไม่กำหนด avatar_url เพื่อให้ UI ใช้ Avatar เริ่มต้นเหมือนปุ่มโปรไฟล์หน้า Home
+                avatar_url: null, // ตั้ง default รูป Avatar (null = รูป default ของระบบ) ทุกครั้ง
               },
               { onConflict: 'id' }
             );
@@ -215,7 +356,7 @@ export default function Profile() {
         localStorage.removeItem('pending_registration');
         router.push('/');
       } else if (hasCompleteProfile) {
-        // ถ้ามีโปรไฟล์ครบแล้ว (เคยลงทะเบียนแล้ว) → เข้า Home ทันที
+        // บัญชีที่มีอยู่แล้ว Login ผ่านหน้าลงทะเบียนได้ → เข้า Home
         localStorage.removeItem('pending_registration');
         router.push('/');
       } else {

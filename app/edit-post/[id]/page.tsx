@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
+import { Avatar } from '@/components/Avatar';
 
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -242,15 +242,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
       {/* Body */}
       <div style={{ flex: 1 }}>
         <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden', flexShrink: 0 }}>
-            {userProfile?.avatar_url ? (
-              <img src={userProfile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <GuestAvatarIcon size={32.5} />
-              </div>
-            )}
-          </div>
+          <Avatar avatarUrl={userProfile?.avatar_url} size={50} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#111111' }}>
               {userProfile?.username || 'User'}
