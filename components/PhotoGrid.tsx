@@ -6,7 +6,7 @@ interface PhotoGridProps {
 }
 
 /**
- * Optimized PhotoGrid component with React.memo and next/image
+ * Optimized PhotoGrid component with React.memo
  * Handles different image count layouts (1, 2, 3, 4+)
  */
 export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) => {
@@ -55,8 +55,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
             objectFit: 'cover', 
             objectPosition: 'center'
           }}
-          loading="lazy"
           alt="Post image"
+          loading="lazy"
+          decoding="async"
         />
       </div>
     );
@@ -76,8 +77,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
-            loading="lazy"
             alt="Post image 1"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
@@ -90,8 +92,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
-            loading="lazy"
             alt="Post image 2"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </div>
@@ -113,8 +116,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
             background: '#f0f0f0', 
             gridRow: 'span 2' 
           }}
-          loading="lazy"
           alt="Post image 1"
+          loading="lazy"
+          decoding="async"
         />
         <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
           <img 
@@ -127,8 +131,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               objectPosition: 'center', 
               background: '#f0f0f0' 
             }}
-            loading="lazy"
             alt="Post image 2"
+            loading="lazy"
+            decoding="async"
           />
           <img 
             src={normalizedImages[2]} 
@@ -140,8 +145,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               objectPosition: 'center', 
               background: '#f0f0f0' 
             }}
-            loading="lazy"
             alt="Post image 3"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </div>
@@ -171,8 +177,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
                 objectFit: 'cover', 
                 objectPosition: 'center'
               }}
-              loading="lazy"
               alt={`Post image ${i + 1}`}
+              loading="lazy"
+              decoding="async"
             />
           </div>
         ))}
@@ -202,8 +209,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
               objectFit: 'cover', 
               objectPosition: 'center'
             }}
-            loading="lazy"
             alt={`Post image ${i + 1}`}
+            loading="lazy"
+            decoding="async"
           />
         </div>
       ))}
@@ -231,8 +239,9 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
                   objectPosition: 'center', 
                   pointerEvents: 'none' 
                 }}
-                loading="lazy"
                 alt={`Post image ${idx + 1}`}
+                loading="lazy"
+                decoding="async"
               />
               {idx === 4 && count > 5 && (
                 <div style={{ 

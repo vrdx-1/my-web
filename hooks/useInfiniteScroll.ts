@@ -36,7 +36,7 @@ export const useInfiniteScroll = ({
         },
         { 
           threshold,
-          rootMargin: '200px' // เพิ่ม rootMargin เพื่อ preload ล่วงหน้ามากขึ้น ให้รู้สึก smooth กว่า
+          rootMargin: '400px' // เพิ่ม rootMargin เพื่อ preload ล่วงหน้ามากขึ้น ให้เลื่อนได้ไวขึ้น (โหลดก่อนถึงโพสต์สุดท้าย 400px)
         }
       );
       

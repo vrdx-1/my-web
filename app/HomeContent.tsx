@@ -1,315 +1,39 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-
-// Shared Components
+import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
-import { PostFeedModals } from '@/components/PostFeedModals';
 import { HomeHeader } from '@/components/home/HomeHeader';
-import { SearchScreen } from '@/components/SearchScreen';
-
-// Modal Components (Static - used frequently)
-import { InteractionModal } from '@/components/modals/InteractionModal';
-import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
-import { SuccessPopup } from '@/components/modals/SuccessPopup';
-import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-
-// Shared Hooks
-import { usePostInteractions } from '@/hooks/usePostInteractions';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
-import { useInteractionModal } from '@/hooks/useInteractionModal';
-import { useViewingPost } from '@/hooks/useViewingPost';
-import { useHomeData } from '@/hooks/useHomeData';
-// @ts-ignore - File exists, TypeScript language server cache issue
-import { useFileUpload } from '@/hooks/useFileUpload';
-import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { useMenu } from '@/hooks/useMenu';
-import { usePostModals } from '@/hooks/usePostModals';
-import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
-import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { useBackHandler } from '@/components/BackHandlerContext';
-
-// Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LAO_FONT } from '@/utils/constants';
-import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { PageSpinner } from '@/components/LoadingSpinner';
+import { useHomeContent } from '@/hooks/useHomeContent';
+
+// Lazy load heavy modals
+const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
+const SearchScreen = dynamic(() => import('@/components/SearchScreen').then(m => ({ default: m.SearchScreen })), { ssr: false });
+const InteractionModal = dynamic(() => import('@/components/modals/InteractionModal').then(m => ({ default: m.InteractionModal })), { ssr: false });
+const ReportSuccessPopup = dynamic(() => import('@/components/modals/ReportSuccessPopup').then(m => ({ default: m.ReportSuccessPopup })), { ssr: false });
+const SuccessPopup = dynamic(() => import('@/components/modals/SuccessPopup').then(m => ({ default: m.SuccessPopup })), { ssr: false });
+const DeleteConfirmModal = dynamic(() => import('@/components/modals/DeleteConfirmModal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
 
 export function HomeContent() {
- const router = useRouter();
-const searchParams = useSearchParams(); 
- const pathname = usePathname();
- const [searchTerm, setSearchTerm] = useState('');
-const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
-const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
-const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
-const [tabRefreshing, setTabRefreshing] = useState(false);
-const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false);
-const initialFetchStartedRef = useRef(false);
- 
- // Use home data hook
- const homeData = useHomeData(searchTerm);
-
- const [unreadCount, setUnreadCount] = useState<number>(0);
-
- const fetchUnreadCount = useCallback(async () => {
-   const userId = homeData.session?.user?.id;
-   if (!userId) {
-     setUnreadCount(0);
-     return;
-   }
-  try {
-    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('notification_cleared_posts') : null;
-    const clearedMap: Record<string, string> = raw ? (() => { try { return JSON.parse(raw); } catch { return {}; } })() : {};
-    const { list } = await fetchNotificationFeed(userId, clearedMap);
-
-    // นับตัวเลขการแจ้งเตือนแบบใหม่: 1 ต่อ 1 โพสต์ (ไม่บวกตามจำนวนคนที่กด)
-    let finalUnread = 0;
-    if (typeof window !== 'undefined') {
-      const lastOpenedRaw = window.localStorage.getItem('notification_home_last_opened_at');
-      if (lastOpenedRaw) {
-        const lastOpenedTime = new Date(lastOpenedRaw).getTime();
-        if (!Number.isNaN(lastOpenedTime) && lastOpenedTime > 0) {
-          // นับเฉพาะโพสต์ที่มีแจ้งเตือนใหม่หลังจากผู้ใช้เคยเข้า "หน้าแจ้งเตือน" ครั้งล่าสุด (1 ต่อโพสต์)
-          const postIdsWithNewNotifications = new Set<string>();
-          list.forEach((n) => {
-            const createdTime = new Date(n.created_at).getTime();
-            const count = n.notification_count ?? 0;
-            if (createdTime > lastOpenedTime && count > 0) {
-              postIdsWithNewNotifications.add(n.post_id);
-            }
-          });
-          finalUnread = postIdsWithNewNotifications.size;
-        } else {
-          // ถ้าเวลาไม่ถูกต้อง ให้เริ่มนับใหม่ (นับทุกโพสต์ที่มีแจ้งเตือน)
-          const postIdsWithNotifications = new Set<string>();
-          list.forEach((n) => {
-            const count = n.notification_count ?? 0;
-            if (count > 0) {
-              postIdsWithNotifications.add(n.post_id);
-            }
-          });
-          finalUnread = postIdsWithNotifications.size;
-        }
-      } else {
-        // ยังไม่เคยเข้าไปหน้าแจ้งเตือน → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
-        const postIdsWithNotifications = new Set<string>();
-        list.forEach((n) => {
-          const count = n.notification_count ?? 0;
-          if (count > 0) {
-            postIdsWithNotifications.add(n.post_id);
-          }
-        });
-        finalUnread = postIdsWithNotifications.size;
-      }
-    } else {
-      // กรณีไม่มี window (SSR) → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
-      const postIdsWithNotifications = new Set<string>();
-      list.forEach((n) => {
-        const count = n.notification_count ?? 0;
-        if (count > 0) {
-          postIdsWithNotifications.add(n.post_id);
-        }
-      });
-      finalUnread = postIdsWithNotifications.size;
-    }
-
-    setUnreadCount(finalUnread);
-   } catch {
-     setUnreadCount(0);
-   }
- }, [homeData.session]);
-
- useEffect(() => {
-   fetchUnreadCount();
- }, [fetchUnreadCount]);
-
- // Re-fetch when returning to this tab/page
- useEffect(() => {
-   if (pathname !== '/') return;
-   const onFocus = () => fetchUnreadCount();
-   const onVisibility = () => {
-     if (document.visibilityState === 'visible') fetchUnreadCount();
-   };
-   window.addEventListener('focus', onFocus);
-   document.addEventListener('visibilitychange', onVisibility);
-   return () => {
-     window.removeEventListener('focus', onFocus);
-     document.removeEventListener('visibilitychange', onVisibility);
-   };
- }, [pathname, fetchUnreadCount]);
-
- /* ใส่ data-page="home" เพื่อให้ CSS ซ่อน scrollbar เฉพาะหน้าโฮม (รวมถึง iOS) */
- useEffect(() => {
-   document.body.setAttribute('data-page', 'home');
-   return () => document.body.removeAttribute('data-page');
- }, []);
-
- // Use viewing post hook
- const viewingPostHook = useViewingPost();
- // Use menu hook
- const menu = useMenu();
- 
-// Use header scroll hook (ซ่อน header ตอนเลื่อนลง และแสดงเมื่อเลื่อนขึ้น)
-const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore, disableScrollHide: true });
-
- // Use fullScreen viewer hook
- const fullScreenViewer = useFullScreenViewer();
-
- // Use interaction modal hook
- const interactionModalHook = useInteractionModal();
-
-// --- State สำหรับ Pop-up ลงทะเบียนสำเร็จ ---
- const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
-
- // Use file upload hook
- const fileUpload = useFileUpload();
-
- // Use shared infinite scroll hook
-  const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
-    loadingMore: homeData.loadingMore,
-    hasMore: homeData.hasMore,
-    onLoadMore: () => homeData.setPage(prevPage => prevPage + 1),
-    threshold: 0.2, // ลด threshold เพื่อให้ trigger เร็วขึ้นเล็กน้อย เมื่อเห็น 20% ของ element สุดท้าย
-  });
-
- const [reportingPost, setReportingPost] = useState<any | null>(null);
- const [reportReason, setReportReason] = useState('');
- const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-
-
-useEffect(() => {
-router.prefetch('/profile');
-}, [router]);
-
-// ตรวจสอบ flag สำหรับแสดง popup ลงทะเบียนสำเร็จ
-useEffect(() => {
-  const showRegistrationSuccessFlag = localStorage.getItem('show_registration_success');
-  if (showRegistrationSuccessFlag === 'true') {
-    setShowRegistrationSuccess(true);
-    localStorage.removeItem('show_registration_success');
-  }
-}, []);
-
-// Use shared post modals hook for managing modal side effects
-usePostModals({
-  viewingPost: viewingPostHook.viewingPost,
-  isViewingModeOpen: viewingPostHook.isViewingModeOpen,
-  setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
-  setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
-  setViewingModeIsDragging: viewingPostHook.setViewingModeIsDragging,
-  initialImageIndex: viewingPostHook.initialImageIndex,
-  savedScrollPosition: viewingPostHook.savedScrollPosition,
-  fullScreenImages: fullScreenViewer.fullScreenImages,
-  setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
-  setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
-  setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
-  setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
-  setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
-  setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
-  setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-  interactionModalShow: interactionModalHook.interactionModal.show,
-  setIsHeaderVisible: headerScroll.setIsHeaderVisible,
-});
-
- const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string) => {
-   await interactionModalHook.fetchInteractions(type, postId, homeData.posts);
- }, [interactionModalHook]); // Remove homeData.posts from dependencies - posts parameter is not actually used in the hook
-
-
-
- const handleLogoClick = useCallback(() => {
-   homeData.setPage(0);
-   homeData.fetchPosts(true);
-   window.scrollTo({ top: 0, behavior: 'smooth' });
- }, [homeData]);
-
- useEffect(() => {
-   if (!homeData.loadingMore) setTabRefreshing(false);
- }, [homeData.loadingMore]);
-
-// Hide empty state until first fetch finishes (avoid "no items" while loading)
-useEffect(() => {
-  if (!initialFetchStartedRef.current && homeData.loadingMore) {
-    initialFetchStartedRef.current = true;
-  }
-  if (initialFetchStartedRef.current && !homeData.loadingMore) {
-    setHasInitialFetchCompleted(true);
-  }
-}, [homeData.loadingMore]);
-
- // Use shared post interactions hook
- const { toggleLike, toggleSave } = usePostInteractions({
-   session: homeData.session,
-   posts: homeData.posts,
-   setPosts: homeData.setPosts,
-   likedPosts: homeData.likedPosts,
-   savedPosts: homeData.savedPosts,
-   setLikedPosts: homeData.setLikedPosts,
-   setSavedPosts: homeData.setSavedPosts,
-   setJustLikedPosts,
-   setJustSavedPosts,
- });
-
-const {
-  pullDistance,
-  isPulling,
-  isRefreshing,
-  handleTouchStart,
-  handleTouchMove,
-  handleTouchEnd,
-} = usePullToRefresh({
-  isLoading: homeData.loadingMore,
-  onRefresh: async () => {
-    // ปิดการ refresh หน้า Home ด้วยการดึงลง
-    // ไม่เรียก refreshData อีกต่อไป
-  },
-});
-
- // Use shared post feed handlers
- const handlers = usePostFeedHandlers({
-   session: homeData.session,
-   posts: homeData.posts,
-   setPosts: homeData.setPosts,
-   viewingPostHook,
-   headerScroll,
-   menu,
-   reportingPost,
-   setReportingPost,
-   reportReason,
-   setReportReason,
-   isSubmittingReport,
-   setIsSubmittingReport,
- });
-
- const { addBackStep } = useBackHandler();
- // กดย้อนกลับบนมือถือ: ปิด fullscreen / viewing ตามสเต็ป
- useEffect(() => {
-   if (!fullScreenViewer.fullScreenImages) return;
-   const close = () => {
-     fullScreenViewer.setFullScreenImages(null);
-     if (fullScreenViewer.activePhotoMenu !== null) {
-       fullScreenViewer.setIsPhotoMenuAnimating(true);
-       setTimeout(() => {
-         fullScreenViewer.setActivePhotoMenu(null);
-         fullScreenViewer.setIsPhotoMenuAnimating(false);
-       }, 300);
-     }
-   };
-   return addBackStep(close);
- }, [fullScreenViewer.fullScreenImages]);
- useEffect(() => {
-   if (!viewingPostHook.viewingPost) return;
-   const close = () => {
-     const isFirstPost = homeData.posts.length > 0 && viewingPostHook.viewingPost?.id === homeData.posts[0]?.id;
-     viewingPostHook.closeViewingMode();
-     if (isFirstPost) headerScroll.setIsHeaderVisible(true);
-   };
-   return addBackStep(close);
- }, [viewingPostHook.viewingPost]);
+ const {
+   searchTerm,
+   setSearchTerm,
+   isSearchScreenOpen,
+   setIsSearchScreenOpen,
+   homeData,
+   unreadCount,
+   hasInitialFetchCompleted,
+   handlers,
+   fetchInteractions,
+   postFeedProps,
+   interactionModalProps,
+   postFeedModalsProps,
+   popups,
+   tabRefreshing,
+   fileUpload,
+ } = useHomeContent();
 
  return (
  <main
@@ -318,37 +42,30 @@ const {
  <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
   <HomeHeader
-  searchTerm={searchTerm}
-  onSearchChange={setSearchTerm}
-  onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session)}
-  onNotificationClick={() => {
-    if (!homeData.session) {
-      router.push('/profile');
-      return;
-    }
-    router.push('/notification');
-  }}
-   unreadCount={unreadCount}
-   userProfile={homeData.userProfile}
-   session={homeData.session}
-   isHeaderVisible={headerScroll.isHeaderVisible}
-   onTabChange={handleLogoClick}
-   onSearchClick={() => setIsSearchScreenOpen(true)}
-   controlSize={40}
-   iconSize={22}
-   onTabRefresh={() => {
-     setTabRefreshing(true);
-     handleLogoClick();
-   }}
-   loadingTab={tabRefreshing ? 'recommend' : null}
- />
+    searchTerm={searchTerm}
+    onSearchChange={setSearchTerm}
+    onCreatePostClick={handlers.handleCreatePostClick}
+    onNotificationClick={handlers.handleNotificationClick}
+    unreadCount={unreadCount}
+    userProfile={homeData.userProfile}
+    session={homeData.session}
+    isHeaderVisible={true}
+    onTabChange={handlers.handleLogoClick}
+    onSearchClick={handlers.handleSearchClick}
+    controlSize={40}
+    iconSize={22}
+    onTabRefresh={handlers.handleTabRefresh}
+    loadingTab={tabRefreshing ? 'recommend' : null}
+  />
 
- <SearchScreen
-   isOpen={isSearchScreenOpen}
-   searchTerm={searchTerm}
-   onSearchChange={setSearchTerm}
-   onClose={() => setIsSearchScreenOpen(false)}
- />
+ {isSearchScreenOpen && (
+   <SearchScreen
+     isOpen={isSearchScreenOpen}
+     searchTerm={searchTerm}
+     onSearchChange={setSearchTerm}
+     onClose={handlers.handleSearchClose}
+   />
+ )}
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
 
@@ -358,172 +75,37 @@ const {
      <PageSpinner />
    </div>
  ) : (
-   <PostFeed
-     posts={homeData.posts}
-     session={homeData.session}
-     likedPosts={homeData.likedPosts}
-     savedPosts={homeData.savedPosts}
-     justLikedPosts={justLikedPosts}
-     justSavedPosts={justSavedPosts}
-     activeMenuState={menu.activeMenuState}
-     isMenuAnimating={menu.isMenuAnimating}
-     lastPostElementRef={lastPostElementRef}
-     menuButtonRefs={menu.menuButtonRefs}
-     onViewPost={handlers.handleViewPost}
-     onImpression={handlers.handleImpression}
-     onLike={toggleLike}
-     onSave={toggleSave}
-     onShare={handlers.handleShare}
-     onViewLikes={(postId) => fetchInteractions('likes', postId)}
-     onViewSaves={(postId) => fetchInteractions('saves', postId)}
-     onTogglePostStatus={handlers.handleTogglePostStatus}
-     onDeletePost={handlers.handleDeletePost}
-     onReport={handlers.handleReport}
-     onSetActiveMenu={menu.setActiveMenu}
-     onSetMenuAnimating={menu.setIsMenuAnimating}
-    loadingMore={homeData.loadingMore}
-    hasMore={homeData.hasMore}
-   />
+   <PostFeed {...postFeedProps} />
  )}
 
  <InteractionModal
-   show={interactionModalHook.interactionModal.show}
-   type={interactionModalHook.interactionModal.type}
-   postId={interactionModalHook.interactionModal.postId}
+   {...interactionModalProps}
    posts={homeData.posts}
-   interactionUsers={interactionModalHook.interactionUsers}
-   interactionLoading={interactionModalHook.interactionLoading}
-   interactionSheetMode={interactionModalHook.interactionSheetMode}
-   isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
-   startY={interactionModalHook.startY}
-   currentY={interactionModalHook.currentY}
-   onClose={interactionModalHook.closeModal}
-   onSheetTouchStart={interactionModalHook.onSheetTouchStart}
-   onSheetTouchMove={interactionModalHook.onSheetTouchMove}
-   onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
-   onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
+   onFetchInteractions={fetchInteractions}
  />
 
  {/* Loading spinner is handled by PostFeed component */}
 
  <PostFeedModals
-   viewingPost={viewingPostHook.viewingPost}
    session={homeData.session}
-   isViewingModeOpen={viewingPostHook.isViewingModeOpen}
-   viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
-   viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
-   savedScrollPosition={viewingPostHook.savedScrollPosition}
-   initialImageIndex={viewingPostHook.initialImageIndex}
-   onViewingPostClose={() => {
-     // ถ้าโพสต์ที่กำลังดูอยู่เป็นโพสต์แรกใน feed ให้แสดง header เสมอ
-     const isFirstPost = homeData.posts.length > 0 && viewingPostHook.viewingPost?.id === homeData.posts[0]?.id;
-     viewingPostHook.closeViewingMode();
-     if (isFirstPost) {
-       headerScroll.setIsHeaderVisible(true);
-     }
-   }}
-   onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
-   onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}
-   onViewingPostTouchEnd={(e: React.TouchEvent) => viewingPostHook.handleViewingModeTouchEnd(e, headerScroll.setIsHeaderVisible)}
-   onViewingPostImageClick={(images: string[], index: number) => {
-     fullScreenViewer.setFullScreenImages(images);
-     fullScreenViewer.setCurrentImgIndex(index);
-   }}
-   fullScreenImages={fullScreenViewer.fullScreenImages}
-   currentImgIndex={fullScreenViewer.currentImgIndex}
-   fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
-   fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
-   fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
-   fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
-   fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}
-   fullScreenShowDetails={fullScreenViewer.fullScreenShowDetails}
-   fullScreenZoomScale={fullScreenViewer.fullScreenZoomScale}
-   fullScreenZoomOrigin={fullScreenViewer.fullScreenZoomOrigin}
-   activePhotoMenu={fullScreenViewer.activePhotoMenu}
-   isPhotoMenuAnimating={fullScreenViewer.isPhotoMenuAnimating}
-   showDownloadBottomSheet={fullScreenViewer.showDownloadBottomSheet}
-   isDownloadBottomSheetAnimating={fullScreenViewer.isDownloadBottomSheetAnimating}
-   showImageForDownload={fullScreenViewer.showImageForDownload}
-   onFullScreenClose={() => {
-     fullScreenViewer.setFullScreenImages(null);
-     if (fullScreenViewer.activePhotoMenu !== null) {
-       fullScreenViewer.setIsPhotoMenuAnimating(true);
-       setTimeout(() => {
-         fullScreenViewer.setActivePhotoMenu(null);
-         fullScreenViewer.setIsPhotoMenuAnimating(false);
-       }, 300);
-     }
-   }}
-   onFullScreenTouchStart={fullScreenViewer.fullScreenOnTouchStart}
-   onFullScreenTouchMove={fullScreenViewer.fullScreenOnTouchMove}
-   onFullScreenTouchEnd={fullScreenViewer.fullScreenOnTouchEnd}
-   onFullScreenClick={fullScreenViewer.fullScreenOnClick}
-   onFullScreenDownload={fullScreenViewer.downloadImage}
-   onFullScreenImageIndexChange={fullScreenViewer.setCurrentImgIndex}
-   onFullScreenPhotoMenuToggle={(index: number) => {
-     if (fullScreenViewer.activePhotoMenu === index) {
-       fullScreenViewer.setIsPhotoMenuAnimating(true);
-       setTimeout(() => {
-         fullScreenViewer.setActivePhotoMenu(null);
-         fullScreenViewer.setIsPhotoMenuAnimating(false);
-       }, 300);
-     } else {
-       fullScreenViewer.setActivePhotoMenu(index);
-       fullScreenViewer.setIsPhotoMenuAnimating(true);
-       requestAnimationFrame(() => {
-         requestAnimationFrame(() => {
-           fullScreenViewer.setIsPhotoMenuAnimating(false);
-         });
-       });
-     }
-   }}
-   onFullScreenDownloadBottomSheetClose={() => {
-     fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
-     setTimeout(() => {
-       fullScreenViewer.setShowDownloadBottomSheet(false);
-       fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
-     }, 300);
-   }}
-   onFullScreenDownloadBottomSheetDownload={() => {
-     fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
-     setTimeout(() => {
-       fullScreenViewer.setShowDownloadBottomSheet(false);
-       fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
-       if (fullScreenViewer.fullScreenImages) {
-         fullScreenViewer.downloadImage(fullScreenViewer.fullScreenImages[fullScreenViewer.currentImgIndex]);
-       }
-     }, 300);
-   }}
-   onFullScreenImageForDownloadClose={() => fullScreenViewer.setShowImageForDownload(null)}
-   reportingPost={reportingPost}
-   reportReason={reportReason}
-   isSubmittingReport={isSubmittingReport}
-   onReportClose={() => setReportingPost(null)}
-   onReportReasonChange={setReportReason}
-   onReportSubmit={handlers.handleSubmitReport}
+   {...postFeedModalsProps}
  />
 
- {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
- {handlers.showReportSuccess && (
-   <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+ {/* Popups */}
+ {popups.showReportSuccess && (
+   <ReportSuccessPopup onClose={popups.onCloseReportSuccess} />
  )}
-
- {/* Modal ยืนยันการลบโพสต์ */}
- {handlers.showDeleteConfirm && (
+ {popups.showDeleteConfirm && (
    <DeleteConfirmModal
-     onConfirm={handlers.handleConfirmDelete}
-     onCancel={handlers.handleCancelDelete}
+     onConfirm={popups.onConfirmDelete}
+     onCancel={popups.onCancelDelete}
    />
  )}
-
- {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
- {handlers.showDeleteSuccess && (
-   <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+ {popups.showDeleteSuccess && (
+   <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={popups.onCloseDeleteSuccess} />
  )}
-
- {/* ป๊อบอัพแสดงผลสำเร็จการลงทะเบียน */}
- {showRegistrationSuccess && (
-   <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={() => setShowRegistrationSuccess(false)} />
+ {popups.showRegistrationSuccess && (
+   <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={popups.onCloseRegistrationSuccess} />
  )}
  </main>
  );

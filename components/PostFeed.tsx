@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { PostCard } from './PostCard';
-import { LoadingSpinner } from './LoadingSpinner';
 import { EmptyState } from './EmptyState';
 
 interface PostFeedProps {
@@ -108,16 +107,14 @@ export const PostFeed = React.memo<PostFeedProps>(({
         );
       })}
 
-      {/* จองพื้นที่คงที่ ไม่ให้ layout shift ตอนโหลดโพสต์ถัดไป (ลดการกระตุก/กระพริบ) */}
-      <div style={{ minHeight: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {loadingMore ? (
-          <LoadingSpinner />
-        ) : !hasMore ? (
+      {/* แสดงข้อความเมื่อไม่มีรายการเพิ่มเติม */}
+      {!hasMore && (
+        <div style={{ minHeight: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span style={{ fontSize: '13px', color: '#111111' }}>
             ບໍ່ມີລາຍການເພີ່ມເຕີມ
           </span>
-        ) : null}
-      </div>
+        </div>
+      )}
     </>
   );
 });

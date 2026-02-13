@@ -43,20 +43,3 @@ export async function swrFetcher(key: string | string[]): Promise<any> {
   // Default: return null for unknown keys
   return null;
 }
-
-/**
- * Fetcher for post details by IDs
- */
-export async function fetchPostsByIds(postIds: string[]): Promise<any[]> {
-  if (postIds.length === 0) return [];
-  
-  const { data, error } = await supabase
-    .from('cars')
-    .select('id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, profiles!cars_user_id_fkey(username, avatar_url, phone, last_seen)')
-    .in('id', postIds)
-    .order('is_boosted', { ascending: false })
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data || [];
-}

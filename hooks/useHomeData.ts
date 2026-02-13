@@ -301,8 +301,8 @@ interface UseHomeDataReturn {
   refreshData: () => Promise<void>;
 }
 
-const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว
-const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items เพื่อให้ smooth เหมือน Facebook
+const PAGE_SIZE = 1; // ใช้สำหรับคำนวณ offset
+const PREFETCH_COUNT = 5; // โหลดทีละ 5 โพสต์เพื่อให้มี buffer และเลื่อนได้ไวขึ้น (แต่แสดงทีละโพสต์ด้วย sequentialAppendItems)
 
 // Simple search result cache ต่อคำค้น (ฝั่ง frontend เท่านั้น)
 const SEARCH_CACHE_STORAGE_KEY = 'home_search_cache_v1';
