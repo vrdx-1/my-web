@@ -3,10 +3,12 @@
 import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
 import { HomeHeader } from '@/components/home/HomeHeader';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LAO_FONT } from '@/utils/constants';
 import { PageSpinner } from '@/components/LoadingSpinner';
 import { useHomeContent } from '@/hooks/useHomeContent';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Lazy load heavy modals
 const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
@@ -34,6 +36,8 @@ export function HomeContent() {
    tabRefreshing,
    fileUpload,
  } = useHomeContent();
+
+ const { pullDistance } = usePullToRefresh(handlers.handleTabRefresh, tabRefreshing);
 
  return (
  <main
@@ -69,7 +73,8 @@ export function HomeContent() {
 
  <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
 
-{/* pull-to-refresh ถูกปิดการใช้งานแล้ว บนหน้า Home */}
+ <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing} />
+
  {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
      <PageSpinner />

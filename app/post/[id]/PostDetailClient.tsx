@@ -123,7 +123,6 @@ export default function PostDetail() {
         session={session}
         isViewingModeOpen={viewingPostHook.isViewingModeOpen}
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
-        viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible)}

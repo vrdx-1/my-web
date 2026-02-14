@@ -257,7 +257,6 @@ export default function AdminReportingPage() {
        session={null}
        isViewingModeOpen={true}
        viewingModeDragOffset={0}
-       viewingModeIsDragging={false}
        savedScrollPosition={0}
        onClose={() => setViewingPost(null)}
        onTouchStart={() => {}}
@@ -278,28 +277,13 @@ export default function AdminReportingPage() {
        images={fullScreenImages}
        currentImgIndex={currentImgIndex}
        fullScreenDragOffset={0}
-       fullScreenVerticalDragOffset={0}
-       fullScreenIsDragging={false}
        fullScreenTransitionDuration={300}
        fullScreenShowDetails={false}
-       fullScreenZoomScale={1}
-       fullScreenZoomOrigin={{ x: 0, y: 0 }}
-       activePhotoMenu={null}
-       isPhotoMenuAnimating={false}
-       showDownloadBottomSheet={false}
-       isDownloadBottomSheetAnimating={false}
-       showImageForDownload={null}
        onClose={() => setFullScreenImages(null)}
        onTouchStart={() => {}}
        onTouchMove={() => {}}
        onTouchEnd={() => {}}
        onClick={() => {}}
-       onDownload={() => {}}
-       onImageIndexChange={setCurrentImgIndex}
-       onPhotoMenuToggle={() => {}}
-       onDownloadBottomSheetClose={() => {}}
-       onDownloadBottomSheetDownload={() => {}}
-       onImageForDownloadClose={() => {}}
      />
    </Suspense>
  )}

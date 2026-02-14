@@ -5,6 +5,7 @@ interface UseInfiniteScrollProps {
   hasMore: boolean;
   onLoadMore: () => void;
   threshold?: number;
+  rootMargin?: string;
 }
 
 /**
@@ -16,6 +17,7 @@ export const useInfiniteScroll = ({
   hasMore,
   onLoadMore,
   threshold = 0.1,
+  rootMargin = '400px',
 }: UseInfiniteScrollProps) => {
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -28,21 +30,17 @@ export const useInfiniteScroll = ({
       observer.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasMore && !loadingMore) {
-            // ใช้ requestAnimationFrame เพื่อให้ scroll smooth ก่อน trigger onLoadMore
             requestAnimationFrame(() => {
               onLoadMore();
             });
           }
         },
-        { 
-          threshold,
-          rootMargin: '400px' // เพิ่ม rootMargin เพื่อ preload ล่วงหน้ามากขึ้น ให้เลื่อนได้ไวขึ้น (โหลดก่อนถึงโพสต์สุดท้าย 400px)
-        }
+        { threshold, rootMargin }
       );
       
       if (node) observer.current.observe(node);
     },
-    [loadingMore, hasMore, onLoadMore, threshold]
+    [loadingMore, hasMore, onLoadMore, threshold, rootMargin]
   );
 
   return { lastElementRef };

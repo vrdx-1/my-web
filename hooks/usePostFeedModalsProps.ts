@@ -23,7 +23,6 @@ export function usePostFeedModalsProps({
     viewingPost: any | null;
     isViewingModeOpen: boolean;
     viewingModeDragOffset: number;
-    viewingModeIsDragging: boolean;
     savedScrollPosition: number;
     initialImageIndex: number;
   };
@@ -58,14 +57,12 @@ export function usePostFeedModalsProps({
     id: viewingPostHook.viewingPost?.id,
     isOpen: viewingPostHook.isViewingModeOpen,
     dragOffset: viewingPostHook.viewingModeDragOffset,
-    isDragging: viewingPostHook.viewingModeIsDragging,
     scrollPos: viewingPostHook.savedScrollPosition,
     imgIndex: viewingPostHook.initialImageIndex,
   }), [
     viewingPostHook.viewingPost?.id,
     viewingPostHook.isViewingModeOpen,
     viewingPostHook.viewingModeDragOffset,
-    viewingPostHook.viewingModeIsDragging,
     viewingPostHook.savedScrollPosition,
     viewingPostHook.initialImageIndex,
   ]);

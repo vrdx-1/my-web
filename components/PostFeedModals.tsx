@@ -17,7 +17,6 @@ interface PostFeedModalsProps {
   session: any;
   isViewingModeOpen: boolean;
   viewingModeDragOffset: number;
-  viewingModeIsDragging: boolean;
   savedScrollPosition: number;
   initialImageIndex?: number;
   onViewingPostClose: () => void;
@@ -72,7 +71,6 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
   session,
   isViewingModeOpen,
   viewingModeDragOffset,
-  viewingModeIsDragging,
   savedScrollPosition,
   initialImageIndex = 0,
   onViewingPostClose,
@@ -123,7 +121,6 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
             session={session}
             isViewingModeOpen={isViewingModeOpen}
             viewingModeDragOffset={viewingModeDragOffset}
-            viewingModeIsDragging={viewingModeIsDragging}
             savedScrollPosition={savedScrollPosition}
             initialImageIndex={initialImageIndex}
             onClose={onViewingPostClose}
@@ -143,28 +140,13 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
             currentImgIndex={currentImgIndex}
             fullScreenDragOffset={fullScreenDragOffset}
             fullScreenEntranceOffset={fullScreenEntranceOffset}
-            fullScreenVerticalDragOffset={fullScreenVerticalDragOffset}
-            fullScreenIsDragging={fullScreenIsDragging}
             fullScreenTransitionDuration={fullScreenTransitionDuration}
             fullScreenShowDetails={fullScreenShowDetails}
-            fullScreenZoomScale={fullScreenZoomScale}
-            fullScreenZoomOrigin={fullScreenZoomOrigin}
-            activePhotoMenu={activePhotoMenu}
-            isPhotoMenuAnimating={isPhotoMenuAnimating}
-            showDownloadBottomSheet={showDownloadBottomSheet}
-            isDownloadBottomSheetAnimating={isDownloadBottomSheetAnimating}
-            showImageForDownload={showImageForDownload}
             onClose={onFullScreenClose}
             onTouchStart={onFullScreenTouchStart}
             onTouchMove={onFullScreenTouchMove}
             onTouchEnd={onFullScreenTouchEnd}
             onClick={onFullScreenClick}
-            onDownload={onFullScreenDownload}
-            onImageIndexChange={onFullScreenImageIndexChange}
-            onPhotoMenuToggle={onFullScreenPhotoMenuToggle}
-            onDownloadBottomSheetClose={onFullScreenDownloadBottomSheetClose}
-            onDownloadBottomSheetDownload={onFullScreenDownloadBottomSheetDownload}
-            onImageForDownloadClose={onFullScreenImageForDownloadClose}
           />
         </Suspense>
       )}

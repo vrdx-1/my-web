@@ -10,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 
-const HINT_IOS = 'ໃຊ້ Safari - ຄິກປຸ່ມແຊ - ເພີ່ມໄປທີ່ໜ້າຫຼັກ';
+const HINT_IOS = '1. ຄິກປຸ່ມແຊ   2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ   3. ເພີ່ມ';
 const HINT_ANDROID = 'ໃຊ້ເມນູ Chrome (⋮) → ຕິດຕັ້ງແອັບ';
 
 function InstallIcon() {
@@ -105,11 +105,11 @@ export function PWAInstallPrompt() {
         right: 16,
         maxWidth: 400,
         margin: '0 auto',
-        background: 'linear-gradient(145deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%)',
-        color: '#1e3a5f',
+        background: '#3b82f6',
+        color: '#fff',
         borderRadius: 16,
         padding: 0,
-        boxShadow: '0 4px 24px rgba(59,130,246,0.35), 0 0 0 1px rgba(255,255,255,0.35)',
+        boxShadow: '0 4px 24px rgba(59,130,246,0.4), 0 0 0 1px rgba(255,255,255,0.2)',
         zIndex: 9998,
         fontFamily: 'inherit',
         overflow: 'hidden',
@@ -131,12 +131,12 @@ export function PWAInstallPrompt() {
             width: 44,
             height: 44,
             borderRadius: 12,
-            background: 'rgba(255,255,255,0.5)',
+            background: 'rgba(255,255,255,0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            color: '#1e3a5f',
+            color: '#fff',
             border: 'none',
             cursor: 'pointer',
           }}
@@ -151,7 +151,7 @@ export function PWAInstallPrompt() {
             flex: 1,
             background: 'transparent',
             border: 'none',
-            color: '#1e3a5f',
+            color: '#fff',
             padding: '6px 0',
             cursor: 'pointer',
             fontWeight: 600,
@@ -170,9 +170,9 @@ export function PWAInstallPrompt() {
             width: 36,
             height: 36,
             borderRadius: 10,
-            background: 'rgba(255,255,255,0.4)',
+            background: 'rgba(255,255,255,0.25)',
             border: 'none',
-            color: '#1e3a5f',
+            color: '#fff',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -188,15 +188,15 @@ export function PWAInstallPrompt() {
         <div
           style={{
             padding: '12px 18px 16px',
-            borderTop: '1px solid rgba(255,255,255,0.4)',
-            background: 'rgba(255,255,255,0.2)',
+            borderTop: '1px solid rgba(255,255,255,0.3)',
+            background: 'rgba(0,0,0,0.1)',
           }}
         >
           <p
             style={{
               margin: 0,
               fontSize: 13,
-              color: '#1e3a5f',
+              color: '#fff',
               lineHeight: 1.5,
               letterSpacing: '0.01em',
             }}

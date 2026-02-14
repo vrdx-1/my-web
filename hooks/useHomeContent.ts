@@ -99,7 +99,6 @@ export function useHomeContent() {
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
     setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
     setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
-    setViewingModeIsDragging: viewingPostHook.setViewingModeIsDragging,
     initialImageIndex: viewingPostHook.initialImageIndex,
     savedScrollPosition: viewingPostHook.savedScrollPosition,
     fullScreenImages: fullScreenViewer.fullScreenImages,

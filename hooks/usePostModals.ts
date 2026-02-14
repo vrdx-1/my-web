@@ -7,7 +7,6 @@ interface UsePostModalsProps {
   isViewingModeOpen: boolean;
   setIsViewingModeOpen: (open: boolean) => void;
   setViewingModeDragOffset: (offset: number) => void;
-  setViewingModeIsDragging: (dragging: boolean) => void;
   initialImageIndex: number;
   savedScrollPosition: number;
   fullScreenImages: string[] | null;
@@ -31,7 +30,6 @@ export function usePostModals({
   isViewingModeOpen,
   setIsViewingModeOpen,
   setViewingModeDragOffset,
-  setViewingModeIsDragging,
   initialImageIndex,
   savedScrollPosition,
   fullScreenImages,
@@ -52,41 +50,35 @@ export function usePostModals({
     };
   }, []);
 
-  // Handle viewing post modal effects
+  // Handle viewing post modal: reset state when closed; scroll to image when open (body lock is done by ViewingPostModal)
   useEffect(() => {
     if (!viewingPost) {
       setIsViewingModeOpen(false);
       setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
       document.body.style.overflow = '';
       document.body.style.scrollbarWidth = '';
       document.body.style.msOverflowStyle = '';
       document.body.removeAttribute('data-viewing-mode');
       window.scrollTo(0, savedScrollPosition);
     } else if (viewingPost.images) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.scrollbarWidth = 'none';
-      document.body.style.msOverflowStyle = 'none';
-      document.body.setAttribute('data-viewing-mode', 'open');
       setViewingModeDragOffset(0);
-      setViewingModeIsDragging(false);
       setIsViewingModeOpen(true);
-      requestAnimationFrame(() => {
+      const rafId = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
           const container = document.getElementById('viewing-mode-container');
-          if (imageElement && container) {
+          const imageElement = document.getElementById(`viewing-image-${initialImageIndex}`);
+          if (container && imageElement) {
             const imageTop = imageElement.offsetTop;
             const imageHeight = imageElement.offsetHeight;
             const containerHeight = container.clientHeight;
-            const scrollTop = Math.max(0, Math.min(
+            container.scrollTop = Math.max(0, Math.min(
               imageTop - containerHeight / 2 + imageHeight / 2,
               container.scrollHeight - containerHeight
             ));
-            container.scrollTop = scrollTop;
           }
         });
       });
+      return () => cancelAnimationFrame(rafId);
     }
     return () => {
       if (!viewingPost) {
@@ -96,7 +88,7 @@ export function usePostModals({
         document.body.removeAttribute('data-viewing-mode');
       }
     };
-  }, [viewingPost, setIsViewingModeOpen, setViewingModeDragOffset, setViewingModeIsDragging, initialImageIndex, savedScrollPosition]);
+  }, [viewingPost, setIsViewingModeOpen, setViewingModeDragOffset, initialImageIndex, savedScrollPosition]);
 
   // Handle fullscreen viewer effects
   useEffect(() => {

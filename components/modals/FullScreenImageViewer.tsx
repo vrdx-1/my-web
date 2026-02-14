@@ -1,35 +1,70 @@
 'use client'
 
-import React, { useRef, useState, useCallback } from 'react';
+import React from 'react';
 import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
+
+const ROOT_STYLE: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: '#000',
+  zIndex: 3000,
+  display: 'flex',
+  flexDirection: 'column',
+  touchAction: 'none',
+};
+const HEADER_STYLE: React.CSSProperties = {
+  padding: '15px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  position: 'relative',
+};
+const BACK_BTN_STYLE: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '8px',
+  touchAction: 'manipulation',
+};
+const COUNTER_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+  padding: 0,
+  margin: 0,
+};
+const IMG_SLIDE_STYLE: React.CSSProperties = {
+  minWidth: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100%',
+};
+const IMG_STYLE: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'contain',
+  objectPosition: 'center',
+};
 
 interface FullScreenImageViewerProps {
   images: string[] | null;
   currentImgIndex: number;
   fullScreenDragOffset: number;
   fullScreenEntranceOffset?: number;
-  fullScreenVerticalDragOffset: number;
-  fullScreenIsDragging: boolean;
   fullScreenTransitionDuration: number;
   fullScreenShowDetails: boolean;
-  fullScreenZoomScale: number;
-  fullScreenZoomOrigin: string;
-  activePhotoMenu: number | null;
-  isPhotoMenuAnimating: boolean;
-  showDownloadBottomSheet: boolean;
-  isDownloadBottomSheetAnimating: boolean;
-  showImageForDownload: string | null;
   onClose: () => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchMove: (e: React.TouchEvent) => void;
   onTouchEnd: (e: React.TouchEvent) => void;
   onClick: (e: React.MouseEvent) => void;
-  onDownload: (url: string) => void;
-  onImageIndexChange: (index: number) => void;
-  onPhotoMenuToggle: (index: number) => void;
-  onDownloadBottomSheetClose: () => void;
-  onDownloadBottomSheetDownload: () => void;
-  onImageForDownloadClose: () => void;
 }
 
 export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
@@ -37,146 +72,53 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   currentImgIndex,
   fullScreenDragOffset,
   fullScreenEntranceOffset = 0,
-  fullScreenVerticalDragOffset,
-  fullScreenIsDragging,
   fullScreenTransitionDuration,
   fullScreenShowDetails,
-  fullScreenZoomScale,
-  fullScreenZoomOrigin,
-  activePhotoMenu,
-  isPhotoMenuAnimating,
-  showDownloadBottomSheet,
-  isDownloadBottomSheetAnimating,
-  showImageForDownload,
   onClose,
   onTouchStart,
   onTouchMove,
   onTouchEnd,
   onClick,
-  onDownload,
-  onImageIndexChange,
-  onPhotoMenuToggle,
-  onDownloadBottomSheetClose,
-  onDownloadBottomSheetDownload,
-  onImageForDownloadClose,
 }) => {
-  const photoMenuButtonRef = useRef<HTMLButtonElement | null>(null);
-
   if (!images) return null;
 
+  const headerOpacity = fullScreenShowDetails ? 1 : 0;
+  const trackStyle = {
+    display: 'flex' as const,
+    transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none',
+    transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px + ${fullScreenEntranceOffset}px))`,
+    width: '100%',
+    height: '100%',
+  };
+
   return (
-    <>
-      <div 
-        {...{ [FULLSCREEN_VIEWER_ROOT_ATTR]: FULLSCREEN_VIEWER_ROOT_VALUE }}
-        style={{ 
-          position: 'fixed', 
-          inset: 0, 
-          background: '#000', 
-          zIndex: 3000, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          // ปิด gesture zoom/scroll พิเศษใน fullscreen ให้ควบคุมเอง
-          touchAction: 'none', 
-        }} 
-        onTouchStart={onTouchStart} 
-        onTouchMove={onTouchMove} 
-        onTouchEnd={onTouchEnd} 
-        onClick={onClick}
-      >
-        <div style={{ 
-          padding: '15px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          position: 'relative', 
-          opacity: fullScreenShowDetails ? 1 : 0, 
-          transition: 'none', 
-          pointerEvents: fullScreenShowDetails ? 'auto' : 'none' 
-        }}>
-          <button 
-            onClick={onClose} 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              padding: '8px', 
-              touchAction: 'manipulation' 
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <div style={{ 
-            position: 'absolute', 
-            left: '50%', 
-            transform: 'translateX(-50%)', 
-            color: '#fff', 
-            fontSize: '16px', 
-            fontWeight: 'bold', 
-            padding: 0, 
-            margin: 0 
-          }}>
-            {currentImgIndex + 1}/{images.length}
-          </div>
-          {/* Removed download/save menu */}
-          <div style={{ width: '44px', height: '44px' }} />
-        </div>
-        <div 
-          ref={(el) => {
-            // Store ref for zoom calculations
-            if (el) (el as any).fullScreenImageContainerRef = el;
-          }}
-          style={{ 
-            flex: 1, 
-            position: 'relative', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            overflow: 'hidden' 
-          }}
-        >
-          <div style={{ 
-            display: 'flex', 
-            transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none', 
-            // ลบการปัดขึ้น/ลงออก (ไม่มี translateY)
-            transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px + ${fullScreenEntranceOffset}px))`, 
-            width: '100%', 
-            height: '100%' 
-          }}>
-            {images.map((img, idx) => (
-              <div 
-                key={idx} 
-                style={{ 
-                  minWidth: '100%', 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  alignItems: 'center', 
-                  height: '100%',
-                  // ลบการ zoom ออกจาก fullscreen (scale คงที่)
-                  transform: 'scale(1)', 
-                  transformOrigin: '50% 50%', 
-                  transition: 'none' 
-                }}
-              >
-                <img 
-                  src={img} 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: 'contain', 
-                    objectPosition: 'center' 
-                  }} 
-                />
-              </div>
-            ))}
-          </div>
+    <div
+      {...{ [FULLSCREEN_VIEWER_ROOT_ATTR]: FULLSCREEN_VIEWER_ROOT_VALUE }}
+      style={ROOT_STYLE}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onClick={onClick}
+    >
+      <div style={{ ...HEADER_STYLE, opacity: headerOpacity, transition: 'none', pointerEvents: fullScreenShowDetails ? 'auto' : 'none' }}>
+        <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Close">
+          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <div style={COUNTER_STYLE}>{currentImgIndex + 1}/{images.length}</div>
+        <div style={{ width: 44, height: 44 }} />
+      </div>
+      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <div style={trackStyle}>
+          {images.map((img, idx) => (
+            <div key={idx} style={IMG_SLIDE_STYLE}>
+              <img src={img} style={IMG_STYLE} alt="" />
+            </div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 });
 

@@ -183,7 +183,6 @@ export function SoldPageContent() {
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
     setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
     setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
-    setViewingModeIsDragging: viewingPostHook.setViewingModeIsDragging,
     initialImageIndex: viewingPostHook.initialImageIndex,
     savedScrollPosition: viewingPostHook.savedScrollPosition,
     fullScreenImages: fullScreenViewer.fullScreenImages,
@@ -312,7 +311,6 @@ export function SoldPageContent() {
         session={postListData.session}
         isViewingModeOpen={viewingPostHook.isViewingModeOpen}
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
-        viewingModeIsDragging={viewingPostHook.viewingModeIsDragging}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {

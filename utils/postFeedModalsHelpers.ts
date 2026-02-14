@@ -39,7 +39,6 @@ export function createPostFeedModalsProps({
     viewingPost: viewingPostHook.viewingPost,
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
     viewingModeDragOffset: viewingPostHook.viewingModeDragOffset,
-    viewingModeIsDragging: viewingPostHook.viewingModeIsDragging,
     savedScrollPosition: viewingPostHook.savedScrollPosition,
     initialImageIndex: viewingPostHook.initialImageIndex,
     onViewingPostClose: () => {
