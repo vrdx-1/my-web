@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { commonStyles } from '@/utils/commonStyles';
 
@@ -20,7 +21,9 @@ interface MenuDropdownProps {
 
 /**
  * MenuDropdown Component
- * Reusable dropdown menu for post actions
+ * Reusable dropdown menu for post actions.
+ * Renders via Portal into document.body so overlay background covers full viewport
+ * (avoids being clipped by ancestor transform/stacking context).
  */
 export const MenuDropdown = React.memo<MenuDropdownProps>(({
   postId,
@@ -41,7 +44,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   const showBoost = typeof onBoost === 'function';
 
-  return (
+  const content = (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
       <div
         style={{
@@ -97,6 +100,11 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(content, document.body);
+  }
+  return content;
 });
 
 MenuDropdown.displayName = 'MenuDropdown';
