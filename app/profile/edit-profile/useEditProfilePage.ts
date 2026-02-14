@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase';
 
 // Shared Hooks
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useMenu } from '@/hooks/useMenu';
@@ -15,6 +14,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostListData } from '@/hooks/usePostListData';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useInteractionModal } from '@/hooks/useInteractionModal';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 
 export function useEditProfilePage() {
   const router = useRouter();
@@ -77,83 +77,12 @@ export function useEditProfilePage() {
     setJustSavedPosts,
   });
 
-  // Fetch liked status for all posts (like home page)
-  const fetchLikedStatus = useCallback(async (userIdOrToken: string, currentSession: any) => {
-    const table = currentSession ? 'post_likes' : 'post_likes_guest';
-    const column = currentSession ? 'user_id' : 'guest_token';
-    const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
-    if (data) {
-      const likedMap: { [key: string]: boolean } = {};
-      data.forEach(item => likedMap[item.post_id] = true);
-      postListData.setLikedPosts(likedMap);
-    }
-  }, [postListData.setLikedPosts]);
-
-  // Fetch saved status for all posts (like home page)
-  const fetchSavedStatus = useCallback(async (userIdOrToken: string, currentSession: any) => {
-    const table = currentSession ? 'post_saves' : 'post_saves_guest';
-    const column = currentSession ? 'user_id' : 'guest_token';
-    const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
-    if (data) {
-      const savedMap: { [key: string]: boolean } = {};
-      data.forEach(item => savedMap[item.post_id] = true);
-      postListData.setSavedPosts(savedMap);
-    }
-  }, [postListData.setSavedPosts]);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
-
-      if (currentSession) {
-        const uid = currentSession.user.id;
-        userIdRef.current = uid;
-        setSession(currentSession);
-        setUserId(uid);
-        await fetchProfile(uid);
-      } else {
-        router.push('/register');
-      }
-    };
-
-    checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Initialize data when tab changes (ไม่ใส่ postListData ใน deps เพื่อไม่ให้ effect รันทุก re-render)
-  useEffect(() => {
-    if (userId && session) {
-      postListData.setPage(0);
-      postListData.setHasMore(true);
-      postListData.fetchPosts(true);
-      // Fetch liked and saved status when tab changes (like home page)
-      fetchLikedStatus(userId, session);
-      fetchSavedStatus(userId, session);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ใช้ postListData จาก closure เฉพาะเมื่อ tab/userId/session เปลี่ยน
-  }, [tab, userId, session, fetchLikedStatus, fetchSavedStatus]);
-
-  useEffect(() => {
-    if (!postListData.loadingMore) setTabRefreshing(false);
-  }, [postListData.loadingMore]);
-
-  // Load more when page changes (ไม่ใส่ postListData ทั้งก้อนใน deps เพื่อลดการรัน effect ซ้ำ)
-  useEffect(() => {
-    if (postListData.page > 0 && !postListData.loadingMore && userId && session) {
-      postListData.fetchPosts(false, postListData.page);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ใช้ postListData จาก closure เฉพาะเมื่อ page/loadingMore/userId/session เปลี่ยน
-  }, [postListData.page, postListData.loadingMore, userId, session]);
-
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from('profiles')
       .select('username, avatar_url, phone, last_seen')
       .eq('id', uid)
       .single();
-
     if (data) {
       setUsername(data.username || '');
       const rawAvatar = data.avatar_url || '';
@@ -165,29 +94,80 @@ export function useEditProfilePage() {
       }
       setPhone(data.phone || '');
     }
-  };
+  }, []);
 
-  const uploadAvatar = async (event: any) => {
+  const fetchLikedStatus = useCallback(async (uid: string) => {
+    const { data } = await supabase.from('post_likes').select('post_id').eq('user_id', uid);
+    if (data) {
+      const map: { [key: string]: boolean } = {};
+      data.forEach((item) => (map[item.post_id] = true));
+      postListData.setLikedPosts(map);
+    }
+  }, [postListData.setLikedPosts]);
+
+  const fetchSavedStatus = useCallback(async (uid: string) => {
+    const { data } = await supabase.from('post_saves').select('post_id').eq('user_id', uid);
+    if (data) {
+      const map: { [key: string]: boolean } = {};
+      data.forEach((item) => (map[item.post_id] = true));
+      postListData.setSavedPosts(map);
+    }
+  }, [postListData.setSavedPosts]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (cancelled) return;
+      if (currentSession) {
+        const uid = currentSession.user.id;
+        userIdRef.current = uid;
+        setSession(currentSession);
+        setUserId(uid);
+        fetchProfile(uid);
+      } else {
+        router.push(REGISTER_PATH);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [router, fetchProfile]);
+
+  useEffect(() => {
+    if (!userId || !session) return;
+    postListData.setPage(0);
+    postListData.setHasMore(true);
+    postListData.fetchPosts(true);
+    fetchLikedStatus(userId);
+    fetchSavedStatus(userId);
+  }, [tab, userId, session, fetchLikedStatus, fetchSavedStatus]);
+
+  useEffect(() => {
+    if (!postListData.loadingMore) setTabRefreshing(false);
+  }, [postListData.loadingMore]);
+
+  useEffect(() => {
+    if (postListData.page > 0 && !postListData.loadingMore && userId && session) {
+      postListData.fetchPosts(false, postListData.page);
+    }
+  }, [postListData.page, postListData.loadingMore, userId, session]);
+
+  const uploadAvatar = useCallback(async (event: any) => {
     const uid = userId ?? userIdRef.current;
     if (!uid) return;
+    const file = event?.target?.files?.[0];
+    if (!file) return;
     try {
       setUploading(true);
-      const file = event.target.files[0];
-      if (!file) return;
       const filePath = `avatars/${uid}-${Date.now()}`;
       await supabase.storage.from('car-images').upload(filePath, file);
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('car-images').getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(filePath);
       await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', uid);
       setAvatarUrl(publicUrl);
     } finally {
       setUploading(false);
     }
-  };
+  }, [userId]);
 
-  const saveUsername = async (name: string) => {
+  const saveUsername = useCallback(async (name: string) => {
     const uid = userId ?? userIdRef.current;
     if (!uid) return;
     const { error } = await supabase.from('profiles').update({ username: name }).eq('id', uid);
@@ -196,9 +176,9 @@ export function useEditProfilePage() {
       setIsEditingName(false);
       if (typeof document !== 'undefined') document.body.style.overflow = '';
     }
-  };
+  }, [userId]);
 
-  const savePhone = async (phoneNum: string) => {
+  const savePhone = useCallback(async (phoneNum: string) => {
     const uid = userId ?? userIdRef.current;
     if (!uid) return;
     const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', uid);
@@ -207,7 +187,7 @@ export function useEditProfilePage() {
       setIsEditingPhone(false);
       if (typeof document !== 'undefined') document.body.style.overflow = '';
     }
-  };
+  }, [userId]);
 
   // Use shared post feed handlers
   const handlers = usePostFeedHandlers({
@@ -239,14 +219,6 @@ export function useEditProfilePage() {
     interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
-
-  // Fetch liked and saved status when session is available (like home page)
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchLikedStatus(session.user.id, session);
-      fetchSavedStatus(session.user.id, session);
-    }
-  }, [session, fetchLikedStatus, fetchSavedStatus]);
 
   // Fetch interactions for bottom sheet (likes / saves)
   const fetchInteractions = useCallback(
@@ -295,16 +267,12 @@ export function useEditProfilePage() {
   }, [username]);
 
   const handleSaveUsername = useCallback((name: string) => {
-    if (name.trim().length >= 1) {
-      saveUsername(name.trim());
-    }
-  }, []);
+    if (name.trim().length >= 1) saveUsername(name.trim());
+  }, [saveUsername]);
 
   const handleSavePhone = useCallback((phoneNum: string) => {
-    if (phoneNum === '020' || (phoneNum.startsWith('020') && phoneNum.length === 11)) {
-      savePhone(phoneNum);
-    }
-  }, []);
+    if (phoneNum === '020' || (phoneNum.startsWith('020') && phoneNum.length === 11)) savePhone(phoneNum);
+  }, [savePhone]);
 
   return {
     // profile

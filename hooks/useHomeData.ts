@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken, expandWithoutBrandAliases } from '@/utils/postUtils';
@@ -10,7 +10,6 @@ import { LAO_PROVINCES } from '@/utils/constants';
 import categoriesData from '@/data/categories.json';
 import { CATEGORY_MODELS } from '@/data/category-models';
 import carsData from '@/data';
-import { sequentialAppendItems } from '@/utils/preloadSequential';
 
 function normalizeCaptionSearch(text: string): string {
   return String(text ?? '')
@@ -302,7 +301,7 @@ interface UseHomeDataReturn {
 }
 
 const PAGE_SIZE = 1; // ใช้สำหรับคำนวณ offset
-const PREFETCH_COUNT = 5; // โหลดทีละ 5 โพสต์เพื่อให้มี buffer และเลื่อนได้ไวขึ้น (แต่แสดงทีละโพสต์ด้วย sequentialAppendItems)
+const PREFETCH_COUNT = 5; // โหลดทีละ 5 โพสต์เพื่อให้มี buffer และเลื่อนได้ไวขึ้น
 
 // Simple search result cache ต่อคำค้น (ฝั่ง frontend เท่านั้น)
 const SEARCH_CACHE_STORAGE_KEY = 'home_search_cache_v1';
@@ -668,28 +667,36 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
           }
         }
         const stillCurrent = String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch;
+        if (!stillCurrent) {
+          setHasMore(newHasMore);
+          setLoadingMore(false);
+          return;
+        }
         // เก็บผลค้นหาที่ผ่านการกรองแล้วลง cache เพื่อใช้ครั้งถัดไปให้แสดงทันที
         if (trimmedSearch && normalizedSearchKey) {
           saveSearchResultToCache(normalizedSearchKey, orderedPostsData, newHasMore);
         }
 
-        // ใช้ shared helper เพื่อแทรกโพสต์ทีละรายการแบบ sequential
-        sequentialAppendItems<any>({
-          items: orderedPostsData,
-          shouldContinue: () =>
-            String(searchTermRef.current ?? '').normalize('NFKC').trim() === trimmedSearch,
-          append: (post) => {
+        // อัปเดตโพสต์ครั้งเดียว — ลด re-render และ layout ซ้ำ
+        // โหลดชุดถัดไป: ใช้ startTransition เพื่อไม่ให้การอัปเดตบล็อก scroll (ไม่กระตุก)
+        const apply = () => {
+          if (isInitial) {
+            setPosts(orderedPostsData);
+          } else {
             setPosts((prev) => {
-              // กันไม่ให้โพสต์ซ้ำ ถ้ามีอยู่แล้วให้ข้าม
-              if (prev.some((p: any) => p.id === post.id)) return prev;
-              return [...prev, post];
+              const existingIds = new Set(prev.map((p: any) => p.id));
+              const toAdd = orderedPostsData.filter((p: any) => !existingIds.has(p.id));
+              return toAdd.length ? [...prev, ...toAdd] : prev;
             });
-          },
-          onDone: () => {
-            setHasMore(newHasMore);
-            setLoadingMore(false);
-          },
-        });
+          }
+          setHasMore(newHasMore);
+          setLoadingMore(false);
+        };
+        if (isInitial) {
+          apply();
+        } else {
+          startTransition(apply);
+        }
       } else {
         setHasMore(newHasMore);
         setLoadingMore(false);
@@ -764,17 +771,18 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     };
   }, [handleActiveStatus, updateLastSeen]);
 
-  // Fetch posts when search term changes (debounce เพื่อไม่ยิง request ทุก keystroke — ลด race ให้ smooth)
+  // Fetch posts when search term changes (debounce เมื่อผู้ใช้พิมพ์; โหลดครั้งแรกทันทีเมื่อไม่มีคำค้น)
   const SEARCH_DEBOUNCE_MS = 350;
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    const t = setTimeout(() => {
+    const isInitialLoad = !searchTerm || searchTerm.trim() === '';
+    if (isInitialLoad) {
       fetchPosts(true);
-    }, SEARCH_DEBOUNCE_MS);
-    if (searchTerm) {
-      localStorage.setItem('last_searched_province', searchTerm);
+      return;
     }
+    localStorage.setItem('last_searched_province', searchTerm);
+    const t = setTimeout(() => fetchPosts(true), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);

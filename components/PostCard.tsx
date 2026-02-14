@@ -97,7 +97,13 @@ export const PostCard = React.memo<PostCardProps>(({
         const entry = entries[0];
         if (!entry?.isIntersecting || impressionSentRef.current.has(post.id)) return;
         impressionSentRef.current.add(post.id);
-        onImpression(post.id);
+        const postId = post.id;
+        const cb = () => onImpression(postId);
+        if (typeof requestIdleCallback !== 'undefined') {
+          (requestIdleCallback as typeof requestIdleCallback)(cb, { timeout: 500 });
+        } else {
+          setTimeout(cb, 100);
+        }
       },
       { threshold: 0.25, rootMargin: '0px' }
     );
@@ -108,6 +114,7 @@ export const PostCard = React.memo<PostCardProps>(({
   return (
     <div
       key={`${post.id}-${index}`}
+      className="feed-card"
       ref={(node) => {
         cardRef.current = node;
         if (isLastElement && lastPostElementRef) lastPostElementRef(node);

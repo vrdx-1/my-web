@@ -1,24 +1,15 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-// Shared Components
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Avatar } from '@/components/Avatar';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
-
-// Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostListData } from '@/hooks/usePostListData';
@@ -33,14 +24,22 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 
-// Shared Utils
-import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { PROFILE_PATH } from '@/utils/authRoutes';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
+
+function countUnreadFromList(list: { post_id: string; created_at: string; notification_count?: number }[], afterTime?: number): number {
+  const set = new Set<string>();
+  list.forEach((n) => {
+    if ((n.notification_count ?? 0) <= 0) return;
+    if (afterTime != null && new Date(n.created_at).getTime() <= afterTime) return;
+    set.add(n.post_id);
+  });
+  return set.size;
+}
 
 export function SoldPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
@@ -52,74 +51,26 @@ export function SoldPageContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const hasFetchedRef = useRef(false);
 
-  // Use home data hook for user profile and session management
   const homeData = useHomeData('');
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
-  // ใช้ระบบนับการแจ้งเตือนแบบเดียวกับหน้า Home (1 ต่อ 1 โพสต์, อิงเวลาที่เปิดหน้าแจ้งเตือนล่าสุด)
   const fetchUnreadCount = useCallback(async () => {
     const userId = homeData.session?.user?.id;
-    if (!userId) {
-      setUnreadCount(0);
-      return;
-    }
+    if (!userId) { setUnreadCount(0); return; }
     try {
       const raw = typeof window !== 'undefined' ? window.localStorage.getItem('notification_cleared_posts') : null;
       const clearedMap: Record<string, string> = raw ? (() => { try { return JSON.parse(raw); } catch { return {}; } })() : {};
       const { list } = await fetchNotificationFeed(userId, clearedMap);
-
-      let finalUnread = 0;
+      let afterTime: number | undefined;
       if (typeof window !== 'undefined') {
         const lastOpenedRaw = window.localStorage.getItem('notification_home_last_opened_at');
         if (lastOpenedRaw) {
-          const lastOpenedTime = new Date(lastOpenedRaw).getTime();
-          if (!Number.isNaN(lastOpenedTime) && lastOpenedTime > 0) {
-            // นับเฉพาะโพสต์ที่มีแจ้งเตือนใหม่หลังจากผู้ใช้เคยเข้า "หน้าแจ้งเตือน" ครั้งล่าสุด (1 ต่อโพสต์)
-            const postIdsWithNewNotifications = new Set<string>();
-            list.forEach((n) => {
-              const createdTime = new Date(n.created_at).getTime();
-              const count = n.notification_count ?? 0;
-              if (createdTime > lastOpenedTime && count > 0) {
-                postIdsWithNewNotifications.add(n.post_id);
-              }
-            });
-            finalUnread = postIdsWithNewNotifications.size;
-          } else {
-            // ถ้าเวลาไม่ถูกต้อง → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
-            const postIdsWithNotifications = new Set<string>();
-            list.forEach((n) => {
-              const count = n.notification_count ?? 0;
-              if (count > 0) {
-                postIdsWithNotifications.add(n.post_id);
-              }
-            });
-            finalUnread = postIdsWithNotifications.size;
-          }
-        } else {
-          // ยังไม่เคยเข้าไปหน้าแจ้งเตือน → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
-          const postIdsWithNotifications = new Set<string>();
-          list.forEach((n) => {
-            const count = n.notification_count ?? 0;
-            if (count > 0) {
-              postIdsWithNotifications.add(n.post_id);
-            }
-          });
-          finalUnread = postIdsWithNotifications.size;
+          const t = new Date(lastOpenedRaw).getTime();
+          if (!Number.isNaN(t) && t > 0) afterTime = t;
         }
-      } else {
-        // กรณีไม่มี window (SSR) → นับทุกโพสต์ที่มีแจ้งเตือน (1 ต่อโพสต์)
-        const postIdsWithNotifications = new Set<string>();
-        list.forEach((n) => {
-          const count = n.notification_count ?? 0;
-          if (count > 0) {
-            postIdsWithNotifications.add(n.post_id);
-          }
-        });
-        finalUnread = postIdsWithNotifications.size;
       }
-
-      setUnreadCount(finalUnread);
+      setUnreadCount(countUnreadFromList(list, afterTime));
     } catch {
       setUnreadCount(0);
     }
@@ -144,41 +95,29 @@ export function SoldPageContent() {
     };
   }, [pathname, fetchUnreadCount]);
 
-  // Use post list data hook for sold posts
   const postListData = usePostListData({
     type: 'sold',
     session: homeData.session,
     status: 'sold',
     searchTerm: searchTerm || undefined,
   });
+  const postsRef = useRef<any[]>([]);
+  postsRef.current = postListData.posts;
 
-  // Use menu hook
   const menu = useMenu();
-
-  // Use fullscreen viewer hook
   const fullScreenViewer = useFullScreenViewer();
-
-  // Use viewing post hook
   const viewingPostHook = useViewingPost();
-
-  // Use interaction modal hook
   const interactionModalHook = useInteractionModal();
-
-  // Use file upload hook
   const fileUpload = useFileUpload();
-
-  // Use header scroll hook (ให้ header ซ่อน/แสดงตามการเลื่อนเหมือนแท็บ ພ້ອມຂາຍ)
   const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore, disableScrollHide: true });
 
-  // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.2, // ลด threshold เพื่อให้ trigger เร็วขึ้นเล็กน้อย เมื่อเห็น 20% ของ element สุดท้าย
+    threshold: 0.2,
   });
 
-  // Use shared post interactions hook
   const { toggleLike, toggleSave } = usePostInteractions({
     session: postListData.session,
     posts: postListData.posts,
@@ -191,9 +130,7 @@ export function SoldPageContent() {
     setJustSavedPosts,
   });
 
-  // Initialize data when search term changes
   useEffect(() => {
-    // รอให้ session ใน hook ถูก initialize แล้ว (ไม่ใช่ undefined)
     if (postListData.session !== undefined) {
       postListData.setPage(0);
       postListData.setHasMore(true);
@@ -203,19 +140,19 @@ export function SoldPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, postListData.session]);
 
-  // Load more when page changes
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
       postListData.fetchPosts(false);
     }
   }, [postListData.page, postListData.session]);
 
-  // Fetch interactions
-  const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string) => {
-    await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
-  }, [postListData.posts, interactionModalHook]);
+  const fetchInteractions = useCallback(
+    async (type: 'likes' | 'saves', postId: string) => {
+      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
+    },
+    [interactionModalHook],
+  );
 
-  // Handlers
   const handleLogoClick = useCallback(() => {
     postListData.setPage(0);
     postListData.fetchPosts(true);
@@ -226,7 +163,6 @@ export function SoldPageContent() {
     if (!postListData.loadingMore) setTabRefreshing(false);
   }, [postListData.loadingMore]);
 
-  // Use shared post feed handlers
   const handlers = usePostFeedHandlers({
     session: postListData.session,
     posts: postListData.posts,
@@ -242,7 +178,6 @@ export function SoldPageContent() {
     setIsSubmittingReport,
   });
 
-  // Use shared post modals hook for managing modal side effects
   usePostModals({
     viewingPost: viewingPostHook.viewingPost,
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
@@ -298,7 +233,7 @@ export function SoldPageContent() {
         onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session)}
         onNotificationClick={() => {
           if (!homeData.session) {
-            router.push('/profile');
+            router.push(PROFILE_PATH);
             return;
           }
           router.push('/notification');

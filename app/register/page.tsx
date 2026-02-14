@@ -7,77 +7,188 @@ import { safeParseJSON } from '@/utils/storageUtils'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
-import { isProviderDefaultAvatar } from '@/utils/avatarUtils'
+import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils'
+import { REGISTER_PATH, LOGIN_PATH, PROFILE_PATH } from '@/utils/authRoutes'
+import { useOtpResendCountdown } from '@/hooks/useOtpResendCountdown'
+import { OtpInputs, AuthOAuthButtons, AuthValidationPopup } from '@/components/auth'
+import { sendOtpToEmail, verifyOtpEmail } from '@/utils/authOtp'
 
 export default function Register() {
+  const router = useRouter()
+
+  // Step 1: ยังไม่มี session — อีเมล / OTP / OAuth
+  const [email, setEmail] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpValue, setOtpValue] = useState('')
+  const [otpError, setOtpError] = useState('')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [showEmailValidationPopup, setShowEmailValidationPopup] = useState(false)
+  const [resendTrigger, setResendTrigger] = useState(0)
+  const resendSeconds = useOtpResendCountdown(otpSent, resendTrigger)
+
+  // Step 2: มี session — ชื่อ + รูป
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [session, setSession] = useState<any>(null)
   const [showValidationPopup, setShowValidationPopup] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
-  const router = useRouter()
-
-  // ตรวจสอบความพร้อมของข้อมูล (ต้องมีทั้งชื่อและรูป)
-  const isFormValid = username.trim() !== '' && avatarUrl !== '';
 
   useEffect(() => {
     const checkRegistrationData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserId(session.user.id);
-        // บัญชีที่มีอยู่แล้ว Login ผ่านหน้าลงทะเบียนได้ → ส่งเข้า Home
+      const pendingData = safeParseJSON<{ email?: string; acceptedTerms?: boolean; username?: string; avatarUrl?: string }>('pending_registration', {})
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+
+      if (currentSession) {
+        setSession(currentSession)
+        setUserId(currentSession.user.id)
         const { data: profile } = await supabase
           .from('profiles')
           .select('username, avatar_url')
-          .eq('id', session.user.id)
-          .single();
+          .eq('id', currentSession.user.id)
+          .single()
         const hasExistingAccount =
           profile &&
           profile.username &&
           String(profile.username).trim() !== '' &&
-          profile.username !== 'Guest User';
+          profile.username !== 'Guest User'
         if (hasExistingAccount) {
-          localStorage.removeItem('pending_registration');
-          router.push('/');
-          return;
+          localStorage.removeItem('pending_registration')
+          router.push('/')
+          return
         }
-        // ตรวจสอบรูป default (100×100) จาก OAuth และลบออก
         if (profile?.avatar_url && isProviderDefaultAvatar(profile.avatar_url)) {
-          await supabase.from('profiles').update({ avatar_url: null }).eq('id', session.user.id);
+          await supabase.from('profiles').update({ avatar_url: null }).eq('id', currentSession.user.id)
         }
-      }
-      const pendingData = localStorage.getItem('pending_registration');
-      if (!pendingData && !session) {
-        router.push('/profile');
-        return;
-      }
-      if (pendingData) {
-        const parsed = JSON.parse(pendingData);
-        if (parsed.username) setUsername(parsed.username);
-        if (parsed.avatarUrl) {
-          // ตรวจสอบว่า avatarUrl จาก localStorage เป็น default avatar หรือไม่
-          const avatarUrl = parsed.avatarUrl;
-          if (isProviderDefaultAvatar(avatarUrl)) {
-            setAvatarUrl(''); // ถ้าเป็น default avatar ให้ล้างออก
-          } else {
-            setAvatarUrl(avatarUrl);
-          }
+        if (pendingData.username) setUsername(pendingData.username)
+        if (pendingData.avatarUrl) {
+          const av = pendingData.avatarUrl
+          setAvatarUrl(isProviderDefaultAvatar(av) ? '' : av)
         }
+      } else {
+        if (pendingData.email) setEmail(pendingData.email)
+        if (pendingData.acceptedTerms) setAcceptedTerms(pendingData.acceptedTerms)
       }
     }
-    checkRegistrationData();
+    checkRegistrationData()
   }, [router])
 
-  // ฟังก์ชันช่วยบันทึกข้อมูลชื่อและรูปภาพลง localStorage ทันที
   const updatePendingData = (updates: any) => {
     const currentData = safeParseJSON<Record<string, any>>('pending_registration', {});
-    localStorage.setItem('pending_registration', JSON.stringify({
-      ...currentData,
-      ...updates
-    }));
-  };
+    localStorage.setItem('pending_registration', JSON.stringify({ ...currentData, ...updates }));
+  }
+
+  const handleOAuthLogin = async (provider: 'facebook' | 'google') => {
+    try {
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}${PROFILE_PATH}` : PROFILE_PATH
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo },
+      })
+    } catch (err) {
+      console.error('OAuth login error', err)
+    }
+  }
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (registerLoading) return
+    if (!email.trim()) {
+      setShowEmailValidationPopup(true)
+      return
+    }
+    setRegisterLoading(true)
+    setOtpError('')
+    const { error } = await sendOtpToEmail(email, true)
+    if (error) setOtpError(error)
+    else {
+      updatePendingData({ email: email.trim() })
+      setOtpSent(true)
+    }
+    setRegisterLoading(false)
+  }
+
+  const verifyOtpCode = async (code: string) => {
+    if (registerLoading || !code.trim()) {
+      if (!code.trim()) setOtpError('ກະລຸນາໃສ່ OTP ທີ່ໄດ້ຮັບ')
+      return
+    }
+    setRegisterLoading(true)
+    setOtpError('')
+    try {
+      const { data, error } = await verifyOtpEmail(email, code)
+      if (error) {
+        setOtpError(resendSeconds > 0 ? 'OTP ບໍ່ຖືກຕ້ອງ' : 'OTP ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸແລ້ວ')
+        setOtpValue('')
+        setRegisterLoading(false)
+        return
+      }
+      const user = data?.user
+      if (!user) {
+        setOtpError('ບໍ່ສາມາດຢືນຢັນໄດ້')
+        setOtpValue('')
+        setRegisterLoading(false)
+        return
+      }
+      const createdAtMs = user.created_at ? new Date(user.created_at).getTime() : NaN
+      const isNewEmailUser = Number.isFinite(createdAtMs) && Date.now() - createdAtMs < 60_000
+
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const rawAvatar = profile?.avatar_url || ''
+      if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+        await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
+        const { data: updated } = await supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle()
+        if (updated) profile = updated
+      }
+
+      const displayAvatar = getDisplayAvatarUrl(profile?.avatar_url)
+      const hasCompleteProfile =
+        !!profile &&
+        !!profile.username &&
+        profile.username.trim() !== '' &&
+        profile.username !== 'Guest User' &&
+        displayAvatar !== ''
+
+      if (isNewEmailUser) {
+        const meta = user.user_metadata || {}
+        const displayName = meta.full_name || meta.name || meta.display_name || ''
+        const emailStr = user.email ?? email.trim()
+        const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '')
+        const defaultName = (displayName || emailFallback || 'Guest User').trim()
+        try {
+          await supabase.from('profiles').upsert(
+            { id: user.id, username: defaultName, avatar_url: null },
+            { onConflict: 'id' }
+          )
+        } catch {}
+        localStorage.removeItem('pending_registration')
+        router.push('/')
+      } else if (hasCompleteProfile) {
+        localStorage.removeItem('pending_registration')
+        router.push('/')
+      } else {
+        updatePendingData({ email: email.trim(), acceptedTerms })
+        router.push(REGISTER_PATH)
+      }
+    } catch {
+      setOtpError('ບໍ່ສາມາດຢືນຢັນໄດ້')
+      setOtpValue('')
+    }
+    setRegisterLoading(false)
+  }
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault()
+    verifyOtpCode(otpValue.trim())
+  }
 
   const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -136,7 +247,7 @@ export default function Register() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         setLoading(false);
-        router.push('/profile');
+        router.push(REGISTER_PATH);
         return;
       }
       const newUser = session.user;
@@ -189,12 +300,112 @@ export default function Register() {
     }
   }
 
+  // Step 1: ยังไม่มี session — แสดงฟอร์มอีเมล / OTP / OAuth
+  if (!session) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
+        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+          <button
+            type="button"
+            onClick={() => { localStorage.removeItem('pending_registration'); router.push('/'); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <div style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center', pointerEvents: 'none' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: 0, color: '#1c1e21' }}>ສ້າງບັນຊີໃໝ່</h1>
+          </div>
+        </div>
+        <div style={{ padding: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)' }}>
+          {!otpSent ? (
+            <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <input
+                type="email"
+                placeholder="ອີເມລ"
+                value={email}
+                maxLength={50}
+                onChange={(e) => { const v = e.target.value.slice(0, 50); setEmail(v); updatePendingData({ email: v }); }}
+                style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', background: '#f9f9f9', fontSize: '16px', outline: 'none', color: '#111111' }}
+              />
+              {otpError && <div style={{ fontSize: '14px', color: '#e0245e', textAlign: 'center' }}>{otpError}</div>}
+              <button
+                type="submit"
+                disabled={registerLoading}
+                style={{ width: '100%', padding: '15px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '18px', cursor: registerLoading ? 'not-allowed' : 'pointer', marginTop: '5px' }}
+              >
+                {registerLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><ButtonSpinner /></span> : 'ສົ່ງ OTP'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <p style={{ fontSize: '14px', color: '#65676b', textAlign: 'center', marginBottom: '8px' }}>ກະລຸນາໃສ່ OTP ທີ່ສົ່ງໄປຫາ {email}</p>
+              <OtpInputs
+                value={otpValue}
+                onChange={setOtpValue}
+                onComplete={verifyOtpCode}
+                disabled={registerLoading}
+              />
+              {otpError && <div style={{ fontSize: '14px', color: '#e0245e', textAlign: 'center' }}>{otpError}</div>}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (resendSeconds > 0 || registerLoading) return
+                  setRegisterLoading(true)
+                  setOtpError('')
+                  const { error } = await sendOtpToEmail(email, true)
+                  if (error) setOtpError(error)
+                  else { setOtpValue(''); setResendTrigger((t) => t + 1) }
+                  setRegisterLoading(false)
+                }}
+                style={{ background: 'none', border: 'none', color: resendSeconds > 0 ? '#a0a0a0' : '#1877f2', fontSize: '14px', cursor: resendSeconds > 0 ? 'default' : 'pointer', marginTop: '4px', alignSelf: 'center' }}
+              >
+                ສົ່ງ OTP ໃໝ່{resendSeconds > 0 ? ` (${resendSeconds})` : ''}
+              </button>
+            </form>
+          )}
+          {!otpSent && (
+            <>
+              <div style={{ marginTop: '30px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
+                  <span style={{ margin: '0 10px', fontSize: '13px', color: '#65676b' }}>ຫຼື</span>
+                  <div style={{ flex: 1, height: '1px', background: '#e0e0e0' }} />
+                </div>
+                <AuthOAuthButtons
+                  redirectTo={typeof window !== 'undefined' ? `${window.location.origin}${PROFILE_PATH}` : PROFILE_PATH}
+                  onOAuth={handleOAuthLogin}
+                  facebookLabel="ລົງທະບຽນດ້ວຍ Facebook"
+                  googleLabel="ລົງທະບຽນດ້ວຍ Google"
+                />
+              </div>
+              <div style={{ marginTop: '40px', marginBottom: '24px' }}>
+                <p style={{ fontSize: '13px', color: '#65676b', textAlign: 'center', lineHeight: 1.5, margin: '0 0 20px', padding: '0 8px' }}>
+                  ການສ້າງບັນຊີໝາຍຄວາມວ່າທ່ານຍອມຮັບ{' '}
+                  <Link href="/terms" onClick={(e) => e.stopPropagation()} style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}>ຂໍ້ກຳນົດແລະນະໂຍບາຍ</Link>
+                </p>
+                <p style={{ fontSize: '18px', color: '#1c1e21', textAlign: 'center', marginTop: '4px', fontWeight: '700' }}>
+                  ທ່ານມີບັນຊີແລ້ວບໍ?{' '}
+                  <button type="button" onClick={() => router.push(LOGIN_PATH)} style={{ background: 'none', border: 'none', padding: 0, margin: 0, color: '#1877f2', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}>ເຂົ້າສູ່ລະບົບ</button>
+                </p>
+              </div>
+            </>
+          )}
+          <AuthValidationPopup
+            show={showEmailValidationPopup}
+            message="ກະລຸນາໃສ່ອີເມລ"
+            onClose={() => setShowEmailValidationPopup(false)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Step 2: มี session — ตั้งชื่อ + รูป
   return (
     <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
-      
-      {/* Header - หน้าตั้งชื่อและรูปโปรไฟล์ (ไม่มีปุ่มย้อนกลับ) */}
       <div style={{ padding: '15px 15px 5px 15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }} />
-
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <form onSubmit={handleCompleteProfile} style={{ textAlign: 'center' }}>
           
@@ -301,53 +512,11 @@ export default function Register() {
             ) : 'ສຳເລັດ'}
           </button>
 
-          {showValidationPopup && (
-            <div
-              style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0,0,0,0.4)',
-                zIndex: 2500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '20px',
-              }}
-            >
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  maxWidth: '320px',
-                  width: '100%',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center', color: '#111111' }}>
-                  {validationMessage}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setShowValidationPopup(false)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 16px',
-                    background: '#1877f2',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    color: '#fff',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ຕົກລົງ
-                </button>
-              </div>
-            </div>
-          )}
+          <AuthValidationPopup
+            show={showValidationPopup}
+            message={validationMessage}
+            onClose={() => setShowValidationPopup(false)}
+          />
 
         </form>
       </div>

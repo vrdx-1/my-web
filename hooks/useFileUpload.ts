@@ -3,6 +3,7 @@
 import { useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { safeParseSessionJSON } from '@/utils/storageUtils';
+import { PROFILE_PATH } from '@/utils/authRoutes';
 
 interface UseFileUploadReturn {
   hiddenFileInputRef: React.RefObject<HTMLInputElement>;
@@ -31,7 +32,7 @@ export function useFileUpload(): UseFileUploadReturn {
     if (session) {
       hiddenFileInputRef.current?.click();
     } else {
-      router.push('/profile');
+      router.push(PROFILE_PATH);
     }
   }, [router]);
 

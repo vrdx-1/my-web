@@ -1,16 +1,8 @@
 'use client'
 
-import { Suspense } from 'react';
-import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
+import { HomeContent } from './HomeContent';
 
-// Lazy load HomeContent with real code splitting
-// This will create a separate bundle chunk that only loads when needed
-const LazyHomeContent = dynamicNamed(() => import('./HomeContent'), 'HomeContent', { ssr: true });
-
+// โหลด HomeContent ใน route chunk เดียวกับหน้าโฮม เพื่อลด round-trip และให้หน้าโฮมโหลดเร็วขึ้น
 export default function HomeClient() {
-  return (
-    <Suspense fallback={<PageLoadingFallback />}>
-      <LazyHomeContent />
-    </Suspense>
-  );
+  return <HomeContent />;
 }

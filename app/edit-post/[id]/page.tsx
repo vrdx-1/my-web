@@ -1,215 +1,89 @@
-'use client'
-import { useState, useEffect, use, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+'use client';
+
+import { use } from 'react';
 import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
-import { useImageUpload } from '@/hooks/useImageUpload';
 import { Avatar } from '@/components/Avatar';
-
-import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { ProvinceDropdown } from '@/components/ProvinceDropdown';
+import { LAO_FONT } from '@/utils/constants';
+import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { useEditPostPage } from './useEditPostPage';
+
+const REMOVE_BTN = {
+  position: 'absolute' as const,
+  top: '10px',
+  right: '10px',
+  background: 'rgba(0,0,0,0.6)',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '50%',
+  width: 30,
+  height: 30,
+  cursor: 'pointer' as const,
+  fontSize: '16px',
+  display: 'flex' as const,
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const LEAVE_OVERLAY = {
+  position: 'fixed' as const,
+  inset: 0,
+  background: 'rgba(0,0,0,0.4)',
+  zIndex: 2500,
+  display: 'flex' as const,
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 20,
+};
+
+const LEAVE_BOX = {
+  background: '#fff',
+  borderRadius: '12px',
+  padding: 20,
+  maxWidth: '320px',
+  width: '100%',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+};
+
+const BTN_LEAVE = {
+  flex: 1,
+  padding: '10px 16px',
+  border: 'none',
+  borderRadius: 8,
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
+  cursor: 'pointer' as const,
+};
 
 export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
-
-  const [caption, setCaption] = useState('');
-  const [province, setProvince] = useState('');
-  const [images, setImages] = useState<string[]>([]); // รูปเดิมจาก DB
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [isViewing, setIsViewing] = useState(false);
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const captionRef = useRef<HTMLTextAreaElement>(null);
-  const initialRef = useRef<{ caption: string; province: string; images: string[] } | null>(null);
-
-  // Use shared profile hook
   const { profile: userProfile } = useProfile();
-
-  const adjustCaptionHeight = () => {
-    const el = captionRef.current;
-    if (!el) return;
-    el.style.overflow = 'hidden';
-    el.style.height = '0';
-    const h = Math.max(24, el.scrollHeight);
-    el.style.height = `${h}px`;
-  };
-
-  // Use shared image upload hook for new images
-  const imageUpload = useImageUpload({
-    maxFiles: 15,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      // ดึงข้อมูลโพสต์
-      const { data: post, error } = await supabase
-        .from('cars')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error || !post) {
-        router.back();
-        return;
-      }
-
-      const capRaw = post.caption || '';
-      const cap = capRaw.split('\n').slice(0, 15).join('\n');
-      const prov = post.province || '';
-      const imgs = post.images || [];
-      setCaption(cap);
-      setProvince(prov);
-      setImages(imgs);
-      initialRef.current = { caption: cap, province: prov, images: imgs };
-      setLoading(false);
-    };
-    fetchData();
-  }, [id, router]);
-
-  const hasChanges = Boolean(
-    !loading &&
-      initialRef.current &&
-      (caption !== initialRef.current.caption ||
-        province !== initialRef.current.province ||
-        JSON.stringify(images) !== JSON.stringify(initialRef.current.images) ||
-        imageUpload.previews.length > 0)
-  );
-
-  const hasChangesRef = useRef(false);
-  hasChangesRef.current = hasChanges;
-  const allowLeaveRef = useRef(false);
-
-  const handleBack = () => {
-    if (hasChangesRef.current) {
-      setShowLeaveConfirm(true);
-      return;
-    }
-    allowLeaveRef.current = true;
-    router.back();
-  };
-
-  const handleDiscardAndBack = () => {
-    allowLeaveRef.current = true;
-    setShowLeaveConfirm(false);
-    router.back();
-  };
-
-
-  const handleLeaveCancel = () => {
-    setShowLeaveConfirm(false);
-  };
-
-  useEffect(() => {
-    if (!showLeaveConfirm || typeof document === 'undefined') return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [showLeaveConfirm]);
-
-  useEffect(() => {
-    if (!loading) {
-      const onBeforeUnload = (e: BeforeUnloadEvent) => {
-        if (hasChangesRef.current && !allowLeaveRef.current) {
-          e.preventDefault();
-        }
-      };
-      window.addEventListener('beforeunload', onBeforeUnload);
-      return () => window.removeEventListener('beforeunload', onBeforeUnload);
-    }
-  }, [loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      const id = requestAnimationFrame(() => {
-        adjustCaptionHeight();
-        requestAnimationFrame(adjustCaptionHeight);
-      });
-      return () => cancelAnimationFrame(id);
-    }
-  }, [loading, caption]);
-
-  const removeImage = (index: number, isNew: boolean) => {
-    if (isNew) {
-      imageUpload.removeImage(index);
-      // Check after removal: if no images left, close viewing mode
-      const remainingNewImages = imageUpload.previews.length - 1;
-      if (images.length === 0 && remainingNewImages === 0) {
-        setIsViewing(false);
-      }
-    } else {
-      const updatedImages = [...images];
-      updatedImages.splice(index, 1);
-      setImages(updatedImages);
-      // Check after removal: if no images left, close viewing mode
-      if (updatedImages.length === 0 && imageUpload.previews.length === 0) {
-        setIsViewing(false);
-      }
-    }
-  };
-
-  const handleUpdate = async (goBackAfterSave?: boolean) => {
-    if (!province) {
-      return;
-    }
-    if (images.length === 0 && imageUpload.selectedFiles.length === 0) {
-      return;
-    }
-    setUploading(true);
-    const uploadedPaths: string[] = [];
-    try {
-      let finalImages = [...images];
-
-      for (const file of imageUpload.selectedFiles) {
-        const fileExt = file.name.split('.').pop() || 'webp';
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `updates/${fileName}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('car-images').upload(filePath, file);
-
-        if (uploadError) {
-          for (const path of uploadedPaths) {
-            await supabase.storage.from('car-images').remove([path]).catch(() => {});
-          }
-          throw uploadError;
-        }
-
-        if (uploadData) {
-          uploadedPaths.push(uploadData.path);
-          const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(uploadData.path);
-          finalImages.push(publicUrl);
-        }
-      }
-
-      const { error } = await supabase
-        .from('cars')
-        .update({ caption, province, images: finalImages })
-        .eq('id', id);
-
-      if (error) {
-        for (const path of uploadedPaths) {
-          await supabase.storage.from('car-images').remove([path]).catch(() => {});
-        }
-        throw error;
-      }
-      if (goBackAfterSave) {
-        allowLeaveRef.current = true;
-        router.back();
-      } else {
-        router.push('/');
-      }
-      router.refresh();
-    } catch (err: any) {
-    } finally {
-      setUploading(false);
-    }
-  };
+  const {
+    caption,
+    province,
+    setProvince,
+    images,
+    loading,
+    uploading,
+    isViewing,
+    setIsViewing,
+    showLeaveConfirm,
+    handleBack,
+    handleDiscardAndBack,
+    handleLeaveCancel,
+    handleUpdate,
+    removeImage,
+    captionRef,
+    imageUpload,
+    hasChanges,
+    handleCaptionKeyDown,
+    handleCaptionPaste,
+    handleCaptionChange,
+    maxCaptionLines,
+  } = useEditPostPage(id);
 
   if (loading) {
     return (
@@ -219,53 +93,42 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     );
   }
 
+  const lineCount = caption.split('\n').length;
+
   return (
     <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
-      
-      {/* Header หน้าหลัก — แสดงปุ่มບັນທຶກ เฉพาะเมื่อมีการแก้ไข กด back ไม่บันทึก */}
       <PageHeader
         title="ແກ້ໄຂ"
         onBack={handleBack}
         centerTitle={!hasChanges}
         actionButton={
           hasChanges
-            ? {
-                label: uploading ? '...' : 'ບັນທຶກ',
-                onClick: () => handleUpdate(),
-                disabled: uploading,
-                variant: 'pill',
-              }
+            ? { label: uploading ? '...' : 'ບັນທຶກ', onClick: () => handleUpdate(), disabled: uploading, variant: 'pill' as const }
             : undefined
         }
       />
 
-      {/* Body */}
       <div style={{ flex: 1 }}>
-        <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar avatarUrl={userProfile?.avatar_url} size={50} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#111111' }}>
               {userProfile?.username || 'User'}
             </div>
-            <ProvinceDropdown
-              selectedProvince={province}
-              onProvinceChange={setProvince}
-              variant="button"
-            />
+            <ProvinceDropdown selectedProvince={province} onProvinceChange={setProvince} variant="button" />
           </div>
         </div>
 
-        {/* Caption: สูงสุด 15 แถว เหมือนสร้างโพสต์ */}
         <div style={{ padding: '0 15px 10px 15px' }}>
           <textarea
             ref={captionRef}
             style={{
               width: '100%',
-              minHeight: '24px',
+              minHeight: 24,
               border: 'none',
               outline: 'none',
               fontSize: '16px',
-              lineHeight: '1.4',
+              lineHeight: 1.4,
               padding: 0,
               resize: 'none',
               overflow: 'hidden',
@@ -277,193 +140,70 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             }}
             placeholder="ໃສ່ລາຍລະອຽດລົດ..."
             value={caption}
-            onKeyDown={(e) => {
-              const currentLines = caption.split('\n');
-              const currentLineCount = currentLines.length;
-              if (currentLineCount >= 15) {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  return;
-                }
-                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
-                const isModifierKey = e.ctrlKey || e.metaKey || e.altKey;
-                if (!allowedKeys.includes(e.key) && !isModifierKey && e.key.length === 1) {
-                  e.preventDefault();
-                  return;
-                }
-              }
-            }}
-            onPaste={(e) => {
-              const currentLines = caption.split('\n');
-              if (currentLines.length >= 15) {
-                e.preventDefault();
-                return;
-              }
-              e.preventDefault();
-              const target = e.target as HTMLTextAreaElement;
-              const start = target.selectionStart;
-              const end = target.selectionEnd;
-              const pastedText = e.clipboardData.getData('text');
-              const newText = caption.substring(0, start) + pastedText + caption.substring(end);
-              const finalLines = newText.split('\n').slice(0, 15);
-              const finalText = finalLines.join('\n');
-              setCaption(finalText);
-              if (captionRef.current) {
-                captionRef.current.value = finalText;
-                adjustCaptionHeight();
-                const newCursorPosition = Math.min(start + pastedText.length, finalText.length);
-                setTimeout(() => {
-                  if (captionRef.current) {
-                    captionRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-                  }
-                }, 0);
-              }
-            }}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              const lines = newValue.split('\n');
-              const limitedLines = lines.slice(0, 15);
-              const limitedValue = limitedLines.join('\n');
-              setCaption(limitedValue);
-              if (captionRef.current && captionRef.current.value !== limitedValue) {
-                const cursorPosition = captionRef.current.selectionStart;
-                captionRef.current.value = limitedValue;
-                const newCursorPosition = Math.min(cursorPosition, limitedValue.length);
-                setTimeout(() => {
-                  if (captionRef.current) {
-                    captionRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-                  }
-                }, 0);
-              }
-              setTimeout(adjustCaptionHeight, 0);
-            }}
+            onKeyDown={handleCaptionKeyDown}
+            onPaste={handleCaptionPaste}
+            onChange={handleCaptionChange}
           />
-          {caption.split('\n').length >= 15 && (
-            <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: '5px' }}>
-              ສູງສຸດ 15 ແຖວ
-            </div>
+          {lineCount >= maxCaptionLines && (
+            <div style={{ color: '#ff4d4f', fontSize: '12px', marginTop: 5 }}>ສູງສຸດ 15 ແຖວ</div>
           )}
         </div>
 
-            <PhotoPreviewGrid
-              existingImages={images}
-              newPreviews={imageUpload.previews}
-              onImageClick={() => setIsViewing(true)}
-              showRemoveButton={false}
-            />
-            
-            {/* Hidden file input for adding images in normal mode */}
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={imageUpload.handleFileChange}
-              ref={imageUpload.fileInputRef}
-              style={{ display: 'none' }}
-            />
+        <PhotoPreviewGrid
+          existingImages={images}
+          newPreviews={imageUpload.previews}
+          onImageClick={() => setIsViewing(true)}
+          showRemoveButton={false}
+        />
+        <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
       </div>
 
-      {/* Viewing Mode Layer */}
       {isViewing && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
           <div style={{ width: '100%', maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH, height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
             <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
-              <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ padding: '5px', width: 24, height: 24 }} aria-hidden />
-              </div>
+              <div style={{ width: 72, flexShrink: 0 }} aria-hidden />
               <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0, color: '#111111' }}>ແກ້ໄຂ</h3>
-              <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                <button onClick={() => setIsViewing(false)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ສຳເລັດ</button>
+              <div style={{ width: 72, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setIsViewing(false)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
+                  ສຳເລັດ
+                </button>
               </div>
             </div>
-            {/* รูปจาก Database */}
             {images.map((img, idx) => (
-              <div key={`old-${idx}`} style={{ width: '100%', marginBottom: '12px', position: 'relative' }}>
-                <img src={img} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                <button onClick={() => removeImage(idx, false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <div key={`old-${idx}`} style={{ width: '100%', marginBottom: 12, position: 'relative' }}>
+                <img src={img} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <button type="button" onClick={() => removeImage(idx, false)} style={REMOVE_BTN}>✕</button>
               </div>
             ))}
-            {/* รูปใหม่ */}
             {imageUpload.previews.map((img, idx) => (
-              <div key={`new-${idx}`} style={{ width: '100%', marginBottom: '12px', position: 'relative' }}>
-                <img src={img} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                <button onClick={() => removeImage(idx, true)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <div key={`new-${idx}`} style={{ width: '100%', marginBottom: 12, position: 'relative' }}>
+                <img src={img} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <button type="button" onClick={() => removeImage(idx, true)} style={REMOVE_BTN}>✕</button>
               </div>
             ))}
-
-            {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
-            <div style={{ padding: '5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
-                <span style={{ fontSize: '18px', color: '#fff', lineHeight: '1' }}>+</span> ເພີ່ມຮູບ
+            <div style={{ padding: 5, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#1877f2', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>
+                <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span> ເພີ່ມຮູບ
                 <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
               </label>
             </div>
-            <div style={{ height: '10px' }}></div>
+            <div style={{ height: 10 }} />
           </div>
         </div>
       )}
 
-      {/* Modal ยืนยัน — ທ່ານຕ້ອງການຖິ້ມການແກ້ໄຂບໍ? */}
       {showLeaveConfirm && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            zIndex: 2500,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '12px',
-              padding: '20px',
-              maxWidth: '320px',
-              width: '100%',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
+        <div style={LEAVE_OVERLAY}>
+          <div style={LEAVE_BOX} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#111111' }}>
               ທ່ານຕ້ອງການຖິ້ມການແກ້ໄຂບໍ?
             </h3>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-              <button
-                type="button"
-                onClick={handleDiscardAndBack}
-                style={{
-                  flex: 1,
-                  padding: '10px 16px',
-                  background: '#e4e6eb',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  color: '#1c1e21',
-                  cursor: 'pointer',
-                }}
-              >
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between' }}>
+              <button type="button" onClick={handleDiscardAndBack} style={{ ...BTN_LEAVE, background: '#e4e6eb', color: '#1c1e21' }}>
                 ຖິ້ມການແກ້ໄຂ
               </button>
-              <button
-                type="button"
-                onClick={handleLeaveCancel}
-                style={{
-                  flex: 1,
-                  padding: '10px 16px',
-                  background: '#1877f2',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  color: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
+              <button type="button" onClick={handleLeaveCancel} style={{ ...BTN_LEAVE, background: '#1877f2', color: '#fff' }}>
                 ແກ້ໄຂຕໍ່
               </button>
             </div>

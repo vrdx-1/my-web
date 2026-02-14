@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { BOOST_PACKAGES } from "@/data/boostPackages";
+import { REGISTER_PATH } from "@/utils/authRoutes";
 import { useBoostSlip } from "../BoostSlipContext";
 import { compressImage } from "@/utils/imageCompression";
 
@@ -75,7 +76,7 @@ function BoostSlipPageContent() {
         userId = refreshed.session?.user?.id ?? null;
       }
       if (!userId) {
-        router.replace("/register");
+        router.replace(REGISTER_PATH);
         return;
       }
 

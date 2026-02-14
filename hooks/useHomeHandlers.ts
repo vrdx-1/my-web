@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { PROFILE_PATH } from '@/utils/authRoutes';
 
 /**
  * Custom hook สำหรับจัดการ handlers ในหน้า Home
@@ -28,7 +29,7 @@ export function useHomeHandlers({
 
   const handleNotificationClick = useCallback(() => {
     if (!homeData.session) {
-      router.push('/profile');
+      router.push(PROFILE_PATH);
       return;
     }
     router.push('/notification');

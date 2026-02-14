@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
@@ -27,32 +26,23 @@ import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
-import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { safeParseJSON } from '@/utils/storageUtils';
 
 export function SavedPostsContent() {
-  const router = useRouter();
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [myGuestPosts, setMyGuestPosts] = useState<{ post_id: string, token: string }[]>([]);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  // Use post list data hook
   const [sessionState, setSessionState] = useState<any>(undefined);
   const hasFetchedRef = useRef(false);
-  
+  const postsRef = useRef<any[]>([]);
+
   useEffect(() => {
-    const initSession = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSessionState(currentSession);
-    };
-    initSession();
+    supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
   }, []);
 
   const postListData = usePostListData({
@@ -60,23 +50,14 @@ export function SavedPostsContent() {
     session: sessionState,
     tab,
   });
+  postsRef.current = postListData.posts;
 
-  // Use menu hook
   const menu = useMenu();
-
-  // Use fullscreen viewer hook
   const fullScreenViewer = useFullScreenViewer();
-
-  // Use viewing post hook
   const viewingPostHook = useViewingPost();
-
-  // Use header scroll hook
   const headerScroll = useHeaderScroll();
-
-  // Use interaction modal hook (bottom sheet for likes/saves)
   const interactionModalHook = useInteractionModal();
 
-  // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
@@ -84,7 +65,6 @@ export function SavedPostsContent() {
     threshold: 0.1,
   });
 
-  // Use shared post interactions hook
   const { toggleLike, toggleSave } = usePostInteractions({
     session: postListData.session,
     posts: postListData.posts,
@@ -97,11 +77,7 @@ export function SavedPostsContent() {
     setJustSavedPosts,
   });
 
-  // Initialize data when session is ready (first time only)
   useEffect(() => {
-    // ตรวจสอบทั้ง sessionState และ postListData.session เพื่อให้แน่ใจว่า session ใน hook ถูก initialize แล้ว
-    // sessionState อาจเป็น null (guest) หรือ session object (logged in) 
-    // postListData.session ต้องไม่ใช่ undefined (หมายความว่า session ใน hook ถูก initialize แล้ว)
     if (sessionState !== undefined && postListData.session !== undefined && !hasFetchedRef.current) {
       postListData.setPage(0);
       postListData.setHasMore(true);
@@ -111,7 +87,6 @@ export function SavedPostsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionState, postListData.session]);
 
-  // Reset and fetch when tab changes
   useEffect(() => {
     if (hasFetchedRef.current && sessionState !== undefined && postListData.session !== undefined) {
       postListData.setPage(0);
@@ -125,32 +100,12 @@ export function SavedPostsContent() {
     if (!postListData.loadingMore) setTabRefreshing(false);
   }, [postListData.loadingMore]);
 
-  // Load more when page changes
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
       postListData.fetchPosts(false, postListData.page);
     }
   }, [postListData.page, postListData.session]);
 
-  // Initialize user profile and guest posts
-  useEffect(() => {
-    const init = async () => {
-      if (sessionState) {
-        // Optimize: Select เฉพาะ fields ที่จำเป็น
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username, avatar_url, phone, last_seen')
-          .eq('id', sessionState.user.id)
-          .single();
-        if (profile) setUserProfile(profile);
-      }
-      const stored = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
-      setMyGuestPosts(stored);
-    };
-    init();
-  }, [sessionState]);
-
-  // Use shared post feed handlers
   const handlers = usePostFeedHandlers({
     session: postListData.session,
     posts: postListData.posts,
@@ -166,7 +121,6 @@ export function SavedPostsContent() {
     setIsSubmittingReport,
   });
 
-  // Use shared post modals hook for managing modal side effects
   usePostModals({
     viewingPost: viewingPostHook.viewingPost,
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
@@ -208,12 +162,11 @@ export function SavedPostsContent() {
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
 
-  // Fetch interactions for bottom sheet (likes / saves)
   const fetchInteractions = useCallback(
     async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
+      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
     },
-    [interactionModalHook, postListData.posts],
+    [interactionModalHook],
   );
 
   return (
@@ -228,15 +181,14 @@ export function SavedPostsContent() {
           ]}
           activeTab={tab}
           onTabChange={(v) => {
+            setTabRefreshing(true);
             if (v === tab) {
-              setTabRefreshing(true);
               postListData.setPage(0);
               postListData.setHasMore(true);
               postListData.fetchPosts(true);
-              return;
+            } else {
+              setTab(v);
             }
-            setTabRefreshing(true);
-            setTab(v);
           }}
           loadingTab={tabRefreshing ? tab : null}
         />

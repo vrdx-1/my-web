@@ -15,8 +15,6 @@ import { EditProfilePostOverlays } from './EditProfilePostOverlays';
 import { useEditProfilePage } from './useEditProfilePage';
 import { useBackHandler } from '@/components/BackHandlerContext';
 
-// Shared Utils (kept for consistency with other pages, even if not used directly here)
-import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 // Removed duplicate dynamic imports - using from PostFeedModals component
@@ -101,7 +99,6 @@ export function EditProfileContent() {
  <EditNameModal
    isOpen={isEditingName}
    editingUsername={editingUsername}
-   username={username}
    setEditingUsername={setEditingUsername}
    onClose={handleCloseNameModal}
    onSave={handleSaveUsername}
@@ -111,7 +108,6 @@ export function EditProfileContent() {
  <EditPhoneModal
    isOpen={isEditingPhone}
    editingPhone={editingPhone}
-   phone={phone}
    setEditingPhone={setEditingPhone}
    onCancel={handleCancelPhoneEdit}
    onSave={handleSavePhone}

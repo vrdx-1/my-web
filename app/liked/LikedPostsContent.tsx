@@ -1,11 +1,8 @@
 'use client'
-import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 
 // Shared Components
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PostFeed } from '@/components/PostFeed';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
@@ -32,7 +29,6 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 export function LikedPostsContent() {
-  const router = useRouter();
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
@@ -41,16 +37,12 @@ export function LikedPostsContent() {
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  // Use post list data hook
   const [sessionState, setSessionState] = useState<any>(undefined);
   const hasFetchedRef = useRef(false);
-  
+  const postsRef = useRef<any[]>([]);
+
   useEffect(() => {
-    const initSession = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSessionState(currentSession);
-    };
-    initSession();
+    supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
   }, []);
 
   const postListData = usePostListData({
@@ -58,23 +50,14 @@ export function LikedPostsContent() {
     session: sessionState,
     tab,
   });
+  postsRef.current = postListData.posts;
 
-  // Use menu hook
   const menu = useMenu();
-
-  // Use fullscreen viewer hook
   const fullScreenViewer = useFullScreenViewer();
-
-  // Use viewing post hook
   const viewingPostHook = useViewingPost();
-
-  // Use header scroll hook
   const headerScroll = useHeaderScroll();
-
-  // Use interaction modal hook (bottom sheet for likes/saves)
   const interactionModalHook = useInteractionModal();
 
-  // Use shared infinite scroll hook
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
@@ -82,7 +65,6 @@ export function LikedPostsContent() {
     threshold: 0.1,
   });
 
-  // Use shared post interactions hook
   const { toggleLike, toggleSave } = usePostInteractions({
     session: postListData.session,
     posts: postListData.posts,
@@ -95,11 +77,7 @@ export function LikedPostsContent() {
     setJustSavedPosts,
   });
 
-  // Initialize data when session is ready (first time only)
   useEffect(() => {
-    // ตรวจสอบทั้ง sessionState และ postListData.session เพื่อให้แน่ใจว่า session ใน hook ถูก initialize แล้ว
-    // sessionState อาจเป็น null (guest) หรือ session object (logged in) 
-    // postListData.session ต้องไม่ใช่ undefined (หมายความว่า session ใน hook ถูก initialize แล้ว)
     if (sessionState !== undefined && postListData.session !== undefined && !hasFetchedRef.current) {
       postListData.setPage(0);
       postListData.setHasMore(true);
@@ -109,7 +87,6 @@ export function LikedPostsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionState, postListData.session]);
 
-  // Reset and fetch when tab changes
   useEffect(() => {
     if (hasFetchedRef.current && sessionState !== undefined && postListData.session !== undefined) {
       postListData.setPage(0);
@@ -123,14 +100,12 @@ export function LikedPostsContent() {
     if (!postListData.loadingMore) setTabRefreshing(false);
   }, [postListData.loadingMore]);
 
-  // Load more when page changes
   useEffect(() => {
     if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
       postListData.fetchPosts(false, postListData.page);
     }
   }, [postListData.page, postListData.session]);
 
-  // Use shared post feed handlers
   const handlers = usePostFeedHandlers({
     session: postListData.session,
     posts: postListData.posts,
@@ -146,7 +121,6 @@ export function LikedPostsContent() {
     setIsSubmittingReport,
   });
 
-  // Use shared post modals hook for managing modal side effects
   usePostModals({
     viewingPost: viewingPostHook.viewingPost,
     isViewingModeOpen: viewingPostHook.isViewingModeOpen,
@@ -188,12 +162,11 @@ export function LikedPostsContent() {
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
 
-  // Fetch interactions for bottom sheet (likes / saves)
   const fetchInteractions = useCallback(
     async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
+      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
     },
-    [interactionModalHook, postListData.posts],
+    [interactionModalHook],
   );
 
   return (
@@ -201,22 +174,21 @@ export function LikedPostsContent() {
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
         <PageHeader title="ລາຍການທີ່ມັກ" centerTitle />
-<TabNavigation
-        tabs={[
+        <TabNavigation
+          tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },
             { value: 'sold', label: 'ຂາຍແລ້ວ' },
           ]}
           activeTab={tab}
           onTabChange={(v) => {
+            setTabRefreshing(true);
             if (v === tab) {
-              setTabRefreshing(true);
               postListData.setPage(0);
               postListData.setHasMore(true);
               postListData.fetchPosts(true);
-              return;
+            } else {
+              setTab(v);
             }
-            setTabRefreshing(true);
-            setTab(v);
           }}
           loadingTab={tabRefreshing ? tab : null}
         />

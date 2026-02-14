@@ -113,6 +113,19 @@ body[data-page="home"]::-webkit-scrollbar-thumb {
   background: transparent !important;
 }
 
+/* เลื่อนฟีดลื่น ไม่กระตุก: momentum บน iOS + ลด paint การ์ดนอกจอ */
+body[data-page="home"],
+html:has(body[data-page="home"]) {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* การ์ดโพสต์: ข้าม paint เมื่ออยู่นอกจอ ลด jank ตอน scroll */
+.feed-card {
+  content-visibility: auto;
+  -webkit-contain-intrinsic-size: auto 480px;
+  contain-intrinsic-size: auto 480px;
+}
+
 /* Loading Spinner Animation */
 @keyframes fadeColor {
   0%, 100% { background: #f0f0f0; }
@@ -125,6 +138,50 @@ body[data-page="home"]::-webkit-scrollbar-thumb {
   87.5% { background: #e5e5e5; }
 }
 
+/* วงหมุน: ใช้ translate3d ใน keyframe เพื่อให้หมุนครบรอบบน compositor ไม่สะดุด */
+@keyframes spinner-ring-spin {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(0, 0, 0) rotate(360deg); }
+}
+
+/* ช่อง spinner ด้านล่าง feed: แยก layer ไม่ให้การอัปเดตโพสต์มาทำให้ spinner กระพริบ/หมุนไม่เต็ม */
+.feed-bottom-slot {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+.spinner-ring {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  flex-shrink: 0;
+  border: 3px solid #e5e5e5;
+  border-top-color: #333333;
+  border-radius: 50%;
+  animation: spinner-ring-spin 1.15s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  contain: layout style paint;
+}
+
+.spinner-ring-sm {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e5e5;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spinner-ring-spin 1.15s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  contain: layout style paint;
+}
+
+/* เลิกใช้แล้ว (เก็บไว้เผื่ออ้างอิง) */
 .loading-spinner-circle {
   display: inline-block;
   width: 40px;

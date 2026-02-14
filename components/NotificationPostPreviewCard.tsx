@@ -5,6 +5,7 @@ import { AvatarGroup } from './AvatarGroup';
 
 export interface NotificationPostPreviewItem {
   id: string;
+  post_id: string;
   post_images?: string[];
   notification_count?: number;
   interaction_total?: number;
@@ -314,8 +315,8 @@ export const NotificationPostPreviewCard = React.memo<{
   notification: NotificationPostPreviewItem;
   isReadStyle: boolean;
   timeAgoText: string;
-  onClick: () => void;
-}>(({ notification, isReadStyle, timeAgoText, onClick }) => {
+  onNavigateToPost: (postId: string) => void;
+}>(({ notification, isReadStyle, timeAgoText, onNavigateToPost }) => {
   const interactionTotal =
     typeof notification.interaction_total === 'number'
       ? notification.interaction_total
@@ -332,13 +333,13 @@ export const NotificationPostPreviewCard = React.memo<{
         ? { text: 'ຖືກປະຕິເສດ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
         : notification.boost_status === 'success'
           ? isBoostExpired
-            ? { text: 'ໂຄສະນາຫມົດອາຍຸ', bg: '#f3f4f6', border: '#d1d5db', color: '#4b5563' }
+            ? { text: 'ໂຄສະນາຫມົດອາຍຸແລ້ວ', bg: '#f3f4f6', border: '#d1d5db', color: '#4b5563' }
             : { text: 'ກຳລັງໂຄສະນາ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
           : null;
 
   return (
     <div
-      onClick={onClick}
+      onClick={() => onNavigateToPost(notification.post_id)}
       style={{
         display: 'flex',
         alignItems: 'flex-start',

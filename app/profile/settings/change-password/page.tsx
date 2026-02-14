@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { LAO_FONT } from '@/utils/constants';
+import { PROFILE_PATH } from '@/utils/authRoutes';
 
 export default function ChangePassword() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function ChangePassword() {
       setConfirmPassword('');
       
       setTimeout(() => {
-        router.push('/profile');
+        router.push(PROFILE_PATH);
       }, 2000);
     }
 

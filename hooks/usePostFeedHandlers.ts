@@ -7,6 +7,7 @@ import { useHeaderScroll } from './useHeaderScroll';
 import { useMenu } from './useMenu';
 import { supabase } from '@/lib/supabase';
 import { togglePostStatus, deletePost, openReportModal, submitReport, sharePost } from '@/utils/postManagement';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface UsePostFeedHandlersProps {
   session: any;
@@ -107,7 +108,7 @@ export function usePostFeedHandlers({
     (post: any) => {
       if (!session) {
         menu?.setActiveMenu(null);
-        router.push('/register');
+        router.push(REGISTER_PATH);
         return;
       }
       if (setReportingPost) {

@@ -92,6 +92,47 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     initSession();
   }, [session]);
 
+  // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม)
+  useEffect(() => {
+    if (type !== 'sold' || currentSession === undefined) return;
+    let idOrToken: string | null = null;
+    if (userIdOrToken && typeof userIdOrToken === 'string' && userIdOrToken !== 'null' && userIdOrToken !== 'undefined' && userIdOrToken !== '') {
+      idOrToken = userIdOrToken;
+    } else if (currentSession?.user?.id) {
+      const uid = currentSession.user.id;
+      if (typeof uid === 'string' && uid !== 'null' && uid !== 'undefined' && uid !== '' && /^[0-9a-f-]{36}$/i.test(uid)) {
+        idOrToken = uid;
+      }
+    }
+    if (!idOrToken && typeof window !== 'undefined') {
+      try {
+        const token = getPrimaryGuestToken();
+        if (token && typeof token === 'string' && token !== 'null' && token !== '') idOrToken = token;
+      } catch (_) {}
+    }
+    if (!idOrToken) return;
+    const isUser = !!currentSession?.user?.id;
+    const likesTable = isUser ? 'post_likes' : 'post_likes_guest';
+    const likesColumn = isUser ? 'user_id' : 'guest_token';
+    const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
+    const savesColumn = isUser ? 'user_id' : 'guest_token';
+    Promise.all([
+      supabase.from(likesTable).select('post_id').eq(likesColumn, idOrToken),
+      supabase.from(savesTable).select('post_id').eq(savesColumn, idOrToken),
+    ]).then(([likedRes, savedRes]) => {
+      if (likedRes.data) {
+        const map: { [key: string]: boolean } = {};
+        likedRes.data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
+        setLikedPosts(prev => ({ ...prev, ...map }));
+      }
+      if (savedRes.data) {
+        const map: { [key: string]: boolean } = {};
+        savedRes.data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
+        setSavedPosts(prev => ({ ...prev, ...map }));
+      }
+    });
+  }, [type, currentSession, userIdOrToken]);
+
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (loadingMore) return;
     
@@ -754,6 +795,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           });
         }
       }
+
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {

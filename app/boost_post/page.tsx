@@ -7,6 +7,7 @@ import { PageSpinner } from "@/components/LoadingSpinner";
 import { BoostAdDetailsPopup } from "@/components/modals/BoostAdDetailsPopup";
 import { BoostHowToModal } from "@/components/modals/BoostHowToModal";
 import { BOOST_PACKAGES } from "@/data/boostPackages";
+import { REGISTER_PATH } from "@/utils/authRoutes";
 import { BoostQRStep } from "./BoostQRStep";
 import { useBoostSlip } from "./BoostSlipContext";
 
@@ -62,7 +63,7 @@ function BoostPostContent() {
       }
       if (!session) {
         setIsRedirectingToRegister(true);
-        router.replace("/register");
+        router.replace(REGISTER_PATH);
         return;
       }
 

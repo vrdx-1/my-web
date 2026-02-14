@@ -3,6 +3,7 @@
 import React from 'react';
 import { PostCard } from './PostCard';
 import { EmptyState } from './EmptyState';
+import { PageSpinner } from './LoadingSpinner';
 
 interface PostFeedProps {
   posts: any[];
@@ -71,51 +72,86 @@ export const PostFeed = React.memo<PostFeedProps>(({
     ) : null;
   }
 
-  return (
-    <>
-      {posts.map((post, index) => {
-        const isLastElement = posts.length === index + 1;
-        return (
-          <PostCard
-            key={`${post.id}-${index}`}
-            post={post}
-            index={index}
-            isLastElement={isLastElement}
-            session={session}
-            likedPosts={likedPosts}
-            savedPosts={savedPosts}
-            justLikedPosts={justLikedPosts}
-            justSavedPosts={justSavedPosts}
-            activeMenuState={activeMenuState}
-            isMenuAnimating={isMenuAnimating}
-            lastPostElementRef={isLastElement ? lastPostElementRef : undefined}
-            menuButtonRefs={menuButtonRefs}
-            onViewPost={onViewPost}
-            onLike={onLike}
-            onSave={onSave}
-            onShare={onShare}
-            onViewLikes={onViewLikes}
-            onViewSaves={onViewSaves}
-            onTogglePostStatus={onTogglePostStatus}
-            onDeletePost={onDeletePost}
-            onReport={onReport}
-            onSetActiveMenu={onSetActiveMenu}
-            onSetMenuAnimating={onSetMenuAnimating}
-            onImpression={onImpression}
-            hideBoost={hideBoost}
-          />
-        );
-      })}
+  const bottomSlotStyle = {
+    minHeight: 88,
+    height: 88,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  } as const;
 
-      {/* แสดงข้อความเมื่อไม่มีรายการเพิ่มเติม */}
-      {!hasMore && (
-        <div style={{ minHeight: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: '13px', color: '#111111' }}>
-            ບໍ່ມີລາຍການເພີ່ມເຕີມ
-          </span>
-        </div>
-      )}
-    </>
+  // ให้ spinner อยู่ใน DOM ตลอด แค่ซ่อนด้วย visibility — ไม่ unmount จึงหมุนครบรอบได้
+  const spinnerWrap = React.createElement(
+    'span',
+    {
+      key: 'feed-spinner-wrap',
+      style: { visibility: loadingMore ? 'visible' : 'hidden', display: 'inline-block' },
+    },
+    React.createElement(PageSpinner)
+  );
+  const noMoreText = React.createElement(
+    'span',
+    {
+      key: 'feed-no-more',
+      style: {
+        fontSize: '13px',
+        color: '#111111',
+        visibility: !hasMore && !loadingMore ? 'visible' : 'hidden',
+        display: !hasMore && !loadingMore ? 'inline' : 'none',
+      },
+    },
+    'ບໍ່ມີລາຍການເພີ່ມເຕີມ'
+  );
+
+  const bottomSlot = React.createElement(
+    'div',
+    {
+      key: 'feed-bottom-slot',
+      className: 'feed-bottom-slot',
+      style: bottomSlotStyle,
+    },
+    spinnerWrap,
+    noMoreText
+  );
+
+  const cards = posts.map((post, index) => {
+    const isLastElement = posts.length === index + 1;
+    return React.createElement(PostCard, {
+      key: `${post.id}-${index}`,
+      post,
+      index,
+      isLastElement,
+      session,
+      likedPosts,
+      savedPosts,
+      justLikedPosts,
+      justSavedPosts,
+      activeMenuState,
+      isMenuAnimating,
+      lastPostElementRef: isLastElement ? lastPostElementRef : undefined,
+      menuButtonRefs,
+      onViewPost,
+      onLike,
+      onSave,
+      onShare,
+      onViewLikes,
+      onViewSaves,
+      onTogglePostStatus,
+      onDeletePost,
+      onReport,
+      onSetActiveMenu,
+      onSetMenuAnimating,
+      onImpression,
+      hideBoost,
+    });
+  });
+
+  return React.createElement(
+    'div',
+    { style: { display: 'contents' } },
+    ...cards,
+    bottomSlot
   );
 });
 

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { PROFILE_PATH } from '@/utils/authRoutes';
 import { TabSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
 
@@ -221,7 +222,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         </button>
 
         {/* Profile Avatar (รูป OAuth 100x100/s100 แสดงเป็นไอคอนเงา) */}
-        <Link href="/profile" style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
+        <Link href={PROFILE_PATH} style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
           <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
         </Link>
       </div>
