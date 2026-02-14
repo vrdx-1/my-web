@@ -24,7 +24,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
     <div
       role="status"
       aria-live="polite"
-      aria-label={isRefreshing ? 'ກຳລັງໂຫຼດໃໝ່' : 'ດຶງເພື່ອໂຫຼດໃໝ່'}
+      aria-label={isRefreshing ? 'ກຳລັງໂຫຼດໃໝ່' : ''}
       style={{
         position: 'fixed',
         top: 0,
@@ -58,9 +58,6 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
               transition: 'border-color 0.15s ease',
             }}
           />
-          <span style={{ fontSize: 13, color: ready ? '#111' : '#888' }}>
-            {ready ? 'ປ່ອຍເພື່ອໂຫຼດໃໝ່' : 'ດຶງເພື່ອໂຫຼດໃໝ່'}
-          </span>
         </div>
       )}
     </div>

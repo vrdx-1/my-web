@@ -5,8 +5,8 @@ import { Avatar } from '../Avatar';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
-const VIEWING_MODE_INITIAL_VISIBLE = 12
-const VIEWING_MODE_LOAD_MORE_COUNT = 10
+const VIEWING_MODE_INITIAL_VISIBLE = 3
+const VIEWING_MODE_LOAD_MORE_COUNT = 2
 
 const OVERLAY_STYLE: React.CSSProperties = {
   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -68,14 +68,14 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const images: string[] = Array.isArray(viewingPost?.images) ? viewingPost.images : [];
 
   const initialVisible = useMemo(
-    () => Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 8)),
+    () => Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3)),
     [initialImageIndex, images.length]
   );
   const [visibleCount, setVisibleCount] = useState<number>(() => initialVisible);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
 
   useEffect(() => {
-    const next = Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 8));
+    const next = Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3));
     setVisibleCount(next);
   }, [viewingPost?.id, initialImageIndex, images.length]);
 
@@ -92,7 +92,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     hasMore,
     onLoadMore,
     threshold: 0.1,
-    rootMargin: '600px',
+    rootMargin: '200px',
   });
 
   const visibleImages = useMemo(
@@ -190,7 +190,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         {visibleImages.map((img, idx) => (
           <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
             <div style={{ width: '100%', overflow: 'hidden', padding: 0, margin: 0 }}>
-              <img src={img} loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" onClick={() => onImageClick(images, idx)} style={IMG_STYLE} alt="" />
+              <img src={img} loading={idx === initialImageIndex ? 'eager' : 'lazy'} decoding="async" onClick={() => onImageClick(images, idx)} style={IMG_STYLE} alt="" />
             </div>
           </div>
         ))}
