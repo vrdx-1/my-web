@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // เพิ่มการนำเข้า Component สำหรับ Track Visitor
@@ -19,12 +19,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_NAME = "Jutpai";
+const APP_DESCRIPTION = "Secondhand marketplace";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+};
+
 export const metadata: Metadata = {
-  title: "Jutpai",
-  description: "Secondhand marketplace",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+  applicationName: APP_NAME,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png",
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png", sizes: "any", type: "image/png" },
+    ],
     shortcut: "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png",
+    apple: "/icons/apple-touch-icon.png",
   },
 };
 

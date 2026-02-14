@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "split:cars": "node scripts/split-cars.mjs",
-    "split:cars:merge": "node scripts/split-cars.mjs --merge"
+    "split:cars:merge": "node scripts/split-cars.mjs --merge",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
@@ -29,6 +31,7 @@
     "eslint-config-next": "16.1.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack": "^5.105.2"
   }
 }

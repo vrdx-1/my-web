@@ -1,21 +1,25 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
+  // ปิด error ตอนรัน next dev (Turbopack) ที่บอกว่ามี webpack config จาก next-pwa
+  turbopack: {},
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'pkvtwuwicjqodkyraune.supabase.co',
         port: '',
-        pathname: '/**', 
+        pathname: '/**',
       },
     ],
   },
-  // ปรับการเขียนส่วนนี้ใหม่เพื่อแก้ Error ในภาพที่ 24
   typescript: {
     ignoreBuildErrors: true,
   },
-  // ลบส่วน eslint ออกไปก่อนเพื่อให้ผ่าน TypeScript check
 };
 
-export default nextConfig;
+export default withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+})(nextConfig);
