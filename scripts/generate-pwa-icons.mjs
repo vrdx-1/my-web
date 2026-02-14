@@ -1,20 +1,23 @@
 #!/usr/bin/env node
 /**
- * Generate PWA icons from source URL (Supabase PNG).
+ * Generate PWA icons from source image (local file or Supabase URL).
+ * Usage: node scripts/generate-pwa-icons.mjs [path-to-image.png]
+ *        If no path given, uses default URL.
  * Writes: public/icons/icon-192x192.png, icon-512x512.png, apple-touch-icon.png
  */
 import { createRequire } from "module";
-import { writeFileSync, mkdirSync } from "fs";
-import { dirname, join } from "path";
+import { mkdirSync, existsSync } from "fs";
+import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
-const ICON_URL =
+const DEFAULT_ICON_URL =
   "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png";
 const OUT_DIR = join(__dirname, "..", "public", "icons");
+const ROOT = join(__dirname, "..");
 
 const SIZES = [
   { name: "icon-192x192.png", size: 192 },
@@ -23,10 +26,21 @@ const SIZES = [
 ];
 
 async function main() {
-  console.log("Fetching source image...");
-  const res = await fetch(ICON_URL);
-  if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-  const buffer = Buffer.from(await res.arrayBuffer());
+  const localPath = process.argv[2];
+  let buffer;
+
+  if (localPath) {
+    const abs = resolve(ROOT, localPath);
+    if (!existsSync(abs)) throw new Error(`File not found: ${abs}`);
+    console.log("Using local image:", abs);
+    const { readFileSync } = await import("fs");
+    buffer = readFileSync(abs);
+  } else {
+    console.log("Fetching source image from URL...");
+    const res = await fetch(DEFAULT_ICON_URL);
+    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+    buffer = Buffer.from(await res.arrayBuffer());
+  }
 
   mkdirSync(OUT_DIR, { recursive: true });
 

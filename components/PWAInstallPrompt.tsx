@@ -10,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 
-const HINT_IOS = 'ໃຊ້ Safari → ປຸ່ມແບ່ງປັນ (⎋) → ເພີ່ມໄປທີ່ຫນ້າຈໍຫຼັກ';
+const HINT_IOS = 'ໃຊ້ Safari - ຄິກປຸ່ມແຊ - ເພີ່ມໄປທີ່ໜ້າຫຼັກ';
 const HINT_ANDROID = 'ໃຊ້ເມນູ Chrome (⋮) → ຕິດຕັ້ງແອັບ';
 
 function InstallIcon() {
@@ -124,7 +124,9 @@ export function PWAInstallPrompt() {
       `}</style>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px 14px 18px' }}>
-        <div
+        <button
+          type="button"
+          onClick={handleInstall}
           style={{
             width: 44,
             height: 44,
@@ -135,10 +137,13 @@ export function PWAInstallPrompt() {
             justifyContent: 'center',
             flexShrink: 0,
             color: '#1e3a5f',
+            border: 'none',
+            cursor: 'pointer',
           }}
+          aria-label={LABEL}
         >
           <InstallIcon />
-        </div>
+        </button>
         <button
           type="button"
           onClick={handleInstall}
@@ -150,7 +155,7 @@ export function PWAInstallPrompt() {
             padding: '6px 0',
             cursor: 'pointer',
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 20,
             textAlign: 'left',
             letterSpacing: '0.01em',
           }}
