@@ -25,6 +25,7 @@ export function usePostFeedProps({
   handleViewSaves,
   loadingMore,
   hasMore,
+  onLoadMore,
 }: {
   posts: any[];
   session: any;
@@ -54,6 +55,7 @@ export function usePostFeedProps({
   handleViewSaves: (postId: string) => void;
   loadingMore: boolean;
   hasMore: boolean;
+  onLoadMore?: () => void;
 }) {
   return useMemo(() => ({
     posts,
@@ -80,6 +82,7 @@ export function usePostFeedProps({
     onSetMenuAnimating: menu.setIsMenuAnimating,
     loadingMore,
     hasMore,
+    onLoadMore,
   }), [
     posts,
     session,
@@ -105,5 +108,6 @@ export function usePostFeedProps({
     menu.setIsMenuAnimating,
     loadingMore,
     hasMore,
+    onLoadMore,
   ]);
 }

@@ -300,8 +300,7 @@ interface UseHomeDataReturn {
   refreshData: () => Promise<void>;
 }
 
-const PAGE_SIZE = 1; // ใช้สำหรับคำนวณ offset
-const PREFETCH_COUNT = 5; // โหลดทีละ 5 โพสต์เพื่อให้มี buffer และเลื่อนได้ไวขึ้น
+const PREFETCH_COUNT = 100; // จำนวนโพสต์ต่อหนึ่งครั้งที่โหลด (ต้องตรงกับที่ใช้คำนวณ startIndex)
 
 // Simple search result cache ต่อคำค้น (ฝั่ง frontend เท่านั้น)
 const SEARCH_CACHE_STORAGE_KEY = 'home_search_cache_v1';
@@ -361,6 +360,8 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const pageRef = useRef(page);
   const loadingMoreRef = useRef(loadingMore);
   const searchTermRef = useRef(searchTerm);
+  /** จำนวนโพสที่แสดงอยู่ — ใช้กันไม่ให้ response หน้า 0 ที่มาทีหลัง overwrite ข้อมูลที่โหลดต่อแล้ว (20, 30, ...) */
+  const postsCountRef = useRef(0);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -426,21 +427,24 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
     setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
-    const startIndex = currentPage * PAGE_SIZE;
-    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex is inclusive
+    const startIndex = currentPage * PREFETCH_COUNT; // หน้าถัดไป = ชุดถัดไป ไม่ทับซ้อน
+    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex แบบรวม (inclusive)
 
     let postIds: string[] = [];
     let categoryModelNamesForFilter: string[] = [];
 
     // ถ้าเป็นการค้นคำใหม่รอบแรก และมีผลค้นหาใน cache แล้ว ให้แสดงผลเก่าทันทีระหว่างที่รอผลใหม่
+    // ไม่ใช้ hasMore จาก cache — ตั้ง true เสมอเพื่อให้ลองโหลดหน้าถัดไป (กันกรณี cache เก่าบันทึก hasMore = false แล้วโพสจริงๆ ยังมีต่อ)
     if (isInitial && trimmedSearch && normalizedSearchKey) {
       const cached = getCachedSearchResult(normalizedSearchKey);
       if (cached && Array.isArray(cached.posts) && cached.posts.length > 0) {
         setPosts(cached.posts);
-        setHasMore(cached.hasMore);
+        postsCountRef.current = cached.posts.length;
+        setHasMore(true);
       }
     }
 
+    let apiHasMore: boolean | undefined = undefined;
     if (trimmedSearch) {
       // ค้นหาหมวดหมู่: ใช้ชื่อรุ่นจาก category-models ส่งให้ API (ตัดคำสั้น/ตัวเลขล้วนออกเพื่อลดโพสมั่ว)
       categoryModelNamesForFilter = getModelNamesFromCategory(trimmedSearch);
@@ -469,6 +473,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       if (res.ok) {
         const json = await res.json();
         postIds = Array.isArray(json.postIds) ? json.postIds : [];
+        apiHasMore = json.hasMore;
       }
     } else {
       const { data, error } = await supabase
@@ -489,7 +494,10 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const currentSearch = String(searchTermRef.current ?? '').normalize('NFKC').trim();
     const isStale = currentSearch !== trimmedSearch;
 
-    const newHasMore = postIds.length >= PREFETCH_COUNT;
+    // ใช้ hasMore จาก API เมื่อมี (ค้นหา) เพื่อให้สอดคล้องกับ backend; ไม่มีคำค้นใช้แค่จำนวน postIds
+    const newHasMore =
+      postIds.length >= PREFETCH_COUNT &&
+      (apiHasMore === undefined || apiHasMore === true);
 
     if (isStale) {
       setLoadingMore(false);
@@ -498,6 +506,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
     if (isInitial) {
       setPosts([]);
+      postsCountRef.current = 0;
     }
 
     // Batch loading: ดึง posts ทั้งหมดในครั้งเดียวแทนการ loop
@@ -515,38 +524,37 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
           // เช็กว่าเป็นการค้นหาหมวดหมู่หรือไม่ (ใช้ผลที่ cache ไว้จากตอนเรียก API)
           const categoryModelNames = categoryModelNamesForFilter;
           if (categoryModelNames.length > 0) {
-            // Pre-normalize ชื่อรุ่นของหมวดนี้ครั้งเดียว — ใช้ใน single pass กรอง+คะแนน
+            // Pre-normalize ชื่อรุ่นของหมวดนี้ครั้งเดียว — ใช้ใน single pass ให้คะแนน (ไม่กรองทิ้ง แค่จัดเรียง)
             const categoryTermsNorm: string[] = [];
             for (const name of categoryModelNames) {
               const termNorm = normalizeCaptionSearch(String(name ?? '').trim());
               if (termNorm && !isTermTooNoisy(termNorm)) categoryTermsNorm.push(termNorm);
             }
-            // Single pass:
-            // - โพสที่มีคำตรงเป๊ะ (ขอบคำครบ) ในหมวดนั้น → ขึ้นบนสุด เรียงตามความยาวชื่อรุ่นที่ตรงที่สุด
-            // - โพสที่มีคำใกล้เคียงแต่ไม่ตรงเป๊ะ → แสดงได้ แต่ให้ไปอยู่ล่างสุด
+            // ทุกโพสอยู่ในรายการ: ตรงเป๊ะขึ้นบน ใกล้เคียงอยู่กลาง ไม่ตรงไปล่างสุด
             const withScore: { post: any; score: number; exact: boolean }[] = [];
             for (const p of postsData) {
               const cap = normalizeCaptionSearch(p?.caption ?? '');
-              if (!cap) continue;
               let maxLenExact = 0;
               let hasExact = false;
               let hasAny = false;
-              for (const termNorm of categoryTermsNorm) {
-                const idx = cap.indexOf(termNorm);
-                if (idx === -1) continue;
-                hasAny = true;
-                if (hasWordBoundary(cap, termNorm, idx)) {
-                  hasExact = true;
-                  if (termNorm.length > maxLenExact) maxLenExact = termNorm.length;
+              if (cap) {
+                for (const termNorm of categoryTermsNorm) {
+                  const idx = cap.indexOf(termNorm);
+                  if (idx === -1) continue;
+                  hasAny = true;
+                  if (hasWordBoundary(cap, termNorm, idx)) {
+                    hasExact = true;
+                    if (termNorm.length > maxLenExact) maxLenExact = termNorm.length;
+                  }
                 }
               }
-              if (!hasAny) continue;
-              withScore.push({ post: p, score: hasExact ? maxLenExact : 0, exact: hasExact });
+              withScore.push({ post: p, score: hasExact ? maxLenExact : hasAny ? 0 : -1, exact: hasExact });
             }
             orderedPostsData = withScore
               .sort((a, b) => {
-                if (a.exact !== b.exact) return a.exact ? -1 : 1; // exact match มาก่อน near match
-                return b.score - a.score;
+                if (a.exact !== b.exact) return a.exact ? -1 : 1; // exact match มาก่อน
+                if (a.score !== b.score) return b.score - a.score; // ตามด้วย near match (score 0) แล้วไม่ตรง (score -1) อยู่ล่าง
+                return 0;
               })
               .map((x) => x.post);
           } else {
@@ -583,19 +591,20 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
               for (const p of postsData) {
                 const cap = normalizeCaptionSearch(p?.caption ?? '');
-                if (!cap) continue;
 
                 let hasBrandExact = false;
                 let hasBrandAny = false;
                 let brandScoreLen = 0;
 
-                for (const termNorm of brandTermsNorm) {
-                  const idx = cap.indexOf(termNorm);
-                  if (idx === -1) continue;
-                  hasBrandAny = true;
-                  if (hasWordBoundary(cap, termNorm, idx)) {
-                    hasBrandExact = true;
-                    if (termNorm.length > brandScoreLen) brandScoreLen = termNorm.length;
+                if (cap) {
+                  for (const termNorm of brandTermsNorm) {
+                    const idx = cap.indexOf(termNorm);
+                    if (idx === -1) continue;
+                    hasBrandAny = true;
+                    if (hasWordBoundary(cap, termNorm, idx)) {
+                      hasBrandExact = true;
+                      if (termNorm.length > brandScoreLen) brandScoreLen = termNorm.length;
+                    }
                   }
                 }
 
@@ -603,31 +612,31 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
                 let hasModelAny = false;
                 let modelScoreLen = 0;
 
-                for (const termNorm of modelTermsNorm) {
-                  const idx = cap.indexOf(termNorm);
-                  if (idx === -1) continue;
-                  hasModelAny = true;
-                  if (hasWordBoundary(cap, termNorm, idx)) {
-                    hasModelExact = true;
-                    if (termNorm.length > modelScoreLen) modelScoreLen = termNorm.length;
+                if (cap) {
+                  for (const termNorm of modelTermsNorm) {
+                    const idx = cap.indexOf(termNorm);
+                    if (idx === -1) continue;
+                    hasModelAny = true;
+                    if (hasWordBoundary(cap, termNorm, idx)) {
+                      hasModelExact = true;
+                      if (termNorm.length > modelScoreLen) modelScoreLen = termNorm.length;
+                    }
                   }
                 }
 
-                if (!hasBrandAny && !hasModelAny) continue;
-
-                let group = 3;
+                let group = 4; // ไม่ตรงเลย → อยู่ล่างสุด
                 let score = 0;
 
                 if (hasBrandExact) {
                   group = 0; // ยี่ห้อตรงเป๊ะ: ขึ้นก่อนสุด
-                  score = modelScoreLen > 0 ? modelScoreLen : brandScoreLen; // รุ่นที่ตรงยาวกว่าช่วยดันขึ้น
+                  score = modelScoreLen > 0 ? modelScoreLen : brandScoreLen;
                 } else if (hasModelExact) {
                   group = 1; // มีรุ่นตรงเป๊ะ แต่ไม่มีชื่อยี่ห้อแบบคำเต็ม
                   score = modelScoreLen;
                 } else if (hasBrandAny) {
                   group = 2; // มียี่ห้อแบบใกล้เคียง (ไม่ขอบคำ)
                   score = brandScoreLen;
-                } else {
+                } else if (hasModelAny) {
                   group = 3; // มีแต่รุ่น/คำใกล้เคียง
                   score = modelScoreLen;
                 }
@@ -642,10 +651,19 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
                 })
                 .map((x) => x.post);
             } else {
-              // คำค้นทั่วไป: ใช้การกรองเดิม
-              orderedPostsData = postsData.filter((p: any) =>
-                captionHasReasonableMatch(p?.caption ?? '', searchTermsForFilter)
-              );
+              // คำค้นทั่วไป: ไม่กรองทิ้ง — ให้คะแนนแล้วจัดเรียง ตรงมากอยู่บน ไม่ตรงไปล่าง
+              const withScore = postsData.map((p: any) => {
+                const cap = p?.caption ?? '';
+                const reasonable = captionHasReasonableMatch(cap, searchTermsForFilter);
+                const hasAny = searchTermsForFilter.some((t: string) =>
+                  normalizeCaptionSearch(cap).includes(normalizeCaptionSearch(t))
+                );
+                const score = reasonable ? 2 : hasAny ? 1 : 0;
+                return { post: p, score };
+              });
+              orderedPostsData = withScore
+                .sort((a, b) => b.score - a.score)
+                .map((x) => x.post);
             }
           }
         } else {
@@ -678,18 +696,25 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
         }
 
         // อัปเดตโพสต์ครั้งเดียว — ลด re-render และ layout ซ้ำ
-        // โหลดชุดถัดไป: ใช้ startTransition เพื่อไม่ให้การอัปเดตบล็อก scroll (ไม่กระตุก)
+        // ไม่ให้ response หน้า 0 ที่มาทีหลัง overwrite รายการที่โหลดต่อแล้ว และไม่ใช้ hasMore จาก response เก่านั้น (กันติดที่ 20)
         const apply = () => {
           if (isInitial) {
-            setPosts(orderedPostsData);
+            if (orderedPostsData.length >= postsCountRef.current) {
+              setPosts(orderedPostsData);
+              postsCountRef.current = orderedPostsData.length;
+              setHasMore(newHasMore);
+            }
+            // ถ้าข้าม setPosts (response เก่า) ไม่แตะ hasMore — ปล่อยให้ค่าจาก response ล่าสุดที่ apply ไปแล้วอยู่
           } else {
             setPosts((prev) => {
               const existingIds = new Set(prev.map((p: any) => p.id));
               const toAdd = orderedPostsData.filter((p: any) => !existingIds.has(p.id));
-              return toAdd.length ? [...prev, ...toAdd] : prev;
+              const next = toAdd.length ? [...prev, ...toAdd] : prev;
+              postsCountRef.current = next.length;
+              return next;
             });
+            setHasMore(newHasMore);
           }
-          setHasMore(newHasMore);
           setLoadingMore(false);
         };
         if (isInitial) {
@@ -774,6 +799,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   // Fetch posts when search term changes (debounce เมื่อผู้ใช้พิมพ์; โหลดครั้งแรกทันทีเมื่อไม่มีคำค้น)
   const SEARCH_DEBOUNCE_MS = 350;
   useEffect(() => {
+    postsCountRef.current = 0;
     setPage(0);
     setHasMore(true);
     const isInitialLoad = !searchTerm || searchTerm.trim() === '';
@@ -795,6 +821,18 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, hasMore, loadingMore]); // Depend on page, hasMore, and loadingMore
+
+  // โหลดหน้าถัดไปอัตโนมัติเมื่อมีโพสครบหนึ่งหน้าและยังมีต่อ — ไม่พึ่งแค่ scroll observer (ให้โหลดได้ครบเสมอ)
+  useEffect(() => {
+    const expectedCount = (page + 1) * PREFETCH_COUNT;
+    if (
+      posts.length === expectedCount &&
+      hasMore &&
+      !loadingMore
+    ) {
+      setPage((p) => p + 1);
+    }
+  }, [posts.length, hasMore, loadingMore, page]);
 
   const refreshData = useCallback(async () => {
     setPage(0);

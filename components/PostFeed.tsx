@@ -32,6 +32,8 @@ interface PostFeedProps {
   emptyMessage?: string;
   hideBoost?: boolean;
   hasMore?: boolean;
+  /** กดโหลดเพิ่มเมื่อ scroll ไม่ยิง (เช่น มือถือ/ container แยก) */
+  onLoadMore?: () => void;
 }
 
 /**
@@ -65,6 +67,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   emptyMessage = 'ຍັງບໍ່ມີລາຍການ',
   hideBoost = false,
   hasMore = true,
+  onLoadMore,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (
@@ -104,14 +107,37 @@ export const PostFeed = React.memo<PostFeedProps>(({
     'ບໍ່ມີລາຍການເພີ່ມເຕີມ'
   );
 
+  const loadMoreButton = onLoadMore && hasMore && !loadingMore
+    ? React.createElement(
+        'button',
+        {
+          key: 'feed-load-more',
+          type: 'button',
+          onClick: onLoadMore,
+          style: {
+            fontSize: '14px',
+            color: '#1877f2',
+            background: 'none',
+            border: '1px solid #1877f2',
+            borderRadius: 8,
+            padding: '8px 16px',
+            cursor: 'pointer',
+            fontWeight: 600,
+          },
+        },
+        'โหลดเพิ่ม'
+      )
+    : null;
+
   const bottomSlot = React.createElement(
     'div',
     {
       key: 'feed-bottom-slot',
       className: 'feed-bottom-slot',
-      style: bottomSlotStyle,
+      style: { ...bottomSlotStyle, flexDirection: 'column', gap: 8 },
     },
     spinnerWrap,
+    loadMoreButton,
     noMoreText
   );
 

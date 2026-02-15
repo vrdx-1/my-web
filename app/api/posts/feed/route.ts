@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { expandCarSearchAliases } from '@/utils/postUtils';
-import { PREFETCH_COUNT } from '@/utils/constants';
+// จำนวนต่อหน้าให้ตรงกับ frontend (useHomeData PREFETCH_COUNT = 100) — ใช้เป็น fallback เมื่อ client ไม่ส่ง endIndex
+const FEED_PAGE_SIZE = 100;
 import carsData from '@/data';
 
 // Helper: normalize สำหรับ fallback lookup
@@ -202,8 +203,8 @@ export async function POST(request: NextRequest) {
     const searchTerms = Array.isArray(rawTerms)
       ? rawTerms.map((t: unknown) => String(t ?? '').trim()).filter(Boolean)
       : [];
-    const startIndex = parseInt(String(body.startIndex ?? 0));
-    const endIndex = parseInt(String(body.endIndex ?? PREFETCH_COUNT - 1));
+    const startIndex = parseInt(String(body.startIndex ?? 0), 10);
+    const endIndex = parseInt(String(body.endIndex ?? FEED_PAGE_SIZE - 1), 10);
 
     // ฝั่ง frontend เป็นผู้เลือกชุดคำส่งมาแล้ว — backend แค่ส่งโพสที่ caption ตรงตามคำที่ให้ไป
     const cookieStore = await cookies();
@@ -234,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     const postIds = (data || []).map((p: { id: string }) => p.id);
-    const hasMore = postIds.length >= PREFETCH_COUNT;
+    const hasMore = postIds.length >= FEED_PAGE_SIZE;
 
     return NextResponse.json(
       { postIds, hasMore },
@@ -257,7 +258,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
-    const endIndex = parseInt(searchParams.get('endIndex') || String(PREFETCH_COUNT - 1));
+    const endIndex = parseInt(searchParams.get('endIndex') || String(FEED_PAGE_SIZE - 1), 10);
     const searchTerm = (searchParams.get('searchTerm') || '').trim();
 
     const cookieStore = await cookies();
@@ -337,7 +338,7 @@ export async function GET(request: NextRequest) {
     }
 
     const postIds = (data || []).map((p: { id: string }) => p.id);
-    const hasMore = postIds.length >= PREFETCH_COUNT;
+    const hasMore = postIds.length >= FEED_PAGE_SIZE;
 
     return NextResponse.json(
       { postIds, hasMore },
