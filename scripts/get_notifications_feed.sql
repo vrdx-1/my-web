@@ -1,11 +1,23 @@
 -- Supabase SQL (run in SQL editor)
 -- Purpose: Fetch notification feed + interaction summaries in ONE call
+-- Keyset pagination (cursor) แทน OFFSET เพื่อให้ทุกหน้าโหลดเร็วเท่ากัน
 -- Usage from client:
---   supabase.rpc('get_notifications_feed', { p_owner_id: userId })
+--   หน้าแรก: supabase.rpc('get_notifications_feed', { p_owner_id: userId, p_limit: 20 })
+--   หน้าถัดไป: supabase.rpc('get_notifications_feed', { p_owner_id: userId, p_limit: 20, p_after_created_at: "2024-...", p_after_id: "uuid" })
 
+-- ========== ลบ Function เก่าทุกแบบ (ทุก overload) ==========
 drop function if exists public.get_notifications_feed(text);
+drop function if exists public.get_notifications_feed(text, int);
+drop function if exists public.get_notifications_feed(text, int, int);
+drop function if exists public.get_notifications_feed(text, int, timestamptz, uuid);
 
-create or replace function public.get_notifications_feed(p_owner_id text)
+-- ========== สร้าง Function ใหม่ (4 พารามิเตอร์, ตัวที่ 3–4 มี default) ==========
+create or replace function public.get_notifications_feed(
+  p_owner_id text,
+  p_limit int default null,
+  p_after_created_at timestamptz default null,
+  p_after_id uuid default null
+)
 returns table (
   id uuid,
   post_id uuid,
@@ -35,7 +47,12 @@ with notifs as (
     n.car_data
   from public.all_notifications n
   where n.owner_id::text = p_owner_id
-  order by n.created_at desc
+  and (
+    (p_after_created_at is null and p_after_id is null)
+    or (n.created_at, n.id) < (p_after_created_at, p_after_id)
+  )
+  order by n.created_at desc, n.id desc
+  limit case when p_limit is not null and p_limit > 0 then p_limit else null end
 ),
 post_ids as (
   select distinct post_id from notifs
@@ -70,7 +87,6 @@ interaction_people as (
     count(*)::int as interaction_total,
     array_agg(p.avatar_url order by p.last_time desc) as interaction_avatars
   from (
-    -- Registered users: group by person_key and take latest time
     select
       u.post_id,
       max(u.created_at) as last_time,
@@ -86,10 +102,7 @@ interaction_people as (
     ) u
     left join public.profiles pr on pr.id = u.user_id
     group by u.post_id, u.user_id
-
     union all
-
-    -- Guests: group by guest_token, avatar_url is NULL (render silhouette client-side)
     select
       g.post_id,
       max(g.created_at) as last_time,
@@ -125,9 +138,9 @@ left join likes_guest lg on lg.post_id = n.post_id
 left join saves_user su on su.post_id = n.post_id
 left join saves_guest sg on sg.post_id = n.post_id
 left join interaction_people ip on ip.post_id = n.post_id
-order by n.created_at desc;
+order by n.created_at desc, n.id desc;
 $$;
 
-revoke all on function public.get_notifications_feed(text) from public;
-grant execute on function public.get_notifications_feed(text) to authenticated;
-
+-- ========== สิทธิ์ (ฟังก์ชันมี 4 พารามิเตอร์, เรียกแค่ 2 ตัวก็ได้ เพราะมี default) ==========
+revoke all on function public.get_notifications_feed(text, int, timestamptz, uuid) from public;
+grant execute on function public.get_notifications_feed(text, int, timestamptz, uuid) to authenticated;

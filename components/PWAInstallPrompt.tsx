@@ -10,7 +10,11 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 
-const HINT_IOS = '1. ຄິກປຸ່ມແຊ   2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ   3. ເພີ່ມ';
+const HINT_IOS_LINES = [
+  '1. ຄິກປຸ່ມແຊຂອງ Safari',
+  '2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ',
+  '3. ເພີ່ມ',
+];
 const HINT_ANDROID = 'ໃຊ້ເມນູ Chrome (⋮) → ຕິດຕັ້ງແອັບ';
 
 function InstallIcon() {
@@ -91,7 +95,7 @@ export function PWAInstallPrompt() {
     }
   }, []);
 
-  const hintText = isIOS ? HINT_IOS : HINT_ANDROID;
+  const hintText = isIOS ? null : HINT_ANDROID;
 
   if (!visible) return null;
 
@@ -192,17 +196,35 @@ export function PWAInstallPrompt() {
             background: 'rgba(0,0,0,0.1)',
           }}
         >
-          <p
-            style={{
-              margin: 0,
-              fontSize: 13,
-              color: '#fff',
-              lineHeight: 1.5,
-              letterSpacing: '0.01em',
-            }}
-          >
-            {hintText}
-          </p>
+          {isIOS ? (
+            <div
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: '#fff',
+                lineHeight: 1.7,
+                letterSpacing: '0.01em',
+              }}
+            >
+              {HINT_IOS_LINES.map((line, i) => (
+                <div key={i} style={{ marginBottom: i < HINT_IOS_LINES.length - 1 ? 8 : 0 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: '#fff',
+                lineHeight: 1.5,
+                letterSpacing: '0.01em',
+              }}
+            >
+              {hintText}
+            </p>
+          )}
         </div>
       )}
     </div>

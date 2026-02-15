@@ -10,6 +10,8 @@ export interface NotificationFeedItem {
   post_id: string;
   type: string;
   created_at: string;
+  /** เวลาจาก all_notifications ใช้สำหรับ cursor เท่านั้น (ไม่ merge กับ boost) */
+  cursor_created_at?: string;
   sender_name: string;
   sender_avatar: string | null;
   post_caption?: string;
@@ -27,24 +29,46 @@ export interface FetchNotificationFeedResult {
   list: NotificationFeedItem[];
   totalUnread: number;
   rawFeed: any[];
+  /** เท true เมื่อโหลดแบบแบ่งหน้าและยังมีหน้าถัดไป */
+  hasMore?: boolean;
+  /** เก็บไว้ส่งเป็น cachedBoosts ในครั้งถัดไป (โหลดเร็วขึ้น) */
+  boostsForCache?: CachedBoosts;
 }
+
+export type CachedBoosts = { data: any[] | null; error: any } | null;
 
 export async function fetchNotificationFeed(
   userId: string,
-  clearedMap: Record<string, string>
+  clearedMap: Record<string, string>,
+  options?: { limit: number; cursor?: { created_at: string; id: string } },
+  cachedBoosts?: CachedBoosts
 ): Promise<FetchNotificationFeedResult> {
-  const { data, error } = await supabase.rpc('get_notifications_feed', {
-    p_owner_id: userId,
-  });
+  const rpcParams: {
+    p_owner_id: string;
+    p_limit?: number;
+    p_after_created_at?: string;
+    p_after_id?: string;
+  } = { p_owner_id: userId };
+  if (options && options.limit > 0) {
+    rpcParams.p_limit = options.limit;
+    if (options.cursor?.created_at && options.cursor?.id) {
+      rpcParams.p_after_created_at = options.cursor.created_at;
+      rpcParams.p_after_id = options.cursor.id;
+    }
+  }
+
+  const { data, error } = await supabase.rpc('get_notifications_feed', rpcParams);
 
   if (error) throw error;
 
   const rawList = data && Array.isArray(data) ? (data as any[]) : [];
+  const hasMore = options && options.limit > 0 ? rawList.length >= options.limit : false;
   const formatted: NotificationFeedItem[] = rawList.map((item: any) => ({
     id: item.id,
     type: item.type,
     post_id: item.post_id,
     created_at: item.created_at,
+    cursor_created_at: item.created_at,
     sender_name: item.username || 'User',
     sender_avatar: item.avatar_url,
     post_caption: item.car_data?.caption || '',
@@ -91,25 +115,30 @@ export async function fetchNotificationFeed(
 
   let boostsData: any[] | null = null;
   let boostsError: any = null;
-  try {
-    const res = await supabase
-      .from('post_boosts')
-      .select('post_id, status, created_at, expires_at, updated_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    boostsData = res.data;
-    boostsError = res.error;
-    if (boostsError && String(boostsError.message || '').toLowerCase().includes('updated_at')) {
-      const fallback = await supabase
+  if (cachedBoosts) {
+    boostsData = cachedBoosts.data;
+    boostsError = cachedBoosts.error;
+  } else {
+    try {
+      const res = await supabase
         .from('post_boosts')
-        .select('post_id, status, created_at, expires_at')
+        .select('post_id, status, created_at, expires_at, updated_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-      boostsData = fallback.data;
-      boostsError = fallback.error;
+      boostsData = res.data;
+      boostsError = res.error;
+      if (boostsError && String(boostsError.message || '').toLowerCase().includes('updated_at')) {
+        const fallback = await supabase
+          .from('post_boosts')
+          .select('post_id, status, created_at, expires_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        boostsData = fallback.data;
+        boostsError = fallback.error;
+      }
+    } catch (_) {
+      boostsError = true;
     }
-  } catch (_) {
-    boostsError = true;
   }
 
   const boostByPostId = new Map<
@@ -153,6 +182,7 @@ export async function fetchNotificationFeed(
       boost_status: boost.status,
       boost_expires_at: boost.expires_at,
       created_at,
+      cursor_created_at: n.cursor_created_at ?? n.created_at,
       notification_count: (n.notification_count ?? 0) + boostCount,
     };
   });
@@ -161,11 +191,15 @@ export async function fetchNotificationFeed(
     (pid) => !feedPostIds.has(pid)
   );
 
-  if (boostOnlyPostIds.length > 0) {
+  // โหลดแบบแบ่งหน้า: เติม boost-only เฉพาะหน้าแรก (offset 0) เพื่อไม่ให้ซ้ำ
+  const isFirstPage = !options || options.offset === 0;
+  const boostOnlyToAdd = isFirstPage ? boostOnlyPostIds : [];
+
+  if (boostOnlyToAdd.length > 0) {
     const { data: carsData } = await supabase
       .from('cars')
       .select('id, caption, images')
-      .in('id', boostOnlyPostIds);
+      .in('id', boostOnlyToAdd);
 
     const carsByPostId = new Map<
       string,
@@ -180,7 +214,7 @@ export async function fetchNotificationFeed(
       });
     }
 
-    boostOnlyPostIds.forEach((postId) => {
+    boostOnlyToAdd.forEach((postId) => {
       const boost = boostByPostId.get(postId);
       if (!boost) return;
       const clearedTime = clearedMap[postId]
@@ -218,5 +252,11 @@ export async function fetchNotificationFeed(
     0
   );
 
-  return { list: sortedList, totalUnread, rawFeed: rawList };
+  return {
+    list: sortedList,
+    totalUnread,
+    rawFeed: rawList,
+    hasMore,
+    boostsForCache: { data: boostsData, error: boostsError },
+  };
 }

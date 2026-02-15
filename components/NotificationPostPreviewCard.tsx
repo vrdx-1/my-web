@@ -43,6 +43,12 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
   const count = images.length;
   const gap = '2px';
 
+  const noCalloutStyle: React.CSSProperties = {
+    WebkitTouchCallout: 'none',
+    WebkitUserSelect: 'none',
+    userSelect: 'none',
+  };
+
   // Single image
   if (count === 1) {
     return (
@@ -53,6 +59,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
           height: imageSize,
           borderRadius: '10px',
           overflow: 'hidden',
+          ...noCalloutStyle,
         }}
       >
         <img
@@ -62,6 +69,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            ...noCalloutStyle,
           }}
           loading="lazy"
         />
@@ -81,6 +89,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
           height: imageSize,
           borderRadius: '10px',
           overflow: 'hidden',
+          ...noCalloutStyle,
         }}
       >
         {images.slice(0, 2).map((img, i) => (
@@ -100,6 +109,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
+                ...noCalloutStyle,
               }}
               loading="lazy"
             />
@@ -121,6 +131,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
           height: imageSize,
           borderRadius: '10px',
           overflow: 'hidden',
+          ...noCalloutStyle,
         }}
       >
         <div
@@ -139,6 +150,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              ...noCalloutStyle,
             }}
             loading="lazy"
           />
@@ -162,6 +174,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
+                  ...noCalloutStyle,
                 }}
                 loading="lazy"
               />
@@ -185,6 +198,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
           height: imageSize,
           borderRadius: '10px',
           overflow: 'hidden',
+          ...noCalloutStyle,
         }}
       >
         {images.map((img, i) => (
@@ -207,6 +221,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
+                ...noCalloutStyle,
               }}
               loading="lazy"
             />
@@ -227,6 +242,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
         height: imageSize,
         borderRadius: '10px',
         overflow: 'hidden',
+        ...noCalloutStyle,
       }}
     >
       {/* Top row: 2 images */}
@@ -248,6 +264,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              ...noCalloutStyle,
             }}
             loading="lazy"
           />
@@ -282,6 +299,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
+                  ...noCalloutStyle,
                 }}
                 loading="lazy"
               />
@@ -359,14 +377,22 @@ export const NotificationPostPreviewCard = React.memo<{
         e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
       }}
     >
-      {/* Post Image */}
-      <div style={{ position: 'relative', flexShrink: 0 }}>
+      {/* Post Image — ปิด long-press preview (ไม่ให้กดค้างแล้วขยาย) */}
+      <div
+        style={{
+          position: 'relative',
+          flexShrink: 0,
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+        }}
+      >
         <MiniPostImage images={notification.post_images || []} />
       </div>
 
       {/* Notification Content */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
-        {/* แถวบนสุด: x ຄົນມັກໂພສຂອງທ່ານ + Avatar */}
+        {/* แถวบนสุด: x ຄົນມັກໂພສຂອງທ່ານ + Avatar — ปิด long-press preview ที่ Avatar */}
         <div
           style={{
             fontSize: '14px',
@@ -376,6 +402,9 @@ export const NotificationPostPreviewCard = React.memo<{
             alignItems: 'center',
             gap: '6px',
             marginBottom: '6px',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
           }}
         >
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52' }}>{interactionTotal}</span>

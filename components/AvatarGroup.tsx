@@ -26,6 +26,12 @@ export const AvatarGroup = React.memo<{
     ? AVATAR_SIZE + MAX_VISIBLE_AVATARS * (AVATAR_SIZE - OVERLAP)
     : AVATAR_SIZE + Math.max(0, toDisplay.length - 1) * (AVATAR_SIZE - OVERLAP);
 
+  const noCalloutStyle: React.CSSProperties = {
+    WebkitTouchCallout: 'none',
+    WebkitUserSelect: 'none',
+    userSelect: 'none',
+  };
+
   return (
     <div
       style={{
@@ -38,6 +44,7 @@ export const AvatarGroup = React.memo<{
         width: `${fixedWidth}px`,
         maxWidth: `${fixedWidth}px`,
         overflow: 'hidden',
+        ...noCalloutStyle,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -55,13 +62,14 @@ export const AvatarGroup = React.memo<{
               position: 'relative',
               zIndex: 100 - idx,
               flexShrink: 0,
+              ...noCalloutStyle,
             }}
           >
             {src ? (
               <img
                 src={src}
                 alt="Profile"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', ...noCalloutStyle }}
                 loading="lazy"
               />
             ) : (

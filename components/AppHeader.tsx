@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 import { TabSpinner } from '@/components/LoadingSpinner';
@@ -221,10 +220,15 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           )}
         </button>
 
-        {/* Profile Avatar (รูป OAuth 100x100/s100 แสดงเป็นไอคอนเงา) */}
-        <Link href={PROFILE_PATH} style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', textDecoration: 'none' }}>
+        {/* Profile Avatar — สลับหน้าโปรไฟล์ทันที (ไม่มี animation สไลด์) */}
+        <button
+          type="button"
+          onClick={() => router.push(PROFILE_PATH, { scroll: false })}
+          style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', background: 'none', border: 'none', padding: 0 }}
+          aria-label="Profile"
+        >
           <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
-        </Link>
+        </button>
       </div>
 
       {/* Tabs */}

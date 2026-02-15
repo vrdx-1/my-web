@@ -6,12 +6,19 @@ import { supabase } from '@/lib/supabase';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
-import { sequentialIncreaseCount } from '@/utils/preloadSequential';
+import { NOTIFICATION_PAGE_SIZE } from '@/utils/constants';
 import type { NotificationFeedItem } from '@/utils/notificationFeed';
+import type { CachedBoosts } from '@/utils/notificationFeed';
 
 const STORAGE_KEY = 'notification_cleared_posts';
 const HOME_OPENED_KEY = 'notification_home_last_opened_at';
+
+/** เปิด debug: เปิด Console (F12) พิมพ์ window.__NOTIFICATION_LOADMORE_DEBUG = true แล้วเลื่อนลง จะมี log [notification loadMore] */
+function debugLog(...args: unknown[]) {
+  if (typeof window !== 'undefined' && (window as any).__NOTIFICATION_LOADMORE_DEBUG) {
+    console.log('[notification loadMore]', ...args);
+  }
+}
 
 function loadClearedMap(): Record<string, string> {
   if (typeof window === 'undefined') return {};
@@ -47,15 +54,19 @@ export interface NotificationItemWithTime extends NotificationFeedItem {
 
 export function useNotificationPage() {
   const router = useRouter();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [clearedPostMap, setClearedPostMap] = useState<Record<string, string>>({});
   const [clearedMapReady, setClearedMapReady] = useState(false);
   const clearedPostMapRef = useRef<Record<string, string>>({});
   const notificationsRef = useRef<NotificationFeedItem[]>([]);
-
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [localLoadingMore, setLocalLoadingMore] = useState(false);
+  const boostsCacheRef = useRef<CachedBoosts>(null);
+  const userIdRef = useRef<string | null>(null);
+  /** Cursor สำหรับหน้าถัดไป = แถวสุดท้ายของ rawFeed ล่าสุด (ไม่ใช้จาก list ที่ merge แล้ว) */
+  const lastCursorRef = useRef<{ created_at: string; id: string } | null>(null);
 
   useEffect(() => {
     const loaded = loadClearedMap();
@@ -72,34 +83,47 @@ export function useNotificationPage() {
     notificationsRef.current = notifications;
   }, [notifications]);
 
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [notifications.length]);
+  const markPageAsRead = useCallback(async (userId: string, rawFeed: any[]) => {
+    if (rawFeed.length === 0) return;
+    try {
+      await supabase
+        .from('notification_reads')
+        .upsert(
+          rawFeed.map((n: { id: string }) => ({ user_id: userId, notification_id: n.id })),
+          { onConflict: 'user_id,notification_id' }
+        );
+    } catch {
+      // ignore
+    }
+  }, []);
 
-  const fetchNotifications = useCallback(async (userId: string) => {
+  const fetchFirstPage = useCallback(async (userId: string) => {
+    userIdRef.current = userId;
     setLoading(true);
     try {
-      const { list, rawFeed } = await fetchNotificationFeed(userId, clearedPostMapRef.current);
-      if (rawFeed.length > 0) {
-        try {
-          await supabase
-            .from('notification_reads')
-            .upsert(
-              rawFeed.map((n: { id: string }) => ({ user_id: userId, notification_id: n.id })),
-              { onConflict: 'user_id,notification_id' }
-            );
-        } catch {
-          // ignore mark-read failure
-        }
-      }
-      setNotifications(list);
+      const result = await fetchNotificationFeed(
+        userId,
+        clearedPostMapRef.current,
+        { limit: NOTIFICATION_PAGE_SIZE, offset: 0 }
+      );
+      markPageAsRead(userId, result.rawFeed).catch(() => {});
+      if (result.boostsForCache) boostsCacheRef.current = result.boostsForCache;
+      setNotifications(result.list);
+      setHasMore(result.hasMore ?? false);
+      const raw = result.rawFeed;
+      lastCursorRef.current =
+        raw?.length > 0 && raw[raw.length - 1]?.id && raw[raw.length - 1]?.created_at
+          ? { created_at: raw[raw.length - 1].created_at, id: raw[raw.length - 1].id }
+          : null;
     } catch (err) {
       console.error('Fetch Error:', err);
       setNotifications([]);
+      setHasMore(false);
+      lastCursorRef.current = null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [markPageAsRead]);
 
   useEffect(() => {
     if (!clearedMapReady) return;
@@ -107,7 +131,7 @@ export function useNotificationPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
       if (session) {
-        fetchNotifications(session.user.id).then(() => {
+        fetchFirstPage(session.user.id).then(() => {
           if (!cancelled && typeof window !== 'undefined') {
             try {
               window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
@@ -122,43 +146,73 @@ export function useNotificationPage() {
     }).catch(() => {
       if (!cancelled) setLoading(false);
     });
-    return () => { cancelled = true; };
-  }, [clearedMapReady, fetchNotifications]);
+    return () => {
+      cancelled = true;
+    };
+  }, [clearedMapReady, fetchFirstPage]);
 
-  const hasMore = useMemo(
-    () => visibleCount < notifications.length,
-    [visibleCount, notifications.length]
-  );
+  const loadMore = useCallback(async () => {
+    debugLog('loadMore called', { loadingMore, hasMore });
+    if (loadingMore || !hasMore) {
+      debugLog('skip: loadingMore=', loadingMore, 'hasMore=', hasMore);
+      return;
+    }
+    const userId = userIdRef.current ?? (await supabase.auth.getSession()).data.session?.user?.id;
+    if (!userId) {
+      debugLog('skip: no userId');
+      return;
+    }
+    if (!userIdRef.current) userIdRef.current = userId;
+    const cursor = lastCursorRef.current ?? undefined;
+    debugLog('cursor from last rawFeed', cursor);
+    setLoadingMore(true);
+    try {
+      const result = await fetchNotificationFeed(
+        userId,
+        clearedPostMapRef.current,
+        { limit: NOTIFICATION_PAGE_SIZE, cursor },
+        boostsCacheRef.current
+      );
+      const raw = result.rawFeed;
+      if (raw?.length > 0 && raw[raw.length - 1]?.id && raw[raw.length - 1]?.created_at) {
+        lastCursorRef.current = { created_at: raw[raw.length - 1].created_at, id: raw[raw.length - 1].id };
+      }
+      debugLog('API returned', result.list.length, 'items, hasMore=', result.hasMore, 'rawRows=', raw?.length);
+      markPageAsRead(userId, raw).catch(() => {});
+      if (result.boostsForCache) boostsCacheRef.current = result.boostsForCache;
+      setNotifications((prev) => {
+        const existingPostIds = new Set(prev.map((n) => String(n.post_id)));
+        const toAdd = result.list.filter((n) => !existingPostIds.has(String(n.post_id)));
+        debugLog('toAdd', toAdd.length, 'existing', prev.length);
+        if (toAdd.length === 0) return prev;
+        return [...prev, ...toAdd];
+      });
+      setHasMore(result.hasMore ?? false);
+    } catch (err) {
+      console.error('Load more Error:', err);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, markPageAsRead]);
 
-  const visibleNotifications = useMemo(
-    () => notifications.slice(0, visibleCount),
-    [notifications, visibleCount]
-  );
+  const { lastElementRef } = useInfiniteScroll({
+    loadingMore,
+    hasMore,
+    onLoadMore: loadMore,
+    threshold: 0.1,
+    rootMargin: '500px',
+    rootRef: scrollContainerRef,
+  });
 
   const visibleItemsWithTime = useMemo<NotificationItemWithTime[]>(
     () =>
-      visibleNotifications.map((n) => ({
+      notifications.map((n) => ({
         ...n,
         timeAgoText: formatTimeAgo(n.created_at),
       })),
-    [visibleNotifications]
+    [notifications]
   );
-
-  const { lastElementRef } = useInfiniteScroll({
-    loadingMore: localLoadingMore,
-    hasMore,
-    onLoadMore: useCallback(() => {
-      if (localLoadingMore || !hasMore) return;
-      setLocalLoadingMore(true);
-      sequentialIncreaseCount({
-        maxSteps: PREFETCH_COUNT,
-        setValue: setVisibleCount,
-        getLimit: () => notificationsRef.current.length,
-        onDone: () => setLocalLoadingMore(false),
-      });
-    }, [localLoadingMore, hasMore]),
-    threshold: 0.2,
-  });
 
   const onNavigateToPost = useCallback(
     (postId: string) => {
@@ -186,5 +240,8 @@ export function useNotificationPage() {
     visibleItemsWithTime,
     lastElementRef,
     onNavigateToPost,
+    loadingMore,
+    hasMore,
+    scrollContainerRef,
   };
 }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Avatar } from '../Avatar';
+import { PageSpinner } from '../LoadingSpinner';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -32,6 +33,12 @@ const IMAGE_WRAP_STYLE: React.CSSProperties = {
   position: 'relative', background: '#fff', marginBottom: 12, width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw',
 };
 const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', cursor: 'pointer', margin: 0, padding: 0 };
+const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
+  position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 200,
+};
+const SPINNER_OVERLAY_STYLE: React.CSSProperties = {
+  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', zIndex: 1,
+};
 
 interface ViewingPostModalProps {
   viewingPost: any | null;
@@ -73,6 +80,15 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   );
   const [visibleCount, setVisibleCount] = useState<number>(() => initialVisible);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
+
+  useEffect(() => {
+    setLoadedIndices(new Set());
+  }, [viewingPost?.id]);
+
+  const handleImageLoad = useCallback((idx: number) => {
+    setLoadedIndices((prev) => new Set(prev).add(idx));
+  }, []);
 
   useEffect(() => {
     const next = Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3));
@@ -189,8 +205,21 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         </div>
         {visibleImages.map((img, idx) => (
           <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
-            <div style={{ width: '100%', overflow: 'hidden', padding: 0, margin: 0 }}>
-              <img src={img} loading={idx === initialImageIndex ? 'eager' : 'lazy'} decoding="async" onClick={() => onImageClick(images, idx)} style={IMG_STYLE} alt="" />
+            <div style={IMAGE_PLACEHOLDER_STYLE}>
+              {!loadedIndices.has(idx) && (
+                <div style={SPINNER_OVERLAY_STYLE} aria-hidden="true">
+                  <PageSpinner />
+                </div>
+              )}
+              <img
+                src={img}
+                loading={idx === initialImageIndex ? 'eager' : 'lazy'}
+                decoding="async"
+                onLoad={() => handleImageLoad(idx)}
+                onClick={() => onImageClick(images, idx)}
+                style={IMG_STYLE}
+                alt=""
+              />
             </div>
           </div>
         ))}
