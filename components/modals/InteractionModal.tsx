@@ -120,9 +120,15 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
         WebkitOverflowScrolling: 'touch',
       }} 
       onClick={onClose}
+      onTouchStart={(e) => {
+        e.stopPropagation();
+      }}
       onTouchMove={(e) => {
-        // Prevent background scrolling when touching overlay
         e.preventDefault();
+        e.stopPropagation();
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
       }}
     >
       <div 

@@ -23,6 +23,8 @@ interface AppHeaderProps {
   controlSize?: number;
   /** เรียกเมื่อกดแท็บที่ active อยู่ (refresh) */
   onTabRefresh?: () => void;
+  /** เรียกเมื่อกดสลับไปอีกฝั่ง (ก่อน navigate) ให้ parent แสดง loading ทันที */
+  onTabSwitchStart?: (tab: 'recommend' | 'sold') => void;
   /** แท็บที่กำลัง refresh แสดง loading เหมือนปุ่มเข้าสู่ระบบ */
   loadingTab?: 'recommend' | 'sold' | null;
 }
@@ -45,6 +47,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   iconSize = 18,
   controlSize = 36,
   onTabRefresh,
+  onTabSwitchStart,
   loadingTab = null,
 }) => {
   const router = useRouter();
@@ -98,6 +101,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       onTabRefresh();
       return;
     }
+    onTabSwitchStart?.(tab);
     if (tab === 'recommend') {
       router.push('/');
     } else {
@@ -239,6 +243,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           return (
             <div
               key={t}
+              onPointerDown={() => handleTabClick(t)}
               onClick={() => handleTabClick(t)}
               style={{
                 flex: 1,

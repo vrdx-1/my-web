@@ -31,6 +31,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         return (
           <div
             key={tab.value}
+            onPointerDown={() => onTabChange(tab.value)}
             onClick={() => onTabChange(tab.value)}
             style={{
               flex: 1,

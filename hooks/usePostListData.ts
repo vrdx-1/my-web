@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
+import { LIST_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
@@ -78,6 +78,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     primaryCount: number;
     provinceTerm: string | null;
   } | null>(null);
+  /** ป้องกันผลของ fetch เก่าเขียนทับเมื่อสลับแท็บเร็ว (คลิกครั้งเดียวสลับฝั่ง) */
+  const fetchIdRef = useRef(0);
 
   // Initialize session
   useEffect(() => {
@@ -134,8 +136,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   }, [type, currentSession, userIdOrToken]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
-    if (loadingMore) return;
-    
+    if (loadingMore && !isInitial) return;
+
+    const currentFetchId = ++fetchIdRef.current;
+
     // รอให้ session ถูก initialize ก่อน (session อาจเป็น null สำหรับ guest)
     // แต่ต้องรอให้ useEffect initialize session เสร็จก่อน (ไม่ใช่ undefined)
     if (currentSession === undefined) {
@@ -145,8 +149,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
-    const startIndex = currentPage * PAGE_SIZE;
-    const endIndex = startIndex + PREFETCH_COUNT - 1;
+    // ใช้ LIST_FEED_PAGE_SIZE เพื่อโหลดครบตาม backend: หน้า 0 = [0..19], หน้า 1 = [20..39], ...
+    const rangeStart = currentPage * LIST_FEED_PAGE_SIZE;
+    const rangeEnd = rangeStart + LIST_FEED_PAGE_SIZE - 1;
     
     // ตรวจสอบ currentUserId อย่างเข้มงวด - ต้องไม่เป็น null, undefined, หรือ string "null"
     let currentUserId: string | null = null;
@@ -162,6 +167,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
       }
     }
 
+    let soldWillClearLoadingInOnDone = false;
     try {
       let postIds: string[] = [];
 
@@ -238,16 +244,14 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             currentUserId, 
             currentSession: currentSession ? 'exists' : 'null' 
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         // ตรวจสอบอีกครั้งก่อน query
         if (idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
           console.error('usePostListData: Invalid idOrToken detected', { idOrToken, type: 'saved' });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -258,19 +262,18 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         // ตรวจสอบอีกครั้งก่อน query - ป้องกันการส่ง "null" ไปยัง database
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
           console.error('usePostListData: Attempted to query with invalid idOrToken', { idOrToken, type: 'saved', table, column });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
-        console.log('usePostListData: Querying saved posts', { idOrToken, table, column, isUser, startIndex, endIndex });
+        console.log('usePostListData: Querying saved posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd });
         
         const { data: savesData, error: savesError } = await supabase
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
           .order('created_at', { ascending: false })
-          .range(startIndex, endIndex);
+          .range(rangeStart, rangeEnd);
         
         if (savesError) {
           console.error('Error fetching saved posts:', savesError, { 
@@ -283,14 +286,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             errorDetails: savesError.details,
             errorHint: savesError.hint
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         if (!savesData) {
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -308,16 +309,14 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             currentUserId, 
             currentSession: currentSession ? 'exists' : 'null' 
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         // ตรวจสอบอีกครั้งก่อน query
         if (idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
           console.error('usePostListData: Invalid idOrToken detected', { idOrToken, type: 'liked' });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -328,19 +327,18 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         // ตรวจสอบอีกครั้งก่อน query - ป้องกันการส่ง "null" ไปยัง database
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
           console.error('usePostListData: Attempted to query with invalid idOrToken', { idOrToken, type: 'liked', table, column });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
-        console.log('usePostListData: Querying liked posts', { idOrToken, table, column, isUser, startIndex, endIndex });
+        console.log('usePostListData: Querying liked posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd });
         
         const { data: likesData, error: likesError } = await supabase
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
           .order('created_at', { ascending: false })
-          .range(startIndex, endIndex);
+          .range(rangeStart, rangeEnd);
         
         if (likesError) {
           console.error('Error fetching liked posts:', likesError, { 
@@ -353,14 +351,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             errorDetails: likesError.details,
             errorHint: likesError.hint
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         if (!likesData) {
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -385,7 +381,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           }
 
           const cache = soldSearchScanCacheRef.current;
-          const neededEnd = endIndex + 1;
+          const neededEnd = rangeEnd + 1;
           const batchSize = 80;
           const expandedTerms = expandCarSearchAliases(term);
           const searchLang = detectSearchLanguage(term);
@@ -438,8 +434,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             }
           }
 
-          postIds = (cache?.matchedIds ?? []).slice(startIndex, neededEnd);
-          setHasMore(!!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd)));
+          postIds = (cache?.matchedIds ?? []).slice(rangeStart, neededEnd);
+          if (fetchIdRef.current === currentFetchId) setHasMore(!!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd)));
         } else {
           let query = supabase
             .from('cars')
@@ -447,14 +443,15 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             .eq('status', status || 'sold')
             .eq('is_hidden', false)
             .order('created_at', { ascending: false })
-            .range(startIndex, endIndex);
+            .range(rangeStart, rangeEnd);
 
           const { data, error } = await query;
           if (error || !data) {
-            setLoadingMore(false);
+            if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
             return;
           }
           postIds = data.map((p: any) => p.id);
+          if (postIds.length === 0 && fetchIdRef.current === currentFetchId) setHasMore(false);
         }
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
@@ -467,8 +464,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             currentUserId, 
             currentSession: currentSession ? 'exists' : 'null' 
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -478,26 +474,23 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .eq('user_id', idOrToken)
           .eq('status', tab || 'recommend')
           .order('created_at', { ascending: false })
-          .range(startIndex, endIndex);
+          .range(rangeStart, rangeEnd);
         
         if (idsError) {
           console.error('Error fetching my-posts:', idsError, { idOrToken });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         if (!idsData) {
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
         postIds = idsData.map(p => p.id);
       } else {
         // ถ้า type ไม่ตรงกับเงื่อนไขใดๆ ให้หยุดการโหลด
-        setLoadingMore(false);
-        setHasMore(false);
+        if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
         return;
       }
 
@@ -509,8 +502,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         
         if (validPostIds.length === 0) {
           console.warn('usePostListData: No valid postIds after filtering', { postIds, type });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -536,8 +528,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             errorDetails: postsError.details,
             errorHint: postsError.hint
           });
-          setLoadingMore(false);
-          setHasMore(false);
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
@@ -578,33 +569,37 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           });
 
           // ถ้าไม่มีโพสต์ใหม่เพิ่มเลย แสดงว่า "หมดแล้วจริงๆ" สำหรับลิสต์นี้
-          // ป้องกันไม่ให้ infinite scroll เรียกโหลดซ้ำและแสดงอนิเมชั่นโหลดค้าง
-          if (newPosts.length === 0) {
-            setHasMore(false);
-          } else {
-            // ถ้ายังได้จำนวน postIds เท่ากับ PREFETCH_COUNT แสดงว่ายังมีโอกาสมีหน้าถัดไป
-            // ถ้าน้อยกว่า แปลว่าถึงท้ายลิสต์แล้ว
-            setHasMore(postIds.length === PREFETCH_COUNT);
+          if (fetchIdRef.current === currentFetchId) {
+            if (newPosts.length === 0) setHasMore(false);
+            else setHasMore(postIds.length >= LIST_FEED_PAGE_SIZE); // ได้ครบหนึ่งหน้าขึ้นไป = โหลดต่อจนได้น้อยกว่าหนึ่งหน้า
           }
 
           // ถ้าเป็นการโหลดใหม่ ให้ล้างรายการเก่าก่อน
-          if (isInitial) {
-            setPosts([]);
-          }
+          if (isInitial && fetchIdRef.current === currentFetchId) setPosts([]);
 
-          // เติมโพสต์ทีละรายการแบบเดียวกับหน้า Home
-          sequentialAppendItems<any>({
-            items: newPosts,
-            append: (post) => {
+          // หน้า sold: ใส่โพสต์ครั้งเดียวแล้วปิด loading ทันที (ไม่พึ่ง rAF/onDone เพื่อไม่ให้ไอคอนโหลดค้าง)
+          if (type === 'sold') {
+            if (fetchIdRef.current === currentFetchId) {
               setPosts((prev) => {
-                if (prev.some((p: any) => p.id === post.id)) return prev;
-                return [...prev, post];
+                const ids = new Set(prev.map((p: any) => p.id));
+                const toAdd = newPosts.filter((p: any) => !ids.has(p.id));
+                return toAdd.length === 0 ? prev : [...prev, ...toAdd];
               });
-            },
-            onDone: () => {
-              // ไม่มีอะไรเพิ่มเติมเป็นพิเศษที่ต้องทำหลัง append จบ
-            },
-          });
+              setLoadingMore(false);
+            }
+          } else {
+            sequentialAppendItems<any>({
+              items: newPosts,
+              append: (post) => {
+                if (fetchIdRef.current !== currentFetchId) return;
+                setPosts((prev) => {
+                  if (prev.some((p: any) => p.id === post.id)) return prev;
+                  return [...prev, post];
+                });
+              },
+              onDone: () => {},
+            });
+          }
 
           // Update interaction status
         if (type === 'saved') {
@@ -799,7 +794,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
-      setLoadingMore(false);
+      if (!soldWillClearLoadingInOnDone && fetchIdRef.current === currentFetchId) {
+        setLoadingMore(false);
+      }
     }
   }, [type, userIdOrToken, currentSession, tab, searchTerm, status, page, loadingMore]);
 
@@ -808,6 +805,15 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     setHasMore(true);
     await fetchPosts(true);
   }, [fetchPosts]);
+
+  // โหลดหน้าถัดไปอัตโนมัติจนหมด — ทั้งกรณีได้ครบหนึ่งหน้า และกรณีได้น้อยกว่าหนึ่งหน้า (filter/ซ้ำ) ก็โหลดต่อ
+  useEffect(() => {
+    if (!hasMore || loadingMore) return;
+    const expectedFull = (page + 1) * LIST_FEED_PAGE_SIZE;
+    const gotFullPage = posts.length === expectedFull;
+    const gotPartialPage = posts.length > page * LIST_FEED_PAGE_SIZE && posts.length < expectedFull;
+    if (gotFullPage || gotPartialPage) setPage((p) => p + 1);
+  }, [posts.length, hasMore, loadingMore, page]);
 
   return {
     posts,

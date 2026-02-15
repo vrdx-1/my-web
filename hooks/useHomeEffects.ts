@@ -10,10 +10,12 @@ export function useHomeEffects({
   loadingMore,
   setTabRefreshing,
   setHasInitialFetchCompleted,
+  setRefreshSource,
 }: {
   loadingMore: boolean;
   setTabRefreshing: (refreshing: boolean) => void;
   setHasInitialFetchCompleted: (completed: boolean) => void;
+  setRefreshSource?: (source: 'pull' | 'tab' | null) => void;
 }) {
   const initialFetchStartedRef = useRef(false);
 
@@ -32,10 +34,11 @@ export function useHomeEffects({
     if (!loadingMore) {
       startTransition(() => {
         setTabRefreshing(false);
+        setRefreshSource?.(null);
         if (initialFetchStartedRef.current) {
           setHasInitialFetchCompleted(true);
         }
       });
     }
-  }, [loadingMore, setTabRefreshing, setHasInitialFetchCompleted]);
+  }, [loadingMore, setTabRefreshing, setHasInitialFetchCompleted, setRefreshSource]);
 }

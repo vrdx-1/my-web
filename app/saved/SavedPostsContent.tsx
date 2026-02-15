@@ -180,13 +180,14 @@ export function SavedPostsContent() {
           ]}
           activeTab={tab}
           onTabChange={(v) => {
-            setTabRefreshing(true);
             if (v === tab) {
+              setTabRefreshing(true);
               postListData.setPage(0);
               postListData.setHasMore(true);
               postListData.fetchPosts(true);
             } else {
               setTab(v);
+              setTabRefreshing(true);
             }
           }}
           loadingTab={tabRefreshing ? tab : null}
@@ -216,8 +217,9 @@ export function SavedPostsContent() {
         onReport={handlers.handleReport}
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
-        loadingMore={postListData.loadingMore}
+        loadingMore={postListData.hasMore ? postListData.loadingMore : false}
         hasMore={postListData.hasMore}
+        onLoadMore={() => postListData.setPage((p) => p + 1)}
         hideBoost={tab === 'sold'}
       />
 

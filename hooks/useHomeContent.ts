@@ -24,22 +24,36 @@ import { usePostFeedProps } from '@/hooks/usePostFeedProps';
 import { useHomeModals } from '@/hooks/useHomeModals';
 import { useHomePopups } from '@/hooks/useHomePopups';
 
+export interface UseHomeContentOptions {
+  /** เมื่อใช้ layout ร่วมกับ sold, ส่ง searchTerm จาก MainTabContext */
+  sharedSearchTerm?: string;
+  setSearchTerm?: (v: string) => void;
+  setIsSearchScreenOpen?: (v: boolean) => void;
+}
+
 /**
  * Mega hook สำหรับหน้า Home
  * รวม hooks ทั้งหมดเข้าด้วยกันเพื่อลดความซับซ้อนของ HomeContent
  */
-export function useHomeContent() {
+export function useHomeContent(options?: UseHomeContentOptions) {
   const router = useRouter();
-  
-  // Search
+  const sharedSearchTerm = options?.sharedSearchTerm;
+  const sharedSetSearchTerm = options?.setSearchTerm;
+  const sharedSetIsSearchScreenOpen = options?.setIsSearchScreenOpen;
+
+  // Search: ใช้ shared จาก layout หรือ local
   const search = useHomeSearch();
-  const deferredSearchTerm = useDeferredValue(search.debouncedSearchTerm);
-  
+  const effectiveSearchTerm = sharedSearchTerm !== undefined ? sharedSearchTerm : search.debouncedSearchTerm;
+  const deferredSearchTerm = useDeferredValue(effectiveSearchTerm);
+
   // State
   const [uiState, setUIState] = useState({
     justLikedPosts: {} as { [key: string]: boolean },
     justSavedPosts: {} as { [key: string]: boolean },
     tabRefreshing: false,
+    /** แหล่งที่มา refresh: 'pull' = ดึง feed (แสดง spinner ใหญ่), 'tab' = กดแท็บ (ไม่แสดง) */
+    refreshSource: null as 'pull' | 'tab' | null,
+    navigatingToTab: null as 'recommend' | 'sold' | null,
     hasInitialFetchCompleted: false,
     reportState: {
       reportingPost: null as any | null,
@@ -47,7 +61,7 @@ export function useHomeContent() {
       isSubmittingReport: false,
     },
   });
-  
+
   // Data hooks
   const homeData = useHomeData(deferredSearchTerm);
   const { unreadCount } = useUnreadNotificationCount({ userId: homeData.session?.user?.id });
@@ -56,9 +70,17 @@ export function useHomeContent() {
   const setTabRefreshing = useCallback((refreshing: boolean) => {
     setUIState(prev => ({ ...prev, tabRefreshing: refreshing }));
   }, []);
+
+  const handleTabSwitchStart = useCallback((tab: 'recommend' | 'sold') => {
+    setUIState(prev => ({ ...prev, navigatingToTab: tab }));
+  }, []);
   
   const setHasInitialFetchCompleted = useCallback((completed: boolean) => {
     setUIState(prev => ({ ...prev, hasInitialFetchCompleted: completed }));
+  }, []);
+
+  const setRefreshSource = useCallback((source: 'pull' | 'tab' | null) => {
+    setUIState(prev => ({ ...prev, refreshSource: source }));
   }, []);
   
   // Effects
@@ -66,6 +88,7 @@ export function useHomeContent() {
     loadingMore: homeData.loadingMore,
     setTabRefreshing,
     setHasInitialFetchCompleted,
+    setRefreshSource,
   });
   
   // UI hooks
@@ -90,8 +113,10 @@ export function useHomeContent() {
     homeData,
     fileUpload,
     router,
-    setIsSearchScreenOpen: search.setIsSearchScreenOpen,
+    setIsSearchScreenOpen: sharedSetIsSearchScreenOpen ?? search.setIsSearchScreenOpen,
     setTabRefreshing,
+    setSearchTerm: sharedSetSearchTerm,
+    setRefreshSource,
   });
   
   // Post modals side effects
@@ -221,11 +246,11 @@ export function useHomeContent() {
   });
   
   return {
-    // Search
-    searchTerm: search.searchTerm,
-    setSearchTerm: search.setSearchTerm,
+    // Search (จาก shared context หรือ local)
+    searchTerm: sharedSearchTerm !== undefined ? sharedSearchTerm : search.searchTerm,
+    setSearchTerm: sharedSetSearchTerm ?? search.setSearchTerm,
     isSearchScreenOpen: search.isSearchScreenOpen,
-    setIsSearchScreenOpen: search.setIsSearchScreenOpen,
+    setIsSearchScreenOpen: sharedSetIsSearchScreenOpen ?? search.setIsSearchScreenOpen,
     
     // Data
     homeData,
@@ -244,6 +269,10 @@ export function useHomeContent() {
     
     // UI state
     tabRefreshing: uiState.tabRefreshing,
+    refreshSource: uiState.refreshSource,
+    navigatingToTab: uiState.navigatingToTab,
+    handleTabSwitchStart,
     fileUpload,
+    isInteractionModalOpen: interactionModalHook.interactionModal.show,
   };
 }

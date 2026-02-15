@@ -822,16 +822,13 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, hasMore, loadingMore]); // Depend on page, hasMore, and loadingMore
 
-  // โหลดหน้าถัดไปอัตโนมัติเมื่อมีโพสครบหนึ่งหน้าและยังมีต่อ — ไม่พึ่งแค่ scroll observer (ให้โหลดได้ครบเสมอ)
+  // โหลดหน้าถัดไปอัตโนมัติจนหมด — ทั้งกรณีได้ครบหนึ่งหน้า และกรณีได้น้อยกว่าหนึ่งหน้าก็โหลดต่อ
   useEffect(() => {
-    const expectedCount = (page + 1) * PREFETCH_COUNT;
-    if (
-      posts.length === expectedCount &&
-      hasMore &&
-      !loadingMore
-    ) {
-      setPage((p) => p + 1);
-    }
+    if (!hasMore || loadingMore) return;
+    const expectedFull = (page + 1) * PREFETCH_COUNT;
+    const gotFullPage = posts.length === expectedFull;
+    const gotPartialPage = posts.length > page * PREFETCH_COUNT && posts.length < expectedFull;
+    if (gotFullPage || gotPartialPage) setPage((p) => p + 1);
   }, [posts.length, hasMore, loadingMore, page]);
 
   const refreshData = useCallback(async () => {

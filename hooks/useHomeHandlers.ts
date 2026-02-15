@@ -14,12 +14,17 @@ export function useHomeHandlers({
   router,
   setIsSearchScreenOpen,
   setTabRefreshing,
+  setSearchTerm,
+  setRefreshSource,
 }: {
   homeData: any;
   fileUpload: any;
   router: any;
   setIsSearchScreenOpen: (open: boolean) => void;
   setTabRefreshing: (refreshing: boolean) => void;
+  /** สำหรับ pull-to-refresh: ล้างคำค้นแล้ว refetch เหมือนเข้าเว็บครั้งแรก */
+  setSearchTerm?: (v: string) => void;
+  setRefreshSource?: (source: 'pull' | 'tab' | null) => void;
 }) {
   const handleLogoClick = useCallback(() => {
     homeData.setPage(0);
@@ -47,10 +52,20 @@ export function useHomeHandlers({
     setIsSearchScreenOpen(false);
   }, [setIsSearchScreenOpen]);
 
+  /** กดแท็บที่ active อยู่ = refresh เฉพาะ feed ของแท็บนี้ (ไม่ล้าง search, ไม่แสดง spinner ใหญ่) */
   const handleTabRefresh = useCallback(() => {
+    setRefreshSource?.('tab');
     setTabRefreshing(true);
     handleLogoClick();
-  }, [handleLogoClick, setTabRefreshing]);
+  }, [handleLogoClick, setTabRefreshing, setRefreshSource]);
+
+  /** ดึง feed (pull-to-refresh) = refresh ใหญ่: ล้าง search แล้ว refetch, แสดง spinner ใหญ่ */
+  const handlePullToRefresh = useCallback(() => {
+    setRefreshSource?.('pull');
+    setSearchTerm?.('');
+    setTabRefreshing(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [setSearchTerm, setTabRefreshing, setRefreshSource]);
 
   return {
     handleLogoClick,
@@ -59,5 +74,6 @@ export function useHomeHandlers({
     handleSearchClick,
     handleSearchClose,
     handleTabRefresh,
+    handlePullToRefresh,
   };
 }

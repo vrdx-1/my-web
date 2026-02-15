@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
@@ -451,8 +452,8 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
       </div>
 
-      {/* Confirm Mark as Sold Modal (same design as logout confirm) */}
-      {isOwner && !isSoldPost && showMarkSoldConfirm && (
+      {/* Confirm Mark as Sold Modal (same design as logout confirm) - portal to body for full-screen overlay + center of viewport */}
+      {typeof document !== 'undefined' && isOwner && !isSoldPost && showMarkSoldConfirm && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -529,11 +530,12 @@ export const PostCard = React.memo<PostCardProps>(({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Sold Info Modal (same design size as logout confirm) */}
-      {isSoldPost && showSoldInfo && (
+      {/* Sold Info Modal (same design size as logout confirm) - portal to body for full-screen overlay + center of viewport */}
+      {typeof document !== 'undefined' && isSoldPost && showSoldInfo && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -580,7 +582,8 @@ export const PostCard = React.memo<PostCardProps>(({
               ຕົກລົງ
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -209,9 +209,11 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      onClose();
+    // ไม่มีคำค้น = แสดงทุกโพสต์เหมือนเพิ่งเข้าเว็บครั้งแรก
+    if (!searchTerm.trim()) {
+      onSearchChange('');
     }
+    onClose();
   };
 
   const handleSuggestionClick = (searchKey: string) => {
@@ -343,19 +345,18 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
           </div>
           <button
             type="submit"
-            disabled={!searchTerm.trim()}
             style={{
-              background: searchTerm.trim() ? '#1877f2' : '#e4e6eb',
-              border: searchTerm.trim() ? '1px solid #1877f2' : '1px solid #e4e6eb',
-              color: searchTerm.trim() ? '#fff' : '#8a8d91',
+              background: '#1877f2',
+              border: '1px solid #1877f2',
+              color: '#fff',
               fontWeight: 'bold',
               fontSize: '15px',
-              cursor: searchTerm.trim() ? 'pointer' : 'not-allowed',
+              cursor: 'pointer',
               padding: '8px 16px',
               borderRadius: '20px',
               flexShrink: 0,
               touchAction: 'manipulation',
-              opacity: searchTerm.trim() ? 1 : 0.6,
+              opacity: 1,
             }}
           >
             ຄົ້ນຫາ

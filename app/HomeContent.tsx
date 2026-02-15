@@ -1,117 +1,103 @@
 'use client'
 
+import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
-import { HomeHeader } from '@/components/home/HomeHeader';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LAO_FONT } from '@/utils/constants';
 import { PageSpinner } from '@/components/LoadingSpinner';
 import { useHomeContent } from '@/hooks/useHomeContent';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useMainTabContext } from '@/contexts/MainTabContext';
 
 // Lazy load heavy modals
 const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
-const SearchScreen = dynamic(() => import('@/components/SearchScreen').then(m => ({ default: m.SearchScreen })), { ssr: false });
 const InteractionModal = dynamic(() => import('@/components/modals/InteractionModal').then(m => ({ default: m.InteractionModal })), { ssr: false });
 const ReportSuccessPopup = dynamic(() => import('@/components/modals/ReportSuccessPopup').then(m => ({ default: m.ReportSuccessPopup })), { ssr: false });
 const SuccessPopup = dynamic(() => import('@/components/modals/SuccessPopup').then(m => ({ default: m.SuccessPopup })), { ssr: false });
 const DeleteConfirmModal = dynamic(() => import('@/components/modals/DeleteConfirmModal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
 
 export function HomeContent() {
- const {
-   searchTerm,
-   setSearchTerm,
-   isSearchScreenOpen,
-   setIsSearchScreenOpen,
-   homeData,
-   unreadCount,
-   hasInitialFetchCompleted,
-   handlers,
-   fetchInteractions,
-   postFeedProps,
-   interactionModalProps,
-   postFeedModalsProps,
-   popups,
-   tabRefreshing,
-   fileUpload,
- } = useHomeContent();
+  const mainTab = useMainTabContext();
+  const {
+    homeData,
+    hasInitialFetchCompleted,
+    handlers,
+    fetchInteractions,
+    postFeedProps,
+    interactionModalProps,
+    postFeedModalsProps,
+    popups,
+    tabRefreshing,
+    refreshSource,
+    fileUpload,
+    isInteractionModalOpen,
+  } = useHomeContent({
+    sharedSearchTerm: mainTab?.searchTerm,
+    setSearchTerm: mainTab?.setSearchTerm,
+    setIsSearchScreenOpen: mainTab?.setIsSearchScreenOpen,
+  });
 
- const { pullDistance } = usePullToRefresh(handlers.handleTabRefresh, tabRefreshing);
+  // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
+  useEffect(() => {
+    if (!mainTab) return;
+    const handler = () => {
+      mainTab.setTabRefreshing(true);
+      handlers.handleTabRefresh();
+    };
+    mainTab.registerTabRefreshHandler(handler);
+    return () => mainTab.unregisterTabRefreshHandler();
+  }, [mainTab, handlers.handleTabRefresh]);
 
- return (
- <main
-   style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
- >
- <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
+  // เคลียร์ loading แท็บเมื่อโหลดเสร็จ
+  useEffect(() => {
+    if (!homeData.loadingMore && mainTab) mainTab.setTabRefreshing(false);
+  }, [homeData.loadingMore, mainTab]);
 
-  <HomeHeader
-    searchTerm={searchTerm}
-    onSearchChange={setSearchTerm}
-    onCreatePostClick={handlers.handleCreatePostClick}
-    onNotificationClick={handlers.handleNotificationClick}
-    unreadCount={unreadCount}
-    userProfile={homeData.userProfile}
-    session={homeData.session}
-    isHeaderVisible={true}
-    onTabChange={handlers.handleLogoClick}
-    onSearchClick={handlers.handleSearchClick}
-    controlSize={40}
-    iconSize={22}
-    onTabRefresh={handlers.handleTabRefresh}
-    loadingTab={tabRefreshing ? 'recommend' : null}
-  />
+  const { pullDistance } = usePullToRefresh(handlers.handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
 
- {isSearchScreenOpen && (
-   <SearchScreen
-     isOpen={isSearchScreenOpen}
-     searchTerm={searchTerm}
-     onSearchChange={setSearchTerm}
-     onClose={handlers.handleSearchClose}
-   />
- )}
+  return (
+    <main
+      style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
+    >
+      <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
- <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing && refreshSource === 'pull'} />
 
- <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing} />
+      {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <PageSpinner />
+        </div>
+      ) : (
+        <PostFeed {...postFeedProps} />
+      )}
 
- {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
-   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-     <PageSpinner />
-   </div>
- ) : (
-   <PostFeed {...postFeedProps} />
- )}
+           <InteractionModal
+        {...interactionModalProps}
+        posts={homeData.posts}
+        onFetchInteractions={fetchInteractions}
+      />
 
- <InteractionModal
-   {...interactionModalProps}
-   posts={homeData.posts}
-   onFetchInteractions={fetchInteractions}
- />
+      <PostFeedModals
+        session={homeData.session}
+        {...postFeedModalsProps}
+      />
 
- {/* Loading spinner is handled by PostFeed component */}
-
- <PostFeedModals
-   session={homeData.session}
-   {...postFeedModalsProps}
- />
-
- {/* Popups */}
- {popups.showReportSuccess && (
-   <ReportSuccessPopup onClose={popups.onCloseReportSuccess} />
- )}
- {popups.showDeleteConfirm && (
-   <DeleteConfirmModal
-     onConfirm={popups.onConfirmDelete}
-     onCancel={popups.onCancelDelete}
-   />
- )}
- {popups.showDeleteSuccess && (
-   <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={popups.onCloseDeleteSuccess} />
- )}
- {popups.showRegistrationSuccess && (
-   <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={popups.onCloseRegistrationSuccess} />
- )}
- </main>
- );
+      {popups.showReportSuccess && (
+        <ReportSuccessPopup onClose={popups.onCloseReportSuccess} />
+      )}
+      {popups.showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={popups.onConfirmDelete ?? (() => {})}
+          onCancel={popups.onCancelDelete ?? (() => {})}
+        />
+      )}
+      {popups.showDeleteSuccess && (
+        <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={popups.onCloseDeleteSuccess} />
+      )}
+      {popups.showRegistrationSuccess && (
+        <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={popups.onCloseRegistrationSuccess} />
+      )}
+    </main>
+  );
 }

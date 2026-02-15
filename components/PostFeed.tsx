@@ -75,21 +75,28 @@ export const PostFeed = React.memo<PostFeedProps>(({
     ) : null;
   }
 
-  const bottomSlotStyle = {
-    minHeight: 88,
-    height: 88,
+  const showNoMoreOnly = !hasMore && !loadingMore;
+  const bottomSlotStyle: React.CSSProperties = {
+    minHeight: showNoMoreOnly ? 120 : 88,
+    height: showNoMoreOnly ? 120 : 88,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
+    paddingTop: showNoMoreOnly ? 28 : 0,
     flexShrink: 0,
-  } as const;
+    width: '100%',
+    boxSizing: 'border-box',
+  };
 
-  // ให้ spinner อยู่ใน DOM ตลอด แค่ซ่อนด้วย visibility — ไม่ unmount จึงหมุนครบรอบได้
+  // ให้ spinner อยู่ใน DOM ตลอด; ตอนไม่โหลดใช้ display none เพื่อไม่ให้ดันข้อความ "ບໍ່ມີລາຍການເພີ່ມເຕີມ" ลงไปจนไม่เห็น
   const spinnerWrap = React.createElement(
     'span',
     {
       key: 'feed-spinner-wrap',
-      style: { visibility: loadingMore ? 'visible' : 'hidden', display: 'inline-block' },
+      style: {
+        visibility: loadingMore ? 'visible' : 'hidden',
+        display: loadingMore ? 'inline-block' : 'none',
+      },
     },
     React.createElement(PageSpinner)
   );
@@ -100,8 +107,10 @@ export const PostFeed = React.memo<PostFeedProps>(({
       style: {
         fontSize: '13px',
         color: '#111111',
-        visibility: !hasMore && !loadingMore ? 'visible' : 'hidden',
-        display: !hasMore && !loadingMore ? 'inline' : 'none',
+        visibility: showNoMoreOnly ? 'visible' : 'hidden',
+        display: showNoMoreOnly ? 'block' : 'none',
+        width: '100%',
+        textAlign: 'center',
       },
     },
     'ບໍ່ມີລາຍການເພີ່ມເຕີມ'

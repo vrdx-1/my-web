@@ -8,8 +8,6 @@ import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { InteractionModal } from '@/components/modals/InteractionModal';
-import { HomeHeader } from '@/components/home/HomeHeader';
-import { SearchScreen } from '@/components/SearchScreen';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostListData } from '@/hooks/usePostListData';
@@ -23,6 +21,7 @@ import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
+import { useMainTabContext } from '@/contexts/MainTabContext';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { PROFILE_PATH } from '@/utils/authRoutes';
@@ -41,8 +40,9 @@ function countUnreadFromList(list: { post_id: string; created_at: string; notifi
 export function SoldPageContent() {
   const router = useRouter();
   const pathname = usePathname();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
+  const mainTab = useMainTabContext();
+  const searchTerm = mainTab?.searchTerm ?? '';
+
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
@@ -80,7 +80,6 @@ export function SoldPageContent() {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  // Re-fetch when returning to this tab/page
   useEffect(() => {
     if (pathname !== '/sold') return;
     const onFocus = () => fetchUnreadCount();
@@ -160,8 +159,23 @@ export function SoldPageContent() {
   }, [postListData]);
 
   useEffect(() => {
-    if (!postListData.loadingMore) setTabRefreshing(false);
-  }, [postListData.loadingMore]);
+    if (!postListData.loadingMore) {
+      setTabRefreshing(false);
+      mainTab?.setTabRefreshing(false);
+    }
+  }, [postListData.loadingMore, mainTab]);
+
+  // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
+  useEffect(() => {
+    if (!mainTab) return;
+    const handler = () => {
+      mainTab.setTabRefreshing(true);
+      setTabRefreshing(true);
+      handleLogoClick();
+    };
+    mainTab.registerTabRefreshHandler(handler);
+    return () => mainTab.unregisterTabRefreshHandler();
+  }, [mainTab, handleLogoClick]);
 
   const handlers = usePostFeedHandlers({
     session: postListData.session,
@@ -226,39 +240,6 @@ export function SoldPageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <HomeHeader
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onCreatePostClick={() => fileUpload.handleCreatePostClick(homeData.session)}
-        onNotificationClick={() => {
-          if (!homeData.session) {
-            router.push(PROFILE_PATH);
-            return;
-          }
-          router.push('/notification');
-        }}
-        unreadCount={unreadCount}
-        userProfile={homeData.userProfile}
-        session={homeData.session}
-        isHeaderVisible={headerScroll.isHeaderVisible}
-        onTabChange={handleLogoClick}
-        onSearchClick={() => setIsSearchScreenOpen(true)}
-        onTabRefresh={() => {
-          setTabRefreshing(true);
-          handleLogoClick();
-        }}
-        loadingTab={tabRefreshing ? 'sold' : null}
-      />
-
-      <SearchScreen
-        isOpen={isSearchScreenOpen}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onClose={() => setIsSearchScreenOpen(false)}
-      />
-
-      <div style={LAYOUT_CONSTANTS.HEADER_SPACER}></div>
-
       <PostFeed
         posts={postListData.posts}
         session={postListData.session}
@@ -282,12 +263,12 @@ export function SoldPageContent() {
         onReport={handlers.handleReport}
         onSetActiveMenu={menu.setActiveMenu}
         onSetMenuAnimating={menu.setIsMenuAnimating}
-        loadingMore={postListData.loadingMore}
+        loadingMore={postListData.hasMore ? postListData.loadingMore : false}
         hasMore={postListData.hasMore}
+        onLoadMore={() => postListData.setPage((p) => p + 1)}
         hideBoost
       />
 
-      {/* Interaction Modal */}
       <InteractionModal
         show={interactionModalHook.interactionModal.show}
         type={interactionModalHook.interactionModal.type}
@@ -376,12 +357,10 @@ export function SoldPageContent() {
         onReportSubmit={handlers.handleSubmitReport}
       />
 
-      {/* ป๊อบอัพแสดงผลสำเร็จการส่งรายงาน */}
       {handlers.showReportSuccess && (
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
       )}
 
-      {/* Modal ยืนยันการลบโพสต์ */}
       {handlers.showDeleteConfirm && (
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
@@ -389,11 +368,9 @@ export function SoldPageContent() {
         />
       )}
 
-      {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
       )}
     </main>
   );
 }
-

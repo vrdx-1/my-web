@@ -34,7 +34,13 @@ export function sequentialAppendItems<T>(options: {
       return;
     }
 
-    append(items[index++]);
+    try {
+      append(items[index++]);
+    } catch (err) {
+      // ถ้า append throw (เช่น setState ล้มเหลว) ให้เรียก onDone เพื่อไม่ให้ loading ค้าง (เช่น หน้า sold)
+      if (onDone) onDone();
+      return;
+    }
 
     if (index < items.length) {
       // ให้ browser มีโอกาส render เฟรมปัจจุบันก่อน แล้วค่อย append รายการถัดไป
