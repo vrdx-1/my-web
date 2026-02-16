@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -22,6 +23,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { PROFILE_PATH } from '@/utils/authRoutes';
@@ -44,6 +46,7 @@ export function SoldPageContent() {
   const searchTerm = mainTab?.searchTerm ?? '';
 
   const [tabRefreshing, setTabRefreshing] = useState(false);
+  const [refreshSource, setRefreshSource] = useState<'pull' | null>(null);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
@@ -161,9 +164,21 @@ export function SoldPageContent() {
   useEffect(() => {
     if (!postListData.loadingMore) {
       setTabRefreshing(false);
+      setRefreshSource(null);
       mainTab?.setTabRefreshing(false);
     }
   }, [postListData.loadingMore, mainTab]);
+
+  /** ดึง feed ลงแล้วปล่อย = refresh ใหญ่ (ล้าง search แล้ว effect จะ refetch) */
+  const handlePullToRefresh = useCallback(() => {
+    setRefreshSource('pull');
+    setTabRefreshing(true);
+    mainTab?.setTabRefreshing(true);
+    mainTab?.setSearchTerm?.('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [mainTab]);
+
+  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
@@ -239,6 +254,8 @@ export function SoldPageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
+
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing && refreshSource === 'pull'} />
 
       <PostFeed
         posts={postListData.posts}

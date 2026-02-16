@@ -533,8 +533,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         
         if (postsData) {
+          // เรียงตามลำดับ postIds: liked/saved = กดล่าสุดก่อน, sold+search = ตาม cache order
           const orderedPostsData =
-            (type === 'sold' && (searchTerm ?? '').trim())
+            (type === 'sold' && (searchTerm ?? '').trim()) || type === 'saved' || type === 'liked'
               ? (() => {
                   const order = new Map<string, number>(validPostIds.map((id, idx) => [String(id), idx]));
                   return [...postsData].sort((a: any, b: any) => {

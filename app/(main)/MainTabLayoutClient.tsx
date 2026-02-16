@@ -9,6 +9,7 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 
 export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,8 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const setSearchTerm = mainTab?.setSearchTerm ?? (() => {});
   const isSearchScreenOpen = mainTab?.isSearchScreenOpen ?? false;
   const setIsSearchScreenOpen = mainTab?.setIsSearchScreenOpen ?? (() => {});
+  const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
+  const setProfileOverlayOpen = mainTab?.setProfileOverlayOpen ?? (() => {});
 
   const handleNotificationClick = useCallback(() => {
     if (!session) {
@@ -77,7 +80,15 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         onTabRefresh={handleTabRefresh}
         onTabSwitchStart={handleTabSwitchStart}
         loadingTab={loadingTab ?? undefined}
+        setProfileOverlayOpen={setProfileOverlayOpen}
       />
+
+      {isProfileOverlayOpen && (
+        <ProfileOverlay
+          isOpen={isProfileOverlayOpen}
+          onClose={() => setProfileOverlayOpen(false)}
+        />
+      )}
 
       {isSearchScreenOpen && (
         <SearchScreen

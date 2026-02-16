@@ -27,6 +27,8 @@ interface AppHeaderProps {
   onTabSwitchStart?: (tab: 'recommend' | 'sold') => void;
   /** แท็บที่กำลัง refresh แสดง loading เหมือนปุ่มเข้าสู่ระบบ */
   loadingTab?: 'recommend' | 'sold' | null;
+  /** เปิด overlay โปรไฟล์ทับ feed (ใช้เมื่ออยู่หน้าโฮม/ขายแล้ว) แทนการ push ไป /profile */
+  setProfileOverlayOpen?: (open: boolean) => void;
 }
 
 /**
@@ -49,9 +51,14 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   onTabRefresh,
   onTabSwitchStart,
   loadingTab = null,
+  setProfileOverlayOpen,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
+
+  const onProfileClick = (pathname === '/' || pathname === '/sold') && setProfileOverlayOpen
+    ? () => setProfileOverlayOpen(true)
+    : () => router.push(PROFILE_PATH, { scroll: false });
 
   // Prevent accidental notification navigation during scroll/drag on touch devices
   const notificationTouchRef = React.useRef<{ x: number; y: number; moved: boolean } | null>(null);
@@ -120,7 +127,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`, 
       width: '100%', 
       background: '#fff', 
-      zIndex: 100, 
+      zIndex: 500, 
       transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
       boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' 
     }}>
@@ -224,10 +231,10 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           )}
         </button>
 
-        {/* Profile Avatar — สลับหน้าโปรไฟล์ทันที (ไม่มี animation สไลด์) */}
+        {/* Profile Avatar — อยู่หน้าโฮม/ขายแล้ว = เปิด overlay สไลด์ทับ feed, นอกนั้น = ไป /profile */}
         <button
           type="button"
-          onClick={() => router.push(PROFILE_PATH, { scroll: false })}
+          onClick={onProfileClick}
           style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', background: 'none', border: 'none', padding: 0 }}
           aria-label="Profile"
         >
@@ -235,16 +242,27 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — ใช้ onTouchEnd + preventDefault เพื่อกัน synthetic click ไปโดนโพสต์ด้านล่าง; stopPropagation กัน event ไปที่อื่น */}
       <div style={{ display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}>
         {(['recommend', 'sold'] as const).map((t) => {
           const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
           const isLoading = loadingTab === t;
+          const onTabActivate = (e: React.SyntheticEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            handleTabClick(t);
+          };
           return (
             <div
               key={t}
-              onPointerDown={() => handleTabClick(t)}
-              onClick={() => handleTabClick(t)}
+              role="tab"
+              aria-selected={isActive}
+              onTouchEnd={(e) => {
+                onTabActivate(e);
+              }}
+              onClick={(e) => {
+                onTabActivate(e);
+              }}
               style={{
                 flex: 1,
                 minHeight: '36px',
@@ -259,6 +277,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                 touchAction: 'manipulation',
                 position: 'relative',
                 overflow: 'visible',
+                zIndex: 1,
               }}
             >
               <div style={{ display: 'inline-block', position: 'relative' }}>

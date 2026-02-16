@@ -100,7 +100,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       onTouchEnd={onTouchEnd}
       onClick={onClick}
     >
-      <div style={{ ...HEADER_STYLE, opacity: headerOpacity, transition: 'none', pointerEvents: fullScreenShowDetails ? 'auto' : 'none' }}>
+      <div style={{ ...HEADER_STYLE, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1, opacity: headerOpacity, transition: 'none', pointerEvents: fullScreenShowDetails ? 'auto' : 'none' }}>
         <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Close">
           <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
@@ -109,7 +109,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
         <div style={COUNTER_STYLE}>{currentImgIndex + 1}/{images.length}</div>
         <div style={{ width: 44, height: 44 }} />
       </div>
-      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={trackStyle}>
           {images.map((img, idx) => (
             <div key={idx} style={IMG_SLIDE_STYLE}>

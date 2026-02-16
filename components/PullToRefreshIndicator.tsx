@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { PageSpinner } from '@/components/LoadingSpinner'
+import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants'
 
 const PULL_THRESHOLD = 70
 
@@ -11,7 +12,7 @@ interface PullToRefreshIndicatorProps {
 }
 
 /**
- * แสดงเหนือ feed เมื่อดึงลงเพื่อรีเฟรช (หรือกำลังรีเฟรช)
+ * แสดงใต้ header ติดกับ feed เมื่อดึงลงเพื่อรีเฟรช (หรือกำลังรีเฟรช) — ไม่ให้ feed แยกออกจาก header
  */
 export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({ pullDistance, isRefreshing }) => {
   const visible = pullDistance > 0 || isRefreshing
@@ -27,7 +28,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
       aria-label={isRefreshing ? 'ກຳລັງໂຫຼດໃໝ່' : ''}
       style={{
         position: 'fixed',
-        top: 0,
+        top: LAYOUT_CONSTANTS.HEADER_HEIGHT,
         left: 0,
         right: 0,
         height: 56,

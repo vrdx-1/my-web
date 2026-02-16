@@ -40,16 +40,20 @@ export function useInteractionModal(): UseInteractionModalReturn {
   const [currentY, setCurrentY] = useState(0);
 
   const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string, posts: any[]) => {
+    const isSwitchingTab = interactionModal.show && interactionModal.postId === postId;
     setInteractionLoading(true);
-    setInteractionModal({ show: true, type, postId });
-    setInteractionSheetMode('half');
-    setIsInteractionModalAnimating(true);
-    requestAnimationFrame(() => {
+    if (!isSwitchingTab) {
+      setInteractionUsers([]);
+      setInteractionSheetMode('half');
+      setIsInteractionModalAnimating(true);
       requestAnimationFrame(() => {
-        setIsInteractionModalAnimating(false);
+        requestAnimationFrame(() => {
+          setIsInteractionModalAnimating(false);
+        });
       });
-    });
-    
+    }
+    setInteractionModal({ show: true, type, postId });
+
     try {
       const table = type === 'likes' ? 'post_likes' : 'post_saves';
       const guestTable = `${table}_guest`;
@@ -82,7 +86,7 @@ export function useInteractionModal(): UseInteractionModalReturn {
     } finally {
       setInteractionLoading(false);
     }
-  }, []);
+  }, [interactionModal.show, interactionModal.postId]);
 
   const onSheetTouchStart = useCallback((e: React.TouchEvent) => {
     // ตรวจสอบว่า touch เกิดขึ้นที่ scrollable area หรือไม่

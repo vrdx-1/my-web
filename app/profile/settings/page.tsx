@@ -56,7 +56,7 @@ export default function Settings() {
         borderBottom: '1px solid #ddd'
       }}>
         <button 
-          onClick={() => router.back()} 
+          onClick={() => { if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1'); router.push('/profile'); }} 
           style={{ 
             background: 'none', 
             border: 'none', 
@@ -97,6 +97,24 @@ export default function Settings() {
             }}
           >
             <span style={{ fontSize: '16px', color: '#1c1e21', fontWeight: '500' }}>ຂໍ້ກຳນົດ ແລະ ນະໂຍບາຍ</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+
+          {/* รายงานปัญหา - อยู่ระหว่าง ข้อกำหนดและนโยบาย กับ ติดต่อทีมงาน */}
+          <div 
+            onClick={() => router.push('/profile/settings/report-problem')}
+            style={{ 
+              padding: '12px 15px', 
+              borderBottom: '1px solid #f0f0f0', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              height: '55px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <span style={{ fontSize: '16px', color: '#1c1e21', fontWeight: '500' }}>ລາຍງານບັນຫາ</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
 

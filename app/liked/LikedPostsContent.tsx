@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 // Shared Components
@@ -29,6 +30,7 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 export function LikedPostsContent() {
+  const router = useRouter();
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
@@ -43,6 +45,11 @@ export function LikedPostsContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
+  }, []);
+
+  /** กลับไปหน้า profile โดยไม่เล่น slide (ใช้ร่วมกับ profile layout) */
+  useEffect(() => {
+    if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1');
   }, []);
 
   const postListData = usePostListData({
@@ -172,7 +179,7 @@ export function LikedPostsContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
-        <PageHeader title="ລາຍການທີ່ມັກ" centerTitle />
+        <PageHeader title="ລາຍການທີ່ມັກ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
         <TabNavigation
           tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },

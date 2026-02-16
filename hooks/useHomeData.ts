@@ -426,6 +426,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     const normalizedSearchKey = normalizeCarSearch(trimmedSearch);
 
     setLoadingMore(true);
+    try {
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
     const startIndex = currentPage * PREFETCH_COUNT; // หน้าถัดไป = ชุดถัดไป ไม่ทับซ้อน
     const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex แบบรวม (inclusive)
@@ -728,6 +729,9 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
       }
     } else {
       setHasMore(newHasMore);
+      setLoadingMore(false);
+    }
+    } catch {
       setLoadingMore(false);
     }
   }, []); // Empty dependency array - using refs instead

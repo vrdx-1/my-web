@@ -63,7 +63,7 @@ body {
   background: transparent;
 }
 
-/* ซ่อน scrollbar ของ feed หลักเมื่อเปิด viewing mode (body + html เผื่อ browser ใช้ html เป็น scroll) */
+/* ซ่อน scrollbar ของ feed หลักเมื่อเปิด viewing mode (body + html เผื่อ browser ใช้ html เป็น scroll; iOS ใช้ clip) */
 body[data-viewing-mode="open"]::-webkit-scrollbar,
 html:has(body[data-viewing-mode="open"])::-webkit-scrollbar {
   display: none !important;
@@ -72,6 +72,9 @@ body[data-viewing-mode="open"],
 html:has(body[data-viewing-mode="open"]) {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+}
+html:has(body[data-viewing-mode="open"]) {
+  overflow-x: hidden !important;
 }
 
 /* ซ่อน scrollbar ใน viewing mode container (ตัวที่ scroll จริง) */
@@ -91,7 +94,7 @@ html:has(body[data-viewing-mode="open"]) {
   background: transparent !important;
 }
 
-/* ซ่อน scrollbar หน้าโฮม (รวม iOS) – ใส่ทั้ง html และ body เผื่อ browser ใช้ html เป็น scroll container */
+/* ซ่อน scrollbar หน้าโฮม – Android/Desktop ใช้ webkit; iOS ไม่รองรับ ::-webkit-scrollbar (scroll อยู่ที่ body) จึงอาจยังเห็นจนกว่าจะใช้ inner scroll container */
 html:has(body[data-page="home"]) {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
@@ -99,6 +102,7 @@ html:has(body[data-page="home"]) {
 body[data-page="home"] {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+  scrollbar-color: transparent transparent !important; /* เผื่อ Safari รองรับในอนาคต */
 }
 body[data-page="home"]::-webkit-scrollbar,
 html:has(body[data-page="home"])::-webkit-scrollbar {

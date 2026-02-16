@@ -18,6 +18,8 @@ interface MainTabContextValue {
   setSearchTerm: (v: string) => void;
   isSearchScreenOpen: boolean;
   setIsSearchScreenOpen: (v: boolean) => void;
+  isProfileOverlayOpen: boolean;
+  setProfileOverlayOpen: (v: boolean) => void;
 }
 
 const MainTabContext = createContext<MainTabContextValue | null>(null);
@@ -29,6 +31,7 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
+  const [isProfileOverlayOpen, setProfileOverlayOpen] = useState(false);
 
   // Clear navigating state when route has changed
   useEffect(() => {
@@ -62,6 +65,8 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     setSearchTerm,
     isSearchScreenOpen,
     setIsSearchScreenOpen,
+    isProfileOverlayOpen,
+    setProfileOverlayOpen,
   };
 
   return (

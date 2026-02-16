@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
@@ -20,6 +21,7 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 // Removed duplicate dynamic imports - using from PostFeedModals component
 
 export function EditProfileContent() {
+ const router = useRouter();
  const {
    username,
    phone,
@@ -83,7 +85,7 @@ export function EditProfileContent() {
  <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
  {/* Header */}
- <PageHeader title="ໂປຣໄຟລ໌" centerTitle />
+ <PageHeader title="ໂປຣໄຟລ໌" centerTitle onBack={() => { if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1'); router.push('/profile'); }} />
 
  {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim */}
  {(isEditingName || isEditingPhone) && (

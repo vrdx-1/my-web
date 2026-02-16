@@ -17,6 +17,14 @@ const CONTAINER_STYLE: React.CSSProperties = {
   width: '100%', height: '100%', background: '#fff', position: 'relative',
   overflowY: 'auto', scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none',
 };
+/** บน iOS ::-webkit-scrollbar ไม่ทำงาน ใช้ wrapper clip scrollbar ออก (กว้างเกิน 30px แล้วให้ wrapper overflow:hidden) */
+const CONTAINER_STYLE_IOS_CLIP: React.CSSProperties = {
+  ...CONTAINER_STYLE,
+  width: 'calc(100% + 30px)',
+};
+const WRAPPER_CLIP_STYLE: React.CSSProperties = {
+  overflow: 'hidden', width: '100%', height: '100%',
+};
 const HEADER_STYLE: React.CSSProperties = {
   padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px',
   background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001,
@@ -71,6 +79,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   const status = getOnlineStatus(viewingPost?.profiles?.last_seen);
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'entered'>('offscreen');
+  const [enterTransitionActive, setEnterTransitionActive] = useState(false);
+  const [initialImageLoaded, setInitialImageLoaded] = useState(false);
 
   const images: string[] = Array.isArray(viewingPost?.images) ? viewingPost.images : [];
 
@@ -83,12 +93,28 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
-    setLoadedIndices(new Set());
-  }, [viewingPost?.id]);
+    // รูปที่คลิกแสดงใน post card อยู่แล้ว ถือว่าโหลดแล้ว ไม่แสดง spinner
+    const safeIdx = images.length ? Math.min(initialImageIndex, images.length - 1) : 0;
+    setLoadedIndices(new Set(images.length ? [safeIdx] : []));
+    setInitialImageLoaded(false);
+  }, [viewingPost?.id, initialImageIndex, images.length]);
+
+  useEffect(() => {
+    if (images.length === 0 && isViewingModeOpen) setInitialImageLoaded(true);
+  }, [images.length, isViewingModeOpen]);
 
   const handleImageLoad = useCallback((idx: number) => {
     setLoadedIndices((prev) => new Set(prev).add(idx));
-  }, []);
+    if (idx === initialImageIndex) {
+      setInitialImageLoaded(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(`viewing-image-${idx}`);
+          if (el) el.scrollIntoView({ block: 'center', behavior: 'auto' });
+        });
+      });
+    }
+  }, [initialImageIndex]);
 
   useEffect(() => {
     const next = Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3));
@@ -118,13 +144,30 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   useEffect(() => {
     setEnterPhase('offscreen');
+    setEnterTransitionActive(false);
   }, [viewingPost?.id]);
 
   useEffect(() => {
     if (!isViewingModeOpen || enterPhase !== 'offscreen') return;
-    const rafId = requestAnimationFrame(() => setEnterPhase('entered'));
+    const canEnter = initialImageLoaded || images.length === 0;
+    if (!canEnter) {
+      const fallback = setTimeout(() => {
+        setInitialImageLoaded(true);
+      }, 400);
+      return () => clearTimeout(fallback);
+    }
+    const rafId = requestAnimationFrame(() => {
+      setEnterTransitionActive(true);
+      setEnterPhase('entered');
+    });
     return () => cancelAnimationFrame(rafId);
-  }, [isViewingModeOpen, enterPhase]);
+  }, [isViewingModeOpen, enterPhase, initialImageLoaded, images.length]);
+
+  useEffect(() => {
+    if (enterPhase !== 'entered' || !enterTransitionActive) return;
+    const t = setTimeout(() => setEnterTransitionActive(false), 350);
+    return () => clearTimeout(t);
+  }, [enterPhase, enterTransitionActive]);
 
   useEffect(() => {
     if (!viewingPost) return;
@@ -165,9 +208,12 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   if (shouldHide) return null;
 
+  // เปิด: สไลด์มาจากด้านขวา (animation เหมือน Bottom sheet 0.3s ease-out). ปิด: ไม่สไลด์ออก สลับหน้าทันที
+  const slideInFromRight = enterPhase === 'offscreen' ? '100%' : `${viewingModeDragOffset}px`;
   const overlayStyle: React.CSSProperties = {
     ...OVERLAY_STYLE,
-    transform: `translateX(${viewingModeDragOffset}px)`,
+    transform: `translateX(${slideInFromRight})`,
+    transition: enterTransitionActive ? 'transform 0.3s ease-out' : 'none',
   };
 
   const metaParts = [formatTime(viewingPost.created_at), viewingPost.province];
@@ -175,7 +221,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   return (
     <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      <div id="viewing-mode-container" style={CONTAINER_STYLE}>
+      <div style={WRAPPER_CLIP_STYLE}>
+        <div id="viewing-mode-container" style={CONTAINER_STYLE_IOS_CLIP}>
         <div style={HEADER_STYLE}>
           <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Back">
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -206,14 +253,14 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         {visibleImages.map((img, idx) => (
           <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
             <div style={IMAGE_PLACEHOLDER_STYLE}>
-              {!loadedIndices.has(idx) && (
+              {!loadedIndices.has(idx) && idx !== initialImageIndex && (
                 <div style={SPINNER_OVERLAY_STYLE} aria-hidden="true">
                   <PageSpinner />
                 </div>
               )}
               <img
                 src={img}
-                loading={idx === initialImageIndex ? 'eager' : 'lazy'}
+                loading={idx < initialVisible ? 'eager' : 'lazy'}
                 decoding="async"
                 onLoad={() => handleImageLoad(idx)}
                 onClick={() => onImageClick(images, idx)}
@@ -223,6 +270,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
