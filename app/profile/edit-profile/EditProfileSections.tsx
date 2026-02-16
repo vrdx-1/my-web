@@ -105,8 +105,6 @@ type EditPhoneModalProps = {
   setEditingPhone: (value: string) => void;
   onCancel: () => void;
   onSave: (phone: string) => void;
-  showPhoneCharWarning: boolean;
-  setShowPhoneCharWarning: (value: boolean) => void;
 };
 
 const EditPhoneModalComponent = ({
@@ -115,8 +113,6 @@ const EditPhoneModalComponent = ({
   setEditingPhone,
   onCancel,
   onSave,
-  showPhoneCharWarning,
-  setShowPhoneCharWarning,
 }: EditPhoneModalProps) => {
   if (!isOpen) return null;
   const valid = isPhoneValid(editingPhone);
@@ -130,7 +126,6 @@ const EditPhoneModalComponent = ({
           value={editingPhone}
           onChange={e => {
             const rawValue = e.target.value;
-            if (/[^\d]/.test(rawValue) && !showPhoneCharWarning) setShowPhoneCharWarning(true);
             const inputValue = rawValue.replace(/\D/g, '');
             if (inputValue.length === 0 || inputValue.length < 3) {
               setEditingPhone('020');
@@ -299,49 +294,3 @@ const ProfileSectionComponent = ({
 );
 
 export const ProfileSection = memo(ProfileSectionComponent);
-
-type PhoneCharWarningPopupProps = { show: boolean; onClose: () => void };
-
-const PhoneCharWarningPopupComponent = ({ show, onClose }: PhoneCharWarningPopupProps) => {
-  if (!show) return null;
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.4)',
-        zIndex: 2000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-      }}
-      onClick={onClose}
-    >
-      <div style={{ background: '#fff', borderRadius: '12px', padding: 20, maxWidth: '320px', width: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>
-          ສຳລັບຕົວເລກເທົ່ານັ້ນ
-        </h3>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: '10px 16px',
-            background: '#1877f2',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: '15px',
-            fontWeight: 'bold',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          ຕົກລົງ
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export const PhoneCharWarningPopup = memo(PhoneCharWarningPopupComponent);

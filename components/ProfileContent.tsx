@@ -169,6 +169,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           </div>
         </Link>
 
+        <Link href="/my-posts" style={{ textDecoration: 'none', marginBottom: '12px', display: 'block' }}>
+          <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0e0e0', borderRadius: '12px', cursor: 'pointer' }}>
+            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1c1e21' }}>ໂພສຂອງຂ້ອຍ</span>
+          </div>
+        </Link>
+
         <div style={{ display: 'flex', gap: '12px' }}>
           <Link href="/liked" style={{ flex: 1, textDecoration: 'none' }}>
             <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0e0e0', borderRadius: '12px', cursor: 'pointer' }}>

@@ -42,12 +42,21 @@ export function createPostFeedModalsProps({
     savedScrollPosition: viewingPostHook.savedScrollPosition,
     initialImageIndex: viewingPostHook.initialImageIndex,
     onViewingPostClose: () => {
-      // ถ้าโพสต์ที่กำลังดูอยู่เป็นโพสต์แรกใน feed ให้แสดง header เสมอ
-      const isFirstPost = posts.length > 0 && viewingPostHook.viewingPost?.id === posts[0]?.id;
       viewingPostHook.closeViewingMode();
-      if (isFirstPost) {
-        headerScroll.setIsHeaderVisible(true);
-      }
+      // Restore header visibility เมื่อปิด viewing mode
+      // ใช้ requestAnimationFrame หลายครั้งเพื่อให้แน่ใจว่า scroll position ถูก restore ก่อน
+      // เพราะ usePostModals จะ restore scroll position ด้วย requestAnimationFrame เช่นกัน
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // Restore header visibility ตาม scroll position ที่ถูก restore แล้ว
+            // ถ้า scroll position อยู่ที่ด้านบนสุด (< 10px) ให้แสดง header เสมอ
+            // ถ้า scroll position อยู่ลึก ให้ header scroll listener จัดการแสดง/ซ่อน header ตาม scroll ต่อ
+            const scrollPos = window.scrollY;
+            headerScroll.setIsHeaderVisible(scrollPos < 10);
+          });
+        });
+      });
     },
     onViewingPostTouchStart: viewingPostHook.handleViewingModeTouchStart,
     onViewingPostTouchMove: viewingPostHook.handleViewingModeTouchMove,

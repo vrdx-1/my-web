@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const DEFAULT_ICON_URL =
-  "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG.png";
+  "https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/new.png";
 const OUT_DIR = join(__dirname, "..", "public", "icons");
 const ROOT = join(__dirname, "..");
 

@@ -4,16 +4,6 @@ import { supabase } from '@/lib/supabase';
 
 // Shared Hooks
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
-import { usePostInteractions } from '@/hooks/usePostInteractions';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { useMenu } from '@/hooks/useMenu';
-import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
-import { useViewingPost } from '@/hooks/useViewingPost';
-import { usePostModals } from '@/hooks/usePostModals';
-import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { usePostListData } from '@/hooks/usePostListData';
-import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
-import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
 export function useEditProfilePage() {
@@ -29,53 +19,6 @@ export function useEditProfilePage() {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editingUsername, setEditingUsername] = useState('');
   const [editingPhone, setEditingPhone] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [showPhoneCharWarning, setShowPhoneCharWarning] = useState(false);
-
-  // Feed States
-  const [tab, setTab] = useState<'recommend' | 'sold'>('recommend');
-  const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
-  const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
-
-  // Use shared hooks
-  const menu = useMenu();
-  const fullScreenViewer = useFullScreenViewer();
-  const viewingPostHook = useViewingPost();
-  const headerScroll = useHeaderScroll();
-
-  // Use interaction modal hook (bottom sheet for likes/saves)
-  const interactionModalHook = useInteractionModal();
-
-  // Use post list data hook for my-posts
-  const postListData = usePostListData({
-    type: 'my-posts',
-    userIdOrToken: userId || undefined,
-    session,
-    tab,
-  });
-
-  // Use shared infinite scroll hook
-  const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
-    loadingMore: postListData.loadingMore,
-    hasMore: postListData.hasMore,
-    onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.1,
-  });
-
-  // Use shared post interactions hook
-  const { toggleLike, toggleSave } = usePostInteractions({
-    session: postListData.session,
-    posts: postListData.posts,
-    setPosts: postListData.setPosts,
-    likedPosts: postListData.likedPosts,
-    savedPosts: postListData.savedPosts,
-    setLikedPosts: postListData.setLikedPosts,
-    setSavedPosts: postListData.setSavedPosts,
-    setJustLikedPosts,
-    setJustSavedPosts,
-  });
 
   const fetchProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -96,23 +39,6 @@ export function useEditProfilePage() {
     }
   }, []);
 
-  const fetchLikedStatus = useCallback(async (uid: string) => {
-    const { data } = await supabase.from('post_likes').select('post_id').eq('user_id', uid);
-    if (data) {
-      const map: { [key: string]: boolean } = {};
-      data.forEach((item) => (map[item.post_id] = true));
-      postListData.setLikedPosts(map);
-    }
-  }, [postListData.setLikedPosts]);
-
-  const fetchSavedStatus = useCallback(async (uid: string) => {
-    const { data } = await supabase.from('post_saves').select('post_id').eq('user_id', uid);
-    if (data) {
-      const map: { [key: string]: boolean } = {};
-      data.forEach((item) => (map[item.post_id] = true));
-      postListData.setSavedPosts(map);
-    }
-  }, [postListData.setSavedPosts]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,7 +47,6 @@ export function useEditProfilePage() {
       if (currentSession) {
         const uid = currentSession.user.id;
         userIdRef.current = uid;
-        setSession(currentSession);
         setUserId(uid);
         fetchProfile(uid);
       } else {
@@ -131,40 +56,16 @@ export function useEditProfilePage() {
     return () => { cancelled = true; };
   }, [router, fetchProfile]);
 
-  useEffect(() => {
-    if (!userId || !session) return;
-    postListData.setPage(0);
-    postListData.setHasMore(true);
-    postListData.fetchPosts(true);
-    fetchLikedStatus(userId);
-    fetchSavedStatus(userId);
-  }, [tab, userId, session, fetchLikedStatus, fetchSavedStatus]);
-
-  useEffect(() => {
-    if (!postListData.loadingMore) setTabRefreshing(false);
-  }, [postListData.loadingMore]);
-
-  useEffect(() => {
-    if (postListData.page > 0 && !postListData.loadingMore && userId && session) {
-      postListData.fetchPosts(false, postListData.page);
-    }
-  }, [postListData.page, postListData.loadingMore, userId, session]);
-
   const uploadAvatar = useCallback(async (event: any) => {
     const uid = userId ?? userIdRef.current;
     if (!uid) return;
     const file = event?.target?.files?.[0];
     if (!file) return;
-    try {
-      setUploading(true);
-      const filePath = `avatars/${uid}-${Date.now()}`;
-      await supabase.storage.from('car-images').upload(filePath, file);
-      const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(filePath);
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', uid);
-      setAvatarUrl(publicUrl);
-    } finally {
-      setUploading(false);
-    }
+    const filePath = `avatars/${uid}-${Date.now()}`;
+    await supabase.storage.from('car-images').upload(filePath, file);
+    const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(filePath);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', uid);
+    setAvatarUrl(publicUrl);
   }, [userId]);
 
   const saveUsername = useCallback(async (name: string) => {
@@ -189,57 +90,78 @@ export function useEditProfilePage() {
     }
   }, [userId]);
 
-  // Use shared post feed handlers
-  const handlers = usePostFeedHandlers({
-    session: postListData.session,
-    posts: postListData.posts,
-    setPosts: postListData.setPosts,
-    viewingPostHook,
-    headerScroll,
-    menu,
-  });
 
-  // Use shared post modals hook for managing modal side effects
-  usePostModals({
-    viewingPost: viewingPostHook.viewingPost,
-    isViewingModeOpen: viewingPostHook.isViewingModeOpen,
-    setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
-    setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
-    initialImageIndex: viewingPostHook.initialImageIndex,
-    savedScrollPosition: viewingPostHook.savedScrollPosition,
-    fullScreenImages: fullScreenViewer.fullScreenImages,
-    setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
-    setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
-    setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
-    setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
-    setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
-    setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
-    setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    interactionModalShow: interactionModalHook.interactionModal.show,
-    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
-  });
-
-  // Fetch interactions for bottom sheet (likes / saves)
-  const fetchInteractions = useCallback(
-    async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, postListData.posts);
-    },
-    [interactionModalHook, postListData.posts],
-  );
-
-  // Lock background scroll while edit-name / edit-phone / phone-warning popup is open
+  // Lock background scroll while edit-name / edit-phone is open
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const shouldLock = isEditingName || isEditingPhone || showPhoneCharWarning;
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    const shouldLock = isEditingName || isEditingPhone;
+    
     if (shouldLock) {
+      // บันทึกตำแหน่ง scroll ปัจจุบัน
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      
+      // ล็อก scroll ทั้ง body และ html
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = `-${scrollX}px`;
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      
+      // ป้องกัน touch events และ wheel events
+      const preventDefault = (e: TouchEvent | WheelEvent) => {
+        e.preventDefault();
+      };
+      
+      const preventDefaultPassive = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+      
+      // เพิ่ม event listeners เพื่อป้องกัน scroll
+      document.addEventListener('touchmove', preventDefaultPassive, { passive: false });
+      document.addEventListener('touchstart', preventDefaultPassive, { passive: false });
+      document.addEventListener('wheel', preventDefault, { passive: false });
+      document.addEventListener('scroll', preventDefault, { passive: false });
+      
+      return () => {
+        // ลบ event listeners
+        document.removeEventListener('touchmove', preventDefaultPassive);
+        document.removeEventListener('touchstart', preventDefaultPassive);
+        document.removeEventListener('wheel', preventDefault);
+        document.removeEventListener('scroll', preventDefault);
+        
+        // ปลดล็อก scroll และคืนตำแหน่ง scroll
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+        
+        // คืนตำแหน่ง scroll
+        window.scrollTo(scrollX, scrollY);
+      };
     } else {
+      // ปลดล็อก scroll เมื่อไม่ต้องล็อก
+      const scrollY = document.body.style.top ? parseInt(document.body.style.top.replace('px', '')) * -1 : 0;
+      const scrollX = document.body.style.left ? parseInt(document.body.style.left.replace('px', '')) * -1 : 0;
+      
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+      
+      if (scrollY !== 0 || scrollX !== 0) {
+        window.scrollTo(scrollX, scrollY);
+      }
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isEditingName, isEditingPhone, showPhoneCharWarning]);
+  }, [isEditingName, isEditingPhone]);
 
   const handleEditNameClick = useCallback(() => {
     setEditingUsername(username);
@@ -284,30 +206,6 @@ export function useEditProfilePage() {
     editingPhone,
     setEditingUsername,
     setEditingPhone,
-    uploading,
-    showPhoneCharWarning,
-    setShowPhoneCharWarning,
-
-    // feed / tab
-    tab,
-    setTab,
-    tabRefreshing,
-    setTabRefreshing,
-    justLikedPosts,
-    justSavedPosts,
-
-    // hooks / data
-    menu,
-    fullScreenViewer,
-    viewingPostHook,
-    headerScroll,
-    interactionModalHook,
-    postListData,
-    lastPostElementRef,
-    handlers,
-    toggleLike,
-    toggleSave,
-    fetchInteractions,
 
     // ui handlers
     uploadAvatar,

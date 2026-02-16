@@ -55,11 +55,43 @@ export function usePostModals({
     if (!viewingPost) {
       setIsViewingModeOpen(false);
       setViewingModeDragOffset(0);
+      
+      // Restore scroll position ก่อน unlock body overflow เพื่อป้องกัน scroll ไปบนสุด
+      const scrollPos = savedScrollPosition;
+      window.scrollTo({ top: scrollPos, behavior: 'auto' });
+      document.documentElement.scrollTop = scrollPos;
+      document.body.scrollTop = scrollPos;
+      
+      // Unlock body overflow หลังจาก restore scroll position แล้ว
       document.body.style.overflow = '';
       document.body.style.scrollbarWidth = '';
       document.body.style.msOverflowStyle = '';
       document.body.removeAttribute('data-viewing-mode');
-      window.scrollTo(0, savedScrollPosition);
+      
+      // Restore scroll position อีกครั้งหลังจาก unlock body overflow เพื่อความแน่ใจ
+      // ใช้ requestAnimationFrame เพื่อให้แน่ใจว่า browser render เสร็จก่อน restore
+      let rafId1: number;
+      let rafId2: number;
+      
+      rafId1 = requestAnimationFrame(() => {
+        rafId2 = requestAnimationFrame(() => {
+          window.scrollTo({ top: scrollPos, behavior: 'auto' });
+          document.documentElement.scrollTop = scrollPos;
+          document.body.scrollTop = scrollPos;
+          
+          // Restore อีกครั้งหลังจาก frame ถัดไปเพื่อป้องกัน scroll position เปลี่ยน
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: scrollPos, behavior: 'auto' });
+            document.documentElement.scrollTop = scrollPos;
+            document.body.scrollTop = scrollPos;
+          });
+        });
+      });
+      
+      return () => {
+        if (rafId1) cancelAnimationFrame(rafId1);
+        if (rafId2) cancelAnimationFrame(rafId2);
+      };
     } else if (viewingPost.images) {
       setViewingModeDragOffset(0);
       setIsViewingModeOpen(true);
@@ -80,14 +112,6 @@ export function usePostModals({
       });
       return () => cancelAnimationFrame(rafId);
     }
-    return () => {
-      if (!viewingPost) {
-        document.body.style.overflow = '';
-        document.body.style.scrollbarWidth = '';
-        document.body.style.msOverflowStyle = '';
-        document.body.removeAttribute('data-viewing-mode');
-      }
-    };
   }, [viewingPost, setIsViewingModeOpen, setViewingModeDragOffset, initialImageIndex, savedScrollPosition]);
 
   // Handle fullscreen viewer effects

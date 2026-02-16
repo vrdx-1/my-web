@@ -46,8 +46,9 @@ export function useViewingPost(): UseViewingPostReturn {
     setViewingModeDragOffset(0);
     setViewingModeTouchStart(null);
     setViewingPost(null);
-    window.scrollTo({ top: savedScrollPosition, behavior: 'auto' });
-  }, [savedScrollPosition]);
+    // ไม่ต้องเรียก window.scrollTo ที่นี่ เพราะ usePostModals จะจัดการ restore scroll position ให้
+    // เพื่อป้องกัน race condition และให้แน่ใจว่า DOM พร้อมก่อน restore
+  }, []);
 
   const handleViewingModeTouchStart = useCallback((e: React.TouchEvent) => {
     setViewingModeTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });

@@ -32,13 +32,15 @@ export function useHomeEffects({
     }
     
     if (!loadingMore) {
-      startTransition(() => {
-        setTabRefreshing(false);
-        setRefreshSource?.(null);
-        if (initialFetchStartedRef.current) {
+      // เคลียร์ refresh state ทันที (ไม่ใช้ startTransition) เพื่อให้ spinner หยุดหมุนทันที
+      setTabRefreshing(false);
+      setRefreshSource?.(null);
+      // ใช้ startTransition เฉพาะสำหรับ hasInitialFetchCompleted เพื่อไม่บล็อก UI
+      if (initialFetchStartedRef.current) {
+        startTransition(() => {
           setHasInitialFetchCompleted(true);
-        }
-      });
+        });
+      }
     }
   }, [loadingMore, setTabRefreshing, setHasInitialFetchCompleted, setRefreshSource]);
 }

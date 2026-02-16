@@ -468,6 +468,19 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
+        // ตรวจสอบว่า idOrToken เป็น valid UUID format (สำหรับ user_id)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(idOrToken)) {
+          console.warn('usePostListData: Invalid UUID format for my-posts', { 
+            idOrToken,
+            type, 
+            userIdOrToken, 
+            currentUserId 
+          });
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
+          return;
+        }
+        
         const { data: idsData, error: idsError } = await supabase
           .from('cars')
           .select('id')
@@ -477,7 +490,21 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .range(rangeStart, rangeEnd);
         
         if (idsError) {
-          console.error('Error fetching my-posts:', idsError, { idOrToken });
+          console.error('Error fetching my-posts:', {
+            error: idsError,
+            message: idsError?.message || 'Unknown error',
+            details: idsError?.details || null,
+            hint: idsError?.hint || null,
+            code: idsError?.code || null,
+            idOrToken,
+            tab,
+            rangeStart,
+            rangeEnd,
+            type,
+            userIdOrToken,
+            currentUserId,
+            currentSession: currentSession ? 'exists' : 'null'
+          });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }

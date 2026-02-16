@@ -24,6 +24,8 @@ html, body {
   padding: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* ตั้งค่า background เป็นสีขาวเสมอเพื่อไม่ให้เห็นสีดำจาก dark mode */
+  background: #ffffff !important;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
@@ -33,7 +35,8 @@ body::-webkit-scrollbar {
 }
 
 body {
-  background: var(--background);
+  /* ตั้งค่า background เป็นสีขาวเสมอเพื่อไม่ให้เห็นสีดำจาก dark mode */
+  background: #ffffff !important;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;

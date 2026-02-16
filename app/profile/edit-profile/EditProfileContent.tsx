@@ -1,24 +1,16 @@
 'use client'
-import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Shared Components
-import { PostFeed } from '@/components/PostFeed';
-import { TabNavigation } from '@/components/TabNavigation';
 import { PageHeader } from '@/components/PageHeader';
 import {
   EditNameModal,
   EditPhoneModal,
-  PhoneCharWarningPopup,
   ProfileSection,
 } from './EditProfileSections';
-import { EditProfilePostOverlays } from './EditProfilePostOverlays';
 import { useEditProfilePage } from './useEditProfilePage';
-import { useBackHandler } from '@/components/BackHandlerContext';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-
-// Removed duplicate dynamic imports - using from PostFeedModals component
 
 export function EditProfileContent() {
  const router = useRouter();
@@ -29,29 +21,10 @@ export function EditProfileContent() {
    isEditingName,
    isEditingPhone,
    editingUsername,
-   editingPhone,
-   setEditingUsername,
-   setEditingPhone,
-   showPhoneCharWarning,
-   setShowPhoneCharWarning,
-   tab,
-   setTab,
-   tabRefreshing,
-   setTabRefreshing,
-   justLikedPosts,
-   justSavedPosts,
-   menu,
-   fullScreenViewer,
-   viewingPostHook,
-   headerScroll,
-   interactionModalHook,
-   postListData,
-   lastPostElementRef,
-   handlers,
-   toggleLike,
-   toggleSave,
-   fetchInteractions,
-   uploadAvatar,
+  editingPhone,
+  setEditingUsername,
+  setEditingPhone,
+  uploadAvatar,
    handleEditNameClick,
    handleEditPhoneClick,
    handleCancelPhoneEdit,
@@ -60,39 +33,68 @@ export function EditProfileContent() {
    handleSavePhone,
  } = useEditProfilePage();
 
- const { addBackStep } = useBackHandler();
- useEffect(() => {
-   if (!fullScreenViewer.fullScreenImages) return;
-   const close = () => {
-     fullScreenViewer.setFullScreenImages(null);
-     if (fullScreenViewer.activePhotoMenu !== null) {
-       fullScreenViewer.setIsPhotoMenuAnimating(true);
-       setTimeout(() => {
-         fullScreenViewer.setActivePhotoMenu(null);
-         fullScreenViewer.setIsPhotoMenuAnimating(false);
-       }, 300);
-     }
-   };
-   return addBackStep(close);
- }, [fullScreenViewer.fullScreenImages]);
- useEffect(() => {
-   if (!viewingPostHook.viewingPost) return;
-   const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
-   return addBackStep(close);
- }, [viewingPostHook.viewingPost]);
-
  return (
- <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+ <main 
+   style={{
+     ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
+     ...((isEditingName || isEditingPhone) && {
+       overflow: 'hidden',
+       touchAction: 'none',
+       overscrollBehavior: 'contain',
+     }),
+   }}
+   onTouchMove={(e) => {
+     if (isEditingName || isEditingPhone) {
+       e.preventDefault();
+       e.stopPropagation();
+     }
+   }}
+   onWheel={(e) => {
+     if (isEditingName || isEditingPhone) {
+       e.preventDefault();
+       e.stopPropagation();
+     }
+   }}
+ >
 
  {/* Header */}
  <PageHeader title="ໂປຣໄຟລ໌" centerTitle onBack={() => { if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1'); router.push('/profile'); }} />
 
- {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim */}
+ {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim และล็อก scroll */}
  {(isEditingName || isEditingPhone) && (
- <div
+<div
  role="button"
  tabIndex={0}
- style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 999, cursor: 'pointer' }}
+ onClick={(e) => {
+   e.stopPropagation();
+   if (isEditingName) handleCloseNameModal();
+   if (isEditingPhone) handleCancelPhoneEdit();
+ }}
+ onTouchStart={(e) => {
+   e.stopPropagation();
+   e.preventDefault();
+ }}
+ onTouchMove={(e) => {
+   e.stopPropagation();
+   e.preventDefault();
+ }}
+ onTouchEnd={(e) => {
+   e.stopPropagation();
+ }}
+ onWheel={(e) => {
+   e.preventDefault();
+   e.stopPropagation();
+ }}
+ style={{ 
+   position: 'fixed', 
+   inset: 0, 
+   background: 'rgba(0,0,0,0.4)', 
+   zIndex: 999, 
+   cursor: 'pointer',
+   touchAction: 'none',
+   overscrollBehavior: 'contain',
+   overflow: 'hidden',
+ } }
  aria-label="ปิด"
  />
  )}
@@ -113,8 +115,6 @@ export function EditProfileContent() {
    setEditingPhone={setEditingPhone}
    onCancel={handleCancelPhoneEdit}
    onSave={handleSavePhone}
-   showPhoneCharWarning={showPhoneCharWarning}
-   setShowPhoneCharWarning={setShowPhoneCharWarning}
  />
 
  {/* Profile Section */}
@@ -126,72 +126,6 @@ export function EditProfileContent() {
    onEditNameClick={handleEditNameClick}
    onEditPhoneClick={handleEditPhoneClick}
  />
-
- <div style={{ height: '8px', background: '#d1d5db' }}></div>
-
- {/* Tabs Section */}
- <TabNavigation
-   tabs={[
-     { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-     { value: 'sold', label: 'ຂາຍແລ້ວ' },
-   ]}
-   activeTab={tab}
-   // v มาจาก TabNavigation ที่เป็น string แต่เราจำกัดให้เป็น 'recommend' | 'sold'
-   onTabChange={(v) => {
-     if (v === tab) {
-       setTabRefreshing(true);
-       postListData.setPage(0);
-       postListData.setHasMore(true);
-       postListData.fetchPosts(true);
-       return;
-     }
-     setTabRefreshing(true);
-     setTab(v as 'recommend' | 'sold');
-   }}
-   loadingTab={tabRefreshing ? tab : null}
-   className="sticky top-[45px] bg-white z-[90]"
- />
-
- {/* Posts Feed */}
- <PostFeed
-   posts={postListData.posts}
-   session={postListData.session}
-   likedPosts={postListData.likedPosts}
-   savedPosts={postListData.savedPosts}
-   justLikedPosts={justLikedPosts}
-   justSavedPosts={justSavedPosts}
-   activeMenuState={menu.activeMenuState}
-   isMenuAnimating={menu.isMenuAnimating}
-   lastPostElementRef={lastPostElementRef}
-   menuButtonRefs={menu.menuButtonRefs}
-   onViewPost={handlers.handleViewPost}
-   onImpression={handlers.handleImpression}
-   onLike={toggleLike}
-   onSave={toggleSave}
-   onShare={handlers.handleShare}
-  onViewLikes={(postId) => fetchInteractions('likes', postId)}
-  onViewSaves={(postId) => fetchInteractions('saves', postId)}
-   onTogglePostStatus={handlers.handleTogglePostStatus}
-   onDeletePost={handlers.handleDeletePost}
-   onReport={() => {}}
-   onSetActiveMenu={menu.setActiveMenu}
-   onSetMenuAnimating={menu.setIsMenuAnimating}
-  // สำหรับหน้าโปรไฟล์ ซ่อนอนิเมชั่นโหลดด้านล่างฟีด (ไม่ให้หมุนค้าง)
-  loadingMore={false}
-  hasMore={false}
-   hideBoost={tab === 'sold'}
- />
-
-<EditProfilePostOverlays
-  interactionModalHook={interactionModalHook}
-  posts={postListData.posts}
-  fetchInteractions={fetchInteractions}
-  viewingPostHook={viewingPostHook}
-  headerScroll={headerScroll}
-  fullScreenViewer={fullScreenViewer}
-  session={postListData.session}
-  handlers={handlers}
-/>
  </main>
  );
 }

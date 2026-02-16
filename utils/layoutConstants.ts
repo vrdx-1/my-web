@@ -54,5 +54,6 @@ export const LAYOUT_CONSTANTS = {
   // Header spacer (used in page.tsx, sold/page.tsx)
   HEADER_SPACER: {
     height: '118px',
+    background: '#fff',
   },
 } as const;

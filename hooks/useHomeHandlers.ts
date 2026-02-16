@@ -62,10 +62,13 @@ export function useHomeHandlers({
   /** ดึง feed (pull-to-refresh) = refresh ใหญ่: ล้าง search แล้ว refetch, แสดง spinner ใหญ่ */
   const handlePullToRefresh = useCallback(() => {
     setRefreshSource?.('pull');
-    setSearchTerm?.('');
     setTabRefreshing(true);
+    setSearchTerm?.('');
+    // เรียก fetchPosts โดยตรงเพื่อให้แน่ใจว่า refresh ทำงานแม้ searchTerm ไม่เปลี่ยน
+    homeData.setPage(0);
+    homeData.fetchPosts(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [setSearchTerm, setTabRefreshing, setRefreshSource]);
+  }, [setSearchTerm, setTabRefreshing, setRefreshSource, homeData]);
 
   return {
     handleLogoClick,

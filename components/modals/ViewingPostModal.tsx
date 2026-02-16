@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { Avatar } from '../Avatar';
 import { PageSpinner } from '../LoadingSpinner';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
@@ -12,10 +13,12 @@ const VIEWING_MODE_LOAD_MORE_COUNT = 2
 const OVERLAY_STYLE: React.CSSProperties = {
   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
   background: '#fff', zIndex: 2000,
+  touchAction: 'pan-y', // อนุญาตให้เลื่อนได้เฉพาะแนวตั้งเท่านั้น
 };
 const CONTAINER_STYLE: React.CSSProperties = {
   width: '100%', height: '100%', background: '#fff', position: 'relative',
-  overflowY: 'auto', scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none',
+  overflowY: 'auto', overflowX: 'hidden', scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none',
+  touchAction: 'pan-y', // อนุญาตให้เลื่อนได้เฉพาะแนวตั้งเท่านั้น
 };
 /** บน iOS ::-webkit-scrollbar ไม่ทำงาน ใช้ wrapper clip scrollbar ออก (กว้างเกิน 30px แล้วให้ wrapper overflow:hidden) */
 const CONTAINER_STYLE_IOS_CLIP: React.CSSProperties = {
@@ -156,9 +159,19 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
       }, 400);
       return () => clearTimeout(fallback);
     }
+    // ใช้ requestAnimationFrame สองครั้งเพื่อให้แน่ใจว่า DOM อัปเดตก่อน transition
+    // ใช้ flushSync เพื่อบังคับให้ state อัปเดตทันทีและให้ transition ทำงาน
     const rafId = requestAnimationFrame(() => {
-      setEnterTransitionActive(true);
-      setEnterPhase('entered');
+      requestAnimationFrame(() => {
+        // ใช้ flushSync เพื่อบังคับให้ enterTransitionActive อัปเดตทันที
+        flushSync(() => {
+          setEnterTransitionActive(true);
+        });
+        // แล้วค่อย set enterPhase ใน frame ถัดไปเพื่อให้ transition ทำงาน
+        requestAnimationFrame(() => {
+          setEnterPhase('entered');
+        });
+      });
     });
     return () => cancelAnimationFrame(rafId);
   }, [isViewingModeOpen, enterPhase, initialImageLoaded, images.length]);
@@ -176,6 +189,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     document.body.style.msOverflowStyle = 'none';
     document.body.setAttribute('data-viewing-mode', 'open');
     return () => {
+      // ไม่ต้อง restore scroll position ที่นี่ เพราะ usePostModals จะจัดการให้
+      // เพื่อป้องกัน race condition และให้แน่ใจว่า restore ถูกต้อง
       document.body.style.overflow = '';
       document.body.style.scrollbarWidth = '';
       document.body.style.msOverflowStyle = '';
@@ -206,10 +221,61 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     };
   }, [enterPhase, initialImageIndex, images.length]);
 
+  // ป้องกันการเลื่อนซ้ายขวาเด็ดขาด: watch scrollLeft และ reset เป็น 0 ทันที
+  useEffect(() => {
+    if (!isViewingModeOpen) return;
+    const container = document.getElementById('viewing-mode-container');
+    if (!container) return;
+
+    // Watch scroll event และ reset scrollLeft เป็น 0 ทันที
+    const preventHorizontalScroll = () => {
+      if (container.scrollLeft !== 0) {
+        container.scrollLeft = 0;
+      }
+    };
+    container.addEventListener('scroll', preventHorizontalScroll, { passive: false });
+    
+    // Watch touchmove event และ preventDefault ถ้ามีการเลื่อนแนวนอน
+    const handleTouchMove = (e: TouchEvent) => {
+      if (container.scrollLeft !== 0) {
+        e.preventDefault();
+        container.scrollLeft = 0;
+      }
+    };
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    // Watch wheel event (สำหรับ desktop) และ preventDefault ถ้ามีการเลื่อนแนวนอน
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaX !== 0) {
+        e.preventDefault();
+        container.scrollLeft = 0;
+      }
+    };
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    // ใช้ requestAnimationFrame เพื่อ watch scrollLeft ตลอดเวลาและ reset เป็น 0
+    let rafId: number;
+    const watchScrollLeft = () => {
+      if (container.scrollLeft !== 0) {
+        container.scrollLeft = 0;
+      }
+      rafId = requestAnimationFrame(watchScrollLeft);
+    };
+    rafId = requestAnimationFrame(watchScrollLeft);
+
+    return () => {
+      container.removeEventListener('scroll', preventHorizontalScroll);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('wheel', handleWheel);
+      cancelAnimationFrame(rafId);
+    };
+  }, [isViewingModeOpen]);
+
   if (shouldHide) return null;
 
   // เปิด: สไลด์มาจากด้านขวา (animation เหมือน Bottom sheet 0.3s ease-out). ปิด: ไม่สไลด์ออก สลับหน้าทันที
-  const slideInFromRight = enterPhase === 'offscreen' ? '100%' : `${viewingModeDragOffset}px`;
+  // ป้องกันการ drag ซ้ายขวา: ไม่ใช้ viewingModeDragOffset เลย ใช้เฉพาะ enterPhase เพื่อควบคุม animation
+  const slideInFromRight = enterPhase === 'offscreen' ? '100%' : '0px';
   const overlayStyle: React.CSSProperties = {
     ...OVERLAY_STYLE,
     transform: `translateX(${slideInFromRight})`,
@@ -219,10 +285,59 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const metaParts = [formatTime(viewingPost.created_at), viewingPost.province];
   if (viewingPost.is_boosted) metaParts.push('Ad');
 
+  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาเด็ดขาด
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // เรียก handler เดิมก่อน
+    onTouchMove(e);
+    
+    // ป้องกันการเลื่อนซ้ายขวาโดย preventDefault เมื่อมีการเลื่อนแนวนอน
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      const target = e.currentTarget as HTMLElement;
+      const scrollContainer = target.querySelector('#viewing-mode-container') as HTMLElement;
+      
+      // ตรวจสอบว่ามีการเลื่อนแนวนอนหรือไม่
+      if (scrollContainer) {
+        const scrollLeft = scrollContainer.scrollLeft;
+        // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault
+        if (scrollLeft !== 0) {
+          e.preventDefault();
+          // บังคับให้ scrollLeft เป็น 0
+          scrollContainer.scrollLeft = 0;
+        }
+      }
+    }
+  }, [onTouchMove]);
+
+  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาใน container
+  const handleContainerTouchMove = useCallback((e: React.TouchEvent) => {
+    const container = e.currentTarget as HTMLElement;
+    // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault และบังคับให้ scrollLeft เป็น 0
+    if (container.scrollLeft !== 0) {
+      e.preventDefault();
+      container.scrollLeft = 0;
+    }
+  }, []);
+
+  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาใน container (wheel event สำหรับ desktop)
+  const handleContainerWheel = useCallback((e: React.WheelEvent) => {
+    const container = e.currentTarget as HTMLElement;
+    // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault และบังคับให้ scrollLeft เป็น 0
+    if (container.scrollLeft !== 0) {
+      e.preventDefault();
+      container.scrollLeft = 0;
+    }
+  }, []);
+
   return (
-    <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+    <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={handleTouchMove} onTouchEnd={onTouchEnd}>
       <div style={WRAPPER_CLIP_STYLE}>
-        <div id="viewing-mode-container" style={CONTAINER_STYLE_IOS_CLIP}>
+        <div 
+          id="viewing-mode-container" 
+          style={CONTAINER_STYLE_IOS_CLIP}
+          onTouchMove={handleContainerTouchMove}
+          onWheel={handleContainerWheel}
+        >
         <div style={HEADER_STYLE}>
           <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Back">
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

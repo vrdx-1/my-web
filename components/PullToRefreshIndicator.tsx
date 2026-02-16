@@ -13,6 +13,7 @@ interface PullToRefreshIndicatorProps {
 
 /**
  * แสดงใต้ header ติดกับ feed เมื่อดึงลงเพื่อรีเฟรช (หรือกำลังรีเฟรช) — ไม่ให้ feed แยกออกจาก header
+ * ตำแหน่งอยู่ด้านบนเสมอ (top: HEADER_HEIGHT) เมื่อกำลัง refresh
  */
 export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({ pullDistance, isRefreshing }) => {
   const visible = pullDistance > 0 || isRefreshing
@@ -20,6 +21,10 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
 
   const ready = pullDistance >= PULL_THRESHOLD
   const height = Math.min(56, Math.max(0, pullDistance) * 0.56)
+
+  // เมื่อกำลัง refresh ต้องอยู่ด้านบนเสมอ (translateY(0))
+  // เมื่อกำลัง pull แต่ยังไม่ refresh ให้เลื่อนขึ้นตาม pull distance
+  const translateY = isRefreshing ? 0 : -56 + height
 
   return (
     <div
@@ -38,9 +43,9 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         gap: 8,
         background: '#fff',
         zIndex: 999,
-        boxShadow: height > 0 ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-        transform: `translateY(${isRefreshing ? 0 : -56 + height}px)`,
-        transition: isRefreshing ? 'none' : 'transform 0.1s ease-out',
+        boxShadow: isRefreshing || height > 0 ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+        transform: `translateY(${translateY}px)`,
+        transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
         pointerEvents: 'none',
       }}
     >

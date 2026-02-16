@@ -69,12 +69,22 @@ export default function AdminBoostingPage() {
       if (!boostsError && !carsError && allBoostsData && allCarsData) {
         // สร้าง map สำหรับ cars
         const carsMap = new Map(allCarsData.map(car => [car.id, car]));
-        
+
         // รวม boosts กับ cars
-        const combinedData = allBoostsData.map(boostData => {
+        let combinedData = allBoostsData.map((boostData) => {
           const carData = carsMap.get(boostData.post_id);
           return { ...boostData, cars: carData };
         });
+
+        // กรอง Boost ที่หมดอายุแล้วไม่ให้แสดงในหน้า Admin (แท็บ Boosting)
+        if (statusFilter === "success") {
+          const now = Date.now();
+          combinedData = combinedData.filter((item) => {
+            if (!item.expires_at) return true;
+            const expiresAtTime = new Date(item.expires_at as string).getTime();
+            return Number.isFinite(expiresAtTime) && expiresAtTime > now;
+          });
+        }
 
         // เพิ่ม items เข้า state
         setItems(prev => {
@@ -146,7 +156,7 @@ export default function AdminBoostingPage() {
             onClick={() => setActiveTab("waiting")} 
             className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'waiting' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Waiting
+            Pending
           </button>
           <button 
             onClick={() => setActiveTab("boosting")} 
