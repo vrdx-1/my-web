@@ -191,7 +191,7 @@ const ProfileSectionComponent = ({
   onEditNameClick,
   onEditPhoneClick,
 }: ProfileSectionProps) => (
-  <div style={{ padding: '20px' }}>
+  <div style={{ padding: '20px', borderBottom: '1px solid #6b6b6b' }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
       <div style={{ position: 'relative', width: 90, height: 90, flexShrink: 0 }}>
         <div

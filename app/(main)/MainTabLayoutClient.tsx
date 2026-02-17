@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -53,7 +52,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
 
   const loadingTab =
     mainTab?.navigatingToTab ??
-    (mainTab?.tabRefreshing ? (pathname === '/sold' ? 'sold' : 'recommend') : null);
+    (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? (pathname === '/sold' ? 'sold' : 'recommend') : null);
+
+  const pullOffset = mainTab?.pullHeaderOffset ?? 0;
 
   return (
     <>
@@ -66,21 +67,39 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         style={{ display: 'none' }}
         aria-hidden
       />
-      <HomeHeader
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
-        onNotificationClick={handleNotificationClick}
-        unreadCount={unreadCount}
-        userProfile={userProfile}
-        session={session}
-        isHeaderVisible={true}
-        onTabChange={handleTabChange}
-        onSearchClick={() => setIsSearchScreenOpen(true)}
-        onTabRefresh={handleTabRefresh}
-        onTabSwitchStart={handleTabSwitchStart}
-        loadingTab={loadingTab ?? undefined}
-        setProfileOverlayOpen={setProfileOverlayOpen}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 500,
+          transform: `translateY(${pullOffset}px)`,
+          transition: pullOffset === 0 ? 'transform 0.15s ease-out' : 'none',
+        }}
+      >
+        <HomeHeader
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
+          onNotificationClick={handleNotificationClick}
+          unreadCount={unreadCount}
+          userProfile={userProfile}
+          session={session}
+          isHeaderVisible={true}
+          onTabChange={handleTabChange}
+          onSearchClick={() => setIsSearchScreenOpen(true)}
+          onTabRefresh={handleTabRefresh}
+          onTabSwitchStart={handleTabSwitchStart}
+          loadingTab={loadingTab ?? undefined}
+          setProfileOverlayOpen={setProfileOverlayOpen}
+        />
+      </div>
+      <div
+        style={{
+          height: `${118 + pullOffset}px`,
+          background: '#fff',
+        }}
       />
 
       {isProfileOverlayOpen && (
@@ -98,8 +117,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
           onClose={() => setIsSearchScreenOpen(false)}
         />
       )}
-
-      <div style={LAYOUT_CONSTANTS.HEADER_SPACER} />
 
       {children}
     </>

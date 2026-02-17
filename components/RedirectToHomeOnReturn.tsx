@@ -35,10 +35,11 @@ export default function RedirectToHomeOnReturn() {
     };
 
     const maybeRedirectHome = () => {
+      if (pathname === HOME_PATH || pathname.startsWith('/profile')) return;
       const lastHidden = getLastHidden();
       if (!lastHidden) return;
       const diff = Date.now() - lastHidden;
-      if (diff > MAX_INACTIVE_MS && pathname !== HOME_PATH) {
+      if (diff > MAX_INACTIVE_MS) {
         router.push(HOME_PATH);
       }
     };

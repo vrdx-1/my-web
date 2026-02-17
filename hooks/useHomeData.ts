@@ -301,6 +301,8 @@ interface UseHomeDataReturn {
 }
 
 const PREFETCH_COUNT = 100; // จำนวนโพสต์ต่อหนึ่งครั้งที่โหลด (ต้องตรงกับที่ใช้คำนวณ startIndex)
+/** โหลดครั้งแรก (ไม่มีคำค้น) แค่เท่านี้เพื่อให้ feed ขึ้นภายใน ~3 วิ แล้วค่อยโหลดต่อ */
+const INITIAL_PREFETCH_COUNT = 28;
 
 // Simple search result cache ต่อคำค้น (ฝั่ง frontend เท่านั้น)
 const SEARCH_CACHE_STORAGE_KEY = 'home_search_cache_v1';
@@ -362,6 +364,8 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
   const searchTermRef = useRef(searchTerm);
   /** จำนวนโพสที่แสดงอยู่ — ใช้กันไม่ให้ response หน้า 0 ที่มาทีหลัง overwrite ข้อมูลที่โหลดต่อแล้ว (20, 30, ...) */
   const postsCountRef = useRef(0);
+  /** ใช้โหลดครั้งแรกแค่ INITIAL_PREFETCH_COUNT (ไม่มีคำค้น) เพื่อให้ feed ขึ้นเร็ว แล้วโหลดต่อด้วย PREFETCH_COUNT */
+  const initialSmallFetchDoneRef = useRef(false);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -428,8 +432,16 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     setLoadingMore(true);
     try {
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
-    const startIndex = currentPage * PREFETCH_COUNT; // หน้าถัดไป = ชุดถัดไป ไม่ทับซ้อน
-    const endIndex = startIndex + PREFETCH_COUNT - 1; // endIndex แบบรวม (inclusive)
+    const useInitialSmall = isInitial && !trimmedSearch;
+    if (useInitialSmall) initialSmallFetchDoneRef.current = true;
+    const limitThisRequest = useInitialSmall ? INITIAL_PREFETCH_COUNT : PREFETCH_COUNT;
+    const startIndex =
+      currentPage === 0
+        ? 0
+        : initialSmallFetchDoneRef.current
+          ? INITIAL_PREFETCH_COUNT + (currentPage - 1) * PREFETCH_COUNT
+          : currentPage * PREFETCH_COUNT;
+    const endIndex = startIndex + limitThisRequest - 1;
 
     let postIds: string[] = [];
     let categoryModelNamesForFilter: string[] = [];
@@ -497,7 +509,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
 
     // ใช้ hasMore จาก API เมื่อมี (ค้นหา) เพื่อให้สอดคล้องกับ backend; ไม่มีคำค้นใช้แค่จำนวน postIds
     const newHasMore =
-      postIds.length >= PREFETCH_COUNT &&
+      postIds.length >= limitThisRequest &&
       (apiHasMore === undefined || apiHasMore === true);
 
     if (isStale) {
@@ -807,6 +819,7 @@ export function useHomeData(searchTerm: string): UseHomeDataReturn {
     setPage(0);
     setHasMore(true);
     const isInitialLoad = !searchTerm || searchTerm.trim() === '';
+    if (!isInitialLoad) initialSmallFetchDoneRef.current = false;
     if (isInitialLoad) {
       fetchPosts(true);
       return;

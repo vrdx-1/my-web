@@ -8,6 +8,12 @@ import { PostFeed } from '@/components/PostFeed';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
+import {
+  EditNameModal,
+  EditPhoneModal,
+  ProfileSection,
+} from '@/app/profile/edit-profile/EditProfileSections';
+import { useEditProfilePage } from '@/app/profile/edit-profile/useEditProfilePage';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -58,6 +64,25 @@ export function MyPostsContent() {
     tab,
   });
   postsRef.current = postListData.posts;
+
+  const {
+    username,
+    phone,
+    avatarUrl,
+    isEditingName,
+    isEditingPhone,
+    editingUsername,
+    editingPhone,
+    setEditingUsername,
+    setEditingPhone,
+    uploadAvatar,
+    handleEditNameClick,
+    handleEditPhoneClick,
+    handleCancelPhoneEdit,
+    handleCloseNameModal,
+    handleSaveUsername,
+    handleSavePhone,
+  } = useEditProfilePage();
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
@@ -176,10 +201,81 @@ export function MyPostsContent() {
   );
 
   return (
-    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+    <main
+      style={{
+        ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
+        ...((isEditingName || isEditingPhone) && {
+          overflow: 'hidden',
+          touchAction: 'none',
+          overscrollBehavior: 'contain',
+        }),
+      }}
+      onTouchMove={(e) => {
+        if (isEditingName || isEditingPhone) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+      onWheel={(e) => {
+        if (isEditingName || isEditingPhone) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+    >
+      {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim ล็อก scroll; ปิดได้เฉพาะปุ่ม ຍົກເລີກ เท่านั้น */}
+      {(isEditingName || isEditingPhone) && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 999,
+            touchAction: 'none',
+            overscrollBehavior: 'contain',
+            overflow: 'hidden',
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onWheel={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        />
+      )}
 
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
-        <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
+      <EditNameModal
+        isOpen={isEditingName}
+        editingUsername={editingUsername}
+        setEditingUsername={setEditingUsername}
+        onClose={handleCloseNameModal}
+        onSave={handleSaveUsername}
+      />
+
+      <EditPhoneModal
+        isOpen={isEditingPhone}
+        editingPhone={editingPhone}
+        setEditingPhone={setEditingPhone}
+        onCancel={handleCancelPhoneEdit}
+        onSave={handleSavePhone}
+      />
+
+      <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
+      <ProfileSection
+        avatarUrl={avatarUrl}
+        username={username}
+        phone={phone}
+        onAvatarChange={uploadAvatar}
+        onEditNameClick={handleEditNameClick}
+        onEditPhoneClick={handleEditPhoneClick}
+      />
+      <div style={{ position: 'sticky', top: 48, zIndex: 99, background: '#fff' }}>
         <TabNavigation
           tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },

@@ -152,26 +152,18 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       </div>
 
       <div style={{ padding: '20px' }}>
-        <Link href="/profile/edit-profile" style={{ textDecoration: 'none' }}>
+        <Link href="/my-posts" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '25px', cursor: 'pointer' }}>
-            <div style={{ position: 'relative', width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5' }}>
+            <div style={{ position: 'relative', width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
-                  <GuestAvatarIcon size={40} />
-                </div>
+                <GuestAvatarIcon size={40} />
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1c1e21', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username || 'ຊື່ຜູ້ໃຊ້'}</div>
             </div>
-          </div>
-        </Link>
-
-        <Link href="/my-posts" style={{ textDecoration: 'none', marginBottom: '12px', display: 'block' }}>
-          <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0e0e0', borderRadius: '12px', cursor: 'pointer' }}>
-            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1c1e21' }}>ໂພສຂອງຂ້ອຍ</span>
           </div>
         </Link>
 

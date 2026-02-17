@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
@@ -49,12 +49,34 @@ export function HomeContent() {
     return () => mainTab.unregisterTabRefreshHandler();
   }, [mainTab, handlers.handleTabRefresh]);
 
-  // เคลียร์ loading แท็บเมื่อโหลดเสร็จ
+  // เคลียร์ loading แท็บและ refresh source เมื่อโหลดเสร็จ (spinner ต้องหายไป)
   useEffect(() => {
-    if (!homeData.loadingMore && mainTab) mainTab.setTabRefreshing(false);
+    if (!homeData.loadingMore && mainTab) {
+      mainTab.setTabRefreshing(false);
+      mainTab.setRefreshSource(null);
+    }
   }, [homeData.loadingMore, mainTab]);
 
-  const { pullDistance } = usePullToRefresh(handlers.handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
+  const handlePullToRefresh = useCallback(() => {
+    mainTab?.setRefreshSource('pull');
+    handlers.handlePullToRefresh();
+  }, [mainTab, handlers.handlePullToRefresh]);
+
+  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
+
+  const pullHeaderOffset = (pullDistance > 0 || (tabRefreshing && refreshSource === 'pull'))
+    ? (pullDistance > 0 ? Math.min(56, pullDistance * 0.56) : 56)
+    : 0;
+
+  useEffect(() => {
+    mainTab?.setPullHeaderOffset(pullHeaderOffset);
+  }, [mainTab, pullHeaderOffset]);
+
+  useEffect(() => {
+    return () => {
+      mainTab?.setPullHeaderOffset(0);
+    };
+  }, [mainTab]);
 
   return (
     <main
@@ -62,7 +84,11 @@ export function HomeContent() {
     >
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing && refreshSource === 'pull'} />
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={tabRefreshing && refreshSource === 'pull'}
+        pullHeaderOffset={pullHeaderOffset}
+      />
 
       {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>

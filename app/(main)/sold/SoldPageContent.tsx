@@ -166,19 +166,35 @@ export function SoldPageContent() {
       setTabRefreshing(false);
       setRefreshSource(null);
       mainTab?.setTabRefreshing(false);
+      mainTab?.setRefreshSource?.(null);
     }
   }, [postListData.loadingMore, mainTab]);
 
-  /** ดึง feed ลงแล้วปล่อย = refresh ใหญ่ (ล้าง search แล้ว effect จะ refetch) */
+  /** ดึง feed ลงแล้วปล่อย = refresh ใหญ่ (ล้าง search แล้ว effect จะ refetch) — ใช้ refresh ตัวเดียวกับหน้า home */
   const handlePullToRefresh = useCallback(() => {
     setRefreshSource('pull');
     setTabRefreshing(true);
     mainTab?.setTabRefreshing(true);
+    mainTab?.setRefreshSource?.('pull');
     mainTab?.setSearchTerm?.('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [mainTab]);
 
   const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
+
+  const pullHeaderOffset = (pullDistance > 0 || (tabRefreshing && refreshSource === 'pull'))
+    ? (pullDistance > 0 ? Math.min(56, pullDistance * 0.56) : 56)
+    : 0;
+
+  useEffect(() => {
+    mainTab?.setPullHeaderOffset(pullHeaderOffset);
+  }, [mainTab, pullHeaderOffset]);
+
+  useEffect(() => {
+    return () => {
+      mainTab?.setPullHeaderOffset(0);
+    };
+  }, [mainTab]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
@@ -255,7 +271,11 @@ export function SoldPageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={tabRefreshing && refreshSource === 'pull'} />
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={tabRefreshing && refreshSource === 'pull'}
+        pullHeaderOffset={pullHeaderOffset}
+      />
 
       <PostFeed
         posts={postListData.posts}

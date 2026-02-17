@@ -15,8 +15,7 @@ const PROFILE_NO_SLIDE_KEY = 'profileNoSlide';
 function isNoSlidePath(pathname: string): boolean {
   return (
     pathname === '/profile/settings' ||
-    pathname.startsWith('/profile/settings/') ||
-    pathname === '/profile/edit-profile'
+    pathname.startsWith('/profile/settings/')
   );
 }
 

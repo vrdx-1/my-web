@@ -12,6 +12,12 @@ interface MainTabContextValue {
   triggerTabRefresh: () => void;
   tabRefreshing: boolean;
   setTabRefreshing: (v: boolean) => void;
+  /** 'pull' = กำลัง refresh จากดึงลง → ไม่แสดง loading บนแท็บ */
+  refreshSource: 'pull' | null;
+  setRefreshSource: (v: 'pull' | null) => void;
+  /** px ที่ใช้ translate header+spacer ลงเมื่อดึง feed (ให้ header ถูกดึงลงด้วย) */
+  pullHeaderOffset: number;
+  setPullHeaderOffset: (v: number) => void;
   navigatingToTab: MainTab | null;
   setNavigatingToTab: (v: MainTab | null) => void;
   searchTerm: string;
@@ -28,6 +34,8 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const handlerRef = useRef<TabRefreshHandler | null>(null);
   const [tabRefreshing, setTabRefreshing] = useState(false);
+  const [refreshSource, setRefreshSource] = useState<'pull' | null>(null);
+  const [pullHeaderOffset, setPullHeaderOffset] = useState(0);
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
@@ -59,6 +67,10 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     triggerTabRefresh,
     tabRefreshing,
     setTabRefreshing,
+    refreshSource,
+    setRefreshSource,
+    pullHeaderOffset,
+    setPullHeaderOffset,
     navigatingToTab,
     setNavigatingToTab,
     searchTerm,
