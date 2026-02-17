@@ -113,7 +113,7 @@ export function useEditProfilePage() {
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
       
-      // ป้องกัน touch events และ wheel events
+      // ป้องกันการ scroll ด้วย touchmove / wheel (แต่ไม่บล็อกการ "แตะ" ปุ่มใน modal)
       const preventDefault = (e: TouchEvent | WheelEvent) => {
         e.preventDefault();
       };
@@ -124,14 +124,12 @@ export function useEditProfilePage() {
       
       // เพิ่ม event listeners เพื่อป้องกัน scroll
       document.addEventListener('touchmove', preventDefaultPassive, { passive: false });
-      document.addEventListener('touchstart', preventDefaultPassive, { passive: false });
       document.addEventListener('wheel', preventDefault, { passive: false });
       document.addEventListener('scroll', preventDefault, { passive: false });
       
       return () => {
         // ลบ event listeners
         document.removeEventListener('touchmove', preventDefaultPassive);
-        document.removeEventListener('touchstart', preventDefaultPassive);
         document.removeEventListener('wheel', preventDefault);
         document.removeEventListener('scroll', preventDefault);
         

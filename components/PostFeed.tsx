@@ -106,27 +106,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
     'ບໍ່ມີລາຍການເພີ່ມເຕີມ'
   );
 
-  const loadMoreButton = onLoadMore && hasMore && !loadingMore
-    ? React.createElement(
-        'button',
-        {
-          key: 'feed-load-more',
-          type: 'button',
-          onClick: onLoadMore,
-          style: {
-            fontSize: '14px',
-            color: '#1877f2',
-            background: 'none',
-            border: '1px solid #1877f2',
-            borderRadius: 8,
-            padding: '8px 16px',
-            cursor: 'pointer',
-            fontWeight: 600,
-          },
-        },
-        'โหลดเพิ่ม'
-      )
-    : null;
+  const loadMoreButton = null;
 
   const bottomSlot = React.createElement(
     'div',

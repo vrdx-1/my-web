@@ -136,16 +136,16 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   }, [type, currentSession, userIdOrToken]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
-    if (loadingMore && !isInitial) return;
-
-    const currentFetchId = ++fetchIdRef.current;
-
     // รอให้ session ถูก initialize ก่อน (session อาจเป็น null สำหรับ guest)
     // แต่ต้องรอให้ useEffect initialize session เสร็จก่อน (ไม่ใช่ undefined)
     if (currentSession === undefined) {
       return;
     }
-    
+
+    if (loadingMore && !isInitial) return;
+
+    const currentFetchId = ++fetchIdRef.current;
+
     setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
