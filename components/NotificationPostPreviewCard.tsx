@@ -16,9 +16,10 @@ export interface NotificationPostPreviewItem {
   boost_expires_at?: string | null;
 }
 
-// Mini PostCard Image Component - Layout เหมือน PhotoGrid แต่ขนาดเล็ก
-const MiniPostImage = ({ images }: { images: string[] }) => {
-  const imageSize = '72px'; // ขนาดเล็กเท่าเดิม
+// Mini PostCard Image Component — lazy loading; รายการแรกใช้ priority สำหรับ LCP
+const MiniPostImage = ({ images, priority = false }: { images: string[]; priority?: boolean }) => {
+  const imageSize = '72px';
+  const firstLoading = priority ? 'eager' : 'lazy';
 
   if (!images || images.length === 0) {
     return (
@@ -71,7 +72,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
             objectFit: 'cover',
             ...noCalloutStyle,
           }}
-          loading="lazy"
+          loading={firstLoading}
+          decoding="async"
+          fetchPriority={priority ? 'high' : undefined}
         />
       </div>
     );
@@ -111,7 +114,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                 objectFit: 'cover',
                 ...noCalloutStyle,
               }}
-              loading="lazy"
+              loading={i === 0 ? firstLoading : 'lazy'}
+              decoding="async"
+              fetchPriority={i === 0 && priority ? 'high' : undefined}
             />
           </div>
         ))}
@@ -152,7 +157,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
               objectFit: 'cover',
               ...noCalloutStyle,
             }}
-            loading="lazy"
+            loading={firstLoading}
+            decoding="async"
+            fetchPriority={priority ? 'high' : undefined}
           />
         </div>
         <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: gap }}>
@@ -177,6 +184,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                   ...noCalloutStyle,
                 }}
                 loading="lazy"
+                decoding="async"
               />
             </div>
           ))}
@@ -223,7 +231,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                 objectFit: 'cover',
                 ...noCalloutStyle,
               }}
-              loading="lazy"
+              loading={i === 0 ? firstLoading : 'lazy'}
+              decoding="async"
+              fetchPriority={i === 0 && priority ? 'high' : undefined}
             />
           </div>
         ))}
@@ -266,7 +276,9 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
               objectFit: 'cover',
               ...noCalloutStyle,
             }}
-            loading="lazy"
+            loading={i === 0 ? firstLoading : 'lazy'}
+            decoding="async"
+            fetchPriority={i === 0 && priority ? 'high' : undefined}
           />
         </div>
       ))}
@@ -302,6 +314,7 @@ const MiniPostImage = ({ images }: { images: string[] }) => {
                   ...noCalloutStyle,
                 }}
                 loading="lazy"
+                decoding="async"
               />
               {idx === 4 && count > 5 && (
                 <div
@@ -334,7 +347,9 @@ export const NotificationPostPreviewCard = React.memo<{
   isReadStyle: boolean;
   timeAgoText: string;
   onNavigateToPost: (postId: string) => void;
-}>(({ notification, isReadStyle, timeAgoText, onNavigateToPost }) => {
+  /** รายการแรกในลิสต์ — โหลดรูปแบบ eager สำหรับ LCP */
+  priority?: boolean;
+}>(({ notification, isReadStyle, timeAgoText, onNavigateToPost, priority = false }) => {
   const interactionTotal =
     typeof notification.interaction_total === 'number'
       ? notification.interaction_total
@@ -387,7 +402,7 @@ export const NotificationPostPreviewCard = React.memo<{
           userSelect: 'none',
         }}
       >
-        <MiniPostImage images={notification.post_images || []} />
+        <MiniPostImage images={notification.post_images || []} priority={priority} />
       </div>
 
       {/* Notification Content */}

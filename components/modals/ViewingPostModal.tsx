@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Avatar } from '../Avatar';
-import { PageSpinner } from '../LoadingSpinner';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 
 const VIEWING_MODE_INITIAL_VISIBLE = 3
 const VIEWING_MODE_LOAD_MORE_COUNT = 2
@@ -47,8 +47,12 @@ const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display:
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
   position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 200,
 };
-const SPINNER_OVERLAY_STYLE: React.CSSProperties = {
-  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', zIndex: 1,
+const SKELETON_OVERLAY_STYLE: React.CSSProperties = {
+  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1,
+  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'viewing-mode-skeleton-shimmer 1.2s ease-in-out infinite',
+  borderRadius: 0,
 };
 
 interface ViewingPostModalProps {
@@ -94,6 +98,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const [visibleCount, setVisibleCount] = useState<number>(() => initialVisible);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // รูปที่คลิกแสดงใน post card อยู่แล้ว ถือว่าโหลดแล้ว ไม่แสดง spinner
@@ -136,8 +141,9 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     loadingMore: localLoadingMore,
     hasMore,
     onLoadMore,
-    threshold: 0.1,
-    rootMargin: '200px',
+    threshold: FEED_PRELOAD_THRESHOLD,
+    rootMargin: FEED_PRELOAD_ROOT_MARGIN,
+    rootRef: scrollContainerRef,
   });
 
   const visibleImages = useMemo(
@@ -198,6 +204,19 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     };
   }, [viewingPost]);
 
+  // ทางหนี: กด Escape ปิด modal (กรณีค้างหรือใช้คีย์บอร์ด)
+  useEffect(() => {
+    if (!isViewingModeOpen || !viewingPost) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isViewingModeOpen, viewingPost, onClose]);
+
   useEffect(() => {
     if (enterPhase !== 'entered') return;
     const idx = Math.min(initialImageIndex, (images.length || 1) - 1);
@@ -234,15 +253,9 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
       }
     };
     container.addEventListener('scroll', preventHorizontalScroll, { passive: false });
-    
-    // Watch touchmove event และ preventDefault ถ้ามีการเลื่อนแนวนอน
-    const handleTouchMove = (e: TouchEvent) => {
-      if (container.scrollLeft !== 0) {
-        e.preventDefault();
-        container.scrollLeft = 0;
-      }
-    };
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    // อย่าใช้ preventDefault บน touchmove — จะทำให้การเลื่อนแนวตั้งค้างบนมือถือ (ยกเลิก touch sequence)
+    // ใช้แค่ scroll listener + rAF ด้านล่าง reset scrollLeft ก็พอ
 
     // Watch wheel event (สำหรับ desktop) และ preventDefault ถ้ามีการเลื่อนแนวนอน
     const handleWheel = (e: WheelEvent) => {
@@ -265,7 +278,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
     return () => {
       container.removeEventListener('scroll', preventHorizontalScroll);
-      container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('wheel', handleWheel);
       cancelAnimationFrame(rafId);
     };
@@ -285,36 +297,17 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const metaParts = [formatTime(viewingPost.created_at), viewingPost.province];
   if (viewingPost.is_boosted) metaParts.push('Ad');
 
-  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาเด็ดขาด
+  // เรียก onTouchMove ของ parent (สำหรับ swipe ลงปิด modal)
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // เรียก handler เดิมก่อน
     onTouchMove(e);
-    
-    // ป้องกันการเลื่อนซ้ายขวาโดย preventDefault เมื่อมีการเลื่อนแนวนอน
-    if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      const target = e.currentTarget as HTMLElement;
-      const scrollContainer = target.querySelector('#viewing-mode-container') as HTMLElement;
-      
-      // ตรวจสอบว่ามีการเลื่อนแนวนอนหรือไม่
-      if (scrollContainer) {
-        const scrollLeft = scrollContainer.scrollLeft;
-        // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault
-        if (scrollLeft !== 0) {
-          e.preventDefault();
-          // บังคับให้ scrollLeft เป็น 0
-          scrollContainer.scrollLeft = 0;
-        }
-      }
-    }
+    // อย่า preventDefault เพื่อกันเลื่อนแนวนอน — จะทำให้การเลื่อนขึ้นลงค้างบนมือถือ
+    // scrollLeft ถูก reset อยู่แล้วใน useEffect (scroll listener + rAF)
   }, [onTouchMove]);
 
-  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาใน container
+  // Reset scrollLeft ใน container โดยไม่ preventDefault (ป้องกันค้าง)
   const handleContainerTouchMove = useCallback((e: React.TouchEvent) => {
     const container = e.currentTarget as HTMLElement;
-    // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault และบังคับให้ scrollLeft เป็น 0
     if (container.scrollLeft !== 0) {
-      e.preventDefault();
       container.scrollLeft = 0;
     }
   }, []);
@@ -331,9 +324,16 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   return (
     <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={handleTouchMove} onTouchEnd={onTouchEnd}>
+      <style>{`
+        @keyframes viewing-mode-skeleton-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
       <div style={WRAPPER_CLIP_STYLE}>
-        <div 
-          id="viewing-mode-container" 
+        <div
+          ref={scrollContainerRef}
+          id="viewing-mode-container"
           style={CONTAINER_STYLE_IOS_CLIP}
           onTouchMove={handleContainerTouchMove}
           onWheel={handleContainerWheel}
@@ -369,14 +369,13 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
             <div style={IMAGE_PLACEHOLDER_STYLE}>
               {!loadedIndices.has(idx) && idx !== initialImageIndex && (
-                <div style={SPINNER_OVERLAY_STYLE} aria-hidden="true">
-                  <PageSpinner />
-                </div>
+                <div style={SKELETON_OVERLAY_STYLE} aria-hidden="true" />
               )}
               <img
                 src={img}
                 loading={idx < initialVisible ? 'eager' : 'lazy'}
                 decoding="async"
+                fetchPriority={idx < initialVisible ? 'high' : undefined}
                 onLoad={() => handleImageLoad(idx)}
                 onClick={() => onImageClick(images, idx)}
                 style={IMG_STYLE}

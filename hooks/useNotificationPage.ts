@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { NOTIFICATION_PAGE_SIZE } from '@/utils/constants';
+import { NOTIFICATION_PAGE_SIZE, FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 import type { NotificationFeedItem } from '@/utils/notificationFeed';
 import type { CachedBoosts } from '@/utils/notificationFeed';
 
@@ -196,12 +196,13 @@ export function useNotificationPage() {
     }
   }, [loadingMore, hasMore, markPageAsRead]);
 
+  // Preloading ระดับสากล — โหลดหน้าถัดไปล่วงหน้า 800px ก่อนถึงล่าง (เหมือน feed)
   const { lastElementRef } = useInfiniteScroll({
     loadingMore,
     hasMore,
     onLoadMore: loadMore,
-    threshold: 0.1,
-    rootMargin: '500px',
+    threshold: FEED_PRELOAD_THRESHOLD,
+    rootMargin: FEED_PRELOAD_ROOT_MARGIN,
     rootRef: scrollContainerRef,
   });
 

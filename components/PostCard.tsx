@@ -39,6 +39,8 @@ interface PostCardProps {
   onImpression?: (postId: string) => void;
   hideBoost?: boolean;
   leftOfAvatar?: React.ReactNode;
+  /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
+  priority?: boolean;
 }
 
 export const PostCard = React.memo<PostCardProps>(({
@@ -68,6 +70,7 @@ export const PostCard = React.memo<PostCardProps>(({
   onImpression,
   hideBoost = false,
   leftOfAvatar,
+  priority = false,
 }) => {
   const router = useRouter();
   const status = getOnlineStatus(post.profiles?.last_seen);
@@ -221,8 +224,8 @@ export const PostCard = React.memo<PostCardProps>(({
         {post.caption}
       </div>
 
-      {/* Photo Grid */}
-      <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} />
+      {/* Photo Grid — priority = โพสแรกในฟีด เพื่อ LCP */}
+      <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} />
 
       {/* Post Actions */}
       <div style={{ borderTop: '1px solid #f0f2f5' }}>

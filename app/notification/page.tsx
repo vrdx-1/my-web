@@ -3,8 +3,8 @@
 import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
+import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
-import { PageSpinner } from '@/components/LoadingSpinner';
 import { NotificationPostPreviewCard } from '@/components/NotificationPostPreviewCard';
 import { useNotificationPage } from '@/hooks/useNotificationPage';
 
@@ -87,8 +87,8 @@ export default function NotificationPage() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flex: 1 }}>
-          <PageSpinner />
+        <div style={{ flex: 1 }}>
+          <NotificationSkeleton count={5} />
         </div>
       ) : notifications.length === 0 ? (
         <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center', flex: 1 }}>
@@ -107,14 +107,13 @@ export default function NotificationPage() {
                 isReadStyle={isReadStyle}
                 timeAgoText={item.timeAgoText}
                 onNavigateToPost={onNavigateToPost}
+                priority={index === 0}
               />
             );
           })}
           <div ref={lastElementRef} style={{ minHeight: 8, pointerEvents: 'none' }} aria-hidden="true" />
+          {loadingMore && <NotificationSkeleton count={2} />}
           <div style={BOTTOM_SLOT_STYLE} className="notification-bottom-slot">
-            <span style={{ visibility: loadingMore ? 'visible' : 'hidden', display: 'inline-block' }}>
-              <PageSpinner />
-            </span>
             {!hasMore && !loadingMore && visibleItemsWithTime.length > 0 && (
               <span style={{ fontSize: 13, color: '#888' }}>ບໍ່ມີລາຍການເພີ່ມເຕີມ</span>
             )}

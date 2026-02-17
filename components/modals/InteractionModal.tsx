@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar } from '../Avatar';
-import { LoadingSpinner } from '../LoadingSpinner';
 import { EmptyState } from '../EmptyState';
 import { GuestAvatarIcon } from '../GuestAvatarIcon';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -68,7 +67,8 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
     }
   }, [show, shouldHide]);
 
-  // Lazy load รายชื่อใน bottom sheet ให้ใช้ pattern เดียวกับ feed หน้า Home
+  // Lazy load + preloading ระดับสากล (เหมือน feed หน้า Home): ใช้ scroll container เป็น root และ preload ล่วงหน้า
+  const sheetScrollRef = useRef<HTMLDivElement | null>(null);
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
 
@@ -94,7 +94,9 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
       );
       setLocalLoadingMore(false);
     },
-    threshold: 0.2,
+    threshold: 0,
+    rootMargin: '0px 0px 400px 0px',
+    rootRef: sheetScrollRef,
   });
 
   const visibleUsers = useMemo(
@@ -209,10 +211,41 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
           </div>
         </div>
         {/* Scrollable content area - ไม่มี touch handler เพื่อป้องกันการขยาย bottom sheet ตอน scroll */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
+        <div ref={sheetScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
           {interactionLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-              <LoadingSpinner />
+            <div className="interaction-sheet-skeleton" style={{ display: 'flex', flexDirection: 'column', width: '100%' }} aria-hidden>
+              <style>{`
+                @keyframes interaction-sheet-skeleton-shimmer {
+                  0% { background-position: 200% 0; }
+                  100% { background-position: -200% 0; }
+                }
+              `}</style>
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <div key={i} style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      flexShrink: 0,
+                      background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'interaction-sheet-skeleton-shimmer 1.2s ease-in-out infinite',
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: 16,
+                      flex: 1,
+                      maxWidth: 160,
+                      borderRadius: 8,
+                      background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'interaction-sheet-skeleton-shimmer 1.2s ease-in-out infinite',
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           ) : visibleUsers.length > 0 ? (
             visibleUsers.map((u, i) => {

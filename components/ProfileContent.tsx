@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { LAO_FONT } from '@/utils/constants';
 import { REGISTER_PATH } from '@/utils/authRoutes';
-import { PageSpinner } from '@/components/LoadingSpinner';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 interface ProfileContentProps {
@@ -119,8 +118,88 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: LAO_FONT }}>
-        <PageSpinner />
+      <div
+        className="profile-content-skeleton"
+        style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}
+        aria-hidden
+      >
+        <style>{`
+          @keyframes profile-skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}</style>
+        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+              backgroundSize: '200% 100%',
+              animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+            }}
+          />
+        </div>
+        <div style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', marginBottom: '25px' }}>
+            <div
+              style={{
+                width: 75,
+                height: 75,
+                borderRadius: '50%',
+                flexShrink: 0,
+                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+              }}
+            />
+            <div
+              style={{
+                height: 20,
+                flex: 1,
+                maxWidth: 160,
+                borderRadius: 8,
+                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div
+              style={{
+                flex: 1,
+                height: 52,
+                borderRadius: 12,
+                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+              }}
+            />
+            <div
+              style={{
+                flex: 1,
+                height: 52,
+                borderRadius: 12,
+                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+              }}
+            />
+          </div>
+          <div
+            style={{
+              marginTop: '50px',
+              width: '100%',
+              height: 52,
+              borderRadius: 12,
+              background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+              backgroundSize: '200% 100%',
+              animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+            }}
+          />
+        </div>
       </div>
     );
   }

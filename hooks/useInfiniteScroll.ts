@@ -1,4 +1,5 @@
 import { useRef, useCallback, RefObject, useEffect } from 'react';
+import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 
 interface UseInfiniteScrollProps {
   loadingMore: boolean;
@@ -11,15 +12,15 @@ interface UseInfiniteScrollProps {
 }
 
 /**
- * Custom hook for infinite scroll functionality
- * Uses Intersection Observer API for better performance
+ * Infinite scroll with world-class preloading (Facebook/Instagram-style).
+ * Triggers load more when the sentinel is still 800px below viewport so next page is ready before user reaches bottom.
  */
 export const useInfiniteScroll = ({
   loadingMore,
   hasMore,
   onLoadMore,
-  threshold = 0.1,
-  rootMargin = '400px',
+  threshold = FEED_PRELOAD_THRESHOLD,
+  rootMargin = FEED_PRELOAD_ROOT_MARGIN,
   rootRef,
 }: UseInfiniteScrollProps) => {
   const observer = useRef<IntersectionObserver | null>(null);

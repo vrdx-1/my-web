@@ -15,6 +15,7 @@ export function useEditProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editingUsername, setEditingUsername] = useState('');
@@ -37,6 +38,7 @@ export function useEditProfilePage() {
       }
       setPhone(data.phone || '');
     }
+    setProfileLoading(false);
   }, []);
 
 
@@ -50,6 +52,7 @@ export function useEditProfilePage() {
         setUserId(uid);
         fetchProfile(uid);
       } else {
+        setProfileLoading(false);
         router.push(REGISTER_PATH);
       }
     });
@@ -200,6 +203,7 @@ export function useEditProfilePage() {
     username,
     phone,
     avatarUrl,
+    profileLoading,
     isEditingName,
     isEditingPhone,
     editingUsername,

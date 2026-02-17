@@ -3,12 +3,11 @@
 import { useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
-import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAO_FONT } from '@/utils/constants';
-import { PageSpinner } from '@/components/LoadingSpinner';
 import { useHomeContent } from '@/hooks/useHomeContent';
-import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Lazy load heavy modals
 const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
@@ -62,21 +61,9 @@ export function HomeContent() {
     handlers.handlePullToRefresh();
   }, [mainTab, handlers.handlePullToRefresh]);
 
-  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
+  usePullToRefresh(handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
 
-  const pullHeaderOffset = (pullDistance > 0 || (tabRefreshing && refreshSource === 'pull'))
-    ? (pullDistance > 0 ? Math.min(56, pullDistance * 0.56) : 56)
-    : 0;
-
-  useEffect(() => {
-    mainTab?.setPullHeaderOffset(pullHeaderOffset);
-  }, [mainTab, pullHeaderOffset]);
-
-  useEffect(() => {
-    return () => {
-      mainTab?.setPullHeaderOffset(0);
-    };
-  }, [mainTab]);
+  const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
   return (
     <main
@@ -84,16 +71,8 @@ export function HomeContent() {
     >
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <PullToRefreshIndicator
-        pullDistance={pullDistance}
-        isRefreshing={tabRefreshing && refreshSource === 'pull'}
-        pullHeaderOffset={pullHeaderOffset}
-      />
-
       {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <PageSpinner />
-        </div>
+        <FeedSkeleton />
       ) : (
         <PostFeed {...postFeedProps} />
       )}

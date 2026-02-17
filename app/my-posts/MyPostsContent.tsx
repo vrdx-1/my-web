@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -69,6 +70,7 @@ export function MyPostsContent() {
     username,
     phone,
     avatarUrl,
+    profileLoading,
     isEditingName,
     isEditingPhone,
     editingUsername,
@@ -94,7 +96,6 @@ export function MyPostsContent() {
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.1,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({
@@ -223,7 +224,7 @@ export function MyPostsContent() {
         }
       }}
     >
-      {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim ล็อก scroll; ปิดได้เฉพาะปุ่ม ຍົກເລີກ เท่านั้น */}
+      {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim; pointer-events: none ให้ touch ผ่านไปปุ่ม ຍົກເລີກ/ບັນທຶກ ได้บนมือถือ */}
       {(isEditingName || isEditingPhone) && (
         <div
           style={{
@@ -231,21 +232,10 @@ export function MyPostsContent() {
             inset: 0,
             background: 'rgba(0,0,0,0.4)',
             zIndex: 999,
+            pointerEvents: 'none',
             touchAction: 'none',
             overscrollBehavior: 'contain',
             overflow: 'hidden',
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-          onTouchMove={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-          onWheel={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
           }}
         />
       )}
@@ -267,14 +257,65 @@ export function MyPostsContent() {
       />
 
       <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
-      <ProfileSection
-        avatarUrl={avatarUrl}
-        username={username}
-        phone={phone}
-        onAvatarChange={uploadAvatar}
-        onEditNameClick={handleEditNameClick}
-        onEditPhoneClick={handleEditPhoneClick}
-      />
+      {profileLoading ? (
+        <div
+          className="my-posts-profile-skeleton"
+          style={{ padding: '20px', borderBottom: '1px solid #6b6b6b' }}
+          aria-hidden
+        >
+          <style>{`
+            @keyframes my-posts-profile-skeleton-shimmer {
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
+            }
+          `}</style>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
+            <div
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: '50%',
+                flexShrink: 0,
+                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
+              }}
+            />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, paddingTop: 10 }}>
+              <div
+                style={{
+                  height: 18,
+                  width: '70%',
+                  maxWidth: 160,
+                  borderRadius: 8,
+                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
+                }}
+              />
+              <div
+                style={{
+                  height: 44,
+                  width: '100%',
+                  borderRadius: 10,
+                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <ProfileSection
+          avatarUrl={avatarUrl}
+          username={username}
+          phone={phone}
+          onAvatarChange={uploadAvatar}
+          onEditNameClick={handleEditNameClick}
+          onEditPhoneClick={handleEditPhoneClick}
+        />
+      )}
       <div style={{ position: 'sticky', top: 48, zIndex: 99, background: '#fff' }}>
         <TabNavigation
           tabs={[
@@ -297,6 +338,9 @@ export function MyPostsContent() {
         />
       </div>
 
+      {postListData.posts.length === 0 && postListData.loadingMore ? (
+        <FeedSkeleton />
+      ) : (
       <PostFeed
         posts={postListData.posts}
         session={postListData.session}
@@ -325,6 +369,7 @@ export function MyPostsContent() {
         onLoadMore={() => postListData.setPage((p) => p + 1)}
         hideBoost={tab === 'sold'}
       />
+      )}
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}

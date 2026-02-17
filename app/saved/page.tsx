@@ -1,13 +1,18 @@
 'use client'
 import { Suspense } from 'react';
-import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
+import { dynamicNamed } from '@/utils/lazyLoad';
+import { FeedPageSkeletonFallback } from '@/components/FeedPageSkeletonFallback';
 
-// Lazy load SavedPostsContent with real code splitting
-const LazySavedPosts = dynamicNamed(() => import('./SavedPostsContent'), 'SavedPostsContent', { ssr: true });
+const feedFallback = <FeedPageSkeletonFallback title="ລາຍການທີ່ບັນທຶກ" />;
+
+const LazySavedPosts = dynamicNamed(() => import('./SavedPostsContent'), 'SavedPostsContent', {
+  ssr: true,
+  loading: () => feedFallback,
+});
 
 export default function SavedPosts() {
   return (
-    <Suspense fallback={<PageLoadingFallback />}>
+    <Suspense fallback={feedFallback}>
       <LazySavedPosts />
     </Suspense>
   );

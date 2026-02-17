@@ -3,7 +3,7 @@
 import React from 'react';
 import { PostCard } from './PostCard';
 import { EmptyState } from './EmptyState';
-import { PageSpinner } from './LoadingSpinner';
+import { FeedSkeleton } from './FeedSkeleton';
 
 interface PostFeedProps {
   posts: any[];
@@ -77,8 +77,8 @@ export const PostFeed = React.memo<PostFeedProps>(({
 
   const showNoMoreOnly = !hasMore && !loadingMore;
   const bottomSlotStyle: React.CSSProperties = {
-    minHeight: showNoMoreOnly ? 120 : 88,
-    height: showNoMoreOnly ? 120 : 88,
+    minHeight: showNoMoreOnly ? 120 : loadingMore ? 0 : 88,
+    height: showNoMoreOnly ? 120 : loadingMore ? 0 : 88,
     display: 'flex',
     alignItems: 'center',
     justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
@@ -88,18 +88,8 @@ export const PostFeed = React.memo<PostFeedProps>(({
     boxSizing: 'border-box',
   };
 
-  // ให้ spinner อยู่ใน DOM ตลอด; ตอนไม่โหลดใช้ display none เพื่อไม่ให้ดันข้อความ "ບໍ່ມີລາຍການເພີ່ມເຕີມ" ลงไปจนไม่เห็น
-  const spinnerWrap = React.createElement(
-    'span',
-    {
-      key: 'feed-spinner-wrap',
-      style: {
-        visibility: loadingMore ? 'visible' : 'hidden',
-        display: loadingMore ? 'inline-block' : 'none',
-      },
-    },
-    React.createElement(PageSpinner)
-  );
+  // โหลดเพิ่ม = แสดง Skeleton ที่ท้าย feed (ไม่ใช้ spinner)
+  const loadingMoreSkeleton = loadingMore ? React.createElement(FeedSkeleton, { key: 'feed-loading-skeleton', count: 2 }) : null;
   const noMoreText = React.createElement(
     'span',
     {
@@ -145,7 +135,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
       className: 'feed-bottom-slot',
       style: { ...bottomSlotStyle, flexDirection: 'column', gap: 8 },
     },
-    spinnerWrap,
+    loadingMoreSkeleton,
     loadMoreButton,
     noMoreText
   );
@@ -157,6 +147,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
       post,
       index,
       isLastElement,
+      priority: index === 0,
       session,
       likedPosts,
       savedPosts,

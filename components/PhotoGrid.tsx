@@ -1,15 +1,66 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+const photoGridShimmerStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'photo-grid-skeleton-shimmer 1.2s ease-in-out infinite',
+};
+
+function ImageWithSkeleton({
+  src,
+  imageIndex,
+  onPostClick,
+  loading,
+  decoding = 'async',
+  fetchPriority,
+  containerStyle,
+  imgStyle,
+}: {
+  src: string;
+  imageIndex: number;
+  onPostClick: (i: number) => void;
+  loading: 'eager' | 'lazy';
+  decoding?: 'async' | 'sync' | 'auto';
+  fetchPriority?: 'high' | 'low' | 'auto';
+  containerStyle: React.CSSProperties;
+  imgStyle: React.CSSProperties;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', ...containerStyle }}>
+      {!loaded && <div style={photoGridShimmerStyle} aria-hidden />}
+      <img
+        src={src}
+        onClick={() => onPostClick(imageIndex)}
+        onLoad={() => setLoaded(true)}
+        loading={loading}
+        decoding={decoding}
+        fetchPriority={fetchPriority}
+        alt={imageIndex === 0 ? 'Post image' : `Post image ${imageIndex + 1}`}
+        style={{
+          ...imgStyle,
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.2s ease-out',
+        }}
+      />
+    </div>
+  );
+}
 
 interface PhotoGridProps {
   images: string[];
   onPostClick: (imageIndex: number) => void;
+  /** เมื่อ true รูปแรกใช้ loading="eager" สำหรับ LCP (โพสแรกในฟีด) */
+  priority?: boolean;
 }
 
 /**
- * Optimized PhotoGrid component with React.memo
- * Handles different image count layouts (1, 2, 3, 4+)
+ * Optimized PhotoGrid with lazy loading. First card in feed uses priority for LCP.
+ * แสดง Skeleton (shimmer) ในพื้นที่รูปจนกว่ารูปโหลดเสร็จ
  */
-export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) => {
+export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false }) => {
   // Defensive: some rows may return images as a JSON string (e.g. '["url1","url2"]').
   // Normalize to string[] to avoid rendering broken src like '[' / '"'.
   const normalizedImages: string[] = (() => {
@@ -39,233 +90,202 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick }) =>
   })();
 
   const count = normalizedImages.length;
-  
+
   if (count === 0) return null;
-  
+
+  const firstImageLoading = priority ? 'eager' : 'lazy';
+  const shimmerStyleTag = (
+    <style>{`
+      @keyframes photo-grid-skeleton-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    `}</style>
+  );
+
+  const baseImgStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center',
+  };
+
   // Single image
   if (count === 1) {
     return (
-      <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
-        <img 
-          src={normalizedImages[0]} 
-          onClick={() => onPostClick(0)} 
-          style={{ 
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover', 
-            objectPosition: 'center'
-          }}
-          alt="Post image"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
+      <>
+        {shimmerStyleTag}
+        <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
+          <ImageWithSkeleton
+            src={normalizedImages[0]}
+            imageIndex={0}
+            onPostClick={onPostClick}
+            loading={firstImageLoading}
+            fetchPriority={priority ? 'high' : undefined}
+            containerStyle={{ width: '100%', height: '100%' }}
+            imgStyle={baseImgStyle}
+          />
+        </div>
+      </>
     );
   }
-  
+
   // Two images
   if (count === 2) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-        <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
-          <img 
-            src={normalizedImages[0]} 
-            onClick={() => onPostClick(0)} 
-            style={{ 
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover', 
-              objectPosition: 'center'
-            }}
-            alt="Post image 1"
+      <>
+        {shimmerStyleTag}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+          <ImageWithSkeleton
+            src={normalizedImages[0]}
+            imageIndex={0}
+            onPostClick={onPostClick}
+            loading={firstImageLoading}
+            fetchPriority={priority ? 'high' : undefined}
+            containerStyle={{ width: '100%', height: '300px' }}
+            imgStyle={baseImgStyle}
+          />
+          <ImageWithSkeleton
+            src={normalizedImages[1]}
+            imageIndex={1}
+            onPostClick={onPostClick}
             loading="lazy"
-            decoding="async"
+            containerStyle={{ width: '100%', height: '300px' }}
+            imgStyle={baseImgStyle}
           />
         </div>
-        <div style={{ position: 'relative', width: '100%', height: '300px', background: '#f0f0f0' }}>
-          <img 
-            src={normalizedImages[1]} 
-            onClick={() => onPostClick(1)} 
-            style={{ 
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover', 
-              objectPosition: 'center'
-            }}
-            alt="Post image 2"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-      </div>
+      </>
     );
   }
-  
+
   // Three images
   if (count === 3) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-        <img 
-          src={normalizedImages[0]} 
-          onClick={() => onPostClick(0)} 
-          style={{ 
-            width: '100%', 
-            height: '400px', 
-            objectFit: 'cover', 
-            objectPosition: 'center', 
-            background: '#f0f0f0', 
-            gridRow: 'span 2' 
-          }}
-          alt="Post image 1"
-          loading="lazy"
-          decoding="async"
-        />
-        <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
-          <img 
-            src={normalizedImages[1]} 
-            onClick={() => onPostClick(1)} 
-            style={{ 
-              width: '100%', 
-              height: '199px', 
-              objectFit: 'cover', 
-              objectPosition: 'center', 
-              background: '#f0f0f0' 
-            }}
-            alt="Post image 2"
-            loading="lazy"
-            decoding="async"
-          />
-          <img 
-            src={normalizedImages[2]} 
-            onClick={() => onPostClick(2)} 
-            style={{ 
-              width: '100%', 
-              height: '199px', 
-              objectFit: 'cover', 
-              objectPosition: 'center', 
-              background: '#f0f0f0' 
-            }}
-            alt="Post image 3"
-            loading="lazy"
-            decoding="async"
-          />
+      <>
+        {shimmerStyleTag}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+          <div style={{ gridRow: 'span 2' }}>
+            <ImageWithSkeleton
+              src={normalizedImages[0]}
+              imageIndex={0}
+              onPostClick={onPostClick}
+              loading={firstImageLoading}
+              fetchPriority={priority ? 'high' : undefined}
+              containerStyle={{ width: '100%', height: '400px' }}
+              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
+            <ImageWithSkeleton
+              src={normalizedImages[1]}
+              imageIndex={1}
+              onPostClick={onPostClick}
+              loading="lazy"
+              containerStyle={{ width: '100%', height: '199px' }}
+              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+            />
+            <ImageWithSkeleton
+              src={normalizedImages[2]}
+              imageIndex={2}
+              onPostClick={onPostClick}
+              loading="lazy"
+              containerStyle={{ width: '100%', height: '199px' }}
+              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+            />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
-  
+
   // Four images — 2x2 grid
   if (count === 4) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-        {normalizedImages.map((img, i) => (
-          <div 
-            key={i} 
-            style={{ 
-              position: 'relative', 
-              aspectRatio: '1', 
-              background: '#f0f0f0', 
-              overflow: 'hidden' 
-            }}
-          >
-            <img 
-              src={img} 
-              onClick={() => onPostClick(i)} 
-              style={{ 
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover', 
-                objectPosition: 'center'
-              }}
-              alt={`Post image ${i + 1}`}
-              loading="lazy"
-              decoding="async"
+      <>
+        {shimmerStyleTag}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+          {normalizedImages.map((img, i) => (
+            <ImageWithSkeleton
+              key={i}
+              src={img}
+              imageIndex={i}
+              onPostClick={onPostClick}
+              loading={i === 0 ? firstImageLoading : 'lazy'}
+              fetchPriority={i === 0 && priority ? 'high' : undefined}
+              containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
+              imgStyle={baseImgStyle}
             />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </>
     );
   }
-  
+
   // Five or more images
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
-      {normalizedImages.slice(0, 2).map((img, i) => (
-        <div 
-          key={i} 
-          style={{ 
-            position: 'relative', 
-            aspectRatio: '1', 
-            background: '#f0f0f0', 
-            overflow: 'hidden' 
-          }}
-        >
-          <img 
-            src={img} 
-            onClick={() => onPostClick(i)} 
-            style={{ 
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover', 
-              objectPosition: 'center'
-            }}
-            alt={`Post image ${i + 1}`}
-            loading="lazy"
-            decoding="async"
+    <>
+      {shimmerStyleTag}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+        {normalizedImages.slice(0, 2).map((img, i) => (
+          <ImageWithSkeleton
+            key={i}
+            src={img}
+            imageIndex={i}
+            onPostClick={onPostClick}
+            loading={i === 0 ? firstImageLoading : 'lazy'}
+            fetchPriority={i === 0 && priority ? 'high' : undefined}
+            containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
+            imgStyle={baseImgStyle}
           />
-        </div>
-      ))}
-      <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
-        {normalizedImages.slice(2, 5).map((img, i) => {
-          const idx = i + 2;
-          return (
-            <div 
-              key={idx} 
-              style={{ 
-                position: 'relative', 
-                aspectRatio: '1', 
-                background: '#f0f0f0', 
-                cursor: 'pointer', 
-                overflow: 'hidden' 
-              }} 
-              onClick={() => onPostClick(idx)}
-            >
-              <img 
-                src={img} 
-                style={{ 
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover', 
-                  objectPosition: 'center', 
-                  pointerEvents: 'none' 
+        ))}
+        <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+          {normalizedImages.slice(2, 5).map((img, i) => {
+            const idx = i + 2;
+            return (
+              <div
+                key={idx}
+                style={{
+                  position: 'relative',
+                  aspectRatio: '1',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
                 }}
-                alt={`Post image ${idx + 1}`}
-                loading="lazy"
-                decoding="async"
-              />
-              {idx === 4 && count > 5 && (
-                <div style={{ 
-                  position: 'absolute', 
-                  inset: 0, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  fontSize: '24px', 
-                  fontWeight: 'bold', 
-                  color: '#fff', 
-                  WebkitTextStroke: '3px #000', 
-                  paintOrder: 'stroke fill', 
-                  pointerEvents: 'none',
-                  zIndex: 1
-                }}>
-                  +{count - 5}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                onClick={() => onPostClick(idx)}
+              >
+                <ImageWithSkeleton
+                  src={img}
+                  imageIndex={idx}
+                  onPostClick={onPostClick}
+                  loading="lazy"
+                  containerStyle={{ position: 'absolute', inset: 0 }}
+                  imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                />
+                {idx === 4 && count > 5 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      WebkitTextStroke: '3px #000',
+                      paintOrder: 'stroke fill',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  >
+                    +{count - 5}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 });
 

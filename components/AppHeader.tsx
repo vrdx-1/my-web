@@ -243,7 +243,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       </div>
 
       {/* Tabs — ใช้ onTouchEnd + preventDefault เพื่อกัน synthetic click ไปโดนโพสต์ด้านล่าง; stopPropagation กัน event ไปที่อื่น */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}>
+      <div style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}>
         {(['recommend', 'sold'] as const).map((t) => {
           const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
           const isLoading = loadingTab === t;
@@ -280,30 +280,32 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                 zIndex: 1,
               }}
             >
-              <div style={{ display: 'inline-block', position: 'relative' }}>
+              <div style={{ display: 'inline-block' }}>
                 {isLoading ? (
                   <TabSpinner />
                 ) : (
                   <span style={{ fontSize: '14px', lineHeight: 1.25, color: '#111111' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
                 )}
-                {isActive && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '200%',
-                      height: '4px',
-                      background: '#1877f2',
-                      borderRadius: '999px',
-                    }}
-                  />
-                )}
               </div>
             </div>
           );
         })}
+        {/* เส้นบ่งชี้แท็บที่เลือก — เลื่อนตามแท็บที่ active */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: pathname === '/sold' ? '75%' : '25%',
+            width: '28%',
+            height: '4px',
+            background: '#1877f2',
+            borderRadius: '999px',
+            transform: 'translateX(-50%)',
+            transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: 'none',
+          }}
+        />
       </div>
     </div>
   );

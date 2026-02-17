@@ -99,13 +99,11 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const { showRegistrationSuccess, setShowRegistrationSuccess } = useRegistrationSuccess();
   const fileUpload = useFileUpload();
   
-  // Infinite scroll — โหลดเมื่อใกล้ถึงโพสสุดท้าย (threshold 0 = เห็นนิดเดียวก็โหลด, rootMargin ล่าง 800px = โหลดล่วงหน้า)
+  // Infinite scroll — ใช้ FEED_PRELOAD_* (โหลดล่วงหน้า 800px ก่อนถึงล่าง)
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: homeData.loadingMore,
     hasMore: homeData.hasMore,
     onLoadMore: () => homeData.setPage(prevPage => prevPage + 1),
-    threshold: 0,
-    rootMargin: '0px 0px 800px 0px',
   });
   
   // Handlers

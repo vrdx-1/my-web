@@ -35,6 +35,10 @@ export const LIST_FEED_PAGE_SIZE = 20;
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */
 export const NOTIFICATION_PAGE_SIZE = 20;
 
+/** Infinite scroll: โหลดหน้าถัดไปล่วงหน้าเมื่อผู้ใช้เลื่อนใกล้ล่าง (ระดับสากล เช่น Facebook, Instagram) */
+export const FEED_PRELOAD_ROOT_MARGIN = '0px 0px 800px 0px';
+export const FEED_PRELOAD_THRESHOLD = 0;
+
 // Post Status Types
 export const POST_STATUS = {
   RECOMMEND: 'recommend',

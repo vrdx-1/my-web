@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -69,7 +70,6 @@ export function SavedPostsContent() {
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.1,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({
@@ -201,6 +201,9 @@ export function SavedPostsContent() {
         />
       </div>
 
+      {postListData.posts.length === 0 && postListData.loadingMore ? (
+        <FeedSkeleton />
+      ) : (
       <PostFeed
         posts={postListData.posts}
         session={postListData.session}
@@ -229,6 +232,7 @@ export function SavedPostsContent() {
         onLoadMore={() => postListData.setPage((p) => p + 1)}
         hideBoost={tab === 'sold'}
       />
+      )}
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}

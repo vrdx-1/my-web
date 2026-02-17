@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { PostFeedModals } from '@/components/PostFeedModals';
-import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -24,6 +23,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { PROFILE_PATH } from '@/utils/authRoutes';
@@ -117,7 +117,6 @@ export function SoldPageContent() {
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
-    threshold: 0.2,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({
@@ -170,31 +169,21 @@ export function SoldPageContent() {
     }
   }, [postListData.loadingMore, mainTab]);
 
-  /** ดึง feed ลงแล้วปล่อย = refresh ใหญ่ (ล้าง search แล้ว effect จะ refetch) — ใช้ refresh ตัวเดียวกับหน้า home */
   const handlePullToRefresh = useCallback(() => {
     setRefreshSource('pull');
     setTabRefreshing(true);
     mainTab?.setTabRefreshing(true);
     mainTab?.setRefreshSource?.('pull');
     mainTab?.setSearchTerm?.('');
+    postListData.setPage(0);
+    postListData.setHasMore(true);
+    postListData.fetchPosts(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [mainTab]);
+  }, [mainTab, postListData]);
 
-  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
+  usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
 
-  const pullHeaderOffset = (pullDistance > 0 || (tabRefreshing && refreshSource === 'pull'))
-    ? (pullDistance > 0 ? Math.min(56, pullDistance * 0.56) : 56)
-    : 0;
-
-  useEffect(() => {
-    mainTab?.setPullHeaderOffset(pullHeaderOffset);
-  }, [mainTab, pullHeaderOffset]);
-
-  useEffect(() => {
-    return () => {
-      mainTab?.setPullHeaderOffset(0);
-    };
-  }, [mainTab]);
+  const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
@@ -271,40 +260,38 @@ export function SoldPageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      <PullToRefreshIndicator
-        pullDistance={pullDistance}
-        isRefreshing={tabRefreshing && refreshSource === 'pull'}
-        pullHeaderOffset={pullHeaderOffset}
-      />
-
-      <PostFeed
-        posts={postListData.posts}
-        session={postListData.session}
-        likedPosts={postListData.likedPosts}
-        savedPosts={postListData.savedPosts}
-        justLikedPosts={justLikedPosts}
-        justSavedPosts={justSavedPosts}
-        activeMenuState={menu.activeMenuState}
-        isMenuAnimating={menu.isMenuAnimating}
-        lastPostElementRef={lastPostElementRef}
-        menuButtonRefs={menu.menuButtonRefs}
-        onViewPost={handlers.handleViewPost}
-        onImpression={handlers.handleImpression}
-        onLike={toggleLike}
-        onSave={toggleSave}
-        onShare={handlers.handleShare}
-        onViewLikes={(postId) => fetchInteractions('likes', postId)}
-        onViewSaves={(postId) => fetchInteractions('saves', postId)}
-        onTogglePostStatus={handlers.handleTogglePostStatus}
-        onDeletePost={handlers.handleDeletePost}
-        onReport={handlers.handleReport}
-        onSetActiveMenu={menu.setActiveMenu}
-        onSetMenuAnimating={menu.setIsMenuAnimating}
-        loadingMore={postListData.hasMore ? postListData.loadingMore : false}
-        hasMore={postListData.hasMore}
-        onLoadMore={() => postListData.setPage((p) => p + 1)}
-        hideBoost
-      />
+      {postListData.posts.length === 0 && postListData.loadingMore ? (
+        <FeedSkeleton />
+      ) : (
+        <PostFeed
+          posts={postListData.posts}
+          session={postListData.session}
+          likedPosts={postListData.likedPosts}
+          savedPosts={postListData.savedPosts}
+          justLikedPosts={justLikedPosts}
+          justSavedPosts={justSavedPosts}
+          activeMenuState={menu.activeMenuState}
+          isMenuAnimating={menu.isMenuAnimating}
+          lastPostElementRef={lastPostElementRef}
+          menuButtonRefs={menu.menuButtonRefs}
+          onViewPost={handlers.handleViewPost}
+          onImpression={handlers.handleImpression}
+          onLike={toggleLike}
+          onSave={toggleSave}
+          onShare={handlers.handleShare}
+          onViewLikes={(postId) => fetchInteractions('likes', postId)}
+          onViewSaves={(postId) => fetchInteractions('saves', postId)}
+          onTogglePostStatus={handlers.handleTogglePostStatus}
+          onDeletePost={handlers.handleDeletePost}
+          onReport={handlers.handleReport}
+          onSetActiveMenu={menu.setActiveMenu}
+          onSetMenuAnimating={menu.setIsMenuAnimating}
+          loadingMore={postListData.hasMore ? postListData.loadingMore : false}
+          hasMore={postListData.hasMore}
+          onLoadMore={() => postListData.setPage((p) => p + 1)}
+          hideBoost
+        />
+      )}
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}

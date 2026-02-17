@@ -1,13 +1,18 @@
 'use client'
 import { Suspense } from 'react';
-import { PageLoadingFallback, dynamicNamed } from '@/utils/lazyLoad';
+import { dynamicNamed } from '@/utils/lazyLoad';
+import { FeedPageSkeletonFallback } from '@/components/FeedPageSkeletonFallback';
 
-// Lazy load MyPostsContent with real code splitting
-const LazyMyPosts = dynamicNamed(() => import('./MyPostsContent'), 'MyPostsContent', { ssr: true });
+const feedFallback = <FeedPageSkeletonFallback title="ໂພສຂອງຂ້ອຍ" />;
+
+const LazyMyPosts = dynamicNamed(() => import('./MyPostsContent'), 'MyPostsContent', {
+  ssr: true,
+  loading: () => feedFallback,
+});
 
 export default function MyPosts() {
   return (
-    <Suspense fallback={<PageLoadingFallback />}>
+    <Suspense fallback={feedFallback}>
       <LazyMyPosts />
     </Suspense>
   );

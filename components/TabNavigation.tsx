@@ -23,8 +23,11 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   className = '',
   loadingTab = null,
 }) => {
+  const activeIndex = tabs.findIndex((t) => t.value === activeTab);
+  const indicatorLeft = activeIndex >= 0 ? `${(activeIndex + 0.5) * (100 / tabs.length)}%` : '25%';
+
   return (
-    <div style={{ display: 'flex', borderBottom: '1px solid #ddd', minHeight: '44px' }} className={className}>
+    <div style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '44px' }} className={className}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.value;
         const isLoading = loadingTab === tab.value;
@@ -49,30 +52,32 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               overflow: 'visible',
             }}
           >
-            <div style={{ display: 'inline-block', position: 'relative' }}>
+            <div style={{ display: 'inline-block' }}>
               {isLoading ? (
                 <TabNavSpinner />
               ) : (
                 <span style={{ fontSize: '17px', lineHeight: 1.25, color: '#111111' }}>{tab.label}</span>
               )}
-              {isActive && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '-10px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '200%',
-                    height: '4px',
-                    background: '#1877f2',
-                    borderRadius: '999px',
-                  }}
-                />
-              )}
             </div>
           </div>
         );
       })}
+      {/* เส้นบ่งชี้แท็บที่เลือก — สไลด์เหมือนหน้า Home */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: indicatorLeft,
+          width: '28%',
+          height: '4px',
+          background: '#1877f2',
+          borderRadius: '999px',
+          transform: 'translateX(-50%)',
+          transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          pointerEvents: 'none',
+        }}
+      />
     </div>
   );
 });
