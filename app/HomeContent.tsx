@@ -8,6 +8,7 @@ import { LAO_FONT } from '@/utils/constants';
 import { useHomeContent } from '@/hooks/useHomeContent';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 
 // Lazy load heavy modals
 const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
@@ -37,6 +38,21 @@ export function HomeContent() {
     setIsSearchScreenOpen: mainTab?.setIsSearchScreenOpen,
   });
 
+  const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
+
+  const handlePullToRefresh = useCallback(() => {
+    if (mainTab) {
+      mainTab.setTabRefreshing(true);
+      mainTab.setRefreshSource('pull');
+    }
+    handlers.handlePullToRefresh();
+  }, [mainTab, handlers.handlePullToRefresh]);
+
+  const { pullDistance } = usePullToRefresh(
+    handlePullToRefresh,
+    tabRefreshing || isInteractionModalOpen,
+  );
+
   // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
   useEffect(() => {
     if (!mainTab) return;
@@ -56,53 +72,47 @@ export function HomeContent() {
     }
   }, [homeData.loadingMore, mainTab]);
 
-  const handlePullToRefresh = useCallback(() => {
-    mainTab?.setRefreshSource('pull');
-    handlers.handlePullToRefresh();
-  }, [mainTab, handlers.handlePullToRefresh]);
-
-  usePullToRefresh(handlePullToRefresh, tabRefreshing || !!isInteractionModalOpen);
-
-  const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
-
   return (
-    <main
-      style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
-    >
-      <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
+    <>
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isPullRefreshing} />
+      <main
+        style={{ width: '100%', margin: '0', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
+      >
+        <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
-      {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
-        <FeedSkeleton />
-      ) : (
-        <PostFeed {...postFeedProps} />
-      )}
+        {homeData.posts.length === 0 && (!hasInitialFetchCompleted || homeData.loadingMore) ? (
+          <FeedSkeleton />
+        ) : (
+          <PostFeed {...postFeedProps} />
+        )}
 
-           <InteractionModal
-        {...interactionModalProps}
-        posts={homeData.posts}
-        onFetchInteractions={fetchInteractions}
-      />
-
-      <PostFeedModals
-        session={homeData.session}
-        {...postFeedModalsProps}
-      />
-
-      {popups.showReportSuccess && (
-        <ReportSuccessPopup onClose={popups.onCloseReportSuccess} />
-      )}
-      {popups.showDeleteConfirm && (
-        <DeleteConfirmModal
-          onConfirm={popups.onConfirmDelete ?? (() => {})}
-          onCancel={popups.onCancelDelete ?? (() => {})}
+        <InteractionModal
+          {...interactionModalProps}
+          posts={homeData.posts}
+          onFetchInteractions={fetchInteractions}
         />
-      )}
-      {popups.showDeleteSuccess && (
-        <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={popups.onCloseDeleteSuccess} />
-      )}
-      {popups.showRegistrationSuccess && (
-        <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={popups.onCloseRegistrationSuccess} />
-      )}
-    </main>
+
+        <PostFeedModals
+          session={homeData.session}
+          {...postFeedModalsProps}
+        />
+
+        {popups.showReportSuccess && (
+          <ReportSuccessPopup onClose={popups.onCloseReportSuccess} />
+        )}
+        {popups.showDeleteConfirm && (
+          <DeleteConfirmModal
+            onConfirm={popups.onConfirmDelete ?? (() => {})}
+            onCancel={popups.onCancelDelete ?? (() => {})}
+          />
+        )}
+        {popups.showDeleteSuccess && (
+          <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={popups.onCloseDeleteSuccess} />
+        )}
+        {popups.showRegistrationSuccess && (
+          <SuccessPopup message="ສ້າງບັນຊີສຳເລັດ" onClose={popups.onCloseRegistrationSuccess} />
+        )}
+      </main>
+    </>
   );
 }

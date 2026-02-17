@@ -57,6 +57,7 @@ export function LikedPostsContent() {
     type: 'liked',
     session: sessionState,
     tab,
+    loadAll: true, // โหลดโพสต์ที่กดถูกใจทั้งหมดครั้งเดียว
   });
   postsRef.current = postListData.posts;
 

@@ -63,6 +63,7 @@ export function MyPostsContent() {
     type: 'my-posts',
     session: sessionState,
     tab,
+    loadAll: true, // โหลดโพสต์ของฉันทั้งหมดครั้งเดียว
   });
   postsRef.current = postListData.posts;
 
@@ -224,7 +225,7 @@ export function MyPostsContent() {
         }
       }}
     >
-      {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim; pointer-events: none ให้ touch ผ่านไปปุ่ม ຍົກເລີກ/ບັນທຶກ ได้บนมือถือ */}
+      {/* Overlay when editing name or phone - คลุมทั้งจอและล็อกพื้นหลัง ไม่ให้แตะหรือสกรอล์ส่วนอื่นขณะเปลี่ยนชื่อ/กรอกเบอร์โทร */}
       {(isEditingName || isEditingPhone) && (
         <div
           style={{
@@ -232,10 +233,18 @@ export function MyPostsContent() {
             inset: 0,
             background: 'rgba(0,0,0,0.4)',
             zIndex: 999,
-            pointerEvents: 'none',
+            pointerEvents: 'auto',
             touchAction: 'none',
             overscrollBehavior: 'contain',
             overflow: 'hidden',
+          }}
+          onTouchMove={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onWheel={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
           }}
         />
       )}

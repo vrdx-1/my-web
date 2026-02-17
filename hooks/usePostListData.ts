@@ -35,6 +35,7 @@ interface UsePostListDataOptions {
   tab?: string;
   searchTerm?: string;
   status?: string; // สำหรับ sold page
+  loadAll?: boolean; // โหลดทั้งหมดครั้งเดียว (ใช้กับ saved/liked/my-posts)
 }
 
 interface UsePostListDataReturn {
@@ -60,7 +61,7 @@ interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, tab, searchTerm, status } = options;
+  const { type, userIdOrToken, session, tab, searchTerm, status, loadAll = false } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -266,14 +267,20 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
-        console.log('usePostListData: Querying saved posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd });
+        console.log('usePostListData: Querying saved posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd, loadAll });
         
-        const { data: savesData, error: savesError } = await supabase
+        let savesQuery = supabase
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
-          .order('created_at', { ascending: false })
-          .range(rangeStart, rangeEnd);
+          .order('created_at', { ascending: false });
+
+        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
+        if (!loadAll) {
+          savesQuery = savesQuery.range(rangeStart, rangeEnd);
+        }
+
+        const { data: savesData, error: savesError } = await savesQuery;
         
         if (savesError) {
           console.error('Error fetching saved posts:', savesError, { 
@@ -331,14 +338,20 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
-        console.log('usePostListData: Querying liked posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd });
+        console.log('usePostListData: Querying liked posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd, loadAll });
         
-        const { data: likesData, error: likesError } = await supabase
+        let likesQuery = supabase
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
-          .order('created_at', { ascending: false })
-          .range(rangeStart, rangeEnd);
+          .order('created_at', { ascending: false });
+
+        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
+        if (!loadAll) {
+          likesQuery = likesQuery.range(rangeStart, rangeEnd);
+        }
+
+        const { data: likesData, error: likesError } = await likesQuery;
         
         if (likesError) {
           console.error('Error fetching liked posts:', likesError, { 
@@ -481,13 +494,19 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
-        const { data: idsData, error: idsError } = await supabase
+        let idsQuery = supabase
           .from('cars')
           .select('id')
           .eq('user_id', idOrToken)
           .eq('status', tab || 'recommend')
-          .order('created_at', { ascending: false })
-          .range(rangeStart, rangeEnd);
+          .order('created_at', { ascending: false });
+
+        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
+        if (!loadAll) {
+          idsQuery = idsQuery.range(rangeStart, rangeEnd);
+        }
+
+        const { data: idsData, error: idsError } = await idsQuery;
         
         if (idsError) {
           console.error('Error fetching my-posts:', {
@@ -596,10 +615,25 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             return true;
           });
 
-          // ถ้าไม่มีโพสต์ใหม่เพิ่มเลย แสดงว่า "หมดแล้วจริงๆ" สำหรับลิสต์นี้
+          // การตัดสินว่า "หมดแล้วหรือยัง"
+          // - saved / liked: ดูจากจำนวน postIds ที่ได้จาก Supabase (ถ้าได้น้อยกว่าหนึ่งหน้า = สิ้นสุดลิสต์)
+          // - my-posts: ผ่อนเงื่อนไขลง เหลือแค่ "ถ้าได้ 0 id" เท่านั้นถึงจะถือว่าหมด (กันเคสที่ Supabase คืนมาน้อยกว่าหนึ่งหน้า
+          //   แต่ยังมีโพสต์หน้าถัดไป ซึ่งอาจเกิดจาก filter/RLS อื่น ๆ)
           if (fetchIdRef.current === currentFetchId) {
-            if (newPosts.length === 0) setHasMore(false);
-            else setHasMore(postIds.length >= LIST_FEED_PAGE_SIZE); // ได้ครบหนึ่งหน้าขึ้นไป = โหลดต่อจนได้น้อยกว่าหนึ่งหน้า
+            if (loadAll) {
+              // โหมดโหลดทั้งหมดครั้งเดียว: ไม่มีหน้าถัดไป
+              setHasMore(false);
+            } else if (type === 'sold') {
+              // sold จัดการ hasMore ไปแล้วด้านบน (ทั้งกรณี search และไม่ search)
+            } else {
+              if (type === 'my-posts') {
+                const noMoreIds = postIds.length === 0;
+                setHasMore(!noMoreIds);
+              } else {
+                const reachedEndOfIds = postIds.length < LIST_FEED_PAGE_SIZE;
+                setHasMore(!reachedEndOfIds); // ถ้าได้น้อยกว่าหนึ่งหน้า = สิ้นสุดลิสต์จริง ๆ
+              }
+            }
           }
 
           // ถ้าเป็นการโหลดใหม่ ให้ล้างรายการเก่าก่อน
@@ -826,7 +860,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setLoadingMore(false);
       }
     }
-  }, [type, userIdOrToken, currentSession, tab, searchTerm, status, page, loadingMore]);
+  }, [type, userIdOrToken, currentSession, tab, searchTerm, status, page, loadingMore, loadAll]);
 
   const refreshData = useCallback(async () => {
     setPage(0);
@@ -835,13 +869,15 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   }, [fetchPosts]);
 
   // โหลดหน้าถัดไปอัตโนมัติจนหมด — ทั้งกรณีได้ครบหนึ่งหน้า และกรณีได้น้อยกว่าหนึ่งหน้า (filter/ซ้ำ) ก็โหลดต่อ
+  // ยกเว้น type 'my-posts' ที่ใช้ infinite scroll ภายนอกเป็นตัวควบคุมการเปลี่ยนหน้า (กัน page กระโดดข้าม)
   useEffect(() => {
+    if (type === 'my-posts' || loadAll) return;
     if (!hasMore || loadingMore) return;
     const expectedFull = (page + 1) * LIST_FEED_PAGE_SIZE;
     const gotFullPage = posts.length === expectedFull;
     const gotPartialPage = posts.length > page * LIST_FEED_PAGE_SIZE && posts.length < expectedFull;
     if (gotFullPage || gotPartialPage) setPage((p) => p + 1);
-  }, [posts.length, hasMore, loadingMore, page]);
+  }, [posts.length, hasMore, loadingMore, page, type, loadAll]);
 
   return {
     posts,

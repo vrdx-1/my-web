@@ -124,6 +124,8 @@ body[data-page="home"]::-webkit-scrollbar-thumb {
 body[data-page="home"],
 html:has(body[data-page="home"]) {
   -webkit-overflow-scrolling: touch;
+  /* ป้องกันการดึงหน้าลง (pull-down) เมื่อ scroll อยู่บนสุดของ feed หน้าโฮม */
+  overscroll-behavior-y: none;
 }
 
 /* การ์ดโพสต์: ข้าม paint เมื่ออยู่นอกจอ ลด jank ตอน scroll */

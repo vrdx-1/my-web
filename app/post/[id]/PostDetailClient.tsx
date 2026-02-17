@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -58,7 +58,7 @@ export default function PostDetail() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <LoadingSpinner />
+        <FeedSkeleton count={1} />
       </div>
     );
   }

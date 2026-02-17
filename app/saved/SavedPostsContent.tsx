@@ -57,6 +57,7 @@ export function SavedPostsContent() {
     type: 'saved',
     session: sessionState,
     tab,
+    loadAll: true, // โหลดโพสต์ที่บันทึกทั้งหมดครั้งเดียว
   });
   postsRef.current = postListData.posts;
 
