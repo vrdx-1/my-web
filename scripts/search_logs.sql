@@ -1,0 +1,112 @@
+-- ============================================================
+-- ตาราง search_logs สำหรับเก็บประวัติการค้นหาทั้งหมดของ User
+-- เก็บทุกการค้นหา ทั้งจาก suggestion หรือพิมพ์ค้นหาเอง
+-- ============================================================
+
+-- 1) สร้างตาราง (ถ้ายังไม่มี)
+CREATE TABLE IF NOT EXISTS public.search_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  search_term TEXT NOT NULL,
+  display_text TEXT,
+  search_type TEXT NOT NULL CHECK (search_type IN ('manual', 'suggestion')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- เพิ่มคอลัมน์ guest_token สำหรับเก็บรหัสแขก (Guest Token)
+ALTER TABLE public.search_logs
+  ADD COLUMN IF NOT EXISTS guest_token TEXT;
+
+-- Index สำหรับดึงตาม user_id / guest_token และเรียงตามเวลา
+CREATE INDEX IF NOT EXISTS idx_search_logs_user_id ON public.search_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_search_logs_guest_token ON public.search_logs(guest_token);
+CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON public.search_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_logs_search_term ON public.search_logs(search_term);
+CREATE INDEX IF NOT EXISTS idx_search_logs_search_type ON public.search_logs(search_type);
+CREATE INDEX IF NOT EXISTS idx_search_logs_guest_token_user ON public.search_logs(guest_token, user_id);
+
+-- Index สำหรับนับจำนวนครั้งที่ค้นหา (สำหรับสถิติ)
+CREATE INDEX IF NOT EXISTS idx_search_logs_term_count ON public.search_logs(search_term, created_at DESC);
+
+-- Comment
+COMMENT ON TABLE public.search_logs IS 'ประวัติการค้นหาทั้งหมดของ User (ทั้ง manual และ suggestion) สำหรับ Admin ดูสถิติ';
+
+-- 2) เปิด RLS (Row Level Security)
+ALTER TABLE public.search_logs ENABLE ROW LEVEL SECURITY;
+
+-- 3) Policy: ทุกคน (ทั้ง authenticated และ anon) สามารถบันทึกการค้นหาได้
+DROP POLICY IF EXISTS "Anyone can insert search logs" ON public.search_logs;
+CREATE POLICY "Anyone can insert search logs"
+  ON public.search_logs
+  FOR INSERT
+  TO public
+  WITH CHECK (true);
+
+-- 4) Policy: ผู้ใช้ที่ล็อกอินสามารถอ่านประวัติการค้นหาทั้งหมดได้
+--    (ข้อมูลนี้จะถูกใช้ในหน้า Admin เป็นหลัก)
+DROP POLICY IF EXISTS "Users can select own search logs" ON public.search_logs;
+DROP POLICY IF EXISTS "Authenticated can read all search logs" ON public.search_logs;
+CREATE POLICY "Authenticated can read all search logs"
+  ON public.search_logs
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- 5) Policy: ผู้ใช้ที่ล็อกอินสามารถ "รับช่วง" ประวัติของ Guest ของตัวเองได้
+--    (อัปเดตจาก guest_token → user_id หลังจากเข้าสู่ระบบสำเร็จ)
+DROP POLICY IF EXISTS "Authenticated can adopt guest logs" ON public.search_logs;
+CREATE POLICY "Authenticated can adopt guest logs"
+  ON public.search_logs
+  FOR UPDATE
+  TO authenticated
+  USING (user_id IS NULL OR user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+-- 6) Policy: Admin ต้องดูทั้งหมดได้ (จะใช้ผ่าน API route ที่ใช้ service_role key หรือ admin client)
+--    สำหรับหน้า admin จะใช้ API route ที่ bypass RLS
+
+-- ============================================================
+-- Function สำหรับนับจำนวนครั้งที่ค้นหาแต่ละคำ (สำหรับสถิติ)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.get_search_term_stats(
+  p_start_date TIMESTAMPTZ DEFAULT NULL,
+  p_end_date TIMESTAMPTZ DEFAULT NULL,
+  p_limit INT DEFAULT 100
+)
+RETURNS TABLE (
+  search_term TEXT,
+  display_text TEXT,
+  search_count BIGINT,
+  manual_count BIGINT,
+  suggestion_count BIGINT,
+  last_searched_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    sl.search_term,
+    MAX(sl.display_text) as display_text,
+    COUNT(*)::BIGINT as search_count,
+    COUNT(*) FILTER (WHERE sl.search_type = 'manual')::BIGINT as manual_count,
+    COUNT(*) FILTER (WHERE sl.search_type = 'suggestion')::BIGINT as suggestion_count,
+    MAX(sl.created_at) as last_searched_at
+  FROM search_logs sl
+  WHERE 
+    (p_start_date IS NULL OR sl.created_at >= p_start_date)
+    AND (p_end_date IS NULL OR sl.created_at <= p_end_date)
+  GROUP BY sl.search_term
+  ORDER BY search_count DESC, last_searched_at DESC
+  LIMIT p_limit;
+END;
+$$;
+
+-- เปิดให้ authenticated และ anon เรียกได้ (แต่จะใช้ผ่าน admin API route ที่ใช้ service_role)
+GRANT EXECUTE ON FUNCTION public.get_search_term_stats(TIMESTAMPTZ, TIMESTAMPTZ, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_search_term_stats(TIMESTAMPTZ, TIMESTAMPTZ, INT) TO anon;
+
+COMMENT ON FUNCTION public.get_search_term_stats IS 'นับจำนวนครั้งที่ค้นหาแต่ละคำ พร้อมแยกประเภท manual/suggestion';

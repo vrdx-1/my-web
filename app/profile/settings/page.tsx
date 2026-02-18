@@ -79,9 +79,27 @@ export default function Settings() {
 
       {/* ส่วนเนื้อหาหลัก */}
       <div style={{ padding: '20px 20px 0 20px', flex: 0 }}>
-        
+
         <div style={{ background: '#e0e0e0', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
-          
+
+          {/* เมนู ປ່ຽນອີເມລ */}
+          <div
+            onClick={() => router.push('/profile/settings/change-email')}
+            style={{
+              padding: '12px 15px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              height: '55px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <span style={{ fontSize: '16px', color: '#1c1e21', fontWeight: '500' }}>ປ່ຽນອີເມລ</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+
           {/* เมนู ขໍ້ກຳນົດ ແລະ ນະໂຍບາຍ */}
           <div 
             onClick={() => router.push('/terms')}

@@ -640,6 +640,7 @@ export type CarSuggestionItem = { display: string; searchKey: string };
 const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
   { display: 'ລົດຍ້າຍພວງ', searchKey: 'ຍ້າຍພວງ' },
   { display: 'ລົດຊ້າຍເດີມ', searchKey: 'ຊ້າຍເດີມ' },
+  { display: 'ລົດສູນລາວ', searchKey: 'ສູນລາວ' },
 ];
 
 export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {

@@ -23,6 +23,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -181,7 +182,7 @@ export function SoldPageContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [mainTab, postListData]);
 
-  usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
+  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
 
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
@@ -257,8 +258,10 @@ export function SoldPageContent() {
   }, [viewingPostHook.viewingPost?.id ?? null, postListData.posts.length]);
 
   return (
-    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
+    <>
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isPullRefreshing} />
+      <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+        <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
       {postListData.posts.length === 0 && postListData.loadingMore ? (
         <FeedSkeleton />
@@ -396,5 +399,6 @@ export function SoldPageContent() {
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
       )}
     </main>
+    </>
   );
 }

@@ -4,6 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LAO_FONT } from '@/utils/constants';
 import { LAO_PROVINCES } from '@/utils/constants';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
+import {
+  loadSearchHistory,
+  saveSearchToHistory,
+  removeSearchFromHistory,
+  clearSearchHistory,
+  logSearchToSupabase,
+  type SearchHistoryItem,
+} from '@/utils/storageUtils';
 
 interface SearchScreenProps {
   isOpen: boolean;
@@ -164,6 +172,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [suggestions, setSuggestions] = useState<Array<{ display: string; searchKey: string }>>([]);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const suggestionReqIdRef = useRef(0);
   const initialDisplayRef = useRef<string>('');
   const initialApiTermRef = useRef<string>('');
@@ -172,6 +181,8 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     if (isOpen) {
       initialDisplayRef.current = searchTerm;
       initialApiTermRef.current = initialApiTerm;
+      // Load search history when search screen opens
+      setSearchHistory(loadSearchHistory());
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
@@ -202,6 +213,13 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     return () => clearTimeout(timer);
   }, [isOpen, searchTerm]);
 
+  // Reload search history when search term changes (to update after deletion)
+  useEffect(() => {
+    if (isOpen) {
+      setSearchHistory(loadSearchHistory());
+    }
+  }, [isOpen]);
+
   // Handle Escape key to close search screen
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -217,18 +235,52 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedTerm = searchTerm.trim();
     // ไม่มีคำค้น = แสดงทุกโพสต์เหมือนเพิ่งเข้าเว็บครั้งแรก
-    if (!searchTerm.trim()) {
+    if (!trimmedTerm) {
       onSearchChange('');
+    } else {
+      // Save to search history (localStorage)
+      saveSearchToHistory(trimmedTerm, trimmedTerm);
+      setSearchHistory(loadSearchHistory());
+      // บันทึกลง Supabase สำหรับ Admin ดูสถิติ
+      logSearchToSupabase(trimmedTerm, trimmedTerm, 'manual');
     }
     onSearchPerform?.();
     onClose();
   };
 
   const handleSuggestionClick = (searchKey: string, displayText: string) => {
+    // Save to search history (localStorage)
+    saveSearchToHistory(searchKey, displayText);
+    setSearchHistory(loadSearchHistory());
+    // บันทึกลง Supabase สำหรับ Admin ดูสถิติ
+    logSearchToSupabase(searchKey, displayText, 'suggestion');
     onSearchChange(searchKey, displayText);
     onSearchPerform?.();
     onClose();
+  };
+
+  const handleHistoryClick = (item: SearchHistoryItem) => {
+    // Move clicked item to top of history
+    saveSearchToHistory(item.term, item.displayText);
+    setSearchHistory(loadSearchHistory());
+    // บันทึกลง Supabase ทุกครั้งที่กดจากประวัติ
+    logSearchToSupabase(item.term, item.displayText, 'manual');
+    onSearchChange(item.term, item.displayText);
+    onSearchPerform?.();
+    onClose();
+  };
+
+  const handleRemoveHistoryItem = (e: React.MouseEvent, term: string) => {
+    e.stopPropagation();
+    removeSearchFromHistory(term);
+    setSearchHistory(loadSearchHistory());
+  };
+
+  const handleClearAllHistory = () => {
+    clearSearchHistory();
+    setSearchHistory([]);
   };
 
   if (!isOpen) return null;
@@ -374,77 +426,264 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
         </form>
       </div>
 
-      {/* Suggestions Section */}
-      {suggestions.length > 0 && (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {/* Suggestions */}
-          {suggestions.length > 0 && (
-            <div style={{ paddingTop: '6px' }}>
-              {suggestions.map((item, index) => (
+      {/* Content Section */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {/* Show suggestions when user is typing */}
+        {suggestions.length > 0 && searchTerm.trim() && (
+          <div style={{ paddingTop: '2px' }}>
+            {suggestions.map((item, index) => (
+              <div
+                key={`suggest-${item.searchKey}-${item.display}-${index}`}
+                onClick={() => handleSuggestionClick(item.searchKey, item.display)}
+                style={{
+                  padding: '12px 15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f0f0f0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
                 <div
-                  key={`suggest-${item.searchKey}-${item.display}-${index}`}
-                  onClick={() => handleSuggestionClick(item.searchKey, item.display)}
                   style={{
-                    padding: '12px 15px',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#e4e6eb',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#4a4d52"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: '15px',
+                      color: '#000',
+                      fontWeight: 500,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {renderHighlighted(item.display, searchTerm)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Show search history when input is empty or user hasn't typed much */}
+        {(!searchTerm.trim() || searchTerm.trim().length < 2) && searchHistory.length > 0 && (
+          <div style={{ marginTop: '-18px' }}>
+            {/* Header with "Recent Searches" and "Clear All" */}
+            <div
+              style={{
+                padding: '0px 15px 10px 15px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#65676b',
+                  letterSpacing: '0.2px',
+                }}
+              >
+              </div>
+              {searchHistory.length > 0 && (
+                <button
+                  onClick={handleClearAllHistory}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#1877f2',
+                    fontSize: '13px',
+                    fontWeight: 500,
                     cursor: 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
                     touchAction: 'manipulation',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f0f0f0';
+                    e.currentTarget.style.background = '#f0f2f5';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
                   }}
                 >
+                </button>
+              )}
+            </div>
+
+            {/* History Items */}
+            {searchHistory.map((item, index) => (
+              <div
+                key={`history-${item.term}-${item.timestamp}-${index}`}
+                onClick={() => handleHistoryClick(item)}
+                style={{
+                  padding: '12px 15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                  position: 'relative',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f0f0f0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                {/* Clock icon for history */}
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#e4e6eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#4a4d52"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: '#e4e6eb',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
+                      fontSize: '15px',
+                      color: '#000',
+                      fontWeight: 500,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#4a4d52"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: '15px',
-                        color: '#000',
-                        fontWeight: 500,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {renderHighlighted(item.display, searchTerm)}
-                    </div>
+                    {item.displayText || item.term}
                   </div>
                 </div>
-              ))}
+                {/* Remove button */}
+                <button
+                  onClick={(e) => handleRemoveHistoryItem(e, item.term)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    padding: 0,
+                    touchAction: 'manipulation',
+                    opacity: 0.6,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e4e6eb';
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.opacity = '0.6';
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#65676b"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state when no history and no suggestions */}
+        {!searchTerm.trim() && searchHistory.length === 0 && suggestions.length === 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '60px 20px',
+              color: '#65676b',
+            }}
+          >
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#c2c2c2"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginBottom: '16px' }}
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div style={{ fontSize: '15px', fontWeight: 500, marginBottom: '4px' }}>
+              ບໍ່ມີປະຫວັດການຄົ້ນຫາ
             </div>
-          )}
-        </div>
-      )}
+            <div style={{ fontSize: '13px', opacity: 0.8 }}>
+              ການຄົ້ນຫາຂອງທ່ານຈະຖືກບັນທຶກໄວ້ທີ່ນີ້
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

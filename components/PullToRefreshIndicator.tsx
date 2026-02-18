@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { PageSpinner } from '@/components/LoadingSpinner'
+import { SpinnerRingSm } from '@/components/LoadingSpinner'
 
 interface PullToRefreshIndicatorProps {
   pullDistance: number
@@ -17,10 +17,11 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   const visible = pullDistance > 0 || isRefreshing
   if (!visible) return null
 
-  const height = Math.min(56, Math.max(0, pullDistance) * 0.56)
+  const containerHeight = 40
+  const height = Math.min(containerHeight, Math.max(0, pullDistance) * 0.4)
 
-  // สไลด์ลงมาจากด้านบนสุด: เริ่มต้นอยู่เหนือ viewport (translateY(-56)) แล้วเลื่อนลงมา (translateY 0)
-  const translateY = isRefreshing ? 0 : -56 + height
+  // สไลด์ลงมาจากด้านบนสุด: เริ่มต้นอยู่เหนือ viewport (translateY(-containerHeight)) แล้วเลื่อนลงมา (translateY 0)
+  const translateY = isRefreshing ? 0 : -containerHeight + height
 
   return (
     <div
@@ -32,12 +33,13 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         top: 0,
         left: 0,
         right: 0,
-        height: 56,
+        height: 40,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
         background: '#fff',
+        color: '#333333',
         zIndex: 999,
         boxShadow: isRefreshing || height > 0 ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
         transform: `translateY(${translateY}px)`,
@@ -45,7 +47,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         pointerEvents: 'none',
       }}
     >
-      <PageSpinner />
+      <SpinnerRingSm />
     </div>
   )
 })

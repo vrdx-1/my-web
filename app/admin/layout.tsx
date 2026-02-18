@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Post', path: '/admin/post' },
     { name: 'Visitor', path: '/admin/visitor' },
     { name: 'User activity', path: '/admin/activity' },
+    { name: 'Search History', path: '/admin/search-history' },
     { name: 'Boosting', path: '/admin/boosting' },
     { name: 'Revenue', path: '/admin/revenue' },
   ];
