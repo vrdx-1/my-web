@@ -1,6 +1,8 @@
 {
   "brandId": "kia",
   "brandName": "Kia",
+  "brandNameLo": "ເກຍ",
+  "brandSearchNames": ["ເກຍ"],
 
   "models": [
     {

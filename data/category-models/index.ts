@@ -8,6 +8,7 @@ import electric from './electric.json';
 import hilux from './hilux.json';
 import hybrid from './hybrid.json';
 import luxury from './luxury.json';
+import mini from './mini.json';
 import pickup from './pickup.json';
 import sedan from './sedan.json';
 import sport from './sport.json';
@@ -24,6 +25,7 @@ export const CATEGORY_MODELS: CategoryModelsMap = {
   hilux: hilux.modelNames,
   hybrid: hybrid.modelNames,
   luxury: luxury.modelNames,
+  mini: mini.modelNames,
   pickup: pickup.modelNames,
   sedan: sedan.modelNames,
   sport: sport.modelNames,

@@ -20,6 +20,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const mainTab = useMainTabContext();
 
   const searchTerm = mainTab?.searchTerm ?? '';
+  const searchDisplayText = mainTab?.searchDisplayText ?? '';
   const setSearchTerm = mainTab?.setSearchTerm ?? (() => {});
   const isSearchScreenOpen = mainTab?.isSearchScreenOpen ?? false;
   const setIsSearchScreenOpen = mainTab?.setIsSearchScreenOpen ?? (() => {});
@@ -38,6 +39,16 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     mainTab?.setTabRefreshing(true);
     mainTab?.triggerTabRefresh();
   }, [mainTab]);
+
+  const handleSearchPerform = useCallback(() => {
+    if (pathname === '/') {
+      mainTab?.setTabRefreshing(true);
+    }
+    if (pathname === '/sold') {
+      mainTab?.setTabRefreshing(true);
+      mainTab?.triggerTabRefresh();
+    }
+  }, [mainTab, pathname]);
 
   const handleTabSwitchStart = useCallback(
     (tab: 'recommend' | 'sold') => {
@@ -79,8 +90,8 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         }}
       >
         <HomeHeader
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          searchTerm={searchDisplayText}
+          onSearchChange={(v) => setSearchTerm(v)}
           onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
           onNotificationClick={handleNotificationClick}
           unreadCount={unreadCount}
@@ -112,9 +123,11 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
       {isSearchScreenOpen && (
         <SearchScreen
           isOpen={isSearchScreenOpen}
-          searchTerm={searchTerm}
+          searchTerm={searchDisplayText}
+          initialApiTerm={searchTerm}
           onSearchChange={setSearchTerm}
           onClose={() => setIsSearchScreenOpen(false)}
+          onSearchPerform={handleSearchPerform}
         />
       )}
 

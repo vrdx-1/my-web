@@ -34,6 +34,7 @@ export function HomeContent() {
     isInteractionModalOpen,
   } = useHomeContent({
     sharedSearchTerm: mainTab?.searchTerm,
+    isSearchScreenOpen: mainTab?.isSearchScreenOpen ?? false,
     setSearchTerm: mainTab?.setSearchTerm,
     setIsSearchScreenOpen: mainTab?.setIsSearchScreenOpen,
   });

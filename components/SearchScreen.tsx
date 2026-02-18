@@ -7,9 +7,15 @@ import { getCarDictionarySuggestions } from '@/utils/postUtils';
 
 interface SearchScreenProps {
   isOpen: boolean;
+  /** ค่าแสดงในช่องค้นหา (ข้อความที่ user เห็นในแท็บ) */
   searchTerm: string;
-  onSearchChange: (value: string) => void;
+  /** ค่าที่ส่งไป API — ใช้เมื่อยกเลิกเพื่อคืน state ให้ตรงกับก่อนเปิด */
+  initialApiTerm?: string;
+  /** value = ค่าส่งไป API, displayText = ค่าแสดงในแท็บ/ช่องค้นหา (ถ้าไม่ใส่ใช้ value) */
+  onSearchChange: (value: string, displayText?: string) => void;
   onClose: () => void;
+  /** เรียกเมื่อผู้ใช้กดส่งคำค้นหรือกด suggestion (ให้ refresh ฝั่งพร้อมขายทันที) */
+  onSearchPerform?: () => void;
 }
 
 const STOP_TOKENS = new Set([
@@ -151,27 +157,29 @@ function buildAutocompleteSuggestionFromCaption(
 export const SearchScreen: React.FC<SearchScreenProps> = ({
   isOpen,
   searchTerm,
+  initialApiTerm = '',
   onSearchChange,
   onClose,
+  onSearchPerform,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [suggestions, setSuggestions] = useState<Array<{ display: string; searchKey: string }>>([]);
   const suggestionReqIdRef = useRef(0);
-  const initialSearchTermRef = useRef<string>('');
+  const initialDisplayRef = useRef<string>('');
+  const initialApiTermRef = useRef<string>('');
 
   useEffect(() => {
     if (isOpen) {
-      // Capture initial value so "back" can cancel edits (no search + clear typed changes).
-      initialSearchTermRef.current = searchTerm;
-      // Focus search input when opened
+      initialDisplayRef.current = searchTerm;
+      initialApiTermRef.current = initialApiTerm;
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, searchTerm, initialApiTerm]);
 
   const handleCancelSearch = () => {
-    onSearchChange(initialSearchTermRef.current || '');
+    onSearchChange(initialApiTermRef.current || '', initialDisplayRef.current || '');
     onClose();
   };
 
@@ -213,11 +221,13 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     if (!searchTerm.trim()) {
       onSearchChange('');
     }
+    onSearchPerform?.();
     onClose();
   };
 
-  const handleSuggestionClick = (searchKey: string) => {
-    onSearchChange(searchKey);
+  const handleSuggestionClick = (searchKey: string, displayText: string) => {
+    onSearchChange(searchKey, displayText);
+    onSearchPerform?.();
     onClose();
   };
 
@@ -373,7 +383,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
               {suggestions.map((item, index) => (
                 <div
                   key={`suggest-${item.searchKey}-${item.display}-${index}`}
-                  onClick={() => handleSuggestionClick(item.searchKey)}
+                  onClick={() => handleSuggestionClick(item.searchKey, item.display)}
                   style={{
                     padding: '12px 15px',
                     display: 'flex',

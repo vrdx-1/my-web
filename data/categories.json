@@ -1,7 +1,7 @@
 {
   "searchTermAliases": [
     {
-      "terms": ["family", "ครอบครัว", "ຄອບຄົວ", "ລົດບ້ານ", "ລົດຄອບຄົວ", "รถบ้าน", "รถครอบคัว"],
+      "terms": ["family", "ครอบครัว", "ລົດບ້ານ", "ລົດຄອບຄົວ", "รถบ้าน", "รถครอบคัว"],
       "categoryIds": ["suv", "sedan", "pickup", "van"]
     },
     {
@@ -33,7 +33,7 @@
     {
     },
     {
-      "terms": ["ໄຟຟ້າ", "ອີວີ", "ລົດ EV", "รถไฟฟ้า", "รถอีวี"],
+      "terms": ["ລົດໄຟຟ້າ", "ລົດອີວີ", "ລົດ EV", "รถไฟฟ้า", "รถอีวี"],
       "categoryIds": ["electric"]
     }
   ],
@@ -48,7 +48,7 @@
           "id": "sedan",
           "name": "รถเก๋ง",
           "nameEn": "Sedan",
-          "nameLo": "ເກັງ",
+          "nameLo": "ລົດເກັງ",
           "description": "รถทรงเก๋งทั่วไป",
           "descriptionEn": "Sedan"
         },
@@ -59,7 +59,7 @@
           "id": "pickup",
           "name": "รถกระบะ",
           "nameEn": "Pickup",
-          "nameLo": "ກະບະ",
+          "nameLo": "ລົດກະບະ",
           "description": "รถกระบะเพื่อบรรทุก/ขนของ",
           "descriptionEn": "Pickup truck"
         },
@@ -76,7 +76,7 @@
           "id": "hybrid",
           "name": "รถไฮบริด",
           "nameEn": "Hybrid",
-          "nameLo": "ໄຮບຣິດ",
+          "nameLo": "ລົດໄຮບຣິດ",
           "description": "น้ำมัน + ไฟฟ้า",
           "descriptionLo": "ນ້ຳມັນ + ໄຟຟ້າ",
           "descriptionEn": "Hybrid (fuel + electric)"
@@ -85,7 +85,7 @@
           "id": "electric",
           "name": "รถไฟฟ้า",
           "nameEn": "Electric",
-          "nameLo": "ໄຟຟ້າ",
+          "nameLo": "ລົດໄຟຟ້າ",
           "description": "ขับเคลื่อนด้วยไฟฟ้า 100%",
           "descriptionEn": "Fully electric vehicle"
         },
@@ -93,7 +93,7 @@
           "id": "sport",
           "name": "รถสปอร์ต",
           "nameEn": "Sport",
-          "nameLo": "ສະປອດ",
+          "nameLo": "ລົດສະປອດ",
           "description": "รถเน้นสมรรถนะ/ทรงสปอร์ต",
           "descriptionEn": "Sports car"
         },
@@ -109,37 +109,45 @@
           "id": "van",
           "name": "รถตู้",
           "nameEn": "Van",
-          "nameLo": "ຕູ້",
+          "nameLo": "ລົດຕູ້",
           "description": "รถตู้หรือรถแวนหลายที่นั่ง",
-          "descriptionLo": "ຕູ້ ຫຼື ແວນຫຼາຍບ່ອນນັ່ງ",
+          "descriptionLo": "ລົດຕູ້ ຫຼື ແວນຫຼາຍບ່ອນນັ່ງ",
           "descriptionEn": "Van"
         },
         {
           "id": "bus",
           "name": "รถบัส (รถเมล์)",
           "nameEn": "Bus",
-          "nameLo": "ເມ",
+          "nameLo": "ລົດເມ",
           "description": "รถโดยสารขนาดใหญ่",
-          "descriptionLo": "ເມ/ບັສ",
+          "descriptionLo": "ລົດເມ/ບັສ",
           "descriptionEn": "Bus"
         },
         {
           "id": "truck",
           "name": "รถบรรทุก",
           "nameEn": "Truck",
-          "nameLo": "ບັນທຸກ",
+          "nameLo": "ລົດບັນທຸກ",
           "description": "รถบรรทุกขนาดใหญ่",
-          "descriptionLo": "ບັນທຸກ",
+          "descriptionLo": "ລົດບັນທຸກ",
           "descriptionEn": "Truck"
         },
         {
           "id": "luxury",
           "name": "รถหรู",
           "nameEn": "Luxury car",
-          "nameLo": "ຫລູ",
+          "nameLo": "ລົດຫລູ",
           "description": "รถยนต์ระดับหรู",
-          "descriptionLo": "ຫລູ",
+          "descriptionLo": "ລົດຫລູ",
           "descriptionEn": "Luxury car"
+        },
+        {
+          "id": "mini",
+          "name": "รถมินิ",
+          "nameEn": "Mini",
+          "nameLo": "ລົດມິນິ",
+          "description": "รถขนาดเล็ก/มินิ",
+          "descriptionEn": "Mini / compact car"
         }
       ]
     }

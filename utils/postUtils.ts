@@ -154,6 +154,7 @@ function buildIndexes(dict: CarsDictionary) {
     addAliasWithTokens(brandKey, brand.brandName);
     addAliasWithTokens(brandKey, brand.brandNameTh as any);
     addAliasWithTokens(brandKey, brand.brandNameLo as any);
+    for (const a of (brand as any).brandSearchNames ?? []) addAliasWithTokens(brandKey, String(a));
 
     for (const model of brand.models ?? []) {
       const modelKey: EntityKey = `model:${brand.brandId}:${model.modelId}`;
@@ -173,6 +174,21 @@ function buildIndexes(dict: CarsDictionary) {
       addAliasWithTokens(modelKey, (model as any).modelNameTh);
       addAliasWithTokens(modelKey, (model as any).modelNameLo);
       for (const s of (model.searchNames ?? []) as any[]) addAliasWithTokens(modelKey, String(s));
+
+      const bName = brand.brandName ?? '';
+      const bNameTh = (brand.brandNameTh as string) ?? '';
+      const bNameLo = (brand.brandNameLo as string) ?? '';
+      if (bName) {
+        addAliasWithTokens(modelKey, `${bName} ${model.modelName}`.trim());
+        for (const s of (model.searchNames ?? []) as any[]) {
+          const sn = String(s).trim();
+          if (sn) addAliasWithTokens(modelKey, `${bName} ${sn}`.trim());
+        }
+      }
+      if (bNameTh && (model as any).modelNameTh)
+        addAliasWithTokens(modelKey, `${bNameTh} ${(model as any).modelNameTh}`.trim());
+      if (bNameLo && (model as any).modelNameLo)
+        addAliasWithTokens(modelKey, `${bNameLo} ${(model as any).modelNameLo}`.trim());
     }
   }
 
@@ -275,6 +291,23 @@ const CAR_INDEX = buildIndexes(carsData);
 const CATEGORY_INDEX = buildCategoryAliasIndex(categoriesData);
 const CATEGORY_TO_MODEL_ALIASES = buildCategoryToModelAliases(carsData);
 
+function getCategoryDisplayName(categoryId: string, lang: SearchLanguage): string {
+  const groups = (categoriesData as any).categoryGroups ?? [];
+  for (const group of groups) {
+    for (const cat of group.categories ?? []) {
+      if (String(cat.id) !== String(categoryId)) continue;
+      const name = cat.name ?? '';
+      const nameEn = cat.nameEn ?? '';
+      const nameLo = cat.nameLo ?? '';
+      if (lang === 'latin') return nameEn || name || nameLo || categoryId;
+      if (lang === 'lo') return nameLo || name || nameEn || categoryId;
+      if (lang === 'th') return name || nameEn || nameLo || categoryId;
+      return name || nameEn || nameLo || categoryId;
+    }
+  }
+  return categoryId;
+}
+
 export type SearchLanguage = 'lo' | 'th' | 'latin' | 'other';
 
 export function detectSearchLanguage(query: string): SearchLanguage {
@@ -329,7 +362,8 @@ function scoreAliasForQuery(aliasNorm: string, queryNorm: string): number | null
   const idx = aliasNorm.indexOf(queryNorm);
   if (idx >= 0) return 7000 - (idx * 50) - aliasNorm.length;
   if (queryNorm.length >= 3) {
-    const dist = levenshteinWithin(aliasNorm, queryNorm, 1);
+    const maxDist = queryNorm.length >= 6 ? 2 : 1;
+    const dist = levenshteinWithin(aliasNorm, queryNorm, maxDist);
     if (dist !== null) return 4000 - (dist * 200) - aliasNorm.length;
   }
   return null;
@@ -603,6 +637,11 @@ export function captionMatchesAnyAlias(caption: string, queries: string[]): bool
 
 export type CarSuggestionItem = { display: string; searchKey: string };
 
+const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
+  { display: 'ລົດຍ້າຍພວງ', searchKey: 'ຍ້າຍພວງ' },
+  { display: 'ລົດຊ້າຍເດີມ', searchKey: 'ຊ້າຍເດີມ' },
+];
+
 export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {
   const qNorm = normalizeCarSearch(prefix);
   if (!qNorm) return [];
@@ -617,6 +656,16 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     for (const entity of entities) {
       const prev = bestByEntity.get(entity);
       if (!prev || score > prev.score) bestByEntity.set(entity, { score, matchedAliasNorm: aliasNorm });
+    }
+  }
+
+  const bestByCategory = new Map<CategoryId, { score: number; matchedAliasNorm: string }>();
+  for (const [aliasNorm, categoryIds] of CATEGORY_INDEX.aliasToCategoryIds.entries()) {
+    const score = scoreAliasForQuery(aliasNorm, qNorm);
+    if (score === null) continue;
+    for (const cid of categoryIds) {
+      const prev = bestByCategory.get(cid);
+      if (!prev || score > prev.score) bestByCategory.set(cid, { score, matchedAliasNorm: aliasNorm });
     }
   }
 
@@ -636,12 +685,9 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
       return b.brandName ?? '';
     };
 
-    // แสดงผลตามภาษาที่ผู้ใช้พิมพ์ (อังกฤษ/ไทย/ลาว)
+    // แสดงผลตามภาษาที่ผู้ใช้พิมพ์ (อังกฤษ/ไทย/ลาว) — ค้นหารุ่นอย่างเดียวแสดงแค่ชื่อรุ่น, ค้นหาแบรนด์จะแสดง แบรนด์+รุ่น (ในบล็อกด้านล่าง)
     let display = '';
     if (info.kind === 'model') {
-      const brandKey = CAR_INDEX.modelToBrandKey.get(entity);
-      const brandInfo = brandKey ? CAR_INDEX.entityInfo.get(brandKey) : undefined;
-      const brandDisplay = brandInfo && brandInfo.kind === 'brand' ? pickBrandDisplay(brandInfo) : '';
       const modelDisplay = buildModelDisplay(
         info.searchNames ?? [],
         info.modelName,
@@ -649,7 +695,7 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
         info.modelNameTh,
         lang,
       );
-      display = uniqStringsCarSearch([brandDisplay, modelDisplay]).join(' ');
+      display = modelDisplay;
     } else {
       display = pickBrandDisplay(info);
     }
@@ -693,8 +739,41 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     }
   }
 
+  for (const [categoryId, m] of bestByCategory.entries()) {
+    const display = getCategoryDisplayName(categoryId, lang);
+    if (!display.trim()) continue;
+    items.push({ display, searchKey: categoryId, _score: m.score });
+  }
+
+  for (const custom of CUSTOM_SUGGESTIONS) {
+    const dNorm = normalizeCarSearch(custom.display);
+    const sNorm = normalizeCarSearch(custom.searchKey);
+    if (
+      qNorm &&
+      (dNorm.startsWith(qNorm) || dNorm === qNorm || sNorm.startsWith(qNorm) || sNorm === qNorm)
+    ) {
+      items.push({ display: custom.display, searchKey: custom.searchKey, _score: 5000 });
+    }
+  }
+
   items.sort((a, b) => b._score - a._score);
-  return items.slice(0, Math.max(0, limit)).map(({ display, searchKey }) => ({ display, searchKey }));
+
+  const direct: typeof items = [];
+  const rest: typeof items = [];
+  for (const it of items) {
+    const dNorm = normalizeCarSearch(it.display);
+    const sNorm = normalizeCarSearch(it.searchKey);
+    const isDirect =
+      !!qNorm &&
+      (dNorm.startsWith(qNorm) || dNorm === qNorm || sNorm.startsWith(qNorm) || sNorm === qNorm);
+    if (isDirect) direct.push(it);
+    else rest.push(it);
+  }
+  const result = [
+    ...direct,
+    ...rest.slice(0, Math.max(0, limit - direct.length)),
+  ];
+  return result.map(({ display, searchKey }) => ({ display, searchKey }));
 }
 
 export interface OnlineStatus {

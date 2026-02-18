@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useDeferredValue, useCallback } from 'react';
+import { useState, useDeferredValue, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -27,6 +27,8 @@ import { useHomePopups } from '@/hooks/useHomePopups';
 export interface UseHomeContentOptions {
   /** เมื่อใช้ layout ร่วมกับ sold, ส่ง searchTerm จาก MainTabContext */
   sharedSearchTerm?: string;
+  /** ใช้ commit คำค้นเมื่อปิดหน้าค้นหา เพื่อให้ feed refetch ทันที (ไม่รอ deferred) */
+  isSearchScreenOpen?: boolean;
   setSearchTerm?: (v: string) => void;
   setIsSearchScreenOpen?: (v: boolean) => void;
 }
@@ -38,6 +40,7 @@ export interface UseHomeContentOptions {
 export function useHomeContent(options?: UseHomeContentOptions) {
   const router = useRouter();
   const sharedSearchTerm = options?.sharedSearchTerm;
+  const isSearchScreenOpen = options?.isSearchScreenOpen ?? false;
   const sharedSetSearchTerm = options?.setSearchTerm;
   const sharedSetIsSearchScreenOpen = options?.setIsSearchScreenOpen;
 
@@ -45,6 +48,16 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const search = useHomeSearch();
   const effectiveSearchTerm = sharedSearchTerm !== undefined ? sharedSearchTerm : search.debouncedSearchTerm;
   const deferredSearchTerm = useDeferredValue(effectiveSearchTerm);
+
+  // เมื่อใช้ shared search: commit คำค้นเฉพาะตอนปิดหน้าค้นหา เพื่อให้หลังกดค้นหา feed refetch ทันที (ไม่รอ deferred)
+  const [committedSearchTerm, setCommittedSearchTerm] = useState('');
+  const prevCommittedRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (sharedSearchTerm === undefined) return;
+    if (!isSearchScreenOpen) setCommittedSearchTerm(sharedSearchTerm);
+  }, [isSearchScreenOpen, sharedSearchTerm]);
+  const searchTermForFetch =
+    sharedSearchTerm !== undefined ? committedSearchTerm : deferredSearchTerm;
 
   // State
   const [uiState, setUIState] = useState({
@@ -63,9 +76,23 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   });
 
   // Data hooks
-  const homeData = useHomeData(deferredSearchTerm);
+  const homeData = useHomeData(searchTermForFetch);
   const { unreadCount } = useUnreadNotificationCount({ userId: homeData.session?.user?.id });
-  
+
+  // หลังกดค้นหา (ปิดหน้าค้นหา) ให้ refetch feed ทันที ไม่รอ debounce 350ms
+  useEffect(() => {
+    if (sharedSearchTerm === undefined) return;
+    const prev = prevCommittedRef.current;
+    prevCommittedRef.current = committedSearchTerm;
+    if (prev !== undefined && prev !== committedSearchTerm) {
+      homeData.setPage(0);
+      homeData.setHasMore(true);
+      homeData.fetchPosts(true);
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ต้องการรันเฉพาะเมื่อ commit คำค้นเปลี่ยน
+  }, [committedSearchTerm, sharedSearchTerm]);
+
   // Memoize setters เพื่อป้องกัน infinite re-render loop
   const setTabRefreshing = useCallback((refreshing: boolean) => {
     setUIState(prev => ({ ...prev, tabRefreshing: refreshing }));
