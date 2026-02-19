@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LAO_FONT } from '@/utils/constants';
@@ -7,7 +7,7 @@ import { PROFILE_PATH } from '@/utils/authRoutes';
 import { OtpInputs } from '@/components/auth';
 import { useOtpResendCountdown } from '@/hooks/useOtpResendCountdown';
 
-export default function ChangeEmailVerify() {
+function ChangeEmailVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const newEmail = searchParams.get('email') || '';
@@ -250,5 +250,13 @@ export default function ChangeEmailVerify() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function ChangeEmailVerify() {
+  return (
+    <Suspense fallback={null}>
+      <ChangeEmailVerifyContent />
+    </Suspense>
   );
 }
