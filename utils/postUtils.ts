@@ -212,7 +212,8 @@ function buildCategoryAliasIndex(dict: CategoriesDictionary) {
       const id = String(cat.id);
       addAlias(id, id);
       addAlias(id, cat.name);
-      addAlias(id, cat.nameLo);
+      const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+      for (const lo of nameLoArr) addAlias(id, lo);
       addAlias(id, cat.nameEn);
     }
   }
@@ -298,7 +299,7 @@ function getCategoryDisplayName(categoryId: string, lang: SearchLanguage): strin
       if (String(cat.id) !== String(categoryId)) continue;
       const name = cat.name ?? '';
       const nameEn = cat.nameEn ?? '';
-      const nameLo = cat.nameLo ?? '';
+      const nameLo = Array.isArray(cat.nameLo) ? (cat.nameLo[0] ?? '') : (cat.nameLo ?? '');
       if (lang === 'latin') return nameEn || name || nameLo || categoryId;
       if (lang === 'lo') return nameLo || name || nameEn || categoryId;
       if (lang === 'th') return name || nameEn || nameLo || categoryId;
@@ -419,7 +420,8 @@ export function expandCarSearchAliases(query: string): string[] {
           if (String(cat.id) === String(cid)) {
             if (cat.name) expanded.push(String(cat.name).trim());
             if (cat.nameEn) expanded.push(String(cat.nameEn).trim());
-            if (cat.nameLo) expanded.push(String(cat.nameLo).trim());
+            const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+            for (const lo of nameLoArr) if (lo) expanded.push(String(lo).trim());
             break;
           }
         }
@@ -637,6 +639,51 @@ export function captionMatchesAnyAlias(caption: string, queries: string[]): bool
 
 export type CarSuggestionItem = { display: string; searchKey: string };
 
+/**
+ * Model การจัดเรียง Suggestion: ใกล้เคียงคำที่พิมพ์มากที่สุดขึ้นก่อน และภาษาที่ตรงกับที่ผู้ใช้พิมพ์ขึ้นก่อน
+ * ใช้กับคำค้นหาใดก็ได้ (ดึงไปใช้ที่คำค้นหาอื่นได้)
+ */
+export function sortSuggestionsByClosenessAndLanguage(
+  items: CarSuggestionItem[],
+  prefix: string,
+): CarSuggestionItem[] {
+  const qNorm = normalizeCarSearch(prefix);
+  if (!qNorm) return items;
+  const lang = detectSearchLanguage(prefix);
+
+  function closenessScore(it: CarSuggestionItem): number {
+    const dNorm = normalizeCarSearch(it.display);
+    const sNorm = normalizeCarSearch(it.searchKey);
+    const displayStartsWith = !!qNorm && dNorm.startsWith(qNorm);
+    const searchKeyStartsWith = !!qNorm && sNorm.startsWith(qNorm);
+    if (displayStartsWith) {
+      // ข้อความที่แสดงขึ้นต้นด้วยคำค้น → ขึ้นก่อน (เช่น Land Rover, Land Cruiser) ใช้ความยาว display
+      return 10000 - dNorm.length;
+    }
+    if (searchKeyStartsWith) {
+      // แค่ searchKey ขึ้นต้น แต่ display ไม่ (เช่น แสดง "127" แต่ searchKey "Land Rover 127") → อยู่ใต้กลุ่ม display ขึ้นต้น
+      return 7000 - dNorm.length;
+    }
+    const idxD = dNorm.indexOf(qNorm);
+    const idxS = sNorm.indexOf(qNorm);
+    const idx =
+      idxD >= 0 && idxS >= 0 ? Math.min(idxD, idxS) : idxD >= 0 ? idxD : idxS >= 0 ? idxS : 9999;
+    return 5000 - idx;
+  }
+
+  const out = [...items];
+  out.sort((a, b) => {
+    const langA = detectSearchLanguage(a.display);
+    const langB = detectSearchLanguage(b.display);
+    const sameLangA = langA === lang ? 10000 : 0;
+    const sameLangB = langB === lang ? 10000 : 0;
+    const scoreA = closenessScore(a) + sameLangA;
+    const scoreB = closenessScore(b) + sameLangB;
+    return scoreB - scoreA;
+  });
+  return out;
+}
+
 const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
   { display: 'ລົດຍ້າຍພວງ', searchKey: 'ຍ້າຍພວງ' },
   { display: 'ລົດຊ້າຍເດີມ', searchKey: 'ຊ້າຍເດີມ' },
@@ -697,6 +744,26 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
         lang,
       );
       display = modelDisplay;
+      // ถ้าคำค้นเป็น prefix ของชื่อรุ่นเต็ม ให้แสดงชื่อนั้น (เช่น พิมพ์ "land" ให้เห็น "Land Cruiser" ไม่ใช่ "lc40")
+      if (qNorm && modelDisplay) {
+        const nameCandidates = [
+          info.modelName,
+          info.modelNameLo,
+          info.modelNameTh,
+          ...(info.searchNames ?? []),
+        ].filter((s): s is string => typeof s === 'string' && s.trim() !== '');
+        const matchingNames = nameCandidates.filter((s) =>
+          normalizeCarSearch(s).startsWith(qNorm),
+        );
+        if (matchingNames.length > 0) {
+          if (info.modelName && normalizeCarSearch(info.modelName).startsWith(qNorm)) {
+            display = info.modelName.trim();
+          } else {
+            matchingNames.sort((a, b) => a.length - b.length);
+            display = matchingNames[0].trim();
+          }
+        }
+      }
     } else {
       display = pickBrandDisplay(info);
     }
@@ -770,11 +837,9 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     if (isDirect) direct.push(it);
     else rest.push(it);
   }
-  const result = [
-    ...direct,
-    ...rest.slice(0, Math.max(0, limit - direct.length)),
-  ];
-  return result.map(({ display, searchKey }) => ({ display, searchKey }));
+  const combined = [...direct, ...rest.slice(0, Math.max(0, limit - direct.length))];
+  const asItems = combined.map(({ display, searchKey }) => ({ display, searchKey }));
+  return sortSuggestionsByClosenessAndLanguage(asItems, prefix);
 }
 
 export interface OnlineStatus {

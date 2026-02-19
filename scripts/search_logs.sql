@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.search_logs (
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   search_term TEXT NOT NULL,
   display_text TEXT,
-  search_type TEXT NOT NULL CHECK (search_type IN ('manual', 'suggestion')),
+  search_type TEXT NOT NULL CHECK (search_type IN ('manual', 'suggestion', 'history')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -29,7 +29,11 @@ CREATE INDEX IF NOT EXISTS idx_search_logs_guest_token_user ON public.search_log
 CREATE INDEX IF NOT EXISTS idx_search_logs_term_count ON public.search_logs(search_term, created_at DESC);
 
 -- Comment
-COMMENT ON TABLE public.search_logs IS 'ประวัติการค้นหาทั้งหมดของ User (ทั้ง manual และ suggestion) สำหรับ Admin ดูสถิติ';
+COMMENT ON TABLE public.search_logs IS 'ประวัติการค้นหาทั้งหมดของ User (manual, suggestion, history=กดจากประวัติการค้นหา) สำหรับ Admin ดูสถิติ';
+
+-- อัปเดต constraint สำหรับ DB ที่มีอยู่แล้ว ให้รับค่า 'history'
+ALTER TABLE public.search_logs DROP CONSTRAINT IF EXISTS search_logs_search_type_check;
+ALTER TABLE public.search_logs ADD CONSTRAINT search_logs_search_type_check CHECK (search_type IN ('manual', 'suggestion', 'history'));
 
 -- 2) เปิด RLS (Row Level Security)
 ALTER TABLE public.search_logs ENABLE ROW LEVEL SECURITY;
@@ -79,6 +83,7 @@ RETURNS TABLE (
   search_count BIGINT,
   manual_count BIGINT,
   suggestion_count BIGINT,
+  history_count BIGINT,
   last_searched_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
@@ -94,6 +99,7 @@ BEGIN
     COUNT(*)::BIGINT as search_count,
     COUNT(*) FILTER (WHERE sl.search_type = 'manual')::BIGINT as manual_count,
     COUNT(*) FILTER (WHERE sl.search_type = 'suggestion')::BIGINT as suggestion_count,
+    COUNT(*) FILTER (WHERE sl.search_type = 'history')::BIGINT as history_count,
     MAX(sl.created_at) as last_searched_at
   FROM search_logs sl
   WHERE 
@@ -109,4 +115,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_search_term_stats(TIMESTAMPTZ, TIMESTAMPTZ, INT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_search_term_stats(TIMESTAMPTZ, TIMESTAMPTZ, INT) TO anon;
 
-COMMENT ON FUNCTION public.get_search_term_stats IS 'นับจำนวนครั้งที่ค้นหาแต่ละคำ พร้อมแยกประเภท manual/suggestion';
+COMMENT ON FUNCTION public.get_search_term_stats IS 'นับจำนวนครั้งที่ค้นหาแต่ละคำ พร้อมแยกประเภท manual/suggestion/history';

@@ -173,12 +173,12 @@ export function clearSearchHistory(): void {
  * บันทึกการค้นหาลง Supabase
  * @param term คำค้นหา
  * @param displayText ข้อความที่แสดง (ถ้ามี)
- * @param searchType ประเภทการค้นหา ('manual' หรือ 'suggestion')
+ * @param searchType ประเภทการค้นหา ('manual' | 'suggestion' | 'history' = กดจากประวัติการค้นหา)
  */
 export async function logSearchToSupabase(
   term: string,
   displayText?: string,
-  searchType: 'manual' | 'suggestion' = 'manual'
+  searchType: 'manual' | 'suggestion' | 'history' = 'manual'
 ): Promise<void> {
   if (typeof window === 'undefined') return;
 
@@ -203,12 +203,21 @@ export async function logSearchToSupabase(
       })
       .then(({ error }) => {
         if (error) {
-          console.error('Error logging search to Supabase:', error);
+          const msg =
+            error?.message ??
+            (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error));
+          console.error('Error logging search to Supabase:', msg, error?.code ?? '');
         }
+      })
+      .catch((err) => {
+        const msg = err?.message ?? (typeof err === 'object' ? JSON.stringify(err) : String(err));
+        console.error('Error logging search to Supabase (request failed):', msg);
       });
   } catch (error) {
     // Silent fail - ไม่ให้กระทบ UX ถ้า Supabase มีปัญหา
-    console.error('Error logging search to Supabase:', error);
+    const msg =
+      error instanceof Error ? error.message : typeof error === 'object' ? JSON.stringify(error) : String(error);
+    console.error('Error logging search to Supabase:', msg);
   }
 }
 

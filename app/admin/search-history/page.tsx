@@ -13,7 +13,7 @@ interface SearchLog {
   user_id: string | null;
   search_term: string;
   display_text: string | null;
-  search_type: 'manual' | 'suggestion';
+  search_type: 'manual' | 'suggestion' | 'history';
   created_at: string;
   profiles?: {
     username: string | null;
@@ -27,6 +27,7 @@ interface SearchTermStat {
   search_count: number;
   manual_count: number;
   suggestion_count: number;
+  history_count: number;
   last_searched_at: string;
 }
 
@@ -36,6 +37,7 @@ interface UserSummary {
   uniqueTerms: number;
   manualSearches: number;
   suggestionSearches: number;
+  historySearches: number;
   last_searched_at: string | null;
   username?: string | null;
   avatar_url?: string | null;
@@ -47,6 +49,7 @@ interface UserTermStat {
   totalSearches: number;
   manualSearches: number;
   suggestionSearches: number;
+  historySearches: number;
   last_searched_at: string;
 }
 
@@ -55,6 +58,7 @@ interface TermUserStat {
   totalSearches: number;
   manualSearches: number;
   suggestionSearches: number;
+  historySearches: number;
   last_searched_at: string;
   username?: string | null;
   avatar_url?: string | null;
@@ -68,6 +72,7 @@ export default function AdminSearchHistoryPage() {
     uniqueTerms: 0,
     manualSearches: 0,
     suggestionSearches: 0,
+    historySearches: 0,
   });
   const [allLogs, setAllLogs] = useState<SearchLog[]>([]);
   const [topSearches, setTopSearches] = useState<SearchTermStat[]>([]);
@@ -158,12 +163,14 @@ export default function AdminSearchHistoryPage() {
 
       const manualSearches = safeLogs.filter((log) => log.search_type === 'manual').length;
       const suggestionSearches = safeLogs.filter((log) => log.search_type === 'suggestion').length;
+      const historySearches = safeLogs.filter((log) => log.search_type === 'history').length;
 
       setStats({
         totalSearches: safeLogs.length,
         uniqueTerms,
         manualSearches,
         suggestionSearches,
+        historySearches,
       });
 
       // Top search terms
@@ -180,6 +187,7 @@ export default function AdminSearchHistoryPage() {
             search_count: 0,
             manual_count: 0,
             suggestion_count: 0,
+            history_count: 0,
             last_searched_at: log.created_at,
           };
         }
@@ -187,8 +195,10 @@ export default function AdminSearchHistoryPage() {
         termCounts[key].search_count += 1;
         if (log.search_type === 'manual') {
           termCounts[key].manual_count += 1;
-        } else {
+        } else if (log.search_type === 'suggestion') {
           termCounts[key].suggestion_count += 1;
+        } else {
+          termCounts[key].history_count += 1;
         }
         if (new Date(log.created_at) > new Date(termCounts[key].last_searched_at)) {
           termCounts[key].last_searched_at = log.created_at;
@@ -211,6 +221,7 @@ export default function AdminSearchHistoryPage() {
           totalSearches: number;
           manualSearches: number;
           suggestionSearches: number;
+          historySearches: number;
           last_searched_at: string | null;
           terms: Set<string>;
           username?: string | null;
@@ -226,6 +237,7 @@ export default function AdminSearchHistoryPage() {
             totalSearches: 0,
             manualSearches: 0,
             suggestionSearches: 0,
+            historySearches: 0,
             last_searched_at: null,
             terms: new Set<string>(),
             username: log.profiles?.username || null,
@@ -236,8 +248,10 @@ export default function AdminSearchHistoryPage() {
         entry.totalSearches += 1;
         if (log.search_type === 'manual') {
           entry.manualSearches += 1;
-        } else {
+        } else if (log.search_type === 'suggestion') {
           entry.suggestionSearches += 1;
+        } else {
+          entry.historySearches += 1;
         }
         entry.terms.add((log.search_term || '').toLowerCase());
         if (!entry.last_searched_at || new Date(log.created_at) > new Date(entry.last_searched_at)) {
@@ -251,6 +265,7 @@ export default function AdminSearchHistoryPage() {
           totalSearches: entry.totalSearches,
           manualSearches: entry.manualSearches,
           suggestionSearches: entry.suggestionSearches,
+          historySearches: entry.historySearches,
           uniqueTerms: entry.terms.size,
           last_searched_at: entry.last_searched_at,
           username: entry.username,
@@ -276,6 +291,7 @@ export default function AdminSearchHistoryPage() {
         totalSearches: number;
         manualSearches: number;
         suggestionSearches: number;
+        historySearches: number;
         last_searched_at: string;
         username?: string | null;
         avatar_url?: string | null;
@@ -292,6 +308,7 @@ export default function AdminSearchHistoryPage() {
           totalSearches: 0,
           manualSearches: 0,
           suggestionSearches: 0,
+          historySearches: 0,
           last_searched_at: log.created_at,
           username: log.profiles?.username || null,
           avatar_url: log.profiles?.avatar_url || null,
@@ -301,8 +318,10 @@ export default function AdminSearchHistoryPage() {
       entry.totalSearches += 1;
       if (log.search_type === 'manual') {
         entry.manualSearches += 1;
-      } else {
+      } else if (log.search_type === 'suggestion') {
         entry.suggestionSearches += 1;
+      } else {
+        entry.historySearches += 1;
       }
       if (new Date(log.created_at) > new Date(entry.last_searched_at)) {
         entry.last_searched_at = log.created_at;
@@ -326,6 +345,7 @@ export default function AdminSearchHistoryPage() {
         totalSearches: number;
         manualSearches: number;
         suggestionSearches: number;
+        historySearches: number;
         last_searched_at: string;
       }
     > = {};
@@ -343,6 +363,7 @@ export default function AdminSearchHistoryPage() {
           totalSearches: 0,
           manualSearches: 0,
           suggestionSearches: 0,
+          historySearches: 0,
           last_searched_at: log.created_at,
         };
       }
@@ -350,8 +371,10 @@ export default function AdminSearchHistoryPage() {
       entry.totalSearches += 1;
       if (log.search_type === 'manual') {
         entry.manualSearches += 1;
-      } else {
+      } else if (log.search_type === 'suggestion') {
         entry.suggestionSearches += 1;
+      } else {
+        entry.historySearches += 1;
       }
       if (new Date(log.created_at) > new Date(entry.last_searched_at)) {
         entry.last_searched_at = log.created_at;
@@ -416,6 +439,12 @@ export default function AdminSearchHistoryPage() {
         <StatCard
           label="ກົດ Suggestion"
           value={stats.suggestionSearches.toLocaleString()}
+          loading={loading}
+          variant="centered"
+        />
+        <StatCard
+          label="ກົດຈາກປະຫວັດ"
+          value={stats.historySearches.toLocaleString()}
           loading={loading}
           variant="centered"
         />
@@ -524,6 +553,16 @@ export default function AdminSearchHistoryPage() {
                   <th
                     style={{
                       padding: '12px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                      color: '#4b4f56',
+                    }}
+                  >
+                    ກົດຈາກປະຫວັດ
+                  </th>
+                  <th
+                    style={{
+                      padding: '12px',
                       textAlign: 'left',
                       fontWeight: 'bold',
                       color: '#4b4f56',
@@ -537,7 +576,7 @@ export default function AdminSearchHistoryPage() {
                 {topSearches.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       style={{
                         padding: '40px',
                         textAlign: 'center',
@@ -601,6 +640,15 @@ export default function AdminSearchHistoryPage() {
                         }}
                       >
                         {item.suggestion_count.toLocaleString()}
+                      </td>
+                      <td
+                        style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: '#65676b',
+                        }}
+                      >
+                        {item.history_count.toLocaleString()}
                       </td>
                       <td
                         style={{
@@ -686,6 +734,16 @@ export default function AdminSearchHistoryPage() {
                         }}
                       >
                         Suggestion
+                      </th>
+                      <th
+                        style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                          color: '#4b4f56',
+                        }}
+                      >
+                        ກົດຈາກປະຫວັດ
                       </th>
                       <th
                         style={{
@@ -778,6 +836,15 @@ export default function AdminSearchHistoryPage() {
                           }}
                         >
                           {item.suggestionSearches.toLocaleString()}
+                        </td>
+                        <td
+                          style={{
+                            padding: '12px',
+                            textAlign: 'center',
+                            color: '#65676b',
+                          }}
+                        >
+                          {item.historySearches.toLocaleString()}
                         </td>
                         <td
                           style={{
@@ -899,13 +966,27 @@ export default function AdminSearchHistoryPage() {
                         style={{
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: item.search_type === 'manual' ? '#e7f3ff' : '#fff3cd',
-                          color: item.search_type === 'manual' ? '#1877f2' : '#856404',
+                          background:
+                            item.search_type === 'manual'
+                              ? '#e7f3ff'
+                              : item.search_type === 'suggestion'
+                                ? '#fff3cd'
+                                : '#e8f5e9',
+                          color:
+                            item.search_type === 'manual'
+                              ? '#1877f2'
+                              : item.search_type === 'suggestion'
+                                ? '#856404'
+                                : '#2e7d32',
                           fontSize: '12px',
                           fontWeight: '500',
                         }}
                       >
-                        {item.search_type === 'manual' ? 'ພິມເອງ' : 'Suggestion'}
+                        {item.search_type === 'manual'
+                          ? 'ພິມເອງ'
+                          : item.search_type === 'suggestion'
+                            ? 'Suggestion'
+                            : 'ກົດຈາກປະຫວັດ'}
                       </span>
                     </td>
                     <td
@@ -1044,6 +1125,16 @@ export default function AdminSearchHistoryPage() {
                 <th
                   style={{
                     padding: '12px',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    color: '#4b4f56',
+                  }}
+                >
+                  ກົດຈາກປະຫວັດ
+                </th>
+                <th
+                  style={{
+                    padding: '12px',
                     textAlign: 'left',
                     fontWeight: 'bold',
                     color: '#4b4f56',
@@ -1057,7 +1148,7 @@ export default function AdminSearchHistoryPage() {
               {userSummaries.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     style={{
                       padding: '40px',
                       textAlign: 'center',
@@ -1161,6 +1252,15 @@ export default function AdminSearchHistoryPage() {
                     <td
                       style={{
                         padding: '12px',
+                        textAlign: 'center',
+                        color: '#65676b',
+                      }}
+                    >
+                      {item.historySearches.toLocaleString()}
+                    </td>
+                    <td
+                      style={{
+                        padding: '12px',
                         color: '#65676b',
                         fontSize: '14px',
                       }}
@@ -1250,6 +1350,16 @@ export default function AdminSearchHistoryPage() {
                     <th
                       style={{
                         padding: '12px',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        color: '#4b4f56',
+                      }}
+                    >
+                      ກົດຈາກປະຫວັດ
+                    </th>
+                    <th
+                      style={{
+                        padding: '12px',
                         textAlign: 'left',
                         fontWeight: 'bold',
                         color: '#4b4f56',
@@ -1263,7 +1373,7 @@ export default function AdminSearchHistoryPage() {
                   {userTermStats.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         style={{
                           padding: '24px',
                           textAlign: 'center',
@@ -1324,6 +1434,15 @@ export default function AdminSearchHistoryPage() {
                           }}
                         >
                           {item.suggestionSearches.toLocaleString()}
+                        </td>
+                        <td
+                          style={{
+                            padding: '12px',
+                            textAlign: 'center',
+                            color: '#65676b',
+                          }}
+                        >
+                          {item.historySearches.toLocaleString()}
                         </td>
                         <td
                           style={{

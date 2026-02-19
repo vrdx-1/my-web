@@ -59,7 +59,7 @@
           "id": "pickup",
           "name": "รถกระบะ",
           "nameEn": "Pickup",
-          "nameLo": "ລົດກະບະ",
+          "nameLo": ["ລົດກະບະ", "ກະບະ"],
           "description": "รถกระบะเพื่อบรรทุก/ขนของ",
           "descriptionEn": "Pickup truck"
         },

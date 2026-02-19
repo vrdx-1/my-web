@@ -265,8 +265,8 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     // Move clicked item to top of history
     saveSearchToHistory(item.term, item.displayText);
     setSearchHistory(loadSearchHistory());
-    // บันทึกลง Supabase ทุกครั้งที่กดจากประวัติ
-    logSearchToSupabase(item.term, item.displayText, 'manual');
+    // บันทึกลง Supabase ทุกครั้งที่กดจากประวัติ (User กดค้นหาจากประวัติการค้นหา)
+    logSearchToSupabase(item.term, item.displayText, 'history');
     onSearchChange(item.term, item.displayText);
     onSearchPerform?.();
     onClose();
@@ -675,11 +675,8 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <div style={{ fontSize: '15px', fontWeight: 500, marginBottom: '4px' }}>
+            <div style={{ fontSize: '15px', fontWeight: 500 }}>
               ບໍ່ມີປະຫວັດການຄົ້ນຫາ
-            </div>
-            <div style={{ fontSize: '13px', opacity: 0.8 }}>
-              ການຄົ້ນຫາຂອງທ່ານຈະຖືກບັນທຶກໄວ້ທີ່ນີ້
             </div>
           </div>
         )}

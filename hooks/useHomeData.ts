@@ -52,7 +52,8 @@ function buildCategoryAliasIndex() {
       const id = String(cat.id);
       addAlias(id, id);
       addAlias(id, cat.name);
-      addAlias(id, cat.nameLo);
+      const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+      for (const lo of nameLoArr) addAlias(id, lo);
       addAlias(id, cat.nameEn);
     }
   }
