@@ -1,12 +1,10 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react';
-import { AdminPostCard } from '@/components/AdminPostCard';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { EmptyState } from '@/components/EmptyState';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { formatCompactNumber } from '@/utils/currency';
 import { lazyNamed } from '@/utils/lazyLoad';
 
@@ -20,9 +18,12 @@ const FullScreenImageViewer = lazyNamed(
   'FullScreenImageViewer'
 );
 
+const REPORTS_API = '/api/admin/reports';
+
 export default function AdminReportingPage() {
  const [reports, setReports] = useState<any[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState<string | null>(null);
  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
  // --- States สำหรับการแสดงผล (ยกมาจาก app/page.tsx) ---
@@ -30,108 +31,69 @@ export default function AdminReportingPage() {
  const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
  const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
- const supabase = createAdminSupabaseClient();
-
  useEffect(() => {
- fetchReports();
+   fetchReports();
  }, []);
 
  const fetchReports = async () => {
- setLoading(true);
- try {
- // 1. ดึง ID ของรายงานทั้งหมด
- const { data: reportsData, error: reportsError } = await supabase
- .from('reports')
- .select('id, car_id')
- .eq('status', 'pending')
- .order('created_at', { ascending: false });
-
- if (reportsError) throw reportsError;
-
- if (reportsData && reportsData.length > 0) {
- setReports([]); // รีเซ็ต reports
-
- // 2. Batch loading: ดึง reports และ cars ทั้งหมดในครั้งเดียว
- const reportIds = reportsData.map(r => r.id);
- const carIds = reportsData.map(r => r.car_id);
-
- // โหลด reports ทั้งหมด
- const { data: allReportsData, error: reportsError } = await supabase
- .from('reports')
- .select('id, car_id, reason, status, created_at, user_id')
- .in('id', reportIds);
-
- // โหลด cars ทั้งหมด
- const { data: allCarsData, error: carsError } = await supabase
- .from('cars')
- .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
- .in('id', carIds);
-
- if (!reportsError && !carsError && allReportsData && allCarsData) {
-   // สร้าง map สำหรับ cars
-   const carsMap = new Map(allCarsData.map(car => [car.id, car]));
-   
-   // รวม reports กับ cars
-   const combinedData = allReportsData.map(reportData => {
-     const carData = carsMap.get(reportData.car_id);
-     return { ...reportData, cars: carData };
-   });
-
-   // เพิ่ม reports เข้า state
-   setReports(prev => {
-     const existingIds = new Set(prev.map(r => r.id));
-     const newReports = combinedData.filter(r => !existingIds.has(r.id));
-     return [...prev, ...newReports];
-   });
-
-   // ตั้งค่า selectedReportId สำหรับรายงานแรก
-   if (combinedData.length > 0) {
-     setSelectedReportId(combinedData[0].id);
+   setLoading(true);
+   setError(null);
+   try {
+     const res = await fetch(REPORTS_API, { credentials: 'include' });
+     if (!res.ok) {
+       const j = await res.json().catch(() => ({}));
+       setError(j?.error || `Error ${res.status}`);
+       setReports([]);
+       return;
+     }
+     const json = await res.json();
+     const list = json.reports ?? [];
+     setReports(list);
+     if (list.length > 0) setSelectedReportId(list[0].id);
+     else setSelectedReportId(null);
+   } catch (err) {
+     console.error('Fetch Error:', err);
+     setError(err instanceof Error ? err.message : 'Failed to load reports');
+     setReports([]);
+   } finally {
+     setLoading(false);
    }
- }
- } else {
- setReports([]);
- }
- } catch (err) {
- console.error("Fetch Error:", err);
- } finally {
- setLoading(false);
- }
  };
 
  // Removed duplicate functions - using from utils/postUtils and components/PhotoGrid
 
  // --- ฟังก์ชันจัดการ Admin ---
  const handleIgnore = async (reportId: string) => {
- if (!confirm('ຢືນຢັນການ Remove ແລະ ລຶບລາຍງານນີ້ຖາວອນ?')) return;
- const { error } = await supabase.from('reports').delete().eq('id', reportId);
- if (!error) {
- const updatedReports = reports.filter(r => r.id !== reportId);
- setReports(updatedReports);
-    if (updatedReports.length > 0) setSelectedReportId(updatedReports[0].id);
-    else setSelectedReportId(null);
-  }
+   if (!confirm('ຢືນຢັນການ Remove ແລະ ລຶບລາຍງານນີ້ຖາວອນ?')) return;
+   const res = await fetch(`${REPORTS_API}?id=${encodeURIComponent(reportId)}`, {
+     method: 'DELETE',
+     credentials: 'include',
+   });
+   if (res.ok) {
+     const updatedReports = reports.filter((r) => r.id !== reportId);
+     setReports(updatedReports);
+     if (updatedReports.length > 0) setSelectedReportId(updatedReports[0].id);
+     else setSelectedReportId(null);
+   }
  };
 
- // ฟังก์ชันใหม่: เปลี่ยนจากลบเป็นการซ่อน (Shadow Ban)
- const handleHidePost = async (reportId: string, carId: string) => {
- if (!confirm('ຢືນຢັນການ Hide ໂພສນີ້? (ຜູ້ໃຊ້ອື່ນຈະບໍ່ເຫັນ ແຕ່ຂໍ້ມູນຍັງຄົງຢູ່)')) return;
- 
- // 1. อัปเดตตาราง cars ให้ is_hidden = true
- const { error: carError } = await supabase
- .from('cars')
- .update({ is_hidden: true })
- .eq('id', carId);
-
- if (!carError) {
- // 2. ลบรายการ report ออกเพื่อให้ Admin ทำงานชิ้นอื่นต่อได้
- await supabase.from('reports').delete().eq('id', reportId);
- 
- const updatedReports = reports.filter(r => r.id !== reportId);
- setReports(updatedReports);
-    if (updatedReports.length > 0) setSelectedReportId(updatedReports[0].id);
-    else setSelectedReportId(null);
-  }
+ const handleHidePost = async (reportId: string, carId: string, report?: any) => {
+   const rid = reportId != null ? String(reportId) : '';
+   const cid = carId != null ? String(carId) : (report?.cars?.id != null ? String(report.cars.id) : '');
+   if (!rid || !cid) return;
+   if (!confirm('ຢືນຢັນການ Hide ໂພສນີ້? (ຜູ້ໃຊ້ອື່ນຈະບໍ່ເຫັນ ແຕ່ຂໍ້ມູນຍັງຄົງຢູ່)')) return;
+   const res = await fetch(REPORTS_API, {
+     method: 'PATCH',
+     credentials: 'include',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ reportId: rid, carId: cid, action: 'hide' }),
+   });
+   if (res.ok) {
+     const updatedReports = reports.filter((r) => r.id !== reportId);
+     setReports(updatedReports);
+     if (updatedReports.length > 0) setSelectedReportId(updatedReports[0].id);
+     else setSelectedReportId(null);
+   }
  };
 
  // Removed duplicate PhotoGrid - using from components/PhotoGrid.tsx
@@ -149,7 +111,12 @@ export default function AdminReportingPage() {
  
  <div style={{ width: '100%' }}>
  <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>ລາຍງານທັງໝົດ ( {reports.length} )</h2>
- {reports.length === 0 && <EmptyState message="ບໍ່ມີລາຍງານຄ້າງຢູ່" variant="card" />}
+ {error && (
+   <div style={{ marginBottom: '16px', padding: '12px', background: '#fff5f5', border: '1px solid #ffccc7', borderRadius: '8px', color: '#cf1322' }}>
+     {error}
+   </div>
+ )}
+ {reports.length === 0 && !error && <EmptyState message="ບໍ່ມີລາຍງານຄ້າງຢູ່" variant="card" />}
  
  {reports.map((report) => {
  const post = report.cars;
@@ -236,7 +203,7 @@ export default function AdminReportingPage() {
  Remove
  </button>
  <button 
- onClick={() => handleHidePost(report.id, report.car_id)} 
+ onClick={() => handleHidePost(report.id, report.car_id, report)} 
  style={{ padding: '12px', borderRadius: '8px', border: 'none', background: '#d33', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
  >
  Hide
