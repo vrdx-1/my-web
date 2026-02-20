@@ -324,7 +324,7 @@ export function MyPostsContent() {
           onEditPhoneClick={handleEditPhoneClick}
         />
       )}
-      <div style={{ position: 'sticky', top: 48, zIndex: 99, background: '#fff' }}>
+      <div style={{ position: 'sticky', top: 48, zIndex: 99, background: '#ffffff', backgroundColor: '#ffffff' }}>
         <TabNavigation
           tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },

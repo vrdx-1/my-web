@@ -37,7 +37,8 @@ const CONFIRM_OVERLAY = {
 };
 
 const CONFIRM_BOX = {
-  background: '#fff',
+  background: '#ffffff',
+  backgroundColor: '#ffffff',
   borderRadius: '12px',
   padding: 20,
   maxWidth: '320px',
@@ -183,7 +184,7 @@ export default function Login() {
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <div style={{ padding: '15px 15px 5px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+      <div style={{ padding: '15px 15px 5px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
         <button
           type="button"
           onClick={() => router.push(REGISTER_PATH)}

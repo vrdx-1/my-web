@@ -143,7 +143,8 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
           <div
             style={{
               height: `${118 + pullOffset}px`,
-              background: '#fff',
+              background: '#ffffff',
+              backgroundColor: '#ffffff',
             }}
           />
         </>

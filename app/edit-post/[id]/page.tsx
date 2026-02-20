@@ -40,7 +40,8 @@ const LEAVE_OVERLAY = {
 };
 
 const LEAVE_BOX = {
-  background: '#fff',
+  background: '#ffffff',
+  backgroundColor: '#ffffff',
   borderRadius: '12px',
   padding: 20,
   maxWidth: '320px',
@@ -159,9 +160,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {isViewing && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH, height: '100%', background: '#fff', position: 'relative', overflowY: 'auto' }}>
-            <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 2000, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH, height: '100%', background: '#ffffff', backgroundColor: '#ffffff', position: 'relative', overflowY: 'auto' }}>
+            <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, background: '#ffffff', backgroundColor: '#ffffff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
               <div style={{ width: 72, flexShrink: 0 }} aria-hidden />
               <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0, color: '#111111' }}>ແກ້ໄຂ</h3>
               <div style={{ width: 72, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>

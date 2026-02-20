@@ -127,7 +127,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     return (
       <div
         className="profile-content-skeleton"
-        style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}
+        style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT }}
         aria-hidden
       >
         <style>{`
@@ -137,7 +137,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           }
         `}</style>
         {!isAppProfile && (
-          <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+          <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, ...shimmerStyle }} />
           </div>
         )}
@@ -165,13 +165,14 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       style={{
         maxWidth: '600px',
         margin: '0 auto',
-        background: '#fff',
+        background: '#ffffff',
+        backgroundColor: '#ffffff',
         minHeight: '100vh',
         fontFamily: LAO_FONT,
       }}
     >
       {onBack != null && (
-        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
           <button
             type="button"
             onClick={onBack}

@@ -234,7 +234,8 @@ function BoostPostContent() {
           gap: "0",
           position: "sticky",
           top: 0,
-          background: "#fff",
+          background: "#ffffff",
+          backgroundColor: "#ffffff",
           zIndex: 10,
           borderBottom: "1px solid #f0f0f0",
         }}

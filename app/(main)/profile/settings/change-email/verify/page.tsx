@@ -125,8 +125,8 @@ function ChangeEmailVerifyContent() {
   }
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
-      <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100, borderBottom: '1px solid #ddd' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT }}>
+      <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100, borderBottom: '1px solid #ddd' }}>
         <button
           onClick={() => router.back()}
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0', position: 'absolute', left: '15px' }}
@@ -214,7 +214,8 @@ function ChangeEmailVerifyContent() {
         >
           <div
             style={{
-              background: '#fff',
+              background: '#ffffff',
+              backgroundColor: '#ffffff',
               borderRadius: '12px',
               padding: '24px',
               maxWidth: '320px',

@@ -174,7 +174,7 @@ export function LikedPostsContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#ffffff', backgroundColor: '#ffffff' }}>
         <PageHeader title="ລາຍການທີ່ມັກ" centerTitle onBack={() => { if (typeof window !== 'undefined') { window.location.href = '/profile'; } else { router.push('/profile'); } }} />
         <TabNavigation
           tabs={[

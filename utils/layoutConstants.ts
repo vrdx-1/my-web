@@ -18,7 +18,8 @@ export const LAYOUT_CONSTANTS = {
   MAIN_CONTAINER: {
     maxWidth: '600px',
     margin: '0 auto',
-    background: '#fff',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
     minHeight: '100vh',
     fontFamily: LAO_FONT,
     position: 'relative' as const,
@@ -29,7 +30,8 @@ export const LAYOUT_CONSTANTS = {
     maxWidth: '600px',
     margin: '0 auto',
     minHeight: '100vh',
-    background: '#fff',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
     display: 'flex',
     flexDirection: 'column' as const,
     fontFamily: LAO_FONT,
@@ -54,6 +56,7 @@ export const LAYOUT_CONSTANTS = {
   // Header spacer (used in page.tsx, sold/page.tsx)
   HEADER_SPACER: {
     height: '118px',
-    background: '#fff',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
   },
 } as const;

@@ -192,7 +192,7 @@ if (isUploading) {
 />
  
  {/* Header */}
- <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
+ <div style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: 0, borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 10 }}>
  <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
  <button 
  onClick={handleBack}

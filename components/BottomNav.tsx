@@ -68,11 +68,11 @@ export function BottomNav() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
+                justifyContent: 'flex-start',
+                gap: '4px',
                 background: 'none',
                 border: 'none',
-                padding: '6px 4px',
+                padding: '8px 4px 6px 4px',
                 cursor: 'pointer',
                 color: '#65676b',
                 touchAction: 'manipulation',
@@ -80,9 +80,9 @@ export function BottomNav() {
               }}
             >
               <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Plus size={24} strokeWidth={2} style={{ flexShrink: 0 }} />
+                <Plus size={28} strokeWidth={2} style={{ flexShrink: 0 }} />
               </span>
-              <span style={{ fontSize: 10, fontWeight: 400, color: '#65676b', lineHeight: 1.2 }}>
+              <span style={{ fontSize: 12, fontWeight: 400, color: '#65676b', lineHeight: 1.2 }}>
                 ໂພສ
               </span>
             </button>
@@ -121,11 +121,11 @@ export function BottomNav() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
+              justifyContent: 'flex-start',
+              gap: '4px',
               background: 'none',
               border: 'none',
-              padding: '6px 4px',
+              padding: '8px 4px 6px 4px',
               cursor: 'pointer',
               color: isActive ? '#1877f2' : '#65676b',
               touchAction: 'manipulation',
@@ -136,14 +136,14 @@ export function BottomNav() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Avatar
                   avatarUrl={userProfile?.avatar_url}
-                  size={24}
+                  size={28}
                   session={session}
                 />
               </div>
             ) : (
               <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon
-                  size={24}
+                  size={28}
                   strokeWidth={isActive ? 2.5 : 2}
                   style={{ flexShrink: 0 }}
                 />
@@ -174,7 +174,7 @@ export function BottomNav() {
             )}
             <span
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: isActive ? 600 : 400,
                 color: isActive ? '#1877f2' : '#65676b',
                 lineHeight: 1.2,

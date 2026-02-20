@@ -25,7 +25,8 @@ const HEADER_STYLE = {
   justifyContent: 'center',
   position: 'sticky' as const,
   top: 0,
-  background: '#fff',
+  background: '#ffffff',
+  backgroundColor: '#ffffff',
   zIndex: 1000,
   flexShrink: 0,
 };
@@ -64,7 +65,8 @@ export default function NotificationPage() {
   return (
     <main
       style={{
-        background: '#fff',
+        background: '#ffffff',
+        backgroundColor: '#ffffff',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',

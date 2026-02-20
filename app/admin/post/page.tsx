@@ -56,7 +56,7 @@ export default function AdminPostStatsPage() {
   }), { total: 0, recommend: 0, sold: 0 });
 
   return (
-    <main style={{ maxWidth: '900px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+    <main style={{ maxWidth: '900px', margin: '40px auto', padding: '20px', background: '#ffffff', backgroundColor: '#ffffff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
       
       {/* Header & Filter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>

@@ -26,7 +26,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     top: 0,
     left: 0,
     right: 0,
-    background: '#fff',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
     zIndex: 1000,
     overflow: 'hidden',
   };

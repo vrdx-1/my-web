@@ -303,8 +303,8 @@ export default function Register() {
   // Step 1: ยังไม่มี session — แสดงฟอร์มอีเมล / OTP / OAuth
   if (!session) {
     return (
-      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT }}>
-        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT }}>
+        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
           <button
             type="button"
             onClick={() => { localStorage.removeItem('pending_registration'); router.push('/'); }}
@@ -404,8 +404,8 @@ export default function Register() {
 
   // Step 2: มี session — ตั้งชื่อ + รูป
   return (
-    <div style={{ maxWidth: '450px', margin: '0 auto', background: '#fff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
-      <div style={{ padding: '15px 15px 5px 15px', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }} />
+    <div style={{ maxWidth: '450px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}>
+      <div style={{ padding: '15px 15px 5px 15px', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }} />
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <form onSubmit={handleCompleteProfile} style={{ textAlign: 'center' }}>
           

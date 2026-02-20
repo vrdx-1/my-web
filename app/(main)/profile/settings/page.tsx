@@ -35,7 +35,8 @@ export default function Settings() {
     <main style={{ 
       maxWidth: '600px', 
       margin: '0 auto', 
-      background: '#fff', 
+      background: '#ffffff', 
+      backgroundColor: '#ffffff',
       minHeight: '100vh', 
       overflowY: 'auto',
       fontFamily: LAO_FONT,
@@ -51,7 +52,8 @@ export default function Settings() {
         justifyContent: 'center',
         position: 'sticky',
         top: 0, 
-        background: '#fff', 
+        background: '#ffffff', 
+        backgroundColor: '#ffffff',
         zIndex: 100,
         borderBottom: '1px solid #ddd'
       }}>
@@ -211,7 +213,8 @@ export default function Settings() {
         >
           <div
             style={{
-              background: '#fff',
+              background: '#ffffff',
+              backgroundColor: '#ffffff',
               borderRadius: '12px',
               padding: '20px',
               maxWidth: '320px',

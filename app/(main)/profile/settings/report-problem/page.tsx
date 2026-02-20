@@ -126,7 +126,8 @@ export default function ReportProblemPage() {
       style={{
         maxWidth: '600px',
         margin: '0 auto',
-        background: '#fff',
+        background: '#ffffff',
+        backgroundColor: '#ffffff',
         minHeight: '100vh',
         overflowY: 'auto',
         fontFamily: LAO_FONT,
@@ -142,7 +143,8 @@ export default function ReportProblemPage() {
           justifyContent: 'center',
           position: 'sticky',
           top: 0,
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           zIndex: 100,
           borderBottom: '1px solid #ddd',
         }}
