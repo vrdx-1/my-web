@@ -2,9 +2,17 @@
 
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { Poppins } from 'next/font/google';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 import { TabSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
+
+const poppinsSemiBold = Poppins({
+  weight: '600',
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 interface AppHeaderProps {
   searchTerm: string;
@@ -132,8 +140,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       background: '#ffffff', 
       backgroundColor: '#ffffff',
       zIndex: 500, 
-      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
-      boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' 
+      boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+      transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out'
     }}>
       <div style={{ 
           padding: '9px 15px', 
@@ -141,13 +149,41 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           alignItems: 'center', 
           gap: '8px', 
           borderBottom: '1px solid #f0f0f0',
-          ...(showOnlySearch ? { justifyContent: 'center' } : {}),
         }}>
+        {/* Logo and Brand Name */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          flexShrink: 0,
+          marginRight: '8px'
+        }}>
+          <Image 
+            src="/images/jutpai-logo.png" 
+            alt="Jutpai Logo" 
+            width={32} 
+            height={32}
+            style={{ flexShrink: 0 }}
+          />
+          <span 
+            className={poppinsSemiBold.className}
+            style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: '#2196F3',
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.3px'
+            }}
+          >
+            Jutpai
+          </span>
+        </div>
+        
         {/* Search Bar */}
         <div 
           onClick={onSearchClick}
           style={{ 
-            ...(showOnlySearch ? { maxWidth: '280px', width: '100%' } : { flex: 1 }), 
+            ...(showOnlySearch ? { maxWidth: '280px', width: '100%', margin: '0 auto' } : { flex: 1 }), 
             display: 'flex', 
             alignItems: 'center', 
             background: '#f0f2f5', 

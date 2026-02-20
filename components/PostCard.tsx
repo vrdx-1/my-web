@@ -225,7 +225,7 @@ export const PostCard = React.memo<PostCardProps>(({
       </div>
 
       {/* Photo Grid — priority = โพสแรกในฟีด เพื่อ LCP */}
-      <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} />
+      <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} layout={post.layout || 'default'} />
 
       {/* Post Actions */}
       <div style={{ borderTop: '1px solid #f0f2f5' }}>

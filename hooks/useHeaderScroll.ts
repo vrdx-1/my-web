@@ -6,6 +6,8 @@ interface UseHeaderScrollOptions {
   loadingMore?: boolean;
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
   disableScrollHide?: boolean;
+  /** เรียกทันทีใน scroll handler (ไม่รอ re-render) เพื่อให้ header/nav ตามจังหวะเลื่อน */
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 interface UseHeaderScrollReturn {
@@ -15,79 +17,44 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { loadingMore = false, disableScrollHide = false } = options ?? {};
+  const { loadingMore = false, disableScrollHide = false, onVisibilityChange } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
-  /** เก็บว่า user เลื่อนลง (scroll position ลด) แล้วยังไม่ปล่อยมือ — จะแสดง header เมื่อ touchend ทันที */
-  const scrolledDownSinceReleaseRef = useRef(false);
-  /** เก็บว่า user กำลัง touch อยู่หรือไม่ */
-  const isTouchingRef = useRef(false);
+  const onVisibilityChangeRef = useRef(onVisibilityChange);
+  onVisibilityChangeRef.current = onVisibilityChange;
+
+  const applyVisible = (visible: boolean) => {
+    setIsHeaderVisible(visible);
+    onVisibilityChangeRef.current?.(visible);
+  };
 
   useEffect(() => {
     if (disableScrollHide) return;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const lastY = lastScrollYRef.current;
-      const scrollDelta = Math.abs(currentScrollY - lastY);
+      const scrollDelta = currentScrollY - lastY;
 
       lastScrollYRef.current = currentScrollY;
 
       if (loadingMore) {
-        /* ขณะโหลดโพสต์ถัดไป อย่าให้ header เลื่อนลงมา */
-        if (currentScrollY > lastY && currentScrollY > 50 && scrollDelta > 2) {
-          setIsHeaderVisible(false);
+        if (scrollDelta > 0 && currentScrollY > 50) {
+          applyVisible(false);
         }
         return;
       }
 
-      if (currentScrollY < 5) {
-        /* อยู่ที่ top → แสดง header เสมอ */
-        setIsHeaderVisible(true);
-        scrolledDownSinceReleaseRef.current = false;
-      } else if (currentScrollY > lastY && scrollDelta > 2) {
-        /* เลื่อนขึ้น (ดูโพสต์) → ซ่อน header ทันที */
-        setIsHeaderVisible(false);
-        scrolledDownSinceReleaseRef.current = false;
-      } else if (currentScrollY < lastY && scrollDelta > 2) {
-        /* เลื่อนลง → ตั้ง flag ว่าเลื่อนลงแล้ว แต่ยังไม่แสดง header จนกว่าจะปล่อยมือ */
-        scrolledDownSinceReleaseRef.current = true;
-      }
-    };
-
-    const handleTouchStart = () => {
-      /* เริ่ม touch → ตั้ง flag */
-      isTouchingRef.current = true;
-    };
-
-    const showHeaderIfScrolledDown = () => {
-      /* แสดง header ทันทีเมื่อปล่อยมือ (touchend) และเคยเลื่อนลง โดยไม่ต้องรอ scrollend */
-      if (scrolledDownSinceReleaseRef.current) {
-        scrolledDownSinceReleaseRef.current = false;
-        setIsHeaderVisible(true);
-      }
-      isTouchingRef.current = false;
-    };
-
-    const handleScrollEnd = () => {
-      /* สำหรับ desktop (mouse scroll) → แสดง header เมื่อ scroll หยุด */
-      if (!isTouchingRef.current && scrolledDownSinceReleaseRef.current) {
-        scrolledDownSinceReleaseRef.current = false;
-        setIsHeaderVisible(true);
+      if (currentScrollY <= 3) {
+        applyVisible(true);
+      } else if (scrollDelta > 0) {
+        applyVisible(false);
+      } else if (scrollDelta < 0) {
+        applyVisible(true);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('scrollend', handleScrollEnd);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', showHeaderIfScrolledDown, { passive: true });
-    document.addEventListener('touchcancel', showHeaderIfScrolledDown, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scrollend', handleScrollEnd);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', showHeaderIfScrolledDown);
-      document.removeEventListener('touchcancel', showHeaderIfScrolledDown);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingMore, disableScrollHide]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ

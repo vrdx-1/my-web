@@ -7,7 +7,7 @@
  * Optimized fields for post/car queries
  * Only selects necessary fields to reduce data transfer
  */
-export const POST_SELECT_FIELDS = 'id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, guest_token, is_guest';
+export const POST_SELECT_FIELDS = 'id, caption, province, images, status, created_at, is_boosted, is_hidden, user_id, views, likes, saves, shares, guest_token, is_guest, layout';
 
 /**
  * Optimized fields for profile queries

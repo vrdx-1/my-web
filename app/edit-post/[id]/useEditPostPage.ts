@@ -13,6 +13,7 @@ export function useEditPostPage(id: string) {
   const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [layout, setLayout] = useState<string>('default');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
@@ -44,9 +45,11 @@ export function useEditPostPage(id: string) {
       const cap = (post.caption || '').split('\n').slice(0, MAX_CAPTION_LINES).join('\n');
       const prov = post.province || '';
       const imgs = post.images || [];
+      const postLayout = post.layout || 'default';
       setCaption(cap);
       setProvince(prov);
       setImages(imgs);
+      setLayout(postLayout);
       initialRef.current = { caption: cap, province: prov, images: imgs };
       setLoading(false);
     };
@@ -211,6 +214,7 @@ export function useEditPostPage(id: string) {
     setProvince,
     images,
     setImages,
+    layout,
     loading,
     uploading,
     isViewing,

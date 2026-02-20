@@ -35,6 +35,7 @@ export function HomeContent() {
     isSearchScreenOpen: mainTab?.isSearchScreenOpen ?? false,
     setSearchTerm: mainTab?.setSearchTerm,
     setIsSearchScreenOpen: mainTab?.setIsSearchScreenOpen,
+    onHeaderVisibilityChange: (v) => headerVisibility?.setHeaderVisible(v),
   });
 
   // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
@@ -55,11 +56,6 @@ export function HomeContent() {
       mainTab.setRefreshSource(null);
     }
   }, [homeData.loadingMore, mainTab]);
-
-  // Sync header scroll visibility ไป layout & bottom nav (ພ້ອມຂາຍ)
-  useEffect(() => {
-    headerVisibility?.setHeaderVisible(headerScroll.isHeaderVisible);
-  }, [headerScroll.isHeaderVisible, headerVisibility]);
 
   return (
     <>

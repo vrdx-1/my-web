@@ -48,7 +48,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
             visibility: isNavVisible ? 'visible' : 'hidden',
-            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
           }}
         >
           <BottomNav />

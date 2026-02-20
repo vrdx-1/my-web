@@ -10,6 +10,7 @@ interface PhotoPreviewGridProps {
   onRemoveImage?: (index: number, isNew: boolean) => void;
   showRemoveButton?: boolean;
   className?: string;
+  layout?: string;
 }
 
 /**
@@ -23,6 +24,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
   onRemoveImage,
   showRemoveButton = true,
   className = '',
+  layout = 'default',
 }) => {
   const allImages = [...(existingImages || []), ...(newPreviews || [])];
   const count = allImages.length;
@@ -217,51 +219,94 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
     );
   }
 
-  // 5+ รูป — เหมือน PhotoGrid (2 บน, 3 ล่าง, +N ถ้า >5)
-  return (
-    <div
-      onClick={click}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '4px',
-        cursor,
-      }}
-      className={className}
-    >
-      {allImages.slice(0, 2).map((img, i) => (
+  // 5 รูป — เหมือน PhotoGrid (2 บน, 3 ล่าง)
+  if (count === 5) {
+    return (
+      <div
+        onClick={click}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '4px',
+          cursor,
+        }}
+        className={className}
+      >
+        {allImages.slice(0, 2).map((img, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'relative',
+              aspectRatio: '1',
+              background: '#f0f0f0',
+              overflow: 'hidden',
+            }}
+          >
+            <Image
+              src={img}
+              alt={`Preview ${i + 1}`}
+              fill
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+              unoptimized
+            />
+            {removeBtn(i)}
+          </div>
+        ))}
         <div
-          key={i}
           style={{
-            position: 'relative',
-            aspectRatio: '1',
-            background: '#f0f0f0',
-            overflow: 'hidden',
+            gridColumn: 'span 2',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            gap: '4px',
           }}
         >
-          <Image
-            src={img}
-            alt={`Preview ${i + 1}`}
-            fill
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
-            unoptimized
-          />
-          {removeBtn(i)}
+          {allImages.slice(2, 5).map((img, i) => {
+            const idx = i + 2;
+            return (
+              <div
+                key={idx}
+                style={{
+                  position: 'relative',
+                  aspectRatio: '1',
+                  background: '#f0f0f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Preview ${idx + 1}`}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  unoptimized
+                />
+                {removeBtn(idx)}
+              </div>
+            );
+          })}
         </div>
-      ))}
-      <div
-        style={{
-          gridColumn: 'span 2',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '4px',
-        }}
-      >
-        {allImages.slice(2, 5).map((img, i) => {
-          const idx = i + 2;
-          return (
+      </div>
+    );
+  }
+
+  // 6+ รูป — ใช้ layout ที่เลือก
+  if (count >= 6) {
+    // Layout: default (2x2 grid สำหรับ 4 รูป, +N ในรูปที่ 4 ถ้า >4)
+    if (layout === 'default') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+            gap: '4px',
+            cursor,
+          }}
+          className={className}
+        >
+          {allImages.slice(0, 4).map((img, i) => (
             <div
-              key={idx}
+              key={i}
               style={{
                 position: 'relative',
                 aspectRatio: '1',
@@ -271,12 +316,12 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             >
               <Image
                 src={img}
-                alt={`Preview ${idx + 1}`}
+                alt={`Preview ${i + 1}`}
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
                 unoptimized
               />
-              {idx === 4 && count > 5 && (
+              {i === 3 && count > 4 && (
                 <div
                   style={{
                     position: 'absolute',
@@ -293,16 +338,336 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
                     zIndex: 1,
                   }}
                 >
-                  +{count - 5}
+                  +{count - 4}
                 </div>
               )}
-              {removeBtn(idx)}
+              {removeBtn(i)}
             </div>
-          );
-        })}
+          ))}
+        </div>
+      );
+    }
+
+    // Layout: five-images (2 บน, 3 ล่าง)
+    if (layout === 'five-images') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '4px',
+            cursor,
+          }}
+          className={className}
+        >
+          {allImages.slice(0, 2).map((img, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'relative',
+                aspectRatio: '1',
+                background: '#f0f0f0',
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                src={img}
+                alt={`Preview ${i + 1}`}
+                fill
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
+                unoptimized
+              />
+              {removeBtn(i)}
+            </div>
+          ))}
+          <div
+            style={{
+              gridColumn: 'span 2',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '4px',
+            }}
+          >
+            {allImages.slice(2, 5).map((img, i) => {
+              const idx = i + 2;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    background: '#f0f0f0',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    unoptimized
+                  />
+                  {idx === 4 && count > 5 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 5}
+                    </div>
+                  )}
+                  {removeBtn(idx)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Layout: five-images-side (2 รูปซ้ายใหญ่, 3 รูปขวาเล็ก)
+    if (layout === 'five-images-side') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1fr',
+            gap: '4px',
+            cursor,
+          }}
+          className={className}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: '1fr 1fr',
+              gap: '4px',
+            }}
+          >
+            {allImages.slice(0, 2).map((img, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'relative',
+                  aspectRatio: '1',
+                  background: '#f0f0f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Preview ${i + 1}`}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  unoptimized
+                />
+                {removeBtn(i)}
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: '1fr 1fr 1fr',
+              gap: '4px',
+            }}
+          >
+            {allImages.slice(2, 5).map((img, i) => {
+              const idx = i + 2;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    background: '#f0f0f0',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    unoptimized
+                  />
+                  {idx === 4 && count > 5 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 5}
+                    </div>
+                  )}
+                  {removeBtn(idx)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Layout: three-images (ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก - เหมือนตอน post 3 รูป)
+    if (layout === 'three-images') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '4px',
+            cursor,
+            position: 'relative',
+          }}
+          className={className}
+        >
+          <div style={{ position: 'relative', gridRow: 'span 2' }}>
+            <img
+              src={allImages[0]}
+              alt="Preview 1"
+              style={{
+                width: '100%',
+                height: '400px',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                background: '#f0f0f0',
+              }}
+            />
+            {removeBtn(0)}
+          </div>
+          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '199px',
+                  background: '#f0f0f0',
+                }}
+              >
+                <img
+                  src={allImages[i]}
+                  alt={`Preview ${i + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+                {i === 2 && count > 3 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      WebkitTextStroke: '3px #000',
+                      paintOrder: 'stroke fill',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  >
+                    +{count - 3}
+                  </div>
+                )}
+                {removeBtn(i)}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback to default layout (2x2 grid)
+    return (
+      <div
+        onClick={click}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: '1fr 1fr',
+          gap: '4px',
+          cursor,
+        }}
+        className={className}
+      >
+        {allImages.slice(0, 4).map((img, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'relative',
+              aspectRatio: '1',
+              background: '#f0f0f0',
+              overflow: 'hidden',
+            }}
+          >
+            <Image
+              src={img}
+              alt={`Preview ${i + 1}`}
+              fill
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+              unoptimized
+            />
+            {i === 3 && count > 4 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  WebkitTextStroke: '3px #000',
+                  paintOrder: 'stroke fill',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                }}
+              >
+                +{count - 4}
+              </div>
+            )}
+            {removeBtn(i)}
+          </div>
+        ))}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 });
 
 PhotoPreviewGrid.displayName = 'PhotoPreviewGrid';

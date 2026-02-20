@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
+import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
@@ -67,6 +67,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     province,
     setProvince,
     images,
+    layout,
     loading,
     uploading,
     isViewing,
@@ -150,12 +151,13 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           )}
         </div>
 
-        <PhotoPreviewGrid
-          existingImages={images}
-          newPreviews={imageUpload.previews}
-          onImageClick={() => setIsViewing(true)}
-          showRemoveButton={false}
-        />
+        {(images.length > 0 || imageUpload.previews.length > 0) && (
+          <PhotoGrid
+            images={[...images, ...imageUpload.previews]}
+            onPostClick={() => setIsViewing(true)}
+            layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
+          />
+        )}
         <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
       </div>
 

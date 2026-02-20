@@ -12,6 +12,7 @@ interface UseCreatePostUploadParams {
   caption: string;
   province: string;
   imageUpload: any;
+  layout?: string;
 }
 
 export function useCreatePostUpload({
@@ -19,6 +20,7 @@ export function useCreatePostUpload({
   caption,
   province,
   imageUpload,
+  layout = 'default',
 }: UseCreatePostUploadParams) {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
@@ -98,21 +100,38 @@ export function useCreatePostUpload({
           .eq('id', session.user.id);
       }
 
-      const { data, error: insertError } = await supabase
+      // ลอง insert โดยใส่ layout field ก่อน
+      let insertData: any = {
+        user_id: session ? session.user.id : guestToken,
+        is_guest: isGuest,
+        guest_token: guestToken,
+        caption: caption,
+        province: province,
+        images: imageUrls,
+        status: 'recommend',
+        created_at: new Date().toISOString(),
+      };
+
+      // เพิ่ม layout field ถ้ามี 6+ รูป
+      if (imageUrls.length >= 6) {
+        insertData.layout = layout;
+      }
+
+      let { data, error: insertError } = await supabase
         .from('cars')
-        .insert([
-          {
-            user_id: session ? session.user.id : guestToken,
-            is_guest: isGuest,
-            guest_token: guestToken,
-            caption: caption,
-            province: province,
-            images: imageUrls,
-            status: 'recommend',
-            created_at: new Date().toISOString(),
-          },
-        ])
+        .insert([insertData])
         .select();
+
+      // ถ้า error เกี่ยวกับ layout column ให้ลอง insert อีกครั้งโดยไม่ใส่ layout field
+      if (insertError && insertError.message && insertError.message.includes('layout')) {
+        delete insertData.layout;
+        const retryResult = await supabase
+          .from('cars')
+          .insert([insertData])
+          .select();
+        data = retryResult.data;
+        insertError = retryResult.error;
+      }
 
       if (insertError) {
         // Cleanup uploaded files ถ้า insert ล้มเหลว
@@ -150,11 +169,13 @@ export function useCreatePostUpload({
         sessionStorage.removeItem('create_post_caption');
         sessionStorage.removeItem('create_post_province');
         sessionStorage.removeItem('create_post_step');
+        sessionStorage.removeItem('create_post_layout');
         sessionStorage.removeItem('create_post_images');
         sessionStorage.removeItem('create_post_images_base64');
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
         localStorage.removeItem('create_post_step_ls');
+        localStorage.removeItem('create_post_layout_ls');
         localStorage.removeItem('create_post_images_base64_ls');
       }
 

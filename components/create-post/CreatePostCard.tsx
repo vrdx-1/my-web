@@ -3,6 +3,7 @@
 import React from 'react';
 import { Avatar } from '@/components/Avatar';
 import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
+import { LayoutPreviewSelector } from './LayoutPreviewSelector';
 
 interface CreatePostCardProps {
   userProfile: any;
@@ -13,6 +14,8 @@ interface CreatePostCardProps {
   previews: string[];
   onImageClick: () => void;
   onRemoveImage: (index: number) => void;
+  layout: string;
+  onLayoutChange: (layout: string) => void;
 }
 
 export const CreatePostCard = React.memo<CreatePostCardProps>(
@@ -25,6 +28,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     previews,
     onImageClick,
     onRemoveImage,
+    layout,
+    onLayoutChange,
   }) => {
     return (
       <div>
@@ -210,13 +215,23 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
           </div>
         </div>
         {previews.length > 0 && (
-          <PhotoPreviewGrid
-            existingImages={[]}
-            newPreviews={previews}
-            onImageClick={onImageClick}
-            onRemoveImage={onRemoveImage}
-            showRemoveButton={false}
-          />
+          <>
+            <PhotoPreviewGrid
+              existingImages={[]}
+              newPreviews={previews}
+              onImageClick={onImageClick}
+              onRemoveImage={onRemoveImage}
+              showRemoveButton={false}
+              layout={previews.length >= 6 ? layout : 'default'}
+            />
+            {previews.length >= 6 && (
+              <LayoutPreviewSelector
+                selectedLayout={layout}
+                onLayoutChange={onLayoutChange}
+                previews={previews}
+              />
+            )}
+          </>
         )}
       </div>
     );

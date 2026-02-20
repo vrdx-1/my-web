@@ -32,6 +32,8 @@ export interface UseHomeContentOptions {
   isSearchScreenOpen?: boolean;
   setSearchTerm?: (v: string) => void;
   setIsSearchScreenOpen?: (v: boolean) => void;
+  /** เรียกทันทีใน scroll handler เพื่อให้ header/nav ตามจังหวะเลื่อน (ไม่รอปล่อยนิ้ว) */
+  onHeaderVisibilityChange?: (visible: boolean) => void;
 }
 
 /**
@@ -44,6 +46,7 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const isSearchScreenOpen = options?.isSearchScreenOpen ?? false;
   const sharedSetSearchTerm = options?.setSearchTerm;
   const sharedSetIsSearchScreenOpen = options?.setIsSearchScreenOpen;
+  const onHeaderVisibilityChange = options?.onHeaderVisibilityChange;
 
   // Search: ใช้ shared จาก layout หรือ local
   const search = useHomeSearch();
@@ -126,7 +129,11 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const interactionModalHook = useInteractionModal();
   const { showRegistrationSuccess, setShowRegistrationSuccess } = useRegistrationSuccess();
   const fileUpload = useFileUpload();
-  const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore });
+  const headerScroll = useHeaderScroll({
+    loadingMore: homeData.loadingMore,
+    disableScrollHide: false,
+    onVisibilityChange: onHeaderVisibilityChange,
+  });
   
   // Infinite scroll — ใช้ FEED_PRELOAD_* (โหลดล่วงหน้า 800px ก่อนถึงล่าง)
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({

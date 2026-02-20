@@ -16,6 +16,8 @@ interface UseCreatePostDraftParams {
   isInitialized: boolean;
   setIsInitialized: (value: boolean) => void;
   setSession: (session: any) => void;
+  layout: string;
+  setLayout: (value: string) => void;
 }
 
 export function useCreatePostDraft({
@@ -29,6 +31,8 @@ export function useCreatePostDraft({
   isInitialized,
   setIsInitialized,
   setSession,
+  layout,
+  setLayout,
 }: UseCreatePostDraftParams) {
   // Initial load: session + caption/province/step + images
   useEffect(() => {
@@ -44,6 +48,7 @@ export function useCreatePostDraft({
     const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
     const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
     const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
+    const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
 
     // โหลด caption, province, step
     if (savedCaption) {
@@ -67,6 +72,13 @@ export function useCreatePostDraft({
     } else {
       const lsStep = safeParseJSON<number>('create_post_step_ls', 2);
       if (lsStep) setStep(lsStep);
+    }
+
+    if (savedLayout) {
+      setLayout(savedLayout);
+    } else {
+      const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'default');
+      if (lsLayout) setLayout(lsLayout);
     }
 
     // ดึงข้อมูลจากหน้าโฮม
@@ -218,6 +230,15 @@ export function useCreatePostDraft({
       localStorage.setItem('create_post_step_ls', JSON.stringify(step));
     }
   }, [step, isInitialized]);
+
+  // บันทึก layout ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('create_post_layout', JSON.stringify(layout));
+      localStorage.setItem('create_post_layout_ls', JSON.stringify(layout));
+    }
+  }, [layout, isInitialized]);
 
   // บันทึกรูปภาพลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
   useEffect(() => {

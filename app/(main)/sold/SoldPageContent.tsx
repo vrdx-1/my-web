@@ -114,7 +114,11 @@ export function SoldPageContent() {
   const viewingPostHook = useViewingPost();
   const interactionModalHook = useInteractionModal();
   const fileUpload = useFileUpload();
-  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore });
+  const headerScroll = useHeaderScroll({
+    loadingMore: postListData.loadingMore,
+    disableScrollHide: false,
+    onVisibilityChange: (v) => headerVisibility?.setHeaderVisible(v),
+  });
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
@@ -196,6 +200,46 @@ export function SoldPageContent() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // ป้องกัน iOS overscroll bounce เมื่ออยู่บนสุดของ feed (แก้ปัญหา feed แยกจาก header)
+  useEffect(() => {
+    if (!isAtTop) return;
+    
+    // ตรวจสอบว่าเป็น iOS หรือไม่
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (!isIOS) return;
+
+    let touchStartY = 0;
+    const MIN_PULL_THRESHOLD = 5; // ต้องดึงลงอย่างน้อย 5px ถึงจะป้องกัน bounce
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY > scrollTopThreshold) return;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // ตรวจสอบอีกครั้งว่า scroll position ยังอยู่บนสุดหรือไม่
+      if (window.scrollY > scrollTopThreshold) return;
+      
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - touchStartY;
+      
+      // ถ้ากำลังดึงลงมากพอ (deltaY > threshold) และอยู่บนสุด ให้ป้องกัน default behavior เพื่อหยุด bounce
+      if (deltaY > MIN_PULL_THRESHOLD) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [isAtTop, scrollTopThreshold]);
+
   const pullDisabled = tabRefreshing || !!interactionModalHook.interactionModal.show || isAtTop;
   const { pullDistance } = usePullToRefresh(handlePullToRefresh, pullDisabled);
 
@@ -224,11 +268,6 @@ export function SoldPageContent() {
     mainTab.registerTabRefreshHandler(handler);
     return () => mainTab.unregisterTabRefreshHandler();
   }, [mainTab, handleLogoClick]);
-
-  // Sync header scroll visibility ไป layout & bottom nav (ຂາຍແລ້ວ)
-  useEffect(() => {
-    headerVisibility?.setHeaderVisible(headerScroll.isHeaderVisible);
-  }, [headerScroll.isHeaderVisible, headerVisibility]);
 
   const handlers = usePostFeedHandlers({
     session: postListData.session,

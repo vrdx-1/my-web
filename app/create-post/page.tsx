@@ -33,6 +33,7 @@ export default function CreatePost() {
   const [step, setStep] = useState(2);
   const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
+  const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
   // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
   const imageUpload = useImageUpload({
@@ -60,6 +61,8 @@ export default function CreatePost() {
     isInitialized,
     setIsInitialized,
     setSession,
+    layout,
+    setLayout,
   });
 
   // Set initial height for textarea และอัพเดทเมื่อ caption เปลี่ยน
@@ -145,11 +148,13 @@ export default function CreatePost() {
      sessionStorage.removeItem('create_post_caption');
      sessionStorage.removeItem('create_post_province');
      sessionStorage.removeItem('create_post_step');
+     sessionStorage.removeItem('create_post_layout');
      sessionStorage.removeItem('create_post_images');
      sessionStorage.removeItem('create_post_images_base64');
     localStorage.removeItem('create_post_caption_ls');
     localStorage.removeItem('create_post_province_ls');
     localStorage.removeItem('create_post_step_ls');
+    localStorage.removeItem('create_post_layout_ls');
     localStorage.removeItem('create_post_images_base64_ls');
    }
    setShowLeaveConfirm(false);
@@ -172,6 +177,7 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   caption,
   province,
   imageUpload,
+  layout,
 });
 
 if (isUploading) {
@@ -228,6 +234,8 @@ if (isUploading) {
             previews={imageUpload.previews}
             onImageClick={() => setIsViewing(true)}
             onRemoveImage={removeImage}
+            layout={layout}
+            onLayoutChange={setLayout}
           />
         )}
 
