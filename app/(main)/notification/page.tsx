@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
 import { NotificationPostPreviewCard } from '@/components/NotificationPostPreviewCard';
 import { useNotificationPage } from '@/hooks/useNotificationPage';
+import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
 
 const BOTTOM_SLOT_STYLE = {
   minHeight: 88,
@@ -30,40 +30,36 @@ const HEADER_STYLE = {
   flexShrink: 0,
 };
 
-const BACK_BUTTON_STYLE: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '8px',
-  touchAction: 'manipulation',
-  position: 'absolute',
-  left: '15px',
-  zIndex: 1001,
-};
-
 export default function NotificationPage() {
-  const router = useRouter();
-  const { loading, notifications, visibleItemsWithTime, lastElementRef, onNavigateToPost, loadingMore, hasMore, scrollContainerRef } =
-    useNotificationPage();
+  const {
+    loading,
+    notifications,
+    visibleItemsWithTime,
+    lastElementRef,
+    onNavigateToPost,
+    loadingMore,
+    hasMore,
+    scrollContainerRef,
+    refresh,
+  } = useNotificationPage();
+  const notificationRefreshContext = useNotificationRefreshContext();
+  const didScrollToTopRef = useRef(false);
 
-  const handleBack = useCallback(() => {
-    if (typeof window === 'undefined') {
-      router.back();
-      return;
-    }
-    if (window.history.length <= 1) {
-      router.push('/');
-      return;
-    }
-    const before = window.location.href;
-    router.back();
-    window.setTimeout(() => {
-      if (window.location.href === before) router.push('/');
-    }, 150);
-  }, [router]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    if (loading || notifications.length === 0) return;
+    if (didScrollToTopRef.current) return;
+    didScrollToTopRef.current = true;
+    requestAnimationFrame(() => scrollContainerRef.current?.scrollTo(0, 0));
+  }, [loading, notifications.length, scrollContainerRef]);
+
+  useEffect(() => {
+    notificationRefreshContext?.register(refresh);
+    return () => notificationRefreshContext?.register(null);
+  }, [notificationRefreshContext, refresh]);
 
   return (
     <main
@@ -76,11 +72,6 @@ export default function NotificationPage() {
       }}
     >
       <div style={HEADER_STYLE}>
-        <button type="button" onClick={handleBack} style={BACK_BUTTON_STYLE} aria-label="Back">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
         <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#111111' }}>
           ການແຈ້ງເຕືອນ
         </h1>

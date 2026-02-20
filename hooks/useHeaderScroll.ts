@@ -18,6 +18,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const { loadingMore = false, disableScrollHide = false } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
+  /** เก็บว่า user เลื่อนลง (scroll position ลด) แล้วยังไม่ปล่อยมือ — จะแสดง header เมื่อ scrollend/touchend */
+  const scrolledDownSinceReleaseRef = useRef(false);
 
   useEffect(() => {
     if (disableScrollHide) return;
@@ -38,15 +40,33 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
       if (currentScrollY < 10) {
         setIsHeaderVisible(true);
+        scrolledDownSinceReleaseRef.current = false;
       } else if (currentScrollY > lastY && currentScrollY > 80 && scrollDelta > 5) {
+        /* เลื่อนขึ้น (ดูโพสต์) → ซ่อน header ทันที */
         setIsHeaderVisible(false);
       } else if (currentScrollY < lastY && scrollDelta > 5) {
+        /* เลื่อนลง → ยังไม่แสดง header จนกว่าจะปล่อยมือ (จัดการใน scrollend/touchend) */
+        scrolledDownSinceReleaseRef.current = true;
+      }
+    };
+
+    const showHeaderIfScrolledDown = () => {
+      if (scrolledDownSinceReleaseRef.current) {
+        scrolledDownSinceReleaseRef.current = false;
         setIsHeaderVisible(true);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scrollend', showHeaderIfScrolledDown);
+    document.addEventListener('touchend', showHeaderIfScrolledDown, { passive: true });
+    document.addEventListener('touchcancel', showHeaderIfScrolledDown, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scrollend', showHeaderIfScrolledDown);
+      document.removeEventListener('touchend', showHeaderIfScrolledDown);
+      document.removeEventListener('touchcancel', showHeaderIfScrolledDown);
+    };
   }, [loadingMore, disableScrollHide]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ

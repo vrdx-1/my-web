@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
@@ -8,6 +8,9 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { useCreatePostContext } from '@/contexts/CreatePostContext';
+import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 
@@ -18,6 +21,14 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const fileUpload = useFileUpload();
   const mainTab = useMainTabContext();
+  const createPostContext = useCreatePostContext();
+  const homeRefreshContext = useHomeRefreshContext();
+
+  useEffect(() => {
+    const handler = () => fileUpload.handleCreatePostClick(session);
+    createPostContext?.register(handler);
+    return () => createPostContext?.register(null);
+  }, [session, createPostContext, fileUpload.handleCreatePostClick]);
 
   const searchTerm = mainTab?.searchTerm ?? '';
   const searchDisplayText = mainTab?.searchDisplayText ?? '';
@@ -61,11 +72,31 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     setIsSearchScreenOpen(false);
   }, []);
 
+  useEffect(() => {
+    if (pathname !== '/' && pathname !== '/sold') {
+      homeRefreshContext?.register(null);
+      return;
+    }
+    const handler = () => {
+      mainTab?.setTabRefreshing(true);
+      mainTab?.triggerTabRefresh();
+    };
+    homeRefreshContext?.register(handler);
+    return () => homeRefreshContext?.register(null);
+  }, [pathname, mainTab, homeRefreshContext]);
+
   const loadingTab =
     mainTab?.navigatingToTab ??
     (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? (pathname === '/sold' ? 'sold' : 'recommend') : null);
 
   const pullOffset = mainTab?.pullHeaderOffset ?? 0;
+
+  const showHomeHeader =
+    pathname === '/' ||
+    pathname === '/sold';
+
+  const headerVisibility = useHeaderVisibilityContext();
+  const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   return (
     <>
@@ -78,40 +109,45 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         style={{ display: 'none' }}
         aria-hidden
       />
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 500,
-          transform: `translateY(${pullOffset}px)`,
-          transition: pullOffset === 0 ? 'transform 0.15s ease-out' : 'none',
-        }}
-      >
-        <HomeHeader
-          searchTerm={searchDisplayText}
-          onSearchChange={(v) => setSearchTerm(v)}
-          onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
-          onNotificationClick={handleNotificationClick}
-          unreadCount={unreadCount}
-          userProfile={userProfile}
-          session={session}
-          isHeaderVisible={true}
-          onTabChange={handleTabChange}
-          onSearchClick={() => setIsSearchScreenOpen(true)}
-          onTabRefresh={handleTabRefresh}
-          onTabSwitchStart={handleTabSwitchStart}
-          loadingTab={loadingTab ?? undefined}
-          setProfileOverlayOpen={setProfileOverlayOpen}
-        />
-      </div>
-      <div
-        style={{
-          height: `${118 + pullOffset}px`,
-          background: '#fff',
-        }}
-      />
+      {showHomeHeader && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 500,
+              transform: `translateY(${pullOffset}px)`,
+              transition: pullOffset === 0 ? 'transform 0.15s ease-out' : 'none',
+            }}
+          >
+            <HomeHeader
+              searchTerm={searchDisplayText}
+              onSearchChange={(v) => setSearchTerm(v)}
+              onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
+              onNotificationClick={handleNotificationClick}
+              unreadCount={unreadCount}
+              userProfile={userProfile}
+              session={session}
+              isHeaderVisible={isHeaderVisible}
+              onTabChange={handleTabChange}
+              onSearchClick={() => setIsSearchScreenOpen(true)}
+              onTabRefresh={handleTabRefresh}
+              onTabSwitchStart={handleTabSwitchStart}
+              loadingTab={loadingTab ?? undefined}
+              setProfileOverlayOpen={setProfileOverlayOpen}
+              showOnlySearch={true}
+            />
+          </div>
+          <div
+            style={{
+              height: `${118 + pullOffset}px`,
+              background: '#fff',
+            }}
+          />
+        </>
+      )}
 
       {isProfileOverlayOpen && (
         <ProfileOverlay

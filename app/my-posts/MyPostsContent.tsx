@@ -13,8 +13,8 @@ import {
   EditNameModal,
   EditPhoneModal,
   ProfileSection,
-} from '@/app/profile/edit-profile/EditProfileSections';
-import { useEditProfilePage } from '@/app/profile/edit-profile/useEditProfilePage';
+} from '@/app/(main)/profile/edit-profile/EditProfileSections';
+import { useEditProfilePage } from '@/app/(main)/profile/edit-profile/useEditProfilePage';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -52,11 +52,6 @@ export function MyPostsContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
-  }, []);
-
-  /** กลับไปหน้า profile โดยไม่เล่น slide (ใช้ร่วมกับ profile layout) */
-  useEffect(() => {
-    if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1');
   }, []);
 
   const postListData = usePostListData({
@@ -175,6 +170,10 @@ export function MyPostsContent() {
   });
 
   const { addBackStep } = useBackHandler();
+
+  const handleBack = useCallback(() => {
+    router.push('/profile');
+  }, [router]);
   useEffect(() => {
     if (!fullScreenViewer.fullScreenImages) return;
     const close = () => {
@@ -265,7 +264,7 @@ export function MyPostsContent() {
         onSave={handleSavePhone}
       />
 
-      <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
+      <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} />
       {profileLoading ? (
         <div
           className="my-posts-profile-skeleton"

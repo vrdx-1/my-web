@@ -48,11 +48,6 @@ export function LikedPostsContent() {
     supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
   }, []);
 
-  /** กลับไปหน้า profile โดยไม่เล่น slide (ใช้ร่วมกับ profile layout) */
-  useEffect(() => {
-    if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1');
-  }, []);
-
   const postListData = usePostListData({
     type: 'liked',
     session: sessionState,
@@ -180,7 +175,7 @@ export function LikedPostsContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }}>
-        <PageHeader title="ລາຍການທີ່ມັກ" centerTitle onBack={() => { if (typeof window !== 'undefined') { sessionStorage.setItem('profileNoSlide', '1'); window.location.href = '/profile'; } else { router.push('/profile'); } }} />
+        <PageHeader title="ລາຍການທີ່ມັກ" centerTitle onBack={() => { if (typeof window !== 'undefined') { window.location.href = '/profile'; } else { router.push('/profile'); } }} />
         <TabNavigation
           tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },

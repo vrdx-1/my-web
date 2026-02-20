@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 
@@ -15,6 +15,7 @@ interface UseUnreadNotificationCountOptions {
 export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCountOptions) {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const pathname = usePathname();
+  const prevPathnameRef = useRef<string | null>(null);
 
   const fetchUnreadCount = useCallback(async () => {
     if (!userId) {
@@ -102,6 +103,17 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [pathname, fetchUnreadCount]);
+
+  // เข้าหรือออกจากหน้าแจ้งเตือน → ลบตัวเลขแจ้งเตือนทันที (ไม่ต้องรอ refresh)
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname ?? null;
+    if (pathname === '/notification') {
+      setUnreadCount(0);
+    } else if (prev === '/notification') {
+      setUnreadCount(0);
+    }
+  }, [pathname]);
 
   return { unreadCount, refetch: fetchUnreadCount };
 }

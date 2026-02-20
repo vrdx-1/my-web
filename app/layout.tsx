@@ -9,6 +9,11 @@ import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { BottomNavWrapper } from "@/components/BottomNavWrapper";
+import { HeaderVisibilityProvider } from "@/contexts/HeaderVisibilityContext";
+import { CreatePostProvider } from "@/contexts/CreatePostContext";
+import { NotificationRefreshProvider } from "@/contexts/NotificationRefreshContext";
+import { HomeRefreshProvider } from "@/contexts/HomeRefreshContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,13 +70,21 @@ export default function RootLayout({
             {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
             <VisitorTracker />
             {/* กดย้อนกลับ (browser/มือถือ) ปิด overlay ตามสเต็ป แล้ว back ตามสเต็ป */}
+            <CreatePostProvider>
+            <NotificationRefreshProvider>
+            <HomeRefreshProvider>
             <BackHandlerProvider>
               <BackHandler />
               {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
               <RedirectToHomeOnReturn />
               <PWAInstallPrompt />
-              {children}
+              <HeaderVisibilityProvider>
+                <BottomNavWrapper>{children}</BottomNavWrapper>
+              </HeaderVisibilityProvider>
             </BackHandlerProvider>
+            </HomeRefreshProvider>
+            </NotificationRefreshProvider>
+            </CreatePostProvider>
           </SWRProvider>
         </ErrorBoundaryWrapper>
       </body>

@@ -29,6 +29,8 @@ interface AppHeaderProps {
   loadingTab?: 'recommend' | 'sold' | null;
   /** เปิด overlay โปรไฟล์ทับ feed (ใช้เมื่ออยู่หน้าโฮม/ขายแล้ว) แทนการ push ไป /profile */
   setProfileOverlayOpen?: (open: boolean) => void;
+  /** หน้า Home: แสดงเฉพาะ Search (ซ่อนปุ่มโพสต์/แจ้งเตือน/โปรไฟล์) */
+  showOnlySearch?: boolean;
 }
 
 /**
@@ -52,6 +54,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   onTabSwitchStart,
   loadingTab = null,
   setProfileOverlayOpen,
+  showOnlySearch = false,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -131,11 +134,27 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
       boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' 
     }}>
-      <div style={{ padding: '9px 15px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #f0f0f0' }}>
+      <div style={{ 
+          padding: '9px 15px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          borderBottom: '1px solid #f0f0f0',
+          ...(showOnlySearch ? { justifyContent: 'center' } : {}),
+        }}>
         {/* Search Bar */}
         <div 
           onClick={onSearchClick}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#f0f2f5', borderRadius: '20px', padding: '7px 14px', cursor: 'pointer', minHeight: `${controlSize}px` }}
+          style={{ 
+            ...(showOnlySearch ? { maxWidth: '280px', width: '100%' } : { flex: 1 }), 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: '#f0f2f5', 
+            borderRadius: '20px', 
+            padding: '7px 14px', 
+            cursor: 'pointer', 
+            minHeight: `${controlSize}px` 
+          }}
         >
           <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8"></circle>
@@ -155,91 +174,95 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           />
         </div>
 
-        {/* Create Post Button */}
-        <button 
-          onClick={onCreatePostClick} 
-          style={{ 
-            width: `${controlSize}px`, 
-            height: `${controlSize}px`, 
-            borderRadius: '50%', 
-            background: '#e4e6eb', 
-            color: '#000', 
-            border: 'none', 
-            cursor: 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flexShrink: 0, 
-            touchAction: 'manipulation' 
-          }}
-        >
-          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
-
-        {/* Notification Button */}
-        <button 
-          onClick={handleNotificationClick}
-          onTouchStart={onNotificationTouchStart}
-          onTouchMove={onNotificationTouchMove}
-          onTouchEnd={onNotificationTouchEnd}
-          onTouchCancel={onNotificationTouchCancel}
-          style={{ 
-            width: `${controlSize}px`, 
-            height: `${controlSize}px`, 
-            borderRadius: '50%', 
-            background: '#e4e6eb', 
-            color: '#000', 
-            border: 'none', 
-            cursor: 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flexShrink: 0, 
-            touchAction: 'manipulation',
-            position: 'relative',
-          }}
-        >
-          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          {unreadCount > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                minWidth: '16px',
-                height: '16px',
-                padding: '0 4px',
-                borderRadius: '999px',
-                background: '#e0245e',
-                color: '#fff',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: '16px',
+        {!showOnlySearch && (
+          <>
+            {/* Create Post Button */}
+            <button 
+              onClick={onCreatePostClick} 
+              style={{ 
+                width: `${controlSize}px`, 
+                height: `${controlSize}px`, 
+                borderRadius: '50%', 
+                background: '#e4e6eb', 
+                color: '#000', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                flexShrink: 0, 
+                touchAction: 'manipulation' 
               }}
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </div>
-          )}
-        </button>
+              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
 
-        {/* Profile Avatar — อยู่หน้าโฮม/ขายแล้ว = เปิด overlay สไลด์ทับ feed, นอกนั้น = ไป /profile */}
-        <button
-          type="button"
-          onClick={onProfileClick}
-          style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', background: 'none', border: 'none', padding: 0 }}
-          aria-label="Profile"
-        >
-          <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
-        </button>
+            {/* Notification Button */}
+            <button 
+              onClick={handleNotificationClick}
+              onTouchStart={onNotificationTouchStart}
+              onTouchMove={onNotificationTouchMove}
+              onTouchEnd={onNotificationTouchEnd}
+              onTouchCancel={onNotificationTouchCancel}
+              style={{ 
+                width: `${controlSize}px`, 
+                height: `${controlSize}px`, 
+                borderRadius: '50%', 
+                background: '#e4e6eb', 
+                color: '#000', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                flexShrink: 0, 
+                touchAction: 'manipulation',
+                position: 'relative',
+              }}
+            >
+              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {unreadCount > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    minWidth: '16px',
+                    height: '16px',
+                    padding: '0 4px',
+                    borderRadius: '999px',
+                    background: '#e0245e',
+                    color: '#fff',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: '16px',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </div>
+              )}
+            </button>
+
+            {/* Profile Avatar — อยู่หน้าโฮม/ขายแล้ว = เปิด overlay สไลด์ทับ feed, นอกนั้น = ไป /profile */}
+            <button
+              type="button"
+              onClick={onProfileClick}
+              style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', background: 'none', border: 'none', padding: 0 }}
+              aria-label="Profile"
+            >
+              <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Tabs — ใช้ onTouchEnd + preventDefault เพื่อกัน synthetic click ไปโดนโพสต์ด้านล่าง; stopPropagation กัน event ไปที่อื่น */}

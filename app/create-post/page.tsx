@@ -207,12 +207,12 @@ if (isUploading) {
  {step === 2 && 'ສ້າງໂພສ'}
  {step === 3 && 'ລົດຢູ່ແຂວງ'}
  </h3>
- <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+ <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
  {step === 2 && caption.trim().length > 0 && (
- <button onClick={() => setStep(3)} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ຕໍ່ໄປ</button>
+ <button type="button" onClick={() => setStep(3)} style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ຕໍ່ໄປ</button>
  )}
 {step === 3 && province && !isUploading && (
-<button onClick={handleSubmit} style={{ background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px' }}>ໂພສ</button>
+<button type="button" onClick={handleSubmit} style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ໂພສ</button>
 )}
  </div>
  </div>

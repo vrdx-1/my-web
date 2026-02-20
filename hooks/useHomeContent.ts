@@ -21,6 +21,7 @@ import { usePostFeedModalsProps } from '@/hooks/usePostFeedModalsProps';
 import { useHomeEffects } from '@/hooks/useHomeEffects';
 import { useHomeInteractions } from '@/hooks/useHomeInteractions';
 import { usePostFeedProps } from '@/hooks/usePostFeedProps';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useHomeModals } from '@/hooks/useHomeModals';
 import { useHomePopups } from '@/hooks/useHomePopups';
 
@@ -125,6 +126,7 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const interactionModalHook = useInteractionModal();
   const { showRegistrationSuccess, setShowRegistrationSuccess } = useRegistrationSuccess();
   const fileUpload = useFileUpload();
+  const headerScroll = useHeaderScroll({ loadingMore: homeData.loadingMore });
   
   // Infinite scroll — ใช้ FEED_PRELOAD_* (โหลดล่วงหน้า 800px ก่อนถึงล่าง)
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -161,7 +163,7 @@ export function useHomeContent(options?: UseHomeContentOptions) {
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
     interactionModalShow: interactionModalHook.interactionModal.show,
-    setIsHeaderVisible: () => {},
+    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
   
   // Interactions
@@ -233,6 +235,7 @@ export function useHomeContent(options?: UseHomeContentOptions) {
   const postFeedModalsPropsRaw = usePostFeedModalsProps({
     viewingPostHook,
     fullScreenViewer,
+    headerScroll,
     posts: homeData.posts,
     reportingPost: uiState.reportState.reportingPost,
     setReportingPost: (post) => setUIState(prev => ({
@@ -299,5 +302,6 @@ export function useHomeContent(options?: UseHomeContentOptions) {
     handleTabSwitchStart,
     fileUpload,
     isInteractionModalOpen: interactionModalHook.interactionModal.show,
+    headerScroll,
   };
 }

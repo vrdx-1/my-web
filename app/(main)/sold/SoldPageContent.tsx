@@ -22,6 +22,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
@@ -44,6 +45,7 @@ export function SoldPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const mainTab = useMainTabContext();
+  const headerVisibility = useHeaderVisibilityContext();
   const searchTerm = mainTab?.searchTerm ?? '';
 
   const [tabRefreshing, setTabRefreshing] = useState(false);
@@ -112,7 +114,7 @@ export function SoldPageContent() {
   const viewingPostHook = useViewingPost();
   const interactionModalHook = useInteractionModal();
   const fileUpload = useFileUpload();
-  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore, disableScrollHide: true });
+  const headerScroll = useHeaderScroll({ loadingMore: postListData.loadingMore });
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
@@ -182,7 +184,20 @@ export function SoldPageContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [mainTab, postListData]);
 
-  const { pullDistance } = usePullToRefresh(handlePullToRefresh, tabRefreshing || !!interactionModalHook.interactionModal.show);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const scrollTopThreshold = 8;
+  useEffect(() => {
+    const onScroll = () => {
+      const atTop = typeof window !== 'undefined' && window.scrollY <= scrollTopThreshold;
+      setIsAtTop(atTop);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const pullDisabled = tabRefreshing || !!interactionModalHook.interactionModal.show || isAtTop;
+  const { pullDistance } = usePullToRefresh(handlePullToRefresh, pullDisabled);
 
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
@@ -197,6 +212,11 @@ export function SoldPageContent() {
     mainTab.registerTabRefreshHandler(handler);
     return () => mainTab.unregisterTabRefreshHandler();
   }, [mainTab, handleLogoClick]);
+
+  // Sync header scroll visibility ไป layout & bottom nav (ຂາຍແລ້ວ)
+  useEffect(() => {
+    headerVisibility?.setHeaderVisible(headerScroll.isHeaderVisible);
+  }, [headerScroll.isHeaderVisible, headerVisibility]);
 
   const handlers = usePostFeedHandlers({
     session: postListData.session,

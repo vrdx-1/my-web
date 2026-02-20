@@ -10,6 +10,7 @@ import { createPostFeedModalsProps } from '@/utils/postFeedModalsHelpers';
 export function usePostFeedModalsProps({
   viewingPostHook,
   fullScreenViewer,
+  headerScroll,
   posts,
   reportingPost,
   setReportingPost,
@@ -43,6 +44,7 @@ export function usePostFeedModalsProps({
     isDownloadBottomSheetAnimating: boolean;
     showImageForDownload: string | null;
   };
+  headerScroll?: { setIsHeaderVisible: (visible: boolean) => void; isHeaderVisible: boolean };
   posts: any[];
   reportingPost: any | null;
   setReportingPost: (post: any | null) => void;
@@ -105,8 +107,7 @@ export function usePostFeedModalsProps({
   const postFeedModalsProps = useMemo(() => createPostFeedModalsProps({
     viewingPostHook,
     fullScreenViewer,
-    // Header หน้าโฮมล็อคไว้แล้ว ให้ถือว่าแสดงตลอดเวลา
-    headerScroll: {
+    headerScroll: headerScroll ?? {
       setIsHeaderVisible: (_visible: boolean) => {},
       isHeaderVisible: true,
     },
@@ -121,6 +122,7 @@ export function usePostFeedModalsProps({
   }), [
     viewingPostKey,
     fullScreenKey,
+    headerScroll,
     posts,
     reportingPost,
     reportReason,

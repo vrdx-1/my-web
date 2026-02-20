@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -37,6 +38,9 @@ function CloseIcon() {
 }
 
 export function PWAInstallPrompt() {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin') ?? false;
+
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -44,6 +48,8 @@ export function PWAInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    if (isAdmin) return;
+
     const standalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     setIsStandalone(standalone);
@@ -72,7 +78,7 @@ export function PWAInstallPrompt() {
     }
 
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-  }, []);
+  }, [isAdmin]);
 
   const handleInstall = useCallback(async () => {
     if (deferredPrompt) {
@@ -97,7 +103,7 @@ export function PWAInstallPrompt() {
 
   const hintText = isIOS ? null : HINT_ANDROID;
 
-  if (!visible) return null;
+  if (isAdmin || !visible) return null;
 
   return (
     <div

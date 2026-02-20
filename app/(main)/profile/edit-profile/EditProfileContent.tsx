@@ -58,7 +58,7 @@ export function EditProfileContent() {
  >
 
  {/* Header */}
- <PageHeader title="ໂປຣໄຟລ໌" centerTitle onBack={() => { if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1'); router.push('/profile'); }} />
+ <PageHeader title="ໂປຣໄຟລ໌" centerTitle onBack={() => router.push('/profile')} />
 
  {/* Overlay when editing name or phone - คลุมทั้งจอ ส่วนอื่น dim และล็อก scroll */}
  {(isEditingName || isEditingPhone) && (

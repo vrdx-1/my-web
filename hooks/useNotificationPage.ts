@@ -122,6 +122,11 @@ export function useNotificationPage() {
       lastCursorRef.current = null;
     } finally {
       setLoading(false);
+      const scrollToTop = () => {
+        if (typeof window !== 'undefined') window.scrollTo(0, 0);
+        scrollContainerRef.current?.scrollTo(0, 0);
+      };
+      requestAnimationFrame(() => requestAnimationFrame(scrollToTop));
     }
   }, [markPageAsRead]);
 
@@ -208,10 +213,12 @@ export function useNotificationPage() {
 
   const visibleItemsWithTime = useMemo<NotificationItemWithTime[]>(
     () =>
-      notifications.map((n) => ({
-        ...n,
-        timeAgoText: formatTimeAgo(n.created_at),
-      })),
+      notifications
+        .map((n) => ({
+          ...n,
+          timeAgoText: formatTimeAgo(n.created_at),
+        }))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     [notifications]
   );
 
@@ -235,6 +242,11 @@ export function useNotificationPage() {
     [router]
   );
 
+  const refresh = useCallback(() => {
+    const uid = userIdRef.current;
+    if (uid) fetchFirstPage(uid);
+  }, [fetchFirstPage]);
+
   return {
     loading,
     notifications,
@@ -244,5 +256,6 @@ export function useNotificationPage() {
     loadingMore,
     hasMore,
     scrollContainerRef,
+    refresh,
   };
 }

@@ -10,7 +10,8 @@ import { REGISTER_PATH } from '@/utils/authRoutes';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 interface ProfileContentProps {
-  onBack: () => void;
+  /** ไม่ส่ง = ไม่แสดงปุ่ม back (เช่น หน้า App profile) */
+  onBack?: () => void;
   /** เมื่อไม่มี session (ยังไม่ล็อกอิน) เรียกฟังก์ชันนี้ แทน redirect เอง (เช่น ปิด overlay แล้วค่อย redirect) */
   onNotLoggedIn?: () => void;
 }
@@ -117,6 +118,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   }, [loading, session, router, onNotLoggedIn]);
 
   if (loading) {
+    const isAppProfile = onBack == null;
+    const shimmerStyle = {
+      background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
+    };
     return (
       <div
         className="profile-content-skeleton"
@@ -129,76 +136,21 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             100% { background-position: -200% 0; }
           }
         `}</style>
-        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-              backgroundSize: '200% 100%',
-              animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-            }}
-          />
-        </div>
-        <div style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', marginBottom: '25px' }}>
-            <div
-              style={{
-                width: 75,
-                height: 75,
-                borderRadius: '50%',
-                flexShrink: 0,
-                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-              }}
-            />
-            <div
-              style={{
-                height: 20,
-                flex: 1,
-                maxWidth: 160,
-                borderRadius: 8,
-                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-              }}
-            />
+        {!isAppProfile && (
+          <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, ...shimmerStyle }} />
+          </div>
+        )}
+        <div style={{ padding: '20px', ...(isAppProfile ? { paddingTop: '48px' } : {}) }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '25px' }}>
+            <div style={{ width: 75, height: 75, borderRadius: '50%', flexShrink: 0, ...shimmerStyle }} />
+            <div style={{ height: 20, flex: 1, maxWidth: 160, borderRadius: 8, ...shimmerStyle }} />
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <div
-              style={{
-                flex: 1,
-                height: 52,
-                borderRadius: 12,
-                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-              }}
-            />
-            <div
-              style={{
-                flex: 1,
-                height: 52,
-                borderRadius: 12,
-                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-              }}
-            />
+            <div style={{ flex: 1, height: 52, borderRadius: 12, ...shimmerStyle }} />
+            <div style={{ flex: 1, height: 52, borderRadius: 12, ...shimmerStyle }} />
           </div>
-          <div
-            style={{
-              marginTop: '50px',
-              width: '100%',
-              height: 52,
-              borderRadius: 12,
-              background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-              backgroundSize: '200% 100%',
-              animation: 'profile-skeleton-shimmer 1.2s ease-in-out infinite',
-            }}
-          />
+          <div style={{ marginTop: '50px', width: '100%', height: 52, borderRadius: 12, ...shimmerStyle }} />
         </div>
       </div>
     );
@@ -218,19 +170,21 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         fontFamily: LAO_FONT,
       }}
     >
-      <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
-        <button
-          type="button"
-          onClick={onBack}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
-        >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-      </div>
+      {onBack != null && (
+        <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#fff', zIndex: 100 }}>
+          <button
+            type="button"
+            onClick={onBack}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
+      )}
 
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: '20px', ...(onBack == null ? { paddingTop: '48px' } : {}) }}>
         <Link href="/my-posts" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#e0e0e0', borderRadius: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '25px', cursor: 'pointer' }}>
             <div style={{ position: 'relative', width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -56,7 +56,7 @@ export default function Settings() {
         borderBottom: '1px solid #ddd'
       }}>
         <button 
-          onClick={() => { if (typeof window !== 'undefined') sessionStorage.setItem('profileNoSlide', '1'); router.push('/profile'); }} 
+          onClick={() => router.push('/profile')} 
           style={{ 
             background: 'none', 
             border: 'none', 
