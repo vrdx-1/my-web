@@ -32,7 +32,8 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
     >
       <div
         style={{
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '20px',
           maxWidth: '320px',

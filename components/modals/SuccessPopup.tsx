@@ -32,7 +32,8 @@ export const SuccessPopup = React.memo<SuccessPopupProps>(({ message, onClose })
     >
       <div
         style={{
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '18px 20px 16px 20px',
           maxWidth: '260px',

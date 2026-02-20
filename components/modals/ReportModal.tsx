@@ -50,7 +50,7 @@ export const ReportModal = React.memo<ReportModalProps>(({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
     >
       <div 
-        style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}
+        style={{ background: '#ffffff', backgroundColor: '#ffffff', borderRadius: '12px', width: '100%', maxWidth: '400px', padding: '20px' }}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center', color: '#111111' }}>ລາຍງານໂພສ</h3>

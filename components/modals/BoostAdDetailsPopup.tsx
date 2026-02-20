@@ -80,7 +80,7 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
       ].join(' ')}
       style={{ zIndex }}
     >
-      <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center bg-white text-gray-900">
+      <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center bg-white text-gray-900" style={{ backgroundColor: '#ffffff' }}>
         {status === 'pending' ? (
           <>
             <h2 className="text-2xl font-bold mb-3 text-green-600">

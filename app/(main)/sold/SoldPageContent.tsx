@@ -201,6 +201,18 @@ export function SoldPageContent() {
 
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
+  // Sync pullDistance กับ pullHeaderOffset เพื่อให้ header และ feed เลื่อนลงพร้อมกัน (ป้องกัน feed แยกจาก header)
+  useEffect(() => {
+    if (mainTab) {
+      mainTab.setPullHeaderOffset(pullDistance);
+    }
+    return () => {
+      if (mainTab) {
+        mainTab.setPullHeaderOffset(0);
+      }
+    };
+  }, [pullDistance, mainTab]);
+
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
     if (!mainTab) return;

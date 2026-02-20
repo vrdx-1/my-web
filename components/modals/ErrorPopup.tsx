@@ -32,7 +32,8 @@ export const ErrorPopup = React.memo<ErrorPopupProps>(({ message, onClose }) => 
     >
       <div
         style={{
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '16px 18px 14px 18px',
           maxWidth: '280px',

@@ -12,11 +12,11 @@ const VIEWING_MODE_LOAD_MORE_COUNT = 2
 
 const OVERLAY_STYLE: React.CSSProperties = {
   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-  background: '#fff', zIndex: 2000,
+  background: '#ffffff', backgroundColor: '#ffffff', zIndex: 2000,
   touchAction: 'pan-y', // อนุญาตให้เลื่อนได้เฉพาะแนวตั้งเท่านั้น
 };
 const CONTAINER_STYLE: React.CSSProperties = {
-  width: '100%', height: '100%', background: '#fff', position: 'relative',
+  width: '100%', height: '100%', background: '#ffffff', backgroundColor: '#ffffff', position: 'relative',
   overflowY: 'auto', overflowX: 'hidden', scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none',
   touchAction: 'pan-y', // อนุญาตให้เลื่อนได้เฉพาะแนวตั้งเท่านั้น
 };
@@ -30,7 +30,7 @@ const WRAPPER_CLIP_STYLE: React.CSSProperties = {
 };
 const HEADER_STYLE: React.CSSProperties = {
   padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px',
-  background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001,
+  background: '#ffffff', backgroundColor: '#ffffff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 2001,
 };
 const BACK_BTN_STYLE: React.CSSProperties = {
   background: 'none', border: 'none', cursor: 'pointer', display: 'flex',
@@ -41,7 +41,7 @@ const DOT_STYLE: React.CSSProperties = {
   display: 'inline-block', width: 3, height: 3, borderRadius: '50%', backgroundColor: META_COLOR, margin: '0 6px', transform: 'translateY(1px)',
 };
 const IMAGE_WRAP_STYLE: React.CSSProperties = {
-  position: 'relative', background: '#fff', marginBottom: 12, width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw',
+  position: 'relative', background: '#ffffff', backgroundColor: '#ffffff', marginBottom: 12, width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw',
 };
 const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', cursor: 'pointer', margin: 0, padding: 0 };
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {

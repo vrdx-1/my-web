@@ -35,7 +35,8 @@ export function AuthValidationPopup({
     >
       <div
         style={{
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
           padding: '20px',
           maxWidth: '320px',

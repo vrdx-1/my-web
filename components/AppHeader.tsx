@@ -129,9 +129,10 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       left: 0, 
       transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`, 
       width: '100%', 
-      background: '#fff', 
+      background: '#ffffff', 
+      backgroundColor: '#ffffff',
       zIndex: 500, 
-      transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
       boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' 
     }}>
       <div style={{ 

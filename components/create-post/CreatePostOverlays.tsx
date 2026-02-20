@@ -89,7 +89,8 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
           left: 0,
           right: 0,
           bottom: 0,
-          background: '#fff',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
           zIndex: 2000,
           display: 'flex',
           justifyContent: 'center',
@@ -100,7 +101,8 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
             width: '100%',
             maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
             height: '100%',
-            background: '#fff',
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
             position: 'relative',
             overflowY: 'auto',
           }}
@@ -111,7 +113,8 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
               display: 'flex',
               alignItems: 'center',
               gap: 0,
-              background: '#fff',
+              background: '#ffffff',
+              backgroundColor: '#ffffff',
               borderBottom: '1px solid #f0f0f0',
               position: 'sticky',
               top: 0,
@@ -275,7 +278,8 @@ export const CreatePostLeaveConfirmModal = React.memo<CreatePostLeaveConfirmModa
       >
         <div
           style={{
-            background: '#fff',
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
             borderRadius: '12px',
             padding: '20px',
             maxWidth: '320px',

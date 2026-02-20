@@ -137,7 +137,8 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
         onClick={e => e.stopPropagation()} 
         style={{ 
           width: '100%', 
-          background: '#fff', 
+          background: '#ffffff', 
+          backgroundColor: '#ffffff',
           borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', 
           height: interactionSheetMode === 'full' ? '100%' : '70%', 
           transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', 
@@ -166,7 +167,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
           >
             <div style={{ width: '40px', height: '5px', background: '#000', borderRadius: '10px' }}></div>
           </div>
-          <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#fff', zIndex: 10 }}>
+          <div style={{ position: 'sticky', display: 'flex', alignItems: 'center', gap: '40px', padding: '6px 25px 0px 25px', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 10 }}>
           <div 
             onClick={() => onFetchInteractions('likes', postId)} 
             style={{ 

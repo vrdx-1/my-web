@@ -31,7 +31,7 @@ export const TermsModal = React.memo<TermsModalProps>(({
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '30px 20px', position: 'relative', textAlign: 'center' }}>
+      <div style={{ background: '#ffffff', backgroundColor: '#ffffff', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '30px 20px', position: 'relative', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '40px 0 30px 0', flexWrap: 'wrap' }}>
           <input 
             type="checkbox" 
