@@ -159,11 +159,11 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           marginRight: '8px'
         }}>
           <Image 
-            src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG%20(1).png" 
+            src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
             alt="Jutpai Logo" 
             width={32} 
             height={32}
-            style={{ flexShrink: 0 }}
+            style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
           />
           <span 
             className={poppinsSemiBold.className}
