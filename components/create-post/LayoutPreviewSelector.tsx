@@ -217,9 +217,9 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
               onClick={() => onLayoutChange(layout.id)}
               style={{
                 flexShrink: 0,
-                width: '90px',
+                width: '72px',
                 aspectRatio: '1',
-                padding: '4px',
+                padding: '3px',
                 border: selectedLayout === layout.id ? '2px solid #1877f2' : '2px solid #e0e0e0',
                 borderRadius: '6px',
                 background: '#fff',

@@ -63,11 +63,16 @@ export function BottomNav() {
         const isCreatePostButton = isPostSlot && (isHome || isNotificationOrProfile);
 
         if (isCreatePostButton) {
+          const triggerCreatePost = () => createPostContext?.trigger();
           return (
             <button
               key="create-post"
               type="button"
-              onClick={() => createPostContext?.trigger()}
+              onClick={triggerCreatePost}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                triggerCreatePost();
+              }}
               aria-label="ໂພສ"
               style={{
                 flex: 1,

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { SpinnerRingSm } from '@/components/LoadingSpinner'
+import { SpinnerRing } from '@/components/LoadingSpinner'
 
 /** ความสูงส่วนหัว (โลโก้ + แท็บ) ใช้จัด spinner ใต้ header — ต้องตรงกับ spacer ใน MainTabLayoutClient */
 export const PULL_REFRESH_HEADER_HEIGHT = 118
@@ -52,7 +52,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         pointerEvents: 'none',
       }}
     >
-      <SpinnerRingSm />
+      <SpinnerRing />
     </div>
   )
 })
