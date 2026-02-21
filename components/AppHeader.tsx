@@ -163,6 +163,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             alt="Jutpai Logo" 
             width={32} 
             height={32}
+            unoptimized
             style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
           />
           <span 
