@@ -159,7 +159,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           marginRight: '8px'
         }}>
           <Image 
-            src="/images/jutpai-logo.png" 
+            src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/PNG%20(1).png" 
             alt="Jutpai Logo" 
             width={32} 
             height={32}
