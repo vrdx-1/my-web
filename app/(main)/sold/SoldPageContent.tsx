@@ -23,8 +23,9 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { usePullHeaderOffset } from '@/app/(main)/MainTabLayoutClient';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
+import { PullToRefreshIndicator, PULL_REFRESH_HEADER_HEIGHT } from '@/components/PullToRefreshIndicator';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -246,22 +247,18 @@ export function SoldPageContent() {
     };
   }, [isAtTop, scrollTopThreshold]);
 
-  const pullDisabled = tabRefreshing || !!interactionModalHook.interactionModal.show || isAtTop;
+  const pullDisabled = tabRefreshing || !!interactionModalHook.interactionModal.show || !isAtTop;
   const { pullDistance } = usePullToRefresh(handlePullToRefresh, pullDisabled);
 
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
-  // Sync pullDistance กับ pullHeaderOffset เพื่อให้ header และ feed เลื่อนลงพร้อมกัน (ป้องกัน feed แยกจาก header)
+  const setPullHeaderOffset = usePullHeaderOffset();
   useEffect(() => {
-    if (mainTab) {
-      mainTab.setPullHeaderOffset(pullDistance);
-    }
+    setPullHeaderOffset?.(pullDistance);
     return () => {
-      if (mainTab) {
-        mainTab.setPullHeaderOffset(0);
-      }
+      setPullHeaderOffset?.(0);
     };
-  }, [pullDistance, mainTab]);
+  }, [pullDistance, setPullHeaderOffset]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
@@ -336,7 +333,7 @@ export function SoldPageContent() {
 
   return (
     <>
-      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isPullRefreshing} />
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isPullRefreshing} headerHeight={PULL_REFRESH_HEADER_HEIGHT} />
       <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
         <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 

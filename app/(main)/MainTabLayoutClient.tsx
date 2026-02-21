@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { SearchScreen } from '@/components/SearchScreen';
@@ -14,6 +14,12 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
+/** Context สำหรับให้หน้า Home/Sold อัปเดต pull offset โดย state อยู่ที่ layout เพื่อให้ Header เลื่อนลงตามแน่นอน */
+const PullHeaderOffsetContext = createContext<((v: number) => void) | null>(null);
+export function usePullHeaderOffset() {
+  return useContext(PullHeaderOffsetContext);
+}
+
 export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -23,6 +29,12 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
+
+  /** State อยู่ที่ layout เลย — เวลาหน้าโฮม/ขายแล้วเรียก setPullHeaderOffset จะ re-render layout และ Header เลื่อนลงทันที */
+  const [pullOffset, setPullOffset] = useState(0);
+  useEffect(() => {
+    if (pathname !== '/' && pathname !== '/sold') setPullOffset(0);
+  }, [pathname]);
 
   useEffect(() => {
     const handler = () => fileUpload.handleCreatePostClick(session);
@@ -89,8 +101,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     mainTab?.navigatingToTab ??
     (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? (pathname === '/sold' ? 'sold' : 'recommend') : null);
 
-  const pullOffset = mainTab?.pullHeaderOffset ?? 0;
-
   const showHomeHeader =
     pathname === '/' ||
     pathname === '/sold';
@@ -118,8 +128,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               left: 0,
               right: 0,
               zIndex: 500,
-              transform: `translateY(${pullOffset}px)`,
-              transition: pullOffset === 0 ? 'transform 0.15s ease-out' : 'none',
             }}
           >
             <HomeHeader
@@ -168,7 +176,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         />
       )}
 
-      {children}
+      <PullHeaderOffsetContext.Provider value={setPullOffset}>
+        {children}
+      </PullHeaderOffsetContext.Provider>
     </>
   );
 }

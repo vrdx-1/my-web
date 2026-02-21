@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { PostFeed } from '@/components/PostFeed';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
@@ -8,6 +9,9 @@ import { LAO_FONT } from '@/utils/constants';
 import { useHomeContent } from '@/hooks/useHomeContent';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { usePullHeaderOffset } from '@/app/(main)/MainTabLayoutClient';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator, PULL_REFRESH_HEADER_HEIGHT } from '@/components/PullToRefreshIndicator';
 
 // Lazy load heavy modals
 const PostFeedModals = dynamic(() => import('@/components/PostFeedModals').then(m => ({ default: m.PostFeedModals })), { ssr: false });
@@ -16,7 +20,10 @@ const ReportSuccessPopup = dynamic(() => import('@/components/modals/ReportSucce
 const SuccessPopup = dynamic(() => import('@/components/modals/SuccessPopup').then(m => ({ default: m.SuccessPopup })), { ssr: false });
 const DeleteConfirmModal = dynamic(() => import('@/components/modals/DeleteConfirmModal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
 
+const SCROLL_TOP_THRESHOLD = 8;
+
 export function HomeContent() {
+  const pathname = usePathname();
   const mainTab = useMainTabContext();
   const headerVisibility = useHeaderVisibilityContext();
   const {
@@ -30,6 +37,9 @@ export function HomeContent() {
     popups,
     fileUpload,
     headerScroll,
+    tabRefreshing,
+    refreshSource,
+    isInteractionModalOpen,
   } = useHomeContent({
     sharedSearchTerm: mainTab?.searchTerm,
     isSearchScreenOpen: mainTab?.isSearchScreenOpen ?? false,
@@ -37,6 +47,66 @@ export function HomeContent() {
     setIsSearchScreenOpen: mainTab?.setIsSearchScreenOpen,
     onHeaderVisibilityChange: (v) => headerVisibility?.setHeaderVisible(v),
   });
+
+  const [isAtTop, setIsAtTop] = useState(true);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const atTop = typeof window !== 'undefined' && window.scrollY <= SCROLL_TOP_THRESHOLD;
+      setIsAtTop(atTop);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== '/') return;
+    document.body.setAttribute('data-page', 'home');
+    return () => document.body.removeAttribute('data-page');
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname !== '/' || !isAtTop) return;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+    let touchStartY = 0;
+    const MIN_PULL_THRESHOLD = 5;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY > SCROLL_TOP_THRESHOLD) return;
+      touchStartY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY > SCROLL_TOP_THRESHOLD) return;
+      const deltaY = e.touches[0].clientY - touchStartY;
+      if (deltaY > MIN_PULL_THRESHOLD) e.preventDefault();
+    };
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [pathname, isAtTop]);
+
+  const handlePullToRefresh = useCallback(() => {
+    mainTab?.setTabRefreshing(true);
+    mainTab?.setRefreshSource?.('pull');
+    handlers.handlePullToRefresh();
+  }, [mainTab, handlers.handlePullToRefresh]);
+
+  const pullDisabled = tabRefreshing || !!isInteractionModalOpen || !isAtTop;
+  const { pullDistance } = usePullToRefresh(handlePullToRefresh, pullDisabled);
+  const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
+
+  const setPullHeaderOffset = usePullHeaderOffset();
+  useEffect(() => {
+    setPullHeaderOffset?.(pullDistance);
+    return () => {
+      setPullHeaderOffset?.(0);
+    };
+  }, [pullDistance, setPullHeaderOffset]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
   useEffect(() => {
@@ -59,6 +129,11 @@ export function HomeContent() {
 
   return (
     <>
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isPullRefreshing}
+        headerHeight={PULL_REFRESH_HEADER_HEIGHT}
+      />
       <main
         style={{ width: '100%', margin: '0', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
       >

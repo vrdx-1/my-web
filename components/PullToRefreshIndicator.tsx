@@ -3,24 +3,29 @@
 import React from 'react'
 import { SpinnerRingSm } from '@/components/LoadingSpinner'
 
+/** ความสูงส่วนหัว (โลโก้ + แท็บ) ใช้จัด spinner ใต้ header — ต้องตรงกับ spacer ใน MainTabLayoutClient */
+export const PULL_REFRESH_HEADER_HEIGHT = 118
+
 interface PullToRefreshIndicatorProps {
   pullDistance: number
   isRefreshing: boolean
   /** px ที่ header ถูก translate ลง (ให้ indicator อยู่ใต้ header ตลอด) */
   pullHeaderOffset?: number
+  /** ความสูงส่วนหัว (px) — spinner จะโผล่ในช่องใต้ header */
+  headerHeight?: number
 }
 
 /**
- * แสดงด้านบนสุด (เหนือ Header) เมื่อดึงลงเพื่อรีเฟรช — spinner สไลด์ลงมาจากด้านบนสุด
+ * แสดงในช่องใต้ Header เมื่อดึงลงเพื่อรีเฟรช — spinner ไหลลงมาจากใต้ header แล้วหมุนอยู่ตรงนั้น (แบบ X)
  */
-export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({ pullDistance, isRefreshing, pullHeaderOffset = 0 }) => {
+export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({ pullDistance, isRefreshing, pullHeaderOffset = 0, headerHeight = PULL_REFRESH_HEADER_HEIGHT }) => {
   const visible = pullDistance > 0 || isRefreshing
   if (!visible) return null
 
   const containerHeight = 40
   const height = Math.min(containerHeight, Math.max(0, pullDistance) * 0.4)
 
-  // สไลด์ลงมาจากด้านบนสุด: เริ่มต้นอยู่เหนือ viewport (translateY(-containerHeight)) แล้วเลื่อนลงมา (translateY 0)
+  // สปินเนอร์ไหลลงมาจากใต้ header: เริ่มต้นซ่อนอยู่ด้านบน (translateY(-40)) แล้วเลื่อนลงมา (translateY 0)
   const translateY = isRefreshing ? 0 : -containerHeight + height
 
   return (
@@ -30,17 +35,17 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
       aria-label={isRefreshing ? 'ກຳລັງໂຫຼດໃໝ່' : ''}
       style={{
         position: 'fixed',
-        top: 0,
+        top: headerHeight,
         left: 0,
         right: 0,
-        height: 40,
+        height: containerHeight,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
         background: '#fff',
         color: '#333333',
-        zIndex: 999,
+        zIndex: 499,
         boxShadow: isRefreshing || height > 0 ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
         transform: `translateY(${translateY}px)`,
         transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
