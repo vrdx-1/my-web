@@ -52,6 +52,7 @@ const IMG_STYLE: React.CSSProperties = {
   objectFit: 'contain',
   objectPosition: 'center',
 };
+const SLIDE_GAP_PX = 8;
 
 interface FullScreenImageViewerProps {
   images: string[] | null;
@@ -84,8 +85,9 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
 
   const trackStyle = {
     display: 'flex' as const,
+    gap: `${SLIDE_GAP_PX}px`,
     transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none',
-    transform: `translateX(calc(-${currentImgIndex * 100}% + ${fullScreenDragOffset}px + ${fullScreenEntranceOffset}px))`,
+    transform: `translateX(calc(-${currentImgIndex} * (100% + ${SLIDE_GAP_PX}px) + ${fullScreenDragOffset}px + ${fullScreenEntranceOffset}px))`,
     width: '100%',
     height: '100%',
   };
@@ -111,14 +113,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={trackStyle}>
           {images.map((img, idx) => (
-            <div
-              key={idx}
-              style={{
-                ...IMG_SLIDE_STYLE,
-                borderRight: idx < images.length - 1 ? '1px solid #fff' : undefined,
-                boxSizing: 'border-box',
-              }}
-            >
+            <div key={idx} style={IMG_SLIDE_STYLE}>
               <img src={img} style={IMG_STYLE} alt="" />
             </div>
           ))}

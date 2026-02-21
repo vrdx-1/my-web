@@ -25,6 +25,61 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
 
     const layouts: LayoutPreview[] = [
       {
+        id: 'five-images-side',
+        name: '5 รูป',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.5fr 1fr',
+              gap: '4px',
+              width: '100%',
+              height: '100%',
+              background: '#ffffff',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr',
+                gap: '4px',
+                background: '#ffffff',
+              }}
+            >
+              {[0, 1].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr 1fr',
+                gap: '4px',
+                background: '#ffffff',
+              }}
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ),
+      },
+      {
         id: 'default',
         name: 'Default',
         render: () => (
@@ -81,61 +136,6 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 gridColumn: 'span 2',
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '4px',
-                background: '#ffffff',
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: 'five-images-side',
-        name: '5 รูป',
-        render: () => (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.5fr 1fr',
-              gap: '4px',
-              width: '100%',
-              height: '100%',
-              background: '#ffffff',
-            }}
-          >
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr',
-                gap: '4px',
-                background: '#ffffff',
-              }}
-            >
-              {[0, 1].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr 1fr',
                 gap: '4px',
                 background: '#ffffff',
               }}

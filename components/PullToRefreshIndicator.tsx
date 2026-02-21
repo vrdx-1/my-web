@@ -28,6 +28,10 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   // สปินเนอร์ไหลลงมาจากใต้ header: เริ่มต้นซ่อนอยู่ด้านบน (translateY(-40)) แล้วเลื่อนลงมา (translateY 0)
   const translateY = isRefreshing ? 0 : -containerHeight + height
 
+  // ตอนกำลัง refresh ให้ช่องสูงเต็มจากใต้ header ถึงล่างจอ แล้วจัด spinner อยู่ตรงกลางแนวตั้ง
+  const useFullHeight = isRefreshing
+  const containerHeightStyle = useFullHeight ? `calc(100vh - ${headerHeight}px)` : containerHeight
+
   return (
     <div
       role="status"
@@ -38,7 +42,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         top: headerHeight,
         left: 0,
         right: 0,
-        height: containerHeight,
+        height: containerHeightStyle,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -54,14 +58,11 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
     >
       <div
         style={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          width: '100%',
+          height: '100%',
         }}
       >
         <SpinnerRing />

@@ -20,7 +20,7 @@ export function useCreatePostUpload({
   caption,
   province,
   imageUpload,
-  layout = 'default',
+  layout = 'five-images-side',
 }: UseCreatePostUploadParams) {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
