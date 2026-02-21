@@ -101,12 +101,17 @@ export function HomeContent() {
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
   const pullOffsetCtx = usePullHeaderOffset();
+  // ฟีดโยโย้ตามนิ้วตอนดึง; ปล่อยมือแล้วคงช่องสปินเนอร์จนโหลดเสร็จ ค่อยโยโย้กลับ
   useEffect(() => {
-    pullOffsetCtx?.setPullHeaderOffset(pullDistance);
-    return () => {
-      pullOffsetCtx?.setPullHeaderOffset(0);
-    };
-  }, [pullDistance, pullOffsetCtx]);
+    if (!pullOffsetCtx) return;
+    if (pullDistance > 0) {
+      pullOffsetCtx.setPullHeaderOffset(pullDistance);
+    } else if (isPullRefreshing) {
+      pullOffsetCtx.setPullHeaderOffset(40);
+    } else {
+      pullOffsetCtx.setPullHeaderOffset(0);
+    }
+  }, [pullDistance, isPullRefreshing, pullOffsetCtx]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
   useEffect(() => {
