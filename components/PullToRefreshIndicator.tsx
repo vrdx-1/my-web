@@ -52,7 +52,20 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         pointerEvents: 'none',
       }}
     >
-      <SpinnerRing />
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <SpinnerRing />
+      </div>
     </div>
   )
 })
