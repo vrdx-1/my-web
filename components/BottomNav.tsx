@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Plus, PenSquare, Bell, User } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
@@ -19,9 +20,12 @@ const routes = [
   { path: '/profile', label: 'ໂປຣຟາຍ', icon: User, match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
 ] as const;
 
+const NAV_DEBOUNCE_MS = 400;
+
 export function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const lastNavRef = useRef<{ path: string; at: number } | null>(null);
   const { session, userProfile } = useSessionAndProfile();
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const createPostContext = useCreatePostContext();
@@ -37,7 +41,7 @@ export function BottomNav() {
       role="navigation"
       aria-label="Bottom navigation"
       className="bottom-nav-bar"
-      style={{
+        style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
@@ -51,7 +55,7 @@ export function BottomNav() {
         justifyContent: 'space-around',
         zIndex: 400,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.06)',
-        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 4px)`,
+        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 12px)`,
       }}
     >
       {routes.map(({ path, label, icon: Icon, match }) => {
@@ -95,8 +99,16 @@ export function BottomNav() {
         const isProfile = path === '/profile';
         const showBadge = path === '/notification' && unreadCount > 0;
 
-        const handleClick = (e: React.MouseEvent) => {
-          e.preventDefault();
+        const runNav = () => {
+          const now = Date.now();
+          const last = lastNavRef.current;
+          if (last && last.path === path && now - last.at < NAV_DEBOUNCE_MS) return;
+          lastNavRef.current = { path, at: now };
+
+          if (path === '/notification' && !session) {
+            router.push(REGISTER_PATH, { scroll: false });
+            return;
+          }
           if (pathname === path && path === '/notification') {
             notificationRefreshContext?.trigger();
             return;
@@ -111,11 +123,22 @@ export function BottomNav() {
           router.push(path, { scroll: false });
         };
 
+        const handleClick = (e: React.MouseEvent) => {
+          e.preventDefault();
+          runNav();
+        };
+
+        const handlePointerDown = (e: React.PointerEvent) => {
+          e.preventDefault();
+          runNav();
+        };
+
         return (
           <button
             key={path}
             type="button"
             onClick={handleClick}
+            onPointerDown={handlePointerDown}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
             style={{

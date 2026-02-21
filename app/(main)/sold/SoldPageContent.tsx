@@ -200,6 +200,12 @@ export function SoldPageContent() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // ใช้กฎเดียวกับ ພ້ອມຂາຍ: ให้ body มี data-page="home" เพื่อ overscroll-behavior-y: none (ไม่ให้ดึงฟีดแยกจาก Header)
+  useEffect(() => {
+    document.body.setAttribute('data-page', 'home');
+    return () => document.body.removeAttribute('data-page');
+  }, []);
+
   // ป้องกัน iOS overscroll bounce เมื่ออยู่บนสุดของ feed (แก้ปัญหา feed แยกจาก header)
   useEffect(() => {
     if (!isAtTop) return;

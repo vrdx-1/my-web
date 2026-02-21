@@ -296,10 +296,10 @@ textarea::placeholder {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .bottom-nav-content-padding {
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 }
 
 /* หน้า Profile: overlay ไม่ทับ Bottom nav (แสดงแถบล่างเหมือนหน้า Notifications) */
 .profile-layout-overlay-bottom {
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 }

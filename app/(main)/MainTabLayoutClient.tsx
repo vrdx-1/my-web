@@ -12,7 +12,7 @@ import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
-import { PROFILE_PATH } from '@/utils/authRoutes';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 
 export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -40,7 +40,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
 
   const handleNotificationClick = useCallback(() => {
     if (!session) {
-      router.push(PROFILE_PATH);
+      router.push(REGISTER_PATH);
       return;
     }
     router.push('/notification');

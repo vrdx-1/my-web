@@ -211,18 +211,22 @@ export function MyPostsContent() {
           overscrollBehavior: 'contain',
         }),
       }}
-      onTouchMove={(e) => {
-        if (isEditingName || isEditingPhone) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      onWheel={(e) => {
-        if (isEditingName || isEditingPhone) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
+      onTouchMove={
+        isEditingName || isEditingPhone
+          ? (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          : undefined
+      }
+      onWheel={
+        isEditingName || isEditingPhone
+          ? (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          : undefined
+      }
     >
       {/* Overlay when editing name or phone - คลุมทั้งจอและล็อกพื้นหลัง ไม่ให้แตะหรือสกรอล์ส่วนอื่นขณะเปลี่ยนชื่อ/กรอกเบอร์โทร */}
       {(isEditingName || isEditingPhone) && (

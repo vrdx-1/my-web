@@ -43,7 +43,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             bottom: 0,
             left: 0,
             right: 0,
-            minHeight: 56,
+            minHeight: 68,
             zIndex: 400,
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,

@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+/** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ตรงกับความสูง spacer หน้าโฮม/ขายแล้ว */
+const HEADER_TOP_ZONE_PX = 120;
+
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
@@ -37,6 +40,12 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
       lastScrollYRef.current = currentScrollY;
 
+      // อยู่โพสบนสุด: Header ต้องไม่เลื่อนออก (ทั้ง ພ້ອມຂາຍ และ ຂາຍແລ້ວ)
+      if (currentScrollY <= HEADER_TOP_ZONE_PX) {
+        applyVisible(true);
+        return;
+      }
+
       if (loadingMore) {
         if (scrollDelta > 0 && currentScrollY > 50) {
           applyVisible(false);
@@ -44,9 +53,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         return;
       }
 
-      if (currentScrollY <= 3) {
-        applyVisible(true);
-      } else if (scrollDelta > 0) {
+      if (scrollDelta > 0) {
         applyVisible(false);
       } else if (scrollDelta < 0) {
         applyVisible(true);

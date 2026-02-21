@@ -82,7 +82,6 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
 }) => {
   if (!images) return null;
 
-  const headerOpacity = fullScreenShowDetails ? 1 : 0;
   const trackStyle = {
     display: 'flex' as const,
     transition: fullScreenTransitionDuration > 0 ? `transform ${fullScreenTransitionDuration}ms ease-out` : 'none',
@@ -100,7 +99,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       onTouchEnd={onTouchEnd}
       onClick={onClick}
     >
-      <div style={{ ...HEADER_STYLE, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1, opacity: headerOpacity, transition: 'none', pointerEvents: fullScreenShowDetails ? 'auto' : 'none' }}>
+      <div style={{ ...HEADER_STYLE, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1, opacity: 1, transition: 'none', pointerEvents: 'auto' }}>
         <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Close">
           <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
@@ -112,7 +111,14 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={trackStyle}>
           {images.map((img, idx) => (
-            <div key={idx} style={IMG_SLIDE_STYLE}>
+            <div
+              key={idx}
+              style={{
+                ...IMG_SLIDE_STYLE,
+                borderRight: idx < images.length - 1 ? '1px solid #fff' : undefined,
+                boxSizing: 'border-box',
+              }}
+            >
               <img src={img} style={IMG_STYLE} alt="" />
             </div>
           ))}
