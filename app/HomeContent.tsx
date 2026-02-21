@@ -100,13 +100,13 @@ export function HomeContent() {
   const { pullDistance } = usePullToRefresh(handlePullToRefresh, pullDisabled);
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
-  const setPullHeaderOffset = usePullHeaderOffset();
+  const pullOffsetCtx = usePullHeaderOffset();
   useEffect(() => {
-    setPullHeaderOffset?.(pullDistance);
+    pullOffsetCtx?.setPullHeaderOffset(pullDistance);
     return () => {
-      setPullHeaderOffset?.(0);
+      pullOffsetCtx?.setPullHeaderOffset(0);
     };
-  }, [pullDistance, setPullHeaderOffset]);
+  }, [pullDistance, pullOffsetCtx]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บพร้อมขายที่ active = refresh)
   useEffect(() => {
@@ -135,7 +135,17 @@ export function HomeContent() {
         headerHeight={PULL_REFRESH_HEADER_HEIGHT}
       />
       <main
-        style={{ width: '100%', margin: '0', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, position: 'relative' }}
+        style={{
+          width: '100%',
+          margin: '0',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
+          minHeight: '100vh',
+          fontFamily: LAO_FONT,
+          position: 'relative',
+          transform: pullOffsetCtx ? `translateY(${pullOffsetCtx.pullHeaderOffset}px)` : undefined,
+          transition: pullOffsetCtx?.pullHeaderOffset === 0 ? 'transform 0.15s ease-out' : 'none',
+        }}
       >
         <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 

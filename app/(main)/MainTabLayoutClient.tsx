@@ -14,8 +14,9 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
-/** Context สำหรับให้หน้า Home/Sold อัปเดต pull offset โดย state อยู่ที่ layout เพื่อให้ Header เลื่อนลงตามแน่นอน */
-const PullHeaderOffsetContext = createContext<((v: number) => void) | null>(null);
+/** Context: setter สำหรับอัปเดต pull offset, และค่าปัจจุบันให้ฟีดโยโย้ (translate) ลงมา */
+type PullHeaderOffsetContextValue = { setPullHeaderOffset: (v: number) => void; pullHeaderOffset: number };
+const PullHeaderOffsetContext = createContext<PullHeaderOffsetContextValue | null>(null);
 export function usePullHeaderOffset() {
   return useContext(PullHeaderOffsetContext);
 }
@@ -150,7 +151,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
           </div>
           <div
             style={{
-              height: `${118 + pullOffset}px`,
+              height: 118,
               background: '#ffffff',
               backgroundColor: '#ffffff',
             }}
@@ -176,7 +177,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         />
       )}
 
-      <PullHeaderOffsetContext.Provider value={setPullOffset}>
+      <PullHeaderOffsetContext.Provider value={{ setPullHeaderOffset: setPullOffset, pullHeaderOffset: pullOffset }}>
         {children}
       </PullHeaderOffsetContext.Provider>
     </>

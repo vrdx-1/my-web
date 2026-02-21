@@ -252,13 +252,13 @@ export function SoldPageContent() {
 
   const isPullRefreshing = tabRefreshing && refreshSource === 'pull';
 
-  const setPullHeaderOffset = usePullHeaderOffset();
+  const pullOffsetCtx = usePullHeaderOffset();
   useEffect(() => {
-    setPullHeaderOffset?.(pullDistance);
+    pullOffsetCtx?.setPullHeaderOffset(pullDistance);
     return () => {
-      setPullHeaderOffset?.(0);
+      pullOffsetCtx?.setPullHeaderOffset(0);
     };
-  }, [pullDistance, setPullHeaderOffset]);
+  }, [pullDistance, pullOffsetCtx]);
 
   // ลงทะเบียน refresh กับ layout (กดแท็บขายแล้วที่ active = refresh)
   useEffect(() => {
@@ -334,7 +334,15 @@ export function SoldPageContent() {
   return (
     <>
       <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isPullRefreshing} headerHeight={PULL_REFRESH_HEADER_HEIGHT} />
-      <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+      <main
+        style={{
+          ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
+          ...(pullOffsetCtx && {
+            transform: `translateY(${pullOffsetCtx.pullHeaderOffset}px)`,
+            transition: pullOffsetCtx.pullHeaderOffset === 0 ? 'transform 0.15s ease-out' : 'none',
+          }),
+        }}
+      >
         <input type="file" ref={fileUpload.hiddenFileInputRef} multiple accept="image/*" onChange={fileUpload.handleFileChange} style={{ display: 'none' }} />
 
       {postListData.posts.length === 0 && postListData.loadingMore ? (
