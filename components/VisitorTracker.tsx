@@ -10,6 +10,14 @@ export default function VisitorTracker() {
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+
+    const updateLastSeen = async (userId: string) => {
+      await supabase
+        .from('profiles')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', userId);
+    };
 
     const track = async () => {
       try {
@@ -39,6 +47,13 @@ export default function VisitorTracker() {
         // --- ส่วนที่อัปเกรด: ระบบ Real-time Presence ---
         // ดึงข้อมูล User ปัจจุบัน (ถ้ามี) เพื่อแยกแยะว่าเป็น Registered หรือ Guest
         const { data: { user } } = await supabase.auth.getUser();
+
+        // อัปเดต last_seen ใน profiles เพื่อให้สถานะออนไลน์แสดงบน PostCard (เมื่อล็อกอิน)
+        if (user?.id) {
+          await updateLastSeen(user.id);
+          // Heartbeat ทุก 2 นาที เพื่อให้สถานะออนไลน์ไม่หลุดระหว่างใช้งาน
+          heartbeatInterval = setInterval(() => updateLastSeen(user.id), 2 * 60 * 1000);
+        }
         
         channel = supabase.channel('active_users', {
           config: { presence: { key: vId } }
@@ -46,7 +61,7 @@ export default function VisitorTracker() {
 
         channel
           .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
+            if (status === 'SUBSCRIBED' && channel) {
               // ส่งสถานะออนไลน์ไปยัง Presence
               await channel.track({
                 online_at: new Date().toISOString(),
@@ -64,8 +79,9 @@ export default function VisitorTracker() {
 
     track()
 
-    // Cleanup function: unsubscribe channel เมื่อ component unmount
+    // Cleanup function: unsubscribe channel และหยุด heartbeat เมื่อ component unmount
     return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
       if (channel) {
         supabase.removeChannel(channel);
       }

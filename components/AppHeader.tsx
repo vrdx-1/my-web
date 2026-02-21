@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Poppins } from 'next/font/google';
 import { PROFILE_PATH } from '@/utils/authRoutes';
+import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { TabSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
 
@@ -67,7 +68,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   const router = useRouter();
   const pathname = usePathname();
 
-  const onProfileClick = (pathname === '/' || pathname === '/sold') && setProfileOverlayOpen
+  const onProfileClick = pathname === '/home' && setProfileOverlayOpen
     ? () => setProfileOverlayOpen(true)
     : () => router.push(PROFILE_PATH, { scroll: false });
 
@@ -113,21 +114,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
     onNotificationClick();
   };
 
-  const handleTabClick = (tab: 'recommend' | 'sold') => {
-    const isActive = (tab === 'recommend' && pathname === '/') || (tab === 'sold' && pathname === '/sold');
-    if (isActive && onTabRefresh) {
-      onTabRefresh();
-      return;
-    }
-    onTabSwitchStart?.(tab);
-    if (tab === 'recommend') {
-      router.push('/');
-    } else {
-      router.push('/sold');
-    }
-    if (onTabChange) {
-      onTabChange();
-    }
+  const handleTabClick = (_tab: 'recommend' | 'sold') => {
+    if (pathname === '/home' && onTabRefresh) onTabRefresh();
   };
 
   return (
@@ -137,8 +125,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       left: 0, 
       transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`, 
       width: '100%', 
-      background: '#ffffff', 
-      backgroundColor: '#ffffff',
+      background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND, 
+      backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
       zIndex: 500, 
       boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
       transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out'
@@ -150,50 +138,76 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           gap: '8px', 
           borderBottom: '1px solid #f0f0f0',
         }}>
-        {/* Logo and Brand Name */}
+        {/* Logo (brand name removed per request) */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '8px', 
           flexShrink: 0,
-          marginRight: '8px'
+          ...(showOnlySearch ? { width: '48px', minWidth: '48px', marginRight: 0 } : { marginRight: '8px' })
         }}>
           <Image 
             src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
             alt="Jutpai Logo" 
-            width={32} 
-            height={32}
+            width={40} 
+            height={40}
             unoptimized
             style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
           />
-          <span 
-            className={poppinsSemiBold.className}
+        </div>
+
+        {showOnlySearch ? (
+          /* Search Bar - centered on home (spacer right = logo width for balance) */
+          <>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minWidth: 0 }}>
+            <div 
+              onClick={onSearchClick}
+              style={{ 
+                maxWidth: '280px', 
+                width: '100%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                background: '#f0f2f5', 
+                borderRadius: '20px', 
+                padding: '7px 14px', 
+                cursor: 'pointer', 
+                minHeight: `${controlSize}px` 
+              }}
+            >
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="ຄົ້ນຫາ" 
+            value={searchTerm} 
+            onChange={(e) => onSearchChange(e.target.value)} 
+            onFocus={onSearchClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSearchClick) onSearchClick();
+            }}
+            style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer', color: '#111111' }} 
+          />
+            </div>
+          </div>
+          <div style={{ width: '48px', minWidth: '48px', flexShrink: 0 }} aria-hidden />
+          </>
+        ) : (
+          /* Search Bar - normal (sold page etc.) */
+          <div 
+            onClick={onSearchClick}
             style={{ 
-              fontSize: '20px', 
-              fontWeight: '600', 
-              color: '#2196F3',
-              whiteSpace: 'nowrap',
-              letterSpacing: '0.3px'
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              background: '#f0f2f5', 
+              borderRadius: '20px', 
+              padding: '7px 14px', 
+              cursor: 'pointer', 
+              minHeight: `${controlSize}px` 
             }}
           >
-            Jutpai
-          </span>
-        </div>
-        
-        {/* Search Bar */}
-        <div 
-          onClick={onSearchClick}
-          style={{ 
-            ...(showOnlySearch ? { maxWidth: '280px', width: '100%', margin: '0 auto' } : { flex: 1 }), 
-            display: 'flex', 
-            alignItems: 'center', 
-            background: '#f0f2f5', 
-            borderRadius: '20px', 
-            padding: '7px 14px', 
-            cursor: 'pointer', 
-            minHeight: `${controlSize}px` 
-          }}
-        >
           <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
@@ -211,6 +225,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer', color: '#111111' }} 
           />
         </div>
+        )}
 
         {!showOnlySearch && (
           <>
@@ -303,71 +318,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         )}
       </div>
 
-      {/* Tabs — ใช้ onTouchEnd + preventDefault เพื่อกัน synthetic click ไปโดนโพสต์ด้านล่าง; stopPropagation กัน event ไปที่อื่น */}
-      <div style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}>
-        {(['recommend', 'sold'] as const).map((t) => {
-          const isActive = (t === 'recommend' && pathname === '/') || (t === 'sold' && pathname === '/sold');
-          const isLoading = loadingTab === t;
-          const onTabActivate = (e: React.SyntheticEvent) => {
-            e.stopPropagation();
-            e.preventDefault();
-            handleTabClick(t);
-          };
-          return (
-            <div
-              key={t}
-              role="tab"
-              aria-selected={isActive}
-              onTouchEnd={(e) => {
-                onTabActivate(e);
-              }}
-              onClick={(e) => {
-                onTabActivate(e);
-              }}
-              style={{
-                flex: 1,
-                minHeight: '36px',
-                padding: '9px 15px 7px 15px',
-                color: isActive ? '#1877f2' : '#4a4d52',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                touchAction: 'manipulation',
-                position: 'relative',
-                overflow: 'visible',
-                zIndex: 1,
-              }}
-            >
-              <div style={{ display: 'inline-block' }}>
-                {isLoading ? (
-                  <TabSpinner />
-                ) : (
-                  <span style={{ fontSize: '14px', lineHeight: 1.25, color: '#111111' }}>{t === 'recommend' ? 'ພ້ອມຂາຍ' : 'ຂາຍແລ້ວ'}</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        {/* เส้นบ่งชี้แท็บที่เลือก — เลื่อนตามแท็บที่ active */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: pathname === '/sold' ? '75%' : '25%',
-            width: '28%',
-            height: '4px',
-            background: '#1877f2',
-            borderRadius: '999px',
-            transform: 'translateX(-50%)',
-            transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
+      {/* แท็บ ພ້ອມຂາຍ | ຂາຍແລ້ວ ถูกยกเลิก — เหลือแค่ ຂາຍແລ້ວ */}
     </div>
   );
 });

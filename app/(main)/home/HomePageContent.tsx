@@ -1,0 +1,389 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { PostFeed } from '@/components/PostFeed';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { PostFeedModals } from '@/components/PostFeedModals';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+import { InteractionModal } from '@/components/modals/InteractionModal';
+
+import { usePostInteractions } from '@/hooks/usePostInteractions';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { usePostListData } from '@/hooks/usePostListData';
+import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useMenu } from '@/hooks/useMenu';
+import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
+import { useViewingPost } from '@/hooks/useViewingPost';
+import { usePostModals } from '@/hooks/usePostModals';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
+import { useInteractionModal } from '@/hooks/useInteractionModal';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useBackHandler } from '@/components/BackHandlerContext';
+import { useMainTabContext } from '@/contexts/MainTabContext';
+import { usePullHeaderOffset } from '@/app/(main)/MainTabLayoutClient';
+
+import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { PULL_REFRESH_HEADER_HEIGHT, PULL_REFRESH_ZONE_HEIGHT } from '@/components/PullToRefreshIndicator';
+
+export type HomeTab = 'recommend' | 'sold';
+
+export function HomePageContent() {
+  const [tabRefreshing, setTabRefreshing] = useState(false);
+  const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const [reportingPost, setReportingPost] = useState<any | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const [sessionState, setSessionState] = useState<any>(undefined);
+  const postsRef = useRef<any[]>([]);
+  const prevLoadingMoreRef = useRef(false);
+
+  const mainTab = useMainTabContext();
+  const tab = mainTab?.homeTab ?? 'recommend';
+  const searchTerm = mainTab?.searchTerm ?? '';
+  const pullHeaderCtx = usePullHeaderOffset();
+  const setPullHeaderOffset = pullHeaderCtx?.setPullHeaderOffset ?? (() => {});
+  const pullHeaderOffset = pullHeaderCtx?.pullHeaderOffset ?? 0;
+
+  const recommendFeed = useHomeFeed({ searchTerm: tab === 'recommend' ? searchTerm : '', session: sessionState });
+  const soldListData = usePostListData({
+    type: 'sold',
+    session: sessionState,
+    searchTerm: tab === 'sold' ? searchTerm : '',
+    status: 'sold',
+  });
+
+  const posts = tab === 'recommend' ? recommendFeed.posts : soldListData.posts;
+  const postList = tab === 'recommend' ? recommendFeed : soldListData;
+  postsRef.current = posts;
+
+  useEffect(() => {
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
+    });
+  }, []);
+
+  const menu = useMenu();
+  const fullScreenViewer = useFullScreenViewer();
+  const viewingPostHook = useViewingPost();
+  const headerScroll = useHeaderScroll();
+  const interactionModalHook = useInteractionModal();
+
+  const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
+    loadingMore: postList.loadingMore,
+    hasMore: postList.hasMore,
+    onLoadMore: () => postList.setPage((p) => p + 1),
+  });
+
+  const { toggleLike, toggleSave } = usePostInteractions({
+    session: postList.session,
+    posts: postList.posts,
+    setPosts: postList.setPosts,
+    likedPosts: postList.likedPosts,
+    savedPosts: postList.savedPosts,
+    setLikedPosts: postList.setLikedPosts,
+    setSavedPosts: postList.setSavedPosts,
+    setJustLikedPosts,
+    setJustSavedPosts,
+  });
+
+  useEffect(() => {
+    if (tab !== 'sold' || sessionState === undefined || soldListData.session === undefined) return;
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+    soldListData.fetchPosts(true);
+  }, [tab, sessionState, soldListData.session, searchTerm]);
+
+  useEffect(() => {
+    const wasLoading = prevLoadingMoreRef.current;
+    prevLoadingMoreRef.current = postList.loadingMore;
+    if (wasLoading && !postList.loadingMore) {
+      setTabRefreshing(false);
+      mainTab?.setNavigatingToTab(null);
+      mainTab?.setTabRefreshing(false);
+    } else if (!postList.loadingMore) {
+      setTabRefreshing(false);
+      mainTab?.setTabRefreshing(false);
+    }
+  }, [postList.loadingMore, mainTab]);
+
+  const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+    if (options?.fromHomeButton) {
+      mainTab?.setRefreshSource('home');
+    } else {
+      mainTab?.setRefreshSource('pull');
+    }
+    setTabRefreshing(true);
+    if (tab === 'recommend') {
+      recommendFeed.setPage(0);
+      recommendFeed.setHasMore(true);
+      recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+    } else {
+      soldListData.setPage(0);
+      soldListData.setHasMore(true);
+      soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+    }
+  }, [tab, mainTab, recommendFeed, soldListData]);
+
+  useEffect(() => {
+    mainTab?.registerTabRefreshHandler(doRefresh);
+    return () => mainTab?.unregisterTabRefreshHandler();
+  }, [mainTab, doRefresh]);
+
+  const { pullDistance } = usePullToRefresh(doRefresh, false);
+
+  useEffect(() => {
+    setPullHeaderOffset(pullDistance);
+    return () => setPullHeaderOffset(0);
+  }, [pullDistance, setPullHeaderOffset]);
+
+  const handlers = usePostFeedHandlers({
+    session: postList.session,
+    posts: postList.posts,
+    setPosts: postList.setPosts,
+    viewingPostHook,
+    headerScroll,
+    menu,
+    reportingPost,
+    setReportingPost,
+    reportReason,
+    setReportReason,
+    isSubmittingReport,
+    setIsSubmittingReport,
+  });
+
+  usePostModals({
+    viewingPost: viewingPostHook.viewingPost,
+    isViewingModeOpen: viewingPostHook.isViewingModeOpen,
+    setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
+    setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
+    initialImageIndex: viewingPostHook.initialImageIndex,
+    savedScrollPosition: viewingPostHook.savedScrollPosition,
+    fullScreenImages: fullScreenViewer.fullScreenImages,
+    setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
+    setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
+    setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
+    setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
+    setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
+    setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
+    setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
+    interactionModalShow: interactionModalHook.interactionModal.show,
+    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+  });
+
+  const { addBackStep } = useBackHandler();
+  useEffect(() => {
+    if (!fullScreenViewer.fullScreenImages) return;
+    const close = () => {
+      fullScreenViewer.setFullScreenImages(null);
+      if (fullScreenViewer.activePhotoMenu !== null) {
+        fullScreenViewer.setIsPhotoMenuAnimating(true);
+        setTimeout(() => {
+          fullScreenViewer.setActivePhotoMenu(null);
+          fullScreenViewer.setIsPhotoMenuAnimating(false);
+        }, 300);
+      }
+    };
+    return addBackStep(close);
+  }, [fullScreenViewer.fullScreenImages]);
+  useEffect(() => {
+    if (!viewingPostHook.viewingPost) return;
+    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    return addBackStep(close);
+  }, [viewingPostHook.viewingPost]);
+
+  const fetchInteractions = useCallback(
+    async (type: 'likes' | 'saves', postId: string) => {
+      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
+    },
+    [interactionModalHook],
+  );
+
+  const isRefreshing = tabRefreshing && mainTab?.refreshSource === 'pull';
+  /** เวลาดึงหรือกำลัง refresh ให้ฟีดโยโย้ลง เท่ากับระยะดึง หรือความสูงช่องสปินเนอร์ */
+  const feedTranslateY = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : pullDistance;
+
+  const setTabAndRefresh = useCallback((newTab: HomeTab) => {
+    if (newTab === tab) {
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+      mainTab?.setTabRefreshing(true);
+      setTabRefreshing(true);
+      if (newTab === 'recommend') {
+        recommendFeed.setPage(0);
+        recommendFeed.setHasMore(true);
+        recommendFeed.fetchPosts(true);
+      } else {
+        soldListData.setPage(0);
+        soldListData.setHasMore(true);
+        soldListData.fetchPosts(true);
+      }
+    } else {
+      mainTab?.setNavigatingToTab(newTab);
+      mainTab?.setHomeTab(newTab);
+      setTabRefreshing(true);
+      if (newTab === 'recommend') {
+        recommendFeed.setPage(0);
+        recommendFeed.setHasMore(true);
+        recommendFeed.fetchPosts(true);
+      }
+      // sold: fetch ถูกเรียกใน useEffect เมื่อ tab === 'sold'
+    }
+  }, [tab, mainTab, recommendFeed, soldListData]);
+
+  useEffect(() => {
+    mainTab?.registerTabChangeHandler(setTabAndRefresh);
+    return () => mainTab?.unregisterTabChangeHandler();
+  }, [mainTab, setTabAndRefresh]);
+
+  return (
+    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        pullHeaderOffset={pullHeaderOffset}
+        headerHeight={PULL_REFRESH_HEADER_HEIGHT}
+      />
+
+      <div
+        style={{
+          transform: feedTranslateY > 0 ? `translateY(${feedTranslateY}px)` : undefined,
+          transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
+        }}
+      >
+        {(posts.length === 0 && postList.loadingMore) || (mainTab?.refreshSource === 'home' && postList.loadingMore) ? (
+          <FeedSkeleton />
+        ) : (
+          <PostFeed
+          posts={posts}
+          session={postList.session}
+          likedPosts={postList.likedPosts}
+          savedPosts={postList.savedPosts}
+          justLikedPosts={justLikedPosts}
+          justSavedPosts={justSavedPosts}
+          activeMenuState={menu.activeMenuState}
+          isMenuAnimating={menu.isMenuAnimating}
+          lastPostElementRef={lastPostElementRef}
+          menuButtonRefs={menu.menuButtonRefs}
+          onViewPost={handlers.handleViewPost}
+          onImpression={handlers.handleImpression}
+          onLike={toggleLike}
+          onSave={toggleSave}
+          onShare={handlers.handleShare}
+          onViewLikes={(postId) => fetchInteractions('likes', postId)}
+          onViewSaves={(postId) => fetchInteractions('saves', postId)}
+          onTogglePostStatus={handlers.handleTogglePostStatus}
+          onDeletePost={handlers.handleDeletePost}
+          onReport={handlers.handleReport}
+          onSetActiveMenu={menu.setActiveMenu}
+          onSetMenuAnimating={menu.setIsMenuAnimating}
+          loadingMore={postList.hasMore ? postList.loadingMore : false}
+          hasMore={postList.hasMore}
+          onLoadMore={() => postList.setPage((p) => p + 1)}
+          hideBoost={tab === 'sold'}
+        />
+        )}
+      </div>
+
+      <InteractionModal
+        show={interactionModalHook.interactionModal.show}
+        type={interactionModalHook.interactionModal.type}
+        postId={interactionModalHook.interactionModal.postId}
+        posts={posts}
+        interactionUsers={interactionModalHook.interactionUsers}
+        interactionLoading={interactionModalHook.interactionLoading}
+        interactionSheetMode={interactionModalHook.interactionSheetMode}
+        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
+        startY={interactionModalHook.startY}
+        currentY={interactionModalHook.currentY}
+        onClose={interactionModalHook.closeModal}
+        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
+        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
+        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
+        onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
+      />
+
+      <PostFeedModals
+        viewingPost={viewingPostHook.viewingPost}
+        session={postList.session}
+        isViewingModeOpen={viewingPostHook.isViewingModeOpen}
+        viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
+        savedScrollPosition={viewingPostHook.savedScrollPosition}
+        initialImageIndex={viewingPostHook.initialImageIndex}
+        onViewingPostClose={() => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible)}
+        onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
+        onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}
+        onViewingPostTouchEnd={(e: React.TouchEvent) => viewingPostHook.handleViewingModeTouchEnd(e, () => {})}
+        onViewingPostImageClick={(images: string[], index: number) => {
+          fullScreenViewer.setFullScreenImages(images);
+          fullScreenViewer.setCurrentImgIndex(index);
+        }}
+        fullScreenImages={fullScreenViewer.fullScreenImages}
+        currentImgIndex={fullScreenViewer.currentImgIndex}
+        fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+        fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
+        fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
+        fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
+        fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}
+        fullScreenShowDetails={fullScreenViewer.fullScreenShowDetails}
+        fullScreenZoomScale={fullScreenViewer.fullScreenZoomScale}
+        fullScreenZoomOrigin={fullScreenViewer.fullScreenZoomOrigin}
+        activePhotoMenu={fullScreenViewer.activePhotoMenu}
+        isPhotoMenuAnimating={fullScreenViewer.isPhotoMenuAnimating}
+        showDownloadBottomSheet={fullScreenViewer.showDownloadBottomSheet}
+        isDownloadBottomSheetAnimating={fullScreenViewer.isDownloadBottomSheetAnimating}
+        showImageForDownload={fullScreenViewer.showImageForDownload}
+        onFullScreenClose={() => {
+          fullScreenViewer.setFullScreenImages(null);
+          if (fullScreenViewer.activePhotoMenu !== null) {
+            setTimeout(() => fullScreenViewer.setActivePhotoMenu(null), 300);
+          }
+        }}
+        onFullScreenTouchStart={fullScreenViewer.fullScreenOnTouchStart}
+        onFullScreenTouchMove={fullScreenViewer.fullScreenOnTouchMove}
+        onFullScreenTouchEnd={fullScreenViewer.fullScreenOnTouchEnd}
+        onFullScreenClick={fullScreenViewer.fullScreenOnClick}
+        onFullScreenDownload={fullScreenViewer.downloadImage}
+        onFullScreenImageIndexChange={fullScreenViewer.setCurrentImgIndex}
+        onFullScreenPhotoMenuToggle={fullScreenViewer.setActivePhotoMenu}
+        onFullScreenDownloadBottomSheetClose={() => {
+          fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
+          setTimeout(() => {
+            fullScreenViewer.setShowDownloadBottomSheet(false);
+            fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
+          }, 300);
+        }}
+        onFullScreenDownloadBottomSheetDownload={() => {
+          if (fullScreenViewer.showImageForDownload) {
+            fullScreenViewer.downloadImage(fullScreenViewer.showImageForDownload);
+          }
+        }}
+        onFullScreenImageForDownloadClose={() => fullScreenViewer.setShowImageForDownload(null)}
+        reportingPost={reportingPost}
+        reportReason={reportReason}
+        isSubmittingReport={isSubmittingReport}
+        onReportClose={() => setReportingPost(null)}
+        onReportReasonChange={setReportReason}
+        onReportSubmit={handlers.handleSubmitReport}
+      />
+
+      {handlers.showReportSuccess && (
+        <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+      )}
+      {handlers.showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={handlers.handleConfirmDelete}
+          onCancel={handlers.handleCancelDelete}
+        />
+      )}
+      {handlers.showDeleteSuccess && (
+        <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
+    </main>
+  );
+}

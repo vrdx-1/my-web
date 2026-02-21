@@ -301,5 +301,5 @@ textarea::placeholder {
 
 /* หน้า Profile: overlay ไม่ทับ Bottom nav (แสดงแถบล่างเหมือนหน้า Notifications) */
 .profile-layout-overlay-bottom {
-  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
 }

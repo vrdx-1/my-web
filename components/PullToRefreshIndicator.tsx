@@ -3,8 +3,11 @@
 import React from 'react'
 import { SpinnerRing } from '@/components/LoadingSpinner'
 
-/** ความสูงส่วนหัว (โลโก้ + แท็บ) ใช้จัด spinner ใต้ header — ต้องตรงกับ spacer ใน MainTabLayoutClient */
-export const PULL_REFRESH_HEADER_HEIGHT = 118
+/** ความสูงส่วนหัว (โลโก้ + แท็บ) ใช้จัด spinner ใต้ header — ต้องตรงกับ spacer ใน MainTabLayoutClient (HOME_FIXED_BLOCK_HEIGHT = 104) */
+export const PULL_REFRESH_HEADER_HEIGHT = 104
+
+/** ความสูงช่อง spinner ตอนกำลัง refresh — ฟีดจะโยโย้ลงเท่านี้ให้สปินเนอร์หมุนตรงนี้ */
+export const PULL_REFRESH_ZONE_HEIGHT = 56
 
 interface PullToRefreshIndicatorProps {
   pullDistance: number
@@ -28,9 +31,9 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   // สปินเนอร์ไหลลงมาจากใต้ header: เริ่มต้นซ่อนอยู่ด้านบน (translateY(-40)) แล้วเลื่อนลงมา (translateY 0)
   const translateY = isRefreshing ? 0 : -containerHeight + height
 
-  // ตอนกำลัง refresh ให้ช่องสูงเต็มจากใต้ header ถึงล่างจอ แล้วจัด spinner อยู่ตรงกลางแนวตั้ง
-  const useFullHeight = isRefreshing
-  const containerHeightStyle = useFullHeight ? `calc(100vh - ${headerHeight}px)` : containerHeight
+  // ตอนกำลัง refresh ใช้ช่องสูงคงที่ ให้ฟีดโยโย้ลงมาแล้วสปินเนอร์หมุนตรงนี้ (ไม่เต็มจอ)
+  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : containerHeight
+  const containerHeightStyle = zoneHeight
 
   return (
     <div

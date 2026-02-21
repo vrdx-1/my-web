@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
+import { TabNavigation } from '@/components/TabNavigation';
 import { SearchScreen } from '@/components/SearchScreen';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -13,6 +14,7 @@ import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 /** Context: setter สำหรับอัปเดต pull offset, และค่าปัจจุบันให้ฟีดโยโย้ (translate) ลงมา */
 type PullHeaderOffsetContextValue = { setPullHeaderOffset: (v: number) => void; pullHeaderOffset: number };
@@ -34,7 +36,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   /** State อยู่ที่ layout เลย — เวลาหน้าโฮม/ขายแล้วเรียก setPullHeaderOffset จะ re-render layout และ Header เลื่อนลงทันที */
   const [pullOffset, setPullOffset] = useState(0);
   useEffect(() => {
-    if (pathname !== '/' && pathname !== '/sold') setPullOffset(0);
+    if (pathname !== '/home') setPullOffset(0);
   }, [pathname]);
 
   useEffect(() => {
@@ -65,10 +67,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   }, [mainTab]);
 
   const handleSearchPerform = useCallback(() => {
-    if (pathname === '/') {
-      mainTab?.setTabRefreshing(true);
-    }
-    if (pathname === '/sold') {
+    if (pathname === '/home') {
       mainTab?.setTabRefreshing(true);
       mainTab?.triggerTabRefresh();
     }
@@ -86,13 +85,13 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    if (pathname !== '/' && pathname !== '/sold') {
+    if (pathname !== '/home') {
       homeRefreshContext?.register(null);
       return;
     }
     const handler = () => {
       mainTab?.setTabRefreshing(true);
-      mainTab?.triggerTabRefresh();
+      mainTab?.triggerTabRefresh({ fromHomeButton: true });
     };
     homeRefreshContext?.register(handler);
     return () => homeRefreshContext?.register(null);
@@ -100,11 +99,12 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
 
   const loadingTab =
     mainTab?.navigatingToTab ??
-    (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? (pathname === '/sold' ? 'sold' : 'recommend') : null);
+    (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? mainTab?.homeTab ?? null : null);
 
-  const showHomeHeader =
-    pathname === '/' ||
-    pathname === '/sold';
+  const showHomeHeader = pathname === '/home';
+
+  /** ความสูงรวมของ fixed block: header (~59) + tab bar (~45) */
+  const HOME_FIXED_BLOCK_HEIGHT = 104;
 
   const headerVisibility = useHeaderVisibilityContext();
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
@@ -129,6 +129,8 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               left: 0,
               right: 0,
               zIndex: 500,
+              background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+              backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
             }}
           >
             <HomeHeader
@@ -148,12 +150,23 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               setProfileOverlayOpen={setProfileOverlayOpen}
               showOnlySearch={true}
             />
+            {/* Reserve space for fixed Header so Tab bar is not hidden under it */}
+            <div style={{ height: 59, flexShrink: 0 }} aria-hidden />
+            <TabNavigation
+              tabs={[
+                { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+                { value: 'sold', label: 'ຂາຍແລ້ວ' },
+              ]}
+              activeTab={mainTab?.homeTab ?? 'recommend'}
+              onTabChange={(v) => mainTab?.triggerTabChange(v as 'recommend' | 'sold')}
+              loadingTab={loadingTab}
+            />
           </div>
           <div
             style={{
-              height: 118,
-              background: '#ffffff',
-              backgroundColor: '#ffffff',
+              height: HOME_FIXED_BLOCK_HEIGHT,
+              background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+              backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
             }}
           />
         </>

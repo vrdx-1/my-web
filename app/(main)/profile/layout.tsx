@@ -12,7 +12,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
   const { addBackStep } = useBackHandler();
 
   const requestBack = useCallback(() => {
-    router.push('/');
+    router.push('/home');
   }, [router]);
 
   useEffect(() => {
@@ -26,6 +26,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     top: 0,
     left: 0,
     right: 0,
+    bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
     background: '#ffffff',
     backgroundColor: '#ffffff',
     zIndex: 1000,

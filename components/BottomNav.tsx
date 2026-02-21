@@ -14,7 +14,7 @@ import { Avatar } from '@/components/Avatar';
 const BOTTOM_NAV_HEIGHT = 56;
 
 const routes = [
-  { path: '/', label: 'ໜ້າຫຼັກ', icon: Home, match: (p: string) => p === '/' || p === '/sold' },
+  { path: '/home', label: 'ໜ້າຫຼັກ', icon: Home, match: (p: string) => p === '/home' },
   { path: '/create-post', label: 'ໂພສ', icon: PenSquare, match: (p: string) => p === '/create-post' },
   { path: '/notification', label: 'ການແຈ້ງເຕືອນ', icon: Bell, match: (p: string) => p === '/notification' },
   { path: '/profile', label: 'ໂປຣຟາຍ', icon: User, match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
@@ -22,17 +22,20 @@ const routes = [
 
 const NAV_DEBOUNCE_MS = 400;
 
+const CREATE_POST_DEBOUNCE_MS = 400;
+
 export function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
   const lastNavRef = useRef<{ path: string; at: number } | null>(null);
+  const lastCreatePostTriggerRef = useRef<number>(0);
   const { session, userProfile } = useSessionAndProfile();
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
 
-  const isHome = pathname === '/' || pathname === '/sold';
+  const isHome = pathname === '/home';
   const isNotificationOrProfile =
     pathname === '/notification' || pathname === '/profile' || (pathname?.startsWith('/profile/') ?? false);
 
@@ -63,12 +66,21 @@ export function BottomNav() {
         const isCreatePostButton = isPostSlot && (isHome || isNotificationOrProfile);
 
         if (isCreatePostButton) {
-          const triggerCreatePost = () => createPostContext?.trigger();
+          const triggerCreatePost = () => {
+            const now = Date.now();
+            if (now - lastCreatePostTriggerRef.current < CREATE_POST_DEBOUNCE_MS) return;
+            lastCreatePostTriggerRef.current = now;
+            createPostContext?.trigger();
+          };
           return (
             <button
               key="create-post"
               type="button"
               onClick={triggerCreatePost}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                triggerCreatePost();
+              }}
               onTouchEnd={(e) => {
                 e.preventDefault();
                 triggerCreatePost();
@@ -88,6 +100,7 @@ export function BottomNav() {
                 color: '#65676b',
                 touchAction: 'manipulation',
                 minWidth: 0,
+                minHeight: 44,
               }}
             >
               <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -118,11 +131,11 @@ export function BottomNav() {
             notificationRefreshContext?.trigger();
             return;
           }
-          if (pathname === path && (path === '/sold' || path === '/profile')) {
+          if (pathname === path && path === '/home') {
+            homeRefreshContext?.trigger();
             return;
           }
-          if (path === '/' && (pathname === '/' || pathname === '/sold')) {
-            homeRefreshContext?.trigger();
+          if (pathname === path && path === '/profile') {
             return;
           }
           router.push(path, { scroll: false });
@@ -147,6 +160,7 @@ export function BottomNav() {
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
             style={{
+              position: 'relative',
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
@@ -160,6 +174,7 @@ export function BottomNav() {
               color: isActive ? '#1877f2' : '#65676b',
               touchAction: 'manipulation',
               minWidth: 0,
+              overflow: 'visible',
             }}
           >
             {isProfile ? (
@@ -212,6 +227,24 @@ export function BottomNav() {
             >
               {label}
             </span>
+            {isActive && (
+              <span
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '40%',
+                  maxWidth: 48,
+                  height: 3,
+                  borderRadius: '0 0 3px 3px',
+                  background: '#1877f2',
+                  zIndex: 2,
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
           </button>
         );
       })}

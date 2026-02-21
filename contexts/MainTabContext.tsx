@@ -3,18 +3,26 @@
 import React, { createContext, useCallback, useRef, useContext, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-type TabRefreshHandler = () => void;
+type TabRefreshOptions = { fromHomeButton?: boolean };
+type TabRefreshHandler = (options?: TabRefreshOptions) => void;
+type TabChangeHandler = (tab: MainTab) => void;
 export type MainTab = 'recommend' | 'sold';
 
 interface MainTabContextValue {
+  /** แท็บ Home ปัจจุบัน (ພ້ອມຂາຍ | ຂາຍແລ້ວ) */
+  homeTab: MainTab;
+  setHomeTab: (v: MainTab) => void;
+  registerTabChangeHandler: (handler: TabChangeHandler) => void;
+  unregisterTabChangeHandler: () => void;
+  triggerTabChange: (tab: MainTab) => void;
   registerTabRefreshHandler: (handler: TabRefreshHandler) => void;
   unregisterTabRefreshHandler: () => void;
-  triggerTabRefresh: () => void;
+  triggerTabRefresh: (options?: TabRefreshOptions) => void;
   tabRefreshing: boolean;
   setTabRefreshing: (v: boolean) => void;
-  /** 'pull' = กำลัง refresh จากดึงลง → ไม่แสดง loading บนแท็บ */
-  refreshSource: 'pull' | null;
-  setRefreshSource: (v: 'pull' | null) => void;
+  /** 'pull' = กำลัง refresh จากดึงลง, 'home' = refresh จากปุ่ม Home → แสดง Skeleton ในพื้นที่ feed */
+  refreshSource: 'pull' | 'home' | null;
+  setRefreshSource: (v: 'pull' | 'home' | null) => void;
   /** px ที่ใช้ translate header+spacer ลงเมื่อดึง feed (ให้ header ถูกดึงลงด้วย) */
   pullHeaderOffset: number;
   setPullHeaderOffset: (v: number) => void;
@@ -33,11 +41,15 @@ interface MainTabContextValue {
 
 const MainTabContext = createContext<MainTabContextValue | null>(null);
 
+const HOME_TAB_DEFAULT: MainTab = 'recommend';
+
 export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const handlerRef = useRef<TabRefreshHandler | null>(null);
+  const tabChangeHandlerRef = useRef<TabChangeHandler | null>(null);
+  const [homeTab, setHomeTabState] = useState<MainTab>(HOME_TAB_DEFAULT);
   const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [refreshSource, setRefreshSource] = useState<'pull' | null>(null);
+  const [refreshSource, setRefreshSource] = useState<'pull' | 'home' | null>(null);
   const [pullHeaderOffset, setPullHeaderOffset] = useState(0);
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
   const [searchTerm, setSearchTermState] = useState('');
@@ -52,11 +64,28 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
 
   // Clear navigating state when route has changed
   useEffect(() => {
-    if (pathname === '/' || pathname === '/sold') {
+    if (pathname === '/home') {
       const t = setTimeout(() => setNavigatingToTab(null), 0);
       return () => clearTimeout(t);
     }
   }, [pathname]);
+
+  const setHomeTab = useCallback((v: MainTab) => {
+    setHomeTabState(v);
+  }, []);
+
+  const registerTabChangeHandler = useCallback((handler: TabChangeHandler) => {
+    tabChangeHandlerRef.current = handler;
+  }, []);
+
+  const unregisterTabChangeHandler = useCallback(() => {
+    tabChangeHandlerRef.current = null;
+  }, []);
+
+  const triggerTabChange = useCallback((tab: MainTab) => {
+    setHomeTabState(tab);
+    tabChangeHandlerRef.current?.(tab);
+  }, []);
 
   const registerTabRefreshHandler = useCallback((handler: TabRefreshHandler) => {
     handlerRef.current = handler;
@@ -66,11 +95,16 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     handlerRef.current = null;
   }, []);
 
-  const triggerTabRefresh = useCallback(() => {
-    handlerRef.current?.();
+  const triggerTabRefresh = useCallback((options?: TabRefreshOptions) => {
+    handlerRef.current?.(options);
   }, []);
 
   const value: MainTabContextValue = {
+    homeTab,
+    setHomeTab,
+    registerTabChangeHandler,
+    unregisterTabChangeHandler,
+    triggerTabChange,
     registerTabRefreshHandler,
     unregisterTabRefreshHandler,
     triggerTabRefresh,

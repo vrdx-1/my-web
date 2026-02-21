@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { expandCarSearchAliases } from '@/utils/postUtils';
-// จำนวนต่อหน้าให้ตรงกับ frontend (useHomeData PREFETCH_COUNT = 100) — ใช้เป็น fallback เมื่อ client ไม่ส่ง endIndex
 const FEED_PAGE_SIZE = 100;
 import carsData from '@/data';
 
@@ -235,7 +234,8 @@ export async function POST(request: NextRequest) {
     }
 
     const postIds = (data || []).map((p: { id: string }) => p.id);
-    const hasMore = postIds.length >= FEED_PAGE_SIZE;
+    const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
+    const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
     return NextResponse.json(
       { postIds, hasMore },
@@ -338,7 +338,8 @@ export async function GET(request: NextRequest) {
     }
 
     const postIds = (data || []).map((p: { id: string }) => p.id);
-    const hasMore = postIds.length >= FEED_PAGE_SIZE;
+    const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
+    const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
     return NextResponse.json(
       { postIds, hasMore },

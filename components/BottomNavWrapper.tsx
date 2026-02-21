@@ -5,7 +5,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 
-const BOTTOM_NAV_PATHS = ['/', '/sold', '/notification', '/profile'];
+const BOTTOM_NAV_PATHS = ['/home', '/notification', '/profile'];
 
 function shouldShowBottomNav(pathname: string): boolean {
   if (!pathname) return false;
@@ -19,7 +19,7 @@ function isNotificationOrProfile(pathname: string): boolean {
 }
 
 function isHomeOrSold(pathname: string): boolean {
-  return pathname === '/' || pathname === '/sold';
+  return pathname === '/home';
 }
 
 export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             left: 0,
             right: 0,
             minHeight: 68,
-            zIndex: 400,
+            zIndex: pathname === '/profile' ? 1001 : 400,
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
             visibility: isNavVisible ? 'visible' : 'hidden',

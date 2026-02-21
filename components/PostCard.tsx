@@ -562,7 +562,7 @@ export const PostCard = React.memo<PostCardProps>(({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ລົດຄັນນີ້ຖືກຂາຍແລ້ວ
+              ຄັນນີ້ຂາຍແລ້ວເດີ
             </h3>
             <button
               type="button"

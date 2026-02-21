@@ -53,6 +53,9 @@ export const LAYOUT_CONSTANTS = {
     padding: '20px',
   },
   
+  /** สีพื้นหลังหน้า App profile (ใช้กับแบ็กกราวนด์แท็บในหน้า Home ให้ตรงกับ profile) */
+  PROFILE_PAGE_BACKGROUND: '#ffffff',
+
   // Header spacer (used in page.tsx, sold/page.tsx)
   HEADER_SPACER: {
     height: '118px',

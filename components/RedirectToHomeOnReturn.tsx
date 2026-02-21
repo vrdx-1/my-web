@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-const HOME_PATH = '/';
+const HOME_PATH = '/home';
 const LAST_HIDDEN_KEY = 'jutpai_last_hidden_ms';
 const MAX_INACTIVE_MS = 30 * 60 * 1000; // 30 นาที
 
@@ -35,7 +35,7 @@ export default function RedirectToHomeOnReturn() {
     };
 
     const maybeRedirectHome = () => {
-      if (pathname === HOME_PATH || pathname.startsWith('/profile')) return;
+      if (pathname === '/home' || pathname.startsWith('/profile')) return;
       const lastHidden = getLastHidden();
       if (!lastHidden) return;
       const diff = Date.now() - lastHidden;
