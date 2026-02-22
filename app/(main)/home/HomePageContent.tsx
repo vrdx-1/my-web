@@ -19,6 +19,7 @@ import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { useViewingPost } from '@/hooks/useViewingPost';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -71,7 +72,10 @@ export function HomePageContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const headerScroll = useHeaderScroll();
+  const headerVisibility = useHeaderVisibilityContext();
+  const headerScroll = useHeaderScroll({
+    onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
+  });
   const interactionModalHook = useInteractionModal();
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -210,8 +214,8 @@ export function HomePageContent() {
   const feedTranslateY = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : pullDistance;
 
   const setTabAndRefresh = useCallback((newTab: HomeTab) => {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
     if (newTab === tab) {
-      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
       mainTab?.setTabRefreshing(true);
       setTabRefreshing(true);
       if (newTab === 'recommend') {
@@ -256,7 +260,7 @@ export function HomePageContent() {
           transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
         }}
       >
-        {(posts.length === 0 && postList.loadingMore) || (mainTab?.refreshSource === 'home' && postList.loadingMore) ? (
+        {(posts.length === 0 && (postList.loadingMore || sessionState === undefined)) || (tabRefreshing && postList.loadingMore) ? (
           <FeedSkeleton />
         ) : (
           <PostFeed

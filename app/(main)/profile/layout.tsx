@@ -21,19 +21,21 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     return remove;
   }, [pathname, addBackStep, requestBack]);
 
+  const isMainProfile = pathname === PROFILE_PATH;
+  const isProfileSubPage = pathname?.startsWith('/profile/') && pathname !== PROFILE_PATH;
+  // หน้าซับ (ການຕັ້ງຄ່າ ฯลฯ) ไม่มีแถบล่าง — ใช้เต็มจอ ไม่มีอะไรมาบังปุ่มອອກຈາກລະບົບ
   const wrapperStyle: React.CSSProperties = {
     position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+    bottom: isProfileSubPage ? 0 : 'calc(72px + env(safe-area-inset-bottom, 0px))',
     background: '#ffffff',
     backgroundColor: '#ffffff',
     zIndex: 1000,
-    overflow: 'hidden',
+    overflow: isMainProfile ? 'hidden' : 'auto',
   };
 
-  const isMainProfile = pathname === PROFILE_PATH;
   return (
     <ProfileSlideProvider requestBack={requestBack}>
       <div className={isMainProfile ? 'profile-layout-overlay-bottom' : undefined} style={wrapperStyle}>{children}</div>

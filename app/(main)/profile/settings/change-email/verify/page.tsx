@@ -30,16 +30,16 @@ function ChangeEmailVerifyContent() {
       router.push('/profile/settings/change-email');
       return;
     }
-    (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const email = user?.email || '';
-        if (email) setOldEmail(email);
-      } catch {
-        // ignore
-      }
-    })();
-  }, [newEmail, router]);
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      const email = session?.user?.email ?? '';
+      if (email) setOldEmail(email);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [newEmail]);
 
   const verifyBothOtps = async (oldCode: string, newCode: string) => {
     if (loading) return;

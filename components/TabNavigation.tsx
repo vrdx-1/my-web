@@ -32,13 +32,19 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         const isActive = activeTab === tab.value;
         const isLoading = loadingTab === tab.value;
         return (
-          <div
+          <button
             key={tab.value}
-            onPointerDown={() => onTabChange(tab.value)}
-            onClick={() => onTabChange(tab.value)}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onTabChange(tab.value);
+            }}
             style={{
               flex: 1,
-              minHeight: '44px',
+              minHeight: 44,
               padding: '12px 15px 10px 15px',
               color: isActive ? '#1877f2' : '#4a4d52',
               fontWeight: 'bold',
@@ -50,6 +56,9 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               touchAction: 'manipulation',
               position: 'relative',
               overflow: 'visible',
+              background: 'none',
+              border: 'none',
+              fontFamily: 'inherit',
             }}
           >
             <div style={{ display: 'inline-block' }}>
@@ -59,7 +68,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
                 <span style={{ fontSize: '17px', lineHeight: 1.25, color: '#111111' }}>{tab.label}</span>
               )}
             </div>
-          </div>
+          </button>
         );
       })}
       {/* เส้นบ่งชี้แท็บที่เลือก — สไลด์เหมือนหน้า Home */}

@@ -131,6 +131,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               zIndex: 500,
               background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+              transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+              boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+              transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out',
             }}
           >
             <HomeHeader
@@ -142,6 +145,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               userProfile={userProfile}
               session={session}
               isHeaderVisible={isHeaderVisible}
+              slideWithContainer={true}
               onTabChange={handleTabChange}
               onSearchClick={() => setIsSearchScreenOpen(true)}
               onTabRefresh={handleTabRefresh}
@@ -150,8 +154,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               setProfileOverlayOpen={setProfileOverlayOpen}
               showOnlySearch={true}
             />
-            {/* Reserve space for fixed Header so Tab bar is not hidden under it */}
-            <div style={{ height: 59, flexShrink: 0 }} aria-hidden />
             <TabNavigation
               tabs={[
                 { value: 'recommend', label: 'ພ້ອມຂາຍ' },

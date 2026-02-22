@@ -18,22 +18,22 @@ interface PullToRefreshIndicatorProps {
   headerHeight?: number
 }
 
+/** ขนาด spinner (px) — ใช้จัดตำแหน่งให้อยู่กึ่งกลาง zone */
+const SPINNER_SIZE = 40
+
 /**
- * แสดงในช่องใต้ Header เมื่อดึงลงเพื่อรีเฟรช — spinner ไหลลงมาจากใต้ header แล้วหมุนอยู่ตรงนั้น (แบบ X)
+ * แสดงเฉพาะ loading spinner ใต้ Header เมื่อดึงลงเพื่อรีเฟรช (แบบ pull-to-refresh ของบราวเซอร์ — ไม่มีกล่องสี่เหลี่ยม)
  */
 export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({ pullDistance, isRefreshing, pullHeaderOffset = 0, headerHeight = PULL_REFRESH_HEADER_HEIGHT }) => {
   const visible = pullDistance > 0 || isRefreshing
   if (!visible) return null
 
-  const containerHeight = 40
-  const height = Math.min(containerHeight, Math.max(0, pullDistance) * 0.4)
+  const pullHeight = Math.min(SPINNER_SIZE, Math.max(0, pullDistance) * 0.4)
+  // สปินเนอร์ไหลลงมาจากใต้ header แล้วหมุนอยู่ตรงนั้น
+  const translateY = isRefreshing ? 0 : -SPINNER_SIZE + pullHeight
 
-  // สปินเนอร์ไหลลงมาจากใต้ header: เริ่มต้นซ่อนอยู่ด้านบน (translateY(-40)) แล้วเลื่อนลงมา (translateY 0)
-  const translateY = isRefreshing ? 0 : -containerHeight + height
-
-  // ตอนกำลัง refresh ใช้ช่องสูงคงที่ ให้ฟีดโยโย้ลงมาแล้วสปินเนอร์หมุนตรงนี้ (ไม่เต็มจอ)
-  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : containerHeight
-  const containerHeightStyle = zoneHeight
+  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : SPINNER_SIZE
+  const topOffset = headerHeight + Math.max(0, (zoneHeight - SPINNER_SIZE) / 2)
 
   return (
     <div
@@ -42,34 +42,21 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
       aria-label={isRefreshing ? 'ກຳລັງໂຫຼດໃໝ່' : ''}
       style={{
         position: 'fixed',
-        top: headerHeight,
-        left: 0,
-        right: 0,
-        height: containerHeightStyle,
+        top: topOffset,
+        left: '50%',
+        width: SPINNER_SIZE,
+        height: SPINNER_SIZE,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        background: '#fff',
         color: '#333333',
         zIndex: 499,
-        boxShadow: isRefreshing || height > 0 ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-        transform: `translateY(${translateY}px)`,
+        transform: `translate(-50%, ${translateY}px)`,
         transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
         pointerEvents: 'none',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <SpinnerRing />
-      </div>
+      <SpinnerRing />
     </div>
   )
 })

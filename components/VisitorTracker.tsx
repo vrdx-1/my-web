@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function VisitorTracker() {
@@ -7,10 +7,11 @@ export default function VisitorTracker() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
-    let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    let currentUserId: string | null = null;
 
     const updateLastSeen = async (userId: string) => {
       await supabase
@@ -19,42 +20,52 @@ export default function VisitorTracker() {
         .eq('id', userId);
     };
 
+    const startHeartbeat = (userId: string) => {
+      if (heartbeatIntervalRef.current) return;
+      updateLastSeen(userId);
+      heartbeatIntervalRef.current = setInterval(() => updateLastSeen(userId), 2 * 60 * 1000);
+    };
+
+    const stopHeartbeat = () => {
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
+    };
+
+    const applyUserPresence = (user: { id: string } | null) => {
+      currentUserId = user?.id ?? null;
+      if (user?.id) {
+        startHeartbeat(user.id);
+      } else {
+        stopHeartbeat();
+      }
+    };
+
     const track = async () => {
       try {
-        // เพิ่มเงื่อนไข: หากเป็นหน้า Admin ไม่ต้องทำการบันทึก Log และไม่ต้อง Sync Presence
         if (window.location.pathname.startsWith('/admin')) {
           return;
         }
 
-        // 1. ตรวจสอบหรือสร้าง Visitor ID ในเครื่องลูกค้า
-        let vId = localStorage.getItem('visitor_id')
-        let isFirstVisit = false; // ตัวแปรสำหรับเช็กว่าเป็นครั้งแรกหรือไม่
-
+        let vId = localStorage.getItem('visitor_id');
+        let isFirstVisit = false;
         if (!vId) {
-          vId = crypto.randomUUID()
-          localStorage.setItem('visitor_id', vId)
-          isFirstVisit = true; // ถ้าไม่มี ID เดิม แสดงว่าเพิ่งเคยมาครั้งแรก
+          vId = crypto.randomUUID();
+          localStorage.setItem('visitor_id', vId);
+          isFirstVisit = true;
         }
 
-        // 2. บันทึก Log ลงตาราง visitor_logs (เพิ่มการส่งค่า is_first_visit)
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
           page_path: window.location.pathname,
           user_agent: navigator.userAgent,
-          is_first_visit: isFirstVisit // ส่งค่า true/false ไปที่คอลัมน์ใหม่
-        })
+          is_first_visit: isFirstVisit
+        });
 
-        // --- ส่วนที่อัปเกรด: ระบบ Real-time Presence ---
-        // ดึงข้อมูล User ปัจจุบัน (ถ้ามี) เพื่อแยกแยะว่าเป็น Registered หรือ Guest
         const { data: { user } } = await supabase.auth.getUser();
+        applyUserPresence(user ?? null);
 
-        // อัปเดต last_seen ใน profiles เพื่อให้สถานะออนไลน์แสดงบน PostCard (เมื่อล็อกอิน)
-        if (user?.id) {
-          await updateLastSeen(user.id);
-          // Heartbeat ทุก 2 นาที เพื่อให้สถานะออนไลน์ไม่หลุดระหว่างใช้งาน
-          heartbeatInterval = setInterval(() => updateLastSeen(user.id), 2 * 60 * 1000);
-        }
-        
         channel = supabase.channel('active_users', {
           config: { presence: { key: vId } }
         });
@@ -62,31 +73,44 @@ export default function VisitorTracker() {
         channel
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED' && channel) {
-              // ส่งสถานะออนไลน์ไปยัง Presence
+              const { data: { user: u } } = await supabase.auth.getUser();
               await channel.track({
                 online_at: new Date().toISOString(),
-                user_id: user?.id || null,
-                is_guest: !user
+                user_id: u?.id || null,
+                is_guest: !u
               });
             }
           });
-        // -------------------------------------------
-
       } catch (error) {
-        console.error('Error tracking visitor:', error)
+        console.error('Error tracking visitor:', error);
       }
-    }
+    };
 
-    track()
+    track();
 
-    // Cleanup function: unsubscribe channel และหยุด heartbeat เมื่อ component unmount
+    // อัปเดต last_seen อีกครั้งเมื่อ session พร้อม (กรณีโหลดจาก cookie ช้ากว่า track)
+    const lateTouch = setTimeout(() => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id && !heartbeatIntervalRef.current) {
+          applyUserPresence(user);
+        }
+      });
+    }, 2000);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id ?? null;
+      applyUserPresence(uid ? { id: uid } : null);
+    });
+
     return () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      clearTimeout(lateTouch);
+      subscription.unsubscribe();
+      stopHeartbeat();
       if (channel) {
         supabase.removeChannel(channel);
       }
     };
-  }, []) // ทำงานครั้งเดียวเมื่อโหลดหน้าเว็บ
+  }, []);
 
-  return null
+  return null;
 }

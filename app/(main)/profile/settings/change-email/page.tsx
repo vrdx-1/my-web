@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { LAO_FONT } from '@/utils/constants';
 import { PROFILE_PATH } from '@/utils/authRoutes';
+
 export default function ChangeEmail() {
   const router = useRouter();
   const [newEmail, setNewEmail] = useState('');
@@ -14,20 +15,17 @@ export default function ChangeEmail() {
     type: '',
   });
 
-  // ดึงอีเมลปัจจุบันมาแสดงในแท็บ "ອີເມລເກົ່າ" ทันทีที่เข้าเพจ
+  // ดึงอีเมลปัจจุบันครั้งเดียว — ไม่ subscribe onAuthStateChange เพื่อไม่ให้ยิง setState ซ้ำแล้วซ้ำอีก (ลดอาการ reload/flicker)
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const email = user?.email || '';
-        if (!cancelled && email) {
-          setOldEmailForOtp(email);
-        }
-      } catch {
-        // เงียบ error ไว้ ไม่กระทบ flow หลัก
-      }
-    })();
+    const setOnce = (email: string) => {
+      if (cancelled) return;
+      setOldEmailForOtp((prev) => (prev === email ? prev : email));
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const email = session?.user?.email ?? '';
+      setOnce(email);
+    });
     return () => {
       cancelled = true;
     };

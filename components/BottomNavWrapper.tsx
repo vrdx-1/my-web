@@ -10,6 +10,8 @@ const BOTTOM_NAV_PATHS = ['/home', '/notification', '/profile'];
 function shouldShowBottomNav(pathname: string): boolean {
   if (!pathname) return false;
   if (pathname === '/profile') return true;
+  // หน้าซับใน profile (เช่น ການຕັ້ງຄ່າ) ไม่แสดงแถบล่าง — ไม่ให้บังปุ่มອອກຈາກລະບົບ
+  if (pathname.startsWith('/profile/')) return false;
   if (pathname === '/create-post' || pathname.startsWith('/create-post/')) return false;
   return BOTTOM_NAV_PATHS.includes(pathname);
 }

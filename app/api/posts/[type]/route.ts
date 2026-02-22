@@ -41,6 +41,10 @@ export async function GET(
     const { data: { session } } = await supabase.auth.getSession();
     const currentUserId = session?.user?.id;
 
+    if (currentUserId) {
+      await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUserId);
+    }
+
     let postIds: string[] = [];
 
     // Fetch post IDs based on type

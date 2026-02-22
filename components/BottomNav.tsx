@@ -76,12 +76,7 @@ export function BottomNav() {
             <button
               key="create-post"
               type="button"
-              onClick={triggerCreatePost}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                triggerCreatePost();
-              }}
-              onTouchEnd={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 triggerCreatePost();
               }}
@@ -141,22 +136,14 @@ export function BottomNav() {
           router.push(path, { scroll: false });
         };
 
-        const handleClick = (e: React.MouseEvent) => {
-          e.preventDefault();
-          runNav();
-        };
-
-        const handlePointerDown = (e: React.PointerEvent) => {
-          e.preventDefault();
-          runNav();
-        };
-
         return (
           <button
             key={path}
             type="button"
-            onClick={handleClick}
-            onPointerDown={handlePointerDown}
+            onClick={(e) => {
+              e.preventDefault();
+              runNav();
+            }}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
             style={{
@@ -174,6 +161,7 @@ export function BottomNav() {
               color: isActive ? '#1877f2' : '#65676b',
               touchAction: 'manipulation',
               minWidth: 0,
+              minHeight: 44,
               overflow: 'visible',
             }}
           >

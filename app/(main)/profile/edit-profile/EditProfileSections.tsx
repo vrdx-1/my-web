@@ -230,9 +230,14 @@ const ProfileSectionComponent = ({
             background: '#e4e6eb',
             borderRadius: '50%',
             padding: 7,
+            minWidth: 44,
+            minHeight: 44,
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
             cursor: 'pointer',
             display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            touchAction: 'manipulation',
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
@@ -260,8 +265,18 @@ const ProfileSectionComponent = ({
             {username || 'ຊື່ຜູ້ໃຊ້'}
           </h2>
           <button
+            type="button"
             onClick={onEditNameClick}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 5, flexShrink: 0 }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 5,
+              flexShrink: 0,
+              minWidth: 44,
+              minHeight: 44,
+              touchAction: 'manipulation',
+            }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
@@ -275,6 +290,7 @@ const ProfileSectionComponent = ({
             style={{
               flex: 1,
               minWidth: 0,
+              minHeight: 44,
               padding: '10px 12px',
               borderRadius: '10px',
               border: '1px solid #ddd',
@@ -285,6 +301,7 @@ const ProfileSectionComponent = ({
               textAlign: 'left',
               color: phone && phone !== '020' ? '#1c1e21' : '#5c5c5c',
               cursor: 'pointer',
+              touchAction: 'manipulation',
             }}
           >
             {phone && phone !== '020' ? phone : 'ເບີ WhatsApp'}

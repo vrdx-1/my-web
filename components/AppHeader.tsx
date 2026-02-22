@@ -40,6 +40,8 @@ interface AppHeaderProps {
   setProfileOverlayOpen?: (open: boolean) => void;
   /** หน้า Home: แสดงเฉพาะ Search (ซ่อนปุ่มโพสต์/แจ้งเตือน/โปรไฟล์) */
   showOnlySearch?: boolean;
+  /** หน้า Home: ให้ parent เป็นคนสไลด์ (Header + แท็บ) — root ไม่ใช้ fixed/transform */
+  slideWithContainer?: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   loadingTab = null,
   setProfileOverlayOpen,
   showOnlySearch = false,
+  slideWithContainer = false,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -118,19 +121,27 @@ export const AppHeader = React.memo<AppHeaderProps>(({
     if (pathname === '/home' && onTabRefresh) onTabRefresh();
   };
 
+  const rootStyle = slideWithContainer
+    ? {
+        width: '100%',
+        background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+        backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+      }
+    : {
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`,
+        width: '100%',
+        background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+        backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+        zIndex: 500,
+        boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+        transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out',
+      };
+
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      transform: `translateY(${isHeaderVisible ? '0' : '-100%'})`, 
-      width: '100%', 
-      background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND, 
-      backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-      zIndex: 500, 
-      boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-      transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out'
-    }}>
+    <div style={rootStyle}>
       <div style={{ 
           padding: '9px 15px', 
           display: 'flex', 

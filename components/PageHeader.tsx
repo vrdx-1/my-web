@@ -43,6 +43,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
 
   const backButton = (
     <button
+      type="button"
       onClick={handleBack}
       style={{
         background: 'none',
@@ -53,6 +54,9 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         justifyContent: 'center',
         color: '#1c1e21',
         padding: useCompactLayout ? '5px' : '0',
+        minWidth: 44,
+        minHeight: 44,
+        touchAction: 'manipulation',
       }}
     >
       <svg
@@ -103,6 +107,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
           </h3>
           <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
             <button
+              type="button"
               onClick={actionButton.onClick}
               disabled={actionButton.disabled}
               style={
@@ -117,6 +122,8 @@ export const PageHeader = React.memo<PageHeaderProps>(({
                       padding: '6px 12px',
                       borderRadius: '20px',
                       opacity: actionButton.disabled ? 0.5 : 1,
+                      minHeight: 44,
+                      touchAction: 'manipulation',
                     }
                   : {
                       background: 'none',
@@ -126,8 +133,10 @@ export const PageHeader = React.memo<PageHeaderProps>(({
                       fontSize: '16px',
                       cursor: actionButton.disabled ? 'not-allowed' : 'pointer',
                       minWidth: '45px',
+                      minHeight: 44,
                       textAlign: 'right',
                       opacity: actionButton.disabled ? 0.5 : 1,
+                      touchAction: 'manipulation',
                     }
               }
             >

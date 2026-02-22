@@ -41,7 +41,7 @@ export default function Settings() {
       overflowY: 'auto',
       fontFamily: LAO_FONT,
       display: 'flex',
-      flexDirection: 'column' // กำหนดเป็น column เพื่อให้แยกส่วนบนกับส่วนล่างได้
+      flexDirection: 'column',
     }}>
       
       {/* Header - คงเดิมตามที่คุณชอบ */}
@@ -164,7 +164,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* ปุ่มออกจากระบบ - ขยับขึ้นมาอีกนิด */}
+      {/* ปุ่มออกจากระบบ — อยู่ล่างสุดเหมือนเดิม (แถบนำทางถูกซ่อนในหน้านี้แล้ว ไม่บัง) */}
       <div style={{ padding: '380px 20px 20px 20px' }}>
         <button 
           onClick={handleLogoutClick} 

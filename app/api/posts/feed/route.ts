@@ -5,6 +5,18 @@ import { expandCarSearchAliases } from '@/utils/postUtils';
 const FEED_PAGE_SIZE = 100;
 import carsData from '@/data';
 
+/** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
+async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
+    }
+  } catch (_) {
+    // ไม่บล็อก feed ถ้าอัปเดต last_seen ล้มเหลว
+  }
+}
+
 // Helper: normalize สำหรับ fallback lookup
 function normalizeForFallback(text: string): string {
   return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -219,6 +231,8 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    await touchLastSeen(supabase);
+
     // ใช้ RPC multi-term เสมอเมื่อมี search term (แม้ได้คำเดียว) เพื่อให้ผลสม่ำเสมอ
     if (searchTerms.length > 0) {
       const result = await runFeedQueryMultiTermRpc(supabase, searchTerms, startIndex, endIndex);
@@ -273,6 +287,8 @@ export async function GET(request: NextRequest) {
         },
       }
     );
+
+    await touchLastSeen(supabase);
 
     let searchTerms: string[] = [];
     if (searchTerm) {

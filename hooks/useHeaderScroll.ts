@@ -71,6 +71,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       return;
     }
     setIsHeaderVisible(visible);
+    onVisibilityChangeRef.current?.(visible);
   };
 
   return {
