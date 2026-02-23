@@ -28,12 +28,10 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   const visible = pullDistance > 0 || isRefreshing
   if (!visible) return null
 
-  const pullHeight = Math.min(SPINNER_SIZE, Math.max(0, pullDistance) * 0.4)
-  // สปินเนอร์ไหลลงมาจากใต้ header แล้วหมุนอยู่ตรงนั้น
-  const translateY = isRefreshing ? 0 : -SPINNER_SIZE + pullHeight
-
-  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : SPINNER_SIZE
+  // สปินเนอร์ลงมาพร้อมจังหวะดึง — อยู่กึ่งกลาง zone ที่ถูกดึง (เหมือนเว็บใหญ่ระดับโลก)
+  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : Math.max(pullDistance, SPINNER_SIZE)
   const topOffset = headerHeight + Math.max(0, (zoneHeight - SPINNER_SIZE) / 2)
+  const translateY = 0
 
   return (
     <div

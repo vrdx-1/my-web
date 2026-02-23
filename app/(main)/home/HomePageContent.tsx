@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { PostFeedModals } from '@/components/PostFeedModals';
@@ -56,6 +56,8 @@ export function HomePageContent() {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
 
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchQuery = searchParams.get('q') ?? '';
 
   const recommendFeed = useHomeFeed({ session: sessionState, province: selectedProvince });
@@ -146,6 +148,15 @@ export function HomePageContent() {
 
   const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+    // pull-to-refresh → ล้างคำค้นหา; กดปุ่ม Home refresh ไม่ล้าง (ให้เหมือนกดแท็บ ພ້ອມຂາຍ/ຂາຍແລ້ວ)
+    if (!options?.fromHomeButton && searchParams.has('q')) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('q');
+      const queryString = params.toString();
+      const newUrl = pathname + (queryString ? `?${queryString}` : '');
+      window.history.replaceState(null, '', newUrl);
+      router.replace(newUrl, { scroll: false });
+    }
     if (options?.fromHomeButton) {
       mainTab?.setRefreshSource('home');
     } else {
@@ -165,7 +176,7 @@ export function HomePageContent() {
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
     }
-  }, [tab, mainTab, searchQuery, recommendFeed, searchData, soldListData]);
+  }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router]);
 
   useEffect(() => {
     mainTab?.registerTabRefreshHandler(doRefresh);

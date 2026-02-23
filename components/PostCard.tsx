@@ -480,7 +480,7 @@ export const PostCard = React.memo<PostCardProps>(({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ລົດຄັນນີ້ຖືກຂາຍແລ້ວບໍ?
+              ລົດຄັນນີ້ ຂາຍແລ້ວບໍ?
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
               <button

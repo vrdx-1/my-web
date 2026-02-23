@@ -9,6 +9,7 @@ import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 const CONTROL_SIZE = 40;
 const ICON_SIZE = 20;
 const SEARCH_BAR_GAP = 10; // ช่องว่างระหว่างแท็บค้นหา กับ ปุ่มฟิลเตอร์ (ให้แท็บค้นหาสั้นลง ไม่ชิดเกินไป)
+const PROVINCE_ROW_HEIGHT = 32; // ความสูงต่อแถว (6+6 + 15*1.3) สำหรับอ้างอิง
 
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
@@ -36,7 +37,8 @@ export function HomeHeaderSearchAndFilter() {
   const provinceToShow = mounted ? selectedProvince : '';
 
   const handleSearchClick = () => {
-    router.push('/search', { scroll: false });
+    const q = searchQuery?.trim() ?? '';
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search', { scroll: false });
   };
 
   const handleFilterClick = () => {
@@ -64,26 +66,44 @@ export function HomeHeaderSearchAndFilter() {
 
   useEffect(() => {
     if (!showProvincePicker) return;
+    const scrollY = window.scrollY;
     const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
     };
   }, [showProvincePicker]);
 
   useEffect(() => {
     if (!showProvincePicker) return;
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
-      if (!target?.closest?.('[data-home-province-picker]') && !target?.closest?.('[data-home-filter-btn]')) {
-        closePicker();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside as EventListener);
-    document.addEventListener('touchstart', handleClickOutside as EventListener);
+    let cleanup: (() => void) | undefined;
+    const timerId = setTimeout(() => {
+      const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+        const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
+        if (!target?.closest?.('[data-home-province-picker]') && !target?.closest?.('[data-home-filter-btn]')) {
+          closePicker();
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside as EventListener);
+      document.addEventListener('touchstart', handleClickOutside as EventListener);
+      cleanup = () => {
+        document.removeEventListener('mousedown', handleClickOutside as EventListener);
+        document.removeEventListener('touchstart', handleClickOutside as EventListener);
+      };
+    }, 80);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside as EventListener);
-      document.removeEventListener('touchstart', handleClickOutside as EventListener);
+      clearTimeout(timerId);
+      cleanup?.();
     };
   }, [showProvincePicker]);
 
@@ -146,25 +166,21 @@ export function HomeHeaderSearchAndFilter() {
           >
             {queryToShow.trim() || 'ຄົ້ນຫາ'}
           </span>
-          {queryToShow.trim() && (
-            <>
-              <span style={{ flex: 1, minWidth: 8 }} aria-hidden />
-              <span
-                style={{
-                  flexShrink: 0,
-                  fontSize: '14px',
-                  color: '#c00',
-                  fontFamily: LAO_FONT,
-                  maxWidth: '120px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
-              </span>
-            </>
-          )}
+          <span style={{ flex: 1, minWidth: 8 }} aria-hidden />
+          <span
+            style={{
+              flexShrink: 0,
+              fontSize: '14px',
+              color: '#c00',
+              fontFamily: LAO_FONT,
+              maxWidth: '120px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
+          </span>
         </button>
 
         {/* ปุ่มฟิลเตอร์ province — ด้านขวา (ไอคอนสไลด์/ฟิลเตอร์ แบบทันสมัย) */}
@@ -172,6 +188,10 @@ export function HomeHeaderSearchAndFilter() {
           ref={filterButtonRef}
           type="button"
           data-home-filter-btn
+          onPointerDown={(e) => {
+            if (e.pointerType === 'touch' || e.pointerType === 'pen') e.preventDefault();
+            handleFilterClick();
+          }}
           onClick={handleFilterClick}
           aria-label="Filter by province"
           style={{
@@ -246,12 +266,15 @@ export function HomeHeaderSearchAndFilter() {
                 ...(filterButtonRect
                   ? (() => {
                       const gap = 8;
-                      const w = Math.min(280, typeof window !== 'undefined' ? window.innerWidth * 0.88 : 280);
-                      const maxH = typeof window !== 'undefined' ? window.innerHeight * 0.84 : 560;
+                      const w =
+                        typeof window !== 'undefined'
+                          ? Math.min(220, Math.round(window.innerWidth * 0.62))
+                          : 220;
                       const left = Math.max(8, filterButtonRect.right - w);
                       const top = filterButtonRect.bottom + gap;
-                      const bottomSpace = typeof window !== 'undefined' ? window.innerHeight - top : maxH;
-                      const height = Math.min(maxH, Math.max(200, bottomSpace - 8));
+                      const fullHeight =
+                        typeof window !== 'undefined' ? window.innerHeight - top - gap : 500;
+                      const height = Math.round(fullHeight * 0.92);
                       return {
                         left: `${left}px`,
                         top: `${top}px`,
@@ -275,31 +298,39 @@ export function HomeHeaderSearchAndFilter() {
               <div
                 onClick={() => handleSelectProvince('')}
                 style={{
-                  padding: '12px 16px',
+                  padding: '10px 12px',
+                  minHeight: 42,
+                  boxSizing: 'border-box',
                   borderBottom: '1px solid #f0f0f0',
-                  fontSize: '15px',
-                  lineHeight: '1.35',
+                  fontSize: '16px',
+                  lineHeight: '1.3',
                   background: selectedProvince === '' ? '#e7f3ff' : '#fff',
                   cursor: 'pointer',
                   fontFamily: LAO_FONT,
                   color: '#111111',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
               >
                 ທຸກແຂວງ {selectedProvince === '' && ' ✓'}
               </div>
-              {LAO_PROVINCES.map((p) => (
+              {LAO_PROVINCES.map((p, i) => (
                 <div
                   key={p}
                   onClick={() => handleSelectProvince(p)}
                   style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid #f0f0f0',
+                    padding: '6px 12px',
+                    minHeight: 34,
+                    boxSizing: 'border-box',
+                    borderBottom: i === LAO_PROVINCES.length - 1 ? 'none' : '1px solid #f0f0f0',
                     fontSize: '15px',
-                    lineHeight: '1.35',
+                    lineHeight: '1.3',
                     background: selectedProvince === p ? '#e7f3ff' : '#fff',
                     cursor: 'pointer',
                     fontFamily: LAO_FONT,
                     color: '#111111',
+                    display: 'flex',
+                    alignItems: 'center',
                   }}
                 >
                   {p} {selectedProvince === p && ' ✓'}

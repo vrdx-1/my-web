@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-/** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ตรงกับความสูง spacer หน้าโฮม/ขายแล้ว */
-const HEADER_TOP_ZONE_PX = 120;
+/** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
+const HEADER_TOP_ZONE_PX = 200;
 
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;
@@ -40,7 +40,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
       lastScrollYRef.current = currentScrollY;
 
-      // อยู่โพสบนสุด: Header ต้องไม่เลื่อนออก (ทั้ง ພ້ອມຂາຍ และ ຂາຍແລ້ວ)
+      // อยู่โพสบนสุด (โพสต์แรกของ feed): Header ต้องไม่สไลด์ออก
       if (currentScrollY <= HEADER_TOP_ZONE_PX) {
         applyVisible(true);
         return;
@@ -59,6 +59,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         applyVisible(true);
       }
     };
+
+    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    lastScrollYRef.current = scrollY;
+    if (scrollY <= HEADER_TOP_ZONE_PX) applyVisible(true);
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);

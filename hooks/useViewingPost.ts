@@ -2,6 +2,9 @@
 
 import { useState, useCallback } from 'react';
 
+/** ตรงกับ useHeaderScroll — อยู่บนสุดของ feed ไม่ซ่อน header ตอนเปิด/ปิด viewing mode */
+const HEADER_TOP_ZONE_PX = 200;
+
 interface UseViewingPostReturn {
   viewingPost: any | null;
   isViewingModeOpen: boolean;
@@ -32,8 +35,9 @@ export function useViewingPost(): UseViewingPostReturn {
     _setPosts: (updater: (prev: any[]) => any[]) => void,
     setIsHeaderVisible: (visible: boolean) => void
   ): Promise<void> => {
-    setIsHeaderVisible(false);
-    setSavedScrollPosition(window.scrollY);
+    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    if (scrollY > HEADER_TOP_ZONE_PX) setIsHeaderVisible(false);
+    setSavedScrollPosition(scrollY);
     setInitialImageIndex(imageIndex);
     setViewingModeDragOffset(0);
     setViewingPost(post);
@@ -41,14 +45,20 @@ export function useViewingPost(): UseViewingPostReturn {
     return Promise.resolve();
   }, []);
 
-  const closeViewingMode = useCallback((_setIsHeaderVisible?: (visible: boolean) => void) => {
+  const closeViewingMode = useCallback((setIsHeaderVisible?: (visible: boolean) => void) => {
+    const wasAtTop = savedScrollPosition <= HEADER_TOP_ZONE_PX;
     setIsViewingModeOpen(false);
     setViewingModeDragOffset(0);
     setViewingModeTouchStart(null);
     setViewingPost(null);
-    // ไม่ต้องเรียก window.scrollTo ที่นี่ เพราะ usePostModals จะจัดการ restore scroll position ให้
-    // เพื่อป้องกัน race condition และให้แน่ใจว่า DOM พร้อมก่อน restore
-  }, []);
+    if (setIsHeaderVisible && wasAtTop) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsHeaderVisible(true);
+        });
+      });
+    }
+  }, [savedScrollPosition]);
 
   const handleViewingModeTouchStart = useCallback((e: React.TouchEvent) => {
     setViewingModeTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });

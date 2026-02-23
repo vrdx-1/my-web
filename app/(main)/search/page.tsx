@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
 import { LAO_FONT } from '@/utils/constants';
@@ -11,11 +11,18 @@ const SUGGESTION_LIMIT = 15;
 
 export default function SearchPage() {
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [historyItems, setHistoryItems] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setHistoryItems(getSearchHistory());
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(t);
   }, []);
 
   const suggestions = useMemo(() => {
@@ -102,7 +109,13 @@ export default function SearchPage() {
       >
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (query.trim().length === 0) {
+              router.push('/home', { scroll: false });
+            } else {
+              router.back();
+            }
+          }}
           style={{
             width: 36,
             height: 36,
@@ -124,6 +137,7 @@ export default function SearchPage() {
         </button>
         <div style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', alignItems: 'center' }}>
           <input
+            ref={inputRef}
             type="text"
             inputMode="search"
             placeholder="ຄົ້ນຫາ"
@@ -154,7 +168,7 @@ export default function SearchPage() {
               aria-label="Clear"
               style={{
                 position: 'absolute',
-                right: 6,
+                right: 12,
                 width: 22,
                 height: 22,
                 borderRadius: '50%',

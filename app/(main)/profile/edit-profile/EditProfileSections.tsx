@@ -229,9 +229,9 @@ const ProfileSectionComponent = ({
             right: 0,
             background: '#e4e6eb',
             borderRadius: '50%',
-            padding: 7,
-            minWidth: 44,
-            minHeight: 44,
+            padding: 5,
+            width: 28,
+            height: 28,
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
             cursor: 'pointer',
             display: 'flex',
@@ -240,7 +240,7 @@ const ProfileSectionComponent = ({
             touchAction: 'manipulation',
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
             <circle cx="12" cy="13" r="4" />
           </svg>
