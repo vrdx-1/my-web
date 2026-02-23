@@ -4,6 +4,7 @@ import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } fr
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
+import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
@@ -32,11 +33,21 @@ function SearchPageContent() {
   }, [query]);
 
   const commitSearch = useCallback(
-    (term: string) => {
+    (term: string, searchType: 'manual' | 'suggestion' | 'history' = 'manual') => {
       const t = term.trim();
       if (t) {
         addSearchHistory(t);
         setHistoryItems(getSearchHistory());
+        fetch('/api/search/log', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            search_term: t,
+            search_type: searchType,
+            guest_token: getOrCreateGuestToken(),
+          }),
+        }).catch(() => {});
       }
       router.push(t ? `/home?q=${encodeURIComponent(t)}` : '/home', { scroll: false });
     },
@@ -55,14 +66,14 @@ function SearchPageContent() {
   const handleSuggestionClick = useCallback(
     (item: { display: string; searchKey: string }) => {
       // ใช้ display เพื่อให้ข้อความที่แสดงด้านบนตรงกับภาษาที่ผู้ใช้กด (เช่น ລົດເກັງ ไม่กลายเป็น sedan) logic การค้นหายังเหมือนเดิม
-      commitSearch(item.display);
+      commitSearch(item.display, 'suggestion');
     },
     [commitSearch],
   );
 
   const handleHistoryClick = useCallback(
     (item: string) => {
-      commitSearch(item);
+      commitSearch(item, 'history');
     },
     [commitSearch],
   );
@@ -192,7 +203,7 @@ function SearchPageContent() {
         </div>
         <button
           type="button"
-          onClick={() => commitSearch(query)}
+          onClick={() => commitSearch(query, 'manual')}
           style={{
             flexShrink: 0,
             height: 40,
