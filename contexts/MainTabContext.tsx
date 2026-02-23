@@ -28,13 +28,6 @@ interface MainTabContextValue {
   setPullHeaderOffset: (v: number) => void;
   navigatingToTab: MainTab | null;
   setNavigatingToTab: (v: MainTab | null) => void;
-  searchTerm: string;
-  /** ข้อความที่แสดงในแท็บ/ช่องค้นหา (เช่น ລົດຍ້າຍພວງ) — logic ยังส่ง searchTerm ไป API เหมือนเดิม */
-  searchDisplayText: string;
-  /** apiTerm = ค่าที่ส่งไป DB, displayText = ค่าที่แสดงใน UI (ถ้าไม่ใส่ใช้ apiTerm) */
-  setSearchTerm: (apiTerm: string, displayText?: string) => void;
-  isSearchScreenOpen: boolean;
-  setIsSearchScreenOpen: (v: boolean) => void;
   isProfileOverlayOpen: boolean;
   setProfileOverlayOpen: (v: boolean) => void;
 }
@@ -52,14 +45,6 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const [refreshSource, setRefreshSource] = useState<'pull' | 'home' | null>(null);
   const [pullHeaderOffset, setPullHeaderOffset] = useState(0);
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
-  const [searchTerm, setSearchTermState] = useState('');
-  const [searchDisplayText, setSearchDisplayText] = useState('');
-  const [isSearchScreenOpen, setIsSearchScreenOpen] = useState(false);
-
-  const setSearchTerm = useCallback((apiTerm: string, displayText?: string) => {
-    setSearchTermState(apiTerm);
-    setSearchDisplayText(displayText !== undefined ? displayText : apiTerm);
-  }, []);
   const [isProfileOverlayOpen, setProfileOverlayOpen] = useState(false);
 
   // Clear navigating state when route has changed
@@ -116,11 +101,6 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     setPullHeaderOffset,
     navigatingToTab,
     setNavigatingToTab,
-    searchTerm,
-    searchDisplayText,
-    setSearchTerm,
-    isSearchScreenOpen,
-    setIsSearchScreenOpen,
     isProfileOverlayOpen,
     setProfileOverlayOpen,
   };

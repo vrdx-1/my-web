@@ -5,11 +5,11 @@ import { supabase } from '@/lib/supabase';
 import { FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { expandCarSearchAliases } from '@/utils/postUtils';
 
 interface UseHomeFeedOptions {
-  searchTerm?: string;
   session?: any;
+  /** แขวงที่เลือกจากฟิลเตอร์หน้า Home — ว่าง = แสดงทุกแขวง */
+  province?: string;
 }
 
 interface UseHomeFeedReturn {
@@ -30,7 +30,7 @@ interface UseHomeFeedReturn {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
-  const { searchTerm = '', session } = options;
+  const { session, province } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -39,8 +39,6 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
-  const searchTermRef = useRef(searchTerm);
-  searchTermRef.current = searchTerm;
 
   useEffect(() => {
     if (session === undefined) {
@@ -98,10 +96,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const rangeEnd = rangeStart + FEED_PAGE_SIZE - 1;
 
     try {
-      const term = (searchTermRef.current ?? '').trim();
-      const searchTerms = term ? expandCarSearchAliases(term).filter(Boolean) : [];
       const url = '/api/posts/feed';
-      const body = { searchTerms, startIndex: rangeStart, endIndex: rangeEnd };
+      const body: { startIndex: number; endIndex: number; province?: string } = { startIndex: rangeStart, endIndex: rangeEnd };
+      if (province && province.trim() !== '') body.province = province.trim();
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,7 +149,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } finally {
       if (fetchIdRef.current === currentFetchId) setLoadingMore(false);
     }
-  }, [currentSession, searchTerm, page, loadingMore]);
+  }, [currentSession, page, loadingMore, province]);
   const fetchPostsRef = useRef(fetchPosts);
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
 
@@ -167,7 +164,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setPage(0);
     setHasMore(true);
     fetchPosts(true);
-  }, [currentSession, searchTerm]);
+  }, [currentSession, province]);
 
   const lastFetchedPageRef = useRef<number | null>(null);
   useEffect(() => {

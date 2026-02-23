@@ -1,6 +1,7 @@
 'use client';
 
 import { MainTabProvider } from '@/contexts/MainTabContext';
+import { HomeProvinceProvider } from '@/contexts/HomeProvinceContext';
 import { MainTabLayoutClient } from './MainTabLayoutClient';
 
 /**
@@ -10,7 +11,9 @@ import { MainTabLayoutClient } from './MainTabLayoutClient';
 export default function MainTabLayout({ children }: { children: React.ReactNode }) {
   return (
     <MainTabProvider>
-      <MainTabLayoutClient>{children}</MainTabLayoutClient>
+      <HomeProvinceProvider>
+        <MainTabLayoutClient>{children}</MainTabLayoutClient>
+      </HomeProvinceProvider>
     </MainTabProvider>
   );
 }

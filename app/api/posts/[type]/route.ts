@@ -7,7 +7,7 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 /**
  * API Route for fetching posts by type (saved, liked, sold, my-posts)
- * GET /api/posts/[type]?startIndex=0&endIndex=9&userId=&tab=&searchTerm=&status=
+ * GET /api/posts/[type]?startIndex=0&endIndex=9&userId=&tab=&status=
  */
 export async function GET(
   request: NextRequest,
@@ -20,7 +20,6 @@ export async function GET(
     const endIndex = parseInt(searchParams.get('endIndex') || '9');
     const userIdOrToken = searchParams.get('userId') || '';
     const tab = searchParams.get('tab') || '';
-    const searchTerm = searchParams.get('searchTerm') || '';
     const status = searchParams.get('status') || '';
 
     // Create Supabase client
@@ -217,19 +216,13 @@ export async function GET(
         .map(item => item.post_id)
         .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
     } else if (type === 'sold') {
-      let query = supabase
+      const { data, error } = await supabase
         .from('cars')
         .select('id')
         .eq('status', status || 'sold')
         .eq('is_hidden', false)
         .order('created_at', { ascending: false })
         .range(startIndex, endIndex);
-
-      if (searchTerm) {
-        query = query.ilike('caption', `%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
       if (error || !data) {
         return NextResponse.json({ posts: [], hasMore: false });
       }

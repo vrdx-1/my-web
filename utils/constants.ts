@@ -30,8 +30,8 @@ export const LAO_PROVINCES = [
 // Pagination Constants
 export const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว (ใช้ที่ InteractionModal ฯลฯ)
 export const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items (ใช้ที่ InteractionModal ฯลฯ)
-/** จำนวนโพสต์ต่อหนึ่งหน้าในฟีดลิสต์ (saved / liked / sold / my-posts) — โหลดครบตาม backend */
-export const LIST_FEED_PAGE_SIZE = 20;
+/** จำนวนโพสต์ต่อหนึ่งหน้าในฟีดลิสต์ (saved / liked / sold / my-posts) — โหลดทั้งหมดในครั้งเดียว */
+export const LIST_FEED_PAGE_SIZE = 1000;
 /** จำนวนโพสต์ที่โหลดในหน้าโฮม — โหลดทั้งหมดทีเดียว */
 export const FEED_PAGE_SIZE = 1000;
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */

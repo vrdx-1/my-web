@@ -16,8 +16,6 @@ const poppinsSemiBold = Poppins({
 });
 
 interface AppHeaderProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   onCreatePostClick: () => void;
   onNotificationClick: () => void;
   unreadCount?: number;
@@ -25,10 +23,9 @@ interface AppHeaderProps {
   session?: any;
   isHeaderVisible: boolean;
   onTabChange?: () => void;
-  onSearchClick?: () => void;
-  /** ขนาด icon ด้านใน header (search/post/notification/profile) */
+  /** ขนาด icon ด้านใน header (post/notification/profile) */
   iconSize?: number;
-  /** ขนาดแท็บ/ปุ่มใน header (search/post/notification/profile) */
+  /** ขนาดแท็บ/ปุ่มใน header (post/notification/profile) */
   controlSize?: number;
   /** เรียกเมื่อกดแท็บที่ active อยู่ (refresh) */
   onTabRefresh?: () => void;
@@ -38,8 +35,10 @@ interface AppHeaderProps {
   loadingTab?: 'recommend' | 'sold' | null;
   /** เปิด overlay โปรไฟล์ทับ feed (ใช้เมื่ออยู่หน้าโฮม/ขายแล้ว) แทนการ push ไป /profile */
   setProfileOverlayOpen?: (open: boolean) => void;
-  /** หน้า Home: แสดงเฉพาะ Search (ซ่อนปุ่มโพสต์/แจ้งเตือน/โปรไฟล์) */
+  /** หน้า Home: แสดงเฉพาะโลโก้ (ซ่อนปุ่มโพสต์/แจ้งเตือน/โปรไฟล์) */
   showOnlySearch?: boolean;
+  /** หน้า Home: คอนเทนต์ระหว่างโลโก้กับขอบขวา (ปุ่มค้นหา + ปุ่มฟิลเตอร์) — ใช้เมื่อ showOnlySearch เท่านั้น */
+  homeCenterContent?: React.ReactNode;
   /** หน้า Home: ให้ parent เป็นคนสไลด์ (Header + แท็บ) — root ไม่ใช้ fixed/transform */
   slideWithContainer?: boolean;
 }
@@ -49,8 +48,6 @@ interface AppHeaderProps {
  * Reusable header component for home and sold pages
  */
 export const AppHeader = React.memo<AppHeaderProps>(({
-  searchTerm,
-  onSearchChange,
   onCreatePostClick,
   onNotificationClick,
   unreadCount = 0,
@@ -58,7 +55,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   session,
   isHeaderVisible,
   onTabChange,
-  onSearchClick,
   iconSize = 18,
   controlSize = 36,
   onTabRefresh,
@@ -66,6 +62,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   loadingTab = null,
   setProfileOverlayOpen,
   showOnlySearch = false,
+  homeCenterContent,
   slideWithContainer = false,
 }) => {
   const router = useRouter();
@@ -146,7 +143,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           padding: '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '8px', 
+          gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
           borderBottom: '1px solid #f0f0f0',
         }}>
         {/* Logo (brand name removed per request) */}
@@ -154,7 +151,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex', 
           alignItems: 'center', 
           flexShrink: 0,
-          ...(showOnlySearch ? { width: '48px', minWidth: '48px', marginRight: 0 } : { marginRight: '8px' })
+          marginRight: showOnlySearch && homeCenterContent ? '4px' : '8px',
         }}>
           <Image 
             src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
@@ -166,77 +163,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           />
         </div>
 
-        {showOnlySearch ? (
-          /* Search Bar - centered on home (spacer right = logo width for balance) */
-          <>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minWidth: 0 }}>
-            <div 
-              onClick={onSearchClick}
-              style={{ 
-                maxWidth: '280px', 
-                width: '100%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                background: '#f0f2f5', 
-                borderRadius: '20px', 
-                padding: '7px 14px', 
-                cursor: 'pointer', 
-                minHeight: `${controlSize}px` 
-              }}
-            >
-          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input 
-            type="text" 
-            placeholder="ຄົ້ນຫາ" 
-            value={searchTerm} 
-            onChange={(e) => onSearchChange(e.target.value)} 
-            onFocus={onSearchClick}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSearchClick) onSearchClick();
-            }}
-            style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer', color: '#111111' }} 
-          />
-            </div>
-          </div>
-          <div style={{ width: '48px', minWidth: '48px', flexShrink: 0 }} aria-hidden />
-          </>
-        ) : (
-          /* Search Bar - normal (sold page etc.) */
-          <div 
-            onClick={onSearchClick}
-            style={{ 
-              flex: 1, 
-              display: 'flex', 
-              alignItems: 'center', 
-              background: '#f0f2f5', 
-              borderRadius: '20px', 
-              padding: '7px 14px', 
-              cursor: 'pointer', 
-              minHeight: `${controlSize}px` 
-            }}
-          >
-          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px', flexShrink: 0 }}>
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input 
-            type="text" 
-            placeholder="ຄົ້ນຫາ" 
-            value={searchTerm} 
-            onChange={(e) => onSearchChange(e.target.value)} 
-            onFocus={onSearchClick}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSearchClick) onSearchClick();
-            }}
-            style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', cursor: 'pointer', color: '#111111' }} 
-          />
-        </div>
-        )}
+        {showOnlySearch && homeCenterContent ? homeCenterContent : <div style={{ flex: 1, minWidth: 0 }} aria-hidden />}
 
         {!showOnlySearch && (
           <>

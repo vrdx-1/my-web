@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { PostFeedModals } from '@/components/PostFeedModals';
@@ -14,6 +15,7 @@ import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useMenu } from '@/hooks/useMenu';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { useViewingPost } from '@/hooks/useViewingPost';
@@ -25,6 +27,7 @@ import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { usePullHeaderOffset } from '@/app/(main)/MainTabLayoutClient';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -46,21 +49,46 @@ export function HomePageContent() {
 
   const mainTab = useMainTabContext();
   const tab = mainTab?.homeTab ?? 'recommend';
-  const searchTerm = mainTab?.searchTerm ?? '';
   const pullHeaderCtx = usePullHeaderOffset();
   const setPullHeaderOffset = pullHeaderCtx?.setPullHeaderOffset ?? (() => {});
   const pullHeaderOffset = pullHeaderCtx?.pullHeaderOffset ?? 0;
+  const homeProvince = useHomeProvince();
+  const selectedProvince = homeProvince?.selectedProvince ?? '';
 
-  const recommendFeed = useHomeFeed({ searchTerm: tab === 'recommend' ? searchTerm : '', session: sessionState });
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') ?? '';
+
+  const recommendFeed = useHomeFeed({ session: sessionState, province: selectedProvince });
+  const searchData = useSearchPosts({
+    query: searchQuery,
+    province: selectedProvince,
+    session: sessionState,
+  });
   const soldListData = usePostListData({
     type: 'sold',
     session: sessionState,
-    searchTerm: tab === 'sold' ? searchTerm : '',
     status: 'sold',
   });
 
-  const posts = tab === 'recommend' ? recommendFeed.posts : soldListData.posts;
-  const postList = tab === 'recommend' ? recommendFeed : soldListData;
+  const recommendSource =
+    searchQuery.trim().length > 0
+      ? {
+          posts: searchData.posts,
+          setPosts: searchData.setPosts,
+          session: searchData.session,
+          likedPosts: searchData.likedPosts,
+          savedPosts: searchData.savedPosts,
+          setLikedPosts: searchData.setLikedPosts,
+          setSavedPosts: searchData.setSavedPosts,
+          loadingMore: searchData.loading,
+          hasMore: false,
+          setPage: () => {},
+          fetchPosts: () => searchData.fetchSearch(),
+        }
+      : recommendFeed;
+
+  const posts = tab === 'recommend' ? recommendSource.posts : soldListData.posts;
+  const postList = tab === 'recommend' ? recommendSource : soldListData;
   postsRef.current = posts;
 
   useEffect(() => {
@@ -101,7 +129,7 @@ export function HomePageContent() {
     soldListData.setPage(0);
     soldListData.setHasMore(true);
     soldListData.fetchPosts(true);
-  }, [tab, sessionState, soldListData.session, searchTerm]);
+  }, [tab, sessionState, soldListData.session]);
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -125,15 +153,19 @@ export function HomePageContent() {
     }
     setTabRefreshing(true);
     if (tab === 'recommend') {
-      recommendFeed.setPage(0);
-      recommendFeed.setHasMore(true);
-      recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      if (searchQuery.trim()) {
+        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
+      } else {
+        recommendFeed.setPage(0);
+        recommendFeed.setHasMore(true);
+        recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      }
     } else {
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
     }
-  }, [tab, mainTab, recommendFeed, soldListData]);
+  }, [tab, mainTab, searchQuery, recommendFeed, searchData, soldListData]);
 
   useEffect(() => {
     mainTab?.registerTabRefreshHandler(doRefresh);
@@ -219,9 +251,13 @@ export function HomePageContent() {
       mainTab?.setTabRefreshing(true);
       setTabRefreshing(true);
       if (newTab === 'recommend') {
-        recommendFeed.setPage(0);
-        recommendFeed.setHasMore(true);
-        recommendFeed.fetchPosts(true);
+        if (searchQuery.trim()) {
+          searchData.fetchSearch();
+        } else {
+          recommendFeed.setPage(0);
+          recommendFeed.setHasMore(true);
+          recommendFeed.fetchPosts(true);
+        }
       } else {
         soldListData.setPage(0);
         soldListData.setHasMore(true);
@@ -232,13 +268,17 @@ export function HomePageContent() {
       mainTab?.setHomeTab(newTab);
       setTabRefreshing(true);
       if (newTab === 'recommend') {
-        recommendFeed.setPage(0);
-        recommendFeed.setHasMore(true);
-        recommendFeed.fetchPosts(true);
+        if (searchQuery.trim()) {
+          searchData.fetchSearch();
+        } else {
+          recommendFeed.setPage(0);
+          recommendFeed.setHasMore(true);
+          recommendFeed.fetchPosts(true);
+        }
       }
       // sold: fetch ถูกเรียกใน useEffect เมื่อ tab === 'sold'
     }
-  }, [tab, mainTab, recommendFeed, soldListData]);
+  }, [tab, mainTab, searchQuery, recommendFeed, searchData, soldListData]);
 
   useEffect(() => {
     mainTab?.registerTabChangeHandler(setTabAndRefresh);

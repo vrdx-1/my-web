@@ -5,26 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { LIST_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { captionHasSearchLanguage, captionMatchesAnyAlias, detectSearchLanguage, expandCarSearchAliases } from '@/utils/postUtils';
-import { LAO_PROVINCES } from '@/utils/constants';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
-function normalizeCaptionSearch(text: string): string {
-  return String(text ?? '')
-    .normalize('NFKC')
-    .toLowerCase()
-    .trim()
-    .replace(/[()[\]{}"“”'‘’]/g, ' ')
-    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
-    .replace(/\s+/g, ' ');
-}
-
-function captionIncludesSearch(caption: string, query: string): boolean {
-  const q = normalizeCaptionSearch(query);
-  if (!q) return false;
-  const c = normalizeCaptionSearch(caption);
-  return c.includes(q);
-}
 
 export type PostListType = 'saved' | 'liked' | 'sold' | 'my-posts';
 
@@ -33,7 +15,6 @@ interface UsePostListDataOptions {
   userIdOrToken?: string;
   session?: any;
   tab?: string;
-  searchTerm?: string;
   status?: string; // สำหรับ sold page
   loadAll?: boolean; // โหลดทั้งหมดครั้งเดียว (ใช้กับ saved/liked/my-posts)
 }
@@ -61,25 +42,15 @@ interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, tab, searchTerm, status, loadAll = false } = options;
+  const { type, userIdOrToken, session, tab, status, loadAll = false } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  // Initialize currentSession - ถ้า session ถูกส่งมาใช้เลย ถ้าไม่รอให้ useEffect initialize
   const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
-  const soldSearchScanCacheRef = useRef<{
-    term: string;
-    scannedUntil: number;
-    sourceExhausted: boolean;
-    matchedIds: string[];
-    primaryCount: number;
-    provinceTerm: string | null;
-  } | null>(null);
-  /** ป้องกันผลของ fetch เก่าเขียนทับเมื่อสลับแท็บเร็ว (คลิกครั้งเดียวสลับฝั่ง) */
   const fetchIdRef = useRef(0);
 
   // Initialize session
@@ -377,95 +348,20 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
       } else if (type === 'sold') {
-        const term = (searchTerm ?? '').trim();
-        if (term) {
-          const termKey = term;
-          const provinceTerm =
-            LAO_PROVINCES.find((p) => term.includes(p)) ?? null;
-          if (isInitial || !soldSearchScanCacheRef.current || soldSearchScanCacheRef.current.term !== termKey) {
-            soldSearchScanCacheRef.current = {
-              term: termKey,
-              scannedUntil: 0,
-              sourceExhausted: false,
-              matchedIds: [],
-              primaryCount: 0,
-              provinceTerm,
-            };
-          }
+        const { data, error } = await supabase
+          .from('cars')
+          .select('id')
+          .eq('status', status || 'sold')
+          .eq('is_hidden', false)
+          .order('created_at', { ascending: false })
+          .range(rangeStart, rangeEnd);
 
-          const cache = soldSearchScanCacheRef.current;
-          const neededEnd = rangeEnd + 1;
-          const batchSize = 80;
-          const expandedTerms = expandCarSearchAliases(term);
-          const searchLang = detectSearchLanguage(term);
-
-          while (cache && cache.matchedIds.length < neededEnd && !cache.sourceExhausted) {
-            const from = cache.scannedUntil;
-            const to = from + batchSize - 1;
-
-            const { data, error } = await supabase
-              .from('cars')
-              .select('id, caption, province')
-              .eq('status', status || 'sold')
-              .eq('is_hidden', false)
-              .order('created_at', { ascending: false })
-              .range(from, to);
-
-            if (error || !data) {
-              cache.sourceExhausted = true;
-              break;
-            }
-
-            if (data.length < batchSize) cache.sourceExhausted = true;
-            cache.scannedUntil += batchSize;
-
-            for (const row of data as any[]) {
-              if (!cache) break;
-              const caption = String(row.caption ?? '');
-              const province = String(row.province ?? '');
-              const match = expandedTerms.length > 0
-                ? captionMatchesAnyAlias(caption, expandedTerms)
-                : captionIncludesSearch(caption, term);
-              if (match) {
-                const id = String(row.id);
-                const isLangPrimary =
-                  searchLang === 'other' ? true : captionHasSearchLanguage(caption, searchLang);
-
-                const provinceTerm = cache.provinceTerm;
-                const isProvincePrimary = !!provinceTerm && province === provinceTerm;
-
-                if (isProvincePrimary) {
-                  cache.matchedIds.splice(0, 0, id);
-                  cache.primaryCount += 1;
-                } else if (isLangPrimary) {
-                  cache.matchedIds.splice(cache.primaryCount, 0, id);
-                  cache.primaryCount += 1;
-                } else {
-                  cache.matchedIds.push(id);
-                }
-              }
-            }
-          }
-
-          postIds = (cache?.matchedIds ?? []).slice(rangeStart, neededEnd);
-          if (fetchIdRef.current === currentFetchId) setHasMore(!!(cache && (!cache.sourceExhausted || cache.matchedIds.length > neededEnd)));
-        } else {
-          let query = supabase
-            .from('cars')
-            .select('id')
-            .eq('status', status || 'sold')
-            .eq('is_hidden', false)
-            .order('created_at', { ascending: false })
-            .range(rangeStart, rangeEnd);
-
-          const { data, error } = await query;
-          if (error || !data) {
-            if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
-            return;
-          }
-          postIds = data.map((p: any) => p.id);
-          if (postIds.length === 0 && fetchIdRef.current === currentFetchId) setHasMore(false);
+        if (error || !data) {
+          if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
+          return;
         }
+        postIds = data.map((p: any) => p.id);
+        if (postIds.length === 0 && fetchIdRef.current === currentFetchId) setHasMore(false);
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
         
@@ -581,7 +477,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         if (postsData) {
           // เรียงตามลำดับ postIds: liked/saved = กดล่าสุดก่อน, sold+search = ตาม cache order
           const orderedPostsData =
-            (type === 'sold' && (searchTerm ?? '').trim()) || type === 'saved' || type === 'liked'
+            type === 'saved' || type === 'liked'
               ? (() => {
                   const order = new Map<string, number>(validPostIds.map((id, idx) => [String(id), idx]));
                   return [...postsData].sort((a: any, b: any) => {
@@ -860,7 +756,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setLoadingMore(false);
       }
     }
-  }, [type, userIdOrToken, currentSession, tab, searchTerm, status, page, loadingMore, loadAll]);
+  }, [type, userIdOrToken, currentSession, tab, status, page, loadingMore, loadAll]);
 
   const refreshData = useCallback(async () => {
     setPage(0);

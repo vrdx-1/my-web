@@ -28,12 +28,8 @@ export async function swrFetcher(key: string | string[]): Promise<any> {
     
     // Handle different query types
     if (table === 'posts') {
-      const [startIndex, endIndex, searchTerm] = params;
-      // Convert to API route for consistency
-      const url = searchTerm && searchTerm !== 'null'
-        ? `/api/posts?startIndex=${startIndex}&endIndex=${endIndex}&searchTerm=${encodeURIComponent(searchTerm)}`
-        : `/api/posts?startIndex=${startIndex}&endIndex=${endIndex}`;
-      
+      const [startIndex, endIndex] = params;
+      const url = `/api/posts?startIndex=${startIndex}&endIndex=${endIndex}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch posts');
       return response.json();

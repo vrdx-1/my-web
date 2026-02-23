@@ -4,7 +4,6 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { TabNavigation } from '@/components/TabNavigation';
-import { SearchScreen } from '@/components/SearchScreen';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -45,11 +44,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     return () => createPostContext?.register(null);
   }, [session, createPostContext, fileUpload.handleCreatePostClick]);
 
-  const searchTerm = mainTab?.searchTerm ?? '';
-  const searchDisplayText = mainTab?.searchDisplayText ?? '';
-  const setSearchTerm = mainTab?.setSearchTerm ?? (() => {});
-  const isSearchScreenOpen = mainTab?.isSearchScreenOpen ?? false;
-  const setIsSearchScreenOpen = mainTab?.setIsSearchScreenOpen ?? (() => {});
   const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
   const setProfileOverlayOpen = mainTab?.setProfileOverlayOpen ?? (() => {});
 
@@ -66,23 +60,12 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     mainTab?.triggerTabRefresh();
   }, [mainTab]);
 
-  const handleSearchPerform = useCallback(() => {
-    if (pathname === '/home') {
-      mainTab?.setTabRefreshing(true);
-      mainTab?.triggerTabRefresh();
-    }
-  }, [mainTab, pathname]);
-
   const handleTabSwitchStart = useCallback(
     (tab: 'recommend' | 'sold') => {
       mainTab?.setNavigatingToTab(tab);
     },
     [mainTab],
   );
-
-  const handleTabChange = useCallback(() => {
-    setIsSearchScreenOpen(false);
-  }, []);
 
   useEffect(() => {
     if (pathname !== '/home') {
@@ -137,8 +120,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
             }}
           >
             <HomeHeader
-              searchTerm={searchDisplayText}
-              onSearchChange={(v) => setSearchTerm(v)}
               onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
               onNotificationClick={handleNotificationClick}
               unreadCount={unreadCount}
@@ -146,8 +127,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               session={session}
               isHeaderVisible={isHeaderVisible}
               slideWithContainer={true}
-              onTabChange={handleTabChange}
-              onSearchClick={() => setIsSearchScreenOpen(true)}
               onTabRefresh={handleTabRefresh}
               onTabSwitchStart={handleTabSwitchStart}
               loadingTab={loadingTab ?? undefined}
@@ -178,17 +157,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         <ProfileOverlay
           isOpen={isProfileOverlayOpen}
           onClose={() => setProfileOverlayOpen(false)}
-        />
-      )}
-
-      {isSearchScreenOpen && (
-        <SearchScreen
-          isOpen={isSearchScreenOpen}
-          searchTerm={searchDisplayText}
-          initialApiTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onClose={() => setIsSearchScreenOpen(false)}
-          onSearchPerform={handleSearchPerform}
         />
       )}
 

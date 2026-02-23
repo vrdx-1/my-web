@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { expandCarSearchAliases } from '@/utils/postUtils';
-const FEED_PAGE_SIZE = 100;
-import carsData from '@/data';
+import { FEED_PAGE_SIZE } from '@/utils/constants';
 
 /** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
 async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
@@ -17,207 +15,36 @@ async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
   }
 }
 
-// Helper: normalize สำหรับ fallback lookup
-function normalizeForFallback(text: string): string {
-  return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-// Helper: หา brand names ทั้งหมดจาก dictionary (cache)
-const BRAND_NAMES_SET = (() => {
-  const set = new Set<string>();
-  for (const brand of carsData.brands ?? []) {
-    const en = String(brand.brandName ?? '').trim();
-    const th = String((brand as any).brandNameTh ?? '').trim();
-    const lo = String((brand as any).brandNameLo ?? '').trim();
-    if (en) set.add(normalizeForFallback(en));
-    if (th) set.add(normalizeForFallback(th));
-    if (lo) set.add(normalizeForFallback(lo));
-  }
-  return set;
-})();
-
-// Helper: normalize สำหรับค้นหาใน dictionary
-function normalizeCarSearch(text: string): string {
-  return String(text ?? '')
-    .normalize('NFKC')
-    .toLowerCase()
-    .trim()
-    .replace(/[()[\]{}"“”'‘’]/g, ' ')
-    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
-    .replace(/\s+/g, ' ');
-}
-
-// Helper: expand โดยกรอง brand aliases และ model aliases อื่นๆ ออกเมื่อค้น model (เพื่อให้ได้ผลที่ตรงคำค้น)
-function expandWithoutBrandAliases(query: string): string[] {
-  const expanded = expandCarSearchAliases(query);
-  if (expanded.length <= 1) return expanded;
-
-  const queryNorm = normalizeCarSearch(query);
-  
-  // ถ้า query เป็น brand name → เก็บ brand aliases ไว้ (ไม่กรอง)
-  if (BRAND_NAMES_SET.has(normalizeForFallback(query))) {
-    return expanded; // ค้น brand → ใช้ทุกอย่าง (brand + models)
-  }
-
-  // ถ้า query เป็น model → กรอง brand aliases และ model aliases อื่นๆ ออก
-  // หา entities ที่ตรงกับ query
-  const matchingEntities = new Set<string>();
-  for (const brand of carsData.brands ?? []) {
-    for (const model of brand.models ?? []) {
-      const modelAliases = [
-        model.modelName,
-        (model as any).modelNameTh,
-        (model as any).modelNameLo,
-        ...((model.searchNames ?? []) as any[]).map(String),
-      ];
-      const modelAliasesNorm = modelAliases.map(a => normalizeCarSearch(String(a ?? ''))).filter(Boolean);
-      if (modelAliasesNorm.includes(queryNorm)) {
-        matchingEntities.add(`model:${brand.brandId}:${model.modelId}`);
-      }
-    }
-  }
-
-  // ถ้าไม่พบ matching entity → ใช้ expanded เดิม
-  if (matchingEntities.size === 0) {
-    const filtered = expanded.filter(term => {
-      const termNorm = normalizeForFallback(term);
-      return !BRAND_NAMES_SET.has(termNorm) || termNorm === normalizeForFallback(query);
-    });
-    return filtered.length > 0 ? filtered : [query];
-  }
-
-  // สร้าง Set ของ aliases ที่เป็นของ model อื่น (เพื่อกรองออก)
-  const otherModelAliases = new Set<string>();
-  for (const brand of carsData.brands ?? []) {
-    for (const model of brand.models ?? []) {
-      const entityKey = `model:${brand.brandId}:${model.modelId}`;
-      if (matchingEntities.has(entityKey)) continue; // ข้าม matching entities
-
-      // เก็บ aliases ของ model อื่น
-      const modelAliases = [
-        model.modelName,
-        (model as any).modelNameTh,
-        (model as any).modelNameLo,
-        ...((model.searchNames ?? []) as any[]).map(String),
-      ];
-      for (const alias of modelAliases) {
-        const a = String(alias ?? '').trim();
-        if (a) {
-          otherModelAliases.add(a);
-          otherModelAliases.add(normalizeCarSearch(a));
-        }
-      }
-    }
-  }
-
-  // กรองให้เหลือเฉพาะ aliases ที่เป็นของ matching entities เท่านั้น
-  // และเพิ่ม token ของแต่ละ alias (แบบเดียวกับ postUtils addAliasWithTokens) เพื่อให้ caption ที่เขียนแค่คำเดียวเช่น "รีโว่" ก็ match
-  const validAliases = new Set<string>();
-  validAliases.add(query); // เก็บ query เดิมเสมอ
-
-  function addAliasAndTokens(alias: string, isAllowed: (a: string) => boolean) {
-    const a = String(alias ?? '').trim();
-    if (!a) return;
-    if (isAllowed(a)) validAliases.add(a);
-    const rawTokens = a.split(/\s+/).map((t) => t.trim()).filter(Boolean);
-    for (const rawTok of rawTokens) {
-      if (rawTok.length >= 2 && isAllowed(rawTok)) validAliases.add(rawTok);
-    }
-  }
-
-  for (const brand of carsData.brands ?? []) {
-    for (const model of brand.models ?? []) {
-      const entityKey = `model:${brand.brandId}:${model.modelId}`;
-      if (!matchingEntities.has(entityKey)) continue;
-
-      const modelAliases = [
-        model.modelName,
-        (model as any).modelNameTh,
-        (model as any).modelNameLo,
-        ...((model.searchNames ?? []) as any[]).map(String),
-      ];
-      for (const alias of modelAliases) {
-        const a = String(alias ?? '').trim();
-        if (!a) continue;
-        const aNorm = normalizeCarSearch(a);
-        const queryNorm = normalizeCarSearch(query);
-        const isAllowed = (t: string) =>
-          normalizeCarSearch(t) === queryNorm ||
-          (!otherModelAliases.has(t) && !otherModelAliases.has(normalizeCarSearch(t)));
-        addAliasAndTokens(a, isAllowed);
-      }
-    }
-  }
-
-  // ส่งชุดคำจาก validAliases โดยตรง (ไม่กรองจาก expanded) เพื่อให้รุ่นที่มี 3 ภาษาได้คำครบไทย/ลาว/อังกฤษเสมอ
-  const result = Array.from(validAliases).filter(Boolean);
-  return result.length > 0 ? result : [query];
-}
-
-/**
- * ใช้ RPC ใน DB ส่ง terms ผ่าน body — คำไทย/ลาวไม่ผ่าน URL จึงค้นได้ครบ 3 ภาษา
- */
-async function runFeedQueryMultiTermRpc(
+function runFeedQuery(
   supabase: ReturnType<typeof createServerClient>,
-  searchTerms: string[],
   startIndex: number,
-  endIndex: number
-): Promise<{ postIds: string[]; hasMore: boolean }> {
-  const pageLen = endIndex - startIndex + 1;
-  const { data, error } = await supabase.rpc('search_cars_by_caption_terms', {
-    p_terms: searchTerms,
-    p_start: startIndex,
-    p_limit: pageLen + 1,
-  });
-
-  if (error) {
-    return { postIds: [], hasMore: false };
-  }
-
-  const rows = Array.isArray(data) ? data : [];
-  const postIds = rows.slice(0, pageLen).map((r: { id: string }) => String(r.id));
-  const hasMore = rows.length > pageLen;
-
-  return { postIds, hasMore };
-}
-
-function runFeedQuerySingle(
-  supabase: ReturnType<typeof createServerClient>,
-  searchTerms: string[],
-  startIndex: number,
-  endIndex: number
+  endIndex: number,
+  province?: string
 ) {
   let query = supabase
     .from('cars')
     .select('id')
     .eq('status', 'recommend')
-    .eq('is_hidden', false)
+    .eq('is_hidden', false);
+  if (province && province.trim() !== '') {
+    query = query.eq('province', province.trim());
+  }
+  return query
     .order('is_boosted', { ascending: false })
     .order('created_at', { ascending: false })
     .range(startIndex, endIndex);
-
-  if (searchTerms.length === 1) {
-    query = query.ilike('caption', `%${searchTerms[0]}%`);
-  }
-
-  return query;
 }
 
 /**
- * POST /api/posts/feed — body: { searchTerms: string[], startIndex, endIndex }
- * ใช้เมื่อ client ส่งคำที่ขยายแล้ว (ไทย/ลาว/อังกฤษ) ใน body เพื่อให้ค้นได้ครบทุกภาษา
+ * POST /api/posts/feed — body: { startIndex, endIndex, province? }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const rawTerms = body.searchTerms;
-    const searchTerms = Array.isArray(rawTerms)
-      ? rawTerms.map((t: unknown) => String(t ?? '').trim()).filter(Boolean)
-      : [];
     const startIndex = parseInt(String(body.startIndex ?? 0), 10);
     const endIndex = parseInt(String(body.endIndex ?? FEED_PAGE_SIZE - 1), 10);
+    const province = typeof body.province === 'string' ? body.province : undefined;
 
-    // ฝั่ง frontend เป็นผู้เลือกชุดคำส่งมาแล้ว — backend แค่ส่งโพสที่ caption ตรงตามคำที่ให้ไป
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -233,14 +60,7 @@ export async function POST(request: NextRequest) {
 
     await touchLastSeen(supabase);
 
-    // ใช้ RPC multi-term เสมอเมื่อมี search term (แม้ได้คำเดียว) เพื่อให้ผลสม่ำเสมอ
-    if (searchTerms.length > 0) {
-      const result = await runFeedQueryMultiTermRpc(supabase, searchTerms, startIndex, endIndex);
-      return NextResponse.json(result, { headers: { 'Cache-Control': 'private, max-age=0' } });
-    }
-
-    // ไม่มี search term → ดึงโพสทั้งหมด
-    const query = runFeedQuerySingle(supabase, [], startIndex, endIndex);
+    const query = runFeedQuery(supabase, startIndex, endIndex, province);
     const { data, error } = await query;
 
     if (error) {
@@ -265,15 +85,14 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/posts/feed?searchTerm=revo&startIndex=0&endIndex=9
- * ค้นจาก query string (รองรับเมื่อมี searchTerm เดียวใน URL)
+ * GET /api/posts/feed?startIndex=0&endIndex=9
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
     const endIndex = parseInt(searchParams.get('endIndex') || String(FEED_PAGE_SIZE - 1), 10);
-    const searchTerm = (searchParams.get('searchTerm') || '').trim();
+    const province = searchParams.get('province') ?? undefined;
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -290,63 +109,7 @@ export async function GET(request: NextRequest) {
 
     await touchLastSeen(supabase);
 
-    let searchTerms: string[] = [];
-    if (searchTerm) {
-      // ขยายเสมอเพื่อให้แน่ใจว่าได้ผลครบทุกครั้ง
-      // ใช้ expandWithoutBrandAliases เพื่อกรอง brand aliases ออกเมื่อค้น model
-      const expanded = expandWithoutBrandAliases(searchTerm);
-      searchTerms = (expanded.length > 0 ? expanded : [searchTerm])
-        .map((t) => String(t ?? '').trim())
-        .filter(Boolean);
-      // ถ้าขยายแล้วยังได้คำเดียว ใช้ fallback สำหรับคำที่รู้จัก (ทั้งอังกฤษ/ไทย/ลาว)
-      // และพยายาม expand อีกครั้งด้วย original query เพื่อให้แน่ใจว่าได้ผลครบ
-      if (searchTerms.length === 1) {
-        const one = searchTerms[0];
-        const fallback: Record<string, string[]> = {
-          revo: ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-          'รีโว่': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-          'รีโว้': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-          'ລີໂວ້': ['revo', 'รีโว่', 'รีโว้', 'ລີໂວ້'],
-          vigo: ['vigo', 'วีโก้', 'ວີໂກ້'],
-          'วีโก้': ['vigo', 'วีโก้', 'ວີໂກ້'],
-          'ວີໂກ້': ['vigo', 'วีโก้', 'ວີໂກ້'],
-          vios: ['vios', 'วีออส', 'ວີອອສ'],
-          'วีออส': ['vios', 'วีออส', 'ວີອອສ'],
-          'ວີອອສ': ['vios', 'วีออส', 'ວີອອສ'],
-          fortuner: ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-          'ฟอร์จูนเนอร์': ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-          'ຟໍຈູນເນີ້': ['fortuner', 'ฟอร์จูนเนอร์', 'ຟໍຈູນເນີ້'],
-          camry: ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-          'คัมรี่': ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-          'ແຄມຣີ້': ['camry', 'คัมรี่', 'ແຄມຣີ້'],
-          hilux: ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-          'ไฮลักซ์': ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-          'ໄຮລັກ': ['hilux', 'ไฮลักซ์', 'ໄຮລັກ'],
-        };
-        const key = normalizeForFallback(one);
-        if (fallback[key]) {
-          searchTerms = fallback[key].map((t) => String(t ?? '').trim()).filter(Boolean);
-        } else {
-          // ถ้าไม่มีใน fallback แต่ได้คำเดียว → พยายาม expand อีกครั้งด้วย original query
-          // เพื่อให้แน่ใจว่าได้ผลครบ (กรณี dictionary index ไม่เสถียร)
-          const reExpanded = expandWithoutBrandAliases(searchTerm);
-          if (reExpanded.length > 1) {
-            const reExpandedSet = new Set<string>();
-            for (const e of reExpanded) reExpandedSet.add(String(e).trim());
-            searchTerms = Array.from(reExpandedSet).filter(Boolean);
-          }
-        }
-      }
-    }
-
-    // ใช้ RPC multi-term เสมอเมื่อมี search term (แม้ได้คำเดียว) เพื่อให้ผลสม่ำเสมอ
-    if (searchTerms.length > 0) {
-      const result = await runFeedQueryMultiTermRpc(supabase, searchTerms, startIndex, endIndex);
-      return NextResponse.json(result, { headers: { 'Cache-Control': 'private, max-age=0' } });
-    }
-
-    // ไม่มี search term → ดึงโพสทั้งหมด
-    const query = runFeedQuerySingle(supabase, [], startIndex, endIndex);
+    const query = runFeedQuery(supabase, startIndex, endIndex, province);
     const { data, error } = await query;
 
     if (error) {
