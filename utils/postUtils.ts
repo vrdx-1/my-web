@@ -6,6 +6,7 @@
 import { safeParseJSON } from './storageUtils';
 import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
+import { CATEGORY_MODELS } from '@/data/category-models';
 
 // ---- Car dictionary search helpers (moved here to avoid extra files) ----
 // NOTE: This preserves existing UX/UI. Only module location changed.
@@ -408,7 +409,7 @@ export function expandCarSearchAliases(query: string): string[] {
     return uniqStringsCarSearch(out);
   }
 
-  // ถ้าไม่พบใน dictionary ของยี่ห้อ/รุ่นเลย ค่อย fallback ไปใช้ category (pickup/van/EV ฯลฯ)
+  // ถ้าไม่พบใน dictionary ของยี่ห้อ/รุ่นเลย ค่อย fallback ไปใช้ category (pickup/van/EV ฯลฯ) — อ่านจาก CATEGORY_MODELS / category-models/*.json
   const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
   if (categoryIds && categoryIds.size > 0) {
     const expanded: string[] = [query];
@@ -426,32 +427,43 @@ export function expandCarSearchAliases(query: string): string[] {
           }
         }
       }
-      // ดูรุ่นไหนมีหมวด cid แล้วใส่ชื่อรุ่นครบ 3 ภาษา (modelName, modelNameTh, modelNameLo, searchNames) จากต้นทาง
-      for (const brand of carsData.brands ?? []) {
-        for (const model of brand.models ?? []) {
-          const modelCats = (model.categoryIds ?? []) as string[];
-          if (!modelCats.includes(String(cid))) continue;
-          const terms = [
-            model.modelName,
-            (model as any).modelNameTh,
-            (model as any).modelNameLo,
-            ...((model.searchNames ?? []) as any[]).map(String),
-          ];
-          for (const t of terms) {
-            const s = String(t ?? '').trim();
-            if (!s) continue;
-            expanded.push(s);
-            const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
-            for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+      const modelNames = CATEGORY_MODELS[String(cid)];
+      if (modelNames && Array.isArray(modelNames)) {
+        for (const name of modelNames) {
+          const s = String(name ?? '').trim();
+          if (!s) continue;
+          expanded.push(s);
+          const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+          for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+        }
+      } else {
+        // fallback: ดูรุ่นไหนมีหมวด cid จาก cars.json
+        for (const brand of carsData.brands ?? []) {
+          for (const model of brand.models ?? []) {
+            const modelCats = (model.categoryIds ?? []) as string[];
+            if (!modelCats.includes(String(cid))) continue;
+            const terms = [
+              model.modelName,
+              (model as any).modelNameTh,
+              (model as any).modelNameLo,
+              ...((model.searchNames ?? []) as any[]).map(String),
+            ];
+            for (const t of terms) {
+              const s = String(t ?? '').trim();
+              if (!s) continue;
+              expanded.push(s);
+              const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+              for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+            }
           }
         }
-      }
-      const aliases = CATEGORY_TO_MODEL_ALIASES.categoryToAliases.get(String(cid));
-      if (aliases) {
-        expanded.push(...aliases);
-        for (const a of aliases) {
-          const tokens = String(a ?? '').split(/\s+/).map((t) => t.trim()).filter(Boolean);
-          for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+        const aliases = CATEGORY_TO_MODEL_ALIASES.categoryToAliases.get(String(cid));
+        if (aliases) {
+          expanded.push(...aliases);
+          for (const a of aliases) {
+            const tokens = String(a ?? '').split(/\s+/).map((t) => t.trim()).filter(Boolean);
+            for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+          }
         }
       }
     }
@@ -490,11 +502,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
   const queryNorm = normalizeCarSearch(query);
   if (BRAND_NAMES_SET.has(normalizeForFallback(query))) return expanded;
 
-  // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ส่งเฉพาะชื่อรุ่นจากพจนานุกรม (data/brands) ครบ 3 ภาษา + searchNames ไม่ใส่ชื่อหมวดจาก categories
+  // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ใช้ชื่อรุ่นจาก CATEGORY_MODELS / category-models/*.json
   const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(queryNorm);
   if (categoryIds && categoryIds.size > 0) {
     const currentCids = new Set(Array.from(categoryIds).map(String));
-    // ไม่ใส่คำที่ตรงกับ alias ของหมวดอื่น (เช่น "sport" จะไม่ใส่ตอนค้น suv เพื่อไม่ให้โพสที่พูดแค่รถสปอร์ตโผล่)
     const isOtherCategoryAlias = (termNorm: string): boolean => {
       const ids = CATEGORY_INDEX.aliasToCategoryIds.get(termNorm);
       if (!ids || ids.size === 0) return false;
@@ -503,23 +514,35 @@ export function expandWithoutBrandAliases(query: string): string[] {
     };
     const out = new Set<string>();
     for (const cid of categoryIds) {
-      for (const brand of carsData.brands ?? []) {
-        for (const model of brand.models ?? []) {
-          const modelCats = (model.categoryIds ?? []) as string[];
-          if (!modelCats.includes(String(cid))) continue;
-          const terms = [
-            model.modelName,
-            (model as any).modelNameTh,
-            (model as any).modelNameLo,
-            ...((model.searchNames ?? []) as any[]).map(String),
-          ];
-          for (const t of terms) {
-            const s = String(t ?? '').trim();
-            if (!s) continue;
-            if (BRAND_NAMES_SET.has(normalizeForFallback(s))) continue;
-            const sNorm = normalizeCarSearch(s);
-            if (sNorm && isOtherCategoryAlias(sNorm)) continue;
-            out.add(s);
+      const modelNames = CATEGORY_MODELS[String(cid)];
+      if (modelNames && Array.isArray(modelNames)) {
+        for (const name of modelNames) {
+          const s = String(name ?? '').trim();
+          if (!s) continue;
+          if (BRAND_NAMES_SET.has(normalizeForFallback(s))) continue;
+          const sNorm = normalizeCarSearch(s);
+          if (sNorm && isOtherCategoryAlias(sNorm)) continue;
+          out.add(s);
+        }
+      } else {
+        for (const brand of carsData.brands ?? []) {
+          for (const model of brand.models ?? []) {
+            const modelCats = (model.categoryIds ?? []) as string[];
+            if (!modelCats.includes(String(cid))) continue;
+            const terms = [
+              model.modelName,
+              (model as any).modelNameTh,
+              (model as any).modelNameLo,
+              ...((model.searchNames ?? []) as any[]).map(String),
+            ];
+            for (const t of terms) {
+              const s = String(t ?? '').trim();
+              if (!s) continue;
+              if (BRAND_NAMES_SET.has(normalizeForFallback(s))) continue;
+              const sNorm = normalizeCarSearch(s);
+              if (sNorm && isOtherCategoryAlias(sNorm)) continue;
+              out.add(s);
+            }
           }
         }
       }
@@ -769,7 +792,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     }
 
     if (!display) continue;
-    items.push({ display, searchKey: matchedRaw, _score: m.score });
+    // ใช้ display เป็น searchKey เพื่อเวลากด suggestion จะค้นด้วยข้อความที่แสดง (เช่น Land Cruiser) ไม่ใช่แค่คำที่พิมพ์ (land)
+    items.push({ display, searchKey: (display.trim() || matchedRaw), _score: m.score });
 
     // ถ้าเป็นการ match ที่ BRAND: แนะนำรุ่นต่าง ๆ ของแบรนด์นั้นต่อจากชื่อแบรนด์
     if (info.kind === 'brand') {

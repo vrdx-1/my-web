@@ -4,7 +4,7 @@
 CREATE OR REPLACE FUNCTION public.search_cars_by_caption_terms(
   p_terms text[],
   p_start int DEFAULT 0,
-  p_limit int DEFAULT 11
+  p_limit int DEFAULT 300
 )
 RETURNS TABLE(id uuid, is_boosted boolean, created_at timestamptz)
 LANGUAGE plpgsql

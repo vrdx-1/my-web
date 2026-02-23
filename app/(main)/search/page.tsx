@@ -54,7 +54,8 @@ function SearchPageContent() {
 
   const handleSuggestionClick = useCallback(
     (item: { display: string; searchKey: string }) => {
-      commitSearch(item.searchKey);
+      // ใช้ display เพื่อให้ข้อความที่แสดงด้านบนตรงกับภาษาที่ผู้ใช้กด (เช่น ລົດເກັງ ไม่กลายเป็น sedan) logic การค้นหายังเหมือนเดิม
+      commitSearch(item.display);
     },
     [commitSearch],
   );
