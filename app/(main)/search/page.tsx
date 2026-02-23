@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
@@ -9,7 +9,7 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 const SUGGESTION_LIMIT = 15;
 
-export default function SearchPage() {
+function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
@@ -319,5 +319,35 @@ export default function SearchPage() {
       )}
 
     </main>
+  );
+}
+
+function SearchPageFallback() {
+  return (
+    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+      <div
+        style={{
+          padding: '10px 12px 10px 8px',
+          borderBottom: '1px solid #f0f0f0',
+          background: '#fff',
+          minHeight: 56,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}
+      >
+        <div style={{ width: 36, height: 36, flexShrink: 0 }} />
+        <div style={{ flex: 1, height: 40, borderRadius: 20, background: '#e4e6eb' }} />
+        <div style={{ width: 72, height: 40, borderRadius: 20, background: '#e4e6eb' }} />
+      </div>
+    </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<SearchPageFallback />}>
+      <SearchPageContent />
+    </Suspense>
   );
 }
