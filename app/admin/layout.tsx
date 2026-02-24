@@ -19,12 +19,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const menuItems = [
-    { name: 'Overview', path: '/admin/overview' },
-    { name: 'Reporting', path: '/admin/reporting' },
-    { name: 'Problem reports', path: '/admin/problem-reports' },
+    { name: 'Post Report', path: '/admin/reporting' },
+    { name: 'Problem Report', path: '/admin/problem-reports' },
     { name: 'Review', path: '/admin/review' },
     { name: 'Review (Edited)', path: '/admin/edited-posts' },
-    { name: 'Post', path: '/admin/post' },
+    { name: 'All Post', path: '/admin/post' },
+    { name: 'Top User', path: '/admin/top-user' },
+    { name: 'User Device', path: '/admin/user-device' },
+    { name: 'Guest User Device', path: '/admin/guest-user-device' },
     { name: 'Search History', path: '/admin/search-history' },
     { name: 'Online Status', path: '/admin/online-status' },
     { name: 'Website Traffic', path: '/admin/website-traffic' },

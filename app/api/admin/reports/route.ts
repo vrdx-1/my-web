@@ -64,7 +64,7 @@ export async function GET() {
 
   const { data: reportsData, error: reportsError } = await admin
     .from('reports')
-    .select('id, car_id, reason, status, created_at, reporter_email')
+    .select('id, car_id, reason, status, created_at, reporter_email, reporter_id')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
@@ -85,10 +85,25 @@ export async function GET() {
     return NextResponse.json({ error: carsError.message }, { status: 500 });
   }
   const carsMap = new Map((carsData ?? []).map((c) => [c.id, c]));
-  const reports = reportsData.map((r) => ({
-    ...r,
-    cars: carsMap.get(r.car_id) ?? null,
-  }));
+
+  const reporterIds = [...new Set((reportsData ?? []).map((r) => (r as { reporter_id?: string }).reporter_id).filter(Boolean))] as string[];
+  let reporterProfilesMap = new Map<string, { username: string | null; avatar_url: string | null }>();
+  if (reporterIds.length > 0) {
+    const { data: reporterProfiles } = await admin
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', reporterIds);
+    reporterProfilesMap = new Map((reporterProfiles ?? []).map((p) => [p.id, { username: p.username, avatar_url: p.avatar_url }]));
+  }
+
+  const reports = reportsData.map((r) => {
+    const row = r as { reporter_id?: string };
+    return {
+      ...r,
+      cars: carsMap.get(r.car_id) ?? null,
+      reporter_profile: row.reporter_id ? reporterProfilesMap.get(row.reporter_id) ?? null : null,
+    };
+  });
 
   return NextResponse.json({ reports });
 }

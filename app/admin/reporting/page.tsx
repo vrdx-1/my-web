@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react';
 import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTimeAgo } from '@/utils/formatTime';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { EmptyState } from '@/components/EmptyState';
@@ -188,8 +189,22 @@ export default function AdminReportingPage() {
  ⚠️ ລາຍລະອຽດການລາຍງານ
  </h3>
  <div style={{ marginBottom: '15px' }}>
- <p style={{ fontSize: '13px', color: '#4a4d52', marginBottom: '2px' }}>ຜູ້ລາຍງານ:</p>
- <p style={{ fontSize: '14px', fontWeight: '500', color: '#111111' }}>{report.reporter_email}</p>
+ <p style={{ fontSize: '13px', color: '#4a4d52', marginBottom: '6px' }}>ຜູ້ລາຍງານ:</p>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+   {report.reporter_profile ? (
+     <>
+       {report.reporter_profile.avatar_url ? (
+         <img src={report.reporter_profile.avatar_url} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+       ) : (
+         <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e4e6eb' }} />
+       )}
+       <span style={{ fontSize: '14px', fontWeight: '500', color: '#111111' }}>{report.reporter_profile.username || report.reporter_email}</span>
+     </>
+   ) : (
+     <span style={{ fontSize: '14px', fontWeight: '500', color: '#111111' }}>{report.reporter_email}</span>
+   )}
+ </div>
+ <p style={{ fontSize: '13px', color: '#65676b', marginTop: '4px' }}>({formatTimeAgo(report.created_at)})</p>
  </div>
  <div style={{ background: '#fff5f5', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #d33', marginBottom: '20px' }}>
  <p style={{ fontWeight: 'bold', color: '#d33', fontSize: '13px', marginBottom: '4px' }}>ສາເຫດ:</p>

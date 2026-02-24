@@ -80,7 +80,7 @@ export default function AdminEditedPostsPage() {
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>
       <div style={{ width: '100%' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>
-          Review (Edited) - โพสที่แก้ไขภายใน 24 ชม. ({edits.length})
+          Review (Edited) - ໂພສທີ່ແກ້ໄຂພາຍໃນ 24 ຊົ່ວໂມງ ({edits.length})
         </h2>
         {edits.length === 0 && (
           <EmptyState message="ບໍ່ມີໂພສທີ່ແກ້ໄຂໃນ 24 ຊົ່ວໂມງນີ້" variant="card" />
@@ -123,7 +123,7 @@ export default function AdminEditedPostsPage() {
                 }}
               >
                 <div style={{ marginBottom: '10px', fontSize: '13px', color: '#4a4d52' }}>
-                  แก้ไขเมื่อ: {formatTime(edit.edited_at)}
+                  ແກ້ໄຂເມື່ອ: {formatTime(edit.edited_at)}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <button

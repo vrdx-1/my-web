@@ -38,12 +38,12 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // ກວດສອບ Session
-  const { data: { session } } = await supabase.auth.getSession()
+  // ກວດສອບ Session — ໃຊ້ getUser() ເພື່ອ validate/refresh token ກ່ອນ (getSession() ບໍ່ refresh ເຮັດໃຫ້ເປັນໄປໜ້າ login ບໍ່ຈຳເປັນ)
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // ຖ້າພະຍາຍามເຂົ້າ /admin ແຕ່ບໍ່ມີ session ໃຫ້ດີດໄປໜ້າ login
+  // ຖ້າພະຍາຍามເຂົ້າ /admin ແຕ່ບໍ່ມີ user (session ໝົດອາຍຸ ຫຼື ບໍ່ມີ) ໃຫ້ດີດໄປໜ້າ login
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!session && request.nextUrl.pathname !== '/admin/login') {
+    if (!user && request.nextUrl.pathname !== '/admin/login') {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }

@@ -115,3 +115,37 @@ export async function PATCH(request: NextRequest) {
   }
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(request: NextRequest) {
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
+  }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+  let body: { id?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
+  const id = typeof body?.id === 'string' ? body.id.trim() : '';
+  if (!id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 });
+  }
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+  const { error: deleteError } = await admin
+    .from('user_problem_reports')
+    .delete()
+    .eq('id', id);
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
+}

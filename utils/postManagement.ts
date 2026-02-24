@@ -70,6 +70,7 @@ export async function submitReport(
       post_id: reportingPost.id,
       car_id: reportingPost.id,
       reporter_email: session.user.email,
+      reporter_id: session.user.id,
       post_caption: reportingPost.caption,
       reason: reportReason,
       status: 'pending'

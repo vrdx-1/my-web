@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants'
+import { formatTimeAgo } from '@/utils/formatTime'
 import { createBrowserClient } from '@supabase/ssr'
 
 type Report = {
@@ -16,19 +17,13 @@ type Report = {
   profiles: { username: string | null; avatar_url: string | null } | null
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleString('th-LA', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
-}
 
 export default function AdminProblemReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   const fetchReports = async () => {
     setLoading(true)
@@ -88,6 +83,29 @@ export default function AdminProblemReportsPage() {
       alert(e?.message || 'Update failed')
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  const removeReport = async (id: string) => {
+    if (!confirm('ລຶບລາຍງານນີ້ອອກ?')) return
+    setRemovingId(id)
+    try {
+      const res = await fetch('/api/admin/problem-reports', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+        credentials: 'include',
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        alert(j?.error || 'Remove failed')
+        return
+      }
+      setReports((prev) => prev.filter((x) => x.id !== id))
+    } catch (e: any) {
+      alert(e?.message || 'Remove failed')
+    } finally {
+      setRemovingId(null)
     }
   }
 
@@ -163,7 +181,7 @@ export default function AdminProblemReportsPage() {
                     {r.profiles?.username || r.user_id}
                   </div>
                   <div style={{ fontSize: '13px', color: '#65676b' }}>
-                    {formatDate(r.created_at)}
+                    ({formatTimeAgo(r.created_at)})
                   </div>
                 </div>
               </div>
@@ -203,6 +221,25 @@ export default function AdminProblemReportsPage() {
                   ))}
                 </div>
               )}
+              <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => removeReport(r.id)}
+                  disabled={removingId === r.id}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #d33',
+                    background: '#fff',
+                    color: '#d33',
+                    cursor: removingId === r.id ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  {removingId === r.id ? '...' : 'Remove'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
