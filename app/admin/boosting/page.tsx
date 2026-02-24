@@ -5,6 +5,7 @@ import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { AdminPostCard } from "@/components/AdminPostCard";
 import { formatTime, getOnlineStatus } from "@/utils/postUtils";
+import { formatTimeAgo } from "@/utils/formatTime";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { lazyNamed } from "@/utils/lazyLoad";
 
@@ -20,7 +21,7 @@ const FullScreenImageViewer = lazyNamed(
 
 export default function AdminBoostingPage() {
   const supabase = supabaseClient;
-  const [activeTab, setActiveTab] = useState<"waiting" | "boosting">("waiting");
+  const [activeTab, setActiveTab] = useState<"waiting" | "boosting" | "sold">("waiting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,14 +33,56 @@ export default function AdminBoostingPage() {
 
   const fetchBoosts = async () => {
     setLoading(true);
+    setItems([]);
+
+    if (activeTab === "sold") {
+      // แท็บ SOLD: โพสต์ที่ขายแล้ว (ຂາຍແລ້ວ) — แสดง boost ที่ถูกปิดอัตโนมัติ
+      const { data: soldCarsData, error: soldCarsError } = await supabase
+        .from("cars")
+        .select('id')
+        .eq("status", "sold");
+      if (soldCarsError || !soldCarsData?.length) {
+        setLoading(false);
+        return;
+      }
+      const soldPostIds = soldCarsData.map((c: { id: string }) => c.id);
+      const { data: boostsData, error: boostsError } = await supabase
+        .from("post_boosts")
+        .select('id, post_id, status, slip_url, price, package_name, boost_days, expires_at, created_at')
+        .in('post_id', soldPostIds)
+        .order("created_at", { ascending: false });
+      if (boostsError || !boostsData?.length) {
+        setLoading(false);
+        return;
+      }
+      const { data: allCarsData, error: carsError } = await supabase
+        .from("cars")
+        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
+        .in('id', soldPostIds);
+      if (carsError || !allCarsData?.length) {
+        setLoading(false);
+        return;
+      }
+      const carsMap = new Map(allCarsData.map((car: any) => [car.id, car]));
+      const combinedData = boostsData.map((boostData: any) => ({
+        ...boostData,
+        cars: carsMap.get(boostData.post_id),
+      }));
+      setItems(combinedData);
+      setLoading(false);
+      return;
+    }
+
     const statusFilter = activeTab === "waiting" ? "pending" : "success";
-    
+    // PENDING: ส่งก่อนอยู่บนสุด ส่งทีหลังอยู่ล่างสุด (เรียง created_at เก่า→ใหม่)
+    const pendingOrderAsc = statusFilter === "pending";
+
     // 1. ดึง ID ของ boost ทั้งหมด
     const { data: boostsData, error: boostsError } = await supabase
       .from("post_boosts")
       .select('id, post_id')
       .eq("status", statusFilter)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: pendingOrderAsc });
 
     if (boostsError) {
       console.error("Error fetching boosts:", boostsError);
@@ -48,14 +91,12 @@ export default function AdminBoostingPage() {
     }
 
     if (boostsData && boostsData.length > 0) {
-      setItems([]); // รีเซ็ต items
-
       // 2. Batch loading: ดึง boosts และ posts ทั้งหมดในครั้งเดียว
       const boostIds = boostsData.map(b => b.id);
       const postIds = boostsData.map(b => b.post_id);
 
       // โหลด boosts ทั้งหมด
-      const { data: allBoostsData, error: boostsError } = await supabase
+      const { data: allBoostsData, error: boostsErr } = await supabase
         .from("post_boosts")
         .select('id, post_id, status, slip_url, price, package_name, boost_days, expires_at, created_at')
         .in('id', boostIds);
@@ -66,11 +107,9 @@ export default function AdminBoostingPage() {
         .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
         .in('id', postIds);
 
-      if (!boostsError && !carsError && allBoostsData && allCarsData) {
-        // สร้าง map สำหรับ cars
+      if (!boostsErr && !carsError && allBoostsData && allCarsData) {
         const carsMap = new Map(allCarsData.map(car => [car.id, car]));
 
-        // รวม boosts กับ cars
         let combinedData = allBoostsData.map((boostData) => {
           const carData = carsMap.get(boostData.post_id);
           return { ...boostData, cars: carData };
@@ -84,17 +123,24 @@ export default function AdminBoostingPage() {
             const expiresAtTime = new Date(item.expires_at as string).getTime();
             return Number.isFinite(expiresAtTime) && expiresAtTime > now;
           });
+          // แท็บ Boosting: ไม่แสดงโพสต์ที่ขายแล้ว (ຂາຍແລ້ວ) — ระบบปิด boost อัตโนมัติแล้ว
+          combinedData = combinedData.filter((item) => item?.cars?.status !== "sold");
         }
 
-        // เพิ่ม items เข้า state
+        // จัดลำดับ: PENDING = ส่งก่อนอยู่บน (created_at เก่า→ใหม่), Boosting = ใหม่อยู่บน
+        const sortAsc = statusFilter === "pending";
+        combinedData = [...combinedData].sort((a, b) => {
+          const ta = new Date((a as any).created_at).getTime();
+          const tb = new Date((b as any).created_at).getTime();
+          return sortAsc ? ta - tb : tb - ta;
+        });
+
         setItems(prev => {
           const existingIds = new Set(prev.map(item => item.id));
           const newItems = combinedData.filter(item => !existingIds.has(item.id));
           return [...prev, ...newItems];
         });
       }
-    } else {
-      setItems([]);
     }
 
     setLoading(false);
@@ -164,6 +210,12 @@ export default function AdminBoostingPage() {
           >
             Boosting
           </button>
+          <button 
+            onClick={() => setActiveTab("sold")} 
+            className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'sold' ? 'bg-white text-amber-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            SOLD
+          </button>
         </div>
       </div>
 
@@ -194,6 +246,11 @@ export default function AdminBoostingPage() {
               </div>
 
               <div className="w-full lg:w-[320px] bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col">
+                {activeTab === 'waiting' && item.status === 'pending' && item.created_at && (
+                  <p className="text-[15px] font-bold text-red-600 mb-3 text-center">
+                    ສົ່ງເມື່ອ {formatTimeAgo(item.created_at)}
+                  </p>
+                )}
                 <p className="text-[11px] font-black text-gray-400 uppercase mb-3 tracking-widest text-center">Transfer Slip</p>
                 
                 <div 
@@ -215,7 +272,11 @@ export default function AdminBoostingPage() {
                 </div>
 
                 <div className="mt-auto flex gap-2">
-                  {item.status === 'pending' ? (
+                  {activeTab === 'sold' ? (
+                    <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 rounded-lg py-3 px-4 text-center font-bold text-xs uppercase tracking-wider">
+                      ປິດ Boost อັດຕະໂນມັດ (ຂາຍແລ້ວ)
+                    </div>
+                  ) : item.status === 'pending' ? (
                     <>
                       <button 
                         onClick={() => handleApprove(item)} 

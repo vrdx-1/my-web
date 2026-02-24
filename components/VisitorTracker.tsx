@@ -56,6 +56,25 @@ export default function VisitorTracker() {
           isFirstVisit = true;
         }
 
+        // บันทึก User Session เริ่มต้น (ครั้งเดียวต่อแท็บ)
+        if (!sessionStorage.getItem('current_session_id')) {
+          const startedAt = new Date().toISOString();
+          const { data: { user } } = await supabase.auth.getUser();
+          const { data: sessionRow } = await supabase
+            .from('user_sessions')
+            .insert({
+              user_id: user?.id ?? null,
+              visitor_id: vId,
+              started_at: startedAt,
+            })
+            .select('id')
+            .single();
+          if (sessionRow?.id) {
+            sessionStorage.setItem('current_session_id', sessionRow.id);
+            sessionStorage.setItem('current_session_started_at', startedAt);
+          }
+        }
+
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
           page_path: window.location.pathname,
@@ -102,7 +121,24 @@ export default function VisitorTracker() {
       applyUserPresence(uid ? { id: uid } : null);
     });
 
+    const sendSessionEnd = () => {
+      const sessionId = sessionStorage.getItem('current_session_id');
+      if (sessionId) {
+        fetch('/api/session-end', {
+          method: 'POST',
+          body: JSON.stringify({ sessionId }),
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener('pagehide', sendSessionEnd);
+    window.addEventListener('beforeunload', sendSessionEnd);
+
     return () => {
+      window.removeEventListener('pagehide', sendSessionEnd);
+      window.removeEventListener('beforeunload', sendSessionEnd);
       clearTimeout(lateTouch);
       subscription.unsubscribe();
       stopHeartbeat();

@@ -5,6 +5,7 @@ import { getPrimaryGuestToken } from './postUtils';
 
 /**
  * Toggle post status between 'recommend' and 'sold'
+ * เมื่อผู้ขายย้ายไป "ຂາຍແລ້ວ" ระบบปิด boost อัตโนมัติ
  */
 export async function togglePostStatus(
   postId: string,
@@ -14,6 +15,10 @@ export async function togglePostStatus(
   const newStatus = currentStatus === 'recommend' ? 'sold' : 'recommend';
   const { error } = await supabase.from('cars').update({ status: newStatus }).eq('id', postId);
   if (!error) {
+    if (newStatus === 'sold') {
+      await supabase.from('cars').update({ is_boosted: false, boost_expiry: null }).eq('id', postId);
+      await supabase.from('post_boosts').update({ status: 'reject' }).eq('post_id', postId).eq('status', 'success');
+    }
     setPosts(prev => prev.filter(p => p.id !== postId));
   }
 }

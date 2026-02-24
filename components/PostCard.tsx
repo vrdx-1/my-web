@@ -154,7 +154,7 @@ export const PostCard = React.memo<PostCardProps>(({
             )}
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
-            {post.is_boosted ? (
+            {post.is_boosted && !hideBoost && post.status !== 'sold' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
                 <span style={{ color: '#4a4d52' }}>{formatTime(post.created_at)}</span>
                 <span

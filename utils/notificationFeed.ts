@@ -165,9 +165,28 @@ export async function fetchNotificationFeed(
     });
   }
 
+  // โพสต์ที่ขายแล้ว (ຂາຍແລ້ວ) ไม่แสดงแจ้งเตือนเกี่ยวกับสถานะโฆษณา — เหมือนไม่เคย boost
+  const boostPostIds = Array.from(boostByPostId.keys());
+  let soldPostIds = new Set<string>();
+  if (boostPostIds.length > 0) {
+    const { data: carsStatusData } = await supabase
+      .from('cars')
+      .select('id, status')
+      .in('id', boostPostIds);
+    if (carsStatusData) {
+      soldPostIds = new Set(
+        (carsStatusData as { id: string; status: string }[])
+          .filter((c) => c.status === 'sold')
+          .map((c) => String(c.id))
+      );
+    }
+  }
+
   const feedPostIds = new Set(uniqueList.map((n) => String(n.post_id)));
   const mergedList: NotificationFeedItem[] = uniqueList.map((n) => {
-    const boost = boostByPostId.get(String(n.post_id));
+    const pid = String(n.post_id);
+    if (soldPostIds.has(pid)) return n;
+    const boost = boostByPostId.get(pid);
     if (!boost) return n;
     const notifTime = new Date(n.created_at).getTime();
     const boostTime = new Date(boost.event_at).getTime();
@@ -188,7 +207,7 @@ export async function fetchNotificationFeed(
   });
 
   const boostOnlyPostIds = Array.from(boostByPostId.keys()).filter(
-    (pid) => !feedPostIds.has(pid)
+    (pid) => !feedPostIds.has(pid) && !soldPostIds.has(pid)
   );
 
   // โหลดแบบแบ่งหน้า: เติม boost-only เฉพาะหน้าแรก (offset 0) เพื่อไม่ให้ซ้ำ

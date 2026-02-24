@@ -295,7 +295,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   };
 
   const metaParts = [formatTime(viewingPost.created_at), viewingPost.province];
-  if (viewingPost.is_boosted) metaParts.push('Ad');
+  if (viewingPost.is_boosted && viewingPost.status !== 'sold') metaParts.push('Ad');
 
   // เรียก onTouchMove ของ parent (สำหรับ swipe ลงปิด modal)
   const handleTouchMove = useCallback((e: React.TouchEvent) => {

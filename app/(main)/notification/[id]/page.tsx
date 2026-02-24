@@ -106,7 +106,7 @@ export default function NotificationDetail() {
             hideBoost={post.status === 'sold'}
           />
 
-          {boostInfo && !isBoostExpired && (
+          {boostInfo && !isBoostExpired && post.status !== 'sold' && (
             <div style={{ padding: '12px 15px 0', display: 'flex', justifyContent: 'center' }}>
               <button
                 type="button"

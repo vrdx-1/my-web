@@ -143,6 +143,10 @@ export function usePostDetail(id: string | undefined) {
     const newStatus = currentStatus === 'recommend' ? 'sold' : 'recommend';
     const { error } = await supabase.from('cars').update({ status: newStatus }).eq('id', postId);
     if (!error) {
+      if (newStatus === 'sold') {
+        await supabase.from('cars').update({ is_boosted: false, boost_expiry: null }).eq('id', postId);
+        await supabase.from('post_boosts').update({ status: 'reject' }).eq('post_id', postId).eq('status', 'success');
+      }
       setPost((prev: any) => (prev?.id === postId ? { ...prev, status: newStatus } : prev));
     }
   }, []);

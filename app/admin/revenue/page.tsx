@@ -1,55 +1,100 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useMemo } from 'react';
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { formatCurrency } from '@/utils/currency';
 import { LAO_FONT } from '@/utils/constants';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
+type RevenueLogRow = { amount: number; created_at: string };
+
 export default function RevenuePage() {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const supabase = createAdminSupabaseClient();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [revenueData, setRevenueData] = useState<{ [key: string]: number }>({});
   const [loading, setLoading] = useState(true);
   const [isMonthOpen, setIsMonthOpen] = useState(false);
   const [isYearOpen, setIsYearOpen] = useState(false);
+  const [revenueRows, setRevenueRows] = useState<RevenueLogRow[]>([]);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const years = Array.from({ length: 11 }, (_, i) => 2026 + i);
+  const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() + i);
 
-  // ฟังก์ชันดึงข้อมูลรายได้ (แก้ไขจุดนี้ให้ดึงจากตาราง revenue_logs)
+  const now = useMemo(() => new Date(), []);
+  const todayStart = useMemo(() => {
+    const d = new Date(now); d.setHours(0, 0, 0, 0); return d.toISOString();
+  }, [now]);
+  const todayEnd = useMemo(() => {
+    const d = new Date(now); d.setHours(23, 59, 59, 999); return d.toISOString();
+  }, [now]);
+  const monthStart = useMemo(() => {
+    const d = new Date(now.getFullYear(), now.getMonth(), 1); return d.toISOString();
+  }, [now]);
+  const yearStart = useMemo(() => {
+    const d = new Date(now.getFullYear(), 0, 1); return d.toISOString();
+  }, [now]);
+
   const fetchRevenue = async () => {
     setLoading(true);
-    const startDate = new Date(selectedYear, selectedMonth, 1).toISOString();
-    const endDate = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59).toISOString();
+    const startOfYear = new Date(selectedYear, 0, 1).toISOString();
+    const endOfYear = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
 
     const { data, error } = await supabase
-      .from('revenue_logs') // เปลี่ยนเป็นตารางใหม่
-      .select('amount, created_at') // เปลี่ยนจาก price เป็น amount
-      .gte('created_at', startDate)
-      .lte('created_at', endDate);
+      .from('revenue_logs')
+      .select('amount, created_at')
+      .gte('created_at', startOfYear)
+      .lte('created_at', endOfYear)
+      .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('Error fetching revenue:', error);
+      console.error('Error fetching revenue_logs:', error);
+      setRevenueRows([]);
     } else {
-      const dailySum: { [key: string]: number } = {};
-      data?.forEach(item => {
-        const dateKey = new Date(item.created_at).getDate();
-        dailySum[dateKey] = (dailySum[dateKey] || 0) + (item.amount || 0); // เปลี่ยนจาก price เป็น amount
-      });
-      setRevenueData(dailySum);
+      const rows = (data || []).map((r: { amount?: number; created_at?: string }) => ({
+        amount: Number(r.amount) || 0,
+        created_at: r.created_at || ''
+      }));
+      setRevenueRows(rows);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchRevenue();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedYear]);
 
-  // Removed duplicate formatCurrency - using from utils/currency.ts
+  const summary = useMemo(() => {
+    let today = 0, month = 0, year = 0;
+    revenueRows.forEach((r) => {
+      const t = new Date(r.created_at).getTime();
+      if (t >= new Date(todayStart).getTime() && t <= new Date(todayEnd).getTime()) today += r.amount;
+      if (t >= new Date(monthStart).getTime() && t <= now.getTime()) month += r.amount;
+      if (t >= new Date(yearStart).getTime() && t <= now.getTime()) year += r.amount;
+    });
+    return { today, month, year };
+  }, [revenueRows, todayStart, todayEnd, monthStart, yearStart, now]);
+
+  const dailyForSelectedMonth = useMemo(() => {
+    const start = new Date(selectedYear, selectedMonth, 1).getTime();
+    const end = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59).getTime();
+    const daily: { [key: string]: number } = {};
+    revenueRows.forEach((r) => {
+      const t = new Date(r.created_at).getTime();
+      if (t >= start && t <= end) {
+        const day = new Date(r.created_at).getDate();
+        daily[day] = (daily[day] || 0) + r.amount;
+      }
+    });
+    return daily;
+  }, [revenueRows, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    setRevenueData(dailyForSelectedMonth);
+  }, [dailyForSelectedMonth]);
 
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -58,10 +103,29 @@ export default function RevenuePage() {
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: '40px' }}>
       
+      {/* Summary: Today / This month / This year */}
+      <div style={{ padding: '20px 20px 16px' }}>
+        <p style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          ລາຍຮັບຈາກ Boost
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <div style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '16px', padding: '16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', marginBottom: '4px' }}>ມື້ນີ້</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{loading ? '...' : formatCurrency(summary.today)}</div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', borderRadius: '16px', padding: '16px', border: '1px solid #bbf7d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: '12px', color: '#15803d', fontWeight: '600', marginBottom: '4px' }}>ເດືອນນີ້</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#14532d' }}>{loading ? '...' : formatCurrency(summary.month)}</div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', borderRadius: '16px', padding: '16px', border: '1px solid #93c5fd', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: '600', marginBottom: '4px' }}>ປີນີ້</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1e3a8a' }}>{loading ? '...' : formatCurrency(summary.year)}</div>
+          </div>
+        </div>
+      </div>
+
       {/* Header Selector Section */}
       <div style={{ padding: '20px', display: 'flex', justifyContent: 'center', gap: '30px', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 10 }}>
-        
-        {/* Month Dropdown */}
         <div style={{ position: 'relative' }}>
           <div 
             onClick={() => setIsMonthOpen(!isMonthOpen)}
@@ -78,8 +142,6 @@ export default function RevenuePage() {
             </div>
           )}
         </div>
-
-        {/* Year Dropdown */}
         <div style={{ position: 'relative' }}>
           <div 
             onClick={() => setIsYearOpen(!isYearOpen)}
@@ -98,8 +160,8 @@ export default function RevenuePage() {
         </div>
       </div>
 
-      {/* Revenue Table */}
       <div style={{ padding: '0 20px' }}>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: '#333', margin: '20px 0 12px' }}>ລາຍລະອຽດແຕ່ລະວັນ — {months[selectedMonth]} {selectedYear}</p>
         {loading ? (
           <LoadingSpinner />
         ) : (
@@ -119,8 +181,6 @@ export default function RevenuePage() {
                   </tr>
                 );
               })}
-              
-              {/* Total Row */}
               <tr>
                 <td style={{ padding: '30px 0', fontWeight: 'bold', fontSize: '20px', color: '#000' }}>ລວມທັງໝົດ</td>
                 <td style={{ padding: '30px 0', textAlign: 'right', fontWeight: 'bold', fontSize: '20px', color: '#000' }}>
@@ -132,8 +192,8 @@ export default function RevenuePage() {
         )}
       </div>
 
-      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#5c5c5c', fontSize: '13px', letterSpacing: '0.5px' }}>
-        REVENUE REPORT • APPROVED POSTS ONLY
+      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#777', fontSize: '14px' }}>
+        ທຸກຕົວເລກແມ່ນລາຍຮັບຈາກ Boost ທີ່ອະນຸມັດແລ້ວ
       </div>
     </main>
   );
