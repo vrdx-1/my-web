@@ -1,11 +1,8 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
-import { safeParseJSON } from '@/utils/storageUtils';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
-const HOME_PROVINCE_STORAGE_KEY = 'home_filter_province';
-
-/** ค่าว่าง '' = "ທຸກແຂວງ" (default ของ home province picker) */
+/** ค่าว่าง '' = "ທຸກແຂວງ" (default ของ home province picker). ไม่ persist — ทุกครั้งที่ refresh/เข้าเว็บใหม่ เป็น "ທຸກແຂວງ" เสมอ */
 interface HomeProvinceContextValue {
   selectedProvince: string;
   setSelectedProvince: (v: string) => void;
@@ -15,25 +12,6 @@ const HomeProvinceContext = createContext<HomeProvinceContextValue | null>(null)
 
 export function HomeProvinceProvider({ children }: { children: React.ReactNode }) {
   const [selectedProvince, setState] = useState<string>('');
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = safeParseJSON(HOME_PROVINCE_STORAGE_KEY, '');
-      if (stored !== selectedProvince) setState(stored);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(HOME_PROVINCE_STORAGE_KEY, JSON.stringify(selectedProvince));
-    } catch {
-      // ignore
-    }
-  }, [selectedProvince]);
 
   const setSelectedProvince = useCallback((v: string) => setState(v), []);
 

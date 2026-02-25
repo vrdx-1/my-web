@@ -110,7 +110,7 @@ export function BottomNav() {
 
         const isActive = match(pathname);
         const isProfile = path === '/profile';
-        const showBadge = path === '/notification' && unreadCount > 0;
+        const showBadge = path === '/notification' && !!session && unreadCount > 0;
 
         const runNav = () => {
           const now = Date.now();
@@ -168,9 +168,16 @@ export function BottomNav() {
             {isProfile ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Avatar
-                  avatarUrl={userProfile?.avatar_url}
+                  avatarUrl={
+                    session
+                      ? userProfile?.avatar_url ??
+                        session?.user?.user_metadata?.avatar_url ??
+                        session?.user?.user_metadata?.picture
+                      : undefined
+                  }
                   size={28}
                   session={session}
+                  useProfileImage
                 />
               </div>
             ) : (

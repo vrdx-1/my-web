@@ -295,6 +295,9 @@ function BoostPostContent() {
       <div className="max-w-md mx-auto p-4">
         {step === 1 && (
           <div className="space-y-4 pt-4">
+            <p className="text-gray-700 text-center text-base font-medium mb-2">
+              ກະລຸນາເລືອກ Package ທີ່ທ່ານຕ້ອງການ boost
+            </p>
             {packages.map((pkg) => (
               <button
                 key={pkg.name}

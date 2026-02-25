@@ -139,6 +139,26 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
       if (isInitial) {
         setPosts(ordered);
+        // หลังผู้ใช้โพสต์: แปะโพสต์ของตัวเองบนสุดของ feed (เหนือ Ad / รายการอื่น) จนกว่าจะ refresh
+        const justPostedId =
+          typeof window !== 'undefined' ? window.localStorage.getItem('just_posted_post_id') : null;
+        if (justPostedId && justPostedId.trim() !== '') {
+          const { data: justPost } = await supabase
+            .from('cars')
+            .select(POST_WITH_PROFILE_SELECT)
+            .eq('id', justPostedId.trim())
+            .maybeSingle();
+          if (currentFetchId !== fetchIdRef.current) return;
+          if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
+            const rest = ordered.filter((p: any) => String(p.id) !== String(justPostedId));
+            setPosts([justPost, ...rest]);
+          }
+          try {
+            window.localStorage.removeItem('just_posted_post_id');
+          } catch {
+            // ignore
+          }
+        }
       } else {
         setPosts(prev => {
           const ids = new Set(prev.map(p => p.id));
@@ -156,6 +176,12 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
+    // หลัง refresh ใช้ลำดับ Algorithm เท่านั้น — ล้างโพสต์ที่แปะบนสุดชั่วคราว
+    try {
+      if (typeof window !== 'undefined') window.localStorage.removeItem('just_posted_post_id');
+    } catch {
+      // ignore
+    }
     await fetchPosts(true);
   }, [fetchPosts]);
 

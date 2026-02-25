@@ -1,11 +1,13 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 /** ถ้าไม่ใช้งาน (แท็บถูกซ่อน/ไม่โฟกัส) เกิน N วินาที เมื่อกลับมาจะจบ session เดิมและสร้างแถวใหม่ */
 const SESSION_INACTIVITY_SECONDS = 1;
 
 export default function VisitorTracker() {
+  const pathname = usePathname()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -55,6 +57,16 @@ export default function VisitorTracker() {
       }
     };
 
+    /** อัปเดต last_seen เฉยๆ (ใช้เมื่ออยู่หน้า admin เพื่อให้สถานะออนไลน์ยังขึ้น) */
+    const runPresenceOnly = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        applyUserPresence(user ?? null);
+      } catch (_) {
+        // ignore
+      }
+    };
+
     const sendSessionEnd = (useBeacon = false) => {
       const sessionId = sessionStorage.getItem('current_session_id');
       if (!sessionId) return;
@@ -101,7 +113,9 @@ export default function VisitorTracker() {
 
     const track = async () => {
       try {
-        if (window.location.pathname.startsWith('/admin')) {
+        const isAdmin = (pathname ?? '').startsWith('/admin');
+        if (isAdmin) {
+          await runPresenceOnly();
           return;
         }
 
@@ -204,7 +218,7 @@ export default function VisitorTracker() {
         supabase.removeChannel(channel);
       }
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

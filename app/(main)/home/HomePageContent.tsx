@@ -148,6 +148,8 @@ export function HomePageContent() {
 
   const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+    // ทุกชนิด refresh (browser/pull/กดแท็บ) → ฟิลเตอร์กลับเป็น "ທຸກແຂວງ"
+    homeProvince?.setSelectedProvince('');
     // pull-to-refresh → ล้างคำค้นหา; กดปุ่ม Home refresh ไม่ล้าง (ให้เหมือนกดแท็บ ພ້ອມຂາຍ/ຂາຍແລ້ວ)
     if (!options?.fromHomeButton && searchParams.has('q')) {
       const params = new URLSearchParams(searchParams.toString());
@@ -176,7 +178,7 @@ export function HomePageContent() {
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
     }
-  }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router]);
+  }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router, homeProvince]);
 
   useEffect(() => {
     mainTab?.registerTabRefreshHandler(doRefresh);

@@ -11,6 +11,7 @@ import { SWRProvider } from "@/components/SWRProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { BottomNavWrapper } from "@/components/BottomNavWrapper";
 import { HeaderVisibilityProvider } from "@/contexts/HeaderVisibilityContext";
+import { SessionProfileProvider } from "@/contexts/SessionProfileContext";
 import { CreatePostProvider } from "@/contexts/CreatePostContext";
 import { NotificationRefreshProvider } from "@/contexts/NotificationRefreshContext";
 import { HomeRefreshProvider } from "@/contexts/HomeRefreshContext";
@@ -79,7 +80,9 @@ export default function RootLayout({
               <RedirectToHomeOnReturn />
               <PWAInstallPrompt />
               <HeaderVisibilityProvider>
-                <BottomNavWrapper>{children}</BottomNavWrapper>
+                <SessionProfileProvider>
+                  <BottomNavWrapper>{children}</BottomNavWrapper>
+                </SessionProfileProvider>
               </HeaderVisibilityProvider>
             </BackHandlerProvider>
             </HomeRefreshProvider>

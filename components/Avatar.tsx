@@ -7,19 +7,23 @@ interface AvatarProps {
   size?: number;
   session?: any;
   className?: string;
+  /** true = แสดงรูปจาก OAuth เสมอ (ใช้ใน Bottom Nav / Header) ไม่ตัด URL ขนาดเล็ก */
+  useProfileImage?: boolean;
 }
 
 /**
  * Reusable Avatar component
  * รูปจาก OAuth (100x100, s100 ฯลฯ) จะถูกถือว่า default → แสดงไอคอนเงาแทน
+ * ส่ง useProfileImage=true เพื่อให้แสดงรูปโปรไฟล์เสมอ (เช่น ในแถบล่าง/หัว)
  */
 export const Avatar = React.memo<AvatarProps>(({
   avatarUrl,
   size = 40,
   session,
-  className
+  className,
+  useProfileImage = false,
 }) => {
-  const displayUrl = getDisplayAvatarUrl(avatarUrl);
+  const displayUrl = getDisplayAvatarUrl(avatarUrl, useProfileImage);
   const defaultSize = size;
 
   return (

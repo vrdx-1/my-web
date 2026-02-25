@@ -13,6 +13,9 @@ export const LAYOUT_CONSTANTS = {
   
   // Heights
   HEADER_HEIGHT: '118px',
+
+  /** ขนาดโลโก้และปุ่มฟิลเตอร์ใน header หน้า Home (ให้ปุ่มฟิลเตอร์ใหญ่เท่าโลโก้) */
+  HEADER_LOGO_SIZE: 40,
   
   // Main container styles (used in saved, liked, edit-profile, sold, create-post, etc.)
   MAIN_CONTAINER: {

@@ -156,8 +156,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           <Image 
             src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
             alt="Jutpai Logo" 
-            width={40} 
-            height={40}
+            width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE} 
+            height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
             unoptimized
             style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
           />
@@ -250,7 +250,18 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               style={{ cursor: 'pointer', flexShrink: 0, touchAction: 'manipulation', display: 'block', background: 'none', border: 'none', padding: 0 }}
               aria-label="Profile"
             >
-              <Avatar avatarUrl={userProfile?.avatar_url} size={controlSize} session={session} />
+              <Avatar
+                avatarUrl={
+                  session
+                    ? userProfile?.avatar_url ??
+                      session?.user?.user_metadata?.avatar_url ??
+                      session?.user?.user_metadata?.picture
+                    : undefined
+                }
+                size={controlSize}
+                session={session}
+                useProfileImage
+              />
             </button>
           </>
         )}

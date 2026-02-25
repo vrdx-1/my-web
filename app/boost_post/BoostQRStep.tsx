@@ -37,13 +37,16 @@ export function BoostQRStep({ selectedPkg, postId }: BoostQRStepProps) {
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border mt-4 text-center text-gray-900">
-      <div className="w-64 h-64 mx-auto mb-6 flex items-center justify-center rounded-lg overflow-hidden border">
+      <div className="w-64 h-64 mx-auto mb-4 flex items-center justify-center rounded-lg overflow-hidden border">
         <img
           src={selectedPkg.qr_url}
           alt={`QR Code ${selectedPkg.name}`}
           className="w-full h-full object-contain"
         />
       </div>
+      <p className="text-gray-900 font-bold text-lg mb-6">
+        ຈຳນວນເງິນທີ່ຕ້ອງໂອນ: {selectedPkg.price}
+      </p>
       <p className="text-gray-600 mb-8 text-sm">
         ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກທ່ານໂອນສຳເລັດ
       </p>

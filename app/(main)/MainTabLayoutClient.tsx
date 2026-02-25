@@ -11,6 +11,7 @@ import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
+import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -31,6 +32,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
+  const homeProvince = useHomeProvince();
 
   /** State อยู่ที่ layout เลย — เวลาหน้าโฮม/ขายแล้วเรียก setPullHeaderOffset จะ re-render layout และ Header เลื่อนลงทันที */
   const [pullOffset, setPullOffset] = useState(0);
@@ -139,7 +141,10 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
                 { value: 'sold', label: 'ຂາຍແລ້ວ' },
               ]}
               activeTab={mainTab?.homeTab ?? 'recommend'}
-              onTabChange={(v) => mainTab?.triggerTabChange(v as 'recommend' | 'sold')}
+              onTabChange={(v) => {
+                homeProvince?.setSelectedProvince('');
+                mainTab?.triggerTabChange(v as 'recommend' | 'sold');
+              }}
               loadingTab={loadingTab}
             />
           </div>

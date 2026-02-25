@@ -61,15 +61,14 @@ export async function POST(request: NextRequest) {
 
     await touchLastSeen(supabase);
 
-    const query = runFeedQuery(supabase, startIndex, endIndex, province);
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const postIds = (data || []).map((p: { id: string }) => p.id);
     const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
+    let postIds: string[];
+
+    // หลัง refresh ใช้ลำดับ Algorithm เท่านั้น; โพสต์ที่เพิ่งสร้างจะถูกแปะบนสุดฝั่ง client (just_posted_post_id)
+    const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    postIds = (data || []).map((p: { id: string }) => p.id);
+
     const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
     return NextResponse.json(
@@ -110,15 +109,10 @@ export async function GET(request: NextRequest) {
 
     await touchLastSeen(supabase);
 
-    const query = runFeedQuery(supabase, startIndex, endIndex, province);
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const postIds = (data || []).map((p: { id: string }) => p.id);
     const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
+    const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const postIds = (data || []).map((p: { id: string }) => p.id);
     const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
     return NextResponse.json(
