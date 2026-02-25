@@ -109,6 +109,7 @@ export function useCreatePostUpload({
         province: province,
         images: imageUrls,
         status: 'recommend',
+        is_hidden: false,
         created_at: new Date().toISOString(),
       };
 

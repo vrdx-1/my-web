@@ -12,23 +12,12 @@ type ProfileMap = Record<string, { username: string | null; avatar_url: string |
 
 type RankRow = { user_id: string; count: number };
 
-type OnlineRow = { user_id: string; total_seconds: number };
-
-function formatUsageTotal(totalSeconds: number): string {
-  if (totalSeconds < 0) return 'ໃຊ້ງານທັງໝົດ 0 ນາທີ';
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  if (h === 0) return `ໃຊ້ງານທັງໝົດ ${m} ນາທີ`;
-  return `ໃຊ້ງານທັງໝົດ ${h} ຊົ່ວໂມງ ${m} ນາທີ`;
-}
-
-type TabId = 'poster' | 'seller' | 'booster' | 'online';
+type TabId = 'poster' | 'seller' | 'booster';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'poster', label: 'Top Poster' },
   { id: 'seller', label: 'Top Seller' },
   { id: 'booster', label: 'Top Booster' },
-  { id: 'online', label: 'Top Online' },
 ];
 
 export default function AdminTopUserPage() {
@@ -38,7 +27,6 @@ export default function AdminTopUserPage() {
   const [topPoster, setTopPoster] = useState<RankRow[]>([]);
   const [topSeller, setTopSeller] = useState<RankRow[]>([]);
   const [topBooster, setTopBooster] = useState<RankRow[]>([]);
-  const [topOnline, setTopOnline] = useState<OnlineRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
 
   const supabase = createAdminSupabaseClient();
@@ -112,53 +100,11 @@ export default function AdminTopUserPage() {
         .sort((a, b) => b.count - a.count);
       setTopBooster(boosterList);
 
-      // 3) Top Online: user_sessions total duration per user (within timeframe), sorted by total desc
-      // ใช้ started_at, ended_at, duration_seconds — ถ้า duration_seconds ยัง null ให้คำนวณจาก ended_at หรือ (now - started_at)
-      let sessionsQuery = supabase
-        .from('user_sessions')
-        .select('user_id, started_at, ended_at, duration_seconds')
-        .not('user_id', 'is', null);
-      sessionsQuery = applyDateFilter(sessionsQuery, filter, 'started_at');
-      const { data: sessionsData, error: sessionsError } = await sessionsQuery;
-      let onlineUserIds: string[] = [];
-      if (!sessionsError && sessionsData) {
-        const nowSec = Math.floor(Date.now() / 1000);
-        const sumByUser: Record<string, number> = {};
-        (
-          sessionsData as {
-            user_id: string;
-            started_at: string;
-            ended_at: string | null;
-            duration_seconds: number | null;
-          }[]
-        ).forEach((row) => {
-          const uid = row.user_id;
-          if (!uid) return;
-          let sec = 0;
-          if (row.duration_seconds != null && row.duration_seconds >= 0) {
-            sec = row.duration_seconds;
-          } else if (row.ended_at && row.started_at) {
-            sec = Math.max(0, Math.round((new Date(row.ended_at).getTime() - new Date(row.started_at).getTime()) / 1000));
-          } else if (row.started_at) {
-            sec = Math.max(0, nowSec - Math.floor(new Date(row.started_at).getTime() / 1000));
-          }
-          sumByUser[uid] = (sumByUser[uid] || 0) + sec;
-        });
-        onlineUserIds = Object.keys(sumByUser);
-        const onlineList: OnlineRow[] = Object.entries(sumByUser)
-          .map(([user_id, total_seconds]) => ({ user_id, total_seconds }))
-          .sort((a, b) => b.total_seconds - a.total_seconds);
-        setTopOnline(onlineList);
-      } else {
-        setTopOnline([]);
-      }
-
-      // 4) Profiles for all user_ids (poster + seller + booster + online)
+      // 3) Profiles for all user_ids (poster + seller + booster)
       const allIds = new Set<string>();
       posterList.forEach((r) => allIds.add(r.user_id));
       sellerList.forEach((r) => allIds.add(r.user_id));
       boosterList.forEach((r) => allIds.add(r.user_id));
-      onlineUserIds.forEach((id) => allIds.add(id));
       const ids = Array.from(allIds);
       if (ids.length > 0) {
         const { data: profData, error: profError } = await supabase
@@ -178,7 +124,6 @@ export default function AdminTopUserPage() {
       setTopPoster([]);
       setTopSeller([]);
       setTopBooster([]);
-      setTopOnline([]);
     } finally {
       setLoading(false);
     }
@@ -231,34 +176,6 @@ export default function AdminTopUserPage() {
     </div>
   );
 
-  const renderOnlineList = (rows: OnlineRow[]) => (
-    <div style={{ marginTop: '20px' }}>
-      {rows.length === 0 ? (
-        <p style={{ color: '#65676b', fontSize: '14px' }}>ບໍ່ມີຂໍ້ມູນ</p>
-      ) : (
-        rows.map((row, index) => {
-          const profile = profiles[row.user_id];
-          const displayName = profile?.username ?? row.user_id.slice(0, 8) + '…';
-          const rightText = formatUsageTotal(row.total_seconds);
-          return (
-            <div key={row.user_id} style={listItemStyle}>
-              <span style={{ fontWeight: 'bold', minWidth: '28px', color: '#65676b' }}>
-                {index + 1}.
-              </span>
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" style={avatarStyle} />
-              ) : (
-                <div style={avatarStyle} />
-              )}
-              <span style={{ flex: 1, color: '#1a1a1a' }}>{displayName}</span>
-              <span style={{ fontWeight: '600', color: '#1877f2', fontSize: '14px' }}>{rightText}</span>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -302,7 +219,6 @@ export default function AdminTopUserPage() {
         {activeTab === 'poster' && renderList(topPoster)}
         {activeTab === 'seller' && renderList(topSeller)}
         {activeTab === 'booster' && renderList(topBooster)}
-        {activeTab === 'online' && renderOnlineList(topOnline)}
       </div>
     </main>
   );

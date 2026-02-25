@@ -122,8 +122,12 @@ export default function AdminEditedPostsPage() {
                   border: isHidden ? '1px solid #ddd' : '1px solid #ffebeb',
                 }}
               >
-                <div style={{ marginBottom: '10px', fontSize: '13px', color: '#4a4d52' }}>
-                  ແກ້ໄຂເມື່ອ: {formatTime(edit.edited_at)}
+                <div style={{ marginBottom: '10px', fontSize: '16px', fontWeight: 600, color: '#c00' }}>
+                  {(() => {
+                    const t = formatTime(edit.edited_at);
+                    const suffix = (t.endsWith('ທີ່ແລ້ວ') || t === 'ເມື່ອຄູ່') ? '' : 'ທີ່ແລ້ວ';
+                    return `ແກ້ໄຂເມື່ອ ${t}${suffix}`;
+                  })()}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <button

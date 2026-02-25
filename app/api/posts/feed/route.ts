@@ -21,11 +21,12 @@ function runFeedQuery(
   endIndex: number,
   province?: string
 ) {
+  // รวมโพสต์ที่ is_hidden = false หรือ is_hidden IS NULL (โพสต์ใหม่ที่ยังไม่ได้ตั้งค่า)
   let query = supabase
     .from('cars')
     .select('id')
     .eq('status', 'recommend')
-    .eq('is_hidden', false);
+    .or('is_hidden.eq.false,is_hidden.is.null');
   if (province && province.trim() !== '') {
     query = query.eq('province', province.trim());
   }

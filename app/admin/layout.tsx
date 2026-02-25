@@ -80,6 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Guest User Device', path: '/admin/guest-user-device' },
     { name: 'Search History', path: '/admin/search-history' },
     { name: 'Online Status', path: '/admin/online-status' },
+    { name: 'Top Online', path: '/admin/top-online' },
     { name: 'Website Traffic', path: '/admin/website-traffic' },
     { name: 'User Sessions', path: '/admin/user-sessions' },
   ];

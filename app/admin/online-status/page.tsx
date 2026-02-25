@@ -39,8 +39,15 @@ export default function AdminOnlineStatusPage() {
     }
   };
 
-  const onlineUsers = profiles.filter((p) => getOnlineStatus(p.last_seen).isOnline);
-  const offlineUsers = profiles.filter((p) => !getOnlineStatus(p.last_seen).isOnline);
+  const sortByLastSeenDesc = (a: ProfileRow, b: ProfileRow) =>
+    new Date(b.last_seen || 0).getTime() - new Date(a.last_seen || 0).getTime();
+
+  const onlineUsers = profiles
+    .filter((p) => getOnlineStatus(p.last_seen).isOnline)
+    .sort(sortByLastSeenDesc);
+  const offlineUsers = profiles
+    .filter((p) => !getOnlineStatus(p.last_seen).isOnline)
+    .sort(sortByLastSeenDesc);
 
   const listItemStyle = {
     display: 'flex',
@@ -149,7 +156,7 @@ export default function AdminOnlineStatusPage() {
                           {u.username || 'User'}
                         </div>
                         {status.text ? (
-                          <div style={{ fontSize: '13px', color: '#65676b', marginTop: '2px' }}>
+                          <div style={{ fontSize: '13px', color: '#1a7f37', marginTop: '2px' }}>
                             {status.text}
                           </div>
                         ) : null}
