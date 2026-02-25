@@ -147,6 +147,28 @@ export default function AdminTopOnlinePage() {
           ເວລາໃຊ້ງານລວມທຸກ session (ນາທີ/ຊົ່ວໂມງ). ແບ່ງຕາມຜູ້ໃຊ້ທີ່ລົງທະບຽນ ຫຼື ເຂົ້າສູ່ລະບົບເທົ່ານັ້ນ. ລຳດັບຈາກໃຊ້ງານຫຼາຍທີ່ສຸດ → ນ້ອຍທີ່ສຸດ.
         </p>
 
+        {rows.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '24px',
+              flexWrap: 'wrap',
+              marginBottom: '20px',
+              padding: '14px 16px',
+              background: '#fff',
+              borderRadius: '10px',
+              border: '1px solid #e5e7eb',
+            }}
+          >
+            <div style={{ fontSize: '14px', color: '#6b7280' }}>
+              ຈຳນວນຜູ້ໃຊ້: <strong style={{ color: '#1a1a1a' }}>{rows.length} ຄົນ</strong>
+            </div>
+            <div style={{ fontSize: '14px', color: '#6b7280' }}>
+              ເວລາໃຊ້ງານລວມທັງໝົດ: <strong style={{ color: '#1877f2' }}>{formatDuration(rows.reduce((sum, r) => sum + r.total_seconds, 0))}</strong>
+            </div>
+          </div>
+        )}
+
         <div style={{ marginTop: '20px' }}>
           {rows.length === 0 ? (
             <p style={{ color: '#65676b', fontSize: '14px' }}>ບໍ່ມີຂໍ້ມູນ</p>

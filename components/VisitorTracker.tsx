@@ -55,12 +55,18 @@ export default function VisitorTracker() {
       }
     };
 
-    const sendSessionEnd = () => {
+    const sendSessionEnd = (useBeacon = false) => {
       const sessionId = sessionStorage.getItem('current_session_id');
-      if (sessionId) {
-        fetch('/api/session-end', {
+      if (!sessionId) return;
+      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/session-end`;
+      const payload = JSON.stringify({ sessionId });
+      if (useBeacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon(url, blob);
+      } else {
+        fetch(url, {
           method: 'POST',
-          body: JSON.stringify({ sessionId }),
+          body: payload,
           keepalive: true,
           headers: { 'Content-Type': 'application/json' },
         }).catch(() => {});
@@ -183,13 +189,14 @@ export default function VisitorTracker() {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
 
-    window.addEventListener('pagehide', sendSessionEnd);
-    window.addEventListener('beforeunload', sendSessionEnd);
+    const onPageUnload = () => sendSessionEnd(true);
+    window.addEventListener('pagehide', onPageUnload);
+    window.addEventListener('beforeunload', onPageUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('pagehide', sendSessionEnd);
-      window.removeEventListener('beforeunload', sendSessionEnd);
+      window.removeEventListener('pagehide', onPageUnload);
+      window.removeEventListener('beforeunload', onPageUnload);
       clearTimeout(lateTouch);
       subscription.unsubscribe();
       stopHeartbeat();
