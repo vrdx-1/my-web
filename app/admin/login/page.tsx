@@ -102,7 +102,7 @@ export default function AdminLogin() {
 
       if (profile.role === 'admin') {
         // ໃຊ້ window.location ເພື່ອໃຫ້ Middleware ເຊັກຄ່າໃໝ່ໄດ້ຊັດເຈນ
-        window.location.href = '/admin/overview';
+        window.location.href = '/admin/search-history';
       } else {
         await supabase.auth.signOut();
         setOtpError('ບໍ່ມີສິດເຂົ້າເຖິງ');
