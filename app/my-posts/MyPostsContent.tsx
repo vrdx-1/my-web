@@ -171,6 +171,15 @@ export function MyPostsContent() {
 
   const { addBackStep } = useBackHandler();
 
+  // iOS: ตั้ง touch-action ที่ body เพื่อให้ single tap ทำงานได้ ไม่ต้อง double tap (เฉพาะหน้านี้)
+  useEffect(() => {
+    const prev = document.body.style.touchAction;
+    document.body.style.touchAction = 'manipulation';
+    return () => {
+      document.body.style.touchAction = prev;
+    };
+  }, []);
+
   const handleBack = useCallback(() => {
     router.push('/profile');
   }, [router]);

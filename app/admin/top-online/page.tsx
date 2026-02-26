@@ -22,13 +22,13 @@ type RankRow = { user_id: string; total_seconds: number; session_count: number }
 
 function formatDuration(totalSeconds: number): string {
   if (totalSeconds < 0) return '—';
-  if (totalSeconds < 60) return `${totalSeconds} ນາທີ`;
+  if (totalSeconds < 60) return `${totalSeconds} วินาที`;
   const m = Math.floor(totalSeconds / 60);
-  if (m < 60) return `${m} ນາທີ`;
+  if (m < 60) return `${m} นาที`;
   const h = Math.floor(m / 60);
   const mm = m % 60;
-  if (mm === 0) return `${h} ຊົ່ວໂມງ`;
-  return `${h} ຊົ່ວໂມງ ${mm} ນາທີ`;
+  if (mm === 0) return `${h} ชั่วโมง`;
+  return `${h} ชั่วโมง ${mm} นาที`;
 }
 
 export default function AdminTopOnlinePage() {

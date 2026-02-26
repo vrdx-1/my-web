@@ -66,12 +66,12 @@ export default function VisitorTracker() {
         startHeartbeat(user.id);
         const sessionId = sessionStorage.getItem('current_session_id');
         if (sessionId) {
-          supabase
-            .from('user_sessions')
-            .update({ user_id: user.id })
-            .eq('id', sessionId)
-            .is('user_id', null)
-            .then(() => {});
+          const origin = typeof window !== 'undefined' ? window.location.origin : '';
+          fetch(`${origin}/api/session-link-user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId, user_id: user.id }),
+          }).catch(() => {});
         }
       } else {
         stopHeartbeat();
@@ -106,27 +106,32 @@ export default function VisitorTracker() {
       }
     };
 
-    /** สร้างแถว session ใหม่ใน DB แล้วเก็บ id ลง sessionStorage (ใช้ทั้งตอนโหลดครั้งแรกและตอนกลับมาหลัง inactive นาน) */
+    /** สร้างแถว session ใหม่ใน DB ผ่าน API (service_role ไม่ติด RLS) แล้วเก็บ id ลง sessionStorage */
     const createNewSession = async (): Promise<boolean> => {
       let vId = localStorage.getItem('visitor_id');
       if (!vId) {
         vId = crypto.randomUUID();
         localStorage.setItem('visitor_id', vId);
       }
-      const startedAt = new Date().toISOString();
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: sessionRow } = await supabase
-        .from('user_sessions')
-        .insert({
-          user_id: user?.id ?? null,
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const res = await fetch(`${origin}/api/session-start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           visitor_id: vId,
-          started_at: startedAt,
-        })
-        .select('id')
-        .single();
-      if (sessionRow?.id) {
-        sessionStorage.setItem('current_session_id', sessionRow.id);
-        sessionStorage.setItem('current_session_started_at', startedAt);
+          user_id: user?.id ?? null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[VisitorTracker] session-start error:', res.status, err);
+        return false;
+      }
+      const data = await res.json();
+      if (data?.sessionId && data?.started_at) {
+        sessionStorage.setItem('current_session_id', data.sessionId);
+        sessionStorage.setItem('current_session_started_at', data.started_at);
         return true;
       }
       return false;

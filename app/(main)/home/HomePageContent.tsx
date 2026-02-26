@@ -286,6 +286,28 @@ export function HomePageContent() {
     return () => mainTab?.unregisterTabChangeHandler();
   }, [mainTab, setTabAndRefresh]);
 
+  /** ล็อกไม่ให้ดึง Header และฟีดลงเมื่ออยู่บนสุด (ทุกอุปกรณ์ รวมถึง iPhone) — ป้องกัน overscroll/bounce */
+  const homePullLockStartY = useRef(0);
+  useEffect(() => {
+    if (pathname !== '/home') return;
+    const doc = document;
+    const SCROLL_TOP_THRESHOLD = 8;
+    const handleTouchStart = (e: TouchEvent) => {
+      homePullLockStartY.current = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY > SCROLL_TOP_THRESHOLD) return;
+      const currentY = e.touches[0].clientY;
+      if (currentY > homePullLockStartY.current) e.preventDefault();
+    };
+    doc.addEventListener('touchstart', handleTouchStart, { passive: true });
+    doc.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      doc.removeEventListener('touchstart', handleTouchStart);
+      doc.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [pathname]);
+
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>

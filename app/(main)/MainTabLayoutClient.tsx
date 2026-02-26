@@ -40,6 +40,17 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     if (pathname !== '/home') setPullOffset(0);
   }, [pathname]);
 
+  /** ตั้ง data-page="home" ให้ body เพื่อให้ CSS overscroll-behavior-y: none ทำงาน (ล็อกไม่ให้ดึง Header/ฟีดลงเมื่ออยู่บนสุด) */
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (pathname === '/home') {
+      document.body.setAttribute('data-page', 'home');
+    } else {
+      document.body.removeAttribute('data-page');
+    }
+    return () => document.body.removeAttribute('data-page');
+  }, [pathname]);
+
   useEffect(() => {
     const handler = () => fileUpload.handleCreatePostClick(session);
     createPostContext?.register(handler);

@@ -38,6 +38,11 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_last_seen_at ON public.user_session
 -- 2) เปิดใช้ RLS
 ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
 
+-- 2.1) ให้ anon / authenticated มีสิทธิ INSERT, UPDATE (RLS ยังบังคับอยู่)
+GRANT INSERT, UPDATE ON public.user_sessions TO anon;
+GRANT INSERT, UPDATE ON public.user_sessions TO authenticated;
+GRANT SELECT ON public.user_sessions TO authenticated;
+
 -- 3) Policy: ให้ anon + authenticated แทรกได้ (frontend บันทึก session เริ่ม)
 DROP POLICY IF EXISTS "Allow insert user_sessions" ON public.user_sessions;
 CREATE POLICY "Allow insert user_sessions"
