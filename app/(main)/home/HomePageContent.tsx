@@ -5,7 +5,6 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { PostFeed } from '@/components/PostFeed';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { PostFeedModals } from '@/components/PostFeedModals';
-import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -24,14 +23,11 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useInteractionModal } from '@/hooks/useInteractionModal';
-import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
-import { usePullHeaderOffset } from '@/app/(main)/MainTabLayoutClient';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { PULL_REFRESH_HEADER_HEIGHT, PULL_REFRESH_ZONE_HEIGHT } from '@/components/PullToRefreshIndicator';
 
 export type HomeTab = 'recommend' | 'sold';
 
@@ -50,9 +46,6 @@ export function HomePageContent() {
 
   const mainTab = useMainTabContext();
   const tab = mainTab?.homeTab ?? 'recommend';
-  const pullHeaderCtx = usePullHeaderOffset();
-  const setPullHeaderOffset = pullHeaderCtx?.setPullHeaderOffset ?? (() => {});
-  const pullHeaderOffset = pullHeaderCtx?.pullHeaderOffset ?? 0;
   const homeProvince = useHomeProvince();
   const selectedProvince = homeProvince?.selectedProvince ?? '';
 
@@ -154,9 +147,9 @@ export function HomePageContent() {
 
   const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
-    // ทุกชนิด refresh (browser/pull/กดแท็บ) → ฟิลเตอร์กลับเป็น "ທຸກແຂວງ"
+    // ทุกชนิด refresh (browser/กดแท็บ) → ฟิลเตอร์กลับเป็น "ທຸກແຂວງ"
     homeProvince?.setSelectedProvince('');
-    // pull-to-refresh → ล้างคำค้นหา; กดปุ่ม Home refresh ไม่ล้าง (ให้เหมือนกดแท็บ ພ້ອມຂາຍ/ຂາຍແລ້ວ)
+    // กดแท็บ refresh → ล้างคำค้นหา; กดปุ่ม Home refresh ไม่ล้าง (ให้เหมือนกดแท็บ ພ້ອມຂາຍ/ຂາຍແລ້ວ)
     if (!options?.fromHomeButton && searchParams.has('q')) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('q');
@@ -190,13 +183,6 @@ export function HomePageContent() {
     mainTab?.registerTabRefreshHandler(doRefresh);
     return () => mainTab?.unregisterTabRefreshHandler();
   }, [mainTab, doRefresh]);
-
-  const { pullDistance } = usePullToRefresh(doRefresh, false);
-
-  useEffect(() => {
-    setPullHeaderOffset(pullDistance);
-    return () => setPullHeaderOffset(0);
-  }, [pullDistance, setPullHeaderOffset]);
 
   const handlers = usePostFeedHandlers({
     session: postList.session,
@@ -260,10 +246,6 @@ export function HomePageContent() {
     [interactionModalHook],
   );
 
-  const isRefreshing = tabRefreshing && mainTab?.refreshSource === 'pull';
-  /** เวลาดึงหรือกำลัง refresh ให้ฟีดโยโย้ลง เท่ากับระยะดึง หรือความสูงช่องสปินเนอร์ */
-  const feedTranslateY = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : pullDistance;
-
   const setTabAndRefresh = useCallback((newTab: HomeTab) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
     if (newTab === tab) {
@@ -306,19 +288,7 @@ export function HomePageContent() {
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <PullToRefreshIndicator
-        pullDistance={pullDistance}
-        isRefreshing={isRefreshing}
-        pullHeaderOffset={pullHeaderOffset}
-        headerHeight={PULL_REFRESH_HEADER_HEIGHT}
-      />
-
-      <div
-        style={{
-          transform: feedTranslateY > 0 ? `translateY(${feedTranslateY}px)` : undefined,
-          transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
-        }}
-      >
+      <div>
         {(posts.length === 0 && (postList.loadingMore || sessionState === undefined)) || (tabRefreshing && postList.loadingMore) ? (
           <FeedSkeleton />
         ) : (

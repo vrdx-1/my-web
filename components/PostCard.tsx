@@ -73,9 +73,9 @@ export const PostCard = React.memo<PostCardProps>(({
   priority = false,
 }) => {
   const router = useRouter();
-  const status = getOnlineStatus(post.profiles?.last_seen);
-  const statusLabel = status.text ? (status.isOnline ? 'ອອນລາຍ' : status.text) : '';
   const isOwner = isPostOwner(post, session);
+  const status = isOwner ? { isOnline: true, text: 'ອອນລາຍ' } : getOnlineStatus(post.profiles?.last_seen);
+  const statusLabel = status.text ? (status.isOnline ? 'ອອນລາຍ' : status.text) : '';
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);

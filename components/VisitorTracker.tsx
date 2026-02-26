@@ -13,6 +13,7 @@ export default function VisitorTracker() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionHeartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastHiddenAtRef = useRef<number>(0);
 
   useEffect(() => {
@@ -36,6 +37,26 @@ export default function VisitorTracker() {
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
+      }
+    };
+
+    const startSessionHeartbeat = () => {
+      if (sessionHeartbeatIntervalRef.current) return;
+      sessionHeartbeatIntervalRef.current = setInterval(() => {
+        const sessionId = sessionStorage.getItem('current_session_id');
+        if (!sessionId) return;
+        supabase
+          .from('user_sessions')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', sessionId)
+          .then(() => {});
+      }, 30 * 1000);
+    };
+
+    const stopSessionHeartbeat = () => {
+      if (sessionHeartbeatIntervalRef.current) {
+        clearInterval(sessionHeartbeatIntervalRef.current);
+        sessionHeartbeatIntervalRef.current = null;
       }
     };
 
@@ -130,6 +151,7 @@ export default function VisitorTracker() {
         if (!sessionStorage.getItem('current_session_id')) {
           await createNewSession();
         }
+        startSessionHeartbeat();
 
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
@@ -182,6 +204,7 @@ export default function VisitorTracker() {
         return;
       }
       if (!document.hidden && typeof window !== 'undefined') {
+        if (currentUserId) updateLastSeen(currentUserId);
         const sessionId = sessionStorage.getItem('current_session_id');
         if (!sessionId) return;
         const inactiveMs = Date.now() - lastHiddenAtRef.current;
@@ -214,6 +237,7 @@ export default function VisitorTracker() {
       clearTimeout(lateTouch);
       subscription.unsubscribe();
       stopHeartbeat();
+      stopSessionHeartbeat();
       if (channel) {
         supabase.removeChannel(channel);
       }

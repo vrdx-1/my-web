@@ -146,21 +146,49 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
           borderBottom: '1px solid #f0f0f0',
         }}>
-        {/* Logo (brand name removed per request) */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        {/* Logo (brand name removed per request); หน้าโฮม: กดโลโก้ = full refresh (ล้างค้นหา + ທຸກແຂວງ) */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           flexShrink: 0,
           marginRight: showOnlySearch && homeCenterContent ? '4px' : '8px',
         }}>
-          <Image 
-            src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg" 
-            alt="Jutpai Logo" 
-            width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE} 
-            height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
-            unoptimized
-            style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
-          />
+          {pathname === '/home' && onTabRefresh ? (
+            <button
+              type="button"
+              onClick={onTabRefresh}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexShrink: 0,
+                padding: 0,
+                margin: 0,
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                touchAction: 'manipulation',
+              }}
+              aria-label="Refresh (ທຸກແຂວງ)"
+            >
+              <Image
+                src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg"
+                alt="Jutpai Logo"
+                width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+                height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+                unoptimized
+                style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
+              />
+            </button>
+          ) : (
+            <Image
+              src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg"
+              alt="Jutpai Logo"
+              width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+              height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+              unoptimized
+              style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
+            />
+          )}
         </div>
 
         {showOnlySearch && homeCenterContent ? homeCenterContent : <div style={{ flex: 1, minWidth: 0 }} aria-hidden />}

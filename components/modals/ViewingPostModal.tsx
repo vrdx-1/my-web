@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Avatar } from '../Avatar';
-import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 
@@ -84,7 +84,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 }) => {
   const shouldHide = !viewingPost;
 
-  const status = getOnlineStatus(viewingPost?.profiles?.last_seen);
+  const status = isPostOwner(viewingPost, session) ? { isOnline: true, text: 'ອອນລາຍ' } : getOnlineStatus(viewingPost?.profiles?.last_seen);
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'entered'>('offscreen');
   const [enterTransitionActive, setEnterTransitionActive] = useState(false);
   const [initialImageLoaded, setInitialImageLoaded] = useState(false);
