@@ -28,9 +28,10 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
   const visible = pullDistance > 0 || isRefreshing
   if (!visible) return null
 
-  // สปินเนอร์ลงมาพร้อมจังหวะดึง — อยู่กึ่งกลาง zone ที่ถูกดึง (เหมือนเว็บใหญ่ระดับโลก)
-  const zoneHeight = isRefreshing ? PULL_REFRESH_ZONE_HEIGHT : Math.max(pullDistance, SPINNER_SIZE)
-  const topOffset = headerHeight + Math.max(0, (zoneHeight - SPINNER_SIZE) / 2)
+  // ตอนดึง: สปินเนอร์ไหลลงตามจังหวะนิ้ว (ตำแหน่งตาม pullDistance โดยตรง). ตอน refresh: อยู่กึ่งกลาง zone
+  const topOffset = isRefreshing
+    ? headerHeight + (PULL_REFRESH_ZONE_HEIGHT - SPINNER_SIZE) / 2
+    : headerHeight + Math.max(0, pullDistance - SPINNER_SIZE / 2)
   const translateY = 0
 
   return (
@@ -50,7 +51,7 @@ export const PullToRefreshIndicator = React.memo<PullToRefreshIndicatorProps>(({
         color: '#333333',
         zIndex: 499,
         transform: `translate(-50%, ${translateY}px)`,
-        transition: isRefreshing ? 'transform 0.2s ease-out' : 'transform 0.1s ease-out',
+        transition: isRefreshing ? 'transform 0.2s ease-out' : 'none',
         pointerEvents: 'none',
       }}
     >

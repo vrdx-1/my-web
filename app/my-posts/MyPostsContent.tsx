@@ -205,11 +205,13 @@ export function MyPostsContent() {
     <main
       style={{
         ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
-        ...((isEditingName || isEditingPhone) && {
-          overflow: 'hidden',
-          touchAction: 'none',
-          overscrollBehavior: 'contain',
-        }),
+        ...((isEditingName || isEditingPhone)
+          ? {
+              overflow: 'hidden',
+              touchAction: 'none',
+              overscrollBehavior: 'contain',
+            }
+          : { touchAction: 'manipulation' }),
       }}
       onTouchMove={
         isEditingName || isEditingPhone

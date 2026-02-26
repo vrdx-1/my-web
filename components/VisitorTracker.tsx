@@ -29,7 +29,7 @@ export default function VisitorTracker() {
     const startHeartbeat = (userId: string) => {
       if (heartbeatIntervalRef.current) return;
       updateLastSeen(userId);
-      heartbeatIntervalRef.current = setInterval(() => updateLastSeen(userId), 2 * 60 * 1000);
+      heartbeatIntervalRef.current = setInterval(() => updateLastSeen(userId), 60 * 1000);
     };
 
     const stopHeartbeat = () => {

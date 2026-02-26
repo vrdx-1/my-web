@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { FEED_PAGE_SIZE } from '@/utils/constants';
+import { FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+
+const FEED_CACHE_KEY = 'home_feed_cache';
 
 interface UseHomeFeedOptions {
   session?: any;
@@ -86,14 +88,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     });
   }, [currentSession]);
 
-  const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
-    if (currentSession === undefined) return;
+  const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
     const currentFetchId = ++fetchIdRef.current;
-    setLoadingMore(true);
+    if (!(isInitial && backgroundRefresh)) setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
-    const rangeStart = currentPage * FEED_PAGE_SIZE;
-    const rangeEnd = rangeStart + FEED_PAGE_SIZE - 1;
+    const rangeStart = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+    const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
+    const rangeEnd = rangeStart + pageSize - 1;
 
     try {
       const url = '/api/posts/feed';
@@ -107,6 +109,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       const data = await res.json().catch(() => ({}));
       const postIds: string[] = Array.isArray(data.postIds) ? data.postIds : [];
       const nextHasMore = !!data.hasMore;
+      const apiPosts: any[] = Array.isArray(data.posts) ? data.posts : [];
 
       if (currentFetchId !== fetchIdRef.current) return;
       setHasMore(nextHasMore);
@@ -117,25 +120,29 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         return;
       }
 
-      const { data: postsData, error } = await supabase
-        .from('cars')
-        .select(POST_WITH_PROFILE_SELECT)
-        .in('id', postIds)
-        .order('created_at', { ascending: false });
+      let ordered: any[];
+      if (apiPosts.length > 0) {
+        ordered = apiPosts;
+      } else {
+        const { data: postsData, error } = await supabase
+          .from('cars')
+          .select(POST_WITH_PROFILE_SELECT)
+          .in('id', postIds)
+          .order('created_at', { ascending: false });
 
-      if (currentFetchId !== fetchIdRef.current) return;
-      if (error) {
-        setLoadingMore(false);
-        return;
+        if (currentFetchId !== fetchIdRef.current) return;
+        if (error) {
+          setLoadingMore(false);
+          return;
+        }
+        const order = new Map(postIds.map((id, i) => [String(id), i]));
+        ordered = (postsData || []).filter((p: any) => p.status === 'recommend' && !p.is_hidden);
+        ordered.sort((a: any, b: any) => {
+          const ai = order.get(String(a.id)) ?? 1e9;
+          const bi = order.get(String(b.id)) ?? 1e9;
+          return ai - bi;
+        });
       }
-
-      const order = new Map(postIds.map((id, i) => [String(id), i]));
-      const ordered = (postsData || []).filter((p: any) => p.status === 'recommend' && !p.is_hidden);
-      ordered.sort((a: any, b: any) => {
-        const ai = order.get(String(a.id)) ?? 1e9;
-        const bi = order.get(String(b.id)) ?? 1e9;
-        return ai - bi;
-      });
 
       if (isInitial) {
         setPosts(ordered);
@@ -159,6 +166,18 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
             // ignore
           }
         }
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({
+              province,
+              posts: ordered,
+              hasMore: nextHasMore,
+              ts: Date.now(),
+            }));
+          }
+        } catch {
+          // ignore
+        }
       } else {
         setPosts(prev => {
           const ids = new Set(prev.map(p => p.id));
@@ -169,16 +188,19 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } finally {
       if (fetchIdRef.current === currentFetchId) setLoadingMore(false);
     }
-  }, [currentSession, page, loadingMore, province]);
+  }, [page, loadingMore, province]);
   const fetchPostsRef = useRef(fetchPosts);
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
+  const initialLoadFromCacheRef = useRef(false);
 
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
-    // หลัง refresh ใช้ลำดับ Algorithm เท่านั้น — ล้างโพสต์ที่แปะบนสุดชั่วคราว
     try {
-      if (typeof window !== 'undefined') window.localStorage.removeItem('just_posted_post_id');
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('just_posted_post_id');
+        window.localStorage.removeItem(FEED_CACHE_KEY);
+      }
     } catch {
       // ignore
     }
@@ -186,19 +208,43 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   }, [fetchPosts]);
 
   useEffect(() => {
-    if (currentSession === undefined) return;
+    initialLoadFromCacheRef.current = false;
+    let fromCache = false;
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = window.localStorage.getItem(FEED_CACHE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.province === province && Array.isArray(parsed.posts)) {
+            const age = Date.now() - (parsed.ts || 0);
+            if (age < FEED_CACHE_MAX_AGE_MS) {
+              setPosts(parsed.posts);
+              setHasMore(!!parsed.hasMore);
+              initialLoadFromCacheRef.current = true;
+              fromCache = true;
+            }
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
     setPage(0);
-    setHasMore(true);
-    fetchPosts(true);
-  }, [currentSession, province]);
+    if (!fromCache) setHasMore(true);
+    if (initialLoadFromCacheRef.current) {
+      fetchPostsRef.current(true, undefined, true);
+    } else {
+      fetchPostsRef.current(true);
+    }
+  }, [province]);
 
   const lastFetchedPageRef = useRef<number | null>(null);
   useEffect(() => {
-    if (page === 0 || loadingMore || currentSession === undefined) return;
+    if (page === 0 || loadingMore) return;
     if (lastFetchedPageRef.current === page) return;
     lastFetchedPageRef.current = page;
     fetchPostsRef.current(false, page);
-  }, [page, currentSession, loadingMore]);
+  }, [page, loadingMore]);
   useEffect(() => {
     if (page === 0) lastFetchedPageRef.current = null;
   }, [page]);

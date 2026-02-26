@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { FEED_PAGE_SIZE } from '@/utils/constants';
+import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 
 /** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
 async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
@@ -71,8 +72,26 @@ export async function POST(request: NextRequest) {
 
     const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
+    let posts: any[] | undefined;
+    if (postIds.length > 0) {
+      const { data: postsData, error: postsErr } = await supabase
+        .from('cars')
+        .select(POST_WITH_PROFILE_SELECT)
+        .in('id', postIds);
+      if (!postsErr && postsData?.length) {
+        const order = new Map(postIds.map((id, i) => [String(id), i]));
+        const filtered = postsData.filter((p: any) => p.status === 'recommend' && !p.is_hidden);
+        filtered.sort((a: any, b: any) => {
+          const ai = order.get(String(a.id)) ?? 1e9;
+          const bi = order.get(String(b.id)) ?? 1e9;
+          return ai - bi;
+        });
+        posts = filtered;
+      }
+    }
+
     return NextResponse.json(
-      { postIds, hasMore },
+      { postIds, hasMore, posts },
       { headers: { 'Cache-Control': 'private, max-age=0' } }
     );
   } catch (err: any) {
@@ -115,8 +134,26 @@ export async function GET(request: NextRequest) {
     const postIds = (data || []).map((p: { id: string }) => p.id);
     const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
 
+    let posts: any[] | undefined;
+    if (postIds.length > 0) {
+      const { data: postsData, error: postsErr } = await supabase
+        .from('cars')
+        .select(POST_WITH_PROFILE_SELECT)
+        .in('id', postIds);
+      if (!postsErr && postsData?.length) {
+        const order = new Map(postIds.map((id, i) => [String(id), i]));
+        const filtered = postsData.filter((p: any) => p.status === 'recommend' && !p.is_hidden);
+        filtered.sort((a: any, b: any) => {
+          const ai = order.get(String(a.id)) ?? 1e9;
+          const bi = order.get(String(b.id)) ?? 1e9;
+          return ai - bi;
+        });
+        posts = filtered;
+      }
+    }
+
     return NextResponse.json(
-      { postIds, hasMore },
+      { postIds, hasMore, posts },
       { headers: { 'Cache-Control': 'private, max-age=0' } }
     );
   } catch (err: any) {

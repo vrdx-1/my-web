@@ -3,7 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 
 const PULL_THRESHOLD = 70
-const PULL_MAX = 100
+/** จำกัดระยะดึงสูงสุด (px) — ไม่ให้ดึงลงมากเกินไป โดยเฉพาะ iPhone ที่ overscroll ได้มาก */
+const PULL_MAX = 72
+const PULL_MAX_IOS = 64
 const PULL_DAMPEN = 0.4
 const SCROLL_TOP_THRESHOLD = 8
 /** ต้องดึงลงอย่างน้อยเท่านี้ (px) ถึงจะนับว่าเป็น pull — ป้องกันเลื่อนเร็วแล้วโดน trigger */
@@ -59,7 +61,9 @@ export function usePullToRefresh(onRefresh: () => void, disabled: boolean) {
     if (gestureCancelledRef.current) return
     if (delta <= 0) return
     e.preventDefault()
-    const damped = Math.min(delta * PULL_DAMPEN, PULL_MAX)
+    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent)
+    const maxPull = isIOS ? PULL_MAX_IOS : PULL_MAX
+    const damped = Math.min(delta * PULL_DAMPEN, maxPull)
     pullDistanceRef.current = damped
     setPullDistance(damped)
   }, [disabled])

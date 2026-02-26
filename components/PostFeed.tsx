@@ -34,6 +34,8 @@ interface PostFeedProps {
   hasMore?: boolean;
   /** กดโหลดเพิ่มเมื่อ scroll ไม่ยิง (เช่น มือถือ/ container แยก) */
   onLoadMore?: () => void;
+  /** อัปเดตเป็นระยะเพื่อให้สถานะออนไลน์ในการ์ด re-render (ไม่ต้อง refresh หน้า) */
+  onlineStatusTick?: number;
 }
 
 /**
@@ -68,6 +70,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   hideBoost = false,
   hasMore = true,
   onLoadMore,
+  onlineStatusTick,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (

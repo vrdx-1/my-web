@@ -46,6 +46,7 @@ export function HomePageContent() {
   const [sessionState, setSessionState] = useState<any>(undefined);
   const postsRef = useRef<any[]>([]);
   const prevLoadingMoreRef = useRef(false);
+  const [onlineStatusTick, setOnlineStatusTick] = useState(0);
 
   const mainTab = useMainTabContext();
   const tab = mainTab?.homeTab ?? 'recommend';
@@ -97,6 +98,11 @@ export function HomePageContent() {
     import('@/lib/supabase').then(({ supabase }) => {
       supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
     });
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setOnlineStatusTick((t) => t + 1), 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   const menu = useMenu();
@@ -343,6 +349,7 @@ export function HomePageContent() {
           hasMore={postList.hasMore}
           onLoadMore={() => postList.setPage((p) => p + 1)}
           hideBoost={tab === 'sold'}
+          onlineStatusTick={onlineStatusTick}
         />
         )}
       </div>
