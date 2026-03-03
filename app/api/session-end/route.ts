@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * POST: บันทึก session end (ended_at + duration_seconds)
- * เรียกจาก VisitorTracker ตอนปิดแท็บ/ออกจากหน้า (keepalive)
- * ใช้ service_role เพื่ออัปเดตได้โดยไม่ต้อง auth
+ * ปัจจุบัน frontend ไม่เรียกแล้ว — ใช้ cron (close-stale-sessions) ปิด session ค้างแทน
+ * เก็บ API ไว้เผื่อเรียกใช้เองหรือใช้ย้อนหลัง
  */
 export async function POST(request: NextRequest) {
   try {

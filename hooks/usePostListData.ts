@@ -405,21 +405,14 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const { data: idsData, error: idsError } = await idsQuery;
         
         if (idsError) {
-          console.error('Error fetching my-posts:', {
-            error: idsError,
-            message: idsError?.message || 'Unknown error',
-            details: idsError?.details || null,
-            hint: idsError?.hint || null,
-            code: idsError?.code || null,
-            idOrToken,
-            tab,
-            rangeStart,
-            rangeEnd,
-            type,
-            userIdOrToken,
-            currentUserId,
-            currentSession: currentSession ? 'exists' : 'null'
-          });
+          const errMsg = idsError?.message ?? idsError?.code ?? 'Unknown error';
+          const errCode = idsError?.code ?? null;
+          const errDetails = idsError?.details ?? null;
+          const errHint = idsError?.hint ?? null;
+          console.error(
+            `Error fetching my-posts: ${errMsg}`,
+            { code: errCode, details: errDetails, hint: errHint, idOrToken, tab, rangeStart, rangeEnd, type }
+          );
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }

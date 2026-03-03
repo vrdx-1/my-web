@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.user_sessions (
 COMMENT ON COLUMN public.user_sessions.user_id IS 'NULL = Guest; มีค่า = Registered user (auth.users.id)';
 COMMENT ON COLUMN public.user_sessions.visitor_id IS 'จาก localStorage ใช้ร่วมกับ visitor_logs';
 COMMENT ON COLUMN public.user_sessions.duration_seconds IS 'คำนวณเมื่อ session จบ: EXTRACT(EPOCH FROM (ended_at - started_at))';
-COMMENT ON COLUMN public.user_sessions.last_seen_at IS 'อัปเดตจาก heartbeat ทุก ~30s ใช้ปิด session ค้าง (cron)';
+COMMENT ON COLUMN public.user_sessions.last_seen_at IS 'อัปเดตพร้อมกับ profiles.last_seen (heartbeat ทุก 60s) ใช้ปิด session ค้าง (cron)';
 
 -- Index สำหรับ filter ตามเวลา และแยก Registered / Guest
 CREATE INDEX IF NOT EXISTS idx_user_sessions_started_at ON public.user_sessions (started_at DESC);

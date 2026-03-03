@@ -13,57 +13,50 @@ export default function VisitorTracker() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const sessionHeartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastHiddenAtRef = useRef<number>(0);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let currentUserId: string | null = null;
+    const now = () => new Date().toISOString();
 
-    const updateLastSeen = async (userId: string) => {
-      await supabase
-        .from('profiles')
-        .update({ last_seen: new Date().toISOString() })
-        .eq('id', userId);
+    /** อัปเดตทั้ง profiles.last_seen และ user_sessions.last_seen_at แบบเดียวกับ last_seen (เรียกพร้อมกัน) */
+    const updatePresenceNow = () => {
+      const sessionId = sessionStorage.getItem('current_session_id');
+      if (sessionId) {
+        supabase
+          .from('user_sessions')
+          .update({ last_seen_at: now() })
+          .eq('id', sessionId)
+          .then(() => {});
+      }
+      if (currentUserId) {
+        supabase
+          .from('profiles')
+          .update({ last_seen: now() })
+          .eq('id', currentUserId)
+          .then(() => {});
+      }
     };
+    const updateLastSeen = updatePresenceNow;
 
-    const startHeartbeat = (userId: string) => {
+    const startPresenceHeartbeat = () => {
       if (heartbeatIntervalRef.current) return;
-      updateLastSeen(userId);
-      heartbeatIntervalRef.current = setInterval(() => updateLastSeen(userId), 60 * 1000);
+      updatePresenceNow();
+      heartbeatIntervalRef.current = setInterval(updatePresenceNow, 60 * 1000);
     };
 
-    const stopHeartbeat = () => {
+    const stopPresenceHeartbeat = () => {
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
       }
     };
-
-    const startSessionHeartbeat = () => {
-      if (sessionHeartbeatIntervalRef.current) return;
-      sessionHeartbeatIntervalRef.current = setInterval(() => {
-        const sessionId = sessionStorage.getItem('current_session_id');
-        if (!sessionId) return;
-        supabase
-          .from('user_sessions')
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq('id', sessionId)
-          .then(() => {});
-      }, 30 * 1000);
-    };
-
-    const stopSessionHeartbeat = () => {
-      if (sessionHeartbeatIntervalRef.current) {
-        clearInterval(sessionHeartbeatIntervalRef.current);
-        sessionHeartbeatIntervalRef.current = null;
-      }
-    };
+    const stopHeartbeat = stopPresenceHeartbeat;
 
     const applyUserPresence = (user: { id: string } | null) => {
       currentUserId = user?.id ?? null;
       if (user?.id) {
-        startHeartbeat(user.id);
         const sessionId = sessionStorage.getItem('current_session_id');
         if (sessionId) {
           const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -73,8 +66,6 @@ export default function VisitorTracker() {
             body: JSON.stringify({ sessionId, user_id: user.id }),
           }).catch(() => {});
         }
-      } else {
-        stopHeartbeat();
       }
     };
 
@@ -83,26 +74,9 @@ export default function VisitorTracker() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         applyUserPresence(user ?? null);
+        startPresenceHeartbeat();
       } catch (_) {
         // ignore
-      }
-    };
-
-    const sendSessionEnd = (useBeacon = false) => {
-      const sessionId = sessionStorage.getItem('current_session_id');
-      if (!sessionId) return;
-      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/session-end`;
-      const payload = JSON.stringify({ sessionId });
-      if (useBeacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: 'application/json' });
-        navigator.sendBeacon(url, blob);
-      } else {
-        fetch(url, {
-          method: 'POST',
-          body: payload,
-          keepalive: true,
-          headers: { 'Content-Type': 'application/json' },
-        }).catch(() => {});
       }
     };
 
@@ -132,6 +106,9 @@ export default function VisitorTracker() {
       if (data?.sessionId && data?.started_at) {
         sessionStorage.setItem('current_session_id', data.sessionId);
         sessionStorage.setItem('current_session_started_at', data.started_at);
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+          console.log('[VisitorTracker] session created:', data.sessionId);
+        }
         return true;
       }
       return false;
@@ -156,7 +133,7 @@ export default function VisitorTracker() {
         if (!sessionStorage.getItem('current_session_id')) {
           await createNewSession();
         }
-        startSessionHeartbeat();
+        startPresenceHeartbeat();
 
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
@@ -192,9 +169,7 @@ export default function VisitorTracker() {
 
     const lateTouch = setTimeout(() => {
       supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user?.id && !heartbeatIntervalRef.current) {
-          applyUserPresence(user);
-        }
+        if (user?.id) applyUserPresence(user);
       });
     }, 2000);
 
@@ -209,13 +184,12 @@ export default function VisitorTracker() {
         return;
       }
       if (!document.hidden && typeof window !== 'undefined') {
-        if (currentUserId) updateLastSeen(currentUserId);
+        updatePresenceNow();
         const sessionId = sessionStorage.getItem('current_session_id');
         if (!sessionId) return;
         const inactiveMs = Date.now() - lastHiddenAtRef.current;
         const thresholdMs = SESSION_INACTIVITY_SECONDS * 1000;
         if (lastHiddenAtRef.current > 0 && inactiveMs >= thresholdMs) {
-          sendSessionEnd();
           sessionStorage.removeItem('current_session_id');
           sessionStorage.removeItem('current_session_started_at');
           createNewSession().then((created) => {
@@ -231,18 +205,11 @@ export default function VisitorTracker() {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
 
-    const onPageUnload = () => sendSessionEnd(true);
-    window.addEventListener('pagehide', onPageUnload);
-    window.addEventListener('beforeunload', onPageUnload);
-
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('pagehide', onPageUnload);
-      window.removeEventListener('beforeunload', onPageUnload);
       clearTimeout(lateTouch);
       subscription.unsubscribe();
-      stopHeartbeat();
-      stopSessionHeartbeat();
+      stopPresenceHeartbeat();
       if (channel) {
         supabase.removeChannel(channel);
       }
