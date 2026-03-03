@@ -100,7 +100,14 @@ export default function VisitorTracker() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const msg = err?.error || err?.message || res.statusText;
-        console.error('[VisitorTracker] session-start ล้มเหลว:', res.status, msg);
+        // 503 มักมาจาก SUPABASE_SERVICE_ROLE_KEY ไม่ได้ตั้งบน Vercel — แจ้งแค่ใน dev หรือครั้งเดียว
+        if (res.status === 503 && typeof window !== 'undefined') {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[VisitorTracker] session-start 503 — ตั้ง SUPABASE_SERVICE_ROLE_KEY บน Vercel (ดู README)');
+          }
+        } else {
+          console.error('[VisitorTracker] session-start ล้มเหลว:', res.status, msg);
+        }
         return false;
       }
       const data = await res.json();
