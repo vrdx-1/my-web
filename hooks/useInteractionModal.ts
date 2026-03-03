@@ -69,7 +69,7 @@ export function useInteractionModal(): UseInteractionModalReturn {
       const formatted = [
         ...(userData || []).map((item: any) => ({
           username: item.profiles?.username || 'Unknown User',
-          avatar_url: item.profiles?.avatar_url || 'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/car-images/default-avatar.png',
+          avatar_url: item.profiles?.avatar_url ?? null,
           created_at: item.created_at
         })),
         ...(guestData || []).map((item: any) => ({

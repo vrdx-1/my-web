@@ -27,6 +27,7 @@ const BTN_CANCEL = {
   fontWeight: 'bold' as const,
   fontSize: '14px',
   cursor: 'pointer' as const,
+  touchAction: 'manipulation' as const,
 };
 
 function isPhoneValid(phone: string): boolean {
@@ -52,7 +53,7 @@ const EditNameModalComponent = ({
   const canSave = editingUsername.trim().length >= 1;
 
   return (
-    <div onClick={e => e.stopPropagation()} style={MODAL_BOX}>
+    <div onClick={e => e.stopPropagation()} style={{ ...MODAL_BOX, touchAction: 'manipulation' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <input
           value={editingUsername}
@@ -73,6 +74,7 @@ const EditNameModalComponent = ({
             flex: 1,
             minWidth: 0,
             padding: '4px 0',
+            touchAction: 'manipulation',
           }}
         />
         <div style={ROW_GAP}>
@@ -119,7 +121,7 @@ const EditPhoneModalComponent = ({
   const valid = isPhoneValid(editingPhone);
 
   return (
-    <div onClick={e => e.stopPropagation()} style={MODAL_BOX}>
+    <div onClick={e => e.stopPropagation()} style={{ ...MODAL_BOX, touchAction: 'manipulation' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <input
           type="text"
@@ -148,6 +150,7 @@ const EditPhoneModalComponent = ({
             outline: 'none',
             fontSize: '16px',
             color: '#111111',
+            touchAction: 'manipulation',
           }}
         />
         <div style={ROW_GAP}>

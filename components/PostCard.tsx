@@ -425,11 +425,14 @@ export const PostCard = React.memo<PostCardProps>(({
                   const raw = post.profiles?.phone || '';
                   const digits = raw.replace(/\D/g, '');
                   if (digits.length < 8) return null;
+                  const waUrl = `https://wa.me/${digits}`;
                   return (
                 <a 
-                  href={`https://wa.me/${digits}`} 
+                  href={waUrl} 
                   target="_blank" 
-                  rel="noopener noreferrer" 
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="ຕິດຕໍ່ WhatsApp"
                   style={{ 
                     display: 'flex', 
                     alignItems: 'center', 

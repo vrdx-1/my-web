@@ -87,10 +87,14 @@ export function HomePageContent() {
   const postList = tab === 'recommend' ? recommendSource : soldListData;
   postsRef.current = posts;
 
+  // เลื่อนตรวจสอบ session ออกไปหนึ่งสเต็ป — ให้โหลดฟีดก่อน ส่วนที่ต้องใช้ session (แท็บขายแล้ว, search ฯลฯ) ค่อยอัปเดตทีหลัง
   useEffect(() => {
-    import('@/lib/supabase').then(({ supabase }) => {
-      supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
-    });
+    const tid = setTimeout(() => {
+      import('@/lib/supabase').then(({ supabase }) => {
+        supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
+      });
+    }, 0);
+    return () => clearTimeout(tid);
   }, []);
 
   useEffect(() => {

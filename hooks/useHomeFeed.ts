@@ -42,12 +42,15 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
 
+  // เลื่อนตรวจสอบ session ออกไปหนึ่งสเต็ป — ให้โหลดฟีดก่อน แล้วไลก์/เซฟค่อยอัปเดตทีหลัง
   useEffect(() => {
     if (session === undefined) {
-      supabase.auth.getSession().then(({ data: { session: s } }) => setCurrentSession(s));
-    } else {
-      setCurrentSession(session);
+      const tid = setTimeout(() => {
+        supabase.auth.getSession().then(({ data: { session: s } }) => setCurrentSession(s));
+      }, 0);
+      return () => clearTimeout(tid);
     }
+    setCurrentSession(session);
   }, [session]);
 
   useEffect(() => {

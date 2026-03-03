@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    await touchLastSeen(supabase);
+    // โหลดฟีดก่อน — อัปเดต last_seen ทำในพื้นหลัง ไม่รอ
+    void touchLastSeen(supabase).catch(() => {});
 
     const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
     let postIds: string[];
@@ -126,7 +127,8 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    await touchLastSeen(supabase);
+    // โหลดฟีดก่อน — อัปเดต last_seen ทำในพื้นหลัง ไม่รอ
+    void touchLastSeen(supabase).catch(() => {});
 
     const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
     const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
