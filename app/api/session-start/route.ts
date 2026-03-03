@@ -15,12 +15,22 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!serviceRoleKey) {
-      return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+      return NextResponse.json(
+        { error: 'SUPABASE_SERVICE_ROLE_KEY ไม่ได้ตั้งค่าใน environment (เพิ่มใน Vercel/hosting ให้ตรงกับ localhost)' },
+        { status: 503 }
+      );
+    }
+    if (!supabaseUrl) {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_SUPABASE_URL ไม่ได้ตั้งค่าใน environment' },
+        { status: 503 }
+      );
     }
 
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       serviceRoleKey,
       { auth: { persistSession: false } }
     );

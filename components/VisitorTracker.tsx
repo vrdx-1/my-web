@@ -99,7 +99,8 @@ export default function VisitorTracker() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        console.error('[VisitorTracker] session-start error:', res.status, err);
+        const msg = err?.error || err?.message || res.statusText;
+        console.error('[VisitorTracker] session-start ล้มเหลว:', res.status, msg);
         return false;
       }
       const data = await res.json();

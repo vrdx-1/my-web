@@ -429,6 +429,14 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         return;
       }
 
+      // เมื่อโหลดครั้งแรก (เช่น เปลี่ยนแท็บ) ให้เคลียร์รายการเก่าก่อน — แม้ได้ postIds ว่าง (เช่น แท็บขายแล้วไม่มีโพสต์) จะได้แสดงหน้าว่าง
+      if (isInitial && fetchIdRef.current === currentFetchId) {
+        setPosts([]);
+      }
+      if (type === 'my-posts' && postIds.length === 0 && fetchIdRef.current === currentFetchId) {
+        setHasMore(false);
+      }
+
       // Batch loading: ดึง posts ทั้งหมดในครั้งเดียวแทนการ loop
       // Optimize: Select เฉพาะ fields ที่จำเป็นเท่านั้น
       if (postIds.length > 0) {
