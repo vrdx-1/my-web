@@ -282,7 +282,7 @@ export default function Login() {
             </form>
           )}
 
-          {!otpSent && (
+          {!otpSent && !hideSavedAccounts && (
             <div style={{ marginTop: 30 }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ flex: 1, height: 1, background: '#e0e0e0' }} />

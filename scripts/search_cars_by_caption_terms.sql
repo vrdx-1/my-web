@@ -16,7 +16,7 @@ BEGIN
   RETURN QUERY
   SELECT c.id, c.is_boosted, c.created_at
   FROM cars c
-  WHERE c.status = 'recommend'
+  WHERE c.status IN ('recommend', 'sold')
     AND (c.is_hidden = false OR c.is_hidden IS NULL)
     AND EXISTS (
       SELECT 1 FROM unnest(p_terms) AS t
@@ -32,4 +32,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.search_cars_by_caption_terms(text[], int, int) TO anon;
 GRANT EXECUTE ON FUNCTION public.search_cars_by_caption_terms(text[], int, int) TO authenticated;
 
-COMMENT ON FUNCTION public.search_cars_by_caption_terms IS 'Feed search by caption: OR match any of p_terms (Thai/Lao/English), with pagination.';
+COMMENT ON FUNCTION public.search_cars_by_caption_terms IS 'Feed search by caption: OR match any of p_terms (Thai/Lao/English), includes recommend + sold, with pagination.';

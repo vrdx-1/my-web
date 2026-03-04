@@ -27,13 +27,13 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   const { query, province, session, sessionReady = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
+  const [currentSession, setCurrentSession] = useState<any>(sessionReady ? session : undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    setCurrentSession(session ?? undefined);
-  }, [session]);
+    setCurrentSession(sessionReady ? session : undefined);
+  }, [session, sessionReady]);
 
   useEffect(() => {
     if (!sessionReady || currentSession === undefined) return;
@@ -95,7 +95,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   }, [currentSession, query, province]);
 
   useEffect(() => {
-    if (currentSession === undefined) return;
+    if (currentSession === undefined) return; // guest = null ผ่าน, แค่ undefined = ยังไม่รู้
     const q = (query || '').trim();
     if (q.length === 0) {
       setPosts([]);

@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { expandWithoutBrandAliases } from '@/utils/postUtils';
 
 const SEARCH_LIMIT = 300;
 const RPC_TERMS_LIMIT = 2500;
+
+/** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
+function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return supabase;
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    key,
+    { auth: { persistSession: false } }
+  );
+}
 
 /**
  * GET /api/posts/search?q=...&province=...
@@ -62,7 +74,8 @@ export async function GET(request: NextRequest) {
       }
 
       const ids = ordered.map((r) => r.id);
-      const { data: rows, error: fetchError } = await supabase
+      const carsClient = getCarsReadClient(supabase);
+      const { data: rows, error: fetchError } = await carsClient
         .from('cars')
         .select(POST_WITH_PROFILE_SELECT)
         .in('id', ids);
@@ -73,7 +86,7 @@ export async function GET(request: NextRequest) {
 
       const byId = new Map<string, any>();
       for (const p of rows || []) {
-        if (p && p.status === 'recommend' && !p.is_hidden) byId.set(p.id, p);
+        if (p && (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden) byId.set(p.id, p);
       }
 
       const posts: any[] = [];
@@ -91,10 +104,11 @@ export async function GET(request: NextRequest) {
     }
 
     const singleQuery = searchTerms[0] ?? query;
-    let dbQuery = supabase
+    const carsClient = getCarsReadClient(supabase);
+    let dbQuery = carsClient
       .from('cars')
       .select(POST_WITH_PROFILE_SELECT)
-      .eq('status', 'recommend')
+      .in('status', ['recommend', 'sold'])
       .eq('is_hidden', false)
       .ilike('caption', `%${singleQuery}%`);
 
@@ -111,7 +125,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const posts = (data || []).filter((p: any) => p.status === 'recommend' && !p.is_hidden);
+    const posts = (data || []).filter((p: any) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden);
 
     return NextResponse.json(
       { posts },

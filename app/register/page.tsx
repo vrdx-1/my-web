@@ -385,9 +385,8 @@ export default function Register() {
                   ການສ້າງບັນຊີໝາຍຄວາມວ່າທ່ານຍອມຮັບ{' '}
                   <Link href="/terms" onClick={(e) => e.stopPropagation()} style={{ color: '#1877f2', textDecoration: 'none', fontWeight: 'bold' }}>ຂໍ້ກຳນົດແລະນະໂຍບາຍ</Link>
                 </p>
-                <p style={{ fontSize: '18px', color: '#1c1e21', textAlign: 'center', marginTop: '4px', fontWeight: '700' }}>
-                  ທ່ານມີບັນຊີແລ້ວບໍ?{' '}
-                  <button type="button" onClick={() => router.push(LOGIN_PATH)} style={{ background: 'none', border: 'none', padding: 0, margin: 0, color: '#1877f2', cursor: 'pointer', fontSize: '16px', fontWeight: '700' }}>ເຂົ້າສູ່ລະບົບ</button>
+                <p style={{ fontSize: '18px', color: '#1c1e21', marginTop: '4px', fontWeight: '700', display: 'flex', justifyContent: 'center' }}>
+                  <button type="button" onClick={() => router.push(LOGIN_PATH)} style={{ background: 'none', border: 'none', padding: 0, margin: 0, color: '#1877f2', cursor: 'pointer', fontSize: '20px', fontWeight: '700' }}>ເຂົ້າສູ່ລະບົບ</button>
                 </p>
               </div>
             </>

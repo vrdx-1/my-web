@@ -56,12 +56,16 @@ export function HomePageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') ?? '';
+  const hadSearchRef = useRef(false);
 
-  // ทุกครั้งที่กดค้นหา → default แสดงฝั่งพร้อมขายเสมอ
+  // เฉพาะตอนที่เพิ่งมีคำค้น (จากไม่มีเป็นมี) → สลับไปแท็บพร้อมขาย ไม่บังคับเมื่อ user กดไปดูแท็บขายแล้ว
   useEffect(() => {
-    if (searchQuery.trim().length > 0) {
+    const hasSearch = searchQuery.trim().length > 0;
+    if (hasSearch && !hadSearchRef.current) {
+      hadSearchRef.current = true;
       mainTab?.setHomeTab('recommend');
     }
+    if (!hasSearch) hadSearchRef.current = false;
   }, [searchQuery, mainTab]);
 
   const recommendFeed = useHomeFeed({
@@ -86,11 +90,22 @@ export function HomePageContent() {
     status: 'sold',
   });
 
+  const hasSearch = searchQuery.trim().length > 0;
+
+  // ฝั่งพร้อมขาย: มีคำค้น = แสดงเฉพาะโพส status recommend ที่ตรงคำค้น (ไม่เอา sold มาแสดงฝั่งนี้)
   const recommendSource =
-    searchQuery.trim().length > 0
+    hasSearch
       ? {
-          posts: searchData.posts,
-          setPosts: searchData.setPosts,
+          posts: searchData.posts.filter((p: any) => p.status === 'recommend'),
+          setPosts: (fn: any) => {
+            searchData.setPosts((prev: any[]) => {
+              const recommendOnly = prev.filter((p: any) => p.status === 'recommend');
+              const next = typeof fn === 'function' ? fn(recommendOnly) : fn;
+              if (!Array.isArray(next)) return prev;
+              const byId = new Map(next.map((p: any) => [p.id, p]));
+              return prev.map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
+            });
+          },
           session: searchData.session,
           likedPosts: searchData.likedPosts,
           savedPosts: searchData.savedPosts,
@@ -103,8 +118,33 @@ export function HomePageContent() {
         }
       : recommendFeed;
 
-  const posts = tab === 'recommend' ? recommendSource.posts : soldListData.posts;
-  const postList = tab === 'recommend' ? recommendSource : soldListData;
+  // ฝั่งขายแล้ว: มีคำค้น = แสดงเฉพาะโพสขายแล้วที่ตรงคำค้น (กรองจากผลค้นหา), ไม่มีคำค้น = รายการขายแล้วทั้งหมด
+  const soldSource = hasSearch
+    ? {
+        posts: searchData.posts.filter((p: any) => p.status === 'sold'),
+        setPosts: (fn: any) => {
+          searchData.setPosts((prev: any[]) => {
+            const soldOnly = prev.filter((p: any) => p.status === 'sold');
+            const next = typeof fn === 'function' ? fn(soldOnly) : fn;
+            if (!Array.isArray(next)) return prev;
+            const byId = new Map(next.map((p: any) => [p.id, p]));
+            return prev.map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
+          });
+        },
+        session: searchData.session,
+        likedPosts: searchData.likedPosts,
+        savedPosts: searchData.savedPosts,
+        setLikedPosts: searchData.setLikedPosts,
+        setSavedPosts: searchData.setSavedPosts,
+        loadingMore: searchData.loading,
+        hasMore: false,
+        setPage: () => {},
+        fetchPosts: () => searchData.fetchSearch(),
+      }
+    : soldListData;
+
+  const posts = tab === 'recommend' ? recommendSource.posts : soldSource.posts;
+  const postList = tab === 'recommend' ? recommendSource : soldSource;
   postsRef.current = posts;
 
   useEffect(() => {
@@ -140,11 +180,11 @@ export function HomePageContent() {
   });
 
   useEffect(() => {
-    if (tab !== 'sold' || !sessionReady || soldListData.session === undefined) return;
+    if (tab !== 'sold' || !sessionReady || soldListData.session === undefined || hasSearch) return;
     soldListData.setPage(0);
     soldListData.setHasMore(true);
     soldListData.fetchPosts(true);
-  }, [tab, sessionReady, soldListData.session]);
+  }, [tab, sessionReady, soldListData.session, hasSearch]);
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -156,6 +196,8 @@ export function HomePageContent() {
     } else if (!postList.loadingMore) {
       setTabRefreshing(false);
       mainTab?.setTabRefreshing(false);
+      // เคลียร์ spinner บนแท็บด้วย (กรณีสลับมาแท็บขายแล้วที่มีคำค้น — โหลดอยู่แล้วจึงไม่เคย wasLoading)
+      mainTab?.setNavigatingToTab(null);
     }
   }, [postList.loadingMore, mainTab]);
 
@@ -187,9 +229,13 @@ export function HomePageContent() {
         recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
       }
     } else {
-      soldListData.setPage(0);
-      soldListData.setHasMore(true);
-      soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      if (searchQuery.trim()) {
+        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
+      } else {
+        soldListData.setPage(0);
+        soldListData.setHasMore(true);
+        soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      }
     }
   }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router, homeProvince]);
 
@@ -325,7 +371,7 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded) ? (
+        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded && !(tab === 'sold' && hasSearch)) ? (
           <FeedSkeleton />
         ) : (
           <PostFeed

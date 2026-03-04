@@ -50,13 +50,14 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
+  const [currentSession, setCurrentSession] = useState<any>(sessionReady ? session : undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
 
   useEffect(() => {
-    if (sessionReady) setCurrentSession(session ?? undefined);
+    // เมื่อ sessionReady = true ใช้ session ตรงๆ (รวม null = guest) เพื่อให้แท็บขายแล้วโหลดได้แม้ไม่ล็อกอิน
+    if (sessionReady) setCurrentSession(session);
     else setCurrentSession(undefined);
   }, [session, sessionReady]);
 
