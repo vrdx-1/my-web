@@ -270,6 +270,10 @@ const ProfileSectionComponent = ({
           <button
             type="button"
             onClick={onEditNameClick}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              onEditNameClick();
+            }}
             style={{
               background: 'none',
               border: 'none',
@@ -290,6 +294,10 @@ const ProfileSectionComponent = ({
           <button
             type="button"
             onClick={onEditPhoneClick}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              onEditPhoneClick();
+            }}
             style={{
               flex: 1,
               minWidth: 0,

@@ -14,6 +14,8 @@ interface UsePostListDataOptions {
   type: PostListType;
   userIdOrToken?: string;
   session?: any;
+  /** เมื่อ true = รู้แล้วว่าใครล็อกอิน แล้วค่อยโหลด (ใช้ session จาก context) */
+  sessionReady?: boolean;
   tab?: string;
   status?: string; // สำหรับ sold page
   loadAll?: boolean; // โหลดทั้งหมดครั้งเดียว (ใช้กับ saved/liked/my-posts)
@@ -42,7 +44,7 @@ interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, tab, status, loadAll = false } = options;
+  const { type, userIdOrToken, session, sessionReady = true, tab, status, loadAll = false } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -53,18 +55,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
 
-  // Initialize session
   useEffect(() => {
-    const initSession = async () => {
-      if (session === undefined) {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setCurrentSession(currentSession);
-      } else {
-        setCurrentSession(session);
-      }
-    };
-    initSession();
-  }, [session]);
+    if (sessionReady) setCurrentSession(session ?? undefined);
+    else setCurrentSession(undefined);
+  }, [session, sessionReady]);
 
   // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม)
   useEffect(() => {

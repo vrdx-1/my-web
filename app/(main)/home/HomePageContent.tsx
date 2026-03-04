@@ -26,6 +26,8 @@ import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
@@ -39,11 +41,12 @@ export function HomePageContent() {
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const [sessionState, setSessionState] = useState<any>(undefined);
   const postsRef = useRef<any[]>([]);
   const prevLoadingMoreRef = useRef(false);
   const [onlineStatusTick, setOnlineStatusTick] = useState(0);
 
+  const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
+  const { setFirstFeedLoaded } = useFirstFeedLoaded();
   const mainTab = useMainTabContext();
   const tab = mainTab?.homeTab ?? 'recommend';
   const homeProvince = useHomeProvince();
@@ -54,15 +57,25 @@ export function HomePageContent() {
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') ?? '';
 
-  const recommendFeed = useHomeFeed({ session: sessionState, province: selectedProvince });
+  const recommendFeed = useHomeFeed({
+    session,
+    sessionReady,
+    province: selectedProvince,
+    onInitialLoadDone: () => {
+      startSessionCheck();
+      setFirstFeedLoaded(true);
+    },
+  });
   const searchData = useSearchPosts({
     query: searchQuery,
     province: selectedProvince,
-    session: sessionState,
+    session,
+    sessionReady,
   });
   const soldListData = usePostListData({
     type: 'sold',
-    session: sessionState,
+    session,
+    sessionReady,
     status: 'sold',
   });
 
@@ -86,16 +99,6 @@ export function HomePageContent() {
   const posts = tab === 'recommend' ? recommendSource.posts : soldListData.posts;
   const postList = tab === 'recommend' ? recommendSource : soldListData;
   postsRef.current = posts;
-
-  // เลื่อนตรวจสอบ session ออกไปหนึ่งสเต็ป — ให้โหลดฟีดก่อน ส่วนที่ต้องใช้ session (แท็บขายแล้ว, search ฯลฯ) ค่อยอัปเดตทีหลัง
-  useEffect(() => {
-    const tid = setTimeout(() => {
-      import('@/lib/supabase').then(({ supabase }) => {
-        supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
-      });
-    }, 0);
-    return () => clearTimeout(tid);
-  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setOnlineStatusTick((t) => t + 1), 60 * 1000);
@@ -130,11 +133,11 @@ export function HomePageContent() {
   });
 
   useEffect(() => {
-    if (tab !== 'sold' || sessionState === undefined || soldListData.session === undefined) return;
+    if (tab !== 'sold' || !sessionReady || soldListData.session === undefined) return;
     soldListData.setPage(0);
     soldListData.setHasMore(true);
     soldListData.fetchPosts(true);
-  }, [tab, sessionState, soldListData.session]);
+  }, [tab, sessionReady, soldListData.session]);
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -315,7 +318,7 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {(posts.length === 0 && (postList.loadingMore || sessionState === undefined)) || (tabRefreshing && postList.loadingMore) ? (
+        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) ? (
           <FeedSkeleton />
         ) : (
           <PostFeed

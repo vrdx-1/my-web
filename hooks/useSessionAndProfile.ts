@@ -10,6 +10,8 @@ export function useSessionAndProfile() {
   const ctx = useSessionProfileContext();
   return {
     session: ctx?.session ?? null,
+    sessionReady: ctx?.sessionReady ?? false,
     userProfile: ctx?.userProfile ?? null,
+    startSessionCheck: ctx?.startSessionCheck ?? (() => {}),
   };
 }

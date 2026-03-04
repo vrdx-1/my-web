@@ -3,9 +3,6 @@ import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
-/** ถ้าไม่ใช้งาน (แท็บถูกซ่อน/ไม่โฟกัส) เกิน N วินาที เมื่อกลับมาจะจบ session เดิมและสร้างแถวใหม่ */
-const SESSION_INACTIVITY_SECONDS = 1;
-
 export default function VisitorTracker() {
   const pathname = usePathname()
   const supabase = createBrowserClient(
@@ -13,23 +10,14 @@ export default function VisitorTracker() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastHiddenAtRef = useRef<number>(0);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let currentUserId: string | null = null;
     const now = () => new Date().toISOString();
 
-    /** อัปเดตทั้ง profiles.last_seen และ user_sessions.last_seen_at แบบเดียวกับ last_seen (เรียกพร้อมกัน) */
+    /** อัปเดต profiles.last_seen */
     const updatePresenceNow = () => {
-      const sessionId = sessionStorage.getItem('current_session_id');
-      if (sessionId) {
-        supabase
-          .from('user_sessions')
-          .update({ last_seen_at: now() })
-          .eq('id', sessionId)
-          .then(() => {});
-      }
       if (currentUserId) {
         supabase
           .from('profiles')
@@ -56,17 +44,6 @@ export default function VisitorTracker() {
 
     const applyUserPresence = (user: { id: string } | null) => {
       currentUserId = user?.id ?? null;
-      if (user?.id) {
-        const sessionId = sessionStorage.getItem('current_session_id');
-        if (sessionId) {
-          const origin = typeof window !== 'undefined' ? window.location.origin : '';
-          fetch(`${origin}/api/session-link-user`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId, user_id: user.id }),
-          }).catch(() => {});
-        }
-      }
     };
 
     /** อัปเดต last_seen เฉยๆ (ใช้เมื่ออยู่หน้า admin เพื่อให้สถานะออนไลน์ยังขึ้น) */
@@ -78,48 +55,6 @@ export default function VisitorTracker() {
       } catch (_) {
         // ignore
       }
-    };
-
-    /** สร้างแถว session ใหม่ใน DB ผ่าน API (service_role ไม่ติด RLS) แล้วเก็บ id ลง sessionStorage */
-    const createNewSession = async (): Promise<boolean> => {
-      let vId = localStorage.getItem('visitor_id');
-      if (!vId) {
-        vId = crypto.randomUUID();
-        localStorage.setItem('visitor_id', vId);
-      }
-      const { data: { user } } = await supabase.auth.getUser();
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const res = await fetch(`${origin}/api/session-start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          visitor_id: vId,
-          user_id: user?.id ?? null,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err?.error || err?.message || res.statusText;
-        // 503 มักมาจาก SUPABASE_SERVICE_ROLE_KEY ไม่ได้ตั้งบน Vercel — แจ้งแค่ใน dev หรือครั้งเดียว
-        if (res.status === 503 && typeof window !== 'undefined') {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[VisitorTracker] session-start 503 — ตั้ง SUPABASE_SERVICE_ROLE_KEY บน Vercel (ดู README)');
-          }
-        } else {
-          console.error('[VisitorTracker] session-start ล้มเหลว:', res.status, msg);
-        }
-        return false;
-      }
-      const data = await res.json();
-      if (data?.sessionId && data?.started_at) {
-        sessionStorage.setItem('current_session_id', data.sessionId);
-        sessionStorage.setItem('current_session_started_at', data.started_at);
-        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-          console.log('[VisitorTracker] session created:', data.sessionId);
-        }
-        return true;
-      }
-      return false;
     };
 
     const track = async () => {
@@ -138,20 +73,18 @@ export default function VisitorTracker() {
           isFirstVisit = true;
         }
 
-        if (!sessionStorage.getItem('current_session_id')) {
-          await createNewSession();
-        }
         startPresenceHeartbeat();
+
+        const { data: { user } } = await supabase.auth.getUser();
+        applyUserPresence(user ?? null);
 
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
+          user_id: user?.id ?? null,
           page_path: window.location.pathname,
           user_agent: navigator.userAgent,
           is_first_visit: isFirstVisit
         });
-
-        const { data: { user } } = await supabase.auth.getUser();
-        applyUserPresence(user ?? null);
 
         channel = supabase.channel('active_users', {
           config: { presence: { key: vId } }
@@ -173,7 +106,18 @@ export default function VisitorTracker() {
       }
     };
 
-    track();
+    // ทำหลังหน้าโหลดเสร็จหรือเบราว์เซอร์ว่าง — ไม่แข่งกับโหลดฟีด
+    const scheduleTrack = () => {
+      if (typeof requestIdleCallback !== 'undefined') {
+        return requestIdleCallback(() => { track(); }, { timeout: 3000 });
+      }
+      return window.setTimeout(() => { track(); }, 1500) as unknown as number;
+    };
+    const cancelScheduled = (id: number) => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+    const scheduledId = scheduleTrack();
 
     const lateTouch = setTimeout(() => {
       supabase.auth.getUser().then(({ data: { user } }) => {
@@ -187,33 +131,15 @@ export default function VisitorTracker() {
     });
 
     const onVisibilityChange = () => {
-      if (document.hidden) {
-        lastHiddenAtRef.current = Date.now();
-        return;
-      }
       if (!document.hidden && typeof window !== 'undefined') {
         updatePresenceNow();
-        const sessionId = sessionStorage.getItem('current_session_id');
-        if (!sessionId) return;
-        const inactiveMs = Date.now() - lastHiddenAtRef.current;
-        const thresholdMs = SESSION_INACTIVITY_SECONDS * 1000;
-        if (lastHiddenAtRef.current > 0 && inactiveMs >= thresholdMs) {
-          sessionStorage.removeItem('current_session_id');
-          sessionStorage.removeItem('current_session_started_at');
-          createNewSession().then((created) => {
-            if (created) {
-              supabase.auth.getUser().then(({ data: { user } }) => {
-                if (user?.id) applyUserPresence(user);
-              });
-            }
-          });
-        }
       }
     };
 
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
+      cancelScheduled(scheduledId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(lateTouch);
       subscription.unsubscribe();

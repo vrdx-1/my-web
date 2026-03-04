@@ -36,7 +36,12 @@ export function useEditProfilePage() {
       } else {
         setAvatarUrl(getDisplayAvatarUrl(rawAvatar) || '');
       }
-      setPhone(data.phone || '');
+      const rawPhone = data.phone || '';
+      if (rawPhone.startsWith('85620') && rawPhone.length === 13) {
+        setPhone('020' + rawPhone.slice(5));
+      } else {
+        setPhone(rawPhone);
+      }
     }
     setProfileLoading(false);
   }, []);
@@ -85,7 +90,11 @@ export function useEditProfilePage() {
   const savePhone = useCallback(async (phoneNum: string) => {
     const uid = userId ?? userIdRef.current;
     if (!uid) return;
-    const { error } = await supabase.from('profiles').update({ phone: phoneNum }).eq('id', uid);
+    const valueToSave =
+      phoneNum.startsWith('020') && phoneNum.length === 11
+        ? '85620' + phoneNum.slice(3)
+        : phoneNum;
+    const { error } = await supabase.from('profiles').update({ phone: valueToSave }).eq('id', uid);
     if (!error) {
       setPhone(phoneNum);
       setIsEditingPhone(false);

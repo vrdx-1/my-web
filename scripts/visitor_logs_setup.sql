@@ -8,6 +8,7 @@
 CREATE TABLE IF NOT EXISTS public.visitor_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   visitor_id text NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   page_path text,
   user_agent text,
   is_first_visit boolean NOT NULL DEFAULT true,
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.visitor_logs (
 CREATE INDEX IF NOT EXISTS idx_visitor_logs_created_at ON public.visitor_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_visitor_logs_visitor_id ON public.visitor_logs (visitor_id);
 CREATE INDEX IF NOT EXISTS idx_visitor_logs_is_first_visit ON public.visitor_logs (is_first_visit);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_user_id ON public.visitor_logs (user_id);
 
 -- 2) เปิดใช้ RLS
 ALTER TABLE public.visitor_logs ENABLE ROW LEVEL SECURITY;

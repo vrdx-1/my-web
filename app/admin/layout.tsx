@@ -77,14 +77,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'First Time Visit', path: '/admin/first-time-visit' },
     { name: 'All Post', path: '/admin/post' },
     { name: 'Top User', path: '/admin/top-user' },
-    { name: 'User Device', path: '/admin/user-device' },
-    { name: 'Guest User Device', path: '/admin/guest-user-device' },
     { name: 'Search History', path: '/admin/search-history' },
     { name: 'Online Status', path: '/admin/online-status' },
-    { name: 'Top Online', path: '/admin/top-online' },
     { name: 'Visits per Day', path: '/admin/visits-per-day' },
     { name: 'Website Traffic', path: '/admin/website-traffic' },
-    { name: 'User Sessions', path: '/admin/user-sessions' },
   ];
 
   return (

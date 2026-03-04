@@ -2,6 +2,7 @@
 
 import { MainTabProvider } from '@/contexts/MainTabContext';
 import { HomeProvinceProvider } from '@/contexts/HomeProvinceContext';
+import { FirstFeedLoadedProvider } from '@/contexts/FirstFeedLoadedContext';
 import { MainTabLayoutClient } from './MainTabLayoutClient';
 
 /**
@@ -12,7 +13,9 @@ export default function MainTabLayout({ children }: { children: React.ReactNode 
   return (
     <MainTabProvider>
       <HomeProvinceProvider>
-        <MainTabLayoutClient>{children}</MainTabLayoutClient>
+        <FirstFeedLoadedProvider>
+          <MainTabLayoutClient>{children}</MainTabLayoutClient>
+        </FirstFeedLoadedProvider>
       </HomeProvinceProvider>
     </MainTabProvider>
   );

@@ -12,6 +12,7 @@ import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -97,7 +98,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     mainTab?.navigatingToTab ??
     (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? mainTab?.homeTab ?? null : null);
 
-  const showHomeHeader = pathname === '/home';
+  const { firstFeedLoaded } = useFirstFeedLoaded();
+  /** หน้าโฮม: แสดงแถบหัวและแท็บหลังโหลดโพสต์แรกเสร็จ */
+  const showHomeHeader = pathname === '/home' && firstFeedLoaded;
 
   /** ความสูงรวมของ fixed block: header (~59) + tab bar (~45) */
   const HOME_FIXED_BLOCK_HEIGHT = 104;

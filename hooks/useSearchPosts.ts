@@ -8,6 +8,7 @@ interface UseSearchPostsOptions {
   query: string;
   province?: string;
   session?: any;
+  sessionReady?: boolean;
 }
 
 interface UseSearchPostsReturn {
@@ -23,7 +24,7 @@ interface UseSearchPostsReturn {
 }
 
 export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsReturn {
-  const { query, province, session } = options;
+  const { query, province, session, sessionReady = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
@@ -31,15 +32,11 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    if (session === undefined) {
-      supabase.auth.getSession().then(({ data: { session: s } }) => setCurrentSession(s));
-    } else {
-      setCurrentSession(session);
-    }
+    setCurrentSession(session ?? undefined);
   }, [session]);
 
   useEffect(() => {
-    if (currentSession === undefined) return;
+    if (!sessionReady || currentSession === undefined) return;
     let idOrToken: string | null = null;
     if (currentSession?.user?.id) {
       const uid = currentSession.user.id;
@@ -74,7 +71,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
-  }, [currentSession]);
+  }, [sessionReady, currentSession]);
 
   const fetchSearch = useCallback(async () => {
     if (currentSession === undefined) return;

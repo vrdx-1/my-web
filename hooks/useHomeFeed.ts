@@ -10,8 +10,12 @@ const FEED_CACHE_KEY = 'home_feed_cache';
 
 interface UseHomeFeedOptions {
   session?: any;
+  /** เมื่อ true = รู้แล้วว่าใครล็อกอิน/เกสต์ แล้วค่อยโหลดไลก์/เซฟ */
+  sessionReady?: boolean;
   /** แขวงที่เลือกจากฟิลเตอร์หน้า Home — ว่าง = แสดงทุกแขวง */
   province?: string;
+  /** เรียกครั้งเดียวเมื่อโหลดโพสต์ชุดแรกเสร็จ (จาก cache หรือ API) */
+  onInitialLoadDone?: () => void;
 }
 
 interface UseHomeFeedReturn {
@@ -32,7 +36,7 @@ interface UseHomeFeedReturn {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
-  const { session, province } = options;
+  const { session, sessionReady = true, province, onInitialLoadDone } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -41,19 +45,20 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
+  const initialLoadDoneFiredRef = useRef(false);
 
-  // เลื่อนตรวจสอบ session ออกไปหนึ่งสเต็ป — ให้โหลดฟีดก่อน แล้วไลก์/เซฟค่อยอัปเดตทีหลัง
+  const fireInitialLoadDone = useCallback(() => {
+    if (initialLoadDoneFiredRef.current) return;
+    initialLoadDoneFiredRef.current = true;
+    onInitialLoadDone?.();
+  }, [onInitialLoadDone]);
+
   useEffect(() => {
-    if (session === undefined) {
-      const tid = setTimeout(() => {
-        supabase.auth.getSession().then(({ data: { session: s } }) => setCurrentSession(s));
-      }, 0);
-      return () => clearTimeout(tid);
-    }
-    setCurrentSession(session);
+    setCurrentSession(session ?? undefined);
   }, [session]);
 
   useEffect(() => {
+    if (!sessionReady) return;
     if (currentSession === undefined) return;
     let idOrToken: string | null = null;
     if (currentSession?.user?.id) {
@@ -89,7 +94,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
-  }, [currentSession]);
+  }, [sessionReady, currentSession]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
@@ -118,7 +123,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       setHasMore(nextHasMore);
 
       if (postIds.length === 0) {
-        if (isInitial) setPosts([]);
+        if (isInitial) {
+          setPosts([]);
+          fireInitialLoadDone();
+        }
         setLoadingMore(false);
         return;
       }
@@ -149,6 +157,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
       if (isInitial) {
         setPosts(ordered);
+        fireInitialLoadDone();
         // หลังผู้ใช้โพสต์: แปะโพสต์ของตัวเองบนสุดของ feed (เหนือ Ad / รายการอื่น) จนกว่าจะ refresh
         const justPostedId =
           typeof window !== 'undefined' ? window.localStorage.getItem('just_posted_post_id') : null;
@@ -191,7 +200,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } finally {
       if (fetchIdRef.current === currentFetchId) setLoadingMore(false);
     }
-  }, [page, loadingMore, province]);
+  }, [page, loadingMore, province, fireInitialLoadDone]);
   const fetchPostsRef = useRef(fetchPosts);
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
   const initialLoadFromCacheRef = useRef(false);
@@ -225,6 +234,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;
+              if (onInitialLoadDone && !initialLoadDoneFiredRef.current) {
+                initialLoadDoneFiredRef.current = true;
+                onInitialLoadDone();
+              }
             }
           }
         }

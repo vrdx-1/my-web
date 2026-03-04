@@ -49,67 +49,65 @@ export default function AdminVisitsPerDayPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Registered: user_sessions with user_id, count per user_id (within timeframe), join profiles
-      let registeredQuery = supabase
-        .from('user_sessions')
-        .select('user_id')
-        .not('user_id', 'is', null);
-      registeredQuery = applyDateFilter(registeredQuery, filter, 'started_at');
-      const { data: sessionsData, error: sessionsError } = await registeredQuery;
+      setRegisteredList([]);
+      setGuestList([]);
 
-      if (sessionsError) throw sessionsError;
+      // ดึง visitor_logs (มี user_id = ผู้ใช้ลงทะเบียน, ไม่มี = แขก)
+      let query = supabase
+        .from('visitor_logs')
+        .select('visitor_id, created_at, user_id')
+        .order('created_at', { ascending: false });
 
-      const countByUserId: Record<string, number> = {};
-      (sessionsData || []).forEach((row: { user_id: string }) => {
-        const uid = String(row.user_id ?? '').trim();
-        if (uid) countByUserId[uid] = (countByUserId[uid] ?? 0) + 1;
+      query = applyDateFilter(query, filter);
+      const { data: logs, error } = await query;
+
+      if (error) throw error;
+
+      type LogRow = { visitor_id: string; created_at: string; user_id: string | null };
+      const rawRows = (logs as LogRow[]) || [];
+
+      // Registered: แถวที่มี user_id → นับต่อ user_id แล้วดึง profiles
+      const registeredCounts = new Map<string, number>();
+      const guestCounts = new Map<string, number>();
+      rawRows.forEach((row) => {
+        if (row.user_id) {
+          registeredCounts.set(row.user_id, (registeredCounts.get(row.user_id) ?? 0) + 1);
+        } else {
+          guestCounts.set(row.visitor_id, (guestCounts.get(row.visitor_id) ?? 0) + 1);
+        }
       });
 
-      const userIds = Object.keys(countByUserId);
-      if (userIds.length > 0) {
+      const guestListData: GuestRow[] = Array.from(guestCounts.entries())
+        .map(([visitor_id, visitCount]) => ({ visitor_id, visitCount }))
+        .sort((a, b) => b.visitCount - a.visitCount);
+      setGuestList(guestListData);
+
+      const userIds = Array.from(registeredCounts.keys());
+      if (userIds.length === 0) {
+        setRegisteredList([]);
+      } else {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
-          .in('id', userIds)
-          .order('username', { ascending: true, nullsFirst: false });
-
+          .in('id', userIds);
         if (profilesError) throw profilesError;
-        const profiles = (profilesData as ProfileRow[]) || [];
-        setRegisteredList(
-          profiles
-            .map((p) => ({
-              id: p.id,
-              username: p.username,
-              avatar_url: p.avatar_url,
-              visitCount: countByUserId[p.id] ?? 0,
-            }))
-            .sort((a, b) => b.visitCount - a.visitCount)
-        );
-      } else {
-        setRegisteredList([]);
+        const profilesMap = new Map<string | null, { username: string | null; avatar_url: string | null }>();
+        (profilesData || []).forEach((p: { id: string; username: string | null; avatar_url: string | null }) => {
+          profilesMap.set(p.id, { username: p.username, avatar_url: p.avatar_url });
+        });
+        const registeredListData: RegisteredRow[] = userIds
+          .map((id) => {
+            const profile = profilesMap.get(id);
+            return {
+              id,
+              username: profile?.username ?? null,
+              avatar_url: profile?.avatar_url ?? null,
+              visitCount: registeredCounts.get(id) ?? 0,
+            };
+          })
+          .sort((a, b) => b.visitCount - a.visitCount);
+        setRegisteredList(registeredListData);
       }
-
-      // Guest: user_sessions where user_id is null, count per visitor_id (within timeframe)
-      let guestQuery = supabase
-        .from('user_sessions')
-        .select('visitor_id')
-        .is('user_id', null);
-      guestQuery = applyDateFilter(guestQuery, filter, 'started_at');
-      const { data: guestSessionsData, error: guestSessionsError } = await guestQuery;
-
-      if (guestSessionsError) throw guestSessionsError;
-
-      const countByVisitorId: Record<string, number> = {};
-      (guestSessionsData || []).forEach((row: { visitor_id: string }) => {
-        const vid = String(row.visitor_id ?? '').trim();
-        if (vid) countByVisitorId[vid] = (countByVisitorId[vid] ?? 0) + 1;
-      });
-
-      setGuestList(
-        Object.entries(countByVisitorId)
-          .map(([visitor_id, visitCount]) => ({ visitor_id, visitCount }))
-          .sort((a, b) => b.visitCount - a.visitCount)
-      );
     } catch (err) {
       console.error('Fetch visits per day error:', err);
       setRegisteredList([]);
