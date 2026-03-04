@@ -8,7 +8,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
 import { ProvinceDropdown } from '@/components/ProvinceDropdown';
 import { LAO_FONT } from '@/utils/constants';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { LAYOUT_CONSTANTS, PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { useEditPostPage } from './useEditPostPage';
 
 const REMOVE_BTN = {
@@ -156,6 +156,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             images={[...images, ...imageUpload.previews]}
             onPostClick={() => setIsViewing(true)}
             layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
+            gap={PHOTO_GRID_GAP}
           />
         )}
         <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />

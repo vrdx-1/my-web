@@ -230,13 +230,32 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           if (parsed && parsed.province === province && Array.isArray(parsed.posts)) {
             const age = Date.now() - (parsed.ts || 0);
             if (age < FEED_CACHE_MAX_AGE_MS) {
-              setPosts(parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE));
+              const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
+              setPosts(cachedPosts);
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;
               if (onInitialLoadDone && !initialLoadDoneFiredRef.current) {
                 initialLoadDoneFiredRef.current = true;
                 onInitialLoadDone();
+              }
+              // แสดงโพสที่เพิ่งโพสทันทีเมื่อกลับจาก create-post (ไม่ต้องรอ background fetch)
+              const justPostedId = typeof window !== 'undefined' ? window.localStorage.getItem('just_posted_post_id') : null;
+              if (justPostedId && justPostedId.trim() !== '') {
+                supabase
+                  .from('cars')
+                  .select(POST_WITH_PROFILE_SELECT)
+                  .eq('id', justPostedId.trim())
+                  .maybeSingle()
+                  .then(({ data: justPost }) => {
+                    if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
+                      setPosts((prev) => {
+                        const hasIt = prev.some((p: any) => String(p.id) === String(justPostedId));
+                        if (hasIt) return prev;
+                        return [justPost, ...prev];
+                      });
+                    }
+                  });
               }
             }
           }

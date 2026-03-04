@@ -181,7 +181,6 @@ export function useCreatePostUpload({
       }
 
       router.push('/');
-      router.refresh();
     } catch (err: any) {
       console.error(err.message);
       setIsUploading(false);

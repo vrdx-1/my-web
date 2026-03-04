@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
 interface LayoutPreviewSelectorProps {
   selectedLayout: string;
@@ -8,7 +9,7 @@ interface LayoutPreviewSelectorProps {
   previews: string[];
 }
 
-type LayoutType = 'default' | 'five-images' | 'five-images-side' | 'three-images';
+type LayoutType = 'default' | 'five-images' | 'five-images-side' | 'car-gallery' | 'three-images';
 
 interface LayoutPreview {
   id: LayoutType;
@@ -33,7 +34,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gridTemplateRows: '1fr 1fr',
-              gap: '4px',
+              gap: PHOTO_GRID_GAP,
               width: '100%',
               height: '100%',
               background: '#ffffff',
@@ -60,7 +61,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
             style={{
               display: 'grid',
               gridTemplateColumns: '1.5fr 1fr',
-              gap: '4px',
+              gap: PHOTO_GRID_GAP,
               width: '100%',
               height: '100%',
               background: '#ffffff',
@@ -70,7 +71,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
               style={{
                 display: 'grid',
                 gridTemplateRows: '1fr 1fr',
-                gap: '4px',
+                gap: PHOTO_GRID_GAP,
                 background: '#ffffff',
               }}
             >
@@ -89,7 +90,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
               style={{
                 display: 'grid',
                 gridTemplateRows: '1fr 1fr 1fr',
-                gap: '4px',
+                gap: PHOTO_GRID_GAP,
                 background: '#ffffff',
               }}
             >
@@ -108,6 +109,60 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
         ),
       },
       {
+        id: 'car-gallery',
+        name: 'Car Gallery',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: PHOTO_GRID_GAP,
+              width: '100%',
+              height: '100%',
+              background: '#ffffff',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                background: '#ffffff',
+              }}
+            >
+              {[0, 1].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                background: '#ffffff',
+              }}
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ),
+      },
+      {
         id: 'five-images',
         name: '5 รูป',
         render: () => (
@@ -115,7 +170,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '4px',
+              gap: PHOTO_GRID_GAP,
               width: '100%',
               height: '100%',
               background: '#ffffff',
@@ -136,7 +191,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 gridColumn: 'span 2',
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '4px',
+                gap: PHOTO_GRID_GAP,
                 background: '#ffffff',
               }}
             >
@@ -162,7 +217,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '4px',
+              gap: PHOTO_GRID_GAP,
               width: '100%',
               height: '100%',
               background: '#ffffff',
@@ -179,7 +234,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
               style={{
                 display: 'grid',
                 gridTemplateRows: '1fr 1fr',
-                gap: '4px',
+                gap: PHOTO_GRID_GAP,
                 background: '#ffffff',
               }}
             >

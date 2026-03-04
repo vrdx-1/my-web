@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
+import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { PostCardMenu } from './PostCardMenu';
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
@@ -82,6 +83,40 @@ export const PostCard = React.memo<PostCardProps>(({
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef<Set<string>>(new Set());
+  const captionRef = React.useRef<HTMLDivElement>(null);
+  const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const selectAllCaption = React.useCallback(() => {
+    const el = captionRef.current;
+    if (!el) return;
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }, []);
+
+  const handleCaptionContextMenu = React.useCallback((e: React.MouseEvent) => {
+    selectAllCaption();
+  }, [selectAllCaption]);
+
+  const handleCaptionTouchStart = React.useCallback(() => {
+    longPressTimerRef.current = setTimeout(selectAllCaption, 500);
+  }, [selectAllCaption]);
+
+  const handleCaptionTouchEnd = React.useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+  }, []);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo;
@@ -219,13 +254,32 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
       </div>
 
-      {/* Caption */}
-      <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap', color: '#111111', fontWeight: 500 }}>
+      {/* Caption — long-press / right-click เลือกข้อความทั้งหมดเพื่อ copy ได้ */}
+      <div
+        ref={captionRef}
+        role="text"
+        style={{
+          padding: '0 15px 10px 15px',
+          fontSize: '15px',
+          lineHeight: '1.4',
+          whiteSpace: 'pre-wrap',
+          color: '#111111',
+          fontWeight: 500,
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+        }}
+        onContextMenu={handleCaptionContextMenu}
+        onTouchStart={handleCaptionTouchStart}
+        onTouchEnd={handleCaptionTouchEnd}
+        onTouchCancel={handleCaptionTouchEnd}
+      >
         {post.caption}
       </div>
 
-      {/* Photo Grid — priority = โพสแรกในฟีด เพื่อ LCP */}
-      <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} layout={post.layout || 'default'} />
+      {/* Photo Grid — ความกว้างเท่า caption (padding 0 15px), gap เท่ากับ layout 2×2 ทุกแบบ */}
+      <div style={{ padding: '0 15px' }}>
+        <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
+      </div>
 
       {/* Post Actions */}
       <div style={{ borderTop: '1px solid #f0f2f5' }}>

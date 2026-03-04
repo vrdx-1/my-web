@@ -6,6 +6,7 @@ import { createBrowserClient } from '@supabase/ssr'; // แก้เป็นต
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [updateCounts, setUpdateCounts] = useState<Record<string, number>>({});
   /** จำนวนที่แอดมิน "ดูไปแล้ว" ต่อ path — ใช้ซ่อน badge จนกว่าจะมีรายการใหม่ (เก็บใน localStorage ให้อยู่หลัง refresh) */
   const [lastSeenCounts, setLastSeenCounts] = useState<Record<string, number>>(() => {
@@ -17,6 +18,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return {};
     }
   });
+
+  // ตรวจสอบว่าแอดมิน login แล้วหรือไม่ — ถ้ายังไม่ login ไม่แสดง sidebar
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const check = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        setIsAdminLoggedIn(false);
+        return;
+      }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      setIsAdminLoggedIn(profile?.role === 'admin');
+    };
+    check();
+  }, []);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -85,7 +104,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar คงที่อยู่ด้านซ้าย */}
+      {/* Sidebar แสดงเฉพาะเมื่อแอดมิน login แล้ว */}
+      {isAdminLoggedIn && (
       <aside style={{ 
         width: '250px', 
         background: '#fff', 
@@ -166,9 +186,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           Log out
         </button>
       </aside>
+      )}
 
       {/* พื้นที่แสดงเนื้อหาฝั่งขวา */}
-      <main style={{ flex: 1, marginLeft: '250px', padding: '40px', background: '#f8f9fa' }}>
+      <main style={{ flex: 1, marginLeft: isAdminLoggedIn ? '250px' : 0, padding: '40px', background: '#f8f9fa' }}>
         {children}
       </main>
     </div>

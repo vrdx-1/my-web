@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
 const photoGridShimmerStyle: React.CSSProperties = {
   position: 'absolute',
@@ -54,15 +55,19 @@ interface PhotoGridProps {
   onPostClick: (imageIndex: number) => void;
   /** เมื่อ true รูปแรกใช้ loading="eager" สำหรับ LCP (โพสแรกในฟีด) */
   priority?: boolean;
-  /** Layout สำหรับ 6+ รูป: 'default' | 'five-images' | 'five-images-side' | 'three-images' */
+  /** Layout สำหรับ 6+ รูป: 'default' | 'five-images' | 'five-images-side' | 'car-gallery' | 'three-images' */
   layout?: string;
+  /** Gap เส้นแบ่งรูป — ไม่ใส่ใช้ค่าเดียวกับ layout 2×2 (PHOTO_GRID_GAP) */
+  gap?: string;
 }
 
 /**
  * Optimized PhotoGrid with lazy loading. First card in feed uses priority for LCP.
  * แสดง Skeleton (shimmer) ในพื้นที่รูปจนกว่ารูปโหลดเสร็จ
  */
-export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false, layout = 'default' }) => {
+export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false, layout = 'default', gap = PHOTO_GRID_GAP }) => {
+  // ใช้ rowGap/columnGap เดียวกันทุก layout — ให้เส้นแบ่งรูปเท่ากับ 2×2 จริง
+  const gridGap = { rowGap: gap, columnGap: gap };
   // Defensive: some rows may return images as a JSON string (e.g. '["url1","url2"]').
   // Normalize to string[] to avoid rendering broken src like '[' / '"'.
   const normalizedImages: string[] = (() => {
@@ -137,7 +142,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     return (
       <>
         {shimmerStyleTag}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
           <ImageWithSkeleton
             src={normalizedImages[0]}
             imageIndex={0}
@@ -165,7 +170,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     return (
       <>
         {shimmerStyleTag}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
           <div style={{ gridRow: 'span 2' }}>
             <ImageWithSkeleton
               src={normalizedImages[0]}
@@ -177,7 +182,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
             <ImageWithSkeleton
               src={normalizedImages[1]}
               imageIndex={1}
@@ -205,7 +210,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     return (
       <>
         {shimmerStyleTag}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
           {normalizedImages.map((img, i) => (
             <ImageWithSkeleton
               key={i}
@@ -230,7 +235,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           {shimmerStyleTag}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
             {normalizedImages.slice(0, 4).map((img, i) => (
               <div
                 key={i}
@@ -283,7 +288,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           {shimmerStyleTag}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
             {normalizedImages.slice(0, 2).map((img, i) => (
               <div
                 key={i}
@@ -306,7 +311,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 />
               </div>
             ))}
-            <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+            <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
               {normalizedImages.slice(2, 5).map((img, i) => {
                 const idx = i + 2;
                 return (
@@ -362,8 +367,8 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           {shimmerStyleTag}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '4px', cursor: 'pointer' }}>
-            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', ...gridGap, cursor: 'pointer' }}>
+            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
               {normalizedImages.slice(0, 2).map((img, i) => (
                 <div
                   key={i}
@@ -387,7 +392,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', gap: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', ...gridGap }}>
               {normalizedImages.slice(2, 5).map((img, i) => {
                 const idx = i + 2;
                 return (
@@ -438,12 +443,103 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       );
     }
 
+    // Layout: car-gallery (ซ้าย 2 รูปใหญ่สี่เหลี่ยมจัตุรัสเท่ากัน, ขวา 3 รูปเล็กสี่เหลี่ยม — ตามภาพ template)
+    if (layout === 'car-gallery') {
+      return (
+        <>
+          {shimmerStyleTag}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              ...gridGap,
+              cursor: 'pointer',
+              aspectRatio: '1',
+              width: '100%',
+            }}
+          >
+            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap, minHeight: 0 }}>
+              {normalizedImages.slice(0, 2).map((img, i) => (
+                <div
+                  key={i}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    minHeight: 0,
+                  }}
+                  onClick={() => onPostClick(i)}
+                >
+                  <ImageWithSkeleton
+                    src={img}
+                    imageIndex={i}
+                    onPostClick={onPostClick}
+                    loading={i === 0 ? firstImageLoading : 'lazy'}
+                    fetchPriority={i === 0 && priority ? 'high' : undefined}
+                    containerStyle={{ position: 'absolute', inset: 0 }}
+                    imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', ...gridGap, minHeight: 0 }}>
+              {normalizedImages.slice(2, 5).map((img, i) => {
+                const idx = i + 2;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      minHeight: 0,
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                    }}
+                    onClick={() => onPostClick(idx)}
+                  >
+                    <ImageWithSkeleton
+                      src={img}
+                      imageIndex={idx}
+                      onPostClick={onPostClick}
+                      loading="lazy"
+                      containerStyle={{ position: 'absolute', inset: 0 }}
+                      imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                    />
+                    {idx === 4 && count > 5 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '24px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          WebkitTextStroke: '3px #000',
+                          paintOrder: 'stroke fill',
+                          pointerEvents: 'none',
+                          zIndex: 1,
+                        }}
+                      >
+                        +{count - 5}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      );
+    }
+
     // Layout: three-images (ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก - เหมือนตอน post 3 รูป)
     if (layout === 'three-images') {
       return (
         <>
           {shimmerStyleTag}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer', position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative' }}>
             <div style={{ gridRow: 'span 2' }}>
               <ImageWithSkeleton
                 src={normalizedImages[0]}
@@ -455,7 +551,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
               {normalizedImages.slice(1, 3).map((img, i) => {
                 const idx = i + 1;
                 return (
@@ -509,7 +605,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
   return (
     <>
       {shimmerStyleTag}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', cursor: 'pointer' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
         {normalizedImages.slice(0, 2).map((img, i) => (
           <ImageWithSkeleton
             key={i}
@@ -522,7 +618,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imgStyle={baseImgStyle}
           />
         ))}
-        <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+        <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
           {normalizedImages.slice(2, 5).map((img, i) => {
             const idx = i + 2;
             return (

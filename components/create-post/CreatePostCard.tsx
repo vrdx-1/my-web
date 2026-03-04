@@ -4,6 +4,7 @@ import React from 'react';
 import { Avatar } from '@/components/Avatar';
 import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
 import { LayoutPreviewSelector } from './LayoutPreviewSelector';
+import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
 interface CreatePostCardProps {
   userProfile: any;
@@ -223,6 +224,7 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               onRemoveImage={onRemoveImage}
               showRemoveButton={false}
               layout={previews.length >= 6 ? layout : 'default'}
+              gap={PHOTO_GRID_GAP}
             />
             {previews.length >= 6 && (
               <LayoutPreviewSelector
