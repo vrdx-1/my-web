@@ -25,6 +25,34 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
 
     const layouts: LayoutPreview[] = [
       {
+        id: 'default',
+        name: 'Default',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gridTemplateRows: '1fr 1fr',
+              gap: '4px',
+              width: '100%',
+              height: '100%',
+              background: '#ffffff',
+            }}
+          >
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  aspectRatio: '1',
+                  background: '#b3d9e6',
+                  borderRadius: '2px',
+                }}
+              />
+            ))}
+          </div>
+        ),
+      },
+      {
         id: 'five-images-side',
         name: '5 รูป',
         render: () => (
@@ -76,34 +104,6 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 />
               ))}
             </div>
-          </div>
-        ),
-      },
-      {
-        id: 'default',
-        name: 'Default',
-        render: () => (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gridTemplateRows: '1fr 1fr',
-              gap: '4px',
-              width: '100%',
-              height: '100%',
-              background: '#ffffff',
-            }}
-          >
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                style={{
-                  aspectRatio: '1',
-                  background: '#b3d9e6',
-                  borderRadius: '2px',
-                }}
-              />
-            ))}
           </div>
         ),
       },

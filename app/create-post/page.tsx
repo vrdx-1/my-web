@@ -33,7 +33,7 @@ export default function CreatePost() {
   const [step, setStep] = useState(2);
   const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
-  const [layout, setLayout] = useState('five-images-side');
+  const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
   // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
   const imageUpload = useImageUpload({

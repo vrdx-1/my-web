@@ -46,7 +46,7 @@ export function HomePageContent() {
   const [onlineStatusTick, setOnlineStatusTick] = useState(0);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
-  const { setFirstFeedLoaded } = useFirstFeedLoaded();
+  const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
   const mainTab = useMainTabContext();
   const tab = mainTab?.homeTab ?? 'recommend';
   const homeProvince = useHomeProvince();
@@ -56,6 +56,13 @@ export function HomePageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') ?? '';
+
+  // ทุกครั้งที่กดค้นหา → default แสดงฝั่งพร้อมขายเสมอ
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      mainTab?.setHomeTab('recommend');
+    }
+  }, [searchQuery, mainTab]);
 
   const recommendFeed = useHomeFeed({
     session,
@@ -318,7 +325,7 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) ? (
+        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded) ? (
           <FeedSkeleton />
         ) : (
           <PostFeed

@@ -230,7 +230,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           if (parsed && parsed.province === province && Array.isArray(parsed.posts)) {
             const age = Date.now() - (parsed.ts || 0);
             if (age < FEED_CACHE_MAX_AGE_MS) {
-              setPosts(parsed.posts);
+              setPosts(parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE));
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;
@@ -246,7 +246,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       // ignore
     }
     setPage(0);
-    if (!fromCache) setHasMore(true);
+    if (!fromCache) {
+      setHasMore(true);
+      setLoadingMore(true); // ให้แสดง skeleton ทันทีจนกว่าโหลดเสร็จ
+    }
     if (initialLoadFromCacheRef.current) {
       fetchPostsRef.current(true, undefined, true);
     } else {

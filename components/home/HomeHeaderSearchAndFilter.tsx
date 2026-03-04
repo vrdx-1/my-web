@@ -78,50 +78,38 @@ export function HomeHeaderSearchAndFilter() {
     closePicker();
   };
 
+  // ปิดป๊อปอัพเมื่อเลื่อนหน้าจอ — แบบเดียวกับปุ่มไข่ปลา (useMenu)
   useEffect(() => {
     if (!showProvincePicker) return;
-    const scrollY = window.scrollY;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevBodyPosition = document.body.style.position;
-    const prevBodyTop = document.body.style.top;
-    const prevBodyWidth = document.body.style.width;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.body.style.position = prevBodyPosition;
-      document.body.style.top = prevBodyTop;
-      document.body.style.width = prevBodyWidth;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      window.scrollTo(0, scrollY);
+    const handleScroll = () => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setShowProvincePicker(false);
+        setIsAnimating(false);
+      }, 300);
     };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [showProvincePicker]);
 
+  // ปิดป๊อปอัพเมื่อคลิกนอก — แบบเดียวกับปุ่มไข่ปลา (useMenu: ไม่ล็อก body, ใช้ mousedown/touchstart)
   useEffect(() => {
     if (!showProvincePicker) return;
-    let cleanup: (() => void) | undefined;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (justOpenedRef.current) return;
+      const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
+      if (!target?.closest?.('[data-home-province-picker]') && !target?.closest?.('[data-home-filter-btn]')) {
+        closePicker();
+      }
+    };
     const timerId = setTimeout(() => {
-      const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-        if (justOpenedRef.current) return;
-        const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
-        if (!target?.closest?.('[data-home-province-picker]') && !target?.closest?.('[data-home-filter-btn]')) {
-          closePicker();
-        }
-      };
       document.addEventListener('mousedown', handleClickOutside as EventListener);
       document.addEventListener('touchstart', handleClickOutside as EventListener);
-      cleanup = () => {
-        document.removeEventListener('mousedown', handleClickOutside as EventListener);
-        document.removeEventListener('touchstart', handleClickOutside as EventListener);
-      };
     }, 120);
     return () => {
       clearTimeout(timerId);
-      cleanup?.();
+      document.removeEventListener('mousedown', handleClickOutside as EventListener);
+      document.removeEventListener('touchstart', handleClickOutside as EventListener);
     };
   }, [showProvincePicker]);
 
@@ -257,7 +245,7 @@ export function HomeHeaderSearchAndFilter() {
               pointerEvents: 'none',
             }}
           >
-            {/* Overlay เต็มหน้าจอ — คลิกปิด; ล็อคไม่ให้ background scroll (touchAction + preventDefault touchmove) */}
+            {/* Overlay เต็มหน้าจอ — คลิกปิด; ไม่ล็อก scroll (ให้ปิดเมื่อเลื่อนเหมือนปุ่มไข่ปลา) */}
             <div
               style={{
                 position: 'fixed',
@@ -268,11 +256,8 @@ export function HomeHeaderSearchAndFilter() {
                 background: 'rgba(0,0,0,0.4)',
                 zIndex: 10001,
                 pointerEvents: 'auto',
-                overflow: 'hidden',
-                touchAction: 'none',
               }}
               onClick={closePicker}
-              onTouchMove={(e) => e.preventDefault()}
             />
             {/* ป๊อบอัพแขวง — ตัวกรอบ scroll ไม่ได้, ให้เฉพาะรายการด้านใน scroll ได้ */}
             <div
@@ -343,6 +328,7 @@ export function HomeHeaderSearchAndFilter() {
                   WebkitOverflowScrolling: 'touch',
                   flex: 1,
                   minHeight: 0,
+                  touchAction: 'pan-y',
                 }}
               >
                 {LAO_PROVINCES.map((p, i) => (

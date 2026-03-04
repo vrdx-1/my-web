@@ -48,7 +48,7 @@ export function useCreatePostDraft({
     const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
     const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
     const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
-    const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'five-images-side');
+    const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
 
     // โหลด caption, province, step
     if (savedCaption) {
@@ -77,7 +77,7 @@ export function useCreatePostDraft({
     if (savedLayout) {
       setLayout(savedLayout);
     } else {
-      const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'five-images-side');
+      const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'default');
       if (lsLayout) setLayout(lsLayout);
     }
 
