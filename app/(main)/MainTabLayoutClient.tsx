@@ -94,15 +94,29 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     return () => homeRefreshContext?.register(null);
   }, [pathname, mainTab, homeRefreshContext]);
 
-  /** โหลดหน้าแจ้งเตือนและโปรไฟล์ล่วงหน้าเมื่ออยู่โฮม — สลับหน้าเร็วขึ้น */
+  /** โหลดและ prefetch หน้าอื่นล่วงหน้า — สลับแท็บเร็วแบบเว็บระดับโลก */
   useEffect(() => {
-    if (pathname !== '/home') return;
+    const delay = pathname === '/home' ? 400 : 200;
     const t = setTimeout(() => {
-      void import('@/app/(main)/notification/page');
-      void import('@/app/(main)/profile/page');
-    }, 500);
+      if (pathname === '/home') {
+        router.prefetch('/notification');
+        router.prefetch('/profile');
+        void import('@/app/(main)/notification/page');
+        void import('@/app/(main)/profile/page');
+      } else if (pathname === '/notification' || pathname?.startsWith('/profile')) {
+        router.prefetch('/home');
+        void import('@/app/(main)/home/page');
+        if (pathname === '/notification') {
+          router.prefetch('/profile');
+          void import('@/app/(main)/profile/page');
+        } else {
+          router.prefetch('/notification');
+          void import('@/app/(main)/notification/page');
+        }
+      }
+    }, delay);
     return () => clearTimeout(t);
-  }, [pathname]);
+  }, [pathname, router]);
 
   const loadingTab =
     mainTab?.navigatingToTab ??

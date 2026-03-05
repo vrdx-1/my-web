@@ -1,21 +1,26 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
 import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 const SUGGESTION_LIMIT = 15;
+const SUGGESTION_DEBOUNCE_MS = 200;
+
+type SuggestionItem = { display: string; searchKey: string };
 
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [historyItems, setHistoryItems] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setHistoryItems(getSearchHistory());
@@ -26,10 +31,33 @@ function SearchPageContent() {
     return () => clearTimeout(t);
   }, []);
 
-  const suggestions = useMemo(() => {
+  useEffect(() => {
     const q = query.trim();
-    if (q.length === 0) return [];
-    return getCarDictionarySuggestions(q, SUGGESTION_LIMIT);
+    if (q.length === 0) {
+      setSuggestions([]);
+      setLoadingSuggestions(false);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      setLoadingSuggestions(true);
+      fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}&limit=${SUGGESTION_LIMIT}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const list = Array.isArray(data?.items) ? data.items : [];
+          setSuggestions(list);
+        })
+        .catch(() => setSuggestions([]))
+        .finally(() => setLoadingSuggestions(false));
+    }, SUGGESTION_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   const commitSearch = useCallback(
@@ -228,6 +256,13 @@ function SearchPageContent() {
       {(showSuggestions || showHistory) && (
         <div style={{ background: '#fff', minHeight: 200 }}>
           {showSuggestions && (
+            <>
+              {loadingSuggestions && (
+                <div style={{ padding: '12px 16px', color: '#65676b', fontSize: 15, fontFamily: LAO_FONT }}>
+                  ກຳລັງໂຫລດ…
+                </div>
+              )}
+              {!loadingSuggestions && (
             <ul style={{ listStyle: 'none', margin: 0, padding: '8px 0' }}>
               {suggestions.map((item, i) => (
                 <li key={`${item.searchKey}-${i}`}>
@@ -262,6 +297,8 @@ function SearchPageContent() {
                 </li>
               ))}
             </ul>
+              )}
+            </>
           )}
           {showHistory && (
             <div style={{ padding: '8px 0' }}>

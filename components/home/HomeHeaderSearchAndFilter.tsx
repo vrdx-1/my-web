@@ -55,11 +55,14 @@ export function HomeHeaderSearchAndFilter() {
     const rect = filterButtonRef.current?.getBoundingClientRect() ?? null;
     setFilterButtonRect(rect);
     justOpenedRef.current = true;
-    setShowProvincePicker(true);
-    setIsAnimating(true);
+    // แสดงป๊อปทันทีโดยไม่รอ — ใช้ requestAnimationFrame แยกให้เบราว์เซอร์วาดป๊อปก่อนงานอื่น
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => setIsAnimating(false));
+      setShowProvincePicker(true);
+      requestAnimationFrame(() => {
+        setIsAnimating(false);
+      });
     });
+    setIsAnimating(true);
     setTimeout(() => {
       justOpenedRef.current = false;
     }, 250);
@@ -233,16 +236,18 @@ export function HomeHeaderSearchAndFilter() {
         </button>
       </div>
 
-      {/* Province picker — เด้งใกล้ปุ่มฟิลเตอร์, overlay เต็มหน้าจอ, ปิดได้ด้วยคลิก overlay หรือ scroll (เหมือนปุ่มไข่ปลา) */}
-      {showProvincePicker &&
-        typeof document !== 'undefined' &&
+      {/* Province picker — สร้างไว้ล่วงหน้า (เมื่อ mounted) แล้วแค่สลับแสดง/ซ่อน ตอนกดจะเร็วเหมือนเว็บระดับโลก */}
+      {mounted && typeof document !== 'undefined' &&
         createPortal(
           <div
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 10000,
-              pointerEvents: 'none',
+              pointerEvents: showProvincePicker ? 'none' : 'none',
+              visibility: showProvincePicker ? 'visible' : 'hidden',
+              opacity: showProvincePicker ? 1 : 0,
+              transition: 'opacity 0.15s ease-out',
             }}
           >
             {/* Overlay เต็มหน้าจอ — คลิกปิด; ไม่ล็อก scroll (ให้ปิดเมื่อเลื่อนเหมือนปุ่มไข่ปลา) */}
@@ -255,7 +260,7 @@ export function HomeHeaderSearchAndFilter() {
                 bottom: 0,
                 background: 'rgba(0,0,0,0.4)',
                 zIndex: 10001,
-                pointerEvents: 'auto',
+                pointerEvents: showProvincePicker ? 'auto' : 'none',
               }}
               onClick={closePicker}
             />
@@ -295,10 +300,10 @@ export function HomeHeaderSearchAndFilter() {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                transform: isAnimating ? 'scale(0.96)' : 'scale(1)',
-                opacity: isAnimating ? 0 : 1,
+                transform: showProvincePicker && !isAnimating ? 'scale(1)' : 'scale(0.96)',
+                opacity: showProvincePicker && !isAnimating ? 1 : 0,
                 transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                pointerEvents: 'auto',
+                pointerEvents: showProvincePicker ? 'auto' : 'none',
               }}
             >
               <div

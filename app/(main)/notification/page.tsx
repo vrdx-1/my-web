@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
@@ -9,48 +9,29 @@ import { useNotificationPage } from '@/hooks/useNotificationPage';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
 import type { NotificationItemWithTime } from '@/hooks/useNotificationPage';
 
-function NotificationCardWithLazyImage({
+/** การ์ดเดียว — ไม่สร้าง IntersectionObserver เอง เพื่อลดงานตอนสลับออก (observer เดียวที่ parent) */
+function NotificationCard({
   item,
   index,
-  rootRef,
+  shouldLoadImage,
   onNavigateToPost,
 }: {
   item: NotificationItemWithTime;
   index: number;
-  rootRef: React.RefObject<HTMLDivElement | null>;
+  shouldLoadImage: boolean;
   onNavigateToPost: (postId: string) => void;
 }) {
-  const [shouldLoadImage, setShouldLoadImage] = useState(index === 0);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (index === 0) return;
-    const root = rootRef.current;
-    const el = cardRef.current;
-    if (!root || !el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) setShouldLoadImage(true);
-      },
-      { root, rootMargin: '200px', threshold: 0 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [index, rootRef]);
-
   const isReadStyle =
     typeof item.notification_count !== 'number' || item.notification_count <= 0;
   return (
-    <div ref={cardRef}>
-      <NotificationPostPreviewCard
-        notification={item}
-        isReadStyle={isReadStyle}
-        timeAgoText={item.timeAgoText}
-        onNavigateToPost={onNavigateToPost}
-        priority={index === 0 && shouldLoadImage}
-        shouldLoadImage={shouldLoadImage}
-      />
-    </div>
+    <NotificationPostPreviewCard
+      notification={item}
+      isReadStyle={isReadStyle}
+      timeAgoText={item.timeAgoText}
+      onNavigateToPost={onNavigateToPost}
+      priority={index === 0 && shouldLoadImage}
+      shouldLoadImage={shouldLoadImage}
+    />
   );
 }
 
@@ -77,6 +58,54 @@ const HEADER_STYLE = {
   flexShrink: 0,
 };
 
+/** Observer เดียวสำหรับทุกการ์ด — สลับออกเร็ว (unmount แค่ disconnect ครั้งเดียว) */
+function useNotificationListLazyImages(
+  scrollRootRef: React.RefObject<HTMLDivElement | null>,
+  listLength: number
+) {
+  const [visibleIndices, setVisibleIndices] = useState<Set<number>>(() => new Set([0]));
+  const cardRefsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  const setCardRef = useCallback((index: number, el: HTMLDivElement | null) => {
+    const arr = cardRefsRef.current;
+    while (arr.length <= index) arr.push(null);
+    arr[index] = el;
+  }, []);
+
+  useEffect(() => {
+    if (listLength === 0) return;
+    const root = scrollRootRef.current;
+    if (!root) return;
+    setVisibleIndices((prev) => (prev.has(0) ? prev : new Set([0, ...prev])));
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const idx = e.target.getAttribute('data-notification-index');
+          if (idx === null) continue;
+          const i = parseInt(idx, 10);
+          if (Number.isNaN(i)) continue;
+          setVisibleIndices((prev) => (prev.has(i) ? prev : new Set([...prev, i])));
+        }
+      },
+      { root, rootMargin: '200px', threshold: 0 }
+    );
+    const id = requestAnimationFrame(() => {
+      const arr = cardRefsRef.current;
+      for (let i = 0; i < listLength; i++) {
+        const el = arr[i];
+        if (el) obs.observe(el);
+      }
+    });
+    return () => {
+      cancelAnimationFrame(id);
+      obs.disconnect();
+    };
+  }, [listLength, scrollRootRef]);
+
+  return { visibleIndices, setCardRef };
+}
+
 export default function NotificationPage() {
   const {
     loading,
@@ -91,6 +120,10 @@ export default function NotificationPage() {
   } = useNotificationPage();
   const notificationRefreshContext = useNotificationRefreshContext();
   const didScrollToTopRef = useRef(false);
+  const { visibleIndices, setCardRef } = useNotificationListLazyImages(
+    scrollContainerRef,
+    visibleItemsWithTime.length
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -138,13 +171,18 @@ export default function NotificationPage() {
           {visibleItemsWithTime.map((item, index) => {
             const uniqueKey = `${item.post_id}-${item.created_at}-${index}`;
             return (
-              <NotificationCardWithLazyImage
+              <div
                 key={uniqueKey}
-                item={item}
-                index={index}
-                rootRef={scrollContainerRef}
-                onNavigateToPost={onNavigateToPost}
-              />
+                ref={(el) => setCardRef(index, el)}
+                data-notification-index={index}
+              >
+                <NotificationCard
+                  item={item}
+                  index={index}
+                  shouldLoadImage={visibleIndices.has(index) || index === 0}
+                  onNavigateToPost={onNavigateToPost}
+                />
+              </div>
             );
           })}
           <div ref={lastElementRef} style={{ minHeight: 8, pointerEvents: 'none' }} aria-hidden="true" />

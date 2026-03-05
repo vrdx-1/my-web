@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, startTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Plus, PenSquare, Bell, User } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -144,7 +144,9 @@ export function BottomNav() {
             return;
           }
           setPendingPath(path);
-          router.push(path, { scroll: false });
+          startTransition(() => {
+            router.push(path, { scroll: false });
+          });
         };
 
         const isActive = match(effectivePath);

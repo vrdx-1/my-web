@@ -74,7 +74,6 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   }, [sessionReady, currentSession]);
 
   const fetchSearch = useCallback(async () => {
-    if (currentSession === undefined) return;
     const q = (query || '').trim();
     if (q.length === 0) {
       setPosts([]);
@@ -92,17 +91,16 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     } finally {
       setLoading(false);
     }
-  }, [currentSession, query, province]);
+  }, [query, province]);
 
   useEffect(() => {
-    if (currentSession === undefined) return; // guest = null ผ่าน, แค่ undefined = ยังไม่รู้
     const q = (query || '').trim();
     if (q.length === 0) {
       setPosts([]);
       return;
     }
     fetchSearch();
-  }, [query, currentSession, province, fetchSearch]);
+  }, [query, province, fetchSearch]);
 
   return {
     posts,

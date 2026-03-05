@@ -46,6 +46,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
   const initialLoadDoneFiredRef = useRef(false);
+  /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
+  const postsLengthRef = useRef(0);
+  postsLengthRef.current = posts.length;
 
   const fireInitialLoadDone = useCallback(() => {
     if (initialLoadDoneFiredRef.current) return;
@@ -101,7 +104,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const currentFetchId = ++fetchIdRef.current;
     if (!(isInitial && backgroundRefresh)) setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
-    const rangeStart = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+    // โหลดเพิ่มใช้ offset จากจำนวนโพสต์จริง (ไม่ใช้ page) เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ
+    const rangeStart = currentPage === 0 ? 0 : postsLengthRef.current;
     const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
     const rangeEnd = rangeStart + pageSize - 1;
 
@@ -116,7 +120,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       });
       const data = await res.json().catch(() => ({}));
       const postIds: string[] = Array.isArray(data.postIds) ? data.postIds : [];
-      const nextHasMore = !!data.hasMore;
+      // ได้ครบหนึ่งหน้า = มีหน้าถัดไป; ได้น้อยกว่าแต่ยังมีรายการ = โหลดต่อ (กรณี backend limit) ไม่หยุดก่อนถึงจริง
+      const fullPage = !isInitial && postIds.length >= pageSize;
+      const partialPage = !isInitial && postIds.length > 0 && postIds.length < pageSize;
+      const nextHasMore = !!data.hasMore || fullPage || partialPage;
       const apiPosts: any[] = Array.isArray(data.posts) ? data.posts : [];
 
       if (currentFetchId !== fetchIdRef.current) return;
@@ -192,8 +199,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         }
       } else {
         setPosts(prev => {
-          const ids = new Set(prev.map(p => p.id));
-          const newOnes = ordered.filter((p: any) => !ids.has(p.id));
+          const ids = new Set(prev.map(p => String(p.id)));
+          const newOnes = ordered.filter((p: any) => !ids.has(String(p.id)));
           return newOnes.length ? [...prev, ...newOnes] : prev;
         });
       }
