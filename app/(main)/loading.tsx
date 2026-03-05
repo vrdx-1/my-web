@@ -1,13 +1,54 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { NotificationSkeleton } from '@/components/NotificationSkeleton';
+import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
+const NOTIFICATION_HEADER_STYLE: React.CSSProperties = {
+  padding: '15px',
+  borderBottom: '1px solid #f0f0f0',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  position: 'sticky',
+  top: 0,
+  background: '#ffffff',
+  backgroundColor: '#ffffff',
+  zIndex: 1000,
+  flexShrink: 0,
+};
+
 /**
- * หน้ากลางตอนเปลี่ยนเส้นทางภายใน (main) — แสดง skeleton ทันทีที่กดสลับหน้า
+ * หน้ากลางตอนเปลี่ยนเส้นทางภายใน (main) — แสดง skeleton ตาม route (แจ้งเตือนใช้ NotificationSkeleton, โฮมใช้ FeedSkeleton)
  */
 export default function MainLoading() {
+  const pathname = usePathname();
+
+  if (pathname === '/notification') {
+    return (
+      <main
+        style={{
+          ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
+          fontFamily: LAO_FONT,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={NOTIFICATION_HEADER_STYLE}>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', textAlign: 'center', color: '#111111' }}>
+            ການແຈ້ງເຕືອນ
+          </h1>
+        </div>
+        <div style={{ flex: 1 }}>
+          <NotificationSkeleton count={5} />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <FeedSkeleton count={4} />

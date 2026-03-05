@@ -37,28 +37,32 @@ export const NotificationSkeleton = React.memo(function NotificationSkeleton({
           key={i}
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             padding: '16px 20px',
             gap: 16,
             borderBottom: '1px solid #f0f0f0',
           }}
         >
-          {/* รูปโพสต์ขนาดเล็ก 72x72 */}
+          {/* Avatar 56x56 ตรงกับ NotificationPostPreviewCard */}
           <div
             style={{
               ...shimmerStyle,
-              width: 72,
-              height: 72,
-              borderRadius: 10,
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
               flexShrink: 0,
             }}
           />
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ ...shimmerStyle, height: 14, width: 24 }} />
-              <div style={{ ...shimmerStyle, height: 14, width: '60%', maxWidth: 160 }} />
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+            {/* แถวบน: ชื่อ + ແລະອີກ x ຄົນມັກໂພສຂອງທ່ານ */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 0 }}>
+              <div style={{ ...shimmerStyle, height: 14, width: 56, flexShrink: 0 }} />
+              <div style={{ ...shimmerStyle, height: 14, flex: 1, minWidth: 0, maxWidth: 200 }} />
             </div>
-            <div style={{ ...shimmerStyle, height: 11, width: '40%', maxWidth: 80 }} />
+            {/* แถวแคปชั่น */}
+            <div style={{ ...shimmerStyle, height: 13, width: '85%', maxWidth: 220 }} />
+            {/* แถวเวลา */}
+            <div style={{ ...shimmerStyle, height: 11, width: 64, marginTop: 2 }} />
           </div>
         </div>
       ))}

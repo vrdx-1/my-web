@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { AvatarGroup } from './AvatarGroup';
+import { Avatar } from '@/components/Avatar';
 
 export interface NotificationPostPreviewItem {
   id: string;
@@ -12,343 +12,15 @@ export interface NotificationPostPreviewItem {
   likes?: number;
   saves?: number;
   interaction_avatars?: (string | null)[];
+  /** ชื่อบัญชีของคนที่กดล่าสุด (จาก notification row) */
+  sender_name?: string;
+  /** Avatar ของคนที่กดล่าสุด */
+  sender_avatar?: string | null;
   boost_status?: 'pending' | 'reject' | 'success' | string | null;
   boost_expires_at?: string | null;
+  /** ตัวอย่างแคปชั่นของโพสต์ (ให้ผู้ใช้รู้ว่าเป็นโพสต์ไหน) */
+  post_caption?: string;
 }
-
-const IMAGE_PLACEHOLDER_STYLE = {
-  width: '72px',
-  height: '72px',
-  borderRadius: '10px',
-  background: '#f0f0f0',
-  display: 'flex',
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
-
-// Mini PostCard Image Component — lazy loading; โหลดเมื่อควรเห็น (shouldLoadImage); รายการแรกใช้ priority สำหรับ LCP
-const MiniPostImage = ({
-  images,
-  priority = false,
-  shouldLoadImage = true,
-}: {
-  images: string[];
-  priority?: boolean;
-  shouldLoadImage?: boolean;
-}) => {
-  const imageSize = '72px';
-  const firstLoading = priority ? 'eager' : 'lazy';
-
-  if (!shouldLoadImage || !images || images.length === 0) {
-    return (
-      <div style={IMAGE_PLACEHOLDER_STYLE}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="#5c5c5c">
-          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-        </svg>
-      </div>
-    );
-  }
-
-  const count = images.length;
-  const gap = '2px';
-
-  const noCalloutStyle: React.CSSProperties = {
-    WebkitTouchCallout: 'none',
-    WebkitUserSelect: 'none',
-    userSelect: 'none',
-  };
-
-  // Single image
-  if (count === 1) {
-    return (
-      <div
-        style={{
-          position: 'relative',
-          width: imageSize,
-          height: imageSize,
-          borderRadius: '10px',
-          overflow: 'hidden',
-          ...noCalloutStyle,
-        }}
-      >
-        <img
-          src={images[0]}
-          alt="Post"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            ...noCalloutStyle,
-          }}
-          loading={firstLoading}
-          decoding="async"
-          fetchPriority={priority ? 'high' : undefined}
-        />
-      </div>
-    );
-  }
-
-  // Two images
-  if (count === 2) {
-    return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: gap,
-          width: imageSize,
-          height: imageSize,
-          borderRadius: '10px',
-          overflow: 'hidden',
-          ...noCalloutStyle,
-        }}
-      >
-        {images.slice(0, 2).map((img, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              width: '100%',
-              height: '100%',
-            }}
-          >
-            <img
-              src={img}
-              alt={`Post ${i + 1}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                ...noCalloutStyle,
-              }}
-              loading={i === 0 ? firstLoading : 'lazy'}
-              decoding="async"
-              fetchPriority={i === 0 && priority ? 'high' : undefined}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Three images - Layout: รูปแรกใหญ่ซ้าย, 2 รูปเล็กขวา (เหมือน PhotoGrid)
-  if (count === 3) {
-    return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: gap,
-          width: imageSize,
-          height: imageSize,
-          borderRadius: '10px',
-          overflow: 'hidden',
-          ...noCalloutStyle,
-        }}
-      >
-        <div
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            gridRow: 'span 2',
-            borderTopLeftRadius: '10px',
-            borderBottomLeftRadius: '10px',
-          }}
-        >
-          <img
-            src={images[0]}
-            alt="Post 1"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              ...noCalloutStyle,
-            }}
-            loading={firstLoading}
-            decoding="async"
-            fetchPriority={priority ? 'high' : undefined}
-          />
-        </div>
-        <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: gap }}>
-          {images.slice(1, 3).map((img, i) => (
-            <div
-              key={i + 1}
-              style={{
-                position: 'relative',
-                overflow: 'hidden',
-                aspectRatio: '1',
-                borderTopRightRadius: i === 0 ? '10px' : '0',
-                borderBottomRightRadius: i === 1 ? '10px' : '0',
-              }}
-            >
-              <img
-                src={img}
-                alt={`Post ${i + 2}`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  ...noCalloutStyle,
-                }}
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Four images - 2x2 grid (เหมือน PhotoGrid)
-  if (count === 4) {
-    return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
-          gap: gap,
-          width: imageSize,
-          height: imageSize,
-          borderRadius: '10px',
-          overflow: 'hidden',
-          ...noCalloutStyle,
-        }}
-      >
-        {images.map((img, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              aspectRatio: '1',
-              borderTopLeftRadius: i === 0 ? '10px' : '0',
-              borderTopRightRadius: i === 1 ? '10px' : '0',
-              borderBottomLeftRadius: i === 2 ? '10px' : '0',
-              borderBottomRightRadius: i === 3 ? '10px' : '0',
-            }}
-          >
-            <img
-              src={img}
-              alt={`Post ${i + 1}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                ...noCalloutStyle,
-              }}
-              loading={i === 0 ? firstLoading : 'lazy'}
-              decoding="async"
-              fetchPriority={i === 0 && priority ? 'high' : undefined}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Five or more images - Layout: 2 รูปบน, 3 รูปล่าง (เหมือน PhotoGrid)
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: gap,
-        width: imageSize,
-        height: imageSize,
-        borderRadius: '10px',
-        overflow: 'hidden',
-        ...noCalloutStyle,
-      }}
-    >
-      {/* Top row: 2 images */}
-      {images.slice(0, 2).map((img, i) => (
-        <div
-          key={i}
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            aspectRatio: '1',
-            borderTopLeftRadius: i === 0 ? '10px' : '0',
-            borderTopRightRadius: i === 1 ? '10px' : '0',
-          }}
-        >
-          <img
-            src={img}
-            alt={`Post ${i + 1}`}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              ...noCalloutStyle,
-            }}
-            loading={i === 0 ? firstLoading : 'lazy'}
-            decoding="async"
-            fetchPriority={i === 0 && priority ? 'high' : undefined}
-          />
-        </div>
-      ))}
-      {/* Bottom row: 3 images */}
-      <div
-        style={{
-          gridColumn: 'span 2',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: gap,
-        }}
-      >
-        {images.slice(2, 5).map((img, i) => {
-          const idx = i + 2;
-          return (
-            <div
-              key={idx}
-              style={{
-                position: 'relative',
-                overflow: 'hidden',
-                aspectRatio: '1',
-                borderBottomLeftRadius: i === 0 ? '10px' : '0',
-                borderBottomRightRadius: i === 2 ? '10px' : '0',
-              }}
-            >
-              <img
-                src={img}
-                alt={`Post ${idx + 1}`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  ...noCalloutStyle,
-                }}
-                loading="lazy"
-                decoding="async"
-              />
-              {idx === 4 && count > 5 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.6)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    borderBottomRightRadius: '10px',
-                  }}
-                >
-                  +{count - 5}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 export const NotificationPostPreviewCard = React.memo<{
   notification: NotificationPostPreviewItem;
@@ -364,6 +36,18 @@ export const NotificationPostPreviewCard = React.memo<{
     typeof notification.interaction_total === 'number'
       ? notification.interaction_total
       : (notification.likes || 0) + (notification.saves || 0);
+
+  const latestAvatar =
+    notification.sender_avatar ??
+    (notification.interaction_avatars && notification.interaction_avatars.length > 0
+      ? notification.interaction_avatars[0]
+      : null);
+  const latestName = notification.sender_name ?? 'User';
+
+  const captionPreview =
+    notification.post_caption && notification.post_caption.trim() !== ''
+      ? notification.post_caption.trim()
+      : '';
 
   const isBoostExpired =
     notification.boost_status === 'success' &&
@@ -385,7 +69,7 @@ export const NotificationPostPreviewCard = React.memo<{
       onClick={() => onNavigateToPost(notification.post_id)}
       style={{
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         padding: '16px 20px',
         cursor: 'pointer',
         borderBottom: '1px solid #f0f0f0',
@@ -402,22 +86,14 @@ export const NotificationPostPreviewCard = React.memo<{
         e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
       }}
     >
-      {/* Post Image — ปิด long-press preview (ไม่ให้กดค้างแล้วขยาย) */}
-      <div
-        style={{
-          position: 'relative',
-          flexShrink: 0,
-          WebkitTouchCallout: 'none',
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
-        }}
-      >
-        <MiniPostImage images={notification.post_images || []} priority={priority} shouldLoadImage={shouldLoadImage} />
+      {/* Avatar ของคนที่กดล่าสุด — ด้านซ้าย */}
+      <div style={{ flexShrink: 0 }}>
+        <Avatar avatarUrl={latestAvatar} size={56} />
       </div>
 
       {/* Notification Content */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
-        {/* แถวบนสุด: x ຄົນມັກໂພສຂອງທ່ານ + Avatar — ปิด long-press preview ที่ Avatar */}
+        {/* แถวบนสุด: (ชื่อคนล่าสุด) + ແລະອີກ x ຄົນມັກໂພສຂອງທ່ານ */}
         <div
           style={{
             fontSize: '14px',
@@ -427,15 +103,50 @@ export const NotificationPostPreviewCard = React.memo<{
             alignItems: 'center',
             gap: '6px',
             marginBottom: '6px',
+            minWidth: 0,
             WebkitTouchCallout: 'none',
             WebkitUserSelect: 'none',
             userSelect: 'none',
           }}
         >
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52' }}>{interactionTotal}</span>
-          <span style={{ color: '#050505' }}>ຄົນມັກໂພສຂອງທ່ານ</span>
-          <AvatarGroup avatars={notification.interaction_avatars || []} totalCount={interactionTotal} />
+          {interactionTotal <= 1 ? (
+            <>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
+              <span style={{ color: '#050505', flexShrink: 0 }}>
+                ມັກໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
+              <span style={{ color: '#050505', flexShrink: 0 }}>
+                ແລະອີກ {interactionTotal - 1} ຄົນມັກໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
+              </span>
+            </>
+          )}
         </div>
+
+        {/* แถวที่สอง: ตัวอย่างแคปชั่นของโพสต์ */}
+        {captionPreview && (
+          <div
+            style={{
+              fontSize: '13px',
+              lineHeight: '1.4',
+              color: '#6b6b6b',
+              marginBottom: '6px',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+            }}
+            title={notification.post_caption?.trim() || undefined}
+          >
+            &quot;{captionPreview}&quot;
+          </div>
+        )}
 
         {/* กลาง: ສະຖານະໂຄສະນາ (เฉพาะโพสต์ที่มี boost) */}
         {boostBadgeConfig && (

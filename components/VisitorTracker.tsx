@@ -16,15 +16,19 @@ export default function VisitorTracker() {
     let currentUserId: string | null = null;
     const now = () => new Date().toISOString();
 
-    /** อัปเดต profiles.last_seen */
+    /** อัปเดต profiles.last_seen (มี retry 1 ครั้งเมื่อเน็ตมือถือหลุด) */
     const updatePresenceNow = () => {
-      if (currentUserId) {
+      if (!currentUserId) return;
+      const doUpdate = (retry = false) => {
         supabase
           .from('profiles')
           .update({ last_seen: now() })
           .eq('id', currentUserId)
-          .then(() => {});
-      }
+          .then(({ error }) => {
+            if (error && !retry) setTimeout(() => doUpdate(true), 2000);
+          });
+      };
+      doUpdate();
     };
     const updateLastSeen = updatePresenceNow;
 
@@ -73,10 +77,10 @@ export default function VisitorTracker() {
           isFirstVisit = true;
         }
 
-        startPresenceHeartbeat();
-
         const { data: { user } } = await supabase.auth.getUser();
         applyUserPresence(user ?? null);
+        startPresenceHeartbeat();
+        updatePresenceNow();
 
         await supabase.from('visitor_logs').insert({
           visitor_id: vId,
@@ -106,6 +110,8 @@ export default function VisitorTracker() {
       }
     };
 
+    // อัปเดตสถานะออนไลน์ทันที (ไม่รอ requestIdleCallback) — ลดปัญหา on mobile ที่โหลดช้า
+    runPresenceOnly();
     // ทำหลังหน้าโหลดเสร็จหรือเบราว์เซอร์ว่าง — ไม่แข่งกับโหลดฟีด
     const scheduleTrack = () => {
       if (typeof requestIdleCallback !== 'undefined') {
@@ -131,9 +137,10 @@ export default function VisitorTracker() {
     });
 
     const onVisibilityChange = () => {
-      if (!document.hidden && typeof window !== 'undefined') {
-        updatePresenceNow();
-      }
+      if (document.hidden || typeof window === 'undefined') return;
+      updatePresenceNow();
+      stopPresenceHeartbeat();
+      startPresenceHeartbeat();
     };
 
     document.addEventListener('visibilitychange', onVisibilityChange);
