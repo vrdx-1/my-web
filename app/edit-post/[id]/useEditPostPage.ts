@@ -7,6 +7,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 
 const MAX_CAPTION_LINES = 15;
 const ALLOWED_KEYS_AT_MAX = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
+const VALID_LAYOUTS = ['default', 'car-gallery', 'five-images', 'three-images', 'two-left-three-right'];
 
 export function useEditPostPage(id: string) {
   const router = useRouter();
@@ -18,8 +19,9 @@ export function useEditPostPage(id: string) {
   const [uploading, setUploading] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
-  const initialRef = useRef<{ caption: string; province: string; images: string[] } | null>(null);
+  const initialRef = useRef<{ caption: string; province: string; images: string[]; layout: string } | null>(null);
   const hasChangesRef = useRef(false);
   const allowLeaveRef = useRef(false);
 
@@ -43,27 +45,32 @@ export function useEditPostPage(id: string) {
         return;
       }
       const cap = (post.caption || '').split('\n').slice(0, MAX_CAPTION_LINES).join('\n');
-      const prov = post.province || '';
-      const imgs = post.images || [];
-      const postLayout = post.layout || 'default';
+      const prov = typeof post.province === 'string' ? post.province.trim() : '';
+      const imgs = Array.isArray(post.images) ? post.images : [];
+      const rawLayout = post.layout;
+      const postLayout = VALID_LAYOUTS.includes(String(rawLayout || '')) ? String(rawLayout) : 'default';
       setCaption(cap);
       setProvince(prov);
       setImages(imgs);
       setLayout(postLayout);
-      initialRef.current = { caption: cap, province: prov, images: imgs };
+      initialRef.current = { caption: cap, province: prov, images: imgs, layout: postLayout };
       setLoading(false);
     };
     run();
     return () => { cancelled = true; };
   }, [id, router]);
 
+  const totalImageCount = images.length + imageUpload.previews.length;
+  const initial = initialRef.current;
+  const captionChanged = initial && caption !== initial.caption;
+  const provinceChanged = initial && String(province).trim() !== String(initial.province).trim();
+  const imagesChanged = initial && JSON.stringify(images) !== JSON.stringify(initial.images);
+  const hasNewPreviews = imageUpload.previews.length > 0;
+  const layoutChanged = totalImageCount >= 6 && initial && String(layout) !== String(initial.layout);
   const hasChanges = Boolean(
     !loading &&
-      initialRef.current &&
-      (caption !== initialRef.current.caption ||
-        province !== initialRef.current.province ||
-        JSON.stringify(images) !== JSON.stringify(initialRef.current.images) ||
-        imageUpload.previews.length > 0)
+      initial &&
+      (captionChanged || provinceChanged || imagesChanged || hasNewPreviews || layoutChanged)
   );
   hasChangesRef.current = hasChanges;
 
@@ -123,7 +130,14 @@ export function useEditPostPage(id: string) {
   }, [images, imageUpload]);
 
   const handleUpdate = useCallback(async (goBackAfterSave?: boolean) => {
-    if (!province || (images.length === 0 && imageUpload.selectedFiles.length === 0)) return;
+    if (uploading) return;
+    setSaveError(null);
+    const noProvince = !String(province).trim();
+    const noImages = images.length === 0 && imageUpload.selectedFiles.length === 0;
+    if (noProvince || noImages) {
+      setSaveError(noProvince ? 'กรุณาเลือกแขวง' : 'กรุณาเพิ่มรูปภาพอย่างน้อย 1 รูป');
+      return;
+    }
     setUploading(true);
     const uploadedPaths: string[] = [];
     try {
@@ -142,7 +156,15 @@ export function useEditPostPage(id: string) {
           finalImages.push(publicUrl);
         }
       }
-      const { error } = await supabase.from('cars').update({ caption, province, images: finalImages }).eq('id', id);
+      const updatePayload: { caption: string; province: string; images: string[]; layout?: string } = {
+        caption,
+        province,
+        images: finalImages,
+      };
+      if (finalImages.length >= 6) {
+        updatePayload.layout = layout;
+      }
+      const { error } = await supabase.from('cars').update(updatePayload).eq('id', id);
       if (error) {
         for (const p of uploadedPaths) await supabase.storage.from('car-images').remove([p]).catch(() => {});
         throw error;
@@ -159,7 +181,9 @@ export function useEditPostPage(id: string) {
     } finally {
       setUploading(false);
     }
-  }, [id, province, caption, images, imageUpload.selectedFiles, router]);
+  }, [id, province, caption, images, layout, uploading, imageUpload.selectedFiles, router]);
+
+  const clearSaveError = useCallback(() => setSaveError(null), []);
 
   const limitCaptionToLines = useCallback((text: string) => text.split('\n').slice(0, MAX_CAPTION_LINES).join('\n'), []);
 
@@ -215,6 +239,7 @@ export function useEditPostPage(id: string) {
     images,
     setImages,
     layout,
+    setLayout,
     loading,
     uploading,
     isViewing,
@@ -233,5 +258,7 @@ export function useEditPostPage(id: string) {
     handleCaptionPaste,
     handleCaptionChange,
     maxCaptionLines: MAX_CAPTION_LINES,
+    saveError,
+    clearSaveError,
   };
 }

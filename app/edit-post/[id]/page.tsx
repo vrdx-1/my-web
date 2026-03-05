@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
 import { ProvinceDropdown } from '@/components/ProvinceDropdown';
+import { LayoutPreviewSelector } from '@/components/create-post/LayoutPreviewSelector';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS, PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { useEditPostPage } from './useEditPostPage';
@@ -68,6 +69,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     setProvince,
     images,
     layout,
+    setLayout,
     loading,
     uploading,
     isViewing,
@@ -85,6 +87,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     handleCaptionPaste,
     handleCaptionChange,
     maxCaptionLines,
+    saveError,
+    clearSaveError,
   } = useEditPostPage(id);
 
   if (loading) {
@@ -98,7 +102,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   const lineCount = caption.split('\n').length;
 
   return (
-    <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
+    <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate' as const }}>
       <PageHeader
         title="ແກ້ໄຂ"
         onBack={handleBack}
@@ -110,16 +114,20 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         }
       />
 
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ height: '100%', overflowY: 'auto', paddingBottom: '100px' }}>
         <div style={{ padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar avatarUrl={userProfile?.avatar_url} size={50} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 'bold', fontSize: '18px', lineHeight: '24px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#111111' }}>
               {userProfile?.username || 'User'}
             </div>
-            <ProvinceDropdown selectedProvince={province} onProvinceChange={setProvince} variant="button" />
+            <ProvinceDropdown selectedProvince={province} onProvinceChange={(p) => { clearSaveError(); setProvince(p); }} variant="button" />
           </div>
         </div>
+        {saveError && (
+          <div style={{ padding: '0 15px 8px', color: '#ff4d4f', fontSize: '14px' }}>{saveError}</div>
+        )}
 
         <div style={{ padding: '0 15px 10px 15px' }}>
           <textarea
@@ -152,14 +160,24 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {(images.length > 0 || imageUpload.previews.length > 0) && (
-          <PhotoGrid
-            images={[...images, ...imageUpload.previews]}
-            onPostClick={() => setIsViewing(true)}
-            layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
-            gap={PHOTO_GRID_GAP}
-          />
+          <>
+            <PhotoGrid
+              images={[...images, ...imageUpload.previews]}
+              onPostClick={() => setIsViewing(true)}
+              layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
+              gap={PHOTO_GRID_GAP}
+            />
+            {([...images, ...imageUpload.previews].length >= 6) && (
+              <LayoutPreviewSelector
+                selectedLayout={layout}
+                onLayoutChange={setLayout}
+                previews={[...images, ...imageUpload.previews]}
+              />
+            )}
+          </>
         )}
         <input type="file" multiple accept="image/*" onChange={imageUpload.handleFileChange} ref={imageUpload.fileInputRef} style={{ display: 'none' }} />
+        </div>
       </div>
 
       {isViewing && (

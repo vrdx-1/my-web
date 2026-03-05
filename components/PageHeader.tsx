@@ -84,8 +84,10 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         position: 'sticky',
         top: 0,
         background: '#fff',
-        zIndex: 100,
+        zIndex: 1000,
+        flexShrink: 0,
         borderBottom: '1px solid #f0f0f0',
+        isolation: 'isolate',
       }}
       className={className}
     >
@@ -105,7 +107,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
           >
             {title}
           </h3>
-          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <button
               type="button"
               onClick={actionButton.onClick}
@@ -123,7 +125,13 @@ export const PageHeader = React.memo<PageHeaderProps>(({
                       borderRadius: '20px',
                       opacity: actionButton.disabled ? 0.5 : 1,
                       minHeight: 44,
+                      minWidth: 64,
                       touchAction: 'manipulation',
+                      position: 'relative',
+                      zIndex: 1,
+                      display: 'block',
+                      width: '100%',
+                      pointerEvents: 'auto',
                     }
                   : {
                       background: 'none',
@@ -137,6 +145,11 @@ export const PageHeader = React.memo<PageHeaderProps>(({
                       textAlign: 'right',
                       opacity: actionButton.disabled ? 0.5 : 1,
                       touchAction: 'manipulation',
+                      position: 'relative',
+                      zIndex: 1,
+                      display: 'block',
+                      width: '100%',
+                      pointerEvents: 'auto',
                     }
               }
             >
