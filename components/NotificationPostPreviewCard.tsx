@@ -70,12 +70,12 @@ export const NotificationPostPreviewCard = React.memo<{
       style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '16px 20px',
+        padding: '12px 14px',
         cursor: 'pointer',
         borderBottom: '1px solid #f0f0f0',
         backgroundColor: isReadStyle ? '#fff' : '#e7f3ff',
         transition: 'background-color 0.2s',
-        gap: '16px',
+        gap: '10px',
       }}
       onMouseEnter={(e) => {
         if (isReadStyle) {
@@ -88,7 +88,7 @@ export const NotificationPostPreviewCard = React.memo<{
     >
       {/* Avatar ของคนที่กดล่าสุด — ด้านซ้าย */}
       <div style={{ flexShrink: 0 }}>
-        <Avatar avatarUrl={latestAvatar} size={56} />
+        <Avatar avatarUrl={latestAvatar} size={64} />
       </div>
 
       {/* Notification Content */}

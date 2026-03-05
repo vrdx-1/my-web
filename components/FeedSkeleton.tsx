@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-const DEFAULT_CARD_COUNT = 4;
+const DEFAULT_CARD_COUNT = 5;
 const shimmerStyle: React.CSSProperties = {
   background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
   backgroundSize: '200% 100%',
@@ -11,7 +11,7 @@ const shimmerStyle: React.CSSProperties = {
 };
 
 interface FeedSkeletonProps {
-  /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 4 สำหรับโหลดครั้งแรก, 2 สำหรับโหลดเพิ่มที่ท้าย feed) */
+  /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 5 สำหรับโหลดครั้งแรก, 2 สำหรับโหลดเพิ่มที่ท้าย feed — ให้สอดคล้องกับหน้า Notifications) */
   count?: number;
 }
 

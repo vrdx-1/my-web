@@ -146,10 +146,51 @@ export function HomePageContent() {
   const posts = tab === 'recommend' ? recommendSource.posts : soldSource.posts;
   const postList = tab === 'recommend' ? recommendSource : soldSource;
   postsRef.current = posts;
+  const postListRef = useRef(postList);
+  postListRef.current = postList;
 
+  // อัปเดตสถานะออนไลน์ทุก 60 วินาที: tick เพื่อ re-render + ดึง last_seen ล่าสุดจาก server
   useEffect(() => {
-    const id = setInterval(() => setOnlineStatusTick((t) => t + 1), 60 * 1000);
-    return () => clearInterval(id);
+    const refreshOnlineStatus = async () => {
+      const list = postsRef.current;
+      if (!list?.length) return;
+      const userIds = [...new Set(list.map((p: any) => p.user_id).filter(Boolean))];
+      if (userIds.length === 0) return;
+      try {
+        const res = await fetch('/api/profiles/last-seen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userIds }),
+        });
+        if (!res.ok) return;
+        const { lastSeen } = await res.json();
+        if (!lastSeen || typeof lastSeen !== 'object') return;
+        const setPosts = postListRef.current?.setPosts;
+        if (typeof setPosts !== 'function') return;
+        setPosts((prev: any[]) =>
+          prev.map((p: any) => {
+            const uid = p.user_id;
+            if (uid && lastSeen[uid] !== undefined) {
+              return { ...p, profiles: { ...p.profiles, last_seen: lastSeen[uid] } };
+            }
+            return p;
+          })
+        );
+      } catch (_) {
+        // ignore
+      }
+    };
+
+    const id = setInterval(() => {
+      setOnlineStatusTick((t) => t + 1);
+      refreshOnlineStatus();
+    }, 60 * 1000);
+    // อัปเดตสถานะออนไลน์ครั้งแรกหลังโหลด feed ~15 วินาที (ไม่ต้องรอ 1 นาที)
+    const firstRefresh = setTimeout(refreshOnlineStatus, 15 * 1000);
+    return () => {
+      clearInterval(id);
+      clearTimeout(firstRefresh);
+    };
   }, []);
 
   const menu = useMenu();
@@ -372,7 +413,7 @@ export function HomePageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
         {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded && !(tab === 'sold' && hasSearch)) ? (
-          <FeedSkeleton />
+          <FeedSkeleton count={5} />
         ) : (
           <PostFeed
           posts={posts}

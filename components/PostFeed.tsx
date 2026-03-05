@@ -79,14 +79,15 @@ export const PostFeed = React.memo<PostFeedProps>(({
   }
 
   const showNoMoreOnly = !hasMore && !loadingMore;
+  // โหลดเพิ่ม: ให้ bottom slot ขยายตาม Skeleton (ไม่บีบความสูงเป็น 0) เพื่อไม่ให้ผู้ใช้เลื่อนลงไปเกิน Skeleton ได้
   const bottomSlotStyle: React.CSSProperties = {
-    minHeight: showNoMoreOnly ? 120 : loadingMore ? 0 : 88,
-    height: showNoMoreOnly ? 120 : loadingMore ? 0 : 88,
+    minHeight: showNoMoreOnly ? 120 : loadingMore ? undefined : 88,
+    height: showNoMoreOnly ? 120 : loadingMore ? undefined : 88,
     display: 'flex',
     alignItems: 'center',
     justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
     paddingTop: showNoMoreOnly ? 28 : 0,
-    flexShrink: 0,
+    flexShrink: loadingMore ? 0 : 0,
     width: '100%',
     boxSizing: 'border-box',
   };

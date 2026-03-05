@@ -10,7 +10,7 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 export default function HomeLoading() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <FeedSkeleton count={4} />
+      <FeedSkeleton count={5} />
     </main>
   );
 }

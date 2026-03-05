@@ -47,13 +47,6 @@ const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display:
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
   position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 200,
 };
-const SKELETON_OVERLAY_STYLE: React.CSSProperties = {
-  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1,
-  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-  backgroundSize: '200% 100%',
-  animation: 'viewing-mode-skeleton-shimmer 1.2s ease-in-out infinite',
-  borderRadius: 0,
-};
 
 interface ViewingPostModalProps {
   viewingPost: any | null;
@@ -324,12 +317,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 
   return (
     <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={handleTouchMove} onTouchEnd={onTouchEnd}>
-      <style>{`
-        @keyframes viewing-mode-skeleton-shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
       <div style={WRAPPER_CLIP_STYLE}>
         <div
           ref={scrollContainerRef}
@@ -368,9 +355,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         {visibleImages.map((img, idx) => (
           <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
             <div style={IMAGE_PLACEHOLDER_STYLE}>
-              {!loadedIndices.has(idx) && idx !== initialImageIndex && (
-                <div style={SKELETON_OVERLAY_STYLE} aria-hidden="true" />
-              )}
               <img
                 src={img}
                 loading={idx < initialVisible ? 'eager' : 'lazy'}
