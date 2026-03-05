@@ -9,7 +9,7 @@ interface LayoutPreviewSelectorProps {
   previews: string[];
 }
 
-type LayoutType = 'default' | 'five-images' | 'five-images-side' | 'car-gallery' | 'three-images';
+type LayoutType = 'default' | 'five-images' | 'car-gallery' | 'three-images' | 'two-left-three-right';
 
 interface LayoutPreview {
   id: LayoutType;
@@ -50,61 +50,6 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 }}
               />
             ))}
-          </div>
-        ),
-      },
-      {
-        id: 'five-images-side',
-        name: '5 รูป',
-        render: () => (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.5fr 1fr',
-              gap: PHOTO_GRID_GAP,
-              width: '100%',
-              height: '100%',
-              background: '#ffffff',
-            }}
-          >
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr',
-                gap: PHOTO_GRID_GAP,
-                background: '#ffffff',
-              }}
-            >
-              {[0, 1].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr 1fr',
-                gap: PHOTO_GRID_GAP,
-                background: '#ffffff',
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
           </div>
         ),
       },
@@ -153,6 +98,65 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 <div
                   key={i}
                   style={{
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ),
+      },
+      // Template 5: 2 รูปใหญ่ซ้าย, 3 รูปเล็กขวา — ทุกรูปสี่เหลี่ยมจัตุรัส (ซ้าย:ขวา = 1.5:1)
+      {
+        id: 'two-left-three-right',
+        name: '2 ซ้าย 3 ขวา',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.5fr 1fr',
+              gap: PHOTO_GRID_GAP,
+              width: '100%',
+              height: '100%',
+              background: '#ffffff',
+              alignContent: 'stretch',
+            }}
+          >
+            <div
+              style={{
+                aspectRatio: '1/2',
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                minHeight: 0,
+              }}
+            >
+              {[0, 1].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+            <div
+              style={{
+                aspectRatio: '1/3',
+                display: 'grid',
+                gridTemplateRows: '1fr 1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                minHeight: 0,
+              }}
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
                     background: '#b3d9e6',
                     borderRadius: '2px',
                   }}

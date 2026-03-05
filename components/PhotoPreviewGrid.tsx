@@ -442,102 +442,6 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       );
     }
 
-    // Layout: five-images-side (2 รูปซ้ายใหญ่, 3 รูปขวาเล็ก)
-    if (layout === 'five-images-side') {
-      return (
-        <div
-          onClick={click}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.5fr 1fr',
-            ...gridGap,
-            cursor,
-          }}
-          className={className}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateRows: '1fr 1fr',
-              ...gridGap,
-            }}
-          >
-            {allImages.slice(0, 2).map((img, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'relative',
-                  aspectRatio: '1',
-                  background: '#f0f0f0',
-                  overflow: 'hidden',
-                }}
-              >
-                <Image
-                  src={img}
-                  alt={`Preview ${i + 1}`}
-                  fill
-                  style={{ objectFit: 'cover', objectPosition: 'center' }}
-                  unoptimized
-                />
-                {removeBtn(i)}
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateRows: '1fr 1fr 1fr',
-              ...gridGap,
-            }}
-          >
-            {allImages.slice(2, 5).map((img, i) => {
-              const idx = i + 2;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    position: 'relative',
-                    aspectRatio: '1',
-                    background: '#f0f0f0',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Image
-                    src={img}
-                    alt={`Preview ${idx + 1}`}
-                    fill
-                    style={{ objectFit: 'cover', objectPosition: 'center' }}
-                    unoptimized
-                  />
-                  {idx === 4 && count > 5 && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        WebkitTextStroke: '3px #000',
-                        paintOrder: 'stroke fill',
-                        pointerEvents: 'none',
-                        zIndex: 1,
-                      }}
-                    >
-                      +{count - 5}
-                    </div>
-                  )}
-                  {removeBtn(idx)}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-
     // Layout: car-gallery (ซ้าย 2 รูปใหญ่สี่เหลี่ยมจัตุรัสเท่ากัน, ขวา 3 รูปเล็กสี่เหลี่ยม, gap แคบ)
     if (layout === 'car-gallery') {
       return (
@@ -601,6 +505,109 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
                     minHeight: 0,
                     background: '#f0f0f0',
                     overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    unoptimized
+                  />
+                  {idx === 4 && count > 5 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 5}
+                    </div>
+                  )}
+                  {removeBtn(idx)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Layout: two-left-three-right (ซ้าย 2 รูปใหญ่สี่เหลี่ยมจัตุรัส, ขวา 3 รูปเล็กสี่เหลี่ยมจัตุรัส — อัตราส่วนคอลัมน์ 1.5:1)
+    if (layout === 'two-left-three-right') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1fr',
+            ...gridGap,
+            cursor,
+            width: '100%',
+          }}
+          className={className}
+        >
+          <div
+            style={{
+              aspectRatio: '1/2',
+              display: 'grid',
+              gridTemplateRows: '1fr 1fr',
+              ...gridGap,
+              minHeight: 0,
+            }}
+          >
+            {allImages.slice(0, 2).map((img, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'relative',
+                  aspectRatio: '1',
+                  background: '#f0f0f0',
+                  overflow: 'hidden',
+                  minHeight: 0,
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Preview ${i + 1}`}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  unoptimized
+                />
+                {removeBtn(i)}
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              aspectRatio: '1/3',
+              display: 'grid',
+              gridTemplateRows: '1fr 1fr 1fr',
+              ...gridGap,
+              minHeight: 0,
+            }}
+          >
+            {allImages.slice(2, 5).map((img, i) => {
+              const idx = i + 2;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    background: '#f0f0f0',
+                    overflow: 'hidden',
+                    minHeight: 0,
                   }}
                 >
                   <Image
