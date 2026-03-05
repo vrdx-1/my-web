@@ -40,6 +40,8 @@ export const INITIAL_FEED_PAGE_SIZE = 1;
 export const FEED_CACHE_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000; // 2 วัน
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */
 export const NOTIFICATION_PAGE_SIZE = 20;
+/** อายุ cache รายการหน้าแจ้งเตือน (มิลลิวินาที) — แสดงของเก่าก่อน แล้วโหลดใหม่ด้านหลัง */
+export const NOTIFICATION_LIST_CACHE_MAX_AGE_MS = 2 * 60 * 1000; // 2 นาที
 
 /** Infinite scroll: โหลดหน้าถัดไปล่วงหน้าเมื่อผู้ใช้เลื่อนใกล้ล่าง (ระดับสากล เช่น Facebook, Instagram) */
 export const FEED_PRELOAD_ROOT_MARGIN = '0px 0px 800px 0px';

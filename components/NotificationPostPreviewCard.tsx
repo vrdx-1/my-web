@@ -16,24 +16,32 @@ export interface NotificationPostPreviewItem {
   boost_expires_at?: string | null;
 }
 
-// Mini PostCard Image Component — lazy loading; รายการแรกใช้ priority สำหรับ LCP
-const MiniPostImage = ({ images, priority = false }: { images: string[]; priority?: boolean }) => {
+const IMAGE_PLACEHOLDER_STYLE = {
+  width: '72px',
+  height: '72px',
+  borderRadius: '10px',
+  background: '#f0f0f0',
+  display: 'flex',
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+
+// Mini PostCard Image Component — lazy loading; โหลดเมื่อควรเห็น (shouldLoadImage); รายการแรกใช้ priority สำหรับ LCP
+const MiniPostImage = ({
+  images,
+  priority = false,
+  shouldLoadImage = true,
+}: {
+  images: string[];
+  priority?: boolean;
+  shouldLoadImage?: boolean;
+}) => {
   const imageSize = '72px';
   const firstLoading = priority ? 'eager' : 'lazy';
 
-  if (!images || images.length === 0) {
+  if (!shouldLoadImage || !images || images.length === 0) {
     return (
-      <div
-        style={{
-          width: imageSize,
-          height: imageSize,
-          borderRadius: '10px',
-          background: '#f0f0f0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div style={IMAGE_PLACEHOLDER_STYLE}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="#5c5c5c">
           <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
         </svg>
@@ -349,7 +357,9 @@ export const NotificationPostPreviewCard = React.memo<{
   onNavigateToPost: (postId: string) => void;
   /** รายการแรกในลิสต์ — โหลดรูปแบบ eager สำหรับ LCP */
   priority?: boolean;
-}>(({ notification, isReadStyle, timeAgoText, onNavigateToPost, priority = false }) => {
+  /** เมื่อ false ไม่โหลดรูปจนกว่าจะใกล้เห็น (ลดการโหลดพร้อมกัน) */
+  shouldLoadImage?: boolean;
+}>(({ notification, isReadStyle, timeAgoText, onNavigateToPost, priority = false, shouldLoadImage = true }) => {
   const interactionTotal =
     typeof notification.interaction_total === 'number'
       ? notification.interaction_total
@@ -402,7 +412,7 @@ export const NotificationPostPreviewCard = React.memo<{
           userSelect: 'none',
         }}
       >
-        <MiniPostImage images={notification.post_images || []} priority={priority} />
+        <MiniPostImage images={notification.post_images || []} priority={priority} shouldLoadImage={shouldLoadImage} />
       </div>
 
       {/* Notification Content */}

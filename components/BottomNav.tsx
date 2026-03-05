@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Plus, PenSquare, Bell, User } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -29,15 +29,26 @@ export function BottomNav() {
   const pathname = usePathname();
   const lastNavRef = useRef<{ path: string; at: number } | null>(null);
   const lastCreatePostTriggerRef = useRef<number>(0);
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
   const { session, userProfile } = useSessionAndProfile();
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
 
-  const isHome = pathname === '/home';
+  const effectivePath = pendingPath ?? pathname ?? '';
+  const isHome = effectivePath === '/home';
   const isNotificationOrProfile =
-    pathname === '/notification' || pathname === '/profile' || (pathname?.startsWith('/profile/') ?? false);
+    effectivePath === '/notification' || effectivePath === '/profile' || effectivePath.startsWith('/profile/');
+
+  useEffect(() => {
+    if (!pendingPath || pathname == null) return;
+    const arrived =
+      pendingPath === '/profile'
+        ? pathname === '/profile' || pathname.startsWith('/profile/')
+        : pathname === pendingPath;
+    if (arrived) setPendingPath(null);
+  }, [pathname, pendingPath]);
 
   return (
     <nav
@@ -108,7 +119,6 @@ export function BottomNav() {
           );
         }
 
-        const isActive = match(pathname);
         const isProfile = path === '/profile';
         const showBadge = path === '/notification' && !!session && unreadCount > 0;
 
@@ -133,9 +143,11 @@ export function BottomNav() {
           if (pathname === path && path === '/profile') {
             return;
           }
+          setPendingPath(path);
           router.push(path, { scroll: false });
         };
 
+        const isActive = match(effectivePath);
         return (
           <button
             key={path}

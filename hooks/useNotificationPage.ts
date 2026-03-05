@@ -6,12 +6,13 @@ import { supabase } from '@/lib/supabase';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { NOTIFICATION_PAGE_SIZE, FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
+import { NOTIFICATION_PAGE_SIZE, FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD, NOTIFICATION_LIST_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import type { NotificationFeedItem } from '@/utils/notificationFeed';
 import type { CachedBoosts } from '@/utils/notificationFeed';
 
 const STORAGE_KEY = 'notification_cleared_posts';
 const HOME_OPENED_KEY = 'notification_home_last_opened_at';
+const LIST_CACHE_KEY = 'notification_list_cache';
 
 /** เปิด debug: เปิด Console (F12) พิมพ์ window.__NOTIFICATION_LOADMORE_DEBUG = true แล้วเลื่อนลง จะมี log [notification loadMore] */
 function debugLog(...args: unknown[]) {
@@ -48,6 +49,29 @@ function saveClearedMap(map: Record<string, string>) {
   }
 }
 
+function loadListCache(): { list: NotificationFeedItem[]; ts: number } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(LIST_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { list?: NotificationFeedItem[]; ts?: number };
+    if (!parsed?.list || !Array.isArray(parsed.list) || typeof parsed.ts !== 'number') return null;
+    const age = Date.now() - parsed.ts;
+    if (age > NOTIFICATION_LIST_CACHE_MAX_AGE_MS) return null;
+    return { list: parsed.list, ts: parsed.ts };
+  } catch {
+    return null;
+  }
+}
+
+function saveListCache(list: NotificationFeedItem[]) {
+  try {
+    window.localStorage.setItem(LIST_CACHE_KEY, JSON.stringify({ list, ts: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
+
 export interface NotificationItemWithTime extends NotificationFeedItem {
   timeAgoText: string;
 }
@@ -67,6 +91,7 @@ export function useNotificationPage() {
   const userIdRef = useRef<string | null>(null);
   /** Cursor สำหรับหน้าถัดไป = แถวสุดท้ายของ rawFeed ล่าสุด (ไม่ใช้จาก list ที่ merge แล้ว) */
   const lastCursorRef = useRef<{ created_at: string; id: string } | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     const loaded = loadClearedMap();
@@ -83,6 +108,13 @@ export function useNotificationPage() {
     notificationsRef.current = notifications;
   }, [notifications]);
 
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const markPageAsRead = useCallback(async (userId: string, rawFeed: any[]) => {
     if (rawFeed.length === 0) return;
     try {
@@ -97,46 +129,57 @@ export function useNotificationPage() {
     }
   }, []);
 
-  const fetchFirstPage = useCallback(async (userId: string) => {
+  const fetchFirstPage = useCallback(async (userId: string, backgroundRefresh = false) => {
     userIdRef.current = userId;
-    setLoading(true);
+    if (!backgroundRefresh) setLoading(true);
     try {
       const result = await fetchNotificationFeed(
         userId,
         clearedPostMapRef.current,
-        { limit: NOTIFICATION_PAGE_SIZE, offset: 0 }
+        { limit: NOTIFICATION_PAGE_SIZE }
       );
+      if (!isMountedRef.current) return;
       markPageAsRead(userId, result.rawFeed).catch(() => {});
       if (result.boostsForCache) boostsCacheRef.current = result.boostsForCache;
       setNotifications(result.list);
       setHasMore(result.hasMore ?? false);
+      saveListCache(result.list);
       const raw = result.rawFeed;
       lastCursorRef.current =
         raw?.length > 0 && raw[raw.length - 1]?.id && raw[raw.length - 1]?.created_at
           ? { created_at: raw[raw.length - 1].created_at, id: raw[raw.length - 1].id }
           : null;
     } catch (err) {
+      if (!isMountedRef.current) return;
       console.error('Fetch Error:', err);
       setNotifications([]);
       setHasMore(false);
       lastCursorRef.current = null;
     } finally {
-      setLoading(false);
-      const scrollToTop = () => {
-        if (typeof window !== 'undefined') window.scrollTo(0, 0);
-        scrollContainerRef.current?.scrollTo(0, 0);
-      };
-      requestAnimationFrame(() => requestAnimationFrame(scrollToTop));
+      if (isMountedRef.current) {
+        setLoading(false);
+        const scrollToTop = () => {
+          if (typeof window !== 'undefined') window.scrollTo(0, 0);
+          scrollContainerRef.current?.scrollTo(0, 0);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(scrollToTop));
+      }
     }
   }, [markPageAsRead]);
 
   useEffect(() => {
     if (!clearedMapReady) return;
     let cancelled = false;
+    const cached = loadListCache();
+    if (cached && cached.list.length > 0) {
+      setNotifications(cached.list);
+      setLoading(false);
+    }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
       if (session) {
-        fetchFirstPage(session.user.id).then(() => {
+        const isBackground = !!(cached && cached.list.length > 0);
+        fetchFirstPage(session.user.id, isBackground).then(() => {
           if (!cancelled && typeof window !== 'undefined') {
             try {
               window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
@@ -146,10 +189,10 @@ export function useNotificationPage() {
           }
         });
       } else {
-        setLoading(false);
+        if (isMountedRef.current) setLoading(false);
       }
     }).catch(() => {
-      if (!cancelled) setLoading(false);
+      if (!cancelled && isMountedRef.current) setLoading(false);
     });
     return () => {
       cancelled = true;
@@ -178,6 +221,7 @@ export function useNotificationPage() {
         { limit: NOTIFICATION_PAGE_SIZE, cursor },
         boostsCacheRef.current
       );
+      if (!isMountedRef.current) return;
       const raw = result.rawFeed;
       if (raw?.length > 0 && raw[raw.length - 1]?.id && raw[raw.length - 1]?.created_at) {
         lastCursorRef.current = { created_at: raw[raw.length - 1].created_at, id: raw[raw.length - 1].id };
@@ -194,10 +238,12 @@ export function useNotificationPage() {
       });
       setHasMore(result.hasMore ?? false);
     } catch (err) {
-      console.error('Load more Error:', err);
-      setHasMore(false);
+      if (isMountedRef.current) {
+        console.error('Load more Error:', err);
+        setHasMore(false);
+      }
     } finally {
-      setLoadingMore(false);
+      if (isMountedRef.current) setLoadingMore(false);
     }
   }, [loadingMore, hasMore, markPageAsRead]);
 

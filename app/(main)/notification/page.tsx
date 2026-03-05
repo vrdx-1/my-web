@@ -1,12 +1,58 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
 import { NotificationPostPreviewCard } from '@/components/NotificationPostPreviewCard';
 import { useNotificationPage } from '@/hooks/useNotificationPage';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
+import type { NotificationItemWithTime } from '@/hooks/useNotificationPage';
+
+function NotificationCardWithLazyImage({
+  item,
+  index,
+  rootRef,
+  onNavigateToPost,
+}: {
+  item: NotificationItemWithTime;
+  index: number;
+  rootRef: React.RefObject<HTMLDivElement | null>;
+  onNavigateToPost: (postId: string) => void;
+}) {
+  const [shouldLoadImage, setShouldLoadImage] = useState(index === 0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (index === 0) return;
+    const root = rootRef.current;
+    const el = cardRef.current;
+    if (!root || !el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setShouldLoadImage(true);
+      },
+      { root, rootMargin: '200px', threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [index, rootRef]);
+
+  const isReadStyle =
+    typeof item.notification_count !== 'number' || item.notification_count <= 0;
+  return (
+    <div ref={cardRef}>
+      <NotificationPostPreviewCard
+        notification={item}
+        isReadStyle={isReadStyle}
+        timeAgoText={item.timeAgoText}
+        onNavigateToPost={onNavigateToPost}
+        priority={index === 0 && shouldLoadImage}
+        shouldLoadImage={shouldLoadImage}
+      />
+    </div>
+  );
+}
 
 const BOTTOM_SLOT_STYLE = {
   minHeight: 88,
@@ -90,17 +136,14 @@ export default function NotificationPage() {
       ) : (
         <div ref={scrollContainerRef} style={{ flex: 1, overflowY: 'auto' }}>
           {visibleItemsWithTime.map((item, index) => {
-            const isReadStyle =
-              typeof item.notification_count !== 'number' || item.notification_count <= 0;
             const uniqueKey = `${item.post_id}-${item.created_at}-${index}`;
             return (
-              <NotificationPostPreviewCard
+              <NotificationCardWithLazyImage
                 key={uniqueKey}
-                notification={item}
-                isReadStyle={isReadStyle}
-                timeAgoText={item.timeAgoText}
+                item={item}
+                index={index}
+                rootRef={scrollContainerRef}
                 onNavigateToPost={onNavigateToPost}
-                priority={index === 0}
               />
             );
           })}

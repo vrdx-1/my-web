@@ -112,6 +112,29 @@ export const PostCard = React.memo<PostCardProps>(({
     }
   }, []);
 
+  const clearCaptionSelection = React.useCallback(() => {
+    const el = captionRef.current;
+    const sel = window.getSelection();
+    if (!el || !sel) return;
+    if (sel.containsNode(el, true)) {
+      sel.removeAllRanges();
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const target = e.target as Node;
+      if (captionRef.current?.contains(target)) return;
+      clearCaptionSelection();
+    };
+    document.addEventListener('click', handler);
+    document.addEventListener('touchend', handler, { passive: true });
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('touchend', handler);
+    };
+  }, [clearCaptionSelection]);
+
   React.useEffect(() => {
     return () => {
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
@@ -272,6 +295,7 @@ export const PostCard = React.memo<PostCardProps>(({
         onTouchStart={handleCaptionTouchStart}
         onTouchEnd={handleCaptionTouchEnd}
         onTouchCancel={handleCaptionTouchEnd}
+        onClick={clearCaptionSelection}
       >
         {post.caption}
       </div>

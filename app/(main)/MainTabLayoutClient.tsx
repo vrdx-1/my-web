@@ -94,6 +94,16 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     return () => homeRefreshContext?.register(null);
   }, [pathname, mainTab, homeRefreshContext]);
 
+  /** โหลดหน้าแจ้งเตือนและโปรไฟล์ล่วงหน้าเมื่ออยู่โฮม — สลับหน้าเร็วขึ้น */
+  useEffect(() => {
+    if (pathname !== '/home') return;
+    const t = setTimeout(() => {
+      void import('@/app/(main)/notification/page');
+      void import('@/app/(main)/profile/page');
+    }, 500);
+    return () => clearTimeout(t);
+  }, [pathname]);
+
   const loadingTab =
     mainTab?.navigatingToTab ??
     (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? mainTab?.homeTab ?? null : null);

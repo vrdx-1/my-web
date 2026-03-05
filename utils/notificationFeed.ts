@@ -37,6 +37,15 @@ export interface FetchNotificationFeedResult {
 
 export type CachedBoosts = { data: any[] | null; error: any } | null;
 
+/** ดึงเฉพาะจำนวนแจ้งเตือนยังไม่อ่าน (สำหรับ badge) — ไม่ดึงรายการ */
+export async function fetchNotificationUnreadCount(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('get_notification_unread_count', {
+    p_owner_id: userId,
+  });
+  if (error) return 0;
+  return typeof data === 'number' ? data : 0;
+}
+
 export async function fetchNotificationFeed(
   userId: string,
   clearedMap: Record<string, string>,
@@ -57,7 +66,16 @@ export async function fetchNotificationFeed(
     }
   }
 
-  const { data, error } = await supabase.rpc('get_notifications_feed', rpcParams);
+  const rpcPromise = supabase.rpc('get_notifications_feed', rpcParams);
+  const boostsPromise = cachedBoosts
+    ? Promise.resolve({ data: cachedBoosts.data, error: cachedBoosts.error })
+    : supabase
+        .from('post_boosts')
+        .select('post_id, status, created_at, expires_at, updated_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+  const [{ data, error }, boostsRes] = await Promise.all([rpcPromise, boostsPromise]);
 
   if (error) throw error;
 
@@ -113,32 +131,16 @@ export async function fetchNotificationFeed(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-  let boostsData: any[] | null = null;
-  let boostsError: any = null;
-  if (cachedBoosts) {
-    boostsData = cachedBoosts.data;
-    boostsError = cachedBoosts.error;
-  } else {
-    try {
-      const res = await supabase
-        .from('post_boosts')
-        .select('post_id, status, created_at, expires_at, updated_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      boostsData = res.data;
-      boostsError = res.error;
-      if (boostsError && String(boostsError.message || '').toLowerCase().includes('updated_at')) {
-        const fallback = await supabase
-          .from('post_boosts')
-          .select('post_id, status, created_at, expires_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-        boostsData = fallback.data;
-        boostsError = fallback.error;
-      }
-    } catch (_) {
-      boostsError = true;
-    }
+  let boostsData: any[] | null = boostsRes?.data ?? null;
+  let boostsError: any = boostsRes?.error ?? null;
+  if (!cachedBoosts && boostsError && String(boostsError?.message || '').toLowerCase().includes('updated_at')) {
+    const fallback = await supabase
+      .from('post_boosts')
+      .select('post_id, status, created_at, expires_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    boostsData = fallback.data;
+    boostsError = fallback.error;
   }
 
   const boostByPostId = new Map<
@@ -211,7 +213,7 @@ export async function fetchNotificationFeed(
   );
 
   // โหลดแบบแบ่งหน้า: เติม boost-only เฉพาะหน้าแรก (offset 0) เพื่อไม่ให้ซ้ำ
-  const isFirstPage = !options || options.offset === 0;
+  const isFirstPage = !options || options.offset === 0 || !options.cursor;
   const boostOnlyToAdd = isFirstPage ? boostOnlyPostIds : [];
 
   if (boostOnlyToAdd.length > 0) {
