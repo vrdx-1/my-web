@@ -276,8 +276,8 @@ export const PostCard = React.memo<PostCardProps>(({
         {post.caption}
       </div>
 
-      {/* Photo Grid — ความกว้างเท่า caption (padding 0 15px), gap เท่ากับ layout 2×2 ทุกแบบ */}
-      <div style={{ padding: '0 15px' }}>
+      {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
+      <div style={{ padding: 0 }}>
         <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
       </div>
 
