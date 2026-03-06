@@ -167,15 +167,28 @@ export function HomeHeaderSearchAndFilter() {
           </svg>
           <span
             style={{
-              flexShrink: 0,
-              fontSize: '15px',
-              color: queryToShow.trim() ? '#111' : '#65676b',
-              fontFamily: LAO_FONT,
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            {queryToShow.trim() || 'ຄົ້ນຫາ'}
+            <span
+              style={{
+                display: 'block',
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontSize: '15px',
+                color: queryToShow.trim() ? '#111' : '#65676b',
+                fontFamily: LAO_FONT,
+              }}
+            >
+              {queryToShow.trim() || 'ຄົ້ນຫາ'}
+            </span>
           </span>
-          <span style={{ flex: 1, minWidth: 8 }} aria-hidden />
           <span
             style={{
               flexShrink: 0,

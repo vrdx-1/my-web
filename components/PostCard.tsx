@@ -84,7 +84,9 @@ export const PostCard = React.memo<PostCardProps>(({
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef<Set<string>>(new Set());
   const captionRef = React.useRef<HTMLDivElement>(null);
+  const captionCopyPopupRef = React.useRef<HTMLDivElement>(null);
   const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCaptionCopyPopup, setShowCaptionCopyPopup] = React.useState(false);
 
   const selectAllCaption = React.useCallback(() => {
     const el = captionRef.current;
@@ -98,11 +100,16 @@ export const PostCard = React.memo<PostCardProps>(({
   }, []);
 
   const handleCaptionContextMenu = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     selectAllCaption();
+    setShowCaptionCopyPopup(true);
   }, [selectAllCaption]);
 
   const handleCaptionTouchStart = React.useCallback(() => {
-    longPressTimerRef.current = setTimeout(selectAllCaption, 500);
+    longPressTimerRef.current = setTimeout(() => {
+      selectAllCaption();
+      setShowCaptionCopyPopup(true);
+    }, 500);
   }, [selectAllCaption]);
 
   const handleCaptionTouchEnd = React.useCallback(() => {
@@ -121,11 +128,30 @@ export const PostCard = React.memo<PostCardProps>(({
     }
   }, []);
 
+  const hideCaptionCopyPopupAndClearSelection = React.useCallback(() => {
+    setShowCaptionCopyPopup(false);
+    clearCaptionSelection();
+  }, [clearCaptionSelection]);
+
+  const handleCaptionCopyClick = React.useCallback(() => {
+    const text = post?.caption ?? '';
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        hideCaptionCopyPopupAndClearSelection();
+      }).catch(() => {
+        hideCaptionCopyPopupAndClearSelection();
+      });
+    } else {
+      hideCaptionCopyPopupAndClearSelection();
+    }
+  }, [post?.caption, hideCaptionCopyPopupAndClearSelection]);
+
   React.useEffect(() => {
     const handler = (e: Event) => {
       const target = e.target as Node;
       if (captionRef.current?.contains(target)) return;
-      clearCaptionSelection();
+      if (captionCopyPopupRef.current?.contains(target)) return;
+      hideCaptionCopyPopupAndClearSelection();
     };
     document.addEventListener('click', handler);
     document.addEventListener('touchend', handler, { passive: true });
@@ -133,7 +159,7 @@ export const PostCard = React.memo<PostCardProps>(({
       document.removeEventListener('click', handler);
       document.removeEventListener('touchend', handler);
     };
-  }, [clearCaptionSelection]);
+  }, [hideCaptionCopyPopupAndClearSelection]);
 
   React.useEffect(() => {
     return () => {
@@ -277,27 +303,83 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
       </div>
 
-      {/* Caption — long-press / right-click เลือกข้อความทั้งหมดเพื่อ copy ได้ */}
-      <div
-        ref={captionRef}
-        role="text"
-        style={{
-          padding: '0 15px 10px 15px',
-          fontSize: '15px',
-          lineHeight: '1.4',
-          whiteSpace: 'pre-wrap',
-          color: '#111111',
-          fontWeight: 500,
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-        }}
-        onContextMenu={handleCaptionContextMenu}
-        onTouchStart={handleCaptionTouchStart}
-        onTouchEnd={handleCaptionTouchEnd}
-        onTouchCancel={handleCaptionTouchEnd}
-        onClick={clearCaptionSelection}
-      >
-        {post.caption}
+      {/* Caption — long-press / right-click เลือกข้อความทั้งหมด แล้วแสดงป๊อปอัพ copy ของเราเท่านั้น */}
+      <div style={{ position: 'relative' }}>
+        <div
+          ref={captionRef}
+          role="text"
+          style={{
+            padding: '0 15px 10px 15px',
+            fontSize: '15px',
+            lineHeight: '1.4',
+            whiteSpace: 'pre-wrap',
+            color: '#111111',
+            fontWeight: 500,
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+          }}
+        >
+          {post.caption}
+        </div>
+        {/* Overlay รับ long-press/right-click เพื่อเลือกทั้งหมดและแสดงป๊อปอัพของเรา (ไม่ให้เมนู copy มาตรฐานโผล่) */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            cursor: 'text',
+          }}
+          onContextMenu={handleCaptionContextMenu}
+          onTouchStart={handleCaptionTouchStart}
+          onTouchEnd={handleCaptionTouchEnd}
+          onTouchCancel={handleCaptionTouchEnd}
+          onClick={hideCaptionCopyPopupAndClearSelection}
+          aria-hidden
+        />
+        {/* ป๊อปอัพ copy เฉพาะของเรา — ຄັດລອກ */}
+        {showCaptionCopyPopup && createPortal(
+          <div
+            ref={captionCopyPopupRef}
+            role="dialog"
+            aria-label="Copy caption"
+            style={{
+              position: 'fixed',
+              zIndex: 9999,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bottom: 'min(22vh, 120px)',
+              background: 'rgba(28, 28, 30, 0.96)',
+              backdropFilter: 'saturate(180%) blur(20px)',
+              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+              borderRadius: '14px',
+              padding: '10px 20px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.12)',
+              minWidth: '140px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={handleCaptionCopyClick}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '16px',
+                fontWeight: 600,
+                letterSpacing: '0.02em',
+                padding: '6px 4px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              ຄັດລອກ
+            </button>
+          </div>,
+          document.body
+        )}
       </div>
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}

@@ -428,107 +428,81 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       );
     }
 
-    // Layout: two-left-three-right (ซ้าย 2 รูปใหญ่สี่เหลี่ยมจัตุรัส, ขวา 3 รูปเล็กสี่เหลี่ยมจัตุรัส — อัตราส่วนคอลัมน์ 1.5:1)
+    // Layout: two-left-three-right (2 รูปใหญ่ 1:1 ซ้าย, 3 รูปเล็ก 1:1 ขวา — ซ้ายใหญ่กว่าขวา)
     if (layout === 'two-left-three-right') {
       return (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.5fr 1fr',
-              ...gridGap,
-              cursor: 'pointer',
-              width: '100%',
-            }}
-          >
-            <div
-              style={{
-                aspectRatio: '1/2',
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr',
-                ...gridGap,
-                minHeight: 0,
-              }}
-            >
-              {normalizedImages.slice(0, 2).map((img, i) => (
+          <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gridTemplateRows: '1fr 1fr 1fr 1fr 1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative', aspectRatio: '5/6', width: '100%' }}>
+            {normalizedImages.slice(0, 2).map((img, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'relative',
+                  gridColumn: 1,
+                  gridRow: `${i * 3 + 1} / ${i * 3 + 4}`,
+                  minHeight: 0,
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                }}
+                onClick={() => onPostClick(i)}
+              >
+                <ImageWithSkeleton
+                  src={img}
+                  imageIndex={i}
+                  onPostClick={onPostClick}
+                  loading={i === 0 ? firstImageLoading : 'lazy'}
+                  fetchPriority={i === 0 && priority ? 'high' : undefined}
+                  containerStyle={{ position: 'absolute', inset: 0 }}
+                  imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                />
+              </div>
+            ))}
+            {normalizedImages.slice(2, 5).map((img, i) => {
+              const idx = i + 2;
+              return (
                 <div
-                  key={i}
+                  key={idx}
                   style={{
                     position: 'relative',
-                    aspectRatio: '1',
+                    gridColumn: 2,
+                    gridRow: `${i * 2 + 1} / ${i * 2 + 3}`,
+                    minHeight: 0,
                     cursor: 'pointer',
                     overflow: 'hidden',
-                    minHeight: 0,
                   }}
-                  onClick={() => onPostClick(i)}
+                  onClick={() => onPostClick(idx)}
                 >
                   <ImageWithSkeleton
                     src={img}
-                    imageIndex={i}
+                    imageIndex={idx}
                     onPostClick={onPostClick}
-                    loading={i === 0 ? firstImageLoading : 'lazy'}
-                    fetchPriority={i === 0 && priority ? 'high' : undefined}
+                    loading="lazy"
                     containerStyle={{ position: 'absolute', inset: 0 }}
                     imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
                   />
+                  {idx === 4 && count > 5 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 5}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            <div
-              style={{
-                aspectRatio: '1/3',
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr 1fr',
-                ...gridGap,
-                minHeight: 0,
-              }}
-            >
-              {normalizedImages.slice(2, 5).map((img, i) => {
-                const idx = i + 2;
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      position: 'relative',
-                      aspectRatio: '1',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      minHeight: 0,
-                    }}
-                    onClick={() => onPostClick(idx)}
-                  >
-                    <ImageWithSkeleton
-                      src={img}
-                      imageIndex={idx}
-                      onPostClick={onPostClick}
-                      loading="lazy"
-                      containerStyle={{ position: 'absolute', inset: 0 }}
-                      imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
-                    />
-                    {idx === 4 && count > 5 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '24px',
-                          fontWeight: 'bold',
-                          color: '#fff',
-                          WebkitTextStroke: '3px #000',
-                          paintOrder: 'stroke fill',
-                          pointerEvents: 'none',
-                          zIndex: 1,
-                        }}
-                      >
-                        +{count - 5}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+              );
+            })}
           </div>
         </>
       );
@@ -594,6 +568,205 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 );
               })}
             </div>
+          </div>
+        </>
+      );
+    }
+
+    // Layout: one-top-two-bottom (1 รูปใหญ่อยู่ด้านบน 2 รูปเล็กอยู่ด้านล่าง) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส
+    if (layout === 'one-top-two-bottom') {
+      return (
+        <>
+          <div style={{ display: 'grid', gridTemplateRows: '2fr 1fr', ...gridGap, cursor: 'pointer', aspectRatio: '1', width: '100%' }}>
+            <div style={{ position: 'relative', width: '100%', minHeight: 0 }} onClick={() => onPostClick(0)}>
+              <ImageWithSkeleton
+                src={normalizedImages[0]}
+                imageIndex={0}
+                onPostClick={onPostClick}
+                loading={firstImageLoading}
+                fetchPriority={priority ? 'high' : undefined}
+                containerStyle={{ position: 'absolute', inset: 0 }}
+                imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+              />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap }}>
+              {normalizedImages.slice(1, 3).map((img, i) => {
+                const idx = i + 1;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      aspectRatio: '1',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                    }}
+                    onClick={() => onPostClick(idx)}
+                  >
+                    <ImageWithSkeleton
+                      src={img}
+                      imageIndex={idx}
+                      onPostClick={onPostClick}
+                      loading="lazy"
+                      containerStyle={{ position: 'absolute', inset: 0 }}
+                      imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                    />
+                    {idx === 2 && count > 3 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '24px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          WebkitTextStroke: '3px #000',
+                          paintOrder: 'stroke fill',
+                          pointerEvents: 'none',
+                          zIndex: 1,
+                        }}
+                      >
+                        +{count - 3}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Layout: one-top-three-bottom (หนึ่งรูปใหญ่อยู่ด้านบน สามรูปเล็ก 1:1 อยู่ด้านล่าง) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส
+    if (layout === 'one-top-three-bottom') {
+      return (
+        <>
+          <div style={{ display: 'grid', gridTemplateRows: '2fr 1fr', ...gridGap, cursor: 'pointer', aspectRatio: '1', width: '100%' }}>
+            <div style={{ position: 'relative', width: '100%', minHeight: 0 }} onClick={() => onPostClick(0)}>
+              <ImageWithSkeleton
+                src={normalizedImages[0]}
+                imageIndex={0}
+                onPostClick={onPostClick}
+                loading={firstImageLoading}
+                fetchPriority={priority ? 'high' : undefined}
+                containerStyle={{ position: 'absolute', inset: 0 }}
+                imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+              />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
+              {normalizedImages.slice(1, 4).map((img, i) => {
+                const idx = i + 1;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      aspectRatio: '1',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                    }}
+                    onClick={() => onPostClick(idx)}
+                  >
+                    <ImageWithSkeleton
+                      src={img}
+                      imageIndex={idx}
+                      onPostClick={onPostClick}
+                      loading="lazy"
+                      containerStyle={{ position: 'absolute', inset: 0 }}
+                      imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                    />
+                    {idx === 3 && count > 4 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '24px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          WebkitTextStroke: '3px #000',
+                          paintOrder: 'stroke fill',
+                          pointerEvents: 'none',
+                          zIndex: 1,
+                        }}
+                      >
+                        +{count - 4}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Layout: one-left-three-right (หนึ่งรูปใหญ่อยู่ด้านซ้าย สามรูปเล็ก 1:1 อยู่ด้านขวา) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส, ช่องขวา 1:1, ใช้ grid หลักเดียวเพื่อให้ row gap เท่ากับ layout อื่น
+    if (layout === 'one-left-three-right') {
+      return (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative', aspectRatio: '1', width: '100%' }}>
+            <div style={{ gridRow: 'span 3', minHeight: 0 }}>
+              <ImageWithSkeleton
+                src={normalizedImages[0]}
+                imageIndex={0}
+                onPostClick={onPostClick}
+                loading={firstImageLoading}
+                fetchPriority={priority ? 'high' : undefined}
+                containerStyle={{ width: '100%', height: '100%' }}
+                imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+              />
+            </div>
+            {normalizedImages.slice(1, 4).map((img, i) => {
+              const idx = i + 1;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    minHeight: 0,
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                  }}
+                  onClick={() => onPostClick(idx)}
+                >
+                  <ImageWithSkeleton
+                    src={img}
+                    imageIndex={idx}
+                    onPostClick={onPostClick}
+                    loading="lazy"
+                    containerStyle={{ position: 'absolute', inset: 0 }}
+                    imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
+                  />
+                  {idx === 3 && count > 4 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 4}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </>
       );

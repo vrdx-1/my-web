@@ -543,109 +543,6 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       );
     }
 
-    // Layout: two-left-three-right (ซ้าย 2 รูปใหญ่สี่เหลี่ยมจัตุรัส, ขวา 3 รูปเล็กสี่เหลี่ยมจัตุรัส — อัตราส่วนคอลัมน์ 1.5:1)
-    if (layout === 'two-left-three-right') {
-      return (
-        <div
-          onClick={click}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.5fr 1fr',
-            ...gridGap,
-            cursor,
-            width: '100%',
-          }}
-          className={className}
-        >
-          <div
-            style={{
-              aspectRatio: '1/2',
-              display: 'grid',
-              gridTemplateRows: '1fr 1fr',
-              ...gridGap,
-              minHeight: 0,
-            }}
-          >
-            {allImages.slice(0, 2).map((img, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'relative',
-                  aspectRatio: '1',
-                  background: '#f0f0f0',
-                  overflow: 'hidden',
-                  minHeight: 0,
-                }}
-              >
-                <Image
-                  src={img}
-                  alt={`Preview ${i + 1}`}
-                  fill
-                  style={{ objectFit: 'cover', objectPosition: 'center' }}
-                  unoptimized
-                />
-                {removeBtn(i)}
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              aspectRatio: '1/3',
-              display: 'grid',
-              gridTemplateRows: '1fr 1fr 1fr',
-              ...gridGap,
-              minHeight: 0,
-            }}
-          >
-            {allImages.slice(2, 5).map((img, i) => {
-              const idx = i + 2;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    position: 'relative',
-                    aspectRatio: '1',
-                    background: '#f0f0f0',
-                    overflow: 'hidden',
-                    minHeight: 0,
-                  }}
-                >
-                  <Image
-                    src={img}
-                    alt={`Preview ${idx + 1}`}
-                    fill
-                    style={{ objectFit: 'cover', objectPosition: 'center' }}
-                    unoptimized
-                  />
-                  {idx === 4 && count > 5 && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        WebkitTextStroke: '3px #000',
-                        paintOrder: 'stroke fill',
-                        pointerEvents: 'none',
-                        zIndex: 1,
-                      }}
-                    >
-                      +{count - 5}
-                    </div>
-                  )}
-                  {removeBtn(idx)}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-
     // Layout: three-images (ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก - เหมือนตอน post 3 รูป)
     if (layout === 'three-images') {
       return (
@@ -719,6 +616,334 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               </div>
             ))}
           </div>
+        </div>
+      );
+    }
+
+    // Layout: one-top-three-bottom (หนึ่งรูปใหญ่อยู่ด้านบน สามรูปเล็ก 1:1 อยู่ด้านล่าง) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส
+    if (layout === 'one-top-three-bottom') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateRows: '2fr 1fr',
+            ...gridGap,
+            cursor,
+            aspectRatio: '1',
+            width: '100%',
+          }}
+          className={className}
+        >
+          <div style={{ position: 'relative', width: '100%', minHeight: 0 }}>
+            <img
+              src={allImages[0]}
+              alt="Preview 1"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                background: '#f0f0f0',
+              }}
+            />
+            {removeBtn(0)}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              ...gridGap,
+            }}
+          >
+            {allImages.slice(1, 4).map((img, i) => {
+              const idx = i + 1;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    background: '#f0f0f0',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    unoptimized
+                  />
+                  {idx === 3 && count > 4 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 4}
+                    </div>
+                  )}
+                  {removeBtn(idx)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Layout: one-top-two-bottom (1 รูปใหญ่อยู่ด้านบน 2 รูปเล็กอยู่ด้านล่าง) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส
+    if (layout === 'one-top-two-bottom') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateRows: '2fr 1fr',
+            ...gridGap,
+            cursor,
+            aspectRatio: '1',
+            width: '100%',
+          }}
+          className={className}
+        >
+          <div style={{ position: 'relative', width: '100%', minHeight: 0 }}>
+            <img
+              src={allImages[0]}
+              alt="Preview 1"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                background: '#f0f0f0',
+              }}
+            />
+            {removeBtn(0)}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap }}>
+            {allImages.slice(1, 3).map((img, i) => {
+              const idx = i + 1;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    background: '#f0f0f0',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    unoptimized
+                  />
+                  {idx === 2 && count > 3 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        WebkitTextStroke: '3px #000',
+                        paintOrder: 'stroke fill',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    >
+                      +{count - 3}
+                    </div>
+                  )}
+                  {removeBtn(idx)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Layout: two-left-three-right (2 รูปใหญ่ 1:1 ซ้าย, 3 รูปเล็ก 1:1 ขวา — ซ้ายใหญ่กว่าขวา)
+    if (layout === 'two-left-three-right') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '3fr 2fr',
+            gridTemplateRows: '1fr 1fr 1fr 1fr 1fr 1fr',
+            ...gridGap,
+            cursor,
+            position: 'relative',
+            aspectRatio: '5/6',
+            width: '100%',
+          }}
+          className={className}
+        >
+          {allImages.slice(0, 2).map((img, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'relative',
+                gridColumn: 1,
+                gridRow: `${i * 3 + 1} / ${i * 3 + 4}`,
+                minHeight: 0,
+                background: '#f0f0f0',
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                src={img}
+                alt={`Preview ${i + 1}`}
+                fill
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
+                unoptimized
+              />
+              {removeBtn(i)}
+            </div>
+          ))}
+          {allImages.slice(2, 5).map((img, i) => {
+            const idx = i + 2;
+            return (
+              <div
+                key={idx}
+                style={{
+                  position: 'relative',
+                  gridColumn: 2,
+                  gridRow: `${i * 2 + 1} / ${i * 2 + 3}`,
+                  minHeight: 0,
+                  background: '#f0f0f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Preview ${idx + 1}`}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  unoptimized
+                />
+                {idx === 4 && count > 5 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      WebkitTextStroke: '3px #000',
+                      paintOrder: 'stroke fill',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  >
+                    +{count - 5}
+                  </div>
+                )}
+                {removeBtn(idx)}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Layout: one-left-three-right (หนึ่งรูปใหญ่อยู่ด้านซ้าย สามรูปเล็ก 1:1 อยู่ด้านขวา) — โครงสร้างรวมเป็นสี่เหลี่ยมจตุรัส, ช่องขวา 1:1, ใช้ grid หลักเดียวเพื่อให้ row gap เท่ากับ layout อื่น
+    if (layout === 'one-left-three-right') {
+      return (
+        <div
+          onClick={click}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gridTemplateRows: '1fr 1fr 1fr',
+            ...gridGap,
+            cursor,
+            position: 'relative',
+            aspectRatio: '1',
+            width: '100%',
+          }}
+          className={className}
+        >
+          <div style={{ position: 'relative', gridRow: 'span 3', minHeight: 0 }}>
+            <img
+              src={allImages[0]}
+              alt="Preview 1"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                background: '#f0f0f0',
+              }}
+            />
+            {removeBtn(0)}
+          </div>
+          {allImages.slice(1, 4).map((img, i) => {
+            const idx = i + 1;
+            return (
+              <div
+                key={idx}
+                style={{
+                  position: 'relative',
+                  minHeight: 0,
+                  background: '#f0f0f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Preview ${idx + 1}`}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center' }}
+                  unoptimized
+                />
+                {idx === 3 && count > 4 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      fontWeight: 'bold',
+                      color: '#fff',
+                      WebkitTextStroke: '3px #000',
+                      paintOrder: 'stroke fill',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  >
+                    +{count - 4}
+                  </div>
+                )}
+                {removeBtn(idx)}
+              </div>
+            );
+          })}
         </div>
       );
     }

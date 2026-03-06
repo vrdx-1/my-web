@@ -9,7 +9,7 @@ interface LayoutPreviewSelectorProps {
   previews: string[];
 }
 
-type LayoutType = 'default' | 'five-images' | 'car-gallery' | 'three-images' | 'two-left-three-right';
+type LayoutType = 'default' | 'five-images' | 'car-gallery' | 'three-images' | 'one-top-three-bottom' | 'one-top-two-bottom' | 'one-left-three-right' | 'two-left-three-right';
 
 interface LayoutPreview {
   id: LayoutType;
@@ -22,7 +22,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
     const count = previews.length;
     if (count < 6) return null;
 
-    // ใช้ count เท่านั้น ไม่ใช้ previews ใน render
+    const effectiveLayout = selectedLayout;
 
     const layouts: LayoutPreview[] = [
       {
@@ -107,7 +107,6 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
           </div>
         ),
       },
-      // Template 5: 2 รูปใหญ่ซ้าย, 3 รูปเล็กขวา — ทุกรูปสี่เหลี่ยมจัตุรัส (ซ้าย:ขวา = 1.5:1)
       {
         id: 'two-left-three-right',
         name: '2 ซ้าย 3 ขวา',
@@ -115,54 +114,20 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1.5fr 1fr',
+              gridTemplateColumns: '3fr 2fr',
+              gridTemplateRows: '1fr 1fr 1fr 1fr 1fr 1fr',
               gap: PHOTO_GRID_GAP,
               width: '100%',
               height: '100%',
+              aspectRatio: '5/6',
               background: '#ffffff',
-              alignContent: 'stretch',
             }}
           >
-            <div
-              style={{
-                aspectRatio: '1/2',
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr',
-                gap: PHOTO_GRID_GAP,
-                minHeight: 0,
-              }}
-            >
-              {[0, 1].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              style={{
-                aspectRatio: '1/3',
-                display: 'grid',
-                gridTemplateRows: '1fr 1fr 1fr',
-                gap: PHOTO_GRID_GAP,
-                minHeight: 0,
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    aspectRatio: '1',
-                    background: '#b3d9e6',
-                    borderRadius: '2px',
-                  }}
-                />
-              ))}
-            </div>
+            <div style={{ gridColumn: 1, gridRow: '1 / 4', background: '#b3d9e6', borderRadius: '2px' }} />
+            <div style={{ gridColumn: 1, gridRow: '4 / 7', background: '#b3d9e6', borderRadius: '2px' }} />
+            <div style={{ gridColumn: 2, gridRow: '1 / 3', background: '#b3d9e6', borderRadius: '2px' }} />
+            <div style={{ gridColumn: 2, gridRow: '3 / 5', background: '#b3d9e6', borderRadius: '2px' }} />
+            <div style={{ gridColumn: 2, gridRow: '5 / 7', background: '#b3d9e6', borderRadius: '2px' }} />
           </div>
         ),
       },
@@ -209,6 +174,118 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                   }}
                 />
               ))}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'one-top-three-bottom',
+        name: '1 บน 3 ล่าง',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: '2fr 1fr',
+              gap: PHOTO_GRID_GAP,
+              width: '100%',
+              height: '100%',
+              aspectRatio: '1',
+              background: '#ffffff',
+            }}
+          >
+            <div
+              style={{
+                background: '#b3d9e6',
+                borderRadius: '2px',
+                minHeight: 0,
+              }}
+            />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                background: '#ffffff',
+                minHeight: 0,
+              }}
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    aspectRatio: '1',
+                    background: '#b3d9e6',
+                    borderRadius: '2px',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'one-left-three-right',
+        name: '1 ซ้าย 3 ขวา',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr',
+              gridTemplateRows: '1fr 1fr 1fr',
+              gap: PHOTO_GRID_GAP,
+              width: '100%',
+              height: '100%',
+              aspectRatio: '1',
+              background: '#ffffff',
+            }}
+          >
+            <div
+              style={{
+                gridRow: 'span 3',
+                background: '#b3d9e6',
+                borderRadius: '2px',
+              }}
+            />
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  aspectRatio: '1',
+                  background: '#b3d9e6',
+                  borderRadius: '2px',
+                }}
+              />
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: 'one-top-two-bottom',
+        name: '1 บน 2 ล่าง',
+        render: () => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: '2fr 1fr',
+              gap: PHOTO_GRID_GAP,
+              width: '100%',
+              height: '100%',
+              aspectRatio: '1',
+              background: '#ffffff',
+            }}
+          >
+            <div style={{ background: '#b3d9e6', borderRadius: '2px', minHeight: 0 }} />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: PHOTO_GRID_GAP,
+                background: '#ffffff',
+                minHeight: 0,
+              }}
+            >
+              <div style={{ aspectRatio: '1', background: '#b3d9e6', borderRadius: '2px' }} />
+              <div style={{ aspectRatio: '1', background: '#b3d9e6', borderRadius: '2px' }} />
             </div>
           </div>
         ),
@@ -263,46 +340,55 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
         <div
           style={{
             display: 'flex',
-            gap: '6px',
+            gap: '4px',
             overflowX: 'auto',
             paddingBottom: '8px',
             scrollbarWidth: 'thin',
           }}
         >
-          {layouts.map((layout) => (
-            <button
+          {layouts.map((layout, index) => (
+            <div
               key={layout.id}
-              type="button"
-              onClick={() => onLayoutChange(layout.id)}
               style={{
                 flexShrink: 0,
-                width: '72px',
-                aspectRatio: '1',
-                padding: '3px',
-                border: selectedLayout === layout.id ? '2px solid #1877f2' : '2px solid #e0e0e0',
-                borderRadius: '6px',
-                background: '#fff',
-                cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '2px',
                 alignItems: 'center',
-                justifyContent: 'center',
+                gap: '3px',
               }}
             >
-              <div
+              <button
+                type="button"
+                onClick={() => onLayoutChange(layout.id)}
                 style={{
-                  width: '100%',
+                  width: '52px',
                   aspectRatio: '1',
-                  overflow: 'hidden',
-                  borderRadius: '3px',
-                  background: '#ffffff',
                   padding: '2px',
+                  border: effectiveLayout === layout.id ? '2px solid #1877f2' : '2px solid #e0e0e0',
+                  borderRadius: '5px',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {layout.render()}
-              </div>
-            </button>
+                <div
+                  style={{
+                    width: '100%',
+                    aspectRatio: '1',
+                    overflow: 'hidden',
+                    borderRadius: '2px',
+                    background: '#ffffff',
+                    padding: '1px',
+                  }}
+                >
+                  {layout.render()}
+                </div>
+              </button>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#65676b' }}>{index + 1}</span>
+            </div>
           ))}
         </div>
       </div>

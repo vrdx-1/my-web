@@ -7,7 +7,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 
 const MAX_CAPTION_LINES = 15;
 const ALLOWED_KEYS_AT_MAX = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
-const VALID_LAYOUTS = ['default', 'car-gallery', 'five-images', 'three-images', 'two-left-three-right'];
+const VALID_LAYOUTS = ['default', 'car-gallery', 'five-images', 'three-images'];
 
 export function useEditPostPage(id: string) {
   const router = useRouter();

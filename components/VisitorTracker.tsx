@@ -134,6 +134,12 @@ export default function VisitorTracker() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const uid = session?.user?.id ?? null;
       applyUserPresence(uid ? { id: uid } : null);
+      if (uid) {
+        updatePresenceNow();
+        startPresenceHeartbeat();
+      } else {
+        stopPresenceHeartbeat();
+      }
     });
 
     const onVisibilityChange = () => {

@@ -197,10 +197,15 @@ export function HomePageContent() {
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
   const headerVisibility = useHeaderVisibilityContext();
+  const interactionModalHook = useInteractionModal();
+  const isBottomSheetOpen = interactionModalHook.interactionModal.show;
   const headerScroll = useHeaderScroll({
+    disableScrollHide: isBottomSheetOpen,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
   });
-  const interactionModalHook = useInteractionModal();
+
+  // ตอนเปิด Bottom sheet: แช่สถานะ Header — ถ้าแสดงอยู่ก็คงแสดง ถ้าซ่อนอยู่ก็คงซ่อน (ไม่ให้ scroll เปลี่ยน)
+  // ไม่มี useEffect บังคับ setHeaderVisible เพื่อรักษาสถานะเดิม
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postList.loadingMore,
