@@ -512,7 +512,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     if (layout === 'three-images') {
       return (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative' }}>
             <div style={{ gridRow: 'span 2' }}>
               <ImageWithSkeleton
                 src={normalizedImages[0]}
@@ -541,7 +541,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                       imageIndex={idx}
                       onPostClick={onPostClick}
                       loading="lazy"
-                      containerStyle={{ width: '100%', height: '199px' }}
+                      containerStyle={{ width: '100%', height: '198.5px' }}
                       imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
                     />
                     {idx === 2 && count > 3 && (

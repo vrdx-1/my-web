@@ -336,13 +336,13 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
     ];
 
     return (
-      <div style={{ padding: '15px', paddingTop: '20px' }}>
+      <div style={{ padding: '12px 15px', paddingTop: '16px' }}>
         <div
           style={{
             display: 'flex',
-            gap: '4px',
+            gap: '3px',
             overflowX: 'auto',
-            paddingBottom: '8px',
+            paddingBottom: '6px',
             scrollbarWidth: 'thin',
           }}
         >
@@ -354,18 +354,18 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '2px',
               }}
             >
               <button
                 type="button"
                 onClick={() => onLayoutChange(layout.id)}
                 style={{
-                  width: '52px',
+                  width: '40px',
                   aspectRatio: '1',
-                  padding: '2px',
+                  padding: '1px',
                   border: effectiveLayout === layout.id ? '2px solid #1877f2' : '2px solid #e0e0e0',
-                  borderRadius: '5px',
+                  borderRadius: '4px',
                   background: '#fff',
                   cursor: 'pointer',
                   display: 'flex',
@@ -379,7 +379,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                     width: '100%',
                     aspectRatio: '1',
                     overflow: 'hidden',
-                    borderRadius: '2px',
+                    borderRadius: '1px',
                     background: '#ffffff',
                     padding: '1px',
                   }}
@@ -387,7 +387,7 @@ export const LayoutPreviewSelector = React.memo<LayoutPreviewSelectorProps>(
                   {layout.render()}
                 </div>
               </button>
-              <span style={{ fontSize: '10px', fontWeight: 600, color: '#65676b' }}>{index + 1}</span>
+              <span style={{ fontSize: '9px', fontWeight: 600, color: '#65676b' }}>{index + 1}</span>
             </div>
           ))}
         </div>

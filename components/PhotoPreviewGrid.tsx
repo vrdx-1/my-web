@@ -551,7 +551,8 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            ...gridGap,
+            columnGap: gap,
+            rowGap: 0,
             cursor,
             position: 'relative',
           }}
@@ -578,7 +579,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
                 style={{
                   position: 'relative',
                   width: '100%',
-                  height: '199px',
+                  height: '198.5px',
                   background: '#f0f0f0',
                 }}
               >

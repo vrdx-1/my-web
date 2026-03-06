@@ -36,6 +36,8 @@ interface PostFeedProps {
   onLoadMore?: () => void;
   /** อัปเดตเป็นระยะเพื่อให้สถานะออนไลน์ในการ์ด re-render (ไม่ต้อง refresh หน้า) */
   onlineStatusTick?: number;
+  /** ฟีดหยุดเลื่อนแล้ว — ให้กดค้างแคปชั่นเพื่อเลือก/คัดลอกได้ (ไม่ส่ง = ถือว่า idle) */
+  isFeedScrollIdle?: boolean;
 }
 
 /**
@@ -71,6 +73,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   hasMore = true,
   onLoadMore,
   onlineStatusTick,
+  isFeedScrollIdle = true,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (
@@ -93,7 +96,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   };
 
   // โหลดเพิ่ม = แสดง Skeleton ที่ท้าย feed (ไม่ใช้ spinner)
-  const loadingMoreSkeleton = loadingMore ? React.createElement(FeedSkeleton, { key: 'feed-loading-skeleton', count: 2 }) : null;
+  const loadingMoreSkeleton = loadingMore ? React.createElement(FeedSkeleton, { key: 'feed-loading-skeleton', count: 1 }) : null;
   const noMoreText = React.createElement(
     'span',
     {
@@ -154,6 +157,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
       onSetMenuAnimating,
       onImpression,
       hideBoost,
+      isFeedScrollIdle,
     });
   });
 

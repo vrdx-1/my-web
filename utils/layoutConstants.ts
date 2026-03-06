@@ -7,7 +7,7 @@
 import { LAO_FONT } from './constants';
 
 /** Gap เส้นแบ่งรูปใน grid — เท่ากับ layout 2×2 ใช้กับทุก template (PhotoGrid, PhotoPreviewGrid, PostCard) */
-export const PHOTO_GRID_GAP = '6px';
+export const PHOTO_GRID_GAP = '3px';
 
 export const LAYOUT_CONSTANTS = {
   // Container widths

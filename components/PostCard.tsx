@@ -42,6 +42,8 @@ interface PostCardProps {
   leftOfAvatar?: React.ReactNode;
   /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
   priority?: boolean;
+  /** ฟีดหยุดเลื่อนแล้ว — กดค้างแคปชั่นได้เฉพาะเมื่อ true (ไม่ส่ง = ถือว่า idle) */
+  isFeedScrollIdle?: boolean;
 }
 
 export const PostCard = React.memo<PostCardProps>(({
@@ -72,6 +74,7 @@ export const PostCard = React.memo<PostCardProps>(({
   hideBoost = false,
   leftOfAvatar,
   priority = false,
+  isFeedScrollIdle = true,
 }) => {
   const router = useRouter();
   const isOwner = isPostOwner(post, session);
@@ -84,9 +87,7 @@ export const PostCard = React.memo<PostCardProps>(({
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef<Set<string>>(new Set());
   const captionRef = React.useRef<HTMLDivElement>(null);
-  const captionCopyPopupRef = React.useRef<HTMLDivElement>(null);
   const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showCaptionCopyPopup, setShowCaptionCopyPopup] = React.useState(false);
 
   const selectAllCaption = React.useCallback(() => {
     const el = captionRef.current;
@@ -102,15 +103,14 @@ export const PostCard = React.memo<PostCardProps>(({
   const handleCaptionContextMenu = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     selectAllCaption();
-    setShowCaptionCopyPopup(true);
   }, [selectAllCaption]);
 
   const handleCaptionTouchStart = React.useCallback(() => {
+    if (!isFeedScrollIdle) return;
     longPressTimerRef.current = setTimeout(() => {
       selectAllCaption();
-      setShowCaptionCopyPopup(true);
     }, 500);
-  }, [selectAllCaption]);
+  }, [selectAllCaption, isFeedScrollIdle]);
 
   const handleCaptionTouchEnd = React.useCallback(() => {
     if (longPressTimerRef.current) {
@@ -128,30 +128,11 @@ export const PostCard = React.memo<PostCardProps>(({
     }
   }, []);
 
-  const hideCaptionCopyPopupAndClearSelection = React.useCallback(() => {
-    setShowCaptionCopyPopup(false);
-    clearCaptionSelection();
-  }, [clearCaptionSelection]);
-
-  const handleCaptionCopyClick = React.useCallback(() => {
-    const text = post?.caption ?? '';
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        hideCaptionCopyPopupAndClearSelection();
-      }).catch(() => {
-        hideCaptionCopyPopupAndClearSelection();
-      });
-    } else {
-      hideCaptionCopyPopupAndClearSelection();
-    }
-  }, [post?.caption, hideCaptionCopyPopupAndClearSelection]);
-
   React.useEffect(() => {
     const handler = (e: Event) => {
       const target = e.target as Node;
       if (captionRef.current?.contains(target)) return;
-      if (captionCopyPopupRef.current?.contains(target)) return;
-      hideCaptionCopyPopupAndClearSelection();
+      clearCaptionSelection();
     };
     document.addEventListener('click', handler);
     document.addEventListener('touchend', handler, { passive: true });
@@ -159,7 +140,7 @@ export const PostCard = React.memo<PostCardProps>(({
       document.removeEventListener('click', handler);
       document.removeEventListener('touchend', handler);
     };
-  }, [hideCaptionCopyPopupAndClearSelection]);
+  }, [clearCaptionSelection]);
 
   React.useEffect(() => {
     return () => {
@@ -303,7 +284,7 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
       </div>
 
-      {/* Caption — long-press / right-click เลือกข้อความทั้งหมด แล้วแสดงป๊อปอัพ copy ของเราเท่านั้น */}
+      {/* Caption — long-press (เมื่อฟีดหยุดเลื่อน) / right-click เลือกข้อความทั้งหมด ใช้ copy ของ device/browser */}
       <div style={{ position: 'relative' }}>
         <div
           ref={captionRef}
@@ -321,7 +302,6 @@ export const PostCard = React.memo<PostCardProps>(({
         >
           {post.caption}
         </div>
-        {/* Overlay รับ long-press/right-click เพื่อเลือกทั้งหมดและแสดงป๊อปอัพของเรา (ไม่ให้เมนู copy มาตรฐานโผล่) */}
         <div
           style={{
             position: 'absolute',
@@ -332,54 +312,9 @@ export const PostCard = React.memo<PostCardProps>(({
           onTouchStart={handleCaptionTouchStart}
           onTouchEnd={handleCaptionTouchEnd}
           onTouchCancel={handleCaptionTouchEnd}
-          onClick={hideCaptionCopyPopupAndClearSelection}
+          onClick={clearCaptionSelection}
           aria-hidden
         />
-        {/* ป๊อปอัพ copy เฉพาะของเรา — ຄັດລອກ */}
-        {showCaptionCopyPopup && createPortal(
-          <div
-            ref={captionCopyPopupRef}
-            role="dialog"
-            aria-label="Copy caption"
-            style={{
-              position: 'fixed',
-              zIndex: 9999,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              bottom: 'min(22vh, 120px)',
-              background: 'rgba(28, 28, 30, 0.96)',
-              backdropFilter: 'saturate(180%) blur(20px)',
-              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-              borderRadius: '14px',
-              padding: '10px 20px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.12)',
-              minWidth: '140px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={handleCaptionCopyClick}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '16px',
-                fontWeight: 600,
-                letterSpacing: '0.02em',
-                padding: '6px 4px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              ຄັດລອກ
-            </button>
-          </div>,
-          document.body
-        )}
       </div>
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
