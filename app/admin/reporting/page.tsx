@@ -114,7 +114,9 @@ export default function AdminReportingPage() {
  <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>ລາຍງານທັງໝົດ ( {reports.length} )</h2>
  {error && (
    <div style={{ marginBottom: '16px', padding: '12px', background: '#fff5f5', border: '1px solid #ffccc7', borderRadius: '8px', color: '#cf1322' }}>
-     {error}
+     {error === 'Server configuration missing'
+       ? 'ບໍ່ມີ SUPABASE_SERVICE_ROLE_KEY ໃນ .env.local (ຫຼື environment ຂອງ server). ເພີ່ມຕົວແປນີ້ແລ້ວ redeploy.'
+       : error}
    </div>
  )}
  {reports.length === 0 && !error && <EmptyState message="ບໍ່ມີລາຍງານຄ້າງຢູ່" variant="card" />}

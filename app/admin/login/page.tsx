@@ -1,11 +1,24 @@
 'use client'
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import { useOtpResendCountdown } from '@/hooks/useOtpResendCountdown';
 import { OtpInputs } from '@/components/auth';
 import { sendOtpToEmail } from '@/utils/authOtp';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
+import { safeParseJSON } from '@/utils/storageUtils';
+
+type SavedAccount = { email: string; last_used_at: string };
+const SAVED_ADMIN_ACCOUNTS_KEY = 'saved_admin_accounts';
+const MAX_SAVED = 5;
+
+function saveSavedAdminAccount(email: string): SavedAccount[] {
+  const trimmed = email.trim();
+  const existing = safeParseJSON<SavedAccount[]>(SAVED_ADMIN_ACCOUNTS_KEY, []);
+  const updated = [{ email: trimmed, last_used_at: new Date().toISOString() }, ...existing.filter((a) => a.email !== trimmed)].slice(0, MAX_SAVED);
+  if (typeof window !== 'undefined') localStorage.setItem(SAVED_ADMIN_ACCOUNTS_KEY, JSON.stringify(updated));
+  return updated;
+}
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -16,6 +29,12 @@ export default function AdminLogin() {
   const [resendTrigger, setResendTrigger] = useState(0);
   const resendSeconds = useOtpResendCountdown(otpSent, resendTrigger);
   const router = useRouter();
+
+  // โหลดอีเมลที่เคยใช้ (จดจำจาก localStorage)
+  useEffect(() => {
+    const stored = safeParseJSON<SavedAccount[]>(SAVED_ADMIN_ACCOUNTS_KEY, []);
+    if (stored.length > 0) setEmail(stored[0].email);
+  }, []);
 
   // สร้าง supabase client สำหรับ Browser
   const supabase = createBrowserClient(
@@ -101,6 +120,7 @@ export default function AdminLogin() {
       }
 
       if (profile.role === 'admin') {
+        saveSavedAdminAccount(email.trim());
         // ໃຊ້ window.location ເພື່ອໃຫ້ Middleware ເຊັກຄ່າໃໝ່ໄດ້ຊັດເຈນ
         window.location.href = '/admin/search-history';
       } else {
