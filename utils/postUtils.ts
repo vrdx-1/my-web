@@ -880,7 +880,7 @@ export const getOnlineStatus = (lastSeen: string | null): OnlineStatus => {
   const lastActive = new Date(lastSeen).getTime();
   const diffInSeconds = Math.floor((now - lastActive) / 1000);
   
-  if (diffInSeconds < 300) return { isOnline: true, text: 'ອອນລາຍ' };
+  if (diffInSeconds < 60) return { isOnline: true, text: 'ອອນລາຍ' };
   if (diffInSeconds < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ເມື່ອຄູ່` };
   
   const diffInMinutes = Math.floor(diffInSeconds / 60);

@@ -81,6 +81,7 @@ export const OtpInputs = React.memo(function OtpInputs({
           onChange={handleChange}
           onPaste={handlePaste}
           placeholder=""
+          autoFocus
           style={{
             width: '11ch',
           border: 'none',

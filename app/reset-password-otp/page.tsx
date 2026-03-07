@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { LAO_FONT } from '@/utils/constants'
@@ -7,6 +7,7 @@ import { ButtonSpinner } from '@/components/LoadingSpinner'
 
 export default function ResetPasswordOtp() {
   const router = useRouter()
+  const otpInputRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState<string | null>(null)
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(false)
@@ -14,6 +15,11 @@ export default function ResetPasswordOtp() {
     text: '',
     type: '',
   })
+
+  // โฟกัสช่อง OTP เมื่อเปิดหน้า เพื่อให้แป้นพิมพ์ขึ้นโดยไม่ต้องคลิก
+  useEffect(() => {
+    otpInputRef.current?.focus()
+  }, [])
 
   // ດຶງອີເມວຈາກ localStorage ຖ້າບໍ່ມີໃຫ້ກັບໄປໜ້າຂໍ OTP
   useEffect(() => {
@@ -158,6 +164,7 @@ export default function ResetPasswordOtp() {
 
         <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <input
+            ref={otpInputRef}
             type="text"
             value={token}
             onChange={(e) => setToken(e.target.value)}
