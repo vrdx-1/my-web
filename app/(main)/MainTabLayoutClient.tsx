@@ -77,7 +77,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
 
   const handleTabRefresh = useCallback(() => {
     mainTab?.setTabRefreshing(true);
-    mainTab?.triggerTabRefresh();
+    mainTab?.triggerTabRefresh({ fromHomeButton: true });
   }, [mainTab]);
 
   const handleTabSwitchStart = useCallback(

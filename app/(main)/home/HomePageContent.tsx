@@ -230,10 +230,11 @@ export function HomePageContent() {
 
   useEffect(() => {
     if (tab !== 'sold' || !sessionReady || soldListData.session === undefined || hasSearch) return;
+    if (soldListData.posts.length > 0) return;
     soldListData.setPage(0);
     soldListData.setHasMore(true);
     soldListData.fetchPosts(true);
-  }, [tab, sessionReady, soldListData.session, hasSearch]);
+  }, [tab, sessionReady, soldListData.session, hasSearch, soldListData.posts.length]);
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -252,10 +253,10 @@ export function HomePageContent() {
 
   const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
-    // ทุกชนิด refresh (browser/กดแท็บ) → ฟิลเตอร์กลับเป็น "ທຸກແຂວງ"
+    // ทุกชนิด refresh (กดโลโก้ / ดึงลง / กดแท็บ) → ฟิลเตอร์ ທຸກແຂວງ + ล้างคำค้นหา
     homeProvince?.setSelectedProvince('');
-    // กดแท็บ refresh → ล้างคำค้นหา; กดปุ่ม Home refresh ไม่ล้าง (ให้เหมือนกดแท็บ ພ້ອມຂາຍ/ຂາຍແລ້ວ)
-    if (!options?.fromHomeButton && searchParams.has('q')) {
+    const clearedSearch = searchParams.has('q');
+    if (clearedSearch) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('q');
       const queryString = params.toString();
@@ -269,21 +270,22 @@ export function HomePageContent() {
       mainTab?.setRefreshSource('pull');
     }
     setTabRefreshing(true);
+    const useNormalFeed = clearedSearch || !searchQuery.trim();
     if (tab === 'recommend') {
-      if (searchQuery.trim()) {
-        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
-      } else {
+      if (useNormalFeed) {
         recommendFeed.setPage(0);
         recommendFeed.setHasMore(true);
         recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      } else {
+        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
       }
     } else {
-      if (searchQuery.trim()) {
-        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
-      } else {
+      if (useNormalFeed) {
         soldListData.setPage(0);
         soldListData.setHasMore(true);
         soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      } else {
+        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
       }
     }
   }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router, homeProvince]);
@@ -439,7 +441,7 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded && !(tab === 'sold' && hasSearch)) ? (
+        {(posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) || (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore) ? (
           <FeedSkeleton count={5} />
         ) : (
           <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
