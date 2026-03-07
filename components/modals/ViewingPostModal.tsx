@@ -47,6 +47,16 @@ const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display:
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
   position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 200,
 };
+/** Placeholder ขณะรอโหลดรูป — แบบ Facebook (เทาอ่อน + shimmer) */
+const IMAGE_SKELETON_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  minHeight: 200,
+  background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'viewing-image-shimmer 1.5s ease-in-out infinite',
+};
 
 interface ViewingPostModalProps {
   viewingPost: any | null;
@@ -94,11 +104,9 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // รูปที่คลิกแสดงใน post card อยู่แล้ว ถือว่าโหลดแล้ว ไม่แสดง spinner
-    const safeIdx = images.length ? Math.min(initialImageIndex, images.length - 1) : 0;
-    setLoadedIndices(new Set(images.length ? [safeIdx] : []));
+    setLoadedIndices(new Set());
     setInitialImageLoaded(false);
-  }, [viewingPost?.id, initialImageIndex, images.length]);
+  }, [viewingPost?.id, images.length]);
 
   useEffect(() => {
     if (images.length === 0 && isViewingModeOpen) setInitialImageLoaded(true);
@@ -108,6 +116,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     setLoadedIndices((prev) => new Set(prev).add(idx));
     if (idx === initialImageIndex) {
       setInitialImageLoaded(true);
+      // เลื่อนไปรูปที่เลือกเมื่อโหลดเสร็จ (หลังเปิด modal แล้ว)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById(`viewing-image-${idx}`);
@@ -149,31 +158,21 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     setEnterTransitionActive(false);
   }, [viewingPost?.id]);
 
+  // เปิดทันทีแบบ Facebook — ไม่รอรูปโหลดก่อนสไลด์เข้า
   useEffect(() => {
     if (!isViewingModeOpen || enterPhase !== 'offscreen') return;
-    const canEnter = initialImageLoaded || images.length === 0;
-    if (!canEnter) {
-      const fallback = setTimeout(() => {
-        setInitialImageLoaded(true);
-      }, 400);
-      return () => clearTimeout(fallback);
-    }
-    // ใช้ requestAnimationFrame สองครั้งเพื่อให้แน่ใจว่า DOM อัปเดตก่อน transition
-    // ใช้ flushSync เพื่อบังคับให้ state อัปเดตทันทีและให้ transition ทำงาน
     const rafId = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // ใช้ flushSync เพื่อบังคับให้ enterTransitionActive อัปเดตทันที
         flushSync(() => {
           setEnterTransitionActive(true);
         });
-        // แล้วค่อย set enterPhase ใน frame ถัดไปเพื่อให้ transition ทำงาน
         requestAnimationFrame(() => {
           setEnterPhase('entered');
         });
       });
     });
     return () => cancelAnimationFrame(rafId);
-  }, [isViewingModeOpen, enterPhase, initialImageLoaded, images.length]);
+  }, [isViewingModeOpen, enterPhase]);
 
   useEffect(() => {
     if (enterPhase !== 'entered' || !enterTransitionActive) return;
@@ -352,22 +351,30 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </div>
           </div>
         </div>
-        {visibleImages.map((img, idx) => (
-          <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
-            <div style={IMAGE_PLACEHOLDER_STYLE}>
-              <img
-                src={img}
-                loading={idx < initialVisible ? 'eager' : 'lazy'}
-                decoding="async"
-                fetchPriority={idx < initialVisible ? 'high' : undefined}
-                onLoad={() => handleImageLoad(idx)}
-                onClick={() => onImageClick(images, idx)}
-                style={IMG_STYLE}
-                alt=""
-              />
+        {visibleImages.map((img, idx) => {
+          const isLoaded = loadedIndices.has(idx);
+          return (
+            <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
+              <div style={IMAGE_PLACEHOLDER_STYLE}>
+                {!isLoaded && <div style={IMAGE_SKELETON_STYLE} aria-hidden="true" />}
+                <img
+                  src={img}
+                  loading={idx < initialVisible ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={idx < initialVisible ? 'high' : undefined}
+                  onLoad={() => handleImageLoad(idx)}
+                  onClick={() => onImageClick(images, idx)}
+                  style={{
+                    ...IMG_STYLE,
+                    opacity: isLoaded ? 1 : 0,
+                    transition: 'opacity 0.22s ease-out',
+                  }}
+                  alt=""
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         </div>
       </div>
     </div>

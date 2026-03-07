@@ -436,47 +436,13 @@ export function HomePageContent() {
     };
   }, [pathname]);
 
-  /** ระหว่างโหลดเพิ่ม (หลังมีโพสแล้ว): ล็อกการเลื่อน และให้ผู้ใช้เห็น Skeleton ที่ท้าย feed เท่านั้น */
-  const lockScrollWhileLoadingMore =
-    pathname === '/home' && posts.length > 0 && postList.hasMore && postList.loadingMore;
-  useEffect(() => {
-    if (!lockScrollWhileLoadingMore) return;
-
-    const body = document.body;
-    const html = document.documentElement;
-    const prevBodyOverflow = body.style.overflow;
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverscroll = body.style.overscrollBehavior;
-    const prevHtmlOverscroll = html.style.overscrollBehavior;
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-    body.style.overscrollBehavior = 'none';
-    html.style.overscrollBehavior = 'none';
-
-    const preventScroll = (e: Event) => {
-      e.preventDefault();
-    };
-
-    window.addEventListener('wheel', preventScroll, { passive: false });
-    window.addEventListener('touchmove', preventScroll, { passive: false });
-
-    return () => {
-      window.removeEventListener('wheel', preventScroll as any);
-      window.removeEventListener('touchmove', preventScroll as any);
-      body.style.overflow = prevBodyOverflow;
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overscrollBehavior = prevBodyOverscroll;
-      html.style.overscrollBehavior = prevHtmlOverscroll;
-    };
-  }, [lockScrollWhileLoadingMore]);
-
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
         {(posts.length === 0 && postList.loadingMore) || (tabRefreshing && postList.loadingMore) || (posts.length === 0 && !firstFeedLoaded && !(tab === 'sold' && hasSearch)) ? (
           <FeedSkeleton count={5} />
         ) : (
+          <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
           <PostFeed
           posts={posts}
           session={postList.session}
@@ -507,6 +473,7 @@ export function HomePageContent() {
           onlineStatusTick={onlineStatusTick}
           isFeedScrollIdle={feedScrollIdle}
         />
+          </div>
         )}
       </div>
 

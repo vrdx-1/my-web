@@ -1,7 +1,14 @@
 'use client'
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+
+/** แคชรายชื่อ Likes/Saves ต่อโพส — สลับแท็บแล้วโหลดไว้แล้วไม่แสดง Skeleton (แบบ Facebook) */
+const INTERACTION_CACHE_MAX = 50;
+
+function getCacheKey(postId: string, type: 'likes' | 'saves'): string {
+  return `${postId}:${type}`;
+}
 
 interface UseInteractionModalReturn {
   // State
@@ -39,8 +46,20 @@ export function useInteractionModal(): UseInteractionModalReturn {
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
 
-  const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string, posts: any[]) => {
+  const interactionCacheRef = useRef<Record<string, any[]>>({});
+
+  const fetchInteractions = useCallback(async (type: 'likes' | 'saves', postId: string, _posts: any[]) => {
+    const cacheKey = getCacheKey(postId, type);
+    const cached = interactionCacheRef.current[cacheKey];
     const isSwitchingTab = interactionModal.show && interactionModal.postId === postId;
+
+    if (cached !== undefined && isSwitchingTab) {
+      setInteractionUsers(cached);
+      setInteractionLoading(false);
+      setInteractionModal({ show: true, type, postId });
+      return;
+    }
+
     setInteractionLoading(true);
     if (!isSwitchingTab) {
       setInteractionUsers([]);
@@ -74,12 +93,21 @@ export function useInteractionModal(): UseInteractionModalReturn {
         })),
         ...(guestData || []).map((item: any) => ({
           username: 'User',
-          // Guest: show grey silhouette avatar (same as guest post profile)
           avatar_url: null,
           created_at: item.created_at
         }))
       ];
       formatted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      const cache = interactionCacheRef.current;
+      const keys = Object.keys(cache);
+      if (keys.length >= INTERACTION_CACHE_MAX) {
+        for (let i = 0; i <= keys.length - INTERACTION_CACHE_MAX; i++) {
+          delete cache[keys[i]];
+        }
+      }
+      cache[cacheKey] = formatted;
+
       setInteractionUsers(formatted);
     } catch (err) {
       console.error(err);

@@ -4,19 +4,23 @@ import React from 'react';
 
 const DEFAULT_CARD_COUNT = 5;
 const shimmerStyle: React.CSSProperties = {
-  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+  background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
   backgroundSize: '200% 100%',
-  animation: 'feed-skeleton-shimmer 1.2s ease-in-out infinite',
+  animation: 'feed-skeleton-shimmer 1.5s ease-in-out infinite',
   borderRadius: 8,
 };
 
+/** โครงเดียวกับ PostCard — header (avatar + ชื่อ/เวลา) + แคปชั่น + รูป + แถบปุ่ม */
+const CARD_PADDING = '12px 15px 8px 15px';
+const CAPTION_PADDING = '0 15px 10px 15px';
+
 interface FeedSkeletonProps {
-  /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 5 สำหรับโหลดครั้งแรก, 2 สำหรับโหลดเพิ่มที่ท้าย feed — ให้สอดคล้องกับหน้า Notifications) */
+  /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 5 สำหรับโหลดครั้งแรก, 1 สำหรับโหลดเพิ่มที่ท้าย feed) */
   count?: number;
 }
 
 /**
- * Skeleton placeholder — ทุกครั้งที่โหลด feed ใช้ Skeleton (โหลดครั้งแรก + โหลดเพิ่มที่ท้าย)
+ * Skeleton แบบ Facebook — โครงเหมือนโพสจริง (feed-card) ใช้ทั้งโหลดครั้งแรกและโหลดเพิ่มที่ท้าย
  */
 export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_CARD_COUNT }: FeedSkeletonProps) {
   return (
@@ -34,15 +38,16 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_C
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
+          className="feed-card"
           style={{
-            borderBottom: '1px solid #e5e5e5',
-            padding: '12px 15px 16px',
+            borderBottom: '1px solid #6b6b6b',
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
-            gap: 10,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Header — ตรงกับ PostCard postHeader */}
+          <div style={{ padding: CARD_PADDING, display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
             <div
               style={{
                 ...shimmerStyle,
@@ -52,31 +57,36 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_C
                 flexShrink: 0,
               }}
             />
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ ...shimmerStyle, height: 16, width: '60%', maxWidth: 140 }} />
-              <div style={{ ...shimmerStyle, height: 12, width: '45%', maxWidth: 100 }} />
+            <div style={{ flex: 1, minWidth: 0, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ ...shimmerStyle, height: 18, width: '50%', maxWidth: 140 }} />
+              <div style={{ ...shimmerStyle, height: 14, width: '40%', maxWidth: 100 }} />
             </div>
           </div>
-          <div style={{ ...shimmerStyle, height: 14, width: '100%', marginTop: 4 }} />
-          <div style={{ ...shimmerStyle, height: 14, width: '85%' }} />
+          {/* Caption — ตรงกับ caption block */}
+          <div style={{ padding: CAPTION_PADDING, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ ...shimmerStyle, height: 15, width: '100%' }} />
+            <div style={{ ...shimmerStyle, height: 15, width: '88%' }} />
+          </div>
+          {/* รูป — ตรงกับ PhotoGrid */}
           <div
             style={{
               ...shimmerStyle,
               width: '100%',
-              height: 320,
-              marginTop: 8,
+              minHeight: 320,
+              margin: '0 15px',
               borderRadius: 4,
             }}
           />
+          {/* แถบปุ่ม Like/Comment/Share */}
           <div
             style={{
               display: 'flex',
               gap: 24,
-              marginTop: 8,
+              padding: '10px 15px 16px',
             }}
           >
             {[1, 2, 3].map((j) => (
-              <div key={j} style={{ ...shimmerStyle, height: 18, width: 56 }} />
+              <div key={j} style={{ ...shimmerStyle, height: 20, width: 56 }} />
             ))}
           </div>
         </div>

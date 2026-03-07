@@ -6,6 +6,7 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { hasRouteVisited } from '@/utils/visitedRoutesStore';
 
 const NOTIFICATION_HEADER_STYLE: React.CSSProperties = {
   padding: '15px',
@@ -22,10 +23,12 @@ const NOTIFICATION_HEADER_STYLE: React.CSSProperties = {
 };
 
 /**
- * หน้ากลางตอนเปลี่ยนเส้นทางภายใน (main) — แสดง skeleton ตาม route (แจ้งเตือนใช้ NotificationSkeleton, โฮมใช้ FeedSkeleton)
+ * หน้ากลางตอนเปลี่ยนเส้นทางภายใน (main) — แสดง skeleton ตาม route
+ * ถ้าเคยโหลดหน้านี้แล้ว ไม่แสดง Skeleton (แบบ Facebook)
  */
 export default function MainLoading() {
   const pathname = usePathname();
+  if (hasRouteVisited(pathname)) return null;
 
   if (pathname === '/notification') {
     return (

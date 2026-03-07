@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
+import { hasRouteVisited } from '@/utils/visitedRoutesStore';
 
 const HEADER_STYLE: React.CSSProperties = {
   padding: '15px',
@@ -19,9 +21,11 @@ const HEADER_STYLE: React.CSSProperties = {
 };
 
 /**
- * Skeleton หน้าการแจ้งเตือน — แสดงทันทีที่กดสลับมาแจ้งเตือน ก่อนโหลดเนื้อหาจริง
+ * Skeleton หน้าการแจ้งเตือน — แสดงเฉพาะโหลดครั้งแรก ถ้าเคยโหลดแล้วไม่แสดง (แบบ Facebook)
  */
 export default function NotificationLoading() {
+  const pathname = usePathname();
+  if (hasRouteVisited(pathname)) return null;
   return (
     <main
       style={{

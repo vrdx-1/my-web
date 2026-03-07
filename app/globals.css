@@ -135,6 +135,24 @@ html:has(body[data-page="home"]) {
   contain-intrinsic-size: auto 480px;
 }
 
+/* Feed โหลดเสร็จ — fade-in แบบ Facebook */
+@keyframes feed-content-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Viewing mode: placeholder รอโหลดรูปแบบ Facebook */
+@keyframes viewing-image-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Bottom sheet (Likes/Saves): skeleton แบบ Facebook */
+@keyframes interaction-sheet-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Loading Spinner Animation */
 @keyframes fadeColor {
   0%, 100% { background: #f0f0f0; }

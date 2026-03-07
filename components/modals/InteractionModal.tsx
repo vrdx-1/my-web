@@ -7,6 +7,9 @@ import { GuestAvatarIcon } from '../GuestAvatarIcon';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 
+/** เส้นโค้งสไลด์แบบ Facebook/Material bottom sheet */
+const SHEET_TRANSITION = 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)';
+
 interface InteractionModalProps {
   show: boolean;
   type: 'likes' | 'saves';
@@ -44,6 +47,37 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
 }) => {
   const shouldHide = !show || !postId;
 
+  // Backdrop fade-in แบบ Facebook
+  const [backdropVisible, setBackdropVisible] = useState(false);
+  const [contentFadeIn, setContentFadeIn] = useState(false);
+  useEffect(() => {
+    if (show && postId) {
+      setBackdropVisible(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setBackdropVisible(true));
+      });
+    } else {
+      setBackdropVisible(false);
+      setContentFadeIn(false);
+    }
+  }, [show, postId]);
+  useEffect(() => {
+    if (interactionLoading) setContentFadeIn(false);
+    else if (interactionUsers.length > 0) {
+      const raf1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => setContentFadeIn(true));
+        rafIdRef.current = r2;
+      });
+      return () => {
+        cancelAnimationFrame(raf1);
+        if (rafIdRef.current != null) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+      };
+    }
+  }, [interactionLoading, interactionUsers.length]);
+
   // Lock body scroll when modal is open
   useEffect(() => {
     if (show && !shouldHide) {
@@ -69,6 +103,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
 
   // Lazy load + preloading ระดับสากล (เหมือน feed หน้า Home): ใช้ scroll container เป็น root และ preload ล่วงหน้า
   const sheetScrollRef = useRef<HTMLDivElement | null>(null);
+  const rafIdRef = useRef<number | null>(null);
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
 
@@ -115,7 +150,8 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
         zIndex: 10000, 
         display: 'flex', 
         alignItems: 'flex-end', 
-        transition: 'background 0.3s', 
+        opacity: backdropVisible ? 1 : 0,
+        transition: 'opacity 0.25s ease-out', 
         touchAction: 'none', 
         overflow: 'hidden',
         overscrollBehavior: 'contain',
@@ -142,7 +178,7 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
           borderRadius: interactionSheetMode === 'full' ? '0' : '20px 20px 0 0', 
           height: interactionSheetMode === 'full' ? '100%' : '70%', 
           transform: isInteractionModalAnimating ? 'translateY(100%)' : 'translateY(0)', 
-          transition: 'transform 0.3s ease-out', 
+          transition: SHEET_TRANSITION, 
           display: 'flex', 
           flexDirection: 'column', 
           overflow: 'hidden', 
@@ -215,12 +251,6 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
         <div ref={sheetScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
           {interactionLoading ? (
             <div className="interaction-sheet-skeleton" style={{ display: 'flex', flexDirection: 'column', width: '100%' }} aria-hidden>
-              <style>{`
-                @keyframes interaction-sheet-skeleton-shimmer {
-                  0% { background-position: 200% 0; }
-                  100% { background-position: -200% 0; }
-                }
-              `}</style>
               {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                 <div key={i} style={{ padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div
@@ -229,9 +259,9 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
                       height: 40,
                       borderRadius: '50%',
                       flexShrink: 0,
-                      background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                      background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
                       backgroundSize: '200% 100%',
-                      animation: 'interaction-sheet-skeleton-shimmer 1.2s ease-in-out infinite',
+                      animation: 'interaction-sheet-skeleton-shimmer 1.5s ease-in-out infinite',
                     }}
                   />
                   <div
@@ -240,16 +270,17 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
                       flex: 1,
                       maxWidth: 160,
                       borderRadius: 8,
-                      background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                      background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
                       backgroundSize: '200% 100%',
-                      animation: 'interaction-sheet-skeleton-shimmer 1.2s ease-in-out infinite',
+                      animation: 'interaction-sheet-skeleton-shimmer 1.5s ease-in-out infinite',
                     }}
                   />
                 </div>
               ))}
             </div>
           ) : visibleUsers.length > 0 ? (
-            visibleUsers.map((u, i) => {
+            <div style={{ opacity: contentFadeIn ? 1 : 0, transition: 'opacity 0.2s ease-out' }}>
+            {visibleUsers.map((u, i) => {
               const isLast = i === visibleUsers.length - 1;
               return (
               <div
@@ -282,7 +313,8 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
                   </div>
                 </div>
               </div>
-            );})
+            );})}
+            </div>
           ) : (
             <EmptyState message="ບໍ່ມີລາຍຊື່" variant="minimal" />
           )}

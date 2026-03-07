@@ -15,6 +15,7 @@ import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { markRouteVisited } from '@/utils/visitedRoutesStore';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 /** Context: setter สำหรับอัปเดต pull offset, และค่าปัจจุบันให้ฟีดโยโย้ (translate) ลงมา */
@@ -50,6 +51,11 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
       document.body.removeAttribute('data-page');
     }
     return () => document.body.removeAttribute('data-page');
+  }, [pathname]);
+
+  /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
+  useEffect(() => {
+    if (pathname) markRouteVisited(pathname);
   }, [pathname]);
 
   useEffect(() => {

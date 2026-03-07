@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { LAO_FONT } from '@/utils/constants';
+import { hasRouteVisited } from '@/utils/visitedRoutesStore';
 
 /**
- * Skeleton หน้าโปรไฟล์ — แสดงทันทีที่กดสลับมาโปรไฟล์ ก่อนโหลดเนื้อหาจริง
- * โครงเดียวกับ ProfileContent ตอน loading (แอปโปรไฟล์ ไม่มีปุ่มกลับ)
+ * Skeleton หน้าโปรไฟล์ — แสดงเฉพาะโหลดครั้งแรก ถ้าเคยโหลดแล้วไม่แสดง (แบบ Facebook)
  */
 export default function ProfileLoading() {
+  const pathname = usePathname();
+  if (hasRouteVisited(pathname)) return null;
   const shimmerStyle: React.CSSProperties = {
     background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
     backgroundSize: '200% 100%',

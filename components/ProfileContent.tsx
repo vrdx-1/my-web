@@ -9,6 +9,9 @@ import { LAO_FONT } from '@/utils/constants';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
+/** แคชโปรไฟล์ล่าสุด — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
+let profileCache: { userId: string; username: string; avatarUrl: string } | null = null;
+
 interface ProfileContentProps {
   /** ไม่ส่ง = ไม่แสดงปุ่ม back (เช่น หน้า App profile) */
   onBack?: () => void;
@@ -28,6 +31,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
 
       if (currentSession) {
+        const userId = currentSession.user?.id;
+        if (userId && profileCache?.userId === userId) {
+          setUsername(profileCache.username);
+          setAvatarUrl(profileCache.avatarUrl);
+          setLoading(false);
+        }
         setSession(currentSession);
         const user = currentSession.user;
         const createdAtMs = user.created_at ? new Date(user.created_at).getTime() : NaN;
@@ -87,18 +96,24 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               );
               setUsername(defaultName);
               setAvatarUrl('');
+              profileCache = { userId: user.id, username: defaultName, avatarUrl: '' };
             } catch {}
           }
         }
 
         if (profile) {
-          setUsername(profile.username || '');
+          const name = profile.username || '';
           const rawAvatar = profile.avatar_url || '';
+          let url = '';
           if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
             await supabase.from('profiles').update({ avatar_url: null }).eq('id', currentSession.user.id);
-            setAvatarUrl('');
           } else {
-            setAvatarUrl(getDisplayAvatarUrl(rawAvatar));
+            url = getDisplayAvatarUrl(rawAvatar);
+          }
+          setUsername(name);
+          setAvatarUrl(url);
+          if (currentSession.user?.id) {
+            profileCache = { userId: currentSession.user.id, username: name, avatarUrl: url };
           }
         }
       }
