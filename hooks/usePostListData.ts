@@ -383,7 +383,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         postIds = data.map((p: any) => p.id);
-        if (postIds.length === 0 && fetchIdRef.current === currentFetchId) setHasMore(false);
+        // ได้น้อยกว่าหนึ่งหน้า = ไม่มีหน้าถัดไป → แสดง "ບໍ່ມີລາຍການເພີ່ມເຕີມ"
+        if (postIds.length < LIST_FEED_PAGE_SIZE && fetchIdRef.current === currentFetchId) setHasMore(false);
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
         
