@@ -7,6 +7,13 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
+/** แคช feed ต่อ type+user — กลับมาหน้า liked/saved/my-posts ไม่แสดง Skeleton (แบบ Facebook) */
+const FEED_LIST_CACHE_MAX = 6;
+const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
+function getFeedListCacheKey(type: string, session: any): string {
+  const uid = session?.user?.id;
+  return `${type}:${uid ? uid : 'guest'}`;
+}
 
 export type PostListType = 'saved' | 'liked' | 'sold' | 'my-posts';
 
@@ -54,12 +61,37 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const fetchIdRef = useRef(0);
+  const hydratedFromCacheRef = useRef(false);
 
   useEffect(() => {
     // เมื่อ sessionReady = true ใช้ session ตรงๆ (รวม null = guest) เพื่อให้แท็บขายแล้วโหลดได้แม้ไม่ล็อกอิน
     if (sessionReady) setCurrentSession(session);
     else setCurrentSession(undefined);
   }, [session, sessionReady]);
+
+  const cacheableTypes: PostListType[] = ['liked', 'saved', 'my-posts'];
+  useEffect(() => {
+    if (!cacheableTypes.includes(type) || currentSession === undefined) return;
+    const key = getFeedListCacheKey(type, currentSession);
+    const cached = feedListCache[key];
+    if (cached && cached.posts.length >= 0) {
+      setPosts(cached.posts);
+      setHasMore(cached.hasMore);
+      setLoadingMore(false);
+      hydratedFromCacheRef.current = true;
+    }
+  }, [type, currentSession]);
+
+  useEffect(() => {
+    if (!cacheableTypes.includes(type) || currentSession === undefined || loadingMore || posts.length === 0) return;
+    const key = getFeedListCacheKey(type, currentSession);
+    const keys = Object.keys(feedListCache);
+    if (keys.length >= FEED_LIST_CACHE_MAX) {
+      const toDelete = keys.filter((k) => k !== key).slice(0, keys.length - FEED_LIST_CACHE_MAX + 1);
+      toDelete.forEach((k) => delete feedListCache[k]);
+    }
+    feedListCache[key] = { posts: [...posts], hasMore };
+  }, [type, currentSession, loadingMore, posts, hasMore]);
 
   // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม)
   useEffect(() => {
@@ -103,17 +135,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   }, [type, currentSession, userIdOrToken]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
-    // รอให้ session ถูก initialize ก่อน (session อาจเป็น null สำหรับ guest)
-    // แต่ต้องรอให้ useEffect initialize session เสร็จก่อน (ไม่ใช่ undefined)
-    if (currentSession === undefined) {
-      return;
-    }
-
+    if (currentSession === undefined) return;
     if (loadingMore && !isInitial) return;
 
     const currentFetchId = ++fetchIdRef.current;
-
-    setLoadingMore(true);
+    const skipSkeleton = isInitial && cacheableTypes.includes(type) && hydratedFromCacheRef.current;
+    if (!skipSkeleton) setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
     // ใช้ LIST_FEED_PAGE_SIZE เพื่อโหลดครบตาม backend: หน้า 0 = [0..19], หน้า 1 = [20..39], ...
@@ -424,8 +451,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         return;
       }
 
-      // เมื่อโหลดครั้งแรก (เช่น เปลี่ยนแท็บ) ให้เคลียร์รายการเก่าก่อน — แม้ได้ postIds ว่าง (เช่น แท็บขายแล้วไม่มีโพสต์) จะได้แสดงหน้าว่าง
-      if (isInitial && fetchIdRef.current === currentFetchId) {
+      if (isInitial && fetchIdRef.current === currentFetchId && !skipSkeleton) {
         setPosts([]);
       }
       if (type === 'my-posts' && postIds.length === 0 && fetchIdRef.current === currentFetchId) {
@@ -528,10 +554,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             }
           }
 
-          // ถ้าเป็นการโหลดใหม่ ให้ล้างรายการเก่าก่อน
-          if (isInitial && fetchIdRef.current === currentFetchId) setPosts([]);
+          if (isInitial && fetchIdRef.current === currentFetchId && !skipSkeleton) setPosts([]);
 
-          // หน้า sold: ใส่โพสต์ครั้งเดียวแล้วปิด loading ทันที (ไม่พึ่ง rAF/onDone เพื่อไม่ให้ไอคอนโหลดค้าง)
           if (type === 'sold') {
             if (fetchIdRef.current === currentFetchId) {
               setPosts((prev) => {
@@ -541,6 +565,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               });
               setLoadingMore(false);
             }
+          } else if (skipSkeleton && isInitial && fetchIdRef.current === currentFetchId) {
+            setPosts(filteredPosts);
+            setLoadingMore(false);
           } else {
             sequentialAppendItems<any>({
               items: newPosts,
@@ -748,6 +775,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
+      if (skipSkeleton) hydratedFromCacheRef.current = false;
       if (!soldWillClearLoadingInOnDone && fetchIdRef.current === currentFetchId) {
         setLoadingMore(false);
       }

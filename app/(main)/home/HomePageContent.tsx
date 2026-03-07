@@ -243,11 +243,13 @@ export function HomePageContent() {
       setTabRefreshing(false);
       mainTab?.setNavigatingToTab(null);
       mainTab?.setTabRefreshing(false);
+      mainTab?.setRefreshSource(null);
     } else if (!postList.loadingMore) {
       setTabRefreshing(false);
       mainTab?.setTabRefreshing(false);
       // เคลียร์ spinner บนแท็บด้วย (กรณีสลับมาแท็บขายแล้วที่มีคำค้น — โหลดอยู่แล้วจึงไม่เคย wasLoading)
       mainTab?.setNavigatingToTab(null);
+      mainTab?.setRefreshSource(null);
     }
   }, [postList.loadingMore, mainTab]);
 
@@ -360,6 +362,7 @@ export function HomePageContent() {
   const setTabAndRefresh = useCallback((newTab: HomeTab) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
     if (newTab === tab) {
+      mainTab?.setRefreshSource('home');
       mainTab?.setTabRefreshing(true);
       setTabRefreshing(true);
       if (newTab === 'recommend') {
