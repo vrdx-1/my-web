@@ -24,8 +24,8 @@ export function getRedis(): Redis | null {
   return client;
 }
 
-/** อายุ cache ฟีดใน Redis (วินาที) — 3 นาที */
-export const FEED_CACHE_TTL_SEC = 180;
+/** อายุ cache ฟีดใน Redis (วินาที) — 3 วัน */
+export const FEED_CACHE_TTL_SEC = 3 * 24 * 60 * 60; // 259200
 
 export type FeedCachePayload = {
   postIds: string[];
