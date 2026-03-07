@@ -3,6 +3,11 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { FEED_PAGE_SIZE } from '@/utils/constants';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import {
+  feedCacheKey,
+  getFeedFromCache,
+  setFeedCache,
+} from '@/lib/redis';
 
 /** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
 async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
@@ -37,6 +42,39 @@ function runFeedQuery(
     .range(startIndex, endIndex);
 }
 
+type FeedResult = { postIds: string[]; hasMore: boolean; posts: any[] };
+
+async function computeFeed(
+  supabase: ReturnType<typeof createServerClient>,
+  startIndex: number,
+  endIndex: number,
+  province?: string
+): Promise<FeedResult> {
+  const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
+  const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
+  if (error) throw new Error(error.message);
+  const postIds = (data || []).map((p: { id: string }) => p.id);
+  const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
+  let posts: any[] = [];
+  if (postIds.length > 0) {
+    const { data: postsData, error: postsErr } = await supabase
+      .from('cars')
+      .select(POST_WITH_PROFILE_SELECT)
+      .in('id', postIds);
+    if (!postsErr && postsData?.length) {
+      const order = new Map(postIds.map((id: string, i: number) => [String(id), i]));
+      const filtered = postsData.filter((p: any) => p.status === 'recommend' && !p.is_hidden);
+      filtered.sort((a: any, b: any) => {
+        const ai = order.get(String(a.id)) ?? 1e9;
+        const bi = order.get(String(b.id)) ?? 1e9;
+        return ai - bi;
+      });
+      posts = filtered;
+    }
+  }
+  return { postIds, hasMore, posts };
+}
+
 /**
  * POST /api/posts/feed — body: { startIndex, endIndex, province? }
  */
@@ -60,41 +98,22 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // โหลดฟีดก่อน — อัปเดต last_seen ทำในพื้นหลัง ไม่รอ
     void touchLastSeen(supabase).catch(() => {});
 
-    const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
-    let postIds: string[];
-
-    // หลัง refresh ใช้ลำดับ Algorithm เท่านั้น; โพสต์ที่เพิ่งสร้างจะถูกแปะบนสุดฝั่ง client (just_posted_post_id)
-    const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    postIds = (data || []).map((p: { id: string }) => p.id);
-
-    const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
-
-    let posts: any[] | undefined;
-    if (postIds.length > 0) {
-      const { data: postsData, error: postsErr } = await supabase
-        .from('cars')
-        .select(POST_WITH_PROFILE_SELECT)
-        .in('id', postIds);
-      if (!postsErr && postsData?.length) {
-        const order = new Map(postIds.map((id, i) => [String(id), i]));
-        const filtered = postsData.filter((p: any) => p.status === 'recommend' && !p.is_hidden);
-        filtered.sort((a: any, b: any) => {
-          const ai = order.get(String(a.id)) ?? 1e9;
-          const bi = order.get(String(b.id)) ?? 1e9;
-          return ai - bi;
-        });
-        posts = filtered;
-      }
+    const cacheKey = feedCacheKey(startIndex, endIndex, province);
+    const cached = await getFeedFromCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'HIT' },
+      });
     }
 
-    return NextResponse.json(
-      { postIds, hasMore, posts },
-      { headers: { 'Cache-Control': 'private, max-age=0' } }
-    );
+    const result = await computeFeed(supabase, startIndex, endIndex, province);
+    await setFeedCache(cacheKey, result);
+
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
+    });
   } catch (err: any) {
     console.error('API /api/posts/feed POST:', err);
     return NextResponse.json(
@@ -127,37 +146,22 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    // โหลดฟีดก่อน — อัปเดต last_seen ทำในพื้นหลัง ไม่รอ
     void touchLastSeen(supabase).catch(() => {});
 
-    const requestedPageLen = Math.max(0, endIndex - startIndex + 1);
-    const { data, error } = await runFeedQuery(supabase, startIndex, endIndex, province);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const postIds = (data || []).map((p: { id: string }) => p.id);
-    const hasMore = requestedPageLen > 0 && postIds.length >= requestedPageLen;
-
-    let posts: any[] | undefined;
-    if (postIds.length > 0) {
-      const { data: postsData, error: postsErr } = await supabase
-        .from('cars')
-        .select(POST_WITH_PROFILE_SELECT)
-        .in('id', postIds);
-      if (!postsErr && postsData?.length) {
-        const order = new Map(postIds.map((id, i) => [String(id), i]));
-        const filtered = postsData.filter((p: any) => p.status === 'recommend' && !p.is_hidden);
-        filtered.sort((a: any, b: any) => {
-          const ai = order.get(String(a.id)) ?? 1e9;
-          const bi = order.get(String(b.id)) ?? 1e9;
-          return ai - bi;
-        });
-        posts = filtered;
-      }
+    const cacheKey = feedCacheKey(startIndex, endIndex, province);
+    const cached = await getFeedFromCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'HIT' },
+      });
     }
 
-    return NextResponse.json(
-      { postIds, hasMore, posts },
-      { headers: { 'Cache-Control': 'private, max-age=0' } }
-    );
+    const result = await computeFeed(supabase, startIndex, endIndex, province);
+    await setFeedCache(cacheKey, result);
+
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
+    });
   } catch (err: any) {
     console.error('API /api/posts/feed GET:', err);
     return NextResponse.json(
