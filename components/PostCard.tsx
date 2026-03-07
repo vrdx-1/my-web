@@ -38,6 +38,8 @@ interface PostCardProps {
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   onImpression?: (postId: string) => void;
+  /** ลงทะเบียน element กับ observer เดียวของ feed (ลดจำนวน IntersectionObserver จาก N เป็น 1) */
+  registerImpressionRef?: (el: HTMLElement | null, postId: string) => void;
   hideBoost?: boolean;
   leftOfAvatar?: React.ReactNode;
   /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
@@ -71,6 +73,7 @@ export const PostCard = React.memo<PostCardProps>(({
   onSetActiveMenu,
   onSetMenuAnimating,
   onImpression,
+  registerImpressionRef,
   hideBoost = false,
   leftOfAvatar,
   priority = false,
@@ -85,7 +88,7 @@ export const PostCard = React.memo<PostCardProps>(({
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement | null>(null);
-  const impressionSentRef = React.useRef<Set<string>>(new Set());
+  const impressionSentRef = React.useRef(false);
   const captionRef = React.useRef<HTMLDivElement>(null);
   const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -158,16 +161,18 @@ export const PostCard = React.memo<PostCardProps>(({
     };
   }, [showMarkSoldConfirm, showSoldInfo]);
 
+  // Impression: ใช้ registerImpressionRef จาก PostFeed (observer เดียว) ถ้ามี ไม่สร้าง observer เอง
   React.useEffect(() => {
+    if (registerImpressionRef) return;
     const el = cardRef.current;
     if (!el || !onImpression) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (!entry?.isIntersecting || impressionSentRef.current.has(post.id)) return;
-        impressionSentRef.current.add(post.id);
+        if (!entry?.isIntersecting || impressionSentRef.current) return;
+        impressionSentRef.current = true;
         const postId = post.id;
-        const cb = () => onImpression(postId);
+        const cb = () => onImpression?.(postId);
         if (typeof requestIdleCallback !== 'undefined') {
           (requestIdleCallback as typeof requestIdleCallback)(cb, { timeout: 500 });
         } else {
@@ -178,7 +183,15 @@ export const PostCard = React.memo<PostCardProps>(({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [post.id, onImpression]);
+  }, [post.id, onImpression, registerImpressionRef]);
+
+  // ลงทะเบียนกับ observer เดียวของ feed ใน useEffect (ไม่ทำใน ref callback เพื่อไม่ให้เกิด React internal "Expected static flag" error)
+  React.useEffect(() => {
+    if (!registerImpressionRef) return;
+    const el = cardRef.current;
+    if (el) registerImpressionRef(el, post.id);
+    return () => registerImpressionRef(null, post.id);
+  }, [registerImpressionRef, post.id]);
 
   return (
     <div

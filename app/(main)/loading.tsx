@@ -52,6 +52,12 @@ export default function MainLoading() {
     );
   }
 
+  // อย่าแสดง FeedSkeleton ตอนอยู่ที่ profile หรือกำลังเปลี่ยนจาก profile ไปหน้าอื่น
+  // (ช่วงเปลี่ยน pathname อาจยังเป็น /profile ทำให้เคยเห็นหน้าฟีดแทรก)
+  if (pathname === '/profile' || pathname?.startsWith('/profile/')) {
+    return null;
+  }
+
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <FeedSkeleton count={4} />
