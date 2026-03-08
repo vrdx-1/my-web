@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Jutpai</string>
+    <string name="title_activity_main">Jutpai</string>
+    <string name="package_name">com.jutpai.app</string>
+    <string name="custom_url_scheme">com.jutpai.app</string>
+</resources>

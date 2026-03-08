@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { PostFeed } from '@/components/PostFeed';
+import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
+
+/** Load PostFeed only on client to avoid React "Expected static flag was missing" (SSR/hydration). */
+const PostFeed = dynamic(
+  () => import('@/components/PostFeed').then((mod) => ({ default: mod.PostFeed })),
+  { ssr: false, loading: () => <FeedSkeleton count={3} /> }
+);
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -30,8 +36,38 @@ import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import type { ComponentProps } from 'react';
 
 export type HomeTab = 'recommend' | 'sold';
+
+/** Render PostFeed only after client mount to avoid React "Expected static flag was missing". */
+function HomeFeedBody({
+  showSkeleton,
+  skeletonCount,
+  postFeedProps,
+}: {
+  showSkeleton: boolean;
+  skeletonCount: number;
+  postFeedProps: ComponentProps<typeof PostFeed>;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (showSkeleton) {
+    return <FeedSkeleton count={skeletonCount} />;
+  }
+  // ไม่เรนเดอร์ PostFeed จนกว่าจะ mount บน client — ลด static flag error
+  if (!mounted) {
+    return <FeedSkeleton count={skeletonCount} />;
+  }
+  return (
+    <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
+      <PostFeed {...postFeedProps} />
+    </div>
+  );
+}
 
 export function HomePageContent() {
   const [tabRefreshing, setTabRefreshing] = useState(false);
@@ -443,45 +479,47 @@ export function HomePageContent() {
     };
   }, [pathname]);
 
+  const showFeedSkeleton =
+    (posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+    (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore);
+
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {(posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) || (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore) ? (
-          <FeedSkeleton count={5} />
-        ) : (
-          <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
-          <PostFeed
-          posts={posts}
-          session={postList.session}
-          likedPosts={postList.likedPosts}
-          savedPosts={postList.savedPosts}
-          justLikedPosts={justLikedPosts}
-          justSavedPosts={justSavedPosts}
-          activeMenuState={menu.activeMenuState}
-          isMenuAnimating={menu.isMenuAnimating}
-          lastPostElementRef={lastPostElementRef}
-          menuButtonRefs={menu.menuButtonRefs}
-          onViewPost={handlers.handleViewPost}
-          onImpression={handlers.handleImpression}
-          onLike={toggleLike}
-          onSave={toggleSave}
-          onShare={handlers.handleShare}
-          onViewLikes={(postId) => fetchInteractions('likes', postId)}
-          onViewSaves={(postId) => fetchInteractions('saves', postId)}
-          onTogglePostStatus={handlers.handleTogglePostStatus}
-          onDeletePost={handlers.handleDeletePost}
-          onReport={handlers.handleReport}
-          onSetActiveMenu={menu.setActiveMenu}
-          onSetMenuAnimating={menu.setIsMenuAnimating}
-          loadingMore={postList.hasMore ? postList.loadingMore : false}
-          hasMore={postList.hasMore}
-          onLoadMore={() => postList.setPage((p) => p + 1)}
-          hideBoost={tab === 'sold'}
-          onlineStatusTick={onlineStatusTick}
-          isFeedScrollIdle={feedScrollIdle}
+        <HomeFeedBody
+          showSkeleton={showFeedSkeleton}
+          skeletonCount={5}
+          postFeedProps={{
+            posts,
+            session: postList.session,
+            likedPosts: postList.likedPosts,
+            savedPosts: postList.savedPosts,
+            justLikedPosts,
+            justSavedPosts,
+            activeMenuState: menu.activeMenuState,
+            isMenuAnimating: menu.isMenuAnimating,
+            lastPostElementRef,
+            menuButtonRefs: menu.menuButtonRefs,
+            onViewPost: handlers.handleViewPost,
+            onImpression: handlers.handleImpression,
+            onLike: toggleLike,
+            onSave: toggleSave,
+            onShare: handlers.handleShare,
+            onViewLikes: (postId) => fetchInteractions('likes', postId),
+            onViewSaves: (postId) => fetchInteractions('saves', postId),
+            onTogglePostStatus: handlers.handleTogglePostStatus,
+            onDeletePost: handlers.handleDeletePost,
+            onReport: handlers.handleReport,
+            onSetActiveMenu: menu.setActiveMenu,
+            onSetMenuAnimating: menu.setIsMenuAnimating,
+            loadingMore: postList.hasMore ? postList.loadingMore : false,
+            hasMore: postList.hasMore ?? true,
+            onLoadMore: () => postList.setPage((p) => p + 1),
+            hideBoost: tab === 'sold',
+            onlineStatusTick,
+            isFeedScrollIdle: feedScrollIdle,
+          }}
         />
-          </div>
-        )}
       </div>
 
       <InteractionModal
