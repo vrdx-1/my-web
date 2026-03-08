@@ -4,9 +4,12 @@ import { cookies } from 'next/headers';
 import { FEED_PAGE_SIZE } from '@/utils/constants';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import {
+  FEED_TOP100_SIZE,
   feedCacheKey,
   getFeedFromCache,
+  getFeedTop100FromCache,
   setFeedCache,
+  setFeedTop100Cache,
 } from '@/lib/redis';
 
 /** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
@@ -43,6 +46,14 @@ function runFeedQuery(
 }
 
 type FeedResult = { postIds: string[]; hasMore: boolean; posts: any[] };
+
+/** ตัดช่วงจาก payload ตาม startIndex, endIndex */
+function sliceFeedPayload(payload: FeedResult, startIndex: number, endIndex: number): FeedResult {
+  const postIds = payload.postIds.slice(startIndex, endIndex + 1);
+  const posts = payload.posts.slice(startIndex, endIndex + 1);
+  const hasMore = payload.postIds.length > endIndex + 1 || payload.hasMore;
+  return { postIds, hasMore, posts };
+}
 
 async function computeFeed(
   supabase: ReturnType<typeof createServerClient>,
@@ -100,6 +111,21 @@ export async function POST(request: NextRequest) {
 
     void touchLastSeen(supabase).catch(() => {});
 
+    // ช่วง 0–99 ใช้ cache ชุดโพส 100 รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
+    if (endIndex < FEED_TOP100_SIZE) {
+      let top100 = await getFeedTop100FromCache(province);
+      const top100Hit = !!top100;
+      if (!top100) {
+        const full = await computeFeed(supabase, 0, FEED_TOP100_SIZE - 1, province);
+        await setFeedTop100Cache(province, full);
+        top100 = full;
+      }
+      const result = sliceFeedPayload(top100, startIndex, endIndex);
+      return NextResponse.json(result, {
+        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': top100Hit ? 'HIT' : 'MISS' },
+      });
+    }
+
     const cacheKey = feedCacheKey(startIndex, endIndex, province);
     const cached = await getFeedFromCache(cacheKey);
     if (cached) {
@@ -147,6 +173,21 @@ export async function GET(request: NextRequest) {
     );
 
     void touchLastSeen(supabase).catch(() => {});
+
+    // ช่วง 0–99 ใช้ cache ชุดโพส 100 รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
+    if (endIndex < FEED_TOP100_SIZE) {
+      let top100 = await getFeedTop100FromCache(province);
+      const top100Hit = !!top100;
+      if (!top100) {
+        const full = await computeFeed(supabase, 0, FEED_TOP100_SIZE - 1, province);
+        await setFeedTop100Cache(province, full);
+        top100 = full;
+      }
+      const result = sliceFeedPayload(top100, startIndex, endIndex);
+      return NextResponse.json(result, {
+        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': top100Hit ? 'HIT' : 'MISS' },
+      });
+    }
 
     const cacheKey = feedCacheKey(startIndex, endIndex, province);
     const cached = await getFeedFromCache(cacheKey);
