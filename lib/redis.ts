@@ -28,7 +28,7 @@ export function getRedis(): Redis | null {
 export const FEED_CACHE_TTL_SEC = 1 * 60; // 60
 
 /** จำนวนโพสต์ (โพสล่าสุด + โพส Boost) ที่เก็บใน cache ชุดเดียว */
-export const FEED_TOP100_SIZE = 100;
+export const FEED_TOP_CACHE_SIZE = 1000;
 
 export type FeedCachePayload = {
   postIds: string[];
@@ -44,7 +44,7 @@ export function feedCacheKey(startIndex: number, endIndex: number, province?: st
   return `${FEED_CACHE_PREFIX}${startIndex}:${endIndex}:${p}`;
 }
 
-/** คีย์ cache ชุดโพส 100 รายการแรก (ล่าสุด + Boost) ต่อ province */
+/** คีย์ cache ชุดโพสแรก (ล่าสุด + Boost ตาม FEED_TOP_CACHE_SIZE) ต่อ province */
 export function feedTop100CacheKey(province?: string): string {
   const p = province?.trim() || 'all';
   return `${FEED_TOP100_PREFIX}${p}`;
@@ -78,13 +78,13 @@ export async function setFeedCache(key: string, payload: FeedCachePayload): Prom
   }
 }
 
-/** ดึง cache โพส 100 รายการแรก (โพสล่าสุด + Boost) */
+/** ดึง cache โพสชุดแรก (โพสล่าสุด + Boost) */
 export async function getFeedTop100FromCache(province?: string): Promise<FeedCachePayload | null> {
   const key = feedTop100CacheKey(province);
   return getFeedFromCache(key);
 }
 
-/** เก็บโพส 100 รายการแรก (โพสล่าสุด + Boost) ลง cache อายุ 1 นาที */
+/** เก็บโพสชุดแรก (โพสล่าสุด + Boost) ลง cache อายุ 1 นาที */
 export async function setFeedTop100Cache(province: string | undefined, payload: FeedCachePayload): Promise<void> {
   const key = feedTop100CacheKey(province);
   return setFeedCache(key, payload);

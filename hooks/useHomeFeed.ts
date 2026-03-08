@@ -49,6 +49,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
   const postsLengthRef = useRef(0);
   postsLengthRef.current = posts.length;
+  /** โพสสุดท้ายของลิสต์ — ใช้เป็น cursor ตอนโหลดเพิ่ม (cursor-based = โหลดเร็วเท่ากันทุกหน้า) */
+  const lastPostRef = useRef<{ is_boosted: boolean; created_at: string } | null>(null);
+  if (posts.length > 0) {
+    const last = posts[posts.length - 1];
+    if (last && typeof last.is_boosted === 'boolean' && typeof last.created_at === 'string') {
+      lastPostRef.current = { is_boosted: last.is_boosted, created_at: last.created_at };
+    }
+  }
 
   const fireInitialLoadDone = useCallback(() => {
     if (initialLoadDoneFiredRef.current) return;
@@ -111,8 +119,27 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
     try {
       const url = '/api/posts/feed';
-      const body: { startIndex: number; endIndex: number; province?: string } = { startIndex: rangeStart, endIndex: rangeEnd };
+      const body: {
+        startIndex?: number;
+        endIndex?: number;
+        province?: string;
+        cursorBoosted?: boolean;
+        cursorCreatedAt?: string;
+        pageSize?: number;
+      } = {};
       if (province && province.trim() !== '') body.province = province.trim();
+
+      // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
+      const cursor = !isInitial ? lastPostRef.current : null;
+      if (cursor) {
+        body.cursorBoosted = cursor.is_boosted;
+        body.cursorCreatedAt = cursor.created_at;
+        body.pageSize = pageSize;
+      } else {
+        body.startIndex = rangeStart;
+        body.endIndex = rangeEnd;
+      }
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
