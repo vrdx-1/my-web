@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { preloadPostImages } from '@/utils/imagePreload';
 
 const FEED_CACHE_KEY = 'home_feed_cache';
 
@@ -191,6 +192,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
       if (isInitial) {
         setPosts(ordered);
+        // โหลดรูปล่วงหน้าชุดแรก (โพสที่เห็นบนจอ + ล่วงหน้า 2–3 โพส) ให้รู้สึกสมูทแบบ Facebook
+        preloadPostImages(ordered, 5);
         fireInitialLoadDone();
         // หลังผู้ใช้โพสต์: แปะโพสต์ของตัวเองบนสุดของ feed (เหนือ Ad / รายการอื่น) จนกว่าจะ refresh
         const justPostedId =
@@ -266,6 +269,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
             if (age < FEED_CACHE_MAX_AGE_MS) {
               const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
               setPosts(cachedPosts);
+              // โหลดรูปล่วงหน้าแบบ Facebook — รูปพร้อมก่อนผู้ใช้เลื่อนเห็น
+              preloadPostImages(cachedPosts, 5);
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;

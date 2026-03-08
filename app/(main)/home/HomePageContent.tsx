@@ -268,12 +268,14 @@ export function HomePageContent() {
     }
     if (options?.fromHomeButton) {
       mainTab?.setRefreshSource('home');
+      mainTab?.setHomeTab('recommend'); // กดโลโก้ = กลับไป default ฝั่ง ພ້ອມຂາຍ
     } else {
       mainTab?.setRefreshSource('pull');
     }
     setTabRefreshing(true);
     const useNormalFeed = clearedSearch || !searchQuery.trim();
-    if (tab === 'recommend') {
+    const effectiveTab = options?.fromHomeButton ? 'recommend' : tab;
+    if (effectiveTab === 'recommend') {
       if (useNormalFeed) {
         recommendFeed.setPage(0);
         recommendFeed.setHasMore(true);

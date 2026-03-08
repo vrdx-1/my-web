@@ -193,7 +193,15 @@ export const PostCard = React.memo<PostCardProps>(({
     return () => registerImpressionRef(null, post.id);
   }, [registerImpressionRef, post.id]);
 
-  return (
+  // content-visibility: auto — ให้เบราว์เซอร์ข้ามการ paint การ์ดที่อยู่นอกจอ (scroll สมูทแบบ Facebook)
+    const cardStyle: React.CSSProperties = {
+      borderBottom: '1px solid #6b6b6b',
+      position: 'relative',
+      contentVisibility: 'auto',
+      containIntrinsicBlockSize: '320px',
+    };
+
+    return (
     <div
       key={`${post.id}-${index}`}
       className="feed-card"
@@ -201,7 +209,7 @@ export const PostCard = React.memo<PostCardProps>(({
         cardRef.current = node;
         if (isLastElement && lastPostElementRef) lastPostElementRef(node);
       }}
-      style={{ borderBottom: '1px solid #6b6b6b', position: 'relative' }}
+      style={cardStyle}
     >
       {/* Post Header */}
       <div style={{ ...commonStyles.postHeader, gap: '10px' }}>
