@@ -896,7 +896,10 @@ export const getOnlineStatus = (lastSeen: string | null): OnlineStatus => {
   if (diffInWeeks < 4) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດທີ່ແລ້ວ` };
   
   const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMonths} ເດືອນທີ່ແລ້ວ` };
+  if (diffInMonths < 12) {
+    if (diffInMonths < 1) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດທີ່ແລ້ວ` }; // 4–5 ອາທິດ ແທນ "0 ເດືອນ"
+    return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMonths} ເດືອນທີ່ແລ້ວ` };
+  }
   
   const diffInYears = Math.floor(diffInDays / 365);
   return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInYears} ປີທີ່ແລ້ວ` };
@@ -925,7 +928,10 @@ export const formatTime = (dateString: string): string => {
   if (diffInWeeks < 4) return `${diffInWeeks} ອາທິດ`;
   
   const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return `${diffInMonths} ເດືອນ`;
+  if (diffInMonths < 12) {
+    if (diffInMonths < 1) return `${diffInWeeks} ອາທິດ`; // 4–5 ອາທິດ ແທນ "0 ເດືອນ"
+    return `${diffInMonths} ເດືອນ`;
+  }
   
   const diffInYears = Math.floor(diffInDays / 365);
   if (diffInYears >= 1) return `${diffInYears} ປີທີ່ແລ້ວ`;

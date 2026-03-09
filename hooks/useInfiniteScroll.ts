@@ -28,6 +28,9 @@ export const useInfiniteScroll = ({
   const onLoadMoreRef = useRef(onLoadMore);
   onLoadMoreRef.current = onLoadMore;
 
+  /** ป้องกันยิง onLoadMore ซ้ำก่อน loadingMore อัปเดต — เลื่อน feed แล้ว refresh/โหลดซ้ำผิดจังหวะ */
+  const triggeredRef = useRef(false);
+
   const lastElementRef = useCallback((node: HTMLElement | null) => {
     nodeRef.current = node;
     if (observer.current) {
@@ -39,7 +42,12 @@ export const useInfiniteScroll = ({
     observer.current = new IntersectionObserver(
       (entries) => {
         if (!entries[0].isIntersecting) return;
-        requestAnimationFrame(() => onLoadMoreRef.current());
+        if (triggeredRef.current) return;
+        triggeredRef.current = true;
+        observer.current?.unobserve(entries[0].target);
+        requestAnimationFrame(() => {
+          onLoadMoreRef.current();
+        });
       },
       { threshold, rootMargin, root }
     );
@@ -48,6 +56,7 @@ export const useInfiniteScroll = ({
 
   useEffect(() => {
     if (loadingMore || !hasMore) return;
+    triggeredRef.current = false;
     const node = nodeRef.current;
     if (!node) return;
     const root = rootRef?.current ?? undefined;
@@ -55,7 +64,12 @@ export const useInfiniteScroll = ({
     observer.current = new IntersectionObserver(
       (entries) => {
         if (!entries[0].isIntersecting) return;
-        requestAnimationFrame(() => onLoadMoreRef.current());
+        if (triggeredRef.current) return;
+        triggeredRef.current = true;
+        observer.current?.unobserve(entries[0].target);
+        requestAnimationFrame(() => {
+          onLoadMoreRef.current();
+        });
       },
       { threshold, rootMargin, root }
     );
