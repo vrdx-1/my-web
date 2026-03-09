@@ -258,6 +258,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
+    setPosts([]);
+    setLoadingMore(true);
     let fromCache = false;
     try {
       if (typeof window !== 'undefined') {
@@ -269,6 +271,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
             if (age < FEED_CACHE_MAX_AGE_MS) {
               const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
               setPosts(cachedPosts);
+              setLoadingMore(false);
               // โหลดรูปล่วงหน้าแบบ Facebook — รูปพร้อมก่อนผู้ใช้เลื่อนเห็น
               preloadPostImages(cachedPosts, 5);
               setHasMore(!!parsed.hasMore);
@@ -306,7 +309,6 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setPage(0);
     if (!fromCache) {
       setHasMore(true);
-      setLoadingMore(true); // ให้แสดง skeleton ทันทีจนกว่าโหลดเสร็จ
     }
     if (initialLoadFromCacheRef.current) {
       fetchPostsRef.current(true, undefined, true);
