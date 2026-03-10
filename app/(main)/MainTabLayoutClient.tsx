@@ -42,17 +42,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     if (pathname !== '/home') setPullOffset(0);
   }, [pathname]);
 
-  /** ตั้ง data-page="home" ให้ body เพื่อให้ CSS overscroll-behavior-y: none ทำงาน (ล็อกไม่ให้ดึง Header/ฟีดลงเมื่ออยู่บนสุด) */
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (pathname === '/home') {
-      document.body.setAttribute('data-page', 'home');
-    } else {
-      document.body.removeAttribute('data-page');
-    }
-    return () => document.body.removeAttribute('data-page');
-  }, [pathname]);
-
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
     if (pathname) markRouteVisited(pathname);
@@ -100,25 +89,17 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     return () => homeRefreshContext?.register(null);
   }, [pathname, mainTab, homeRefreshContext]);
 
-  /** โหลดและ prefetch หน้าอื่นล่วงหน้า — สลับแท็บเร็วแบบเว็บระดับโลก */
+  /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay ยาวขึ้นและไม่ preload module เพื่อให้หน้าโฮมโหลดเร็วก่อน */
   useEffect(() => {
-    const delay = pathname === '/home' ? 400 : 200;
+    const delay = pathname === '/home' ? 2000 : 1000;
     const t = setTimeout(() => {
       if (pathname === '/home') {
         router.prefetch('/notification');
         router.prefetch('/profile');
-        void import('@/app/(main)/notification/page');
-        void import('@/app/(main)/profile/page');
       } else if (pathname === '/notification' || pathname?.startsWith('/profile')) {
         router.prefetch('/home');
-        void import('@/app/(main)/home/page');
-        if (pathname === '/notification') {
-          router.prefetch('/profile');
-          void import('@/app/(main)/profile/page');
-        } else {
-          router.prefetch('/notification');
-          void import('@/app/(main)/notification/page');
-        }
+        if (pathname === '/notification') router.prefetch('/profile');
+        else router.prefetch('/notification');
       }
     }, delay);
     return () => clearTimeout(t);

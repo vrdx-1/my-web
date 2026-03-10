@@ -188,48 +188,6 @@ export function HomePageContent() {
   const posts = tab === 'recommend' ? recommendSource.posts : soldSource.posts;
   const postList = tab === 'recommend' ? recommendSource : soldSource;
   postsRef.current = posts;
-  const postListRef = useRef(postList);
-  postListRef.current = postList;
-
-  // อัปเดต last_seen ทุก 60 วินาที (ไม่ใช้ state tick เพื่อลด re-render ทั้งฟีด — อัปเดตผ่าน setPosts อย่างเดียว)
-  useEffect(() => {
-    const refreshOnlineStatus = async () => {
-      const list = postsRef.current;
-      if (!list?.length) return;
-      const userIds = [...new Set(list.map((p: any) => p.user_id).filter(Boolean))];
-      if (userIds.length === 0) return;
-      try {
-        const res = await fetch('/api/profiles/last-seen', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userIds }),
-        });
-        if (!res.ok) return;
-        const { lastSeen } = await res.json();
-        if (!lastSeen || typeof lastSeen !== 'object') return;
-        const setPosts = postListRef.current?.setPosts;
-        if (typeof setPosts !== 'function') return;
-        setPosts((prev: any[]) =>
-          prev.map((p: any) => {
-            const uid = p.user_id;
-            if (uid && lastSeen[uid] !== undefined) {
-              return { ...p, profiles: { ...p.profiles, last_seen: lastSeen[uid] } };
-            }
-            return p;
-          })
-        );
-      } catch (_) {
-        // ignore
-      }
-    };
-
-    const id = setInterval(refreshOnlineStatus, 60 * 1000);
-    const firstRefresh = setTimeout(refreshOnlineStatus, 15 * 1000);
-    return () => {
-      clearInterval(id);
-      clearTimeout(firstRefresh);
-    };
-  }, []);
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
@@ -437,28 +395,6 @@ export function HomePageContent() {
     return () => mainTab?.unregisterTabChangeHandler();
   }, [mainTab, setTabAndRefresh]);
 
-  /** ล็อกไม่ให้ดึง Header และฟีดลงเมื่ออยู่บนสุด (ทุกอุปกรณ์ รวมถึง iPhone) — ป้องกัน overscroll/bounce */
-  const homePullLockStartY = useRef(0);
-  useEffect(() => {
-    if (pathname !== '/home') return;
-    const doc = document;
-    const SCROLL_TOP_THRESHOLD = 8;
-    const handleTouchStart = (e: TouchEvent) => {
-      homePullLockStartY.current = e.touches[0].clientY;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (window.scrollY > SCROLL_TOP_THRESHOLD) return;
-      const currentY = e.touches[0].clientY;
-      if (currentY > homePullLockStartY.current) e.preventDefault();
-    };
-    doc.addEventListener('touchstart', handleTouchStart, { passive: true });
-    doc.addEventListener('touchmove', handleTouchMove, { passive: false });
-    return () => {
-      doc.removeEventListener('touchstart', handleTouchStart);
-      doc.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [pathname]);
-
   const showFeedSkeleton =
     (posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
     (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore);
@@ -468,7 +404,7 @@ export function HomePageContent() {
       <div>
         <HomeFeedBody
           showSkeleton={showFeedSkeleton}
-          skeletonCount={5}
+          skeletonCount={3}
           postFeedProps={{
             posts,
             session: postList.session,

@@ -71,11 +71,15 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
     if (pathname === '/notification') return;
     setUnreadCount((prev) => (prev === 0 ? getCachedUnreadCount(userId) : prev));
     const runFetch = () => fetchUnreadCount();
+    // หน้าโฮม: defer ยาวขึ้นเพื่อให้ฟีดโหลดก่อน ไม่แข่ง network
+    const isHome = pathname === '/home' || pathname === '/';
+    const timeoutMs = isHome ? 3500 : 2500;
+    const delayMs = isHome ? 1500 : 800;
     if (typeof requestIdleCallback !== 'undefined') {
-      const id = requestIdleCallback(runFetch, { timeout: 2500 });
+      const id = requestIdleCallback(runFetch, { timeout: timeoutMs });
       return () => cancelIdleCallback(id);
     }
-    const t = window.setTimeout(runFetch, 800);
+    const t = window.setTimeout(runFetch, delayMs);
     return () => clearTimeout(t);
   }, [userId, pathname, fetchUnreadCount]);
 

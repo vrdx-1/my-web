@@ -14,7 +14,7 @@ export default function HomeLoading() {
   if (hasRouteVisited(pathname)) return null;
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <FeedSkeleton count={5} />
+      <FeedSkeleton count={3} />
     </main>
   );
 }
