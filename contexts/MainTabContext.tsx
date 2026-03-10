@@ -20,12 +20,6 @@ interface MainTabContextValue {
   triggerTabRefresh: (options?: TabRefreshOptions) => void;
   tabRefreshing: boolean;
   setTabRefreshing: (v: boolean) => void;
-  /** 'pull' = กำลัง refresh จากดึงลง, 'home' = refresh จากปุ่ม Home → แสดง Skeleton ในพื้นที่ feed */
-  refreshSource: 'pull' | 'home' | null;
-  setRefreshSource: (v: 'pull' | 'home' | null) => void;
-  /** px ที่ใช้ translate header+spacer ลงเมื่อดึง feed (ให้ header ถูกดึงลงด้วย) */
-  pullHeaderOffset: number;
-  setPullHeaderOffset: (v: number) => void;
   navigatingToTab: MainTab | null;
   setNavigatingToTab: (v: MainTab | null) => void;
   isProfileOverlayOpen: boolean;
@@ -42,8 +36,6 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const tabChangeHandlerRef = useRef<TabChangeHandler | null>(null);
   const [homeTab, setHomeTabState] = useState<MainTab>(HOME_TAB_DEFAULT);
   const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [refreshSource, setRefreshSource] = useState<'pull' | 'home' | null>(null);
-  const [pullHeaderOffset, setPullHeaderOffset] = useState(0);
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
   const [isProfileOverlayOpen, setProfileOverlayOpen] = useState(false);
 
@@ -95,10 +87,6 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     triggerTabRefresh,
     tabRefreshing,
     setTabRefreshing,
-    refreshSource,
-    setRefreshSource,
-    pullHeaderOffset,
-    setPullHeaderOffset,
     navigatingToTab,
     setNavigatingToTab,
     isProfileOverlayOpen,

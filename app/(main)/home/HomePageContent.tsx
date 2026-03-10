@@ -420,12 +420,10 @@ export function HomePageContent() {
       setTabRefreshing(false);
       mainTab?.setNavigatingToTab(null);
       mainTab?.setTabRefreshing(false);
-      mainTab?.setRefreshSource(null);
     } else if (!effectiveLoadingMore) {
       setTabRefreshing(false);
       mainTab?.setTabRefreshing(false);
       mainTab?.setNavigatingToTab(null);
-      mainTab?.setRefreshSource(null);
     }
   }, [effectiveLoadingMore, mainTab]);
 
@@ -443,10 +441,7 @@ export function HomePageContent() {
       router.replace(newUrl, { scroll: false });
     }
     if (options?.fromHomeButton) {
-      mainTab?.setRefreshSource('home');
       mainTab?.setHomeTab('recommend'); // กดโลโก้ = กลับไป default ฝั่ง ພ້ອມຂາຍ
-    } else {
-      mainTab?.setRefreshSource('pull');
     }
     setTabRefreshing(true);
     const useNormalFeed = clearedSearch || !searchQuery.trim();
@@ -455,17 +450,17 @@ export function HomePageContent() {
       if (useNormalFeed) {
         recommendFeed.setPage(0);
         recommendFeed.setHasMore(true);
-        recommendFeed.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+        recommendFeed.fetchPosts(true);
       } else {
-        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
+        searchData.fetchSearch();
       }
     } else {
       if (useNormalFeed) {
         soldTabRefreshRef.current?.setPage(0);
         soldTabRefreshRef.current?.setHasMore(true);
-        soldTabRefreshRef.current?.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+        soldTabRefreshRef.current?.fetchPosts(true);
       } else if (!useNormalFeed) {
-        searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
+        searchData.fetchSearch();
       }
     }
   }, [tab, mainTab, pathname, recommendFeed, searchData, searchQuery, searchParams, router, homeProvince]);
@@ -541,7 +536,6 @@ export function HomePageContent() {
   const setTabAndRefresh = useCallback((newTab: HomeTab) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
     if (newTab === tab) {
-      mainTab?.setRefreshSource('home');
       mainTab?.setTabRefreshing(true);
       setTabRefreshing(true);
       if (newTab === 'recommend') {
@@ -582,7 +576,7 @@ export function HomePageContent() {
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     ((posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
-      (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore));
+      (tabRefreshing && postList.loadingMore));
 
   // ไม่ render เนื้อหาลง DOM จนกว่าจะ mount บน client (ลด hydration / static flag issues)
   if (!clientMounted) return null;

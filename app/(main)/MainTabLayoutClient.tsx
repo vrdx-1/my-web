@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { TabNavigation } from '@/components/TabNavigation';
@@ -18,13 +18,6 @@ import { REGISTER_PATH } from '@/utils/authRoutes';
 import { markRouteVisited } from '@/utils/visitedRoutesStore';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
-/** Context: setter สำหรับอัปเดต pull offset, และค่าปัจจุบันให้ฟีดโยโย้ (translate) ลงมา */
-type PullHeaderOffsetContextValue = { setPullHeaderOffset: (v: number) => void; pullHeaderOffset: number };
-const PullHeaderOffsetContext = createContext<PullHeaderOffsetContextValue | null>(null);
-export function usePullHeaderOffset() {
-  return useContext(PullHeaderOffsetContext);
-}
-
 export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,12 +28,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
   const homeProvince = useHomeProvince();
-
-  /** State อยู่ที่ layout เลย — เวลาหน้าโฮม/ขายแล้วเรียก setPullHeaderOffset จะ re-render layout และ Header เลื่อนลงทันที */
-  const [pullOffset, setPullOffset] = useState(0);
-  useEffect(() => {
-    if (pathname !== '/home') setPullOffset(0);
-  }, [pathname]);
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
@@ -106,8 +93,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   }, [pathname, router]);
 
   const loadingTab =
-    mainTab?.navigatingToTab ??
-    (mainTab?.tabRefreshing && mainTab?.refreshSource !== 'pull' ? mainTab?.homeTab ?? null : null);
+    mainTab?.navigatingToTab ?? (mainTab?.tabRefreshing ? mainTab?.homeTab ?? null : null);
 
   const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: แสดงแถบหัวและแท็บหลังโหลดโพสต์แรกเสร็จ */
@@ -190,9 +176,7 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         />
       )}
 
-      <PullHeaderOffsetContext.Provider value={{ setPullHeaderOffset: setPullOffset, pullHeaderOffset: pullOffset }}>
-        {children}
-      </PullHeaderOffsetContext.Provider>
+      {children}
     </>
   );
 }
