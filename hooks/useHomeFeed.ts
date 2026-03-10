@@ -9,6 +9,13 @@ import { preloadPostImages } from '@/utils/imagePreload';
 
 const FEED_CACHE_KEY = 'home_feed_cache';
 
+export interface HomeLikedSavedShared {
+  likedPosts: { [key: string]: boolean };
+  savedPosts: { [key: string]: boolean };
+  setLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+  setSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+}
+
 interface UseHomeFeedOptions {
   session?: any;
   /** เมื่อ true = รู้แล้วว่าใครล็อกอิน/เกสต์ แล้วค่อยโหลดไลก์/เซฟ */
@@ -17,6 +24,8 @@ interface UseHomeFeedOptions {
   province?: string;
   /** เรียกครั้งเดียวเมื่อโหลดโพสต์ชุดแรกเสร็จ (จาก cache หรือ API) */
   onInitialLoadDone?: () => void;
+  /** ถ้ามี = ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำในหน้าโฮม) */
+  sharedLikedSaved?: HomeLikedSavedShared | null;
 }
 
 interface UseHomeFeedReturn {
@@ -37,7 +46,7 @@ interface UseHomeFeedReturn {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
-  const { session, sessionReady = true, province, onInitialLoadDone } = options;
+  const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -45,6 +54,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const likedPostsOut = sharedLikedSaved ? sharedLikedSaved.likedPosts : likedPosts;
+  const savedPostsOut = sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
+  const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
+  const setSavedPostsOut = sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
   const fetchIdRef = useRef(0);
   const initialLoadDoneFiredRef = useRef(false);
   /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
@@ -70,6 +83,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   }, [session]);
 
   useEffect(() => {
+    if (sharedLikedSaved) return;
     if (!sessionReady) return;
     if (currentSession === undefined) return;
     let idOrToken: string | null = null;
@@ -106,7 +120,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
-  }, [sessionReady, currentSession]);
+  }, [sessionReady, currentSession, sharedLikedSaved]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
@@ -337,10 +351,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setHasMore,
     loadingMore,
     session: currentSession,
-    likedPosts,
-    savedPosts,
-    setLikedPosts,
-    setSavedPosts,
+    likedPosts: likedPostsOut,
+    savedPosts: savedPostsOut,
+    setLikedPosts: setLikedPostsOut,
+    setSavedPosts: setSavedPostsOut,
     fetchPosts,
     refreshData,
   };

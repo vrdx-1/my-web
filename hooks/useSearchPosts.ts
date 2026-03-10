@@ -4,11 +4,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 
+export interface SearchLikedSavedShared {
+  likedPosts: { [key: string]: boolean };
+  savedPosts: { [key: string]: boolean };
+  setLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+  setSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+}
+
 interface UseSearchPostsOptions {
   query: string;
   province?: string;
   session?: any;
   sessionReady?: boolean;
+  /** ถ้ามี = ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำในหน้าโฮม) */
+  sharedLikedSaved?: SearchLikedSavedShared | null;
+  /** เมื่อ false = ไม่ยิง search API และไม่รัน effect (ใช้เมื่อยังไม่มีคำค้น เพื่อลดงานตอนโหลดหน้าโฮม) */
+  enabled?: boolean;
 }
 
 interface UseSearchPostsReturn {
@@ -24,18 +35,23 @@ interface UseSearchPostsReturn {
 }
 
 export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsReturn {
-  const { query, province, session, sessionReady = true } = options;
+  const { query, province, session, sessionReady = true, sharedLikedSaved, enabled = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentSession, setCurrentSession] = useState<any>(sessionReady ? session : undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const likedPostsOut = sharedLikedSaved ? sharedLikedSaved.likedPosts : likedPosts;
+  const savedPostsOut = sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
+  const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
+  const setSavedPostsOut = sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
 
   useEffect(() => {
     setCurrentSession(sessionReady ? session : undefined);
   }, [session, sessionReady]);
 
   useEffect(() => {
+    if (sharedLikedSaved) return;
     if (!sessionReady || currentSession === undefined) return;
     let idOrToken: string | null = null;
     if (currentSession?.user?.id) {
@@ -71,7 +87,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
-  }, [sessionReady, currentSession]);
+  }, [sessionReady, currentSession, sharedLikedSaved]);
 
   const fetchSearch = useCallback(async () => {
     const q = (query || '').trim();
@@ -94,23 +110,27 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   }, [query, province]);
 
   useEffect(() => {
+    if (!enabled) {
+      setPosts([]);
+      return;
+    }
     const q = (query || '').trim();
     if (q.length === 0) {
       setPosts([]);
       return;
     }
     fetchSearch();
-  }, [query, province, fetchSearch]);
+  }, [enabled, query, province, fetchSearch]);
 
   return {
     posts,
     setPosts,
     loading,
     session: currentSession,
-    likedPosts,
-    savedPosts,
-    setLikedPosts,
-    setSavedPosts,
+    likedPosts: likedPostsOut,
+    savedPosts: savedPostsOut,
+    setLikedPosts: setLikedPostsOut,
+    setSavedPosts: setSavedPostsOut,
     fetchSearch,
   };
 }

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 
 /** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
 const HEADER_TOP_ZONE_PX = 200;
+/** Throttle การอัปเดต visibility เพื่อลด re-render จาก scroll (สมูทขึ้น) */
+const VISIBILITY_THROTTLE_MS = 120;
 
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;
@@ -25,8 +27,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const lastScrollYRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
   onVisibilityChangeRef.current = onVisibilityChange;
+  const lastAppliedVisibleRef = useRef(true);
+  const throttleUntilRef = useRef(0);
 
   const applyVisible = (visible: boolean) => {
+    if (lastAppliedVisibleRef.current === visible) return;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now < throttleUntilRef.current) return;
+    throttleUntilRef.current = now + VISIBILITY_THROTTLE_MS;
+    lastAppliedVisibleRef.current = visible;
     setIsHeaderVisible(visible);
     onVisibilityChangeRef.current?.(visible);
   };

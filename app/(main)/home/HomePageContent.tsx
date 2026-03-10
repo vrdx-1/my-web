@@ -20,6 +20,7 @@ import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useHomeLikedSaved } from '@/hooks/useHomeLikedSaved';
 import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useMenu } from '@/hooks/useMenu';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
@@ -79,11 +80,6 @@ export function HomePageContent() {
 
   const postsRef = useRef<any[]>([]);
   const prevLoadingMoreRef = useRef(false);
-  const [onlineStatusTick, setOnlineStatusTick] = useState(0);
-  /** ใช้กับ PostCard: กดค้างแคปชั่นได้เฉพาะเมื่อฟีดหยุดเลื่อนแล้ว */
-  const [feedScrollIdle, setFeedScrollIdle] = useState(true);
-  const feedScrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
   const mainTab = useMainTabContext();
@@ -96,6 +92,9 @@ export function HomePageContent() {
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') ?? '';
   const hadSearchRef = useRef(false);
+
+  // โหลด liked/saved ครั้งเดียว แชร์ให้ home + search + sold (ลด request ซ้ำ 3 ชุด)
+  const sharedLikedSaved = useHomeLikedSaved(session, sessionReady);
 
   // เฉพาะตอนที่เพิ่งมีคำค้น (จากไม่มีเป็นมี) → สลับไปแท็บพร้อมขาย ไม่บังคับเมื่อ user กดไปดูแท็บขายแล้ว
   useEffect(() => {
@@ -115,18 +114,22 @@ export function HomePageContent() {
       startSessionCheck();
       setFirstFeedLoaded(true);
     },
+    sharedLikedSaved,
   });
   const searchData = useSearchPosts({
     query: searchQuery,
     province: selectedProvince,
     session,
     sessionReady,
+    sharedLikedSaved,
+    enabled: searchQuery.trim().length > 0,
   });
   const soldListData = usePostListData({
     type: 'sold',
     session,
     sessionReady,
     status: 'sold',
+    sharedLikedSaved,
   });
 
   const hasSearch = searchQuery.trim().length > 0;
@@ -188,7 +191,7 @@ export function HomePageContent() {
   const postListRef = useRef(postList);
   postListRef.current = postList;
 
-  // อัปเดตสถานะออนไลน์ทุก 60 วินาที: tick เพื่อ re-render + ดึง last_seen ล่าสุดจาก server
+  // อัปเดต last_seen ทุก 60 วินาที (ไม่ใช้ state tick เพื่อลด re-render ทั้งฟีด — อัปเดตผ่าน setPosts อย่างเดียว)
   useEffect(() => {
     const refreshOnlineStatus = async () => {
       const list = postsRef.current;
@@ -220,11 +223,7 @@ export function HomePageContent() {
       }
     };
 
-    const id = setInterval(() => {
-      setOnlineStatusTick((t) => t + 1);
-      refreshOnlineStatus();
-    }, 60 * 1000);
-    // อัปเดตสถานะออนไลน์ครั้งแรกหลังโหลด feed ~15 วินาที (ไม่ต้องรอ 1 นาที)
+    const id = setInterval(refreshOnlineStatus, 60 * 1000);
     const firstRefresh = setTimeout(refreshOnlineStatus, 15 * 1000);
     return () => {
       clearInterval(id);
@@ -438,25 +437,6 @@ export function HomePageContent() {
     return () => mainTab?.unregisterTabChangeHandler();
   }, [mainTab, setTabAndRefresh]);
 
-  /** ตรวจจับว่า feed หยุดเลื่อนแล้ว — ให้ PostCard เปิด long-press copy ได้เฉพาะเมื่อ idle */
-  useEffect(() => {
-    if (pathname !== '/home') return;
-    const SCROLL_IDLE_MS = 180;
-    const onScroll = () => {
-      setFeedScrollIdle(false);
-      if (feedScrollIdleTimerRef.current) clearTimeout(feedScrollIdleTimerRef.current);
-      feedScrollIdleTimerRef.current = setTimeout(() => {
-        setFeedScrollIdle(true);
-        feedScrollIdleTimerRef.current = null;
-      }, SCROLL_IDLE_MS);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      if (feedScrollIdleTimerRef.current) clearTimeout(feedScrollIdleTimerRef.current);
-    };
-  }, [pathname]);
-
   /** ล็อกไม่ให้ดึง Header และฟีดลงเมื่ออยู่บนสุด (ทุกอุปกรณ์ รวมถึง iPhone) — ป้องกัน overscroll/bounce */
   const homePullLockStartY = useRef(0);
   useEffect(() => {
@@ -516,8 +496,7 @@ export function HomePageContent() {
             hasMore: postList.hasMore ?? true,
             onLoadMore: () => postList.setPage((p) => p + 1),
             hideBoost: tab === 'sold',
-            onlineStatusTick,
-            isFeedScrollIdle: feedScrollIdle,
+            isFeedScrollIdle: true,
           }}
         />
       </div>

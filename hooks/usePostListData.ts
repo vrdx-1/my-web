@@ -17,6 +17,13 @@ function getFeedListCacheKey(type: string, session: any): string {
 
 export type PostListType = 'saved' | 'liked' | 'sold' | 'my-posts';
 
+export interface PostListLikedSavedShared {
+  likedPosts: { [key: string]: boolean };
+  savedPosts: { [key: string]: boolean };
+  setLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+  setSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+}
+
 interface UsePostListDataOptions {
   type: PostListType;
   userIdOrToken?: string;
@@ -26,6 +33,8 @@ interface UsePostListDataOptions {
   tab?: string;
   status?: string; // สำหรับ sold page
   loadAll?: boolean; // โหลดทั้งหมดครั้งเดียว (ใช้กับ saved/liked/my-posts)
+  /** สำหรับ type 'sold' ในหน้าโฮม: ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำ) */
+  sharedLikedSaved?: PostListLikedSavedShared | null;
 }
 
 interface UsePostListDataReturn {
@@ -51,7 +60,7 @@ interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, sessionReady = true, tab, status, loadAll = false } = options;
+  const { type, userIdOrToken, session, sessionReady = true, tab, status, loadAll = false, sharedLikedSaved } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -93,9 +102,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     feedListCache[key] = { posts: [...posts], hasMore };
   }, [type, currentSession, loadingMore, posts, hasMore]);
 
-  // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม)
+  // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม) — ข้ามถ้ามี sharedLikedSaved
   useEffect(() => {
-    if (type !== 'sold' || currentSession === undefined) return;
+    if (type !== 'sold' || currentSession === undefined || sharedLikedSaved) return;
     let idOrToken: string | null = null;
     if (userIdOrToken && typeof userIdOrToken === 'string' && userIdOrToken !== 'null' && userIdOrToken !== 'undefined' && userIdOrToken !== '') {
       idOrToken = userIdOrToken;
@@ -132,7 +141,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
-  }, [type, currentSession, userIdOrToken]);
+  }, [type, currentSession, userIdOrToken, sharedLikedSaved]);
+
+  const likedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.likedPosts : likedPosts;
+  const savedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
+  const setLikedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
+  const setSavedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (currentSession === undefined) return;
@@ -806,13 +820,13 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     hasMore,
     loadingMore,
     session: currentSession,
-    likedPosts,
-    savedPosts,
+    likedPosts: likedPostsOut,
+    savedPosts: savedPostsOut,
     setPosts,
     setPage,
     setHasMore,
-    setLikedPosts,
-    setSavedPosts,
+    setLikedPosts: setLikedPostsOut,
+    setSavedPosts: setSavedPostsOut,
     fetchPosts,
     refreshData,
   };
