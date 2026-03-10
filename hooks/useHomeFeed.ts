@@ -207,7 +207,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (isInitial) {
         setPosts(ordered);
         // โหลดรูปล่วงหน้าชุดแรก (โพสที่เห็นบนจอ + ล่วงหน้า 2–3 โพส) ให้รู้สึกสมูทแบบ Facebook
-        preloadPostImages(ordered, 5);
+        preloadPostImages(ordered, 2);
         fireInitialLoadDone();
         // หลังผู้ใช้โพสต์: แปะโพสต์ของตัวเองบนสุดของ feed (เหนือ Ad / รายการอื่น) จนกว่าจะ refresh
         const justPostedId =
@@ -287,7 +287,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
               setPosts(cachedPosts);
               setLoadingMore(false);
               // โหลดรูปล่วงหน้าแบบ Facebook — รูปพร้อมก่อนผู้ใช้เลื่อนเห็น
-              preloadPostImages(cachedPosts, 5);
+              preloadPostImages(cachedPosts, 2);
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;

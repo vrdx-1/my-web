@@ -190,7 +190,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             typeof userIdOrToken === 'string' &&
             userIdOrToken.length > 0 &&
             !userIdOrToken.includes('null')) {
-          console.log('getIdOrToken: Using userIdOrToken', { userIdOrToken });
           return userIdOrToken;
         }
         
@@ -201,13 +200,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             currentUserId !== 'undefined' &&
             currentUserId.length > 0 &&
             !currentUserId.includes('null')) {
-          console.log('getIdOrToken: Using currentUserId', { currentUserId });
           return currentUserId;
         }
         
         // ใช้ guest token เป็น fallback (สำหรับ guest user)
-        // getPrimaryGuestToken() จะ return guest token เสมอ (สร้างใหม่ถ้ายังไม่มี)
-        // แต่ถ้า window เป็น undefined (SSR) จะ return empty string
         if (typeof window !== 'undefined') {
           try {
             const guestToken = getPrimaryGuestToken();
@@ -218,25 +214,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 typeof guestToken === 'string' &&
                 guestToken.length > 0 &&
                 !guestToken.includes('null')) {
-              console.log('getIdOrToken: Using guestToken', { guestToken });
               return guestToken;
-            } else {
-              console.warn('getIdOrToken: Invalid guestToken', { guestToken });
             }
           } catch (err) {
             console.error('Error getting guest token:', err);
           }
-        } else {
-          console.warn('getIdOrToken: window is undefined (SSR)');
         }
-        
-        // ถ้าไม่มีอะไรเลย return null (จะไม่ query database)
-        console.warn('getIdOrToken: No valid idOrToken found', { 
-          userIdOrToken, 
-          currentUserId, 
-          currentSession: currentSession ? 'exists' : 'null',
-          window: typeof window !== 'undefined' ? 'exists' : 'undefined'
-        });
         return null;
       };
 
@@ -246,19 +229,11 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         
         // ถ้าไม่มี idOrToken ให้หยุดการโหลด
         if (!idOrToken) {
-          console.warn('usePostListData: No valid idOrToken for saved posts', { 
-            type, 
-            userIdOrToken, 
-            currentUserId, 
-            currentSession: currentSession ? 'exists' : 'null' 
-          });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
-        // ตรวจสอบอีกครั้งก่อน query
         if (idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
-          console.error('usePostListData: Invalid idOrToken detected', { idOrToken, type: 'saved' });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
@@ -267,14 +242,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const table = isUser ? 'post_saves' : 'post_saves_guest';
         const column = isUser ? 'user_id' : 'guest_token';
         
-        // ตรวจสอบอีกครั้งก่อน query - ป้องกันการส่ง "null" ไปยัง database
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
-          console.error('usePostListData: Attempted to query with invalid idOrToken', { idOrToken, type: 'saved', table, column });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        
-        console.log('usePostListData: Querying saved posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd, loadAll });
         
         let savesQuery = supabase
           .from(table)
@@ -317,19 +288,11 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         
         // ถ้าไม่มี idOrToken ให้หยุดการโหลด
         if (!idOrToken) {
-          console.warn('usePostListData: No valid idOrToken for liked posts', { 
-            type, 
-            userIdOrToken, 
-            currentUserId, 
-            currentSession: currentSession ? 'exists' : 'null' 
-          });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
-        // ตรวจสอบอีกครั้งก่อน query
         if (idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
-          console.error('usePostListData: Invalid idOrToken detected', { idOrToken, type: 'liked' });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
@@ -345,7 +308,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
-        console.log('usePostListData: Querying liked posts', { idOrToken, table, column, isUser, rangeStart, rangeEnd, loadAll });
         
         let likesQuery = supabase
           .from(table)
@@ -404,25 +366,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         
         // ถ้าไม่มี idOrToken หรือเป็น invalid value ให้หยุดการโหลด
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
-          console.warn('usePostListData: No valid idOrToken for my-posts', { 
-            type, 
-            userIdOrToken, 
-            currentUserId, 
-            currentSession: currentSession ? 'exists' : 'null' 
-          });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
         
-        // ตรวจสอบว่า idOrToken เป็น valid UUID format (สำหรับ user_id)
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(idOrToken)) {
-          console.warn('usePostListData: Invalid UUID format for my-posts', { 
-            idOrToken,
-            type, 
-            userIdOrToken, 
-            currentUserId 
-          });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
@@ -480,16 +429,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const validPostIds = postIds.filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
         
         if (validPostIds.length === 0) {
-          console.warn('usePostListData: No valid postIds after filtering', { postIds, type });
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        
-        console.log('usePostListData: Fetching posts', { 
-          postIdsCount: postIds.length, 
-          validPostIdsCount: validPostIds.length,
-          type 
-        });
         
         const { data: postsData, error: postsError } = await supabase
           .from('cars')
@@ -692,7 +634,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           }
           
           try {
-            console.log('usePostListData: Fetching saved status for liked posts', { idOrToken, table, column, isUser });
             const { data: savedData, error: savedError } = await supabase
               .from(table)
               .select('post_id')
@@ -718,13 +659,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           } catch (err) {
             console.error('Exception fetching saved status:', err, { idOrToken, table, column, currentUserId });
           }
-        } else {
-          // ถ้า idOrToken ไม่ valid ให้ skip การ fetch saved status
-          console.warn('Skipping saved status fetch for liked posts - invalid idOrToken', { 
-            idOrToken, 
-            currentUserId, 
-            currentSession: currentSession ? 'exists' : 'null' 
-          });
         }
       }
 
@@ -751,7 +685,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           }
           
           try {
-            console.log('usePostListData: Fetching liked status for saved posts', { idOrToken, table, column, isUser });
             const { data: likedData, error: likedError } = await supabase
               .from(table)
               .select('post_id')
@@ -777,13 +710,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           } catch (err) {
             console.error('Exception fetching liked status:', err, { idOrToken, table, column, currentUserId });
           }
-        } else {
-          // ถ้า idOrToken ไม่ valid ให้ skip การ fetch liked status
-          console.warn('Skipping liked status fetch for saved posts - invalid idOrToken', { 
-            idOrToken, 
-            currentUserId, 
-            currentSession: currentSession ? 'exists' : 'null' 
-          });
         }
       }
 

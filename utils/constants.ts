@@ -34,8 +34,8 @@ export const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 it
 export const LIST_FEED_PAGE_SIZE = 1000;
 /** จำนวนโพสต์ที่โหลดในหน้าโฮมต่อหนึ่งครั้ง (เมื่อเลื่อนลง) — โหลดเพิ่มทีละ 10 รายการ */
 export const FEED_PAGE_SIZE = 10;
-/** จำนวนโพสต์ชุดแรกที่โหลดในหน้าโฮม (1 รายการเพื่อให้ฟีดแสดงเร็ว จากนั้นโหลดเพิ่มทีละ FEED_PAGE_SIZE เมื่อเลื่อนลง) */
-export const INITIAL_FEED_PAGE_SIZE = 1;
+/** จำนวนโพสต์ชุดแรกที่โหลดในหน้าโฮม (6 รายการ — balance ระหว่างโหลดเร็วกับความสมูท) */
+export const INITIAL_FEED_PAGE_SIZE = 6;
 /** อายุ cache ฟีดหน้าโฮม (มิลลิวินาที) — ใช้แสดงผลทันทีเมื่อกลับมาเปิดเว็บ แล้วค่อยโหลดที่อัปเดตใหม่ทีหลัง */
 export const FEED_CACHE_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000; // 2 วัน
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */

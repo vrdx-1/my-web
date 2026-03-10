@@ -41,6 +41,193 @@ import type { ComponentProps } from 'react';
 
 export type HomeTab = 'recommend' | 'sold';
 
+/** Stub sold source เมื่อยังไม่เปิดแท็บขายแล้ว — ใช้ตอนมีคำค้น (sold จาก search) */
+const SOLD_STUB = {
+  posts: [] as any[],
+  setPosts: (_: any) => {},
+  session: undefined as any,
+  likedPosts: {} as { [key: string]: boolean },
+  savedPosts: {} as { [key: string]: boolean },
+  setLikedPosts: (_: any) => {},
+  setSavedPosts: (_: any) => {},
+  loadingMore: false,
+  hasMore: false,
+  setPage: (_: any) => {},
+  fetchPosts: (_?: boolean) => Promise.resolve(),
+};
+
+/** โหลดข้อมูลแท็บขายแล้วเฉพาะเมื่อเปิดแท็บนี้ (lazy) — ลดงานตอนโหลดหน้าโฮม */
+function SoldTabFeedWrapper({
+  session,
+  sessionReady,
+  sharedLikedSaved,
+  soldTabRefreshRef,
+  onLoadingMoreChange,
+  onPostsChange,
+  menu,
+  viewingPostHook,
+  headerScroll,
+  fullScreenViewer,
+  reportingPost,
+  setReportingPost,
+  reportReason,
+  setReportReason,
+  isSubmittingReport,
+  setIsSubmittingReport,
+  justLikedPosts,
+  setJustLikedPosts,
+  justSavedPosts,
+  setJustSavedPosts,
+  fetchInteractions,
+  postsRef,
+  handleSubmitReportRef,
+}: {
+  session: any;
+  sessionReady: boolean;
+  sharedLikedSaved: ReturnType<typeof useHomeLikedSaved>;
+  soldTabRefreshRef: React.MutableRefObject<{ setPage: (v: number | ((p: number) => number)) => void; setHasMore: (v: boolean) => void; fetchPosts: (isInitial?: boolean) => Promise<void> } | null>;
+  onLoadingMoreChange: (loading: boolean) => void;
+  onPostsChange: (posts: any[]) => void;
+  menu: ReturnType<typeof useMenu>;
+  viewingPostHook: ReturnType<typeof useViewingPost>;
+  headerScroll: ReturnType<typeof useHeaderScroll>;
+  fullScreenViewer: ReturnType<typeof useFullScreenViewer>;
+  reportingPost: any;
+  setReportingPost: (p: any) => void;
+  reportReason: string;
+  setReportReason: (r: string) => void;
+  isSubmittingReport: boolean;
+  setIsSubmittingReport: (v: boolean) => void;
+  justLikedPosts: { [key: string]: boolean };
+  setJustLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+  justSavedPosts: { [key: string]: boolean };
+  setJustSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
+  fetchInteractions: (type: 'likes' | 'saves', postId: string) => Promise<void>;
+  postsRef: React.MutableRefObject<any[]>;
+  handleSubmitReportRef: React.MutableRefObject<(() => void) | null>;
+}) {
+  const soldListData = usePostListData({
+    type: 'sold',
+    session,
+    sessionReady,
+    status: 'sold',
+    sharedLikedSaved,
+  });
+
+  useEffect(() => {
+    soldTabRefreshRef.current = {
+      setPage: soldListData.setPage,
+      setHasMore: soldListData.setHasMore,
+      fetchPosts: soldListData.fetchPosts,
+    };
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+    soldListData.fetchPosts(true);
+    return () => {
+      soldTabRefreshRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    onLoadingMoreChange(soldListData.loadingMore);
+  }, [soldListData.loadingMore, onLoadingMoreChange]);
+
+  useEffect(() => {
+    onPostsChange(soldListData.posts);
+  }, [soldListData.posts, onPostsChange]);
+
+  const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
+    loadingMore: soldListData.loadingMore,
+    hasMore: soldListData.hasMore,
+    onLoadMore: () => soldListData.setPage((p) => p + 1),
+  });
+
+  const { toggleLike, toggleSave } = usePostInteractions({
+    session: soldListData.session,
+    posts: soldListData.posts,
+    setPosts: soldListData.setPosts,
+    likedPosts: soldListData.likedPosts,
+    savedPosts: soldListData.savedPosts,
+    setLikedPosts: soldListData.setLikedPosts,
+    setSavedPosts: soldListData.setSavedPosts,
+    setJustLikedPosts,
+    setJustSavedPosts,
+  });
+
+  const handlers = usePostFeedHandlers({
+    session: soldListData.session,
+    posts: soldListData.posts,
+    setPosts: soldListData.setPosts,
+    viewingPostHook,
+    headerScroll,
+    menu,
+    reportingPost,
+    setReportingPost,
+    reportReason,
+    setReportReason,
+    isSubmittingReport,
+    setIsSubmittingReport,
+  });
+
+  useEffect(() => {
+    handleSubmitReportRef.current = handlers.handleSubmitReport;
+  }, [handlers.handleSubmitReport]);
+
+  const showSkeleton = soldListData.posts.length === 0 && soldListData.loadingMore;
+
+  return (
+    <>
+    <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
+      <HomeFeedBody
+        showSkeleton={showSkeleton}
+        skeletonCount={3}
+        postFeedProps={{
+          posts: soldListData.posts,
+          session: soldListData.session,
+          likedPosts: soldListData.likedPosts,
+          savedPosts: soldListData.savedPosts,
+          justLikedPosts,
+          justSavedPosts,
+          activeMenuState: menu.activeMenuState,
+          isMenuAnimating: menu.isMenuAnimating,
+          lastPostElementRef,
+          menuButtonRefs: menu.menuButtonRefs,
+          onViewPost: handlers.handleViewPost,
+          onImpression: handlers.handleImpression,
+          onLike: toggleLike,
+          onSave: toggleSave,
+          onShare: handlers.handleShare,
+          onViewLikes: (postId) => fetchInteractions('likes', postId),
+          onViewSaves: (postId) => fetchInteractions('saves', postId),
+          onTogglePostStatus: handlers.handleTogglePostStatus,
+          onDeletePost: handlers.handleDeletePost,
+          onReport: handlers.handleReport,
+          onSetActiveMenu: menu.setActiveMenu,
+          onSetMenuAnimating: menu.setIsMenuAnimating,
+          loadingMore: soldListData.hasMore ? soldListData.loadingMore : false,
+          hasMore: soldListData.hasMore ?? true,
+          onLoadMore: () => soldListData.setPage((p) => p + 1),
+          hideBoost: true,
+          isFeedScrollIdle: true,
+        }}
+      />
+    </div>
+    {handlers.showReportSuccess && (
+      <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
+    )}
+    {handlers.showDeleteConfirm && (
+      <DeleteConfirmModal
+        onConfirm={handlers.handleConfirmDelete}
+        onCancel={handlers.handleCancelDelete}
+      />
+    )}
+    {handlers.showDeleteSuccess && (
+      <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+    )}
+    </>
+  );
+}
+
 /** Render PostFeed only after client mount to avoid React "Expected static flag was missing". */
 function HomeFeedBody({
   showSkeleton,
@@ -129,15 +316,12 @@ export function HomePageContent() {
     sharedLikedSaved,
     enabled: searchQuery.trim().length > 0,
   });
-  const soldListData = usePostListData({
-    type: 'sold',
-    session,
-    sessionReady,
-    status: 'sold',
-    sharedLikedSaved,
-  });
 
   const hasSearch = searchQuery.trim().length > 0;
+  const soldTabRefreshRef = useRef<{ setPage: (v: number | ((p: number) => number)) => void; setHasMore: (v: boolean) => void; fetchPosts: (isInitial?: boolean) => Promise<void> } | null>(null);
+  const handleSubmitReportRef = useRef<(() => void) | null>(null);
+  const [soldTabLoadingMore, setSoldTabLoadingMore] = useState(false);
+  const [soldTabPosts, setSoldTabPosts] = useState<any[]>([]);
 
   // ฝั่งพร้อมขาย: มีคำค้น = แสดงเฉพาะโพส status recommend ที่ตรงคำค้น (ไม่เอา sold มาแสดงฝั่งนี้)
   const recommendSource =
@@ -165,7 +349,7 @@ export function HomePageContent() {
         }
       : recommendFeed;
 
-  // ฝั่งขายแล้ว: มีคำค้น = แสดงเฉพาะโพสขายแล้วที่ตรงคำค้น (กรองจากผลค้นหา), ไม่มีคำค้น = รายการขายแล้วทั้งหมด
+  // ฝั่งขายแล้ว: มีคำค้น = แสดงเฉพาะโพสขายแล้วที่ตรงคำค้น; ไม่มีคำค้น = ใช้ stub (ข้อมูลจริงโหลดใน SoldTabFeedWrapper เมื่อเปิดแท็บ)
   const soldSource = hasSearch
     ? {
         posts: searchData.posts.filter((p: any) => p.status === 'sold'),
@@ -188,10 +372,11 @@ export function HomePageContent() {
         setPage: () => {},
         fetchPosts: () => searchData.fetchSearch(),
       }
-    : soldListData;
+    : SOLD_STUB;
 
-  const posts = tab === 'recommend' ? recommendSource.posts : soldSource.posts;
-  const postList = tab === 'recommend' ? recommendSource : soldSource;
+  const isSoldTabNoSearch = tab === 'sold' && !hasSearch;
+  const posts = tab === 'recommend' ? recommendSource.posts : isSoldTabNoSearch ? soldTabPosts : soldSource.posts;
+  const postList = tab === 'recommend' ? recommendSource : isSoldTabNoSearch ? SOLD_STUB : soldSource;
   postsRef.current = posts;
 
   const menu = useMenu();
@@ -226,30 +411,23 @@ export function HomePageContent() {
     setJustSavedPosts,
   });
 
-  useEffect(() => {
-    if (tab !== 'sold' || !sessionReady || soldListData.session === undefined || hasSearch) return;
-    if (soldListData.posts.length > 0) return;
-    soldListData.setPage(0);
-    soldListData.setHasMore(true);
-    soldListData.fetchPosts(true);
-  }, [tab, sessionReady, soldListData.session, hasSearch, soldListData.posts.length]);
+  const effectiveLoadingMore = isSoldTabNoSearch ? soldTabLoadingMore : postList.loadingMore;
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
-    prevLoadingMoreRef.current = postList.loadingMore;
-    if (wasLoading && !postList.loadingMore) {
+    prevLoadingMoreRef.current = effectiveLoadingMore;
+    if (wasLoading && !effectiveLoadingMore) {
       setTabRefreshing(false);
       mainTab?.setNavigatingToTab(null);
       mainTab?.setTabRefreshing(false);
       mainTab?.setRefreshSource(null);
-    } else if (!postList.loadingMore) {
+    } else if (!effectiveLoadingMore) {
       setTabRefreshing(false);
       mainTab?.setTabRefreshing(false);
-      // เคลียร์ spinner บนแท็บด้วย (กรณีสลับมาแท็บขายแล้วที่มีคำค้น — โหลดอยู่แล้วจึงไม่เคย wasLoading)
       mainTab?.setNavigatingToTab(null);
       mainTab?.setRefreshSource(null);
     }
-  }, [postList.loadingMore, mainTab]);
+  }, [effectiveLoadingMore, mainTab]);
 
   const doRefresh = useCallback((options?: { fromHomeButton?: boolean }) => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
@@ -283,22 +461,23 @@ export function HomePageContent() {
       }
     } else {
       if (useNormalFeed) {
-        soldListData.setPage(0);
-        soldListData.setHasMore(true);
-        soldListData.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
-      } else {
+        soldTabRefreshRef.current?.setPage(0);
+        soldTabRefreshRef.current?.setHasMore(true);
+        soldTabRefreshRef.current?.fetchPosts(true).finally(() => mainTab?.setRefreshSource(null));
+      } else if (!useNormalFeed) {
         searchData.fetchSearch().finally(() => mainTab?.setRefreshSource(null));
       }
     }
-  }, [tab, mainTab, pathname, recommendFeed, soldListData, searchData, searchQuery, searchParams, router, homeProvince]);
+  }, [tab, mainTab, pathname, recommendFeed, searchData, searchQuery, searchParams, router, homeProvince]);
 
   useEffect(() => {
     mainTab?.registerTabRefreshHandler(doRefresh);
     return () => mainTab?.unregisterTabRefreshHandler();
   }, [mainTab, doRefresh]);
 
+  const effectiveSession = isSoldTabNoSearch ? session : postList.session;
   const handlers = usePostFeedHandlers({
-    session: postList.session,
+    session: effectiveSession,
     posts: postList.posts,
     setPosts: postList.setPosts,
     viewingPostHook,
@@ -374,9 +553,9 @@ export function HomePageContent() {
           recommendFeed.fetchPosts(true);
         }
       } else {
-        soldListData.setPage(0);
-        soldListData.setHasMore(true);
-        soldListData.fetchPosts(true);
+        soldTabRefreshRef.current?.setPage(0);
+        soldTabRefreshRef.current?.setHasMore(true);
+        soldTabRefreshRef.current?.fetchPosts(true);
       }
     } else {
       mainTab?.setNavigatingToTab(newTab);
@@ -391,9 +570,9 @@ export function HomePageContent() {
           recommendFeed.fetchPosts(true);
         }
       }
-      // sold: fetch ถูกเรียกใน useEffect เมื่อ tab === 'sold'
+      // sold: fetch ถูกเรียกใน SoldTabFeedWrapper เมื่อ mount
     }
-  }, [tab, mainTab, searchQuery, recommendFeed, searchData, soldListData]);
+  }, [tab, mainTab, searchQuery, recommendFeed, searchData]);
 
   useEffect(() => {
     mainTab?.registerTabChangeHandler(setTabAndRefresh);
@@ -401,8 +580,9 @@ export function HomePageContent() {
   }, [mainTab, setTabAndRefresh]);
 
   const showFeedSkeleton =
-    (posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
-    (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore);
+    !isSoldTabNoSearch &&
+    ((posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+      (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore));
 
   // ไม่ render เนื้อหาลง DOM จนกว่าจะ mount บน client (ลด hydration / static flag issues)
   if (!clientMounted) return null;
@@ -410,39 +590,67 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        <HomeFeedBody
-          showSkeleton={showFeedSkeleton}
-          skeletonCount={3}
-          postFeedProps={{
-            posts,
-            session: postList.session,
-            likedPosts: postList.likedPosts,
-            savedPosts: postList.savedPosts,
-            justLikedPosts,
-            justSavedPosts,
-            activeMenuState: menu.activeMenuState,
-            isMenuAnimating: menu.isMenuAnimating,
-            lastPostElementRef,
-            menuButtonRefs: menu.menuButtonRefs,
-            onViewPost: handlers.handleViewPost,
-            onImpression: handlers.handleImpression,
-            onLike: toggleLike,
-            onSave: toggleSave,
-            onShare: handlers.handleShare,
-            onViewLikes: (postId) => fetchInteractions('likes', postId),
-            onViewSaves: (postId) => fetchInteractions('saves', postId),
-            onTogglePostStatus: handlers.handleTogglePostStatus,
-            onDeletePost: handlers.handleDeletePost,
-            onReport: handlers.handleReport,
-            onSetActiveMenu: menu.setActiveMenu,
-            onSetMenuAnimating: menu.setIsMenuAnimating,
-            loadingMore: postList.hasMore ? postList.loadingMore : false,
-            hasMore: postList.hasMore ?? true,
-            onLoadMore: () => postList.setPage((p) => p + 1),
-            hideBoost: tab === 'sold',
-            isFeedScrollIdle: true,
-          }}
-        />
+        {isSoldTabNoSearch ? (
+          <SoldTabFeedWrapper
+            session={session}
+            sessionReady={sessionReady}
+            sharedLikedSaved={sharedLikedSaved}
+            soldTabRefreshRef={soldTabRefreshRef}
+            onLoadingMoreChange={setSoldTabLoadingMore}
+            onPostsChange={setSoldTabPosts}
+            menu={menu}
+            viewingPostHook={viewingPostHook}
+            headerScroll={headerScroll}
+            fullScreenViewer={fullScreenViewer}
+            reportingPost={reportingPost}
+            setReportingPost={setReportingPost}
+            reportReason={reportReason}
+            setReportReason={setReportReason}
+            isSubmittingReport={isSubmittingReport}
+            setIsSubmittingReport={setIsSubmittingReport}
+            justLikedPosts={justLikedPosts}
+            setJustLikedPosts={setJustLikedPosts}
+            justSavedPosts={justSavedPosts}
+            setJustSavedPosts={setJustSavedPosts}
+            fetchInteractions={fetchInteractions}
+            postsRef={postsRef}
+            handleSubmitReportRef={handleSubmitReportRef}
+          />
+        ) : (
+          <HomeFeedBody
+            showSkeleton={showFeedSkeleton}
+            skeletonCount={3}
+            postFeedProps={{
+              posts,
+              session: postList.session,
+              likedPosts: postList.likedPosts,
+              savedPosts: postList.savedPosts,
+              justLikedPosts,
+              justSavedPosts,
+              activeMenuState: menu.activeMenuState,
+              isMenuAnimating: menu.isMenuAnimating,
+              lastPostElementRef,
+              menuButtonRefs: menu.menuButtonRefs,
+              onViewPost: handlers.handleViewPost,
+              onImpression: handlers.handleImpression,
+              onLike: toggleLike,
+              onSave: toggleSave,
+              onShare: handlers.handleShare,
+              onViewLikes: (postId) => fetchInteractions('likes', postId),
+              onViewSaves: (postId) => fetchInteractions('saves', postId),
+              onTogglePostStatus: handlers.handleTogglePostStatus,
+              onDeletePost: handlers.handleDeletePost,
+              onReport: handlers.handleReport,
+              onSetActiveMenu: menu.setActiveMenu,
+              onSetMenuAnimating: menu.setIsMenuAnimating,
+              loadingMore: postList.hasMore ? postList.loadingMore : false,
+              hasMore: postList.hasMore ?? true,
+              onLoadMore: () => postList.setPage((p) => p + 1),
+              hideBoost: tab === 'sold',
+              isFeedScrollIdle: true,
+            }}
+          />
+        )}
       </div>
 
       <InteractionModal
@@ -463,9 +671,13 @@ export function HomePageContent() {
         onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
       />
 
+      {/* โหลด modal tree เมื่อจำเป็นเท่านั้น — ลดงานเรนเดอร์ตอนเลื่อนฟีด */}
+      {(viewingPostHook.viewingPost ||
+        fullScreenViewer.fullScreenImages ||
+        reportingPost) && (
       <PostFeedModals
         viewingPost={viewingPostHook.viewingPost}
-        session={postList.session}
+        session={effectiveSession}
         isViewingModeOpen={viewingPostHook.isViewingModeOpen}
         viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
         savedScrollPosition={viewingPostHook.savedScrollPosition}
@@ -524,19 +736,20 @@ export function HomePageContent() {
         isSubmittingReport={isSubmittingReport}
         onReportClose={() => setReportingPost(null)}
         onReportReasonChange={setReportReason}
-        onReportSubmit={handlers.handleSubmitReport}
+        onReportSubmit={isSoldTabNoSearch ? () => handleSubmitReportRef.current?.() : handlers.handleSubmitReport}
       />
+      )}
 
-      {handlers.showReportSuccess && (
+      {!isSoldTabNoSearch && handlers.showReportSuccess && (
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
       )}
-      {handlers.showDeleteConfirm && (
+      {!isSoldTabNoSearch && handlers.showDeleteConfirm && (
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
           onCancel={handlers.handleCancelDelete}
         />
       )}
-      {handlers.showDeleteSuccess && (
+      {!isSoldTabNoSearch && handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
       )}
     </main>

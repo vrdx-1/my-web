@@ -89,9 +89,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
     return () => homeRefreshContext?.register(null);
   }, [pathname, mainTab, homeRefreshContext]);
 
-  /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay ยาวขึ้นและไม่ preload module เพื่อให้หน้าโฮมโหลดเร็วก่อน */
+  /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay 4–5 วินาทีบนโฮมเพื่อลดงานช่วงโหลดหน้าแรก */
   useEffect(() => {
-    const delay = pathname === '/home' ? 2000 : 1000;
+    const delay = pathname === '/home' ? 4500 : 1000;
     const t = setTimeout(() => {
       if (pathname === '/home') {
         router.prefetch('/notification');
