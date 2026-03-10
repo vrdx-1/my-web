@@ -71,6 +71,11 @@ function HomeFeedBody({
 }
 
 export function HomePageContent() {
+  const [clientMounted, setClientMounted] = useState(false);
+  useEffect(() => {
+    setClientMounted(true);
+  }, []);
+
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
@@ -398,6 +403,9 @@ export function HomePageContent() {
   const showFeedSkeleton =
     (posts.length === 0 && (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
     (mainTab?.refreshSource === 'home' && tabRefreshing && postList.loadingMore);
+
+  // ไม่ render เนื้อหาลง DOM จนกว่าจะ mount บน client (ลด hydration / static flag issues)
+  if (!clientMounted) return null;
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
