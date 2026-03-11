@@ -191,6 +191,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
       index,
       isLastElement,
       priority: index === 0,
+      imageFetchPriority: index === 0 ? undefined : index <= 2 ? 'high' : 'low',
       session,
       likedPosts,
       savedPosts,

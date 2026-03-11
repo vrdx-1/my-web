@@ -44,6 +44,8 @@ interface PostCardProps {
   leftOfAvatar?: React.ReactNode;
   /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
   priority?: boolean;
+  /** ลำดับโหลดรูปของการ์ด (โพสบนสุดก่อน แล้วไล่ลงล่าง): high / low — ส่งจาก feed ตาม index */
+  imageFetchPriority?: 'high' | 'low' | 'auto';
   /** ฟีดหยุดเลื่อนแล้ว — กดค้างแคปชั่นได้เฉพาะเมื่อ true (ไม่ส่ง = ถือว่า idle) */
   isFeedScrollIdle?: boolean;
 }
@@ -77,6 +79,7 @@ export const PostCard = React.memo<PostCardProps>(({
   hideBoost = false,
   leftOfAvatar,
   priority = false,
+  imageFetchPriority,
   isFeedScrollIdle = true,
 }) => {
   const router = useRouter();
@@ -340,7 +343,7 @@ export const PostCard = React.memo<PostCardProps>(({
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
       <div style={{ padding: 0 }}>
-        <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
+        <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} firstImageFetchPriority={imageFetchPriority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
       </div>
 
       {/* Post Actions */}

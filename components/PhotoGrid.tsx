@@ -46,6 +46,8 @@ interface PhotoGridProps {
   onPostClick: (imageIndex: number) => void;
   /** เมื่อ true รูปแรกใช้ loading="eager" สำหรับ LCP (โพสแรกในฟีด) */
   priority?: boolean;
+  /** ลำดับโหลดรูปแรกของการ์ด (เมื่อไม่ใช้ priority): high = โหลดก่อน, low = โหลดหลัง */
+  firstImageFetchPriority?: 'high' | 'low' | 'auto';
   /** Layout สำหรับ 6+ รูป: 'default' | 'five-images' | 'five-images-side' | 'car-gallery' | 'three-images' */
   layout?: string;
   /** Gap เส้นแบ่งรูป — ไม่ใส่ใช้ค่าเดียวกับ layout 2×2 (PHOTO_GRID_GAP) */
@@ -55,11 +57,12 @@ interface PhotoGridProps {
 /**
  * Optimized PhotoGrid with lazy loading. First card in feed uses priority for LCP.
  */
-export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false, layout = 'default', gap = PHOTO_GRID_GAP }) => {
+export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false, firstImageFetchPriority, layout = 'default', gap = PHOTO_GRID_GAP }) => {
   // ใช้ rowGap/columnGap เดียวกันทุก layout — ให้เส้นแบ่งรูปเท่ากับ 2×2 จริง
   const gridGap = { rowGap: gap, columnGap: gap };
+  // รูปแรกของการ์ด: โพสบนสุด = high, โพสถัดไป = high, โพสล่าง = low
+  const firstImgFetchPriority = priority ? 'high' : (firstImageFetchPriority ?? undefined);
   // Defensive: some rows may return images as a JSON string (e.g. '["url1","url2"]').
-  // Normalize to string[] to avoid rendering broken src like '[' / '"'.
   const normalizedImages: string[] = (() => {
     if (Array.isArray(images)) {
       return images.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
@@ -109,7 +112,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imageIndex={0}
             onPostClick={onPostClick}
             loading={firstImageLoading}
-            fetchPriority={priority ? 'high' : undefined}
+            fetchPriority={firstImgFetchPriority}
             containerStyle={{ width: '100%', height: '100%' }}
             imgStyle={baseImgStyle}
           />
@@ -128,7 +131,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imageIndex={0}
             onPostClick={onPostClick}
             loading={firstImageLoading}
-            fetchPriority={priority ? 'high' : undefined}
+            fetchPriority={firstImgFetchPriority}
             containerStyle={{ width: '100%', height: '300px' }}
             imgStyle={baseImgStyle}
           />
@@ -156,10 +159,10 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               imageIndex={0}
               onPostClick={onPostClick}
               loading={firstImageLoading}
-              fetchPriority={priority ? 'high' : undefined}
+              fetchPriority={firstImgFetchPriority}
               containerStyle={{ width: '100%', height: '400px' }}
-              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-            />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
           </div>
           <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
             <ImageWithSkeleton
@@ -168,16 +171,16 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               onPostClick={onPostClick}
               loading="lazy"
               containerStyle={{ width: '100%', height: '199px' }}
-              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-            />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
             <ImageWithSkeleton
               src={normalizedImages[2]}
               imageIndex={2}
               onPostClick={onPostClick}
               loading="lazy"
               containerStyle={{ width: '100%', height: '199px' }}
-              imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-            />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
           </div>
         </div>
       </>
@@ -196,10 +199,10 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               imageIndex={i}
               onPostClick={onPostClick}
               loading={i === 0 ? firstImageLoading : 'lazy'}
-              fetchPriority={i === 0 && priority ? 'high' : undefined}
+              fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
               containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
-              imgStyle={baseImgStyle}
-            />
+                  imgStyle={baseImgStyle}
+                />
           ))}
         </div>
       </>
@@ -229,7 +232,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                   imageIndex={i}
                   onPostClick={onPostClick}
                   loading={i === 0 ? firstImageLoading : 'lazy'}
-                  fetchPriority={i === 0 && priority ? 'high' : undefined}
+                  fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
                   containerStyle={{ position: 'absolute', inset: 0 }}
                   imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
                 />
@@ -281,7 +284,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                   imageIndex={i}
                   onPostClick={onPostClick}
                   loading={i === 0 ? firstImageLoading : 'lazy'}
-                  fetchPriority={i === 0 && priority ? 'high' : undefined}
+                  fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
                   containerStyle={{ position: 'absolute', inset: 0 }}
                   imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
                 />
@@ -370,7 +373,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                     imageIndex={i}
                     onPostClick={onPostClick}
                     loading={i === 0 ? firstImageLoading : 'lazy'}
-                    fetchPriority={i === 0 && priority ? 'high' : undefined}
+                    fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
                     containerStyle={{ position: 'absolute', inset: 0 }}
                     imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
                   />
@@ -451,7 +454,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                   imageIndex={i}
                   onPostClick={onPostClick}
                   loading={i === 0 ? firstImageLoading : 'lazy'}
-                  fetchPriority={i === 0 && priority ? 'high' : undefined}
+                  fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
                   containerStyle={{ position: 'absolute', inset: 0 }}
                   imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
                 />
@@ -519,10 +522,10 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
-                fetchPriority={priority ? 'high' : undefined}
+                fetchPriority={firstImgFetchPriority}
                 containerStyle={{ width: '100%', height: '400px' }}
-                imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-              />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
             </div>
             <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
               {normalizedImages.slice(1, 3).map((img, i) => {
@@ -542,8 +545,8 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                       onPostClick={onPostClick}
                       loading="lazy"
                       containerStyle={{ width: '100%', height: '198.5px' }}
-                      imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-                    />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
                     {idx === 2 && count > 3 && (
                       <div
                         style={{
@@ -579,12 +582,12 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
         <>
           <div style={{ display: 'grid', gridTemplateRows: '2fr 1fr', ...gridGap, cursor: 'pointer', aspectRatio: '1', width: '100%' }}>
             <div style={{ position: 'relative', width: '100%', minHeight: 0 }} onClick={() => onPostClick(0)}>
-              <ImageWithSkeleton
+                  <ImageWithSkeleton
                 src={normalizedImages[0]}
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
-                fetchPriority={priority ? 'high' : undefined}
+                fetchPriority={firstImgFetchPriority}
                 containerStyle={{ position: 'absolute', inset: 0 }}
                 imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
               />
@@ -651,7 +654,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
-                fetchPriority={priority ? 'high' : undefined}
+                fetchPriority={firstImgFetchPriority}
                 containerStyle={{ position: 'absolute', inset: 0 }}
                 imgStyle={{ ...baseImgStyle, pointerEvents: 'none' }}
               />
@@ -718,10 +721,10 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
-                fetchPriority={priority ? 'high' : undefined}
+                fetchPriority={firstImgFetchPriority}
                 containerStyle={{ width: '100%', height: '100%' }}
-                imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-              />
+            imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          />
             </div>
             {normalizedImages.slice(1, 4).map((img, i) => {
               const idx = i + 1;
@@ -784,7 +787,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imageIndex={i}
             onPostClick={onPostClick}
             loading={i === 0 ? firstImageLoading : 'lazy'}
-            fetchPriority={i === 0 && priority ? 'high' : undefined}
+            fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
             containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
             imgStyle={baseImgStyle}
           />
