@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { FeedWithPreload } from '@/components/FeedWithPreload';
 import type { ComponentProps } from 'react';
 
 /** Load PostFeed only on client to avoid React "Expected static flag was missing" (SSR/hydration). */
@@ -17,22 +18,21 @@ export type HomeFeedBodyProps = {
   postFeedProps: ComponentProps<typeof PostFeed>;
 };
 
-/** Render PostFeed only after client mount to avoid React "Expected static flag was missing". */
+/** Render PostFeed only after client mount. Preloading แบบ Facebook ผ่าน FeedWithPreload */
 export function HomeFeedBody({ showSkeleton, skeletonCount, postFeedProps }: HomeFeedBodyProps) {
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (showSkeleton) {
-    return <FeedSkeleton count={skeletonCount} />;
-  }
   if (!mounted) {
     return <FeedSkeleton count={skeletonCount} />;
   }
+
   return (
-    <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
+    <FeedWithPreload showSkeleton={showSkeleton} skeletonCount={skeletonCount}>
       <PostFeed {...postFeedProps} />
-    </div>
+    </FeedWithPreload>
   );
 }

@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
+const imagePlaceholderShimmerStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'photo-grid-shimmer 1.5s ease-in-out infinite',
+  borderRadius: 0,
+};
+
 function ImageWithSkeleton({
   src,
   imageIndex,
@@ -23,6 +32,14 @@ function ImageWithSkeleton({
   const [loaded, setLoaded] = useState(false);
   return (
     <div style={{ position: 'relative', overflow: 'hidden', ...containerStyle }}>
+      {/* Facebook-style placeholder: grey shimmer until image loads */}
+      {!loaded && (
+        <div
+          className="photo-grid-placeholder"
+          style={imagePlaceholderShimmerStyle}
+          aria-hidden="true"
+        />
+      )}
       <img
         src={src}
         onClick={() => onPostClick(imageIndex)}
@@ -33,8 +50,10 @@ function ImageWithSkeleton({
         alt={imageIndex === 0 ? 'Post image' : `Post image ${imageIndex + 1}`}
         style={{
           ...imgStyle,
+          position: 'relative',
+          zIndex: 1,
           opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.2s ease-out',
+          transition: 'opacity 0.25s ease-out',
         }}
       />
     </div>

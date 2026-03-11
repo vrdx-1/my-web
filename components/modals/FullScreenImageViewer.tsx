@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
 
 const ROOT_STYLE: React.CSSProperties = {
@@ -45,12 +45,21 @@ const IMG_SLIDE_STYLE: React.CSSProperties = {
   justifyContent: 'center',
   alignItems: 'center',
   height: '100%',
+  position: 'relative',
 };
 const IMG_STYLE: React.CSSProperties = {
   width: '100%',
   height: '100%',
   objectFit: 'contain',
   objectPosition: 'center',
+};
+/** Skeleton ขณะรอโหลดรูปถัดไป — แบบ Facebook (พื้นดำ + shimmer) */
+const FULLSCREEN_SKELETON_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'viewing-image-shimmer 1.5s ease-in-out infinite',
 };
 const SLIDE_GAP_PX = 8;
 
@@ -81,6 +90,16 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   onTouchEnd,
   onClick,
 }) => {
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
+
+  useEffect(() => {
+    setLoadedIndices(new Set());
+  }, [images?.length, images?.[0]]);
+
+  const handleImageLoad = useCallback((idx: number) => {
+    setLoadedIndices((prev) => new Set(prev).add(idx));
+  }, []);
+
   if (!images) return null;
 
   const trackStyle = {
@@ -112,11 +131,28 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       </div>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={trackStyle}>
-          {images.map((img, idx) => (
-            <div key={idx} style={IMG_SLIDE_STYLE}>
-              <img src={img} style={IMG_STYLE} alt="" />
-            </div>
-          ))}
+          {images.map((img, idx) => {
+            const isLoaded = loadedIndices.has(idx);
+            return (
+              <div key={idx} style={IMG_SLIDE_STYLE}>
+                {!isLoaded && (
+                  <div style={FULLSCREEN_SKELETON_STYLE} aria-hidden="true" />
+                )}
+                <img
+                  src={img}
+                  onLoad={() => handleImageLoad(idx)}
+                  style={{
+                    ...IMG_STYLE,
+                    position: 'relative',
+                    zIndex: 1,
+                    opacity: isLoaded ? 1 : 0,
+                    transition: 'opacity 0.22s ease-out',
+                  }}
+                  alt=""
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

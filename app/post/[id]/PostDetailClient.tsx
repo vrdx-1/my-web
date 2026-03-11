@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -55,50 +55,46 @@ export default function PostDetail() {
     fetchInteractions,
   } = usePostDetail(id as string | undefined);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <FeedSkeleton count={1} />
-      </div>
-    );
-  }
-
   return (
-    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <PageHeader title="ລາຍລະອຽດໂພສ" centerTitle onBack={handleBack} />
+    <>
+      <FeedWithPreload showSkeleton={loading} skeletonCount={1}>
+        <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+          <PageHeader title="ລາຍລະອຽດໂພສ" centerTitle onBack={handleBack} />
 
-      {!post ? (
-        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-          <EmptyState message="ບໍ່ມີຂໍ້ມູນ" variant="minimal" />
-        </div>
-      ) : (
-        <PostCard
-          post={post}
-          index={0}
-          isLastElement={false}
-          session={session}
-          likedPosts={likedPosts}
-          savedPosts={savedPosts}
-          justLikedPosts={justLikedPosts}
-          justSavedPosts={justSavedPosts}
-          activeMenuState={menu.activeMenuState}
-          isMenuAnimating={menu.isMenuAnimating}
-          menuButtonRefs={menu.menuButtonRefs}
-          onViewPost={handlers.handleViewPost}
-          onImpression={handlers.handleImpression}
-          onLike={toggleLike}
-          onSave={toggleSave}
-          onShare={handlers.handleShare}
-          onViewLikes={(postId) => fetchInteractions('likes', postId)}
-          onViewSaves={(postId) => fetchInteractions('saves', postId)}
-          onTogglePostStatus={handleTogglePostStatus}
-          onDeletePost={handlers.handleDeletePost}
-          onReport={handlers.handleReport}
-          onSetActiveMenu={menu.setActiveMenu}
-          onSetMenuAnimating={menu.setIsMenuAnimating}
-          hideBoost={post.status === 'sold'}
-        />
-      )}
+          {!post ? (
+            <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
+              <EmptyState message="ບໍ່ມີຂໍ້ມູນ" variant="minimal" />
+            </div>
+          ) : (
+            <PostCard
+              post={post}
+              index={0}
+              isLastElement={false}
+              session={session}
+              likedPosts={likedPosts}
+              savedPosts={savedPosts}
+              justLikedPosts={justLikedPosts}
+              justSavedPosts={justSavedPosts}
+              activeMenuState={menu.activeMenuState}
+              isMenuAnimating={menu.isMenuAnimating}
+              menuButtonRefs={menu.menuButtonRefs}
+              onViewPost={handlers.handleViewPost}
+              onImpression={handlers.handleImpression}
+              onLike={toggleLike}
+              onSave={toggleSave}
+              onShare={handlers.handleShare}
+              onViewLikes={(postId) => fetchInteractions('likes', postId)}
+              onViewSaves={(postId) => fetchInteractions('saves', postId)}
+              onTogglePostStatus={handleTogglePostStatus}
+              onDeletePost={handlers.handleDeletePost}
+              onReport={handlers.handleReport}
+              onSetActiveMenu={menu.setActiveMenu}
+              onSetMenuAnimating={menu.setIsMenuAnimating}
+              hideBoost={post.status === 'sold'}
+            />
+          )}
+        </main>
+      </FeedWithPreload>
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}
@@ -210,6 +206,6 @@ export default function PostDetail() {
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
       )}
-    </main>
+    </>
   );
 }

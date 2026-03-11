@@ -1,14 +1,12 @@
 'use client'
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Avatar } from '../Avatar';
 import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 
-const VIEWING_MODE_INITIAL_VISIBLE = 3
-const VIEWING_MODE_LOAD_MORE_COUNT = 2
+/** จำนวนรูปที่โหลดก่อน (eager) เพื่อให้รูปแรกๆ โผล่เร็ว ส่วนที่เหลือใช้ loading="lazy" */
+const VIEWING_MODE_EAGER_COUNT = 5;
 
 const OVERLAY_STYLE: React.CSSProperties = {
   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -45,14 +43,14 @@ const IMAGE_WRAP_STYLE: React.CSSProperties = {
 };
 const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', cursor: 'pointer', margin: 0, padding: 0 };
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
-  position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 200,
+  position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 280,
 };
-/** Placeholder ขณะรอโหลดรูป — แบบ Facebook (เทาอ่อน + shimmer) */
+/** Skeleton ขณะรอโหลดรูป — แบบ Facebook (เทาอ่อน + shimmer) ให้ผู้ใช้รู้ว่ายังมีรูปถัดไป */
 const IMAGE_SKELETON_STYLE: React.CSSProperties = {
   position: 'absolute',
   inset: 0,
   width: '100%',
-  minHeight: 200,
+  minHeight: 280,
   background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
   backgroundSize: '200% 100%',
   animation: 'viewing-image-shimmer 1.5s ease-in-out infinite',
@@ -93,13 +91,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   const [initialImageLoaded, setInitialImageLoaded] = useState(false);
 
   const images: string[] = Array.isArray(viewingPost?.images) ? viewingPost.images : [];
-
-  const initialVisible = useMemo(
-    () => Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3)),
-    [initialImageIndex, images.length]
-  );
-  const [visibleCount, setVisibleCount] = useState<number>(() => initialVisible);
-  const [localLoadingMore, setLocalLoadingMore] = useState<boolean>(false);
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -116,7 +107,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     setLoadedIndices((prev) => new Set(prev).add(idx));
     if (idx === initialImageIndex) {
       setInitialImageLoaded(true);
-      // เลื่อนไปรูปที่เลือกเมื่อโหลดเสร็จ (หลังเปิด modal แล้ว)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById(`viewing-image-${idx}`);
@@ -125,33 +115,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
       });
     }
   }, [initialImageIndex]);
-
-  useEffect(() => {
-    const next = Math.min(images.length || 0, Math.max(VIEWING_MODE_INITIAL_VISIBLE, (initialImageIndex ?? 0) + 3));
-    setVisibleCount(next);
-  }, [viewingPost?.id, initialImageIndex, images.length]);
-
-  const hasMore = visibleCount < images.length;
-
-  const onLoadMore = useCallback(() => {
-    if (localLoadingMore || !hasMore) return;
-    setLocalLoadingMore(true);
-    setVisibleCount((prev) => Math.min(prev + VIEWING_MODE_LOAD_MORE_COUNT, images.length));
-    requestAnimationFrame(() => setLocalLoadingMore(false));
-  }, [localLoadingMore, hasMore, images.length]);
-  const { lastElementRef } = useInfiniteScroll({
-    loadingMore: localLoadingMore,
-    hasMore,
-    onLoadMore,
-    threshold: FEED_PRELOAD_THRESHOLD,
-    rootMargin: FEED_PRELOAD_ROOT_MARGIN,
-    rootRef: scrollContainerRef,
-  });
-
-  const visibleImages = useMemo(
-    () => images.slice(0, visibleCount),
-    [images, visibleCount]
-  );
 
   useEffect(() => {
     setEnterPhase('offscreen');
@@ -351,17 +314,17 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
             </div>
           </div>
         </div>
-        {visibleImages.map((img, idx) => {
+        {images.map((img, idx) => {
           const isLoaded = loadedIndices.has(idx);
           return (
-            <div key={idx} id={`viewing-image-${idx}`} ref={idx === visibleImages.length - 1 ? lastElementRef : undefined} style={IMAGE_WRAP_STYLE}>
+            <div key={idx} id={`viewing-image-${idx}`} style={IMAGE_WRAP_STYLE}>
               <div style={IMAGE_PLACEHOLDER_STYLE}>
                 {!isLoaded && <div style={IMAGE_SKELETON_STYLE} aria-hidden="true" />}
                 <img
                   src={img}
-                  loading={idx < initialVisible ? 'eager' : 'lazy'}
+                  loading={idx < VIEWING_MODE_EAGER_COUNT ? 'eager' : 'lazy'}
                   decoding="async"
-                  fetchPriority={idx < initialVisible ? 'high' : undefined}
+                  fetchPriority={idx < VIEWING_MODE_EAGER_COUNT ? 'high' : undefined}
                   onLoad={() => handleImageLoad(idx)}
                   onClick={() => onImageClick(images, idx)}
                   style={{

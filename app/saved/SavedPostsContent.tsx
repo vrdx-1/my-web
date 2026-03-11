@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 // Shared Components
 import { PostFeed } from '@/components/PostFeed';
-import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -197,38 +197,39 @@ export function SavedPostsContent() {
         />
       </div>
 
-      {postListData.posts.length === 0 && postListData.loadingMore ? (
-        <FeedSkeleton />
-      ) : (
-      <PostFeed
-        posts={postListData.posts}
-        session={postListData.session}
-        likedPosts={postListData.likedPosts}
-        savedPosts={postListData.savedPosts}
-        justLikedPosts={justLikedPosts}
-        justSavedPosts={justSavedPosts}
-        activeMenuState={menu.activeMenuState}
-        isMenuAnimating={menu.isMenuAnimating}
-        lastPostElementRef={lastPostElementRef}
-        menuButtonRefs={menu.menuButtonRefs}
-        onViewPost={handlers.handleViewPost}
-        onImpression={handlers.handleImpression}
-        onLike={toggleLike}
-        onSave={toggleSave}
-        onShare={handlers.handleShare}
-        onViewLikes={(postId) => fetchInteractions('likes', postId)}
-        onViewSaves={(postId) => fetchInteractions('saves', postId)}
-        onTogglePostStatus={handlers.handleTogglePostStatus}
-        onDeletePost={handlers.handleDeletePost}
-        onReport={handlers.handleReport}
-        onSetActiveMenu={menu.setActiveMenu}
-        onSetMenuAnimating={menu.setIsMenuAnimating}
-        loadingMore={postListData.hasMore ? postListData.loadingMore : false}
-        hasMore={postListData.hasMore}
-        onLoadMore={() => postListData.setPage((p) => p + 1)}
-        hideBoost={tab === 'sold'}
-      />
-      )}
+      <FeedWithPreload
+        showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
+        skeletonCount={3}
+      >
+        <PostFeed
+          posts={postListData.posts}
+          session={postListData.session}
+          likedPosts={postListData.likedPosts}
+          savedPosts={postListData.savedPosts}
+          justLikedPosts={justLikedPosts}
+          justSavedPosts={justSavedPosts}
+          activeMenuState={menu.activeMenuState}
+          isMenuAnimating={menu.isMenuAnimating}
+          lastPostElementRef={lastPostElementRef}
+          menuButtonRefs={menu.menuButtonRefs}
+          onViewPost={handlers.handleViewPost}
+          onImpression={handlers.handleImpression}
+          onLike={toggleLike}
+          onSave={toggleSave}
+          onShare={handlers.handleShare}
+          onViewLikes={(postId) => fetchInteractions('likes', postId)}
+          onViewSaves={(postId) => fetchInteractions('saves', postId)}
+          onTogglePostStatus={handlers.handleTogglePostStatus}
+          onDeletePost={handlers.handleDeletePost}
+          onReport={handlers.handleReport}
+          onSetActiveMenu={menu.setActiveMenu}
+          onSetMenuAnimating={menu.setIsMenuAnimating}
+          loadingMore={postListData.hasMore ? postListData.loadingMore : false}
+          hasMore={postListData.hasMore}
+          onLoadMore={() => postListData.setPage((p) => p + 1)}
+          hideBoost={tab === 'sold'}
+        />
+      </FeedWithPreload>
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}

@@ -141,6 +141,12 @@ html:has(body[data-page="home"]) {
   to { opacity: 1; }
 }
 
+/* Feed รูปโพส — placeholder shimmer แบบ Facebook (PhotoGrid) */
+@keyframes photo-grid-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Viewing mode: placeholder รอโหลดรูปแบบ Facebook */
 @keyframes viewing-image-shimmer {
   0% { background-position: 200% 0; }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -61,67 +61,63 @@ export default function NotificationDetail() {
     fetchInteractions,
   } = useNotificationDetail(id as string | undefined);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <FeedSkeleton count={1} />
-      </div>
-    );
-  }
-
   return (
-    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <PageHeader title="ລາຍລະອຽດໂພສ" centerTitle />
+    <>
+      <FeedWithPreload showSkeleton={loading} skeletonCount={1}>
+        <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+          <PageHeader title="ລາຍລະອຽດໂພສ" centerTitle />
 
-      {!post ? (
-        <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-          <EmptyState message="ບໍ່ມີຂໍ້ມູນ" variant="minimal" />
-        </div>
-      ) : (
-        <>
-          <PostCard
-            post={post}
-            index={0}
-            isLastElement={false}
-            session={session}
-            likedPosts={likedPosts}
-            savedPosts={savedPosts}
-            justLikedPosts={justLikedPosts}
-            justSavedPosts={justSavedPosts}
-            activeMenuState={menu.activeMenuState}
-            isMenuAnimating={menu.isMenuAnimating}
-            menuButtonRefs={menu.menuButtonRefs}
-            onViewPost={handlers.handleViewPost}
-            onImpression={handlers.handleImpression}
-            onLike={toggleLike}
-            onSave={toggleSave}
-            onShare={handlers.handleShare}
-            onViewLikes={(postId) => fetchInteractions('likes', postId)}
-            onViewSaves={(postId) => fetchInteractions('saves', postId)}
-            onTogglePostStatus={handleTogglePostStatus}
-            onDeletePost={handlers.handleDeletePost}
-            onReport={handlers.handleReport}
-            onSetActiveMenu={menu.setActiveMenu}
-            onSetMenuAnimating={menu.setIsMenuAnimating}
-            hideBoost={post.status === 'sold'}
-          />
-
-          {boostInfo && !isBoostExpired && post.status !== 'sold' && (
-            <div style={{ padding: '12px 15px 0', display: 'flex', justifyContent: 'center' }}>
-              <button
-                type="button"
-                onClick={async () => {
-                  await fetchBoostInfo();
-                  setShowBoostDetails(true);
-                }}
-                style={BOOST_BUTTON_STYLE}
-              >
-                ສະຖານະໂຄສະນາ
-              </button>
+          {!post ? (
+            <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
+              <EmptyState message="ບໍ່ມີຂໍ້ມູນ" variant="minimal" />
             </div>
+          ) : (
+            <>
+              <PostCard
+                post={post}
+                index={0}
+                isLastElement={false}
+                session={session}
+                likedPosts={likedPosts}
+                savedPosts={savedPosts}
+                justLikedPosts={justLikedPosts}
+                justSavedPosts={justSavedPosts}
+                activeMenuState={menu.activeMenuState}
+                isMenuAnimating={menu.isMenuAnimating}
+                menuButtonRefs={menu.menuButtonRefs}
+                onViewPost={handlers.handleViewPost}
+                onImpression={handlers.handleImpression}
+                onLike={toggleLike}
+                onSave={toggleSave}
+                onShare={handlers.handleShare}
+                onViewLikes={(postId) => fetchInteractions('likes', postId)}
+                onViewSaves={(postId) => fetchInteractions('saves', postId)}
+                onTogglePostStatus={handleTogglePostStatus}
+                onDeletePost={handlers.handleDeletePost}
+                onReport={handlers.handleReport}
+                onSetActiveMenu={menu.setActiveMenu}
+                onSetMenuAnimating={menu.setIsMenuAnimating}
+                hideBoost={post.status === 'sold'}
+              />
+
+              {boostInfo && !isBoostExpired && post.status !== 'sold' && (
+                <div style={{ padding: '12px 15px 0', display: 'flex', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await fetchBoostInfo();
+                      setShowBoostDetails(true);
+                    }}
+                    style={BOOST_BUTTON_STYLE}
+                  >
+                    ສະຖານະໂຄສະນາ
+                  </button>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </main>
+      </FeedWithPreload>
 
       <BoostAdDetailsPopup
         show={showBoostDetails}
@@ -245,6 +241,6 @@ export default function NotificationDetail() {
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
       )}
-    </main>
+    </>
   );
 }
