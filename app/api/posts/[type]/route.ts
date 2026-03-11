@@ -21,6 +21,7 @@ export async function GET(
     const userIdOrToken = searchParams.get('userId') || '';
     const tab = searchParams.get('tab') || '';
     const status = searchParams.get('status') || '';
+    const province = searchParams.get('province') || '';
 
     // Create Supabase client
     const cookieStore = await cookies();
@@ -216,13 +217,17 @@ export async function GET(
         .map(item => item.post_id)
         .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
     } else if (type === 'sold') {
-      const { data, error } = await supabase
+      let soldQuery = supabase
         .from('cars')
         .select('id')
         .eq('status', status || 'sold')
         .eq('is_hidden', false)
         .order('created_at', { ascending: false })
         .range(startIndex, endIndex);
+      if (province && province.trim() !== '') {
+        soldQuery = soldQuery.eq('province', province.trim());
+      }
+      const { data, error } = await soldQuery;
       if (error || !data) {
         return NextResponse.json({ posts: [], hasMore: false });
       }

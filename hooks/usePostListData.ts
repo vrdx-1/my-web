@@ -35,6 +35,8 @@ interface UsePostListDataOptions {
   loadAll?: boolean; // โหลดทั้งหมดครั้งเดียว (ใช้กับ saved/liked/my-posts)
   /** สำหรับ type 'sold' ในหน้าโฮม: ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำ) */
   sharedLikedSaved?: PostListLikedSavedShared | null;
+  /** สำหรับ type 'sold' ในหน้าโฮม: กรองตามจังหวัด (ທຸກແຂວງ ถ้าว่าง) */
+  province?: string;
 }
 
 interface UsePostListDataReturn {
@@ -60,7 +62,7 @@ interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, sessionReady = true, tab, status, loadAll = false, sharedLikedSaved } = options;
+  const { type, userIdOrToken, session, sessionReady = true, tab, status, loadAll = false, sharedLikedSaved, province } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -346,13 +348,17 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
       } else if (type === 'sold') {
-        const { data, error } = await supabase
+        let soldQuery = supabase
           .from('cars')
           .select('id')
           .eq('status', status || 'sold')
           .eq('is_hidden', false)
           .order('created_at', { ascending: false })
           .range(rangeStart, rangeEnd);
+        if (province && province.trim() !== '') {
+          soldQuery = soldQuery.eq('province', province.trim());
+        }
+        const { data, error } = await soldQuery;
 
         if (error || !data) {
           if (fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
@@ -721,7 +727,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setLoadingMore(false);
       }
     }
-  }, [type, userIdOrToken, currentSession, tab, status, page, loadingMore, loadAll]);
+  }, [type, userIdOrToken, currentSession, tab, status, page, loadingMore, loadAll, province]);
 
   const refreshData = useCallback(async () => {
     setPage(0);

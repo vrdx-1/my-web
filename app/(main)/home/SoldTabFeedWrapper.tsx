@@ -16,6 +16,8 @@ import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { HomeFeedBody } from './HomeFeedBody';
 
 export type SoldTabFeedWrapperProps = {
+  /** ค่าว่าง = ທຸກແຂວງ — ใช้กับฟิลเตอร์จังหวัดใน header */
+  province?: string;
   session: any;
   sessionReady: boolean;
   sharedLikedSaved: ReturnType<typeof useHomeLikedSaved>;
@@ -47,6 +49,7 @@ export type SoldTabFeedWrapperProps = {
 
 /** โหลดข้อมูลแท็บขายแล้วเฉพาะเมื่อเปิดแท็บนี้ (lazy) — ลดงานตอนโหลดหน้าโฮม */
 export function SoldTabFeedWrapper({
+  province = '',
   session,
   sessionReady,
   sharedLikedSaved,
@@ -77,8 +80,10 @@ export function SoldTabFeedWrapper({
     sessionReady,
     status: 'sold',
     sharedLikedSaved,
+    province,
   });
 
+  // โหลดเมื่อเปิดแท็บ และ refetch เมื่อเปลี่ยนจังหวัด (ฟิลเตอร์)
   useEffect(() => {
     soldTabRefreshRef.current = {
       setPage: soldListData.setPage,
@@ -91,7 +96,7 @@ export function SoldTabFeedWrapper({
     return () => {
       soldTabRefreshRef.current = null;
     };
-  }, []);
+  }, [province]);
 
   useEffect(() => {
     onLoadingMoreChange(soldListData.loadingMore);

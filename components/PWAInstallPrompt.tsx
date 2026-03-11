@@ -13,8 +13,8 @@ const LABEL = 'ຕິດຕັ້ງແອັບ';
 
 const HINT_IOS_LINES = [
   '1. ຄິກປຸ່ມແຊຂອງ Safari',
-  '2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ',
-  '3. ເພີ່ມ',
+  '2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ (Add to Home Screen)',
+  '3. ເພີ່ມ (Add)',
 ];
 const HINT_ANDROID = 'ໃຊ້ເມນູ Chrome (⋮) → ຕິດຕັ້ງແອັບ';
 

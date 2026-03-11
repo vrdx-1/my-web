@@ -22,7 +22,9 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const { session, userProfile } = useSessionAndProfile();
-  const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
+  const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
+    userId: session?.user?.id,
+  });
   const fileUpload = useFileUpload();
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
@@ -98,6 +100,13 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: แสดงแถบหัวและแท็บหลังโหลดโพสต์แรกเสร็จ */
   const showHomeHeader = pathname === '/home' && firstFeedLoaded;
+
+  /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
+  useEffect(() => {
+    if (pathname === '/home' && firstFeedLoaded && session?.user?.id) {
+      refetchUnreadCount();
+    }
+  }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
   /** ความสูงรวมของ fixed block: header (~59) + tab bar (~45) */
   const HOME_FIXED_BLOCK_HEIGHT = 104;

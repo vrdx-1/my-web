@@ -229,6 +229,7 @@ export function HomePageContent() {
       <div>
         {isSoldTabNoSearch ? (
           <SoldTabFeedWrapper
+            province={homeProvince?.selectedProvince ?? ''}
             session={session}
             sessionReady={sessionReady}
             sharedLikedSaved={sharedLikedSaved}
