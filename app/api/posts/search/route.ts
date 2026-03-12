@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { expandWithoutBrandAliases } from '@/utils/postUtils';
 
-const SEARCH_LIMIT = 100;
+const SEARCH_LIMIT = 1000;
 const RPC_TERMS_LIMIT = 2500;
 
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
