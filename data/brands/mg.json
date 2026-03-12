@@ -6,10 +6,13 @@
   "models": [
     {
       "modelId": "1100",
-      "modelName": "1100",
-      "modelNameTh": "1100",
-      "modelNameLo": "1100",
+      "modelName": "MG 1100",
+      "modelNameTh": "เอ็มจี 1100",
+      "modelNameLo": "ເອັມຈີ 1100",
       "searchNames": [
+        "mg 1100",
+        "ເອັມຈີ 1100",
+        "ເອັມຈີ1100",
         "1100"
       ],
       "categoryIds": [
@@ -18,10 +21,13 @@
     },
     {
       "modelId": "1300",
-      "modelName": "1300",
-      "modelNameTh": "1300",
-      "modelNameLo": "1300",
+      "modelName": "MG 1300",
+      "modelNameTh": "เอ็มจี 1300",
+      "modelNameLo": "ເອັມຈີ 1300",
       "searchNames": [
+        "mg 1300",
+        "ເອັມຈີ 1300",
+        "ເອັມຈີ1300",
         "1300"
       ],
       "categoryIds": [
@@ -30,10 +36,13 @@
     },
     {
       "modelId": "14-28",
-      "modelName": "14/28",
-      "modelNameTh": "14/28",
-      "modelNameLo": "14/28",
+      "modelName": "MG 14/28",
+      "modelNameTh": "เอ็มจี 14/28",
+      "modelNameLo": "ເອັມຈີ 14/28",
       "searchNames": [
+        "mg 14/28",
+        "ເອັມຈີ 14/28",
+        "ເອັມຈີ14/28",
         "14/28",
         "14 28"
       ],
@@ -43,10 +52,13 @@
     },
     {
       "modelId": "14-40",
-      "modelName": "14/40",
-      "modelNameTh": "14/40",
-      "modelNameLo": "14/40",
+      "modelName": "MG 14/40",
+      "modelNameTh": "เอ็มจี 14/40",
+      "modelNameLo": "ເອັມຈີ 14/40",
       "searchNames": [
+        "mg 14/40",
+        "ເອັມຈີ 14/40",
+        "ເອັມຈີ14/40",
         "14/40",
         "14 40"
       ],
@@ -56,10 +68,13 @@
     },
     {
       "modelId": "18-80",
-      "modelName": "18/80",
-      "modelNameTh": "18/80",
-      "modelNameLo": "18/80",
+      "modelName": "MG 18/80",
+      "modelNameTh": "เอ็มจี 18/80",
+      "modelNameLo": "ເອັມຈີ 18/80",
       "searchNames": [
+        "mg 18/80",
+        "ເອັມຈີ 18/80",
+        "ເອັມຈີ18/80",
         "18/80",
         "18 80"
       ],
@@ -69,12 +84,14 @@
     },
     {
       "modelId": "3",
-      "modelName": "3",
-      "modelNameTh": "3",
-      "modelNameLo": "3",
+      "modelName": "MG 3",
+      "modelNameTh": "เอ็มจี 3",
+      "modelNameLo": "ເອັມຈີ 3",
       "searchNames": [
-        "mg3",
-        "mg 3"
+        "mg 3",
+        "ເອັມຈີ 3",
+        "ເອັມຈີ3",
+        "mg3"
       ],
       "categoryIds": [
         "sedan"
@@ -82,12 +99,14 @@
     },
     {
       "modelId": "5",
-      "modelName": "5",
-      "modelNameTh": "5",
-      "modelNameLo": "5",
+      "modelName": "MG 5",
+      "modelNameTh": "เอ็มจี 5",
+      "modelNameLo": "ເອັມຈີ 5",
       "searchNames": [
-        "mg5",
-        "mg 5"
+        "mg 5",
+        "ເອັມຈີ 5",
+        "ເອັມຈີ5",
+        "mg5"
       ],
       "categoryIds": [
         "sedan"
@@ -95,12 +114,14 @@
     },
     {
       "modelId": "6",
-      "modelName": "6",
-      "modelNameTh": "6",
-      "modelNameLo": "6",
+      "modelName": "MG 6",
+      "modelNameTh": "เอ็มจี 6",
+      "modelNameLo": "ເອັມຈີ 6",
       "searchNames": [
-        "mg6",
-        "mg 6"
+        "mg 6",
+        "ເອັມຈີ 6",
+        "ເອັມຈີ6",
+        "mg6"
       ],
       "categoryIds": [
         "sedan"
@@ -108,10 +129,13 @@
     },
     {
       "modelId": "350",
-      "modelName": "350",
-      "modelNameTh": "350",
-      "modelNameLo": "350",
+      "modelName": "MG 350",
+      "modelNameTh": "เอ็มจี 350",
+      "modelNameLo": "ເອັມຈີ 350",
       "searchNames": [
+        "mg 350",
+        "ເອັມຈີ 350",
+        "ເອັມຈີ350",
         "350"
       ],
       "categoryIds": [
@@ -120,10 +144,13 @@
     },
     {
       "modelId": "360",
-      "modelName": "360",
-      "modelNameTh": "360",
-      "modelNameLo": "360",
+      "modelName": "MG 360",
+      "modelNameTh": "เอ็มจี 360",
+      "modelNameLo": "ເອັມຈີ 360",
       "searchNames": [
+        "mg 360",
+        "ເອັມຈີ 360",
+        "ເອັມຈີ360",
         "360"
       ],
       "categoryIds": [
@@ -132,10 +159,13 @@
     },
     {
       "modelId": "550",
-      "modelName": "550",
-      "modelNameTh": "550",
-      "modelNameLo": "550",
+      "modelName": "MG 550",
+      "modelNameTh": "เอ็มจี 550",
+      "modelNameLo": "ເອັມຈີ 550",
       "searchNames": [
+        "mg 550",
+        "ເອັມຈີ 550",
+        "ເອັມຈີ550",
         "550"
       ],
       "categoryIds": [
@@ -144,10 +174,13 @@
     },
     {
       "modelId": "750",
-      "modelName": "750",
-      "modelNameTh": "750",
-      "modelNameLo": "750",
+      "modelName": "MG 750",
+      "modelNameTh": "เอ็มจี 750",
+      "modelNameLo": "ເອັມຈີ 750",
       "searchNames": [
+        "mg 750",
+        "ເອັມຈີ 750",
+        "ເອັມຈີ750",
         "750"
       ],
       "categoryIds": [
@@ -156,10 +189,13 @@
     },
     {
       "modelId": "astor",
-      "modelName": "Astor",
-      "modelNameTh": "Astor",
-      "modelNameLo": "Astor",
+      "modelName": "MG Astor",
+      "modelNameTh": "เอ็มจี Astor",
+      "modelNameLo": "ເອັມຈີ Astor",
       "searchNames": [
+        "mg astor",
+        "ເອັມຈີ Astor",
+        "ເອັມຈີAstor",
         "astor"
       ],
       "categoryIds": [
@@ -168,10 +204,13 @@
     },
     {
       "modelId": "c-type",
-      "modelName": "C-Type",
-      "modelNameTh": "C-Type",
-      "modelNameLo": "C-Type",
+      "modelName": "MG C-Type",
+      "modelNameTh": "เอ็มจี C-Type",
+      "modelNameLo": "ເອັມຈີ C-Type",
       "searchNames": [
+        "mg c-type",
+        "ເອັມຈີ C-Type",
+        "ເອັມຈີC-Type",
         "c-type",
         "ctype"
       ],
@@ -181,10 +220,13 @@
     },
     {
       "modelId": "comet-ev",
-      "modelName": "Comet EV",
-      "modelNameTh": "Comet EV",
-      "modelNameLo": "Comet EV",
+      "modelName": "MG Comet EV",
+      "modelNameTh": "เอ็มจี Comet EV",
+      "modelNameLo": "ເອັມຈີ Comet EV",
       "searchNames": [
+        "mg comet ev",
+        "ເອັມຈີ Comet EV",
+        "ເອັມຈີCometEV",
         "comet ev",
         "cometev"
       ],
@@ -195,10 +237,13 @@
     },
     {
       "modelId": "cyberster",
-      "modelName": "Cyberster",
-      "modelNameTh": "Cyberster",
-      "modelNameLo": "Cyberster",
+      "modelName": "MG Cyberster",
+      "modelNameTh": "เอ็มจี Cyberster",
+      "modelNameLo": "ເອັມຈີ Cyberster",
       "searchNames": [
+        "mg cyberster",
+        "ເອັມຈີ Cyberster",
+        "ເອັມຈີCyberster",
         "cyberster"
       ],
       "categoryIds": [
@@ -208,10 +253,13 @@
     },
     {
       "modelId": "d-type",
-      "modelName": "D-Type",
-      "modelNameTh": "D-Type",
-      "modelNameLo": "D-Type",
+      "modelName": "MG D-Type",
+      "modelNameTh": "เอ็มจี D-Type",
+      "modelNameLo": "ເອັມຈີ D-Type",
       "searchNames": [
+        "mg d-type",
+        "ເອັມຈີ D-Type",
+        "ເອັມຈີD-Type",
         "d-type",
         "dtype"
       ],
@@ -221,12 +269,14 @@
     },
     {
       "modelId": "es",
-      "modelName": "ES",
-      "modelNameTh": "ES",
-      "modelNameLo": "ES",
+      "modelName": "MG ES",
+      "modelNameTh": "เอ็มจี ES",
+      "modelNameLo": "ເອັມຈີ ES",
       "searchNames": [
-        "es",
-        "mg es"
+        "mg es",
+        "ເອັມຈີ ES",
+        "ເອັມຈີES",
+        "es"
       ],
       "categoryIds": [
         "sedan"
@@ -234,10 +284,13 @@
     },
     {
       "modelId": "es5",
-      "modelName": "ES5",
-      "modelNameTh": "ES5",
-      "modelNameLo": "ES5",
+      "modelName": "MG ES5",
+      "modelNameTh": "เอ็มจี ES5",
+      "modelNameLo": "ເອັມຈີ ES5",
       "searchNames": [
+        "mg es5",
+        "ເອັມຈີ ES5",
+        "ເອັມຈີES5",
         "es5"
       ],
       "categoryIds": [
@@ -246,10 +299,13 @@
     },
     {
       "modelId": "e50",
-      "modelName": "E50",
-      "modelNameTh": "E50",
-      "modelNameLo": "E50",
+      "modelName": "MG E50",
+      "modelNameTh": "เอ็มจี E50",
+      "modelNameLo": "ເອັມຈີ E50",
       "searchNames": [
+        "mg e50",
+        "ເອັມຈີ E50",
+        "ເອັມຈີE50",
         "e50"
       ],
       "categoryIds": [
@@ -259,10 +315,13 @@
     },
     {
       "modelId": "ep",
-      "modelName": "EP",
-      "modelNameTh": "EP",
-      "modelNameLo": "EP",
+      "modelName": "MG EP",
+      "modelNameTh": "เอ็มจี EP",
+      "modelNameLo": "ເອັມຈີ EP",
       "searchNames": [
+        "mg ep",
+        "ເອັມຈີ EP",
+        "ເອັມຈີEP",
         "ep"
       ],
       "categoryIds": [
@@ -271,10 +330,13 @@
     },
     {
       "modelId": "ex120",
-      "modelName": "EX120",
-      "modelNameTh": "EX120",
-      "modelNameLo": "EX120",
+      "modelName": "MG EX120",
+      "modelNameTh": "เอ็มจี EX120",
+      "modelNameLo": "ເອັມຈີ EX120",
       "searchNames": [
+        "mg ex120",
+        "ເອັມຈີ EX120",
+        "ເອັມຈີEX120",
         "ex120"
       ],
       "categoryIds": [
@@ -283,10 +345,13 @@
     },
     {
       "modelId": "extender",
-      "modelName": "Extender",
-      "modelNameTh": "Extender",
-      "modelNameLo": "Extender",
+      "modelName": "MG Extender",
+      "modelNameTh": "เอ็มจี Extender",
+      "modelNameLo": "ເອັມຈີ Extender",
       "searchNames": [
+        "mg extender",
+        "ເອັມຈີ Extender",
+        "ເອັມຈີExtender",
         "extender"
       ],
       "categoryIds": [
@@ -295,11 +360,13 @@
     },
     {
       "modelId": "f",
-      "modelName": "F",
-      "modelNameTh": "F",
-      "modelNameLo": "F",
+      "modelName": "MG F",
+      "modelNameTh": "เอ็มจี F",
+      "modelNameLo": "ເອັມຈີ F",
       "searchNames": [
         "mg f",
+        "ເອັມຈີ F",
+        "ເອັມຈີF",
         "mgf"
       ],
       "categoryIds": [
@@ -308,10 +375,13 @@
     },
     {
       "modelId": "f-type",
-      "modelName": "F-Type",
-      "modelNameTh": "F-Type",
-      "modelNameLo": "F-Type",
+      "modelName": "MG F-Type",
+      "modelNameTh": "เอ็มจี F-Type",
+      "modelNameLo": "ເອັມຈີ F-Type",
       "searchNames": [
+        "mg f-type",
+        "ເອັມຈີ F-Type",
+        "ເອັມຈີF-Type",
         "f-type",
         "ftype"
       ],
@@ -321,10 +391,13 @@
     },
     {
       "modelId": "g-type",
-      "modelName": "G-Type",
-      "modelNameTh": "G-Type",
-      "modelNameLo": "G-Type",
+      "modelName": "MG G-Type",
+      "modelNameTh": "เอ็มจี G-Type",
+      "modelNameLo": "ເອັມຈີ G-Type",
       "searchNames": [
+        "mg g-type",
+        "ເອັມຈີ G-Type",
+        "ເອັມຈີG-Type",
         "g-type",
         "gtype"
       ],
@@ -334,10 +407,13 @@
     },
     {
       "modelId": "gloster",
-      "modelName": "Gloster",
-      "modelNameTh": "Gloster",
-      "modelNameLo": "Gloster",
+      "modelName": "MG Gloster",
+      "modelNameTh": "เอ็มจี Gloster",
+      "modelNameLo": "ເອັມຈີ Gloster",
       "searchNames": [
+        "mg gloster",
+        "ເອັມຈີ Gloster",
+        "ເອັມຈີGloster",
         "gloster"
       ],
       "categoryIds": [
@@ -346,12 +422,14 @@
     },
     {
       "modelId": "gs",
-      "modelName": "GS",
-      "modelNameTh": "GS",
-      "modelNameLo": "GS",
+      "modelName": "MG GS",
+      "modelNameTh": "เอ็มจี GS",
+      "modelNameLo": "ເອັມຈີ GS",
       "searchNames": [
-        "gs",
-        "mg gs"
+        "mg gs",
+        "ເອັມຈີ GS",
+        "ເອັມຈີGS",
+        "gs"
       ],
       "categoryIds": [
         "sedan"
@@ -359,12 +437,14 @@
     },
     {
       "modelId": "gt",
-      "modelName": "GT",
-      "modelNameTh": "GT",
-      "modelNameLo": "GT",
+      "modelName": "MG GT",
+      "modelNameTh": "เอ็มจี GT",
+      "modelNameLo": "ເອັມຈີ GT",
       "searchNames": [
-        "gt",
-        "mg gt"
+        "mg gt",
+        "ເອັມຈີ GT",
+        "ເອັມຈີGT",
+        "gt"
       ],
       "categoryIds": [
         "sport"
@@ -372,10 +452,13 @@
     },
     {
       "modelId": "hector",
-      "modelName": "Hector",
-      "modelNameTh": "Hector",
-      "modelNameLo": "Hector",
+      "modelName": "MG Hector",
+      "modelNameTh": "เอ็มจี Hector",
+      "modelNameLo": "ເອັມຈີ Hector",
       "searchNames": [
+        "mg hector",
+        "ເອັມຈີ Hector",
+        "ເອັມຈີHector",
         "hector"
       ],
       "categoryIds": [
@@ -385,12 +468,14 @@
     },
     {
       "modelId": "hs",
-      "modelName": "HS",
-      "modelNameTh": "HS",
-      "modelNameLo": "HS",
+      "modelName": "MG HS",
+      "modelNameTh": "เอ็มจี HS",
+      "modelNameLo": "ເອັມຈີ HS",
       "searchNames": [
-        "hs",
-        "mg hs"
+        "mg hs",
+        "ເອັມຈີ HS",
+        "ເອັມຈີHS",
+        "hs"
       ],
       "categoryIds": [
         "suv"
@@ -398,10 +483,13 @@
     },
     {
       "modelId": "im5",
-      "modelName": "IM5",
-      "modelNameTh": "IM5",
-      "modelNameLo": "IM5",
+      "modelName": "MG IM5",
+      "modelNameTh": "เอ็มจี IM5",
+      "modelNameLo": "ເອັມຈີ IM5",
       "searchNames": [
+        "mg im5",
+        "ເອັມຈີ IM5",
+        "ເອັມຈີIM5",
         "im5"
       ],
       "categoryIds": [
@@ -411,10 +499,13 @@
     },
     {
       "modelId": "im6",
-      "modelName": "IM6",
-      "modelNameTh": "IM6",
-      "modelNameLo": "IM6",
+      "modelName": "MG IM6",
+      "modelNameTh": "เอ็มจี IM6",
+      "modelNameLo": "ເອັມຈີ IM6",
       "searchNames": [
+        "mg im6",
+        "ເອັມຈີ IM6",
+        "ເອັມຈີIM6",
         "im6"
       ],
       "categoryIds": [
@@ -424,10 +515,13 @@
     },
     {
       "modelId": "j-type",
-      "modelName": "J-Type",
-      "modelNameTh": "J-Type",
-      "modelNameLo": "J-Type",
+      "modelName": "MG J-Type",
+      "modelNameTh": "เอ็มจี J-Type",
+      "modelNameLo": "ເອັມຈີ J-Type",
       "searchNames": [
+        "mg j-type",
+        "ເອັມຈີ J-Type",
+        "ເອັມຈີJ-Type",
         "j-type",
         "jtype"
       ],
@@ -437,10 +531,13 @@
     },
     {
       "modelId": "k-type",
-      "modelName": "K-Type",
-      "modelNameTh": "K-Type",
-      "modelNameLo": "K-Type",
+      "modelName": "MG K-Type",
+      "modelNameTh": "เอ็มจี K-Type",
+      "modelNameLo": "ເອັມຈີ K-Type",
       "searchNames": [
+        "mg k-type",
+        "ເອັມຈີ K-Type",
+        "ເອັມຈີK-Type",
         "k-type",
         "ktype"
       ],
@@ -450,10 +547,13 @@
     },
     {
       "modelId": "kn",
-      "modelName": "KN",
-      "modelNameTh": "KN",
-      "modelNameLo": "KN",
+      "modelName": "MG KN",
+      "modelNameTh": "เอ็มจี KN",
+      "modelNameLo": "ເອັມຈີ KN",
       "searchNames": [
+        "mg kn",
+        "ເອັມຈີ KN",
+        "ເອັມຈີKN",
         "kn"
       ],
       "categoryIds": [
@@ -462,10 +562,13 @@
     },
     {
       "modelId": "l-type",
-      "modelName": "L-Type",
-      "modelNameTh": "L-Type",
-      "modelNameLo": "L-Type",
+      "modelName": "MG L-Type",
+      "modelNameTh": "เอ็มจี L-Type",
+      "modelNameLo": "ເອັມຈີ L-Type",
       "searchNames": [
+        "mg l-type",
+        "ເອັມຈີ L-Type",
+        "ເອັມຈີL-Type",
         "l-type",
         "ltype"
       ],
@@ -475,10 +578,13 @@
     },
     {
       "modelId": "m-type",
-      "modelName": "M-Type",
-      "modelNameTh": "M-Type",
-      "modelNameLo": "M-Type",
+      "modelName": "MG M-Type",
+      "modelNameTh": "เอ็มจี M-Type",
+      "modelNameLo": "ເອັມຈີ M-Type",
       "searchNames": [
+        "mg m-type",
+        "ເອັມຈີ M-Type",
+        "ເອັມຈີM-Type",
         "m-type",
         "mtype"
       ],
@@ -488,10 +594,13 @@
     },
     {
       "modelId": "m9",
-      "modelName": "M9",
-      "modelNameTh": "M9",
-      "modelNameLo": "M9",
+      "modelName": "MG M9",
+      "modelNameTh": "เอ็มจี M9",
+      "modelNameLo": "ເອັມຈີ M9",
       "searchNames": [
+        "mg m9",
+        "ເອັມຈີ M9",
+        "ເອັມຈີM9",
         "m9"
       ],
       "categoryIds": [
@@ -500,10 +609,13 @@
     },
     {
       "modelId": "maestro",
-      "modelName": "Maestro",
-      "modelNameTh": "Maestro",
-      "modelNameLo": "Maestro",
+      "modelName": "MG Maestro",
+      "modelNameTh": "เอ็มจี Maestro",
+      "modelNameLo": "ເອັມຈີ Maestro",
       "searchNames": [
+        "mg maestro",
+        "ເອັມຈີ Maestro",
+        "ເອັມຈີMaestro",
         "maestro"
       ],
       "categoryIds": [
@@ -512,10 +624,13 @@
     },
     {
       "modelId": "magnette",
-      "modelName": "Magnette",
-      "modelNameTh": "Magnette",
-      "modelNameLo": "Magnette",
+      "modelName": "MG Magnette",
+      "modelNameTh": "เอ็มจี Magnette",
+      "modelNameLo": "ເອັມຈີ Magnette",
       "searchNames": [
+        "mg magnette",
+        "ເອັມຈີ Magnette",
+        "ເອັມຈີMagnette",
         "magnette"
       ],
       "categoryIds": [
@@ -524,10 +639,13 @@
     },
     {
       "modelId": "marvel-r",
-      "modelName": "Marvel R",
-      "modelNameTh": "Marvel R",
-      "modelNameLo": "Marvel R",
+      "modelName": "MG Marvel R",
+      "modelNameTh": "เอ็มจี Marvel R",
+      "modelNameLo": "ເອັມຈີ Marvel R",
       "searchNames": [
+        "mg marvel r",
+        "ເອັມຈີ Marvel R",
+        "ເອັມຈີMarvelR",
         "marvel r",
         "marvelr"
       ],
@@ -538,10 +656,13 @@
     },
     {
       "modelId": "maxus-7",
-      "modelName": "Maxus 7",
-      "modelNameTh": "Maxus 7",
-      "modelNameLo": "Maxus 7",
+      "modelName": "MG Maxus 7",
+      "modelNameTh": "เอ็มจี Maxus 7",
+      "modelNameLo": "ເອັມຈີ Maxus 7",
       "searchNames": [
+        "mg maxus 7",
+        "ເອັມຈີ Maxus 7",
+        "ເອັມຈີMaxus7",
         "maxus 7",
         "maxus7"
       ],
@@ -551,10 +672,13 @@
     },
     {
       "modelId": "maxus-9",
-      "modelName": "Maxus 9",
-      "modelNameTh": "Maxus 9",
-      "modelNameLo": "Maxus 9",
+      "modelName": "MG Maxus 9",
+      "modelNameTh": "เอ็มจี Maxus 9",
+      "modelNameLo": "ເອັມຈີ Maxus 9",
       "searchNames": [
+        "mg maxus 9",
+        "ເອັມຈີ Maxus 9",
+        "ເອັມຈີMaxus9",
         "maxus 9",
         "maxus9"
       ],
@@ -564,10 +688,13 @@
     },
     {
       "modelId": "metro",
-      "modelName": "Metro",
-      "modelNameTh": "Metro",
-      "modelNameLo": "Metro",
+      "modelName": "MG Metro",
+      "modelNameTh": "เอ็มจี Metro",
+      "modelNameLo": "ເອັມຈີ Metro",
       "searchNames": [
+        "mg metro",
+        "ເອັມຈີ Metro",
+        "ເອັມຈີMetro",
         "metro"
       ],
       "categoryIds": [
@@ -576,10 +703,13 @@
     },
     {
       "modelId": "mga",
-      "modelName": "MGA",
-      "modelNameTh": "MGA",
-      "modelNameLo": "MGA",
+      "modelName": "MG MGA",
+      "modelNameTh": "เอ็มจี MGA",
+      "modelNameLo": "ເອັມຈີ MGA",
       "searchNames": [
+        "mg mga",
+        "ເອັມຈີ MGA",
+        "ເອັມຈີMGA",
         "mga"
       ],
       "categoryIds": [
@@ -588,10 +718,13 @@
     },
     {
       "modelId": "mgb",
-      "modelName": "MGB",
-      "modelNameTh": "MGB",
-      "modelNameLo": "MGB",
+      "modelName": "MG MGB",
+      "modelNameTh": "เอ็มจี MGB",
+      "modelNameLo": "ເອັມຈີ MGB",
       "searchNames": [
+        "mg mgb",
+        "ເອັມຈີ MGB",
+        "ເອັມຈີMGB",
         "mgb"
       ],
       "categoryIds": [
@@ -600,10 +733,13 @@
     },
     {
       "modelId": "mgc",
-      "modelName": "MGC",
-      "modelNameTh": "MGC",
-      "modelNameLo": "MGC",
+      "modelName": "MG MGC",
+      "modelNameTh": "เอ็มจี MGC",
+      "modelNameLo": "ເອັມຈີ MGC",
       "searchNames": [
+        "mg mgc",
+        "ເອັມຈີ MGC",
+        "ເອັມຈີMGC",
         "mgc"
       ],
       "categoryIds": [
@@ -612,10 +748,13 @@
     },
     {
       "modelId": "mg4-electric",
-      "modelName": "MG4 Electric",
-      "modelNameTh": "MG4 Electric",
-      "modelNameLo": "MG4 Electric",
+      "modelName": "MG MG4 Electric",
+      "modelNameTh": "เอ็มจี MG4 Electric",
+      "modelNameLo": "ເອັມຈີ MG4 Electric",
       "searchNames": [
+        "mg mg4 electric",
+        "ເອັມຈີ MG4 Electric",
+        "ເອັມຈີMG4Electric",
         "mg4",
         "mg4 electric",
         "mg 4"
@@ -627,10 +766,13 @@
     },
     {
       "modelId": "midget",
-      "modelName": "Midget",
-      "modelNameTh": "Midget",
-      "modelNameLo": "Midget",
+      "modelName": "MG Midget",
+      "modelNameTh": "เอ็มจี Midget",
+      "modelNameLo": "ເອັມຈີ Midget",
       "searchNames": [
+        "mg midget",
+        "ເອັມຈີ Midget",
+        "ເອັມຈີMidget",
         "midget"
       ],
       "categoryIds": [
@@ -639,10 +781,13 @@
     },
     {
       "modelId": "montego",
-      "modelName": "Montego",
-      "modelNameTh": "Montego",
-      "modelNameLo": "Montego",
+      "modelName": "MG Montego",
+      "modelNameTh": "เอ็มจี Montego",
+      "modelNameLo": "ເອັມຈີ Montego",
       "searchNames": [
+        "mg montego",
+        "ເອັມຈີ Montego",
+        "ເອັມຈີMontego",
         "montego"
       ],
       "categoryIds": [
@@ -651,10 +796,13 @@
     },
     {
       "modelId": "n-type",
-      "modelName": "N-Type",
-      "modelNameTh": "N-Type",
-      "modelNameLo": "N-Type",
+      "modelName": "MG N-Type",
+      "modelNameTh": "เอ็มจี N-Type",
+      "modelNameLo": "ເອັມຈີ N-Type",
       "searchNames": [
+        "mg n-type",
+        "ເອັມຈີ N-Type",
+        "ເອັມຈີN-Type",
         "n-type",
         "ntype"
       ],
@@ -664,12 +812,14 @@
     },
     {
       "modelId": "one",
-      "modelName": "One",
-      "modelNameTh": "One",
-      "modelNameLo": "One",
+      "modelName": "MG One",
+      "modelNameTh": "เอ็มจี One",
+      "modelNameLo": "ເອັມຈີ One",
       "searchNames": [
-        "one",
-        "mg one"
+        "mg one",
+        "ເອັມຈີ One",
+        "ເອັມຈີOne",
+        "one"
       ],
       "categoryIds": [
         "sedan"
@@ -677,10 +827,13 @@
     },
     {
       "modelId": "p-type",
-      "modelName": "P-Type",
-      "modelNameTh": "P-Type",
-      "modelNameLo": "P-Type",
+      "modelName": "MG P-Type",
+      "modelNameTh": "เอ็มจี P-Type",
+      "modelNameLo": "ເອັມຈີ P-Type",
       "searchNames": [
+        "mg p-type",
+        "ເອັມຈີ P-Type",
+        "ເອັມຈີP-Type",
         "p-type",
         "ptype"
       ],
@@ -690,10 +843,13 @@
     },
     {
       "modelId": "q-type",
-      "modelName": "Q-Type",
-      "modelNameTh": "Q-Type",
-      "modelNameLo": "Q-Type",
+      "modelName": "MG Q-Type",
+      "modelNameTh": "เอ็มจี Q-Type",
+      "modelNameLo": "ເອັມຈີ Q-Type",
       "searchNames": [
+        "mg q-type",
+        "ເອັມຈີ Q-Type",
+        "ເອັມຈີQ-Type",
         "q-type",
         "qtype"
       ],
@@ -703,10 +859,13 @@
     },
     {
       "modelId": "qs",
-      "modelName": "QS",
-      "modelNameTh": "QS",
-      "modelNameLo": "QS",
+      "modelName": "MG QS",
+      "modelNameTh": "เอ็มจี QS",
+      "modelNameLo": "ເອັມຈີ QS",
       "searchNames": [
+        "mg qs",
+        "ເອັມຈີ QS",
+        "ເອັມຈີQS",
         "qs"
       ],
       "categoryIds": [
@@ -715,10 +874,13 @@
     },
     {
       "modelId": "r-type",
-      "modelName": "R-Type",
-      "modelNameTh": "R-Type",
-      "modelNameLo": "R-Type",
+      "modelName": "MG R-Type",
+      "modelNameTh": "เอ็มจี R-Type",
+      "modelNameLo": "ເອັມຈີ R-Type",
       "searchNames": [
+        "mg r-type",
+        "ເອັມຈີ R-Type",
+        "ເອັມຈີR-Type",
         "r-type",
         "rtype"
       ],
@@ -728,10 +890,13 @@
     },
     {
       "modelId": "rv8",
-      "modelName": "RV8",
-      "modelNameTh": "RV8",
-      "modelNameLo": "RV8",
+      "modelName": "MG RV8",
+      "modelNameTh": "เอ็มจี RV8",
+      "modelNameLo": "ເອັມຈີ RV8",
       "searchNames": [
+        "mg rv8",
+        "ເອັມຈີ RV8",
+        "ເອັມຈີRV8",
         "rv8"
       ],
       "categoryIds": [
@@ -740,10 +905,13 @@
     },
     {
       "modelId": "rx5",
-      "modelName": "RX5",
-      "modelNameTh": "RX5",
-      "modelNameLo": "RX5",
+      "modelName": "MG RX5",
+      "modelNameTh": "เอ็มจี RX5",
+      "modelNameLo": "ເອັມຈີ RX5",
       "searchNames": [
+        "mg rx5",
+        "ເອັມຈີ RX5",
+        "ເອັມຈີRX5",
         "rx5"
       ],
       "categoryIds": [
@@ -752,10 +920,13 @@
     },
     {
       "modelId": "rx8",
-      "modelName": "RX8",
-      "modelNameTh": "RX8",
-      "modelNameLo": "RX8",
+      "modelName": "MG RX8",
+      "modelNameTh": "เอ็มจี RX8",
+      "modelNameLo": "ເອັມຈີ RX8",
       "searchNames": [
+        "mg rx8",
+        "ເອັມຈີ RX8",
+        "ເອັມຈີRX8",
         "rx8"
       ],
       "categoryIds": [
@@ -764,10 +935,13 @@
     },
     {
       "modelId": "rx9",
-      "modelName": "RX9",
-      "modelNameTh": "RX9",
-      "modelNameLo": "RX9",
+      "modelName": "MG RX9",
+      "modelNameTh": "เอ็มจี RX9",
+      "modelNameLo": "ເອັມຈີ RX9",
       "searchNames": [
+        "mg rx9",
+        "ເອັມຈີ RX9",
+        "ເອັມຈີRX9",
         "rx9"
       ],
       "categoryIds": [
@@ -776,10 +950,13 @@
     },
     {
       "modelId": "s5",
-      "modelName": "S5",
-      "modelNameTh": "S5",
-      "modelNameLo": "S5",
+      "modelName": "MG S5",
+      "modelNameTh": "เอ็มจี S5",
+      "modelNameLo": "ເອັມຈີ S5",
       "searchNames": [
+        "mg s5",
+        "ເອັມຈີ S5",
+        "ເອັມຈີS5",
         "s5"
       ],
       "categoryIds": [
@@ -788,10 +965,13 @@
     },
     {
       "modelId": "sa",
-      "modelName": "SA",
-      "modelNameTh": "SA",
-      "modelNameLo": "SA",
+      "modelName": "MG SA",
+      "modelNameTh": "เอ็มจี SA",
+      "modelNameLo": "ເອັມຈີ SA",
       "searchNames": [
+        "mg sa",
+        "ເອັມຈີ SA",
+        "ເອັມຈີSA",
         "sa"
       ],
       "categoryIds": [
@@ -800,10 +980,13 @@
     },
     {
       "modelId": "sv",
-      "modelName": "SV",
-      "modelNameTh": "SV",
-      "modelNameLo": "SV",
+      "modelName": "MG SV",
+      "modelNameTh": "เอ็มจี SV",
+      "modelNameLo": "ເອັມຈີ SV",
       "searchNames": [
+        "mg sv",
+        "ເອັມຈີ SV",
+        "ເອັມຈີSV",
         "sv"
       ],
       "categoryIds": [
@@ -812,10 +995,13 @@
     },
     {
       "modelId": "t-type",
-      "modelName": "T-Type",
-      "modelNameTh": "T-Type",
-      "modelNameLo": "T-Type",
+      "modelName": "MG T-Type",
+      "modelNameTh": "เอ็มจี T-Type",
+      "modelNameLo": "ເອັມຈີ T-Type",
       "searchNames": [
+        "mg t-type",
+        "ເອັມຈີ T-Type",
+        "ເອັມຈີT-Type",
         "t-type",
         "ttype"
       ],
@@ -825,12 +1011,14 @@
     },
     {
       "modelId": "tf",
-      "modelName": "TF",
-      "modelNameTh": "TF",
-      "modelNameLo": "TF",
+      "modelName": "MG TF",
+      "modelNameTh": "เอ็มจี TF",
+      "modelNameLo": "ເອັມຈີ TF",
       "searchNames": [
-        "tf",
-        "mg tf"
+        "mg tf",
+        "ເອັມຈີ TF",
+        "ເອັມຈີTF",
+        "tf"
       ],
       "categoryIds": [
         "sport"
@@ -838,10 +1026,13 @@
     },
     {
       "modelId": "v80",
-      "modelName": "V80",
-      "modelNameTh": "V80",
-      "modelNameLo": "V80",
+      "modelName": "MG V80",
+      "modelNameTh": "เอ็มจี V80",
+      "modelNameLo": "ເອັມຈີ V80",
       "searchNames": [
+        "mg v80",
+        "ເອັມຈີ V80",
+        "ເອັມຈີV80",
         "v80",
         "maxus v80"
       ],
@@ -851,10 +1042,13 @@
     },
     {
       "modelId": "va",
-      "modelName": "VA",
-      "modelNameTh": "VA",
-      "modelNameLo": "VA",
+      "modelName": "MG VA",
+      "modelNameTh": "เอ็มจี VA",
+      "modelNameLo": "ເອັມຈີ VA",
       "searchNames": [
+        "mg va",
+        "ເອັມຈີ VA",
+        "ເອັມຈີVA",
         "va"
       ],
       "categoryIds": [
@@ -863,10 +1057,13 @@
     },
     {
       "modelId": "vs",
-      "modelName": "VS",
-      "modelNameTh": "VS",
-      "modelNameLo": "VS",
+      "modelName": "MG VS",
+      "modelNameTh": "เอ็มจี VS",
+      "modelNameLo": "ເອັມຈີ VS",
       "searchNames": [
+        "mg vs",
+        "ເອັມຈີ VS",
+        "ເອັມຈີVS",
         "vs"
       ],
       "categoryIds": [
@@ -875,10 +1072,13 @@
     },
     {
       "modelId": "wa",
-      "modelName": "WA",
-      "modelNameTh": "WA",
-      "modelNameLo": "WA",
+      "modelName": "MG WA",
+      "modelNameTh": "เอ็มจี WA",
+      "modelNameLo": "ເອັມຈີ WA",
       "searchNames": [
+        "mg wa",
+        "ເອັມຈີ WA",
+        "ເອັມຈີWA",
         "wa"
       ],
       "categoryIds": [
@@ -887,10 +1087,13 @@
     },
     {
       "modelId": "windsor-ev",
-      "modelName": "Windsor EV",
-      "modelNameTh": "Windsor EV",
-      "modelNameLo": "Windsor EV",
+      "modelName": "MG Windsor EV",
+      "modelNameTh": "เอ็มจี Windsor EV",
+      "modelNameLo": "ເອັມຈີ Windsor EV",
       "searchNames": [
+        "mg windsor ev",
+        "ເອັມຈີ Windsor EV",
+        "ເອັມຈີWindsorEV",
         "windsor ev",
         "windsorev"
       ],
@@ -901,10 +1104,13 @@
     },
     {
       "modelId": "xpower-sv",
-      "modelName": "XPower SV",
-      "modelNameTh": "XPower SV",
-      "modelNameLo": "XPower SV",
+      "modelName": "MG XPower SV",
+      "modelNameTh": "เอ็มจี XPower SV",
+      "modelNameLo": "ເອັມຈີ XPower SV",
       "searchNames": [
+        "mg xpower sv",
+        "ເອັມຈີ XPower SV",
+        "ເອັມຈີXPowerSV",
         "xpower sv",
         "xpowersv"
       ],
@@ -914,10 +1120,13 @@
     },
     {
       "modelId": "y-type",
-      "modelName": "Y-Type",
-      "modelNameTh": "Y-Type",
-      "modelNameLo": "Y-Type",
+      "modelName": "MG Y-Type",
+      "modelNameTh": "เอ็มจี Y-Type",
+      "modelNameLo": "ເອັມຈີ Y-Type",
       "searchNames": [
+        "mg y-type",
+        "ເອັມຈີ Y-Type",
+        "ເອັມຈີY-Type",
         "y-type",
         "ytype"
       ],
@@ -927,12 +1136,14 @@
     },
     {
       "modelId": "zr",
-      "modelName": "ZR",
-      "modelNameTh": "ZR",
-      "modelNameLo": "ZR",
+      "modelName": "MG ZR",
+      "modelNameTh": "เอ็มจี ZR",
+      "modelNameLo": "ເອັມຈີ ZR",
       "searchNames": [
-        "zr",
-        "mg zr"
+        "mg zr",
+        "ເອັມຈີ ZR",
+        "ເອັມຈີZR",
+        "zr"
       ],
       "categoryIds": [
         "sedan"
@@ -940,12 +1151,14 @@
     },
     {
       "modelId": "zs",
-      "modelName": "ZS",
-      "modelNameTh": "ZS",
-      "modelNameLo": "ZS",
+      "modelName": "MG ZS",
+      "modelNameTh": "เอ็มจี ZS",
+      "modelNameLo": "ເອັມຈີ ZS",
       "searchNames": [
-        "zs",
-        "mg zs"
+        "mg zs",
+        "ເອັມຈີ ZS",
+        "ເອັມຈີZS",
+        "zs"
       ],
       "categoryIds": [
         "suv"
@@ -953,10 +1166,13 @@
     },
     {
       "modelId": "zs-ev",
-      "modelName": "ZS EV",
-      "modelNameTh": "ZS EV",
-      "modelNameLo": "ZS EV",
+      "modelName": "MG ZS EV",
+      "modelNameTh": "เอ็มจี ZS EV",
+      "modelNameLo": "ເອັມຈີ ZS EV",
       "searchNames": [
+        "mg zs ev",
+        "ເອັມຈີ ZS EV",
+        "ເອັມຈີZSEV",
         "zs ev",
         "zsev"
       ],
@@ -967,12 +1183,14 @@
     },
     {
       "modelId": "zt",
-      "modelName": "ZT",
-      "modelNameTh": "ZT",
-      "modelNameLo": "ZT",
+      "modelName": "MG ZT",
+      "modelNameTh": "เอ็มจี ZT",
+      "modelNameLo": "ເອັມຈີ ZT",
       "searchNames": [
-        "zt",
-        "mg zt"
+        "mg zt",
+        "ເອັມຈີ ZT",
+        "ເອັມຈີZT",
+        "zt"
       ],
       "categoryIds": [
         "sedan"
@@ -980,10 +1198,13 @@
     },
     {
       "modelId": "zt-t",
-      "modelName": "ZT-T",
-      "modelNameTh": "ZT-T",
-      "modelNameLo": "ZT-T",
+      "modelName": "MG ZT-T",
+      "modelNameTh": "เอ็มจี ZT-T",
+      "modelNameLo": "ເອັມຈີ ZT-T",
       "searchNames": [
+        "mg zt-t",
+        "ເອັມຈີ ZT-T",
+        "ເອັມຈີZT-T",
         "zt-t",
         "ztt"
       ],

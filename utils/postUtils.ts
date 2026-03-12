@@ -438,12 +438,14 @@ export function expandCarSearchAliases(query: string): string[] {
   const entities = CAR_INDEX.aliasToEntities.get(qNorm);
   if (entities && entities.size > 0) {
     const out: string[] = [query];
+    let hasBrand = false;
     for (const entity of entities) {
       const aliases = CAR_INDEX.entityAliases.get(entity);
       if (aliases) out.push(...aliases);
 
       const info = CAR_INDEX.entityInfo.get(entity);
       if (!info) continue;
+      if (info.kind === 'brand') hasBrand = true;
 
       // If searching by BRAND: also expand to all MODELS under that brand,
       // so a caption that contains only the model (no brand) still matches.
@@ -466,7 +468,15 @@ export function expandCarSearchAliases(query: string): string[] {
         }
       }
     }
-    return uniqStringsCarSearch(out);
+    const list = uniqStringsCarSearch(out);
+    // ตอนค้นจากแบรนด์ ไม่ส่งคำที่เป็นตัวเลขล้วน (เช่น 1100, 350) เพื่อลดรถที่ไม่เกี่ยวข้อง
+    if (hasBrand) {
+      return list.filter((t) => {
+        const n = normalizeCarSearch(t);
+        return !n || !/^\d+$/.test(n);
+      });
+    }
+    return list;
   }
 
   // ถ้าไม่พบใน dictionary ของยี่ห้อ/รุ่นเลย ค่อย fallback ไปใช้ category (pickup/van/EV ฯลฯ) — อ่านจาก CATEGORY_MODELS / category-models/*.json
