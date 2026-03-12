@@ -89,3 +89,15 @@ export async function setFeedTop100Cache(province: string | undefined, payload: 
   const key = feedTop100CacheKey(province);
   return setFeedCache(key, payload);
 }
+
+/** ล้าง cache ฟีดทั้งหมด — เรียกเมื่อมีโพสต์ใหม่/แก้ไข/ขาย/Boost เพื่อให้ request ถัดไปดึงจาก DB ใหม่ */
+export async function invalidateFeedCache(): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+  try {
+    const keys = await redis.keys('feed:*');
+    if (keys.length > 0) await redis.del(...keys);
+  } catch (_) {
+    // ignore
+  }
+}

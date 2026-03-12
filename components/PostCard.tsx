@@ -557,8 +557,11 @@ export const PostCard = React.memo<PostCardProps>(({
                 onClick={async () => {
                   setIsTogglingStatus(true);
                   setShowMarkSoldConfirm(false);
-                  await onTogglePostStatus(post.id, post.status);
-                  setIsTogglingStatus(false);
+                  try {
+                    await onTogglePostStatus(post.id, post.status);
+                  } finally {
+                    setIsTogglingStatus(false);
+                  }
                 }}
                 disabled={isTogglingStatus}
                 style={{

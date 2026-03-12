@@ -70,9 +70,10 @@ export function usePostFeedHandlers({
 
   const handleTogglePostStatus = useCallback(
     (postId: string, currentStatus: string) => {
-      togglePostStatus(postId, currentStatus, setPosts);
+      const postToRestore = posts.find((p) => p.id === postId);
+      return togglePostStatus(postId, currentStatus, setPosts, postToRestore);
     },
-    [setPosts]
+    [setPosts, posts]
   );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
