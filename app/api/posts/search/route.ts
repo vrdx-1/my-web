@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { expandWithoutBrandAliases } from '@/utils/postUtils';
+import { expandWithoutBrandAliases, getSearchPriorityTerms, captionContainsPriorityTerm } from '@/utils/postUtils';
 
 const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
@@ -134,6 +134,20 @@ export async function GET(request: NextRequest) {
         posts.push(post);
       }
 
+      // จัดเรียงตามความเกี่ยวข้อง: โพสที่มีคำหลัก (เช่น MG, ເອັມຈີ) ใน caption แสดงก่อน โพสที่ไม่ตรงไปล่าง
+      const priorityTerms = getSearchPriorityTerms(query);
+      if (priorityTerms.length > 0) {
+        posts.sort((a, b) => {
+          const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
+          const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
+          if (bHas !== aHas) return bHas - aHas;
+          const aBoost = a.is_boosted === true ? 1 : 0;
+          const bBoost = b.is_boosted === true ? 1 : 0;
+          if (bBoost !== aBoost) return bBoost - aBoost;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      }
+
       return NextResponse.json(
         { posts },
         { headers: { 'Cache-Control': 'private, max-age=0' } }
@@ -162,7 +176,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const posts = (data || []).filter((p: any) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden);
+    let posts = (data || []).filter((p: any) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden);
+
+    const priorityTerms = getSearchPriorityTerms(query);
+    if (priorityTerms.length > 0) {
+      posts = [...posts].sort((a, b) => {
+        const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
+        const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
+        if (bHas !== aHas) return bHas - aHas;
+        const aBoost = a.is_boosted === true ? 1 : 0;
+        const bBoost = b.is_boosted === true ? 1 : 0;
+        if (bBoost !== aBoost) return bBoost - aBoost;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    }
 
     return NextResponse.json(
       { posts },

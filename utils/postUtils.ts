@@ -726,6 +726,79 @@ export function expandWithoutBrandAliases(query: string): string[] {
   return result.length > 0 ? result : [query];
 }
 
+/**
+ * คืนรายการ "คำหลัก" สำหรับจัดเรียงความเกี่ยวข้อง (โพสที่มีคำเหล่านี้ใน caption แสดงก่อน)
+ * ใช้ตอนค้นหา เช่น ค้น "MG" จะได้ ["MG", "mg", "ເອັມຈີ", "เอ็มจี"]
+ */
+export function getSearchPriorityTerms(query: string): string[] {
+  const q = String(query ?? '').trim();
+  if (!q) return [];
+  const qNorm = normalizeCarSearch(q);
+  const out = new Set<string>();
+  out.add(q);
+
+  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
+  if (entities && entities.size > 0) {
+    for (const entity of entities) {
+      const info = CAR_INDEX.entityInfo.get(entity);
+      if (!info) continue;
+      if (info.kind === 'brand') {
+        if (info.brandName) out.add(String(info.brandName).trim());
+        if ((info as any).brandNameTh) out.add(String((info as any).brandNameTh).trim());
+        if ((info as any).brandNameLo) out.add(String((info as any).brandNameLo).trim());
+      }
+      if (info.kind === 'model') {
+        const bk = CAR_INDEX.modelToBrandKey.get(entity);
+        if (bk) {
+          const bInfo = CAR_INDEX.entityInfo.get(bk);
+          if (bInfo && bInfo.kind === 'brand') {
+            if (bInfo.brandName) out.add(String(bInfo.brandName).trim());
+            if ((bInfo as any).brandNameTh) out.add(String((bInfo as any).brandNameTh).trim());
+            if ((bInfo as any).brandNameLo) out.add(String((bInfo as any).brandNameLo).trim());
+          }
+        }
+      }
+    }
+  }
+
+  const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
+  if (categoryIds && categoryIds.size > 0) {
+    const groups = (categoriesData as any).categoryGroups ?? [];
+    for (const cid of categoryIds) {
+      out.add(String(cid));
+      for (const g of groups) {
+        for (const cat of g.categories ?? []) {
+          if (String(cat.id) === String(cid)) {
+            if (cat.name) out.add(String(cat.name).trim());
+            if (cat.nameEn) out.add(String(cat.nameEn).trim());
+            const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+            for (const lo of nameLoArr) if (lo) out.add(String(lo).trim());
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(out).filter((t) => t.length > 0);
+}
+
+/**
+ * ตรวจว่า caption มีคำหลัก (priority term) อยู่หรือไม่ — ใช้จัดเรียงความเกี่ยวข้อง
+ */
+export function captionContainsPriorityTerm(caption: string, priorityTerms: string[]): boolean {
+  const c = String(caption ?? '');
+  if (!c || !priorityTerms?.length) return false;
+  const cLower = c.toLowerCase();
+  for (const term of priorityTerms) {
+    const t = String(term ?? '').trim();
+    if (!t) continue;
+    if (c.includes(t)) return true;
+    if (/[a-zA-Z]/.test(t) && cLower.includes(t.toLowerCase())) return true;
+  }
+  return false;
+}
+
 export function captionMatchesAnyAlias(caption: string, queries: string[]): boolean {
   const c = normalizeCarSearch(caption);
   if (!c) return false;
