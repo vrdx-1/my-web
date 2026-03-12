@@ -36,8 +36,6 @@ interface PostFeedProps {
   onLoadMore?: () => void;
   /** อัปเดตเป็นระยะเพื่อให้สถานะออนไลน์ในการ์ด re-render (ไม่ต้อง refresh หน้า) */
   onlineStatusTick?: number;
-  /** ฟีดหยุดเลื่อนแล้ว — ให้กดค้างแคปชั่นเพื่อเลือก/คัดลอกได้ (ไม่ส่ง = ถือว่า idle) */
-  isFeedScrollIdle?: boolean;
 }
 
 /**
@@ -73,7 +71,6 @@ export const PostFeed = React.memo<PostFeedProps>(({
   hasMore = true,
   onLoadMore,
   onlineStatusTick,
-  isFeedScrollIdle = true,
 }) => {
   if (posts.length === 0) {
     return !loadingMore ? (
@@ -269,7 +266,6 @@ export const PostFeed = React.memo<PostFeedProps>(({
       registerImpressionRef: onImpression ? registerImpressionRef : undefined,
       registerVisibilityRef,
       hideBoost,
-      isFeedScrollIdle,
     });
   });
 

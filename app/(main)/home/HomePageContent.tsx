@@ -285,7 +285,6 @@ export function HomePageContent() {
               hasMore: postList.hasMore ?? true,
               onLoadMore: () => postList.setPage((p: number) => p + 1),
               hideBoost: tab === 'sold',
-              isFeedScrollIdle: true,
             }}
           />
         )}

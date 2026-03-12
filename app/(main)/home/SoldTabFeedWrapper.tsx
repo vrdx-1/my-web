@@ -178,7 +178,6 @@ export function SoldTabFeedWrapper({
             hasMore: soldListData.hasMore ?? true,
             onLoadMore: () => soldListData.setPage((p) => p + 1),
             hideBoost: true,
-            isFeedScrollIdle: true,
           }}
         />
       </div>

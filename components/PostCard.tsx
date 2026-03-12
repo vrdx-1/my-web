@@ -48,8 +48,6 @@ interface PostCardProps {
   priority?: boolean;
   /** ลำดับโหลดรูปของการ์ด (โพสบนสุดก่อน แล้วไล่ลงล่าง): high / low — ส่งจาก feed ตาม index */
   imageFetchPriority?: 'high' | 'low' | 'auto';
-  /** ฟีดหยุดเลื่อนแล้ว — กดค้างแคปชั่นได้เฉพาะเมื่อ true (ไม่ส่ง = ถือว่า idle) */
-  isFeedScrollIdle?: boolean;
 }
 
 export const PostCard = React.memo<PostCardProps>(({
@@ -83,7 +81,6 @@ export const PostCard = React.memo<PostCardProps>(({
   leftOfAvatar,
   priority = false,
   imageFetchPriority,
-  isFeedScrollIdle = true,
 }) => {
   const router = useRouter();
   const isOwner = isPostOwner(post, session);
@@ -95,67 +92,6 @@ export const PostCard = React.memo<PostCardProps>(({
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef(false);
-  const captionRef = React.useRef<HTMLDivElement>(null);
-  const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const selectAllCaption = React.useCallback(() => {
-    const el = captionRef.current;
-    if (!el) return;
-    const sel = window.getSelection();
-    if (!sel) return;
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }, []);
-
-  const handleCaptionContextMenu = React.useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    selectAllCaption();
-  }, [selectAllCaption]);
-
-  const handleCaptionTouchStart = React.useCallback(() => {
-    if (!isFeedScrollIdle) return;
-    longPressTimerRef.current = setTimeout(() => {
-      selectAllCaption();
-    }, 500);
-  }, [selectAllCaption, isFeedScrollIdle]);
-
-  const handleCaptionTouchEnd = React.useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  }, []);
-
-  const clearCaptionSelection = React.useCallback(() => {
-    const el = captionRef.current;
-    const sel = window.getSelection();
-    if (!el || !sel) return;
-    if (sel.containsNode(el, true)) {
-      sel.removeAllRanges();
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const handler = (e: Event) => {
-      const target = e.target as Node;
-      if (captionRef.current?.contains(target)) return;
-      clearCaptionSelection();
-    };
-    document.addEventListener('click', handler);
-    document.addEventListener('touchend', handler, { passive: true });
-    return () => {
-      document.removeEventListener('click', handler);
-      document.removeEventListener('touchend', handler);
-    };
-  }, [clearCaptionSelection]);
-
-  React.useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    };
-  }, []);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo;
@@ -318,37 +254,21 @@ export const PostCard = React.memo<PostCardProps>(({
         </div>
       </div>
 
-      {/* Caption — long-press (เมื่อฟีดหยุดเลื่อน) / right-click เลือกข้อความทั้งหมด ใช้ copy ของ device/browser */}
-      <div style={{ position: 'relative' }}>
-        <div
-          ref={captionRef}
-          role="text"
-          style={{
-            padding: '0 15px 10px 15px',
-            fontSize: '15px',
-            lineHeight: '1.4',
-            whiteSpace: 'pre-wrap',
-            color: '#111111',
-            fontWeight: 500,
-            userSelect: 'text',
-            WebkitUserSelect: 'text',
-          }}
-        >
-          {post.caption}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            cursor: 'text',
-          }}
-          onContextMenu={handleCaptionContextMenu}
-          onTouchStart={handleCaptionTouchStart}
-          onTouchEnd={handleCaptionTouchEnd}
-          onTouchCancel={handleCaptionTouchEnd}
-          onClick={clearCaptionSelection}
-          aria-hidden
-        />
+      {/* Caption */}
+      <div
+        role="text"
+        style={{
+          padding: '0 15px 10px 15px',
+          fontSize: '15px',
+          lineHeight: '1.4',
+          whiteSpace: 'pre-wrap',
+          color: '#111111',
+          fontWeight: 500,
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+        }}
+      >
+        {post.caption}
       </div>
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
