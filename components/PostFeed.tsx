@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { PostCard } from './PostCard';
 import { EmptyState } from './EmptyState';
 import { FeedSkeleton } from './FeedSkeleton';
@@ -80,6 +80,56 @@ export const PostFeed = React.memo<PostFeedProps>(({
       <EmptyState message={emptyMessage} variant="default" />
     ) : null;
   }
+
+  // โพสต์ที่อยู่ใน viewport ได้ priority โหลดรูปก่อน (แก้โพสต์ในจอโหลดไม่ทัน โพสต์นอกจอโหลดก่อน)
+  const [visibleIndices, setVisibleIndices] = useState<Set<number>>(() => new Set([0, 1, 2]));
+  const visibleIndicesRef = useRef<Set<number>>(new Set([0, 1, 2]));
+  const elementToIndexRef = useRef<WeakMap<HTMLElement, number>>(new WeakMap());
+  const indexToElementRef = useRef<Map<number, HTMLElement>>(new Map());
+  const visibilityObserverRef = useRef<IntersectionObserver | null>(null);
+
+  const registerVisibilityRef = useCallback((el: HTMLElement | null, index: number) => {
+    if (el) {
+      const prev = indexToElementRef.current.get(index);
+      if (prev && prev !== el) {
+        visibilityObserverRef.current?.unobserve(prev);
+        elementToIndexRef.current.delete(prev);
+        indexToElementRef.current.delete(index);
+      }
+      if (!visibilityObserverRef.current) {
+        visibilityObserverRef.current = new IntersectionObserver(
+          (entries) => {
+            const set = visibleIndicesRef.current;
+            entries.forEach((entry) => {
+              const idx = elementToIndexRef.current.get(entry.target as HTMLElement);
+              if (idx === undefined) return;
+              if (entry.isIntersecting) set.add(idx);
+              else set.delete(idx);
+            });
+            setVisibleIndices(new Set(set));
+          },
+          { threshold: 0.1, rootMargin: '100px 0px' }
+        );
+      }
+      elementToIndexRef.current.set(el, index);
+      indexToElementRef.current.set(index, el);
+      visibilityObserverRef.current.observe(el);
+    } else {
+      const prevEl = indexToElementRef.current.get(index);
+      if (prevEl) {
+        visibilityObserverRef.current?.unobserve(prevEl);
+        elementToIndexRef.current.delete(prevEl);
+        indexToElementRef.current.delete(index);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      visibilityObserverRef.current?.disconnect();
+      visibilityObserverRef.current = null;
+    };
+  }, []);
 
   // Observer เดียวสำหรับ impression ทุกการ์ด — ลดจาก N observers เป็น 1 (ช่วยเมื่อ feed ยาว)
   const impressionSentRef = useRef<Set<string>>(new Set());
@@ -183,15 +233,18 @@ export const PostFeed = React.memo<PostFeedProps>(({
     noMoreText
   );
 
+  const validVisible = [...visibleIndices].filter((i) => i < posts.length);
+  const firstVisibleIndex = validVisible.length > 0 ? Math.min(...validVisible) : 0;
   const cards = posts.map((post, index) => {
     const isLastElement = posts.length === index + 1;
+    const inViewport = visibleIndices.has(index);
     return React.createElement(PostCard, {
       key: `${post.id}-${index}`,
       post,
       index,
       isLastElement,
-      priority: index === 0,
-      imageFetchPriority: index === 0 ? undefined : index <= 2 ? 'high' : 'low',
+      priority: index === firstVisibleIndex,
+      imageFetchPriority: inViewport ? 'high' : 'low',
       session,
       likedPosts,
       savedPosts,
@@ -214,6 +267,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
       onSetMenuAnimating,
       onImpression,
       registerImpressionRef: onImpression ? registerImpressionRef : undefined,
+      registerVisibilityRef,
       hideBoost,
       isFeedScrollIdle,
     });

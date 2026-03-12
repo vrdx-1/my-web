@@ -40,6 +40,8 @@ interface PostCardProps {
   onImpression?: (postId: string) => void;
   /** ลงทะเบียน element กับ observer เดียวของ feed (ลดจำนวน IntersectionObserver จาก N เป็น 1) */
   registerImpressionRef?: (el: HTMLElement | null, postId: string) => void;
+  /** ลงทะเบียนการ์ดกับ observer สำหรับ viewport — ให้โพสต์ในจอได้ priority โหลดรูปก่อน */
+  registerVisibilityRef?: (el: HTMLElement | null, index: number) => void;
   hideBoost?: boolean;
   leftOfAvatar?: React.ReactNode;
   /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
@@ -76,6 +78,7 @@ export const PostCard = React.memo<PostCardProps>(({
   onSetMenuAnimating,
   onImpression,
   registerImpressionRef,
+  registerVisibilityRef,
   hideBoost = false,
   leftOfAvatar,
   priority = false,
@@ -195,6 +198,13 @@ export const PostCard = React.memo<PostCardProps>(({
     if (el) registerImpressionRef(el, post.id);
     return () => registerImpressionRef(null, post.id);
   }, [registerImpressionRef, post.id]);
+
+  React.useEffect(() => {
+    if (!registerVisibilityRef) return;
+    const el = cardRef.current;
+    if (el) registerVisibilityRef(el, index);
+    return () => registerVisibilityRef(null, index);
+  }, [registerVisibilityRef, index]);
 
   // content-visibility: auto — ให้เบราว์เซอร์ข้ามการ paint การ์ดที่อยู่นอกจอ (scroll สมูทแบบ Facebook)
     const cardStyle: React.CSSProperties = {
