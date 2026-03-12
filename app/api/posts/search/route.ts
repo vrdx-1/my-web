@@ -6,7 +6,8 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { expandWithoutBrandAliases } from '@/utils/postUtils';
 
 const SEARCH_LIMIT = 1000;
-const RPC_TERMS_LIMIT = 2500;
+/** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
+const RPC_TERMS_PER_CALL = 500;
 
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
 function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     const terms = expandWithoutBrandAliases(query)
       .map((t) => String(t ?? '').trim())
       .filter(Boolean);
-    const searchTerms = terms.length > RPC_TERMS_LIMIT ? terms.slice(0, RPC_TERMS_LIMIT) : terms;
+    const searchTerms = terms;
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -56,30 +57,65 @@ export async function GET(request: NextRequest) {
     );
 
     if (searchTerms.length > 1) {
-      const { data: rpcRows, error: rpcError } = await supabase.rpc('search_cars_by_caption_terms', {
-        p_terms: searchTerms,
-        p_start: 0,
-        p_limit: SEARCH_LIMIT,
-      });
+      type RpcRow = { id: string; is_boosted: boolean | null; created_at: string };
+      const allOrdered: RpcRow[] = [];
+      const seenIds = new Set<string>();
 
-      if (rpcError) {
-        return NextResponse.json({ error: rpcError.message }, { status: 500 });
+      if (searchTerms.length <= RPC_TERMS_PER_CALL) {
+        const { data: rpcRows, error: rpcError } = await supabase.rpc('search_cars_by_caption_terms', {
+          p_terms: searchTerms,
+          p_start: 0,
+          p_limit: SEARCH_LIMIT,
+        });
+        if (rpcError) {
+          return NextResponse.json({ error: rpcError.message }, { status: 500 });
+        }
+        for (const r of (rpcRows || []) as RpcRow[]) {
+          if (!seenIds.has(r.id)) {
+            seenIds.add(r.id);
+            allOrdered.push(r);
+          }
+        }
+      } else {
+        for (let i = 0; i < searchTerms.length; i += RPC_TERMS_PER_CALL) {
+          const chunk = searchTerms.slice(i, i + RPC_TERMS_PER_CALL);
+          const { data: rpcRows, error: rpcError } = await supabase.rpc('search_cars_by_caption_terms', {
+            p_terms: chunk,
+            p_start: 0,
+            p_limit: SEARCH_LIMIT,
+          });
+          if (rpcError) {
+            return NextResponse.json({ error: rpcError.message }, { status: 500 });
+          }
+          for (const r of (rpcRows || []) as RpcRow[]) {
+            if (!seenIds.has(r.id)) {
+              seenIds.add(r.id);
+              allOrdered.push(r);
+            }
+          }
+        }
       }
 
-      const ordered = (rpcRows || []) as { id: string; is_boosted: boolean | null; created_at: string }[];
-      if (ordered.length === 0) {
+      allOrdered.sort((a, b) => {
+        const aBoost = a.is_boosted === true ? 1 : 0;
+        const bBoost = b.is_boosted === true ? 1 : 0;
+        if (bBoost !== aBoost) return bBoost - aBoost;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      const topIds = allOrdered.slice(0, SEARCH_LIMIT).map((r) => r.id);
+      if (topIds.length === 0) {
         return NextResponse.json(
           { posts: [] },
           { headers: { 'Cache-Control': 'private, max-age=0' } }
         );
       }
 
-      const ids = ordered.map((r) => r.id);
       const carsClient = getCarsReadClient(supabase);
       const { data: rows, error: fetchError } = await carsClient
         .from('cars')
         .select(POST_WITH_PROFILE_SELECT)
-        .in('id', ids);
+        .in('id', topIds);
 
       if (fetchError) {
         return NextResponse.json({ error: fetchError.message }, { status: 500 });
@@ -91,8 +127,8 @@ export async function GET(request: NextRequest) {
       }
 
       const posts: any[] = [];
-      for (const r of ordered) {
-        const post = byId.get(r.id);
+      for (const id of topIds) {
+        const post = byId.get(id);
         if (!post) continue;
         if (province && province.trim() !== '' && post.province !== province.trim()) continue;
         posts.push(post);

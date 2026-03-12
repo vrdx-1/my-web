@@ -375,6 +375,66 @@ export function expandCarSearchAliases(query: string): string[] {
   const qNorm = normalizeCarSearch(query);
   if (!qNorm) return [];
 
+  // เมื่อผู้ใช้พิมพ์รหัสหมวดหมู่โดยตรง (เช่น sedan, pickup) ให้ขยายเป็นทุกรุ่นในหมวด ไม่ให้ไปติด entity (เช่น รุ่นที่มีคำว่า sedan ในชื่อ)
+  const categoryIdsForQuery = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
+  if (categoryIdsForQuery && categoryIdsForQuery.has(qNorm)) {
+    const expanded: string[] = [query];
+    const groups = (categoriesData as any).categoryGroups ?? [];
+    for (const cid of categoryIdsForQuery) {
+      expanded.push(String(cid));
+      for (const g of groups) {
+        for (const cat of g.categories ?? []) {
+          if (String(cat.id) === String(cid)) {
+            if (cat.name) expanded.push(String(cat.name).trim());
+            if (cat.nameEn) expanded.push(String(cat.nameEn).trim());
+            const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+            for (const lo of nameLoArr) if (lo) expanded.push(String(lo).trim());
+            break;
+          }
+        }
+      }
+      const modelNames = CATEGORY_MODELS[String(cid)];
+      if (modelNames && Array.isArray(modelNames)) {
+        for (const name of modelNames) {
+          const s = String(name ?? '').trim();
+          if (!s) continue;
+          expanded.push(s);
+          const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+          for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+        }
+      } else {
+        for (const brand of carsData.brands ?? []) {
+          for (const model of brand.models ?? []) {
+            const modelCats = (model.categoryIds ?? []) as string[];
+            if (!modelCats.includes(String(cid))) continue;
+            const terms = [
+              model.modelName,
+              (model as any).modelNameTh,
+              (model as any).modelNameLo,
+              ...((model.searchNames ?? []) as any[]).map(String),
+            ];
+            for (const t of terms) {
+              const s = String(t ?? '').trim();
+              if (!s) continue;
+              expanded.push(s);
+              const tokens = s.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+              for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+            }
+          }
+        }
+        const aliases = CATEGORY_TO_MODEL_ALIASES.categoryToAliases.get(String(cid));
+        if (aliases) {
+          expanded.push(...aliases);
+          for (const a of aliases) {
+            const tokens = String(a ?? '').split(/\s+/).map((t) => t.trim()).filter(Boolean);
+            for (const tok of tokens) if (tok.length >= 2) expanded.push(tok);
+          }
+        }
+      }
+    }
+    return uniqStringsCarSearch(expanded);
+  }
+
   const entities = CAR_INDEX.aliasToEntities.get(qNorm);
   if (entities && entities.size > 0) {
     const out: string[] = [query];
@@ -513,6 +573,23 @@ export function expandWithoutBrandAliases(query: string): string[] {
       return true;
     };
     const out = new Set<string>();
+    // ใส่คำค้นและชื่อหมวดทุกภาษาไว้ใน terms เสมอ เพื่อให้ caption ที่มีแค่ "sedan"/"รถเก๋ง" ก็ match
+    out.add(query.trim());
+    const groups = (categoriesData as any).categoryGroups ?? [];
+    for (const cid of categoryIds) {
+      out.add(String(cid));
+      for (const g of groups) {
+        for (const cat of g.categories ?? []) {
+          if (String(cat.id) === String(cid)) {
+            if (cat.name) out.add(String(cat.name).trim());
+            if (cat.nameEn) out.add(String(cat.nameEn).trim());
+            const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+            for (const lo of nameLoArr) if (lo) out.add(String(lo).trim());
+            break;
+          }
+        }
+      }
+    }
     for (const cid of categoryIds) {
       const modelNames = CATEGORY_MODELS[String(cid)];
       if (modelNames && Array.isArray(modelNames)) {
