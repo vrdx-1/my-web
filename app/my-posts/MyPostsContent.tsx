@@ -58,7 +58,7 @@ export function MyPostsContent() {
     type: 'my-posts',
     session: sessionState,
     tab,
-    loadAll: true, // โหลดโพสต์ของฉันทั้งหมดครั้งเดียว
+    // โหลดทีละน้อยแบบหน้าโฮม (6 แล้ว 10) เพื่อไม่ให้หน่วง
   });
   postsRef.current = postListData.posts;
 

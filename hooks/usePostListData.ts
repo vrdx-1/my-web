@@ -159,8 +159,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     if (!skipSkeleton) setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
-    // หน้า liked/saved โหลดทีละน้อยแบบโฮม (6 แล้ว 10); หน้าอื่นใช้ LIST_FEED_PAGE_SIZE
-    const isIncrementalList = type === 'liked' || type === 'saved';
+    // หน้า liked / saved / my-posts โหลดทีละน้อยแบบโฮม (6 แล้ว 10); หน้าอื่นใช้ LIST_FEED_PAGE_SIZE
+    const isIncrementalList = type === 'liked' || type === 'saved' || type === 'my-posts';
     const listPageSize = isIncrementalList
       ? (currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE)
       : LIST_FEED_PAGE_SIZE;
@@ -391,10 +391,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .eq('status', tab || 'recommend')
           .order('created_at', { ascending: false });
 
-        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
-        if (!loadAll) {
-          idsQuery = idsQuery.range(rangeStart, rangeEnd);
-        }
+        // my-posts โหลดทีละน้อยแบบโฮม (ไม่ใช้ loadAll)
+        idsQuery = idsQuery.range(rangeStart, rangeEnd);
 
         const { data: idsData, error: idsError } = await idsQuery;
         
@@ -509,14 +507,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             } else if (type === 'sold') {
               // sold จัดการ hasMore ไปแล้วด้านบน (ทั้งกรณี search และไม่ search)
             } else {
-              if (type === 'my-posts') {
-                const noMoreIds = postIds.length === 0;
-                setHasMore(!noMoreIds);
-              } else {
-                // liked/saved: ใช้ listPageSize ของชุดนี้
-                const reachedEndOfIds = postIds.length < listPageSize;
-                setHasMore(!reachedEndOfIds);
-              }
+              // liked / saved / my-posts: ใช้ listPageSize ของชุดนี้
+              const reachedEndOfIds = postIds.length < listPageSize;
+              setHasMore(!reachedEndOfIds);
             }
           }
 
