@@ -53,6 +53,8 @@ export function HomePageContent() {
     fetchPosts: (isInitial?: boolean) => Promise<void>;
   } | null>(null);
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
+  /** ใช้แยก "กำลังรอผลค้นหา" (แสดง skeleton) กับ "ค้นหาเสร็จแล้วไม่มีรายการ" (แสดง ຍັງບໍ່ມີລາຍການ) */
+  const searchResolvedRef = useRef(false);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
@@ -118,6 +120,9 @@ export function HomePageContent() {
 
   const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
   postsRef.current = posts;
+
+  if (hasSearch && searchData.loading) searchResolvedRef.current = true;
+  if (!hasSearch) searchResolvedRef.current = false;
 
   useHomeRefresh({
     tab,
@@ -252,10 +257,15 @@ export function HomePageContent() {
     [interactionModalHook],
   );
 
+  const searchWaitingResults =
+    hasSearch &&
+    posts.length === 0 &&
+    (searchData.loading || !searchResolvedRef.current);
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
-    ((posts.length === 0 &&
-      (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+    (searchWaitingResults ||
+      (posts.length === 0 &&
+        (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
       (tabRefreshing && postList.loadingMore));
 
   if (!clientMounted) return null;
