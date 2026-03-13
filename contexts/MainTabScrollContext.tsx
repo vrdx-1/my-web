@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 const MAIN_TAB_PATHS = ['/home', '/notification', '/profile'] as const;
 type MainTabId = (typeof MAIN_TAB_PATHS)[number];
 
+const STORAGE_KEY_PREFIX = 'mainTabScroll_';
+
 type GetScroll = () => number;
 type SetScroll = (y: number) => void;
 
@@ -29,6 +31,27 @@ interface MainTabScrollContextValue {
 
 const MainTabScrollContext = createContext<MainTabScrollContextValue | null>(null);
 
+function getStoredScroll(tabId: MainTabId): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const s = sessionStorage.getItem(STORAGE_KEY_PREFIX + tabId);
+    if (s == null) return undefined;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function setStoredScroll(tabId: MainTabId, y: number) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(STORAGE_KEY_PREFIX + tabId, String(y));
+  } catch {
+    // ignore
+  }
+}
+
 export function MainTabScrollProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const registryRef = useRef<Map<MainTabId, ScrollEntry>>(new Map());
@@ -47,31 +70,40 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     if (entry) {
       try {
         const y = entry.getScroll();
-        if (typeof y === 'number' && Number.isFinite(y)) savedScrollRef.current[tabId] = y;
+        if (typeof y === 'number' && Number.isFinite(y)) {
+          savedScrollRef.current[tabId] = y;
+          setStoredScroll(tabId, y);
+        }
       } catch {
         // ignore
       }
     }
   }, []);
 
+  const getSavedScroll = useCallback((tabId: MainTabId): number | undefined => {
+    const fromRef = savedScrollRef.current[tabId];
+    if (typeof fromRef === 'number' && Number.isFinite(fromRef)) return fromRef;
+    return getStoredScroll(tabId);
+  }, []);
+
   const restoreScrollForTab = useCallback((tabId: MainTabId) => {
     const entry = registryRef.current.get(tabId);
     if (!entry) return;
-    const toRestore = savedScrollRef.current[tabId];
+    const toRestore = getSavedScroll(tabId);
     if (typeof toRestore !== 'number' || !Number.isFinite(toRestore)) return;
     try {
       entry.setScroll(toRestore);
     } catch {
       // ignore
     }
-  }, []);
+  }, [getSavedScroll]);
 
   const activeTabId: MainTabId | null =
     pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? pathname : null;
 
   const prevTabIdRef = useRef<MainTabId | null>(null);
 
-  /** เมื่อ pathname เปลี่ยน: คืนค่า scroll ก่อน paint — ให้เห็นจุดเดิมทันที ไม่โชว์ด้านบนก่อนแล้วค่อยกระโดด */
+  /** เมื่อ pathname เปลี่ยน: คืนค่า scroll ก่อน paint — ให้เห็นจุดเดิมทันที (ใช้ sessionStorage เป็น fallback เผื่อ context ถูก remount ตอน deploy) */
   useLayoutEffect(() => {
     const registry = registryRef.current;
     prevTabIdRef.current = activeTabId;
@@ -79,8 +111,8 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     if (!activeTabId) return;
     const entry = registry.get(activeTabId);
     if (entry) {
-      const toRestore = savedScrollRef.current[activeTabId];
-      if (typeof toRestore === 'number') {
+      const toRestore = getSavedScroll(activeTabId);
+      if (typeof toRestore === 'number' && Number.isFinite(toRestore)) {
         try {
           entry.setScroll(toRestore);
         } catch {
@@ -88,7 +120,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
         }
       }
     }
-  }, [activeTabId]);
+  }, [activeTabId, getSavedScroll]);
 
   const value: MainTabScrollContextValue = {
     registerScroll,
