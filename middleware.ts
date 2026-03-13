@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // เปิดจากลิงก์หน้าจอ (PWA) หรือเข้า / โดยตรง → ไป /home ทันที ไม่ render หน้า root เพื่อไม่ให้กระพริบ
+  if (request.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/home', request.url))
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -52,5 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/', '/admin/:path*'],
 }

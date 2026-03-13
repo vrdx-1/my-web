@@ -7,9 +7,18 @@ const HOME_PATH = '/home';
 const LAST_HIDDEN_KEY = 'jutpai_last_hidden_ms';
 const MAX_INACTIVE_MS = 30 * 60 * 1000; // 30 นาที
 
+function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true
+  );
+}
+
 /**
  * ถ้ากลับเข้ามาในเว็บภายใน 30 นาที → อยู่หน้าปัจจุบัน
  * ถ้าออกจากเว็บ/เบราว์เซอร์เกิน 30 นาที → กลับมาแล้วเด้งไปหน้า home
+ * เมื่อเปิดจากลิงก์หน้าจอ (PWA/standalone) จะไม่ redirect เลย — ห้ามกระพริบเด็ดขาด
  */
 export default function RedirectToHomeOnReturn() {
   const pathname = usePathname();
@@ -36,6 +45,8 @@ export default function RedirectToHomeOnReturn() {
 
     const maybeRedirectHome = () => {
       if (pathname === '/home' || pathname.startsWith('/profile')) return;
+      // เปิดจากลิงก์หน้าจอ (PWA): ห้าม redirect เด็ดขาด เพื่อไม่ให้กระพริบ
+      if (isStandalone()) return;
       const lastHidden = getLastHidden();
       if (!lastHidden) return;
       const diff = Date.now() - lastHidden;
