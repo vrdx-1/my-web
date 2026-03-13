@@ -5,8 +5,9 @@ import { FeedPageSkeletonFallback } from '@/components/FeedPageSkeletonFallback'
 
 const feedFallback = <FeedPageSkeletonFallback title="ລາຍການທີ່ມັກ" />;
 
+/** ปิด SSR เพื่อหลีกเลี่ยง React "Expected static flag was missing" ตอน hydrate กับ PostFeed */
 const LazyLikedPosts = dynamicNamed(() => import('./LikedPostsContent'), 'LikedPostsContent', {
-  ssr: true,
+  ssr: false,
   loading: () => feedFallback,
 });
 

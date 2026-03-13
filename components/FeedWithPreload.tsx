@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 
-/** Minimum time to show skeleton before revealing content (Facebook-style, avoids flash) */
-export const FEED_PRELOAD_MIN_MS = 320;
+/** Minimum time to show skeleton before revealing content (0 = แสดงทันทีเมื่อโหลดเสร็จ) */
+export const FEED_PRELOAD_MIN_MS = 0;
 
 export interface FeedWithPreloadProps {
   /** เมื่อ true แสดง FeedSkeleton; เมื่อ false รอ FEED_PRELOAD_MIN_MS แล้วค่อยแสดง children พร้อม fade-in */
@@ -52,7 +52,7 @@ export function FeedWithPreload({
   if (showSkeleton) {
     return <FeedSkeleton count={skeletonCount} />;
   }
-  if (!preloadMinElapsed) {
+  if (FEED_PRELOAD_MIN_MS > 0 && !preloadMinElapsed) {
     return <FeedSkeleton count={skeletonCount} />;
   }
   return (

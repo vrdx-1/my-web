@@ -50,7 +50,8 @@ interface PostCardProps {
   imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
-export const PostCard = React.memo<PostCardProps>(({
+/** ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts */
+export function PostCard({
   post,
   index,
   isLastElement,
@@ -81,7 +82,7 @@ export const PostCard = React.memo<PostCardProps>(({
   leftOfAvatar,
   priority = false,
   imageFetchPriority,
-}) => {
+}: PostCardProps) {
   const router = useRouter();
   const isOwner = isPostOwner(post, session);
   const status = isOwner ? { isOnline: true, text: 'ອອນລາຍ' } : getOnlineStatus(post.profiles?.last_seen);
@@ -645,6 +646,4 @@ export const PostCard = React.memo<PostCardProps>(({
       )}
     </div>
   );
-});
-
-PostCard.displayName = 'PostCard';
+}

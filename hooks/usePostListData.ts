@@ -7,12 +7,16 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
-/** แคช feed ต่อ type+user — กลับมาหน้า liked/saved/my-posts ไม่แสดง Skeleton (แบบ Facebook) */
+/** แคช feed ต่อ type+user (+ tab สำหรับ saved/liked/my-posts เพื่อแยก list พร้อมขาย/ขายแล้ว) */
 const FEED_LIST_CACHE_MAX = 6;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
-function getFeedListCacheKey(type: string, session: any): string {
+function getFeedListCacheKey(type: string, session: any, tab?: string): string {
   const uid = session?.user?.id;
-  return `${type}:${uid ? uid : 'guest'}`;
+  const base = `${type}:${uid ? uid : 'guest'}`;
+  if (tab && (type === 'saved' || type === 'liked' || type === 'my-posts')) {
+    return `${base}:${tab}`;
+  }
+  return base;
 }
 
 export type PostListType = 'saved' | 'liked' | 'sold' | 'my-posts';
@@ -89,7 +93,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const cacheableTypes: PostListType[] = ['liked', 'saved', 'my-posts'];
   useEffect(() => {
     if (!cacheableTypes.includes(type) || currentSession === undefined) return;
-    const key = getFeedListCacheKey(type, currentSession);
+    const key = getFeedListCacheKey(type, currentSession, tab);
     const cached = feedListCache[key];
     if (cached && cached.posts.length >= 0) {
       setPosts(cached.posts);
@@ -97,18 +101,18 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
       setLoadingMore(false);
       hydratedFromCacheRef.current = true;
     }
-  }, [type, currentSession]);
+  }, [type, currentSession, tab]);
 
   useEffect(() => {
     if (!cacheableTypes.includes(type) || currentSession === undefined || loadingMore || posts.length === 0) return;
-    const key = getFeedListCacheKey(type, currentSession);
+    const key = getFeedListCacheKey(type, currentSession, tab);
     const keys = Object.keys(feedListCache);
     if (keys.length >= FEED_LIST_CACHE_MAX) {
       const toDelete = keys.filter((k) => k !== key).slice(0, keys.length - FEED_LIST_CACHE_MAX + 1);
       toDelete.forEach((k) => delete feedListCache[k]);
     }
     feedListCache[key] = { posts: [...posts], hasMore };
-  }, [type, currentSession, loadingMore, posts, hasMore]);
+  }, [type, currentSession, tab, loadingMore, posts, hasMore]);
 
   // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม) — ข้ามถ้ามี sharedLikedSaved
   useEffect(() => {

@@ -40,9 +40,10 @@ interface PostFeedProps {
 
 /**
  * PostFeed Component
- * Reusable component for rendering a list of PostCard components
+ * Reusable component for rendering a list of PostCard components.
+ * ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts
  */
-export const PostFeed = React.memo<PostFeedProps>(({
+export function PostFeed({
   posts,
   session,
   likedPosts,
@@ -71,7 +72,7 @@ export const PostFeed = React.memo<PostFeedProps>(({
   hasMore = true,
   onLoadMore,
   onlineStatusTick,
-}) => {
+}: PostFeedProps) {
   if (posts.length === 0) {
     return !loadingMore ? (
       <EmptyState message={emptyMessage} variant="default" />
@@ -275,6 +276,4 @@ export const PostFeed = React.memo<PostFeedProps>(({
     ...cards,
     bottomSlot
   );
-});
-
-PostFeed.displayName = 'PostFeed';
+}

@@ -23,6 +23,7 @@ import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { useHomeTabData, type HomeTab } from '@/hooks/useHomeTabData';
 import { useHomeRefresh } from '@/hooks/useHomeRefresh';
 import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
+import { usePostListData } from '@/hooks/usePostListData';
 
 import { HomeFeedBody } from './HomeFeedBody';
 import { SoldTabFeedWrapper } from './SoldTabFeedWrapper';
@@ -52,8 +53,6 @@ export function HomePageContent() {
     fetchPosts: (isInitial?: boolean) => Promise<void>;
   } | null>(null);
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
-  const [soldTabLoadingMore, setSoldTabLoadingMore] = useState(false);
-  const [soldTabPosts, setSoldTabPosts] = useState<any[]>([]);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
@@ -81,7 +80,43 @@ export function HomePageContent() {
     searchParams,
   } = tabData;
 
-  const posts = isSoldTabNoSearch ? soldTabPosts : tabData.posts;
+  const selectedProvince = homeProvince?.selectedProvince ?? '';
+  const soldListData = usePostListData({
+    type: 'sold',
+    session,
+    sessionReady,
+    status: 'sold',
+    sharedLikedSaved,
+    province: selectedProvince,
+  });
+
+  useEffect(() => {
+    soldTabRefreshRef.current = {
+      setPage: soldListData.setPage,
+      setHasMore: soldListData.setHasMore,
+      fetchPosts: soldListData.fetchPosts,
+    };
+    return () => {
+      soldTabRefreshRef.current = null;
+    };
+  }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
+
+  useEffect(() => {
+    if (tab === 'sold' && soldListData.posts.length === 0 && !soldListData.loadingMore) {
+      soldListData.setPage(0);
+      soldListData.setHasMore(true);
+      soldListData.fetchPosts(true);
+    }
+  }, [tab, soldListData.posts.length, soldListData.loadingMore]);
+
+  useEffect(() => {
+    if (tab !== 'sold') return;
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+    soldListData.fetchPosts(true);
+  }, [selectedProvince]);
+
+  const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
   postsRef.current = posts;
 
   useHomeRefresh({
@@ -106,6 +141,7 @@ export function HomePageContent() {
     searchData,
     soldTabRefreshRef,
     setTabRefreshing,
+    hasSoldTabCache: soldListData.posts.length > 0,
   });
 
   const menu = useMenu();
@@ -137,7 +173,7 @@ export function HomePageContent() {
     setJustSavedPosts,
   });
 
-  const effectiveLoadingMore = isSoldTabNoSearch ? soldTabLoadingMore : postList.loadingMore;
+  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -229,13 +265,7 @@ export function HomePageContent() {
       <div>
         {isSoldTabNoSearch ? (
           <SoldTabFeedWrapper
-            province={homeProvince?.selectedProvince ?? ''}
-            session={session}
-            sessionReady={sessionReady}
-            sharedLikedSaved={sharedLikedSaved}
-            soldTabRefreshRef={soldTabRefreshRef}
-            onLoadingMoreChange={setSoldTabLoadingMore}
-            onPostsChange={setSoldTabPosts}
+            soldListData={soldListData}
             menu={menu}
             viewingPostHook={viewingPostHook}
             headerScroll={headerScroll}

@@ -18,6 +18,8 @@ export interface UseHomeTabSwitchOptions {
     fetchPosts: (isInitial?: boolean) => Promise<void>;
   } | null>;
   setTabRefreshing: (v: boolean) => void;
+  /** มีรายการขายแล้วโหลดไว้แล้ว — สลับมาแสดงทันที ไม่โหลดใหม่ */
+  hasSoldTabCache?: boolean;
 }
 
 export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
@@ -29,6 +31,7 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
     searchData,
     soldTabRefreshRef,
     setTabRefreshing,
+    hasSoldTabCache = false,
   } = options;
 
   const setTabAndRefresh = useCallback(
@@ -53,19 +56,24 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
       } else {
         mainTab?.setNavigatingToTab(newTab);
         mainTab?.setHomeTab(newTab);
-        setTabRefreshing(true);
-        if (newTab === 'recommend') {
-          if (searchQuery.trim()) {
-            searchData.fetchSearch();
-          } else {
-            recommendFeed.setPage(0);
-            recommendFeed.setHasMore(true);
-            recommendFeed.fetchPosts(true);
+        if (newTab === 'sold' && hasSoldTabCache) {
+          setTabRefreshing(false);
+          mainTab?.setTabRefreshing(false);
+        } else {
+          setTabRefreshing(true);
+          if (newTab === 'recommend') {
+            if (searchQuery.trim()) {
+              searchData.fetchSearch();
+            } else {
+              recommendFeed.setPage(0);
+              recommendFeed.setHasMore(true);
+              recommendFeed.fetchPosts(true);
+            }
           }
         }
       }
     },
-    [tab, mainTab, searchQuery, recommendFeed, searchData, soldTabRefreshRef, setTabRefreshing]
+    [tab, mainTab, searchQuery, recommendFeed, searchData, soldTabRefreshRef, setTabRefreshing, hasSoldTabCache]
   );
 
   useEffect(() => {

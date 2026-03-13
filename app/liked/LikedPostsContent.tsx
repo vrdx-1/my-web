@@ -1,11 +1,11 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 // Shared Components
-import { PostFeed } from '@/components/PostFeed';
-import { FeedWithPreload } from '@/components/FeedWithPreload';
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
@@ -30,10 +30,27 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
+/** ใช้ LikedFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
+const LikedFeedBlock = dynamic(
+  () => import('./LikedFeedBlock').then((mod) => ({ default: mod.LikedFeedBlock })),
+  { ssr: false, loading: () => <FeedSkeleton count={3} /> }
+);
+
 export function LikedPostsContent() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [feedReady, setFeedReady] = useState(false);
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  useEffect(() => {
+    if (!mounted) return;
+    const id = requestAnimationFrame(() => setFeedReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [mounted]);
   const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
@@ -41,19 +58,26 @@ export function LikedPostsContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const [sessionState, setSessionState] = useState<any>(undefined);
-  const hasFetchedRef = useRef(false);
+  const hasFetchedRecommendRef = useRef(false);
+  const hasFetchedSoldRef = useRef(false);
   const postsRef = useRef<any[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
   }, []);
 
-  const postListData = usePostListData({
+  const recommendListData = usePostListData({
     type: 'liked',
     session: sessionState,
-    tab,
-    // โหลดทีละน้อยแบบหน้าโฮม (6 แล้ว 10) เพื่อไม่ให้หน่วง
+    tab: 'recommend',
   });
+  const soldListData = usePostListData({
+    type: 'liked',
+    session: sessionState,
+    tab: 'sold',
+  });
+
+  const postListData = tab === 'recommend' ? recommendListData : soldListData;
   postsRef.current = postListData.posts;
 
   const menu = useMenu();
@@ -81,33 +105,39 @@ export function LikedPostsContent() {
   });
 
   useEffect(() => {
-    if (sessionState !== undefined && postListData.session !== undefined && !hasFetchedRef.current) {
-      postListData.setPage(0);
-      postListData.setHasMore(true);
-      postListData.fetchPosts(true);
-      hasFetchedRef.current = true;
+    if (sessionState === undefined || recommendListData.session === undefined) return;
+    if (!hasFetchedRecommendRef.current && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
+      hasFetchedRecommendRef.current = true;
+      recommendListData.setPage(0);
+      recommendListData.setHasMore(true);
+      recommendListData.fetchPosts(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionState, postListData.session]);
+  }, [sessionState, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore]);
 
   useEffect(() => {
-    if (hasFetchedRef.current && sessionState !== undefined && postListData.session !== undefined) {
-      postListData.setPage(0);
-      postListData.setHasMore(true);
-      postListData.fetchPosts(true);
+    if (tab !== 'sold' || sessionState === undefined || soldListData.session === undefined) return;
+    if (!hasFetchedSoldRef.current && soldListData.posts.length === 0 && !soldListData.loadingMore) {
+      hasFetchedSoldRef.current = true;
+      soldListData.setPage(0);
+      soldListData.setHasMore(true);
+      soldListData.fetchPosts(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, [tab, sessionState, soldListData.session, soldListData.posts.length, soldListData.loadingMore]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
   }, [postListData.loadingMore]);
 
   useEffect(() => {
-    if (postListData.page > 0 && !postListData.loadingMore && postListData.session !== undefined) {
-      postListData.fetchPosts(false, postListData.page);
+    if (recommendListData.page > 0 && !recommendListData.loadingMore && recommendListData.session !== undefined) {
+      recommendListData.fetchPosts(false, recommendListData.page);
     }
-  }, [postListData.page, postListData.session]);
+  }, [recommendListData.page, recommendListData.session]);
+  useEffect(() => {
+    if (soldListData.page > 0 && !soldListData.loadingMore && soldListData.session !== undefined) {
+      soldListData.fetchPosts(false, soldListData.page);
+    }
+  }, [soldListData.page, soldListData.session]);
 
   const handlers = usePostFeedHandlers({
     session: postListData.session,
@@ -189,23 +219,27 @@ export function LikedPostsContent() {
           onTabChange={(v) => {
             if (v === tab) {
               setTabRefreshing(true);
-              postListData.setPage(0);
-              postListData.setHasMore(true);
-              postListData.fetchPosts(true);
+              const list = v === 'recommend' ? recommendListData : soldListData;
+              list.setPage(0);
+              list.setHasMore(true);
+              list.fetchPosts(true);
+              if (v === 'sold') hasFetchedSoldRef.current = true;
             } else {
               setTab(v);
-              setTabRefreshing(true);
+              const targetList = v === 'recommend' ? recommendListData : soldListData;
+              if (targetList.posts.length === 0) setTabRefreshing(true);
             }
           }}
           loadingTab={tabRefreshing ? tab : null}
         />
       </div>
 
-      <FeedWithPreload
-        showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
-        skeletonCount={3}
-      >
-        <PostFeed
+      {!mounted || !feedReady ? (
+        <FeedSkeleton count={3} />
+      ) : (
+        <LikedFeedBlock
+          showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
+          skeletonCount={3}
           posts={postListData.posts}
           session={postListData.session}
           likedPosts={postListData.likedPosts}
@@ -233,7 +267,7 @@ export function LikedPostsContent() {
           onLoadMore={() => postListData.setPage((p) => p + 1)}
           hideBoost={tab === 'sold'}
         />
-      </FeedWithPreload>
+      )}
 
       <InteractionModal
         show={interactionModalHook.interactionModal.show}

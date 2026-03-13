@@ -1,33 +1,22 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePostListData } from '@/hooks/usePostListData';
+import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
-import { useHomeLikedSaved } from '@/hooks/useHomeLikedSaved';
-import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
-import { SuccessPopup } from '@/components/modals/SuccessPopup';
-import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { useMenu } from '@/hooks/useMenu';
 import { useViewingPost } from '@/hooks/useViewingPost';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { HomeFeedBody } from './HomeFeedBody';
+import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
 export type SoldTabFeedWrapperProps = {
-  /** ค่าว่าง = ທຸກແຂວງ — ใช้กับฟิลเตอร์จังหวัดใน header */
-  province?: string;
-  session: any;
-  sessionReady: boolean;
-  sharedLikedSaved: ReturnType<typeof useHomeLikedSaved>;
-  soldTabRefreshRef: React.MutableRefObject<{
-    setPage: (v: number | ((p: number) => number)) => void;
-    setHasMore: (v: boolean) => void;
-    fetchPosts: (isInitial?: boolean) => Promise<void>;
-  } | null>;
-  onLoadingMoreChange: (loading: boolean) => void;
-  onPostsChange: (posts: any[]) => void;
+  /** ข้อมูล feed แท็บขายแล้วจากหน้าหลัก — เก็บไว้ไม่หายเมื่อสลับแท็บ */
+  soldListData: UsePostListDataReturn;
   menu: ReturnType<typeof useMenu>;
   viewingPostHook: ReturnType<typeof useViewingPost>;
   headerScroll: ReturnType<typeof useHeaderScroll>;
@@ -47,15 +36,9 @@ export type SoldTabFeedWrapperProps = {
   handleSubmitReportRef: React.MutableRefObject<(() => void) | null>;
 };
 
-/** โหลดข้อมูลแท็บขายแล้วเฉพาะเมื่อเปิดแท็บนี้ (lazy) — ลดงานตอนโหลดหน้าโฮม */
+/** แสดง feed แท็บขายแล้ว — รับข้อมูลจากหน้าหลัก เพื่อให้สลับแท็บแล้วแสดงทันทีโดยไม่โหลดใหม่ */
 export function SoldTabFeedWrapper({
-  province = '',
-  session,
-  sessionReady,
-  sharedLikedSaved,
-  soldTabRefreshRef,
-  onLoadingMoreChange,
-  onPostsChange,
+  soldListData,
   menu,
   viewingPostHook,
   headerScroll,
@@ -74,38 +57,6 @@ export function SoldTabFeedWrapper({
   postsRef,
   handleSubmitReportRef,
 }: SoldTabFeedWrapperProps) {
-  const soldListData = usePostListData({
-    type: 'sold',
-    session,
-    sessionReady,
-    status: 'sold',
-    sharedLikedSaved,
-    province,
-  });
-
-  // โหลดเมื่อเปิดแท็บ และ refetch เมื่อเปลี่ยนจังหวัด (ฟิลเตอร์)
-  useEffect(() => {
-    soldTabRefreshRef.current = {
-      setPage: soldListData.setPage,
-      setHasMore: soldListData.setHasMore,
-      fetchPosts: soldListData.fetchPosts,
-    };
-    soldListData.setPage(0);
-    soldListData.setHasMore(true);
-    soldListData.fetchPosts(true);
-    return () => {
-      soldTabRefreshRef.current = null;
-    };
-  }, [province]);
-
-  useEffect(() => {
-    onLoadingMoreChange(soldListData.loadingMore);
-  }, [soldListData.loadingMore, onLoadingMoreChange]);
-
-  useEffect(() => {
-    onPostsChange(soldListData.posts);
-  }, [soldListData.posts, onPostsChange]);
-
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: soldListData.loadingMore,
     hasMore: soldListData.hasMore,
