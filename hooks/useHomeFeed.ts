@@ -205,30 +205,25 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       }
 
       if (isInitial) {
-        setPosts(ordered);
-        // โหลดรูปล่วงหน้าชุดแรก (โพสที่เห็นบนจอ + ล่วงหน้า 2–3 โพส) ให้รู้สึกสมูทแบบ Facebook
-        preloadPostImages(ordered, 2);
-        fireInitialLoadDone();
-        // หลังผู้ใช้โพสต์: แปะโพสต์ของตัวเองบนสุดของ feed (เหนือ Ad / รายการอื่น) จนกว่าจะ refresh
-        const justPostedId =
-          typeof window !== 'undefined' ? window.localStorage.getItem('just_posted_post_id') : null;
-        if (justPostedId && justPostedId.trim() !== '') {
-          const { data: justPost } = await supabase
-            .from('cars')
-            .select(POST_WITH_PROFILE_SELECT)
-            .eq('id', justPostedId.trim())
-            .maybeSingle();
-          if (currentFetchId !== fetchIdRef.current) return;
-          if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
-            const rest = ordered.filter((p: any) => String(p.id) !== String(justPostedId));
-            setPosts([justPost, ...rest]);
-          }
+        // ใช้โพสที่เก็บไว้จาก create-post แสดงครั้งเดียว ไม่ fetch แยก เพื่อไม่ให้จอกระพริบ
+        let initialList = ordered;
+        if (typeof window !== 'undefined') {
           try {
+            const raw = window.localStorage.getItem('just_posted_post');
+            const justPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
+            if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
+              const rest = ordered.filter((p: any) => String(p.id) !== String(justPost.id));
+              initialList = [justPost, ...rest];
+            }
+            window.localStorage.removeItem('just_posted_post');
             window.localStorage.removeItem('just_posted_post_id');
           } catch {
             // ignore
           }
         }
+        setPosts(initialList);
+        preloadPostImages(initialList, 2);
+        fireInitialLoadDone();
         try {
           if (typeof window !== 'undefined') {
             window.localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({
@@ -261,6 +256,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setHasMore(true);
     try {
       if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('just_posted_post');
         window.localStorage.removeItem('just_posted_post_id');
         window.localStorage.removeItem(FEED_CACHE_KEY);
       }
@@ -272,9 +268,18 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
-    setPosts([]);
-    setLoadingMore(true);
     let fromCache = false;
+    // อ่านโพสที่พึ่งโพสกับแคชพร้อมกัน แล้ว set รายการครั้งเดียว เพื่อไม่ให้จอกระพริบ
+    let justPostedPost: any = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = window.localStorage.getItem('just_posted_post');
+        justPostedPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
+        if (!justPostedPost || justPostedPost.status !== 'recommend' || justPostedPost.is_hidden) justPostedPost = null;
+      } catch {
+        justPostedPost = null;
+      }
+    }
     try {
       if (typeof window !== 'undefined') {
         const raw = window.localStorage.getItem(FEED_CACHE_KEY);
@@ -284,10 +289,12 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
             const age = Date.now() - (parsed.ts || 0);
             if (age < FEED_CACHE_MAX_AGE_MS) {
               const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
-              setPosts(cachedPosts);
+              const initialPosts = justPostedPost
+                ? [justPostedPost, ...cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id))]
+                : cachedPosts;
+              setPosts(initialPosts);
               setLoadingMore(false);
-              // โหลดรูปล่วงหน้าแบบ Facebook — รูปพร้อมก่อนผู้ใช้เลื่อนเห็น
-              preloadPostImages(cachedPosts, 2);
+              preloadPostImages(initialPosts, 2);
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;
@@ -295,24 +302,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
                 initialLoadDoneFiredRef.current = true;
                 onInitialLoadDone();
               }
-              // แสดงโพสที่เพิ่งโพสทันทีเมื่อกลับจาก create-post (ไม่ต้องรอ background fetch)
-              const justPostedId = typeof window !== 'undefined' ? window.localStorage.getItem('just_posted_post_id') : null;
-              if (justPostedId && justPostedId.trim() !== '') {
-                supabase
-                  .from('cars')
-                  .select(POST_WITH_PROFILE_SELECT)
-                  .eq('id', justPostedId.trim())
-                  .maybeSingle()
-                  .then(({ data: justPost }) => {
-                    if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
-                      setPosts((prev) => {
-                        const hasIt = prev.some((p: any) => String(p.id) === String(justPostedId));
-                        if (hasIt) return prev;
-                        return [justPost, ...prev];
-                      });
-                    }
-                  });
-              }
+              // ยังไม่ลบ just_posted_post ที่นี่ — รอให้ fetch ในพื้นหลังเสร็จแล้วเอาโพสนั้นไปไว้บนสุดก่อน ค่อยลบใน fetchPosts
             }
           }
         }
@@ -320,11 +310,20 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } catch {
       // ignore
     }
-    setPage(0);
     if (!fromCache) {
+      const initialPosts = justPostedPost ? [justPostedPost] : [];
+      setPosts(initialPosts);
+      setLoadingMore(!justPostedPost);
       setHasMore(true);
+      if (justPostedPost && onInitialLoadDone && !initialLoadDoneFiredRef.current) {
+        initialLoadDoneFiredRef.current = true;
+        onInitialLoadDone();
+      }
     }
-    if (initialLoadFromCacheRef.current) {
+    setPage(0);
+    // มีแคชหรือมีโพสที่พึ่งโพสอยู่แล้ว = โหลดในพื้นหลังโดยไม่แสดงสปินเนอร์ (ไม่กระพริบ)
+    const backgroundOnly = initialLoadFromCacheRef.current || !!justPostedPost;
+    if (backgroundOnly) {
       fetchPostsRef.current(true, undefined, true);
     } else {
       fetchPostsRef.current(true);

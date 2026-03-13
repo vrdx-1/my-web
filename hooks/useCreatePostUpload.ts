@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { compressImage } from '@/utils/imageCompression';
+import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 
 interface UseCreatePostUploadParams {
   session: any;
@@ -151,9 +152,17 @@ export function useCreatePostUpload({
         localStorage.setItem('my_guest_posts', JSON.stringify(myPosts));
       }
 
-      // บันทึก ID ของโพสต์ที่เพิ่งสร้าง เพื่อให้หน้า Home ดึงมาแสดงไว้บนสุดชั่วคราว
+      // บันทึกโพสต์ที่เพิ่งสร้างแบบเต็ม (พร้อม profile) เพื่อให้หน้า Home แสดงทันทีโดยไม่กระพริบ
       if (typeof window !== 'undefined' && data && data.length > 0) {
         try {
+          const { data: fullPost } = await supabase
+            .from('cars')
+            .select(POST_WITH_PROFILE_SELECT)
+            .eq('id', data[0].id)
+            .maybeSingle();
+          if (fullPost && fullPost.status === 'recommend' && !fullPost.is_hidden) {
+            window.localStorage.setItem('just_posted_post', JSON.stringify(fullPost));
+          }
           window.localStorage.setItem('just_posted_post_id', String(data[0].id));
         } catch {
           // ถ้า localStorage ใช้งานไม่ได้ ให้ข้ามโดยไม่กระทบ flow เดิม
