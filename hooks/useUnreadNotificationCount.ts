@@ -63,12 +63,15 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
     }
   }, [userId]);
 
+  const isOnNotificationPage =
+    pathname === '/notification' || (pathname?.startsWith && pathname.startsWith('/notification/'));
+
   useEffect(() => {
     if (!userId) {
       setUnreadCount(0);
       return;
     }
-    if (pathname === '/notification') return;
+    if (isOnNotificationPage) return;
     setUnreadCount((prev) => (prev === 0 ? getCachedUnreadCount(userId) : prev));
     const runFetch = () => fetchUnreadCount();
     // หน้าโฮม: defer ยาวขึ้นเพื่อให้ฟีดโหลดก่อน ไม่แข่ง network
@@ -81,7 +84,7 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
     }
     const t = window.setTimeout(runFetch, delayMs);
     return () => clearTimeout(t);
-  }, [userId, pathname, fetchUnreadCount]);
+  }, [userId, pathname, fetchUnreadCount, isOnNotificationPage]);
 
   // Re-fetch when returning to this tab/page
   useEffect(() => {
@@ -101,11 +104,15 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
   // เข้าหรือออกจากหน้าแจ้งเตือน → ลบตัวเลขแจ้งเตือนทันที; ออกจากหน้าแล้วค่อยอัปเดต cache เมื่อเครื่องว่าง (ไม่บล็อกการสลับหน้า)
   useEffect(() => {
     const prev = prevPathnameRef.current;
+    const prevIsNotification =
+      prev === '/notification' || (prev?.startsWith && prev.startsWith('/notification/'));
     prevPathnameRef.current = pathname ?? null;
-    if (pathname === '/notification') {
+    if (isOnNotificationPage) {
       setUnreadCount(0);
-    } else if (prev === '/notification') {
+      setCachedUnreadCount(userId, 0);
+    } else if (prevIsNotification) {
       setUnreadCount(0);
+      setCachedUnreadCount(userId, 0);
       const deferRefetch = () => {
         if (userId) fetchUnreadCount();
       };
@@ -115,7 +122,7 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
         window.setTimeout(deferRefetch, 500);
       }
     }
-  }, [pathname, userId, fetchUnreadCount]);
+  }, [pathname, userId, fetchUnreadCount, isOnNotificationPage]);
 
   return { unreadCount, refetch: fetchUnreadCount };
 }
