@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -24,6 +24,7 @@ import { useHomeTabData, type HomeTab } from '@/hooks/useHomeTabData';
 import { useHomeRefresh } from '@/hooks/useHomeRefresh';
 import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
+import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 
 import { HomeFeedBody } from './HomeFeedBody';
 import { SoldTabFeedWrapper } from './SoldTabFeedWrapper';
@@ -55,6 +56,10 @@ export function HomePageContent() {
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
   /** ใช้แยก "กำลังรอผลค้นหา" (แสดง skeleton) กับ "ค้นหาเสร็จแล้วไม่มีรายการ" (แสดง ຍັງບໍ່ມີລາຍການ) */
   const searchResolvedRef = useRef(false);
+  /** จำ scroll ของแท็บพร้อมขาย/ขายแล้ว — สลับแท็บแล้วกลับมาเห็นจุดเดิม (แบบ MainTabPanels) */
+  const recommendScrollRef = useRef(0);
+  const soldScrollRef = useRef(0);
+  const prevShowSoldRef = useRef<boolean | null>(null);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
@@ -151,15 +156,78 @@ export function HomePageContent() {
     hasSearchResultsCache: hasSearch && searchData.posts.length > 0,
   });
 
+  /** บันทึก scroll ก่อนสลับแท็บ — ใช้แบบเดียวกับ saveCurrentScroll ก่อน router.push (ลงทะเบียนให้ header เรียกตอนกดแท็บ) */
+  const homeTabScroll = useHomeTabScroll();
+  const headerVisibility = useHeaderVisibilityContext();
+  useEffect(() => {
+    if (!homeTabScroll?.saveBeforeSwitchRef) return;
+    homeTabScroll.saveBeforeSwitchRef.current = () => {
+      const y = typeof window !== 'undefined' ? window.scrollY : 0;
+      if (isSoldTabNoSearch) soldScrollRef.current = y;
+      else recommendScrollRef.current = y;
+    };
+    return () => {
+      homeTabScroll.saveBeforeSwitchRef.current = null;
+    };
+  }, [homeTabScroll, isSoldTabNoSearch]);
+
+  /** สลับแท็บแล้ว: คืนค่า scroll — ฝั่งพร้อมขายเลื่อนลึกแล้วต้อง retry จน layout สูงพอ (เบราว์เซอร์ clamp ถ้า scrollHeight ยังไม่พอ) */
+  const recommendPanelRef = useRef<HTMLDivElement | null>(null);
+  const suppressHideUntilRef = useRef<number | null>(null);
+  const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
+  setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
+  useLayoutEffect(() => {
+    const showSold = isSoldTabNoSearch;
+    const prev = prevShowSoldRef.current;
+    prevShowSoldRef.current = showSold;
+    if (prev === null) return;
+    if (prev !== showSold) {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      suppressHideUntilRef.current = now + 400;
+      const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
+      const showHeaderAfterRestore = () => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setHeaderVisibleRef.current?.(true));
+        });
+      };
+      if (typeof window !== 'undefined' && Number.isFinite(toRestore)) {
+        if (showSold) {
+          window.scrollTo(0, toRestore);
+          showHeaderAfterRestore();
+        } else {
+          const targetY = toRestore;
+          let attempts = 0;
+          const maxAttempts = 25;
+          const tryScroll = () => {
+            const el = recommendPanelRef.current;
+            if (el) void el.offsetHeight;
+            window.scrollTo(0, targetY);
+            attempts += 1;
+            const current = window.scrollY;
+            const diff = Math.abs(current - targetY);
+            if (diff > 2 && attempts < maxAttempts) {
+              requestAnimationFrame(tryScroll);
+            } else {
+              showHeaderAfterRestore();
+            }
+          };
+          requestAnimationFrame(() => requestAnimationFrame(tryScroll));
+        }
+      } else {
+        showHeaderAfterRestore();
+      }
+    }
+  }, [isSoldTabNoSearch, headerVisibility]);
+
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const headerVisibility = useHeaderVisibilityContext();
   const interactionModalHook = useInteractionModal();
   const isBottomSheetOpen = interactionModalHook.interactionModal.show;
   const headerScroll = useHeaderScroll({
     disableScrollHide: isBottomSheetOpen,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
+    suppressHideUntilRef,
   });
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
@@ -275,28 +343,8 @@ export function HomePageContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div>
-        {isSoldTabNoSearch ? (
-          <SoldTabFeedWrapper
-            soldListData={soldListData}
-            menu={menu}
-            viewingPostHook={viewingPostHook}
-            headerScroll={headerScroll}
-            fullScreenViewer={fullScreenViewer}
-            reportingPost={reportingPost}
-            setReportingPost={setReportingPost}
-            reportReason={reportReason}
-            setReportReason={setReportReason}
-            isSubmittingReport={isSubmittingReport}
-            setIsSubmittingReport={setIsSubmittingReport}
-            justLikedPosts={justLikedPosts}
-            setJustLikedPosts={setJustLikedPosts}
-            justSavedPosts={justSavedPosts}
-            setJustSavedPosts={setJustSavedPosts}
-            fetchInteractions={fetchInteractions}
-            postsRef={postsRef}
-            handleSubmitReportRef={handleSubmitReportRef}
-          />
-        ) : (
+        {/* แท็บพร้อมขาย (หรือค้นหา): เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll */}
+        <div ref={recommendPanelRef} style={{ display: isSoldTabNoSearch ? 'none' : 'block' }} aria-hidden={isSoldTabNoSearch}>
           <HomeFeedBody
             showSkeleton={showFeedSkeleton}
             skeletonCount={3}
@@ -326,10 +374,33 @@ export function HomePageContent() {
               loadingMore: postList.hasMore ? postList.loadingMore : false,
               hasMore: postList.hasMore ?? true,
               onLoadMore: () => postList.setPage((p: number) => p + 1),
-              hideBoost: tab === 'sold',
+              hideBoost: false,
             }}
           />
-        )}
+        </div>
+        {/* แท็บขายแล้ว: เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll */}
+        <div style={{ display: isSoldTabNoSearch ? 'block' : 'none' }} aria-hidden={!isSoldTabNoSearch}>
+          <SoldTabFeedWrapper
+            soldListData={soldListData}
+            menu={menu}
+            viewingPostHook={viewingPostHook}
+            headerScroll={headerScroll}
+            fullScreenViewer={fullScreenViewer}
+            reportingPost={reportingPost}
+            setReportingPost={setReportingPost}
+            reportReason={reportReason}
+            setReportReason={setReportReason}
+            isSubmittingReport={isSubmittingReport}
+            setIsSubmittingReport={setIsSubmittingReport}
+            justLikedPosts={justLikedPosts}
+            setJustLikedPosts={setJustLikedPosts}
+            justSavedPosts={justSavedPosts}
+            setJustSavedPosts={setJustSavedPosts}
+            fetchInteractions={fetchInteractions}
+            postsRef={postsRef}
+            handleSubmitReportRef={handleSubmitReportRef}
+          />
+        </div>
       </div>
 
       <InteractionModal

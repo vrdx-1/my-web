@@ -87,6 +87,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
       setFirstFeedLoaded(true);
     },
     sharedLikedSaved,
+    isActive: pathname === '/home',
   });
 
   const searchData = useSearchPosts({

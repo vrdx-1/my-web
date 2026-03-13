@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
 
 const BOTTOM_NAV_PATHS = ['/home', '/notification', '/profile'];
 
@@ -33,7 +34,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const isNavVisible = hideNavWithScroll ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   return (
-    <>
+    <MainTabScrollProvider>
       {needCreatePostHandler && <CreatePostHandlerRegistration />}
       <div className={showNav ? 'bottom-nav-content-padding' : undefined}>
         {children}
@@ -56,6 +57,6 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
           <BottomNav />
         </div>
       )}
-    </>
+    </MainTabScrollProvider>
   );
 }

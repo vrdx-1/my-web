@@ -76,7 +76,13 @@ export interface NotificationItemWithTime extends NotificationFeedItem {
   timeAgoText: string;
 }
 
-export function useNotificationPage() {
+export interface UseNotificationPageOptions {
+  /** เมื่อ false = ไม่อัปเดต state หลัง fetch (ใช้ตอนสลับออกจากหน้าแต่ยังเก็บหน้าไว้แบบ MainTabPanels) */
+  isActive?: boolean;
+}
+
+export function useNotificationPage(options: UseNotificationPageOptions = {}) {
+  const { isActive = true } = options;
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationFeedItem[]>([]);
@@ -114,6 +120,8 @@ export function useNotificationPage() {
       isMountedRef.current = false;
     };
   }, []);
+
+  /** ไม่ผูก isMountedRef กับ isActive — ให้รับผล fetch เสมอ เก็บข้อมูลไว้ พอสลับมาแจ้งเตือนจะได้โชว์ทันที ไม่ช้า */
 
   const markPageAsRead = useCallback(async (userId: string, rawFeed: any[]) => {
     if (rawFeed.length === 0) return;

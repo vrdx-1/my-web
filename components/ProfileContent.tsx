@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { supabase } from '@/lib/supabase';
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { LAO_FONT } from '@/utils/constants';
@@ -21,10 +22,39 @@ interface ProfileContentProps {
 
 export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [session, setSession] = useState<any>(null);
+
+  const mainTabScroll = useMainTabScroll();
+  useLayoutEffect(() => {
+    if (!mainTabScroll) return;
+    const getScroll = () => scrollContainerRef.current?.scrollTop ?? 0;
+    const setScroll = (y: number) => {
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = y;
+    };
+    mainTabScroll.registerScroll('/profile', getScroll, setScroll);
+    return () => mainTabScroll.unregisterScroll('/profile');
+  }, [mainTabScroll]);
+
+  /** สลับมาหน้าโปรไฟล์ → ล็อก scroll: ดึง window ขึ้นบนเสมอ ไม่งั้นจะเลื่อนตามตำแหน่งของหน้าโฮม */
+  useLayoutEffect(() => {
+    if (pathname !== '/profile') return;
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  }, [pathname]);
+
+  useLayoutEffect(() => {
+    if (pathname !== '/profile' || !session) return;
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = 0;
+    const id = requestAnimationFrame(() => {
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [pathname, session]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -142,7 +172,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     return (
       <div
         className="profile-content-skeleton"
-        style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT }}
+        style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', height: '100vh', overflow: 'hidden', fontFamily: LAO_FONT }}
         aria-hidden
       >
         <style>{`
@@ -182,10 +212,20 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         margin: '0 auto',
         background: '#ffffff',
         backgroundColor: '#ffffff',
-        minHeight: '100vh',
+        height: '100vh',
+        overflow: 'hidden',
         fontFamily: LAO_FONT,
       }}
     >
+      <div
+        ref={scrollContainerRef}
+        style={{
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
       {onBack != null && (
         <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
           <button
@@ -244,6 +284,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           </svg>
           ການຕັ້ງຄ່າ
         </button>
+      </div>
       </div>
     </main>
   );

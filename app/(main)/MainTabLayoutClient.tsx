@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { TabNavigation } from '@/components/TabNavigation';
@@ -17,8 +17,10 @@ import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { markRouteVisited } from '@/utils/visitedRoutesStore';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { MainTabPanels } from './MainTabPanels';
+import { HomeTabScrollProvider, useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 
-export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
+function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { session, userProfile } = useSessionAndProfile();
@@ -30,11 +32,23 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
   const homeProvince = useHomeProvince();
+  const headerVisibility = useHeaderVisibilityContext();
+  const homeTabScroll = useHomeTabScroll();
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
     if (pathname) markRouteVisited(pathname);
   }, [pathname]);
+
+  /** สลับกลับมาหน้าโฮมเท่านั้น → แสดง navigation bar ครั้งเดียว (ไม่รันทุกครั้งที่ headerVisibility เปลี่ยน ไม่งั้นเลื่อนฟีดแล้ว nav จะไม่หาย) */
+  const prevPathnameRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+    if (pathname === '/home' && prev !== '/home') {
+      headerVisibility?.setHeaderVisible(true);
+    }
+  }, [pathname, headerVisibility]);
 
   useEffect(() => {
     const handler = () => fileUpload.handleCreatePostClick(session);
@@ -111,7 +125,6 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
   /** ความสูงรวมของ fixed block: header (~59) + tab bar (~45) */
   const HOME_FIXED_BLOCK_HEIGHT = 104;
 
-  const headerVisibility = useHeaderVisibilityContext();
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   return (
@@ -162,6 +175,10 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
               ]}
               activeTab={mainTab?.homeTab ?? 'recommend'}
               onTabChange={(v) => {
+                if (pathname === '/home') {
+                  homeTabScroll?.saveCurrentHomeTabScroll();
+                  headerVisibility?.setHeaderVisible(true);
+                }
                 homeProvince?.setSelectedProvince('');
                 mainTab?.triggerTabChange(v as 'recommend' | 'sold');
               }}
@@ -185,7 +202,19 @@ export function MainTabLayoutClient({ children }: { children: React.ReactNode })
         />
       )}
 
-      {children}
+      {pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? (
+        <MainTabPanels />
+      ) : (
+        children
+      )}
     </>
+  );
+}
+
+export function MainTabLayoutClient({ children }: { children: React.ReactNode }) {
+  return (
+    <HomeTabScrollProvider>
+      <MainTabLayoutClientInner>{children}</MainTabLayoutClientInner>
+    </HomeTabScrollProvider>
   );
 }

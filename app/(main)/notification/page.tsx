@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
 import { NotificationPostPreviewCard } from '@/components/NotificationPostPreviewCard';
 import { useNotificationPage } from '@/hooks/useNotificationPage';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
+import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import type { NotificationItemWithTime } from '@/hooks/useNotificationPage';
 
 /** การ์ดเดียว — ไม่สร้าง IntersectionObserver เอง เพื่อลดงานตอนสลับออก (observer เดียวที่ parent) */
@@ -107,6 +109,7 @@ function useNotificationListLazyImages(
 }
 
 export default function NotificationPage() {
+  const pathname = usePathname();
   const {
     loading,
     notifications,
@@ -117,7 +120,7 @@ export default function NotificationPage() {
     hasMore,
     scrollContainerRef,
     refresh,
-  } = useNotificationPage();
+  } = useNotificationPage({ isActive: pathname === '/notification' });
   const notificationRefreshContext = useNotificationRefreshContext();
   const didScrollToTopRef = useRef(false);
   const { visibleIndices, setCardRef } = useNotificationListLazyImages(
@@ -140,6 +143,25 @@ export default function NotificationPage() {
     notificationRefreshContext?.register(refresh);
     return () => notificationRefreshContext?.register(null);
   }, [notificationRefreshContext, refresh]);
+
+  const mainTabScroll = useMainTabScroll();
+  const prevPathnameRef = useRef<string | null>(null);
+  /** ลงทะเบียน scroll — default บนสุดเฉพาะตอนสลับมาหน้าแจ้งเตือน ไม่ใช่ตอนเลื่อนในหน้า */
+  useLayoutEffect(() => {
+    if (!mainTabScroll) return;
+    const getScroll = () => scrollContainerRef.current?.scrollTop ?? 0;
+    const setScroll = (y: number) => {
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = y;
+    };
+    mainTabScroll.registerScroll('/notification', getScroll, setScroll);
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+    if (prev !== '/notification' && pathname === '/notification') {
+      if (typeof window !== 'undefined') window.scrollTo(0, 0);
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+    }
+    return () => mainTabScroll.unregisterScroll('/notification');
+  }, [mainTabScroll, scrollContainerRef, pathname]);
 
   return (
     <main

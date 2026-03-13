@@ -13,6 +13,8 @@ interface UseHeaderScrollOptions {
   disableScrollHide?: boolean;
   /** เรียกทันทีใน scroll handler (ไม่รอ re-render) เพื่อให้ header/nav ตามจังหวะเลื่อน */
   onVisibilityChange?: (visible: boolean) => void;
+  /** ถ้า ref.current เป็น timestamp และ performance.now() < ref.current จะไม่ซ่อน header (ใช้หลังสลับแท็บโฮมเพื่อกันกระตุก) */
+  suppressHideUntilRef?: React.MutableRefObject<number | null>;
 }
 
 interface UseHeaderScrollReturn {
@@ -22,7 +24,7 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { loadingMore = false, disableScrollHide = false, onVisibilityChange } = options ?? {};
+  const { loadingMore = false, disableScrollHide = false, onVisibilityChange, suppressHideUntilRef } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
@@ -34,6 +36,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     if (lastAppliedVisibleRef.current === visible) return;
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (now < throttleUntilRef.current) return;
+    if (visible === false && suppressHideUntilRef?.current != null && now < suppressHideUntilRef.current) return;
     throttleUntilRef.current = now + VISIBILITY_THROTTLE_MS;
     lastAppliedVisibleRef.current = visible;
     setIsHeaderVisible(visible);

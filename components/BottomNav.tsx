@@ -9,6 +9,7 @@ import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
+import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
 const BOTTOM_NAV_HEIGHT = 56;
@@ -35,6 +36,7 @@ export function BottomNav() {
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
+  const mainTabScroll = useMainTabScroll();
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
@@ -142,6 +144,9 @@ export function BottomNav() {
           }
           if (pathname === path && path === '/profile') {
             return;
+          }
+          if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+            mainTabScroll?.saveCurrentScroll(pathname);
           }
           setPendingPath(path);
           startTransition(() => {

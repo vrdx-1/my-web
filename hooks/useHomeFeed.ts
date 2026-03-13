@@ -26,6 +26,8 @@ interface UseHomeFeedOptions {
   onInitialLoadDone?: () => void;
   /** ถ้ามี = ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำในหน้าโฮม) */
   sharedLikedSaved?: HomeLikedSavedShared | null;
+  /** เมื่อ false = หยุดโหลด (ใช้ตอนสลับออกจากหน้าโฮมแต่ยังเก็บหน้าไว้แบบ MainTabPanels) */
+  isActive?: boolean;
 }
 
 interface UseHomeFeedReturn {
@@ -46,7 +48,7 @@ interface UseHomeFeedReturn {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
-  const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved } = options;
+  const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -72,6 +74,16 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       abortControllerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isActive) {
+      cancelledRef.current = true;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+    } else {
+      cancelledRef.current = false;
+    }
+  }, [isActive]);
   /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
   const postsLengthRef = useRef(0);
   postsLengthRef.current = posts.length;
