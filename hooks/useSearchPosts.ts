@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 
@@ -45,6 +45,17 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
   const savedPostsOut = sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
   const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
   const setSavedPostsOut = sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
+  const cancelledRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentSession(sessionReady ? session : undefined);
@@ -72,10 +83,12 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     const likesColumn = isUser ? 'user_id' : 'guest_token';
     const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
     const savesColumn = isUser ? 'user_id' : 'guest_token';
+    let likesSavesCancelled = false;
     Promise.all([
       supabase.from(likesTable).select('post_id').eq(likesColumn, idOrToken),
       supabase.from(savesTable).select('post_id').eq(savesColumn, idOrToken),
     ]).then(([likedRes, savedRes]) => {
+      if (likesSavesCancelled) return;
       if (likedRes.data) {
         const map: { [key: string]: boolean } = {};
         likedRes.data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
@@ -87,6 +100,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
+    return () => { likesSavesCancelled = true; };
   }, [sessionReady, currentSession, sharedLikedSaved]);
 
   const fetchSearch = useCallback(async () => {
@@ -95,17 +109,25 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       setPosts([]);
       return;
     }
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set('q', q);
       if (province && province.trim() !== '') params.set('province', province.trim());
-      const res = await fetch(`/api/posts/search?${params.toString()}`);
+      const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
+      if (cancelledRef.current) return;
       const data = await res.json().catch(() => ({}));
+      if (cancelledRef.current) return;
       const list = Array.isArray(data.posts) ? data.posts : [];
       setPosts(list);
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return;
+      throw e;
     } finally {
-      setLoading(false);
+      if (!cancelledRef.current) setLoading(false);
     }
   }, [query, province]);
 

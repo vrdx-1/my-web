@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { useViewingPost } from '@/hooks/useViewingPost';
@@ -26,6 +26,12 @@ export function useNotificationDetail(id: string | undefined) {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [boostInfo, setBoostInfo] = useState<{ status: string; expiresAt: string | null } | null>(null);
   const [showBoostDetails, setShowBoostDetails] = useState(false);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => { cancelledRef.current = true; };
+  }, []);
 
   const menu = useMenu();
   const viewingPostHook = useViewingPost();
@@ -85,6 +91,7 @@ export function useNotificationDetail(id: string | undefined) {
     const table = isUser ? 'post_likes' : 'post_likes_guest';
     const column = isUser ? 'user_id' : 'guest_token';
     const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
+    if (cancelledRef.current) return;
     if (data) {
       const map: { [key: string]: boolean } = {};
       data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
@@ -96,6 +103,7 @@ export function useNotificationDetail(id: string | undefined) {
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
     const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
+    if (cancelledRef.current) return;
     if (data) {
       const map: { [key: string]: boolean } = {};
       data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
@@ -104,7 +112,9 @@ export function useNotificationDetail(id: string | undefined) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (cancelled) return;
       setSession(s);
       if (s) {
         fetchLikedStatus(s.user.id, true);
@@ -115,12 +125,14 @@ export function useNotificationDetail(id: string | undefined) {
         fetchSavedStatus(token, false);
       }
     });
+    return () => { cancelled = true; };
   }, [fetchLikedStatus, fetchSavedStatus]);
 
   const fetchPostDetail = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     const { data } = await supabase.from('cars').select('*, profiles!cars_user_id_fkey(*)').eq('id', id).single();
+    if (cancelledRef.current) return;
     setPost(data ?? null);
     setLoading(false);
   }, [id]);
@@ -133,6 +145,7 @@ export function useNotificationDetail(id: string | undefined) {
       .eq('post_id', id)
       .order('created_at', { ascending: false })
       .limit(1);
+    if (cancelledRef.current) return;
     if (!error && data?.length) {
       const row = data[0] as any;
       setBoostInfo({ status: String(row.status), expiresAt: row.expires_at ?? null });

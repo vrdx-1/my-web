@@ -60,6 +60,18 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const setSavedPostsOut = sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
   const fetchIdRef = useRef(0);
   const initialLoadDoneFiredRef = useRef(false);
+  /** ยกเลิกการโหลดเมื่อออกจากหน้า — ใช้ใน cleanup และก่อน setState หลัง await */
+  const cancelledRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+    };
+  }, []);
   /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
   const postsLengthRef = useRef(0);
   postsLengthRef.current = posts.length;
@@ -105,10 +117,12 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const likesColumn = isUser ? 'user_id' : 'guest_token';
     const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
     const savesColumn = isUser ? 'user_id' : 'guest_token';
+    let likesSavesCancelled = false;
     Promise.all([
       supabase.from(likesTable).select('post_id').eq(likesColumn, idOrToken),
       supabase.from(savesTable).select('post_id').eq(savesColumn, idOrToken),
     ]).then(([likedRes, savedRes]) => {
+      if (likesSavesCancelled) return;
       if (likedRes.data) {
         const map: { [key: string]: boolean } = {};
         likedRes.data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
@@ -120,10 +134,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         setSavedPosts(prev => ({ ...prev, ...map }));
       }
     });
+    return () => { likesSavesCancelled = true; };
   }, [sessionReady, currentSession, sharedLikedSaved]);
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     const currentFetchId = ++fetchIdRef.current;
     if (!(isInitial && backgroundRefresh)) setLoadingMore(true);
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
@@ -159,8 +177,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal,
       });
+      if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
       const data = await res.json().catch(() => ({}));
+      if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
       const postIds: string[] = Array.isArray(data.postIds) ? data.postIds : [];
       // ได้ครบหนึ่งหน้า = มีหน้าถัดไป; ได้น้อยกว่าแต่ยังมีรายการ = โหลดต่อ (กรณี backend limit) ไม่หยุดก่อนถึงจริง
       const fullPage = !isInitial && postIds.length >= pageSize;
@@ -168,7 +189,6 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       const nextHasMore = !!data.hasMore || fullPage || partialPage;
       const apiPosts: any[] = Array.isArray(data.posts) ? data.posts : [];
 
-      if (currentFetchId !== fetchIdRef.current) return;
       setHasMore(nextHasMore);
 
       if (postIds.length === 0) {
@@ -176,7 +196,6 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           setPosts([]);
           fireInitialLoadDone();
         }
-        setLoadingMore(false);
         return;
       }
 
@@ -190,11 +209,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           .in('id', postIds)
           .order('created_at', { ascending: false });
 
-        if (currentFetchId !== fetchIdRef.current) return;
-        if (error) {
-          setLoadingMore(false);
-          return;
-        }
+        if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
+        if (error) return;
         const order = new Map(postIds.map((id, i) => [String(id), i]));
         ordered = (postsData || []).filter((p: any) => p.status === 'recommend' && !p.is_hidden);
         ordered.sort((a: any, b: any) => {
@@ -203,6 +219,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           return ai - bi;
         });
       }
+
+      if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
 
       if (isInitial) {
         // ใช้โพสที่เก็บไว้จาก create-post แสดงครั้งเดียว ไม่ fetch แยก เพื่อไม่ให้จอกระพริบ
@@ -243,8 +261,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           return newOnes.length ? [...prev, ...newOnes] : prev;
         });
       }
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return;
+      throw e;
     } finally {
-      if (fetchIdRef.current === currentFetchId) setLoadingMore(false);
+      if (!cancelledRef.current && fetchIdRef.current === currentFetchId) setLoadingMore(false);
     }
   }, [page, loadingMore, province, fireInitialLoadDone]);
   const fetchPostsRef = useRef(fetchPosts);
