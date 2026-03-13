@@ -20,6 +20,8 @@ export interface UseHomeTabSwitchOptions {
   setTabRefreshing: (v: boolean) => void;
   /** มีรายการขายแล้วโหลดไว้แล้ว — สลับมาแสดงทันที ไม่โหลดใหม่ */
   hasSoldTabCache?: boolean;
+  /** มีรายการพร้อมขายโหลดไว้แล้ว — สลับกลับมาแสดงทันที ไม่โหลดใหม่ */
+  hasRecommendTabCache?: boolean;
 }
 
 export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
@@ -32,6 +34,7 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
     soldTabRefreshRef,
     setTabRefreshing,
     hasSoldTabCache = false,
+    hasRecommendTabCache = false,
   } = options;
 
   const setTabAndRefresh = useCallback(
@@ -59,6 +62,10 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
         if (newTab === 'sold' && hasSoldTabCache) {
           setTabRefreshing(false);
           mainTab?.setTabRefreshing(false);
+        } else if (newTab === 'recommend' && (searchQuery.trim() ? false : hasRecommendTabCache)) {
+          // มี cache ฝั่งพร้อมขาย (ไม่มี search) — แสดงทันที ไม่โหลดใหม่
+          setTabRefreshing(false);
+          mainTab?.setTabRefreshing(false);
         } else {
           setTabRefreshing(true);
           if (newTab === 'recommend') {
@@ -73,7 +80,7 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
         }
       }
     },
-    [tab, mainTab, searchQuery, recommendFeed, searchData, soldTabRefreshRef, setTabRefreshing, hasSoldTabCache]
+    [tab, mainTab, searchQuery, recommendFeed, searchData, soldTabRefreshRef, setTabRefreshing, hasSoldTabCache, hasRecommendTabCache]
   );
 
   useEffect(() => {

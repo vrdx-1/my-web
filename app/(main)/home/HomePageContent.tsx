@@ -147,6 +147,7 @@ export function HomePageContent() {
     soldTabRefreshRef,
     setTabRefreshing,
     hasSoldTabCache: soldListData.posts.length > 0,
+    hasRecommendTabCache: recommendFeed.posts.length > 0,
   });
 
   const menu = useMenu();
