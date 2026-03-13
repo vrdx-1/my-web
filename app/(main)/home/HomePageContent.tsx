@@ -148,6 +148,7 @@ export function HomePageContent() {
     setTabRefreshing,
     hasSoldTabCache: soldListData.posts.length > 0,
     hasRecommendTabCache: recommendFeed.posts.length > 0,
+    hasSearchResultsCache: hasSearch && searchData.posts.length > 0,
   });
 
   const menu = useMenu();
