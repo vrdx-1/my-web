@@ -52,7 +52,7 @@ export function LikedPostsContent() {
     type: 'liked',
     session: sessionState,
     tab,
-    loadAll: true, // โหลดโพสต์ที่กดถูกใจทั้งหมดครั้งเดียว
+    // โหลดทีละน้อยแบบหน้าโฮม (6 แล้ว 10) เพื่อไม่ให้หน่วง
   });
   postsRef.current = postListData.posts;
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LIST_FEED_PAGE_SIZE } from '@/utils/constants';
+import { LIST_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
@@ -159,9 +159,15 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     if (!skipSkeleton) setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
-    // ใช้ LIST_FEED_PAGE_SIZE เพื่อโหลดครบตาม backend: หน้า 0 = [0..19], หน้า 1 = [20..39], ...
-    const rangeStart = currentPage * LIST_FEED_PAGE_SIZE;
-    const rangeEnd = rangeStart + LIST_FEED_PAGE_SIZE - 1;
+    // หน้า liked/saved โหลดทีละน้อยแบบโฮม (6 แล้ว 10); หน้าอื่นใช้ LIST_FEED_PAGE_SIZE
+    const isIncrementalList = type === 'liked' || type === 'saved';
+    const listPageSize = isIncrementalList
+      ? (currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE)
+      : LIST_FEED_PAGE_SIZE;
+    const rangeStart = isIncrementalList
+      ? (currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE)
+      : currentPage * LIST_FEED_PAGE_SIZE;
+    const rangeEnd = rangeStart + listPageSize - 1;
     
     // ตรวจสอบ currentUserId อย่างเข้มงวด - ต้องไม่เป็น null, undefined, หรือ string "null"
     let currentUserId: string | null = null;
@@ -255,10 +261,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .eq(column, idOrToken)
           .order('created_at', { ascending: false });
 
-        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
-        if (!loadAll) {
-          savesQuery = savesQuery.range(rangeStart, rangeEnd);
-        }
+        // saved โหลดทีละน้อย (ไม่ใช้ loadAll)
+        savesQuery = savesQuery.range(rangeStart, rangeEnd);
 
         const { data: savesData, error: savesError } = await savesQuery;
         
@@ -317,10 +321,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .eq(column, idOrToken)
           .order('created_at', { ascending: false });
 
-        // ถ้าไม่ได้ตั้งค่า loadAll ให้ใช้ pagination ตามเดิม
-        if (!loadAll) {
-          likesQuery = likesQuery.range(rangeStart, rangeEnd);
-        }
+        // liked โหลดทีละน้อย (ไม่ใช้ loadAll)
+        likesQuery = likesQuery.range(rangeStart, rangeEnd);
 
         const { data: likesData, error: likesError } = await likesQuery;
         
@@ -501,8 +503,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           // - my-posts: ผ่อนเงื่อนไขลง เหลือแค่ "ถ้าได้ 0 id" เท่านั้นถึงจะถือว่าหมด (กันเคสที่ Supabase คืนมาน้อยกว่าหนึ่งหน้า
           //   แต่ยังมีโพสต์หน้าถัดไป ซึ่งอาจเกิดจาก filter/RLS อื่น ๆ)
           if (fetchIdRef.current === currentFetchId) {
-            if (loadAll) {
-              // โหมดโหลดทั้งหมดครั้งเดียว: ไม่มีหน้าถัดไป
+            if (loadAll && !isIncrementalList) {
+              // โหมดโหลดทั้งหมดครั้งเดียว (เฉพาะ my-posts ที่ยังใช้ loadAll): ไม่มีหน้าถัดไป
               setHasMore(false);
             } else if (type === 'sold') {
               // sold จัดการ hasMore ไปแล้วด้านบน (ทั้งกรณี search และไม่ search)
@@ -511,8 +513,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 const noMoreIds = postIds.length === 0;
                 setHasMore(!noMoreIds);
               } else {
-                const reachedEndOfIds = postIds.length < LIST_FEED_PAGE_SIZE;
-                setHasMore(!reachedEndOfIds); // ถ้าได้น้อยกว่าหนึ่งหน้า = สิ้นสุดลิสต์จริง ๆ
+                // liked/saved: ใช้ listPageSize ของชุดนี้
+                const reachedEndOfIds = postIds.length < listPageSize;
+                setHasMore(!reachedEndOfIds);
               }
             }
           }
@@ -735,10 +738,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     await fetchPosts(true);
   }, [fetchPosts]);
 
-  // โหลดหน้าถัดไปอัตโนมัติจนหมด — ทั้งกรณีได้ครบหนึ่งหน้า และกรณีได้น้อยกว่าหนึ่งหน้า (filter/ซ้ำ) ก็โหลดต่อ
-  // ยกเว้น type 'my-posts' ที่ใช้ infinite scroll ภายนอกเป็นตัวควบคุมการเปลี่ยนหน้า (กัน page กระโดดข้าม)
+  // โหลดหน้าถัดไปอัตโนมัติจนหมด (เฉพาะ sold) — liked/saved ใช้ infinite scroll ให้ผู้ใช้เลื่อนโหลดเอง
   useEffect(() => {
-    if (type === 'my-posts' || loadAll) return;
+    if (type === 'my-posts' || type === 'liked' || type === 'saved' || loadAll) return;
     if (!hasMore || loadingMore) return;
     const expectedFull = (page + 1) * LIST_FEED_PAGE_SIZE;
     const gotFullPage = posts.length === expectedFull;
