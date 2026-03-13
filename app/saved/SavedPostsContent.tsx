@@ -171,11 +171,15 @@ export function SavedPostsContent() {
     [interactionModalHook],
   );
 
+  const handleBack = useCallback(() => {
+    router.push('/profile');
+  }, [router]);
+
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#ffffff', backgroundColor: '#ffffff' }}>
-        <PageHeader title="ລາຍການທີ່ບັນທຶກ" centerTitle onBack={() => { if (typeof window !== 'undefined') { window.location.href = '/profile'; } else { router.push('/profile'); } }} />
+        <PageHeader title="ລາຍການທີ່ບັນທຶກ" centerTitle onBack={handleBack} />
         <TabNavigation
           tabs={[
             { value: 'recommend', label: 'ພ້ອມຂາຍ' },
