@@ -152,7 +152,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   }, [router]);
 
   useEffect(() => {
-    if (!loading && !session) {
+    if (!loading && !session && pathname === '/profile') {
       if (onNotLoggedIn) {
         onNotLoggedIn();
       } else {
@@ -160,7 +160,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         router.replace('/home');
       }
     }
-  }, [loading, session, router, onNotLoggedIn]);
+  }, [loading, session, router, onNotLoggedIn, pathname]);
 
   if (loading) {
     const isAppProfile = onBack == null;

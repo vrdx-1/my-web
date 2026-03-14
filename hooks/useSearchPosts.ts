@@ -37,7 +37,9 @@ interface UseSearchPostsReturn {
 export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsReturn {
   const { query, province, session, sessionReady = true, sharedLikedSaved, enabled = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const q = (query || '').trim();
+  const shouldLoad = enabled && q.length > 0;
+  const [loading, setLoading] = useState(() => shouldLoad);
   const [currentSession, setCurrentSession] = useState<any>(sessionReady ? session : undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
@@ -141,6 +143,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       setPosts([]);
       return;
     }
+    setLoading(true);
     fetchSearch();
   }, [enabled, query, province, fetchSearch]);
 

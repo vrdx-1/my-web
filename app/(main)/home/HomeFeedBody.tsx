@@ -9,6 +9,12 @@ import { EmptyState } from '@/components/EmptyState';
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
+  /** เมื่อ true และ posts ว่าง → แสดง skeleton แทน "ຍັງບໍ່ມີລາຍການ" (ใช้ตอนกำลังค้นหา) */
+  forceSkeletonWhenEmpty?: boolean;
+  /** แสดง "ຍັງບໍ່ມີລາຍການ" ได้เฉพาะเมื่อ true (parent ส่ง false ตอนกำลังค้นหา) */
+  mayShowEmptyState?: boolean;
+  /** true = กำลังโหลดผลค้นหา → ถ้า posts ว่างให้แสดง skeleton เท่านั้น */
+  isSearchLoading?: boolean;
   skeletonCount: number;
   postFeedProps: {
     posts: any[];
@@ -41,7 +47,7 @@ export type HomeFeedBodyProps = {
 };
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
-export function HomeFeedBody({ showSkeleton, skeletonCount, postFeedProps }: HomeFeedBodyProps) {
+export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, postFeedProps }: HomeFeedBodyProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -80,7 +86,11 @@ export function HomeFeedBody({ showSkeleton, skeletonCount, postFeedProps }: Hom
     hideBoost = false,
   } = postFeedProps;
 
-  if (showSkeleton) {
+  const effectivelyShowSkeleton =
+    showSkeleton ||
+    (forceSkeletonWhenEmpty && posts.length === 0) ||
+    (isSearchLoading && posts.length === 0);
+  if (effectivelyShowSkeleton) {
     return (
       <FeedWithPreload showSkeleton={true} skeletonCount={skeletonCount}>
         <div style={{ display: 'contents' }} />
@@ -89,9 +99,10 @@ export function HomeFeedBody({ showSkeleton, skeletonCount, postFeedProps }: Hom
   }
 
   if (posts.length === 0) {
+    const showEmpty = mayShowEmptyState && !isSearchLoading && !loadingMore;
     return (
       <FeedWithPreload showSkeleton={false} skeletonCount={skeletonCount}>
-        {loadingMore ? null : <EmptyState message="ຍັງບໍ່ມີລາຍການ" variant="default" />}
+        {showEmpty ? <EmptyState message="ຍັງບໍ່ມີລາຍການ" variant="default" /> : <FeedSkeleton count={skeletonCount} />}
       </FeedWithPreload>
     );
   }

@@ -26,6 +26,7 @@ import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 
+import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
 import { SoldTabFeedWrapper } from './SoldTabFeedWrapper';
 
@@ -56,6 +57,10 @@ export function HomePageContent() {
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
   /** ใช้แยก "กำลังรอผลค้นหา" (แสดง skeleton) กับ "ค้นหาเสร็จแล้วไม่มีรายการ" (แสดง ຍັງບໍ່ມີລາຍການ) */
   const searchResolvedRef = useRef(false);
+  const prevSearchQueryRef = useRef<string>('');
+  const prevSearchLoadingRef = useRef(false);
+  /** ตั้ง true เมื่อเคยเห็น loading = true สำหรับคำค้นนี้ → แสดง "ไม่มีรายการ" ได้เฉพาะหลังโหลดเสร็จจริง */
+  const searchHasTriggeredRef = useRef(false);
   /** จำ scroll ของแท็บพร้อมขาย/ขายแล้ว — สลับแท็บแล้วกลับมาเห็นจุดเดิม (แบบ MainTabPanels) */
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);
@@ -128,8 +133,27 @@ export function HomePageContent() {
   const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
   postsRef.current = posts;
 
-  if (hasSearch && searchData.loading) searchResolvedRef.current = true;
-  if (!hasSearch) searchResolvedRef.current = false;
+  if (!hasSearch) {
+    searchResolvedRef.current = false;
+    prevSearchQueryRef.current = '';
+    prevSearchLoadingRef.current = false;
+    searchHasTriggeredRef.current = false;
+  } else {
+    if (searchQuery !== prevSearchQueryRef.current) {
+      prevSearchQueryRef.current = searchQuery;
+      searchResolvedRef.current = false;
+      prevSearchLoadingRef.current = false;
+      searchHasTriggeredRef.current = false;
+    }
+    if (searchData.loading) searchHasTriggeredRef.current = true;
+  }
+
+  useEffect(() => {
+    if (!hasSearch) return;
+    const wasLoading = prevSearchLoadingRef.current;
+    prevSearchLoadingRef.current = searchData.loading;
+    if (wasLoading && !searchData.loading) searchResolvedRef.current = true;
+  }, [hasSearch, searchData.loading]);
 
   useHomeRefresh({
     tab,
@@ -343,7 +367,7 @@ export function HomePageContent() {
   const searchWaitingResults =
     hasSearch &&
     posts.length === 0 &&
-    (searchData.loading || !searchResolvedRef.current);
+    (searchData.loading || !searchHasTriggeredRef.current);
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
@@ -351,7 +375,20 @@ export function HomePageContent() {
         (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
       (tabRefreshing && postList.loadingMore));
 
-  if (!clientMounted) return null;
+  if (!clientMounted) {
+    if (hasSearch && !isSoldTabNoSearch) {
+      return (
+        <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+          <div>
+            <div ref={recommendPanelRef} style={{ display: 'block' }} aria-hidden={false}>
+              <FeedSkeleton count={3} />
+            </div>
+          </div>
+        </main>
+      );
+    }
+    return null;
+  }
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -360,6 +397,9 @@ export function HomePageContent() {
         <div ref={recommendPanelRef} style={{ display: isSoldTabNoSearch ? 'none' : 'block' }} aria-hidden={isSoldTabNoSearch}>
           <HomeFeedBody
             showSkeleton={showFeedSkeleton}
+            forceSkeletonWhenEmpty={searchWaitingResults}
+            mayShowEmptyState={!searchWaitingResults}
+            isSearchLoading={hasSearch && searchData.loading}
             skeletonCount={3}
             postFeedProps={{
               posts,

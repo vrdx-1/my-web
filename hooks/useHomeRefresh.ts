@@ -44,20 +44,20 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
     (refreshOptions?: { fromHomeButton?: boolean }) => {
       if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
       homeProvince?.setSelectedProvince('');
-      const clearedSearch = searchParams.has('q');
-      if (clearedSearch) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete('q');
-        const queryString = params.toString();
-        const newUrl = pathname + (queryString ? `?${queryString}` : '');
-        window.history.replaceState(null, '', newUrl);
-        router.replace(newUrl, { scroll: false });
-      }
+      let useNormalFeed = !searchQuery.trim();
       if (refreshOptions?.fromHomeButton) {
         mainTab?.setHomeTab('recommend');
+        if (searchParams.has('q')) {
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('q');
+          const queryString = params.toString();
+          const newUrl = pathname + (queryString ? `?${queryString}` : '');
+          window.history.replaceState(null, '', newUrl);
+          router.replace(newUrl, { scroll: false });
+          useNormalFeed = true;
+        }
       }
       setTabRefreshing(true);
-      const useNormalFeed = clearedSearch || !searchQuery.trim();
       const effectiveTab = refreshOptions?.fromHomeButton ? 'recommend' : tab;
       if (effectiveTab === 'recommend') {
         if (useNormalFeed) {
@@ -81,11 +81,11 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
       tab,
       mainTab,
       pathname,
+      router,
+      searchParams,
+      searchQuery,
       recommendFeed,
       searchData,
-      searchQuery,
-      searchParams,
-      router,
       homeProvince,
       soldTabRefreshRef,
       setTabRefreshing,
