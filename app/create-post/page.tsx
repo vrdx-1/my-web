@@ -66,11 +66,27 @@ export default function CreatePost() {
     setLayout,
   });
 
-  // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน (replace เพื่อไม่ให้กดย้อนกลับแล้ววนกลับมา create-post ซ้ำ)
+  // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน หลังรอให้ checkUser() ใน useCreatePostDraft โหลด session ก่อน (ถ้า redirect ทันทีจะทำให้ User ที่ล็อกอินแล้วโดนเด้งไปโฮม/ลงทะเบียนตอนเลือกรูป)
+  const guestRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!isInitialized) return;
-    if (session !== null) return;
-    router.replace(REGISTER_PATH);
+    if (session !== null) {
+      if (guestRedirectTimeoutRef.current) {
+        clearTimeout(guestRedirectTimeoutRef.current);
+        guestRedirectTimeoutRef.current = null;
+      }
+      return;
+    }
+    guestRedirectTimeoutRef.current = setTimeout(() => {
+      guestRedirectTimeoutRef.current = null;
+      router.replace(REGISTER_PATH);
+    }, 600);
+    return () => {
+      if (guestRedirectTimeoutRef.current) {
+        clearTimeout(guestRedirectTimeoutRef.current);
+        guestRedirectTimeoutRef.current = null;
+      }
+    };
   }, [isInitialized, session, router]);
 
   // Set initial height for textarea และอัพเดทเมื่อ caption เปลี่ยน
