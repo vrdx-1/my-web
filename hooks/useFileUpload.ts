@@ -3,7 +3,7 @@
 import { useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { safeParseSessionJSON } from '@/utils/storageUtils';
-import { PROFILE_PATH } from '@/utils/authRoutes';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface UseFileUploadReturn {
   hiddenFileInputRef: React.RefObject<HTMLInputElement>;
@@ -32,7 +32,8 @@ export function useFileUpload(): UseFileUploadReturn {
     if (session) {
       hiddenFileInputRef.current?.click();
     } else {
-      router.push(PROFILE_PATH);
+      // Guest → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
+      router.push(REGISTER_PATH);
     }
   }, [router]);
 

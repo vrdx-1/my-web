@@ -72,7 +72,8 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
 
   const handleNotLoggedIn = useCallback(() => {
     onClose();
-    router.replace(REGISTER_PATH);
+    // ใช้ push เพื่อให้ guest กดย้อนกลับได้กลับไปหน้าโฮม
+    router.push(REGISTER_PATH);
   }, [onClose, router]);
 
   if (!isOpen) return null;

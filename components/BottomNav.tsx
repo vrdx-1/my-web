@@ -130,21 +130,30 @@ export function BottomNav() {
           if (last && last.path === path && now - last.at < NAV_DEBOUNCE_MS) return;
           lastNavRef.current = { path, at: now };
 
+          // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
           if (path === '/notification' && !session) {
             router.push(REGISTER_PATH, { scroll: false });
             return;
           }
-          if (pathname === path && path === '/notification') {
-            notificationRefreshContext?.trigger();
+          if (path === '/profile' && !session) {
+            router.push(REGISTER_PATH, { scroll: false });
             return;
           }
-          if (pathname === path && path === '/home') {
-            homeRefreshContext?.trigger();
-            return;
+          // อยู่แท็บเดียวกันแล้ว → แค่ refresh (โฮม/แจ้งเตือน) หรือไม่ทำอะไร (โปรไฟล์)
+          const isAlreadyOnTarget =
+            pathname === path || (path === '/profile' && pathname?.startsWith('/profile'));
+          if (isAlreadyOnTarget) {
+            if (path === '/notification') {
+              notificationRefreshContext?.trigger();
+              return;
+            }
+            if (path === '/home') {
+              homeRefreshContext?.trigger();
+              return;
+            }
+            if (path === '/profile') return;
           }
-          if (pathname === path && path === '/profile') {
-            return;
-          }
+          // สลับไปอีกแท็บ → บันทึก scroll แล้ว navigate
           if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
             mainTabScroll?.saveCurrentScroll(pathname);
           }

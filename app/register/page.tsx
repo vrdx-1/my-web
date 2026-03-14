@@ -57,7 +57,7 @@ export default function Register() {
           profile.username !== 'Guest User'
         if (hasExistingAccount) {
           localStorage.removeItem('pending_registration')
-          router.push('/')
+          router.push('/home')
           return
         }
         if (profile?.avatar_url && isProviderDefaultAvatar(profile.avatar_url)) {
@@ -170,10 +170,10 @@ export default function Register() {
           )
         } catch {}
         localStorage.removeItem('pending_registration')
-        router.push('/')
+        router.push('/home')
       } else if (hasCompleteProfile) {
         localStorage.removeItem('pending_registration')
-        router.push('/')
+        router.push('/home')
       } else {
         updatePendingData({ email: email.trim(), acceptedTerms })
         router.push(REGISTER_PATH)
@@ -266,7 +266,7 @@ export default function Register() {
       if (hasExistingAccount) {
         setLoading(false);
         localStorage.removeItem('pending_registration');
-        router.push('/');
+        router.push('/home');
         return;
       }
 
@@ -294,7 +294,7 @@ export default function Register() {
 
       localStorage.removeItem('pending_registration');
       localStorage.setItem('show_registration_success', 'true');
-      router.push('/');
+      router.push('/home');
     } catch (error: any) {
       setLoading(false);
     }
@@ -307,7 +307,7 @@ export default function Register() {
         <div style={{ padding: '15px 15px 5px 15px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
           <button
             type="button"
-            onClick={() => { localStorage.removeItem('pending_registration'); router.push('/'); }}
+            onClick={() => { localStorage.removeItem('pending_registration'); router.push('/home'); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '10px' }}
           >
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

@@ -60,6 +60,8 @@ export function HomePageContent() {
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);
   const prevShowSoldRef = useRef<boolean | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
+  const suppressHideUntilRef = useRef<number | null>(null);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
@@ -159,6 +161,18 @@ export function HomePageContent() {
   /** บันทึก scroll ก่อนสลับแท็บ — ใช้แบบเดียวกับ saveCurrentScroll ก่อน router.push (ลงทะเบียนให้ header เรียกตอนกดแท็บ) */
   const homeTabScroll = useHomeTabScroll();
   const headerVisibility = useHeaderVisibilityContext();
+
+  /** สลับจากหน้าอื่นกลับมาหน้าโฮม → แสดง header/nav ทันที และกันไม่ให้ scroll ที่เกิดจากการ restore ซ่อน header (ให้หายเฉพาะตอนผู้ใช้เลื่อนจริง) */
+  useLayoutEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+    if (pathname === '/home' && prev !== '/home' && prev != null) {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      suppressHideUntilRef.current = now + 500;
+      headerVisibility?.setHeaderVisible(true);
+    }
+  }, [pathname, headerVisibility]);
+
   useEffect(() => {
     if (!homeTabScroll?.saveBeforeSwitchRef) return;
     homeTabScroll.saveBeforeSwitchRef.current = () => {
@@ -173,7 +187,6 @@ export function HomePageContent() {
 
   /** สลับแท็บแล้ว: คืนค่า scroll — ฝั่งพร้อมขายเลื่อนลึกแล้วต้อง retry จน layout สูงพอ (เบราว์เซอร์ clamp ถ้า scrollHeight ยังไม่พอ) */
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
-  const suppressHideUntilRef = useRef<number | null>(null);
   const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
   setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
   useLayoutEffect(() => {

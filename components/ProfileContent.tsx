@@ -7,7 +7,6 @@ import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { supabase } from '@/lib/supabase';
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { LAO_FONT } from '@/utils/constants';
-import { REGISTER_PATH } from '@/utils/authRoutes';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 /** แคชโปรไฟล์ล่าสุด — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
@@ -105,7 +104,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               setUsername(defaultName);
               setAvatarUrl('');
               localStorage.removeItem('pending_registration');
-              router.push('/');
+              router.push('/home');
               setLoading(false);
               return;
             } catch {}
@@ -157,7 +156,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       if (onNotLoggedIn) {
         onNotLoggedIn();
       } else {
-        router.replace(REGISTER_PATH);
+        // Guest เข้าหน้า profile โดยตรง (ไม่ผ่าน overlay) → ไปหน้าโฮมให้ใช้ได้ปกติ ไม่เด้งไปลงทะเบียน
+        router.replace('/home');
       }
     }
   }, [loading, session, router, onNotLoggedIn]);

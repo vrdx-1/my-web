@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
@@ -33,12 +33,14 @@ export function HomeHeaderSearchAndFilter() {
   /** กันไม่ให้การกดที่เปิดป๊อปถูกนับเป็นคลิกนอก (ต้องกดครั้งเดียวแล้วเปิดได้เสถียร) */
   const justOpenedRef = useRef(false);
 
-  useEffect(() => {
+  // ใช้ useLayoutEffect เพื่อให้คำค้นในแถบแสดงทันที (ไม่กระพริบว่าง) — โดยเฉพาะ guest
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
 
-  const queryToShow = mounted ? searchQuery : '';
-  const provinceToShow = mounted ? selectedProvince : '';
+  /** แสดงคำค้นและแขวงเสมอ (ไม่ใช้ mounted เพื่อไม่ให้ guest เห็นแถบค้นว่างชั่วคราว) */
+  const queryToShow = searchQuery;
+  const provinceToShow = selectedProvince;
 
   /** เมื่อผู้ใช้เปลี่ยนหรือแก้ไขคำค้นหา (URL ?q= เปลี่ยน) ให้ฟิลเตอร์กลับเป็น "ທຸກແຂວງ" */
   useEffect(() => {

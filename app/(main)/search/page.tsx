@@ -13,9 +13,15 @@ type SuggestionItem = { display: string; searchKey: string };
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
+  const qFromUrl = searchParams.get('q') ?? '';
+  const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /** ซิงก์คำค้นกับ URL (แก้กรณี guest หรือ client nav ที่ state เริ่มต้นไม่ตรงกับ ?q=) */
+  useEffect(() => {
+    setQuery((prev) => (prev !== qFromUrl ? qFromUrl : prev));
+  }, [qFromUrl]);
 
   const suggestions = useMemo(() => {
     const q = query.trim();

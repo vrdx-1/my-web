@@ -7,6 +7,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { Avatar } from '@/components/Avatar';
 
 import { LAO_PROVINCES } from '@/utils/constants';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
@@ -64,6 +65,13 @@ export default function CreatePost() {
     layout,
     setLayout,
   });
+
+  // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน (replace เพื่อไม่ให้กดย้อนกลับแล้ววนกลับมา create-post ซ้ำ)
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (session !== null) return;
+    router.replace(REGISTER_PATH);
+  }, [isInitialized, session, router]);
 
   // Set initial height for textarea และอัพเดทเมื่อ caption เปลี่ยน
   useEffect(() => {
