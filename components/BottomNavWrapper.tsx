@@ -1,5 +1,6 @@
 'use client';
 
+import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
@@ -51,7 +52,9 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
           }}
         >
-          <BottomNav />
+          <Suspense fallback={<div style={{ minHeight: 56, background: '#fff', borderTop: '1px solid #e4e6eb' }} />}>
+            <BottomNav />
+          </Suspense>
         </div>
       )}
     </MainTabScrollProvider>
