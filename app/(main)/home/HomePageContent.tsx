@@ -59,8 +59,9 @@ export function HomePageContent() {
   const searchResolvedRef = useRef(false);
   const prevSearchQueryRef = useRef<string>('');
   const prevSearchLoadingRef = useRef(false);
-  /** ตั้ง true เมื่อเคยเห็น loading = true สำหรับคำค้นนี้ → แสดง "ไม่มีรายการ" ได้เฉพาะหลังโหลดเสร็จจริง */
-  const searchHasTriggeredRef = useRef(false);
+  /** แสดง "ຍັງບໍ່ມີລາຍການ" ได้เฉพาะเมื่อ true = โหลดค้นหาเสร็จแล้ว (loading เปลี่ยนจาก true → false) */
+  const [searchResolvedForEmpty, setSearchResolvedForEmpty] = useState(false);
+  const prevQueryForEmptyRef = useRef<string>('');
   /** จำ scroll ของแท็บพร้อมขาย/ขายแล้ว — สลับแท็บแล้วกลับมาเห็นจุดเดิม (แบบ MainTabPanels) */
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);
@@ -137,23 +138,39 @@ export function HomePageContent() {
     searchResolvedRef.current = false;
     prevSearchQueryRef.current = '';
     prevSearchLoadingRef.current = false;
-    searchHasTriggeredRef.current = false;
   } else {
     if (searchQuery !== prevSearchQueryRef.current) {
       prevSearchQueryRef.current = searchQuery;
       searchResolvedRef.current = false;
       prevSearchLoadingRef.current = false;
-      searchHasTriggeredRef.current = false;
     }
-    if (searchData.loading) searchHasTriggeredRef.current = true;
   }
 
   useEffect(() => {
-    if (!hasSearch) return;
+    if (!hasSearch) {
+      setSearchResolvedForEmpty(false);
+      return;
+    }
+    if (prevSearchQueryRef.current !== searchQuery) return;
     const wasLoading = prevSearchLoadingRef.current;
     prevSearchLoadingRef.current = searchData.loading;
-    if (wasLoading && !searchData.loading) searchResolvedRef.current = true;
-  }, [hasSearch, searchData.loading]);
+    if (wasLoading && !searchData.loading) {
+      searchResolvedRef.current = true;
+      setSearchResolvedForEmpty(true);
+    }
+  }, [hasSearch, searchQuery, searchData.loading]);
+
+  useEffect(() => {
+    if (!hasSearch) {
+      setSearchResolvedForEmpty(false);
+      prevQueryForEmptyRef.current = '';
+      return;
+    }
+    if (prevQueryForEmptyRef.current !== searchQuery) {
+      setSearchResolvedForEmpty(false);
+      prevQueryForEmptyRef.current = searchQuery;
+    }
+  }, [hasSearch, searchQuery]);
 
   useHomeRefresh({
     tab,
@@ -365,9 +382,7 @@ export function HomePageContent() {
   );
 
   const searchWaitingResults =
-    hasSearch &&
-    posts.length === 0 &&
-    (searchData.loading || !searchHasTriggeredRef.current);
+    hasSearch && posts.length === 0 && !searchResolvedForEmpty;
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||

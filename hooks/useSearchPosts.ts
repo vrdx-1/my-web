@@ -115,6 +115,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     setLoading(true);
+    let aborted = false;
     try {
       const params = new URLSearchParams();
       params.set('q', q);
@@ -126,10 +127,13 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       const list = Array.isArray(data.posts) ? data.posts : [];
       setPosts(list);
     } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return;
+      if (e instanceof Error && e.name === 'AbortError') {
+        aborted = true;
+        return;
+      }
       throw e;
     } finally {
-      if (!cancelledRef.current) setLoading(false);
+      if (!aborted && !cancelledRef.current) setLoading(false);
     }
   }, [query, province]);
 
