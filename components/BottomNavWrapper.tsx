@@ -17,11 +17,7 @@ function shouldShowBottomNav(pathname: string): boolean {
   return BOTTOM_NAV_PATHS.includes(pathname);
 }
 
-function isNotificationOrProfile(pathname: string): boolean {
-  return pathname === '/notification' || pathname === '/profile';
-}
-
-function isHomeOrSold(pathname: string): boolean {
+function isHomeOrSold(pathname: string | null): boolean {
   return pathname === '/home';
 }
 
@@ -29,7 +25,8 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const headerVisibility = useHeaderVisibilityContext();
   const showNav = shouldShowBottomNav(pathname ?? '');
-  const needCreatePostHandler = showNav && isNotificationOrProfile(pathname ?? '');
+  // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
+  const needCreatePostHandler = showNav;
   const hideNavWithScroll = showNav && isHomeOrSold(pathname ?? '');
   const isNavVisible = hideNavWithScroll ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
