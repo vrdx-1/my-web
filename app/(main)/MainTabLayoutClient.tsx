@@ -67,7 +67,14 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     router.push('/notification');
   }, [session, router]);
 
+  /** กดไอคอนโฮม (อยู่ที่โฮมแล้ว) = refresh อย่างเดียว ไม่ล้างคำค้น */
   const handleTabRefresh = useCallback(() => {
+    mainTab?.setTabRefreshing(true);
+    mainTab?.triggerTabRefresh();
+  }, [mainTab]);
+
+  /** กดโลโก้ = ล้างคำค้น + refresh */
+  const handleLogoRefresh = useCallback(() => {
     mainTab?.setTabRefreshing(true);
     mainTab?.triggerTabRefresh({ fromHomeButton: true });
   }, [mainTab]);
@@ -84,13 +91,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       homeRefreshContext?.register(null);
       return;
     }
-    const handler = () => {
-      mainTab?.setTabRefreshing(true);
-      mainTab?.triggerTabRefresh({ fromHomeButton: true });
-    };
-    homeRefreshContext?.register(handler);
+    homeRefreshContext?.register(handleTabRefresh);
     return () => homeRefreshContext?.register(null);
-  }, [pathname, mainTab, homeRefreshContext]);
+  }, [pathname, mainTab, homeRefreshContext, handleTabRefresh]);
 
   /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay 4–5 วินาทีบนโฮมเพื่อลดงานช่วงโหลดหน้าแรก */
   useEffect(() => {
@@ -162,7 +165,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               session={session}
               isHeaderVisible={isHeaderVisible}
               slideWithContainer={true}
-              onTabRefresh={handleTabRefresh}
+              onTabRefresh={handleLogoRefresh}
               onTabSwitchStart={handleTabSwitchStart}
               loadingTab={loadingTab ?? undefined}
               setProfileOverlayOpen={setProfileOverlayOpen}

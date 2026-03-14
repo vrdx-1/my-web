@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect, startTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Home, Plus, PenSquare, Bell, User } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { REGISTER_PATH } from '@/utils/authRoutes';
@@ -25,9 +25,12 @@ const NAV_DEBOUNCE_MS = 400;
 
 const CREATE_POST_DEBOUNCE_MS = 400;
 
+const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
+
 export function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const lastNavRef = useRef<{ path: string; at: number } | null>(null);
   const lastCreatePostTriggerRef = useRef<number>(0);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
@@ -51,6 +54,18 @@ export function BottomNav() {
         : pathname === pendingPath;
     if (arrived) setPendingPath(null);
   }, [pathname, pendingPath]);
+
+  /** บันทึก URL หน้าโฮม (รวม ?q=) เพื่อเมื่อสลับไปหน้าอื่นแล้วกลับมาได้คำค้นและ scroll คืน */
+  useEffect(() => {
+    if (pathname !== '/home' || typeof window === 'undefined') return;
+    const qs = searchParams.toString();
+    const homeUrl = qs ? `/home?${qs}` : '/home';
+    try {
+      window.sessionStorage.setItem(LAST_HOME_URL_KEY, homeUrl);
+    } catch {
+      // ignore
+    }
+  }, [pathname, searchParams]);
 
   return (
     <nav
@@ -159,7 +174,19 @@ export function BottomNav() {
           }
           setPendingPath(path);
           startTransition(() => {
-            router.push(path, { scroll: false });
+            // กลับมาโฮม: ใช้ URL ที่บันทึกไว้ (รวม ?q=) เพื่อไม่ล้างคำค้นและจดจำ scroll ได้
+            if (path === '/home') {
+              let homeUrl = '/home';
+              try {
+                const saved = typeof window !== 'undefined' ? window.sessionStorage.getItem(LAST_HOME_URL_KEY) : null;
+                if (saved && saved.startsWith('/home')) homeUrl = saved;
+              } catch {
+                // ignore
+              }
+              router.push(homeUrl, { scroll: false });
+            } else {
+              router.push(path, { scroll: false });
+            }
           });
         };
 
