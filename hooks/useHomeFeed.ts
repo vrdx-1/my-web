@@ -9,6 +9,48 @@ import { preloadPostImages } from '@/utils/imagePreload';
 
 const FEED_CACHE_KEY = 'home_feed_cache';
 
+/** อ่านรายการโพสจาก storage ตั้งแต่ state ครั้งแรก — ให้เฟรมแรกเห็นโพสที่พึ่งโพสพร้อมรูปทันที (แทบไม่เห็น Skeleton) */
+function getInitialPostsFromStorage(province?: string): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem('just_posted_post');
+    const justPostedPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
+    if (!justPostedPost || justPostedPost.status !== 'recommend' || justPostedPost.is_hidden) {
+      const cacheRaw = window.localStorage.getItem(FEED_CACHE_KEY);
+      if (cacheRaw) {
+        const parsed = JSON.parse(cacheRaw);
+        if (parsed?.province === province && Array.isArray(parsed.posts)) {
+          const age = Date.now() - (parsed.ts || 0);
+          if (age < FEED_CACHE_MAX_AGE_MS) {
+            return parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
+          }
+        }
+      }
+      return [];
+    }
+    const preloadRaw = sessionStorage.getItem('just_posted_post_preload');
+    const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
+    if (preloadArr && Array.isArray(justPostedPost.images) && preloadArr.length === justPostedPost.images.length) {
+      justPostedPost._preloadImages = preloadArr;
+    }
+    const cacheRaw = window.localStorage.getItem(FEED_CACHE_KEY);
+    if (cacheRaw) {
+      const parsed = JSON.parse(cacheRaw);
+      if (parsed?.province === province && Array.isArray(parsed.posts)) {
+        const age = Date.now() - (parsed.ts || 0);
+        if (age < FEED_CACHE_MAX_AGE_MS) {
+          const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
+          const rest = cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id));
+          return [justPostedPost, ...rest];
+        }
+      }
+    }
+    return [justPostedPost];
+  } catch {
+    return [];
+  }
+}
+
 export interface HomeLikedSavedShared {
   likedPosts: { [key: string]: boolean };
   savedPosts: { [key: string]: boolean };
@@ -49,7 +91,7 @@ interface UseHomeFeedReturn {
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>(() => getInitialPostsFromStorage(province));
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
