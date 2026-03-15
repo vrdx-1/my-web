@@ -25,14 +25,47 @@ import {
 import { CreatePostCard } from '@/components/create-post/CreatePostCard';
 import { CreatePostProvinceStep } from '@/components/create-post/CreatePostProvinceStep';
 
+/** เก็บ caption ล่าสุดระดับโมดูล — กัน caption หายเมื่อหน้า remount */
+let createPostCaptionBackup = '';
+
+/** เก็บ caption ตอนกด "ຕໍ່ໄປ" ระดับโมดูล — ไม่หายเมื่อ component remount */
+let captionWhenLeavingStep2Module = '';
+
+function getLongestStoredCaption(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const rawS = sessionStorage.getItem('create_post_caption');
+    const rawL = localStorage.getItem('create_post_caption_ls');
+    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as string; } catch { return ''; } })() : '';
+    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as string; } catch { return ''; } })() : '';
+    return [createPostCaptionBackup, captionWhenLeavingStep2Module, fromS, fromL].reduce(
+      (a, b) => (a.length >= b.length ? a : b),
+      ''
+    );
+  } catch {
+    return '';
+  }
+}
+
+/** คืน caption ที่ยาวที่สุดสำหรับแสดงเมื่อกลับมา step 2 (ref + โมดูล + storage) */
+function getCaptionForStep2(refValue: string): string {
+  const fromModule = captionWhenLeavingStep2Module;
+  const fromStorage = getLongestStoredCaption();
+  return [refValue, fromModule, fromStorage].reduce((a, b) => (a.length >= b.length ? a : b), '');
+}
+
 export default function CreatePost() {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const autoFileInputRef = useRef<HTMLInputElement | null>(null);
   const hasRequestedGalleryRef = useRef<boolean>(false);
+  /** เก็บ caption ตอนกด "ຕໍ່ໄປ" — ใช้คืนเมื่อกดย้อนกลับ */
+  const captionWhenLeavingStep2Ref = useRef<string>('');
+  /** ref ที่ sync กับ caption ทุกครั้ง — ใช้ตอนกด "ຕໍ່ໄປ" เพื่อไม่ให้ได้ค่าเก่าจาก closure */
+  const captionLatestRef = useRef<string>('');
 
   const [step, setStep] = useState(2);
-  const [caption, setCaption] = useState('');
+  const [caption, setCaption] = useState(getLongestStoredCaption);
   const [province, setProvince] = useState('');
   const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
@@ -64,7 +97,14 @@ export default function CreatePost() {
     setSession,
     layout,
     setLayout,
+    getCaptionBackup: () => createPostCaptionBackup,
   });
+
+  // อัปเดต backup + ref ล่าสุดทุกครั้งที่ caption เปลี่ยน
+  useEffect(() => {
+    createPostCaptionBackup = caption;
+    captionLatestRef.current = caption;
+  }, [caption]);
 
   // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน หลังรอให้ checkUser() ใน useCreatePostDraft โหลด session ก่อน (ถ้า redirect ทันทีจะทำให้ User ที่ล็อกอินแล้วโดนเด้งไปโฮม/ลงทะเบียนตอนเลือกรูป)
   const guestRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -167,7 +207,9 @@ export default function CreatePost() {
  };
 
  const handleDiscardAndBack = () => {
-   // ลบข้อมูลจาก sessionStorage
+   createPostCaptionBackup = '';
+   captionWhenLeavingStep2Module = '';
+   captionWhenLeavingStep2Ref.current = '';
    if (typeof window !== 'undefined') {
      sessionStorage.removeItem('create_post_caption');
      sessionStorage.removeItem('create_post_province');
@@ -202,6 +244,11 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   province,
   imageUpload,
   layout,
+  onDraftCleared: () => {
+    createPostCaptionBackup = '';
+    captionWhenLeavingStep2Module = '';
+    captionWhenLeavingStep2Ref.current = '';
+  },
 });
 
 if (isUploading) {
@@ -239,7 +286,26 @@ if (isUploading) {
  </h3>
  <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
  {step === 2 && caption.trim().length > 0 && (
- <button type="button" onClick={() => setStep(3)} style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ຕໍ່ໄປ</button>
+ <button
+   type="button"
+   onClick={() => {
+     const latest = captionLatestRef.current ?? caption;
+     captionWhenLeavingStep2Ref.current = latest;
+     captionWhenLeavingStep2Module = latest;
+     if (typeof window !== 'undefined') {
+       try {
+         sessionStorage.setItem('create_post_caption', JSON.stringify(latest));
+       } catch { /* quota */ }
+       try {
+         localStorage.setItem('create_post_caption_ls', JSON.stringify(latest));
+       } catch { /* quota */ }
+     }
+     setStep(3);
+   }}
+   style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+ >
+   ຕໍ່ໄປ
+ </button>
  )}
 {step === 3 && province && !isUploading && (
 <button type="button" onClick={handleSubmit} style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ໂພສ</button>
@@ -248,7 +314,11 @@ if (isUploading) {
  </div>
 
       <div style={{ flex: 1, paddingBottom: '100px', minHeight: 0, overflowY: 'auto' }}>
-        {step === 2 && (
+        {/* แบบเดียวกับ navigation bar: เก็บทั้งสอง step ไว้ใน DOM แค่ซ่อน/แสดง — caption ไม่หายเมื่อกดย้อนกลับ */}
+        <div
+          aria-hidden={step !== 2}
+          style={{ display: step === 2 ? 'block' : 'none', minHeight: 0 }}
+        >
           <CreatePostCard
             userProfile={userProfile}
             session={session}
@@ -261,12 +331,14 @@ if (isUploading) {
             layout={layout}
             onLayoutChange={setLayout}
           />
-        )}
-
-{step === 3 && (
-  <CreatePostProvinceStep province={province} onProvinceChange={setProvince} />
-)}
- </div>
+        </div>
+        <div
+          aria-hidden={step !== 3}
+          style={{ display: step === 3 ? 'block' : 'none', minHeight: 0 }}
+        >
+          <CreatePostProvinceStep province={province} onProvinceChange={setProvince} />
+        </div>
+      </div>
 
 {isViewing && (
   <CreatePostViewingOverlay

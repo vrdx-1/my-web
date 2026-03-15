@@ -18,6 +18,8 @@ interface UseCreatePostDraftParams {
   setSession: (session: any) => void;
   layout: string;
   setLayout: (value: string) => void;
+  /** คืนค่า caption ที่เก็บไว้ระดับโมดูล — กัน caption หายเมื่อหน้า remount */
+  getCaptionBackup?: () => string;
 }
 
 export function useCreatePostDraft({
@@ -33,6 +35,7 @@ export function useCreatePostDraft({
   setSession,
   layout,
   setLayout,
+  getCaptionBackup,
 }: UseCreatePostDraftParams) {
   // Initial load: session + caption/province/step + images
   useEffect(() => {
@@ -50,14 +53,18 @@ export function useCreatePostDraft({
     const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
     const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
 
-    // โหลด caption, province, step
-    if (savedCaption) {
-      setCaption(savedCaption);
-    } else {
-      // fallback caption จาก localStorage (กันข้อมูลหายกรณีบาง browser ล้าง sessionStorage ตอน refresh)
-      const lsCaption = safeParseJSON<string>('create_post_caption_ls', '');
-      if (lsCaption) setCaption(lsCaption);
-    }
+    // โหลด caption — ใช้ค่าที่ยาวที่สุดระหว่าง session / localStorage / backup ระดับโมดูล (กัน caption หายเมื่อ remount)
+    const sessionCaption = typeof savedCaption === 'string' ? savedCaption : '';
+    const lsCaption = safeParseJSON<string>('create_post_caption_ls', '');
+    const lsCaptionStr = typeof lsCaption === 'string' ? lsCaption : '';
+    const fromStorage =
+      sessionCaption.length >= lsCaptionStr.length ? sessionCaption : lsCaptionStr;
+    const backup = typeof getCaptionBackup === 'function' ? getCaptionBackup() : '';
+    const backupStr = typeof backup === 'string' ? backup : '';
+    const captionToUse =
+      backupStr.length > fromStorage.length ? backupStr : fromStorage;
+    // อย่าเขียนทับด้วยค่าที่สั้นกว่า — state อาจถูก init จาก getLongestStoredCaption() แล้ว
+    if (captionToUse && captionToUse.length > caption.length) setCaption(captionToUse);
 
     if (savedProvince) {
       setProvince(savedProvince);
@@ -193,18 +200,26 @@ export function useCreatePostDraft({
     setIsInitialized(true);
   }, []);
 
-  // บันทึก caption ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  // บันทึก caption ลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  // ใช้ try/catch เพื่อกัน QuotaExceeded เมื่อ storage เต็ม (เช่น มีรูป base64 เยอะ) — caption ต้องไม่หาย
   useEffect(() => {
     if (!isInitialized) return;
-    if (typeof window !== 'undefined') {
-      if (caption) {
-        sessionStorage.setItem('create_post_caption', JSON.stringify(caption));
-        // backup ลง localStorage เพื่อกันข้อมูลหายกรณี refresh แล้ว sessionStorage หาย
-        localStorage.setItem('create_post_caption_ls', JSON.stringify(caption));
-      } else {
-        sessionStorage.removeItem('create_post_caption');
-        localStorage.removeItem('create_post_caption_ls');
+    if (typeof window === 'undefined') return;
+    if (caption) {
+      const payload = JSON.stringify(caption);
+      try {
+        sessionStorage.setItem('create_post_caption', payload);
+      } catch {
+        // quota เต็ม ไม่ลบของเดิม
       }
+      try {
+        localStorage.setItem('create_post_caption_ls', payload);
+      } catch {
+        // quota เต็ม ไม่ลบของเดิม
+      }
+    } else {
+      sessionStorage.removeItem('create_post_caption');
+      localStorage.removeItem('create_post_caption_ls');
     }
   }, [caption, isInitialized]);
 

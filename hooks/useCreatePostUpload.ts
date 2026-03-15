@@ -14,6 +14,8 @@ interface UseCreatePostUploadParams {
   province: string;
   imageUpload: any;
   layout?: string;
+  /** เรียกหลังลบ draft จาก storage เมื่อโพสต์สำเร็จ (เช่น ล้าง caption backup ระดับโมดูล) */
+  onDraftCleared?: () => void;
 }
 
 export function useCreatePostUpload({
@@ -22,6 +24,7 @@ export function useCreatePostUpload({
   province,
   imageUpload,
   layout = 'five-images-side',
+  onDraftCleared,
 }: UseCreatePostUploadParams) {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
@@ -202,6 +205,7 @@ export function useCreatePostUpload({
         localStorage.removeItem('create_post_layout_ls');
         localStorage.removeItem('create_post_images_base64_ls');
       }
+      onDraftCleared?.();
 
       router.push('/');
     } catch (err: any) {
