@@ -78,6 +78,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const fetchIdRef = useRef(0);
   const hydratedFromCacheRef = useRef(false);
   const cancelledRef = useRef(false);
+  /** เก็บรายการโพสต์ฝั่งขายแล้วทั้งหมดสำหรับ liked/saved tab sold เพื่อแบ่งหน้าได้ถูกต้อง */
+  const soldTabFullListRef = useRef<any[] | null>(null);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -243,6 +245,123 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         return null;
       };
+
+      // หน้า likes/saves แท็บ "ขายแล้ว": ดึง ID ทั้งหมดที่ like/save แล้วกรองเฉพาะ status=sold จาก DB เพื่อให้เห็นรายการถูกต้อง
+      const isLikedSavedSoldTab = (type === 'liked' || type === 'saved') && tab === 'sold';
+      if (isLikedSavedSoldTab) {
+        // Load more: ใช้รายการที่เก็บไว้ใน ref แทนการยิง DB ซ้ำ
+        if (!isInitial && soldTabFullListRef.current && soldTabFullListRef.current.length > 0) {
+          const sorted = soldTabFullListRef.current;
+          const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
+          const start = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+          const end = start + pageSize;
+          const slicePosts = sorted.slice(start, end);
+          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+            setPosts((prev) => {
+              const ids = new Set(prev.map((p: any) => p.id));
+              const toAdd = slicePosts.filter((p: any) => !ids.has(p.id));
+              return toAdd.length === 0 ? prev : [...prev, ...toAdd];
+            });
+            setHasMore(end < sorted.length);
+            setLoadingMore(false);
+            if (type === 'saved') {
+              setSavedPosts((prev) => { const next = { ...prev }; slicePosts.forEach((p: any) => { next[p.id] = true; }); return next; });
+            } else {
+              setLikedPosts((prev) => { const next = { ...prev }; slicePosts.forEach((p: any) => { next[p.id] = true; }); return next; });
+            }
+          }
+          return;
+        }
+        const idOrToken = getIdOrToken();
+        if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
+          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+            setLoadingMore(false);
+            setHasMore(false);
+          }
+          return;
+        }
+        const isUser = !!currentUserId;
+        const table = type === 'saved' ? (isUser ? 'post_saves' : 'post_saves_guest') : (isUser ? 'post_likes' : 'post_likes_guest');
+        const column = isUser ? 'user_id' : 'guest_token';
+        const { data: idsData, error: idsError } = await supabase
+          .from(table)
+          .select('post_id')
+          .eq(column, idOrToken)
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (cancelledRef.current) return;
+        if (idsError || !idsData) {
+          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+            setLoadingMore(false);
+            setHasMore(false);
+          }
+          return;
+        }
+        const allIds = (idsData as { post_id: string }[])
+          .map((item) => item.post_id)
+          .filter((id): id is string => !!id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
+        if (allIds.length === 0) {
+          if (isInitial && fetchIdRef.current === currentFetchId && !skipSkeleton) setPosts([]);
+          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+            setLoadingMore(false);
+            setHasMore(false);
+          }
+          return;
+        }
+        const { data: postsData, error: postsError } = await supabase
+          .from('cars')
+          .select(POST_WITH_PROFILE_SELECT)
+          .in('id', allIds)
+          .eq('status', 'sold');
+        if (cancelledRef.current) return;
+        if (postsError || !postsData) {
+          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+            setLoadingMore(false);
+            setHasMore(false);
+          }
+          return;
+        }
+        const orderMap = new Map<string, number>(allIds.map((id, idx) => [String(id), idx]));
+        const sorted = [...postsData].filter((p: any) => !p.is_hidden || (currentUserId && p.user_id === currentUserId));
+        sorted.sort((a: any, b: any) => {
+          const ai = orderMap.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
+          const bi = orderMap.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
+          return ai - bi;
+        });
+        soldTabFullListRef.current = sorted;
+        const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
+        const start = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+        const end = start + pageSize;
+        const slicePosts = sorted.slice(start, end);
+        if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+          if (isInitial && !skipSkeleton) setPosts([]);
+          if (isInitial) {
+            setPosts(slicePosts);
+          } else {
+            setPosts((prev) => {
+              const ids = new Set(prev.map((p: any) => p.id));
+              const toAdd = slicePosts.filter((p: any) => !ids.has(p.id));
+              return toAdd.length === 0 ? prev : [...prev, ...toAdd];
+            });
+          }
+          setHasMore(end < sorted.length);
+          setLoadingMore(false);
+          if (type === 'saved') {
+            setSavedPosts((prev) => {
+              const next = { ...prev };
+              slicePosts.forEach((p: any) => { next[p.id] = true; });
+              return next;
+            });
+          } else {
+            setLikedPosts((prev) => {
+              const next = { ...prev };
+              slicePosts.forEach((p: any) => { next[p.id] = true; });
+              return next;
+            });
+          }
+        }
+        return;
+      }
 
       // ดึง post_ids ตาม type
       if (type === 'saved') {
