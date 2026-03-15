@@ -242,11 +242,17 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
             const raw = window.localStorage.getItem('just_posted_post');
             const justPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
             if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
+              const preloadRaw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('just_posted_post_preload') : null;
+              const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
+              if (preloadArr && Array.isArray(justPost.images) && preloadArr.length === justPost.images.length) {
+                justPost._preloadImages = preloadArr;
+              }
               const rest = ordered.filter((p: any) => String(p.id) !== String(justPost.id));
               initialList = [justPost, ...rest];
             }
             window.localStorage.removeItem('just_posted_post');
             window.localStorage.removeItem('just_posted_post_id');
+            try { sessionStorage.removeItem('just_posted_post_preload'); } catch { /* ignore */ }
           } catch {
             // ignore
           }
@@ -292,6 +298,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         window.localStorage.removeItem('just_posted_post');
         window.localStorage.removeItem('just_posted_post_id');
         window.localStorage.removeItem(FEED_CACHE_KEY);
+        try { sessionStorage.removeItem('just_posted_post_preload'); } catch { /* ignore */ }
       }
     } catch {
       // ignore
@@ -309,6 +316,13 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         const raw = window.localStorage.getItem('just_posted_post');
         justPostedPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
         if (!justPostedPost || justPostedPost.status !== 'recommend' || justPostedPost.is_hidden) justPostedPost = null;
+        else {
+          const preloadRaw = sessionStorage.getItem('just_posted_post_preload');
+          const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
+          if (preloadArr && Array.isArray(justPostedPost.images) && preloadArr.length === justPostedPost.images.length) {
+            justPostedPost._preloadImages = preloadArr;
+          }
+        }
       } catch {
         justPostedPost = null;
       }

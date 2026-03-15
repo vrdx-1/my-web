@@ -274,7 +274,7 @@ export function PostCard({
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
       <div style={{ padding: 0 }}>
-        <PhotoGrid images={post.images || []} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} firstImageFetchPriority={imageFetchPriority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
+        <PhotoGrid images={post.images || []} preloadImages={post._preloadImages} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} firstImageFetchPriority={imageFetchPriority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
       </div>
 
       {/* Post Actions */}

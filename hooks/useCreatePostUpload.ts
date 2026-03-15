@@ -164,6 +164,20 @@ export function useCreatePostUpload({
             window.localStorage.setItem('just_posted_post', JSON.stringify(fullPost));
           }
           window.localStorage.setItem('just_posted_post_id', String(data[0].id));
+          // เก็บรูปที่เพิ่งอัปโหลดเป็น data URL เพื่อให้หน้าโฮมแสดงรูปทันทีโดยไม่เห็น Skeleton (ใช้เฉพาะโพสที่พึ่งโพส แล้วลบหลังใช้)
+          try {
+            const fileToDataUrl = (file: File): Promise<string> =>
+              new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result as string);
+                r.onerror = () => reject(r.error);
+                r.readAsDataURL(file);
+              });
+            const dataUrls = await Promise.all(compressedFiles.map(fileToDataUrl));
+            sessionStorage.setItem('just_posted_post_preload', JSON.stringify(dataUrls));
+          } catch {
+            // ข้ามถ้า sessionStorage เต็มหรือแปลงรูปไม่สำเร็จ
+          }
         } catch {
           // ถ้า localStorage ใช้งานไม่ได้ ให้ข้ามโดยไม่กระทบ flow เดิม
         }

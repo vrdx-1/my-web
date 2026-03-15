@@ -29,7 +29,8 @@ function ImageWithSkeleton({
   containerStyle: React.CSSProperties;
   imgStyle: React.CSSProperties;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  // รูปที่เป็น data URL (จากโพสที่พึ่งโพส) มีข้อมูลในหน่วยความจำแล้ว ไม่ต้องแสดง Skeleton
+  const [loaded, setLoaded] = useState(() => typeof src === 'string' && src.startsWith('data:'));
   return (
     <div style={{ position: 'relative', overflow: 'hidden', ...containerStyle }}>
       {/* Facebook-style placeholder: grey shimmer until image loads */}
@@ -63,6 +64,8 @@ function ImageWithSkeleton({
 interface PhotoGridProps {
   images: string[];
   onPostClick: (imageIndex: number) => void;
+  /** รูปที่โหลดไว้แล้ว (data URL) สำหรับโพสที่พึ่งโพส — ใช้แสดงทันทีโดยไม่เห็น Skeleton */
+  preloadImages?: string[] | null;
   /** เมื่อ true รูปแรกใช้ loading="eager" สำหรับ LCP (โพสแรกในฟีด) */
   priority?: boolean;
   /** ลำดับโหลดรูปแรกของการ์ด (เมื่อไม่ใช้ priority): high = โหลดก่อน, low = โหลดหลัง */
@@ -76,7 +79,7 @@ interface PhotoGridProps {
 /**
  * Optimized PhotoGrid with lazy loading. First card in feed uses priority for LCP.
  */
-export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, priority = false, firstImageFetchPriority, layout = 'default', gap = PHOTO_GRID_GAP }) => {
+export const PhotoGrid = React.memo<PhotoGridProps>(({ images, preloadImages, onPostClick, priority = false, firstImageFetchPriority, layout = 'default', gap = PHOTO_GRID_GAP }) => {
   // ใช้ rowGap/columnGap เดียวกันทุก layout — ให้เส้นแบ่งรูปเท่ากับ 2×2 จริง
   const gridGap = { rowGap: gap, columnGap: gap };
   // รูปแรกของการ์ด: โพสบนสุด = high, โพสถัดไป = high, โพสล่าง = low
@@ -108,6 +111,13 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     return [];
   })();
 
+  // โพสที่พึ่งโพส: ใช้ preload (data URL) แทน URL จากเน็ต เพื่อแสดงรูปทันที
+  const effectiveImages: string[] = normalizedImages.map((url, i) =>
+    preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
+      ? preloadImages[i].trim()
+      : url
+  );
+
   const count = normalizedImages.length;
 
   if (count === 0) return null;
@@ -127,7 +137,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       <>
         <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
           <ImageWithSkeleton
-            src={normalizedImages[0]}
+            src={effectiveImages[0]}
             imageIndex={0}
             onPostClick={onPostClick}
             loading={firstImageLoading}
@@ -146,7 +156,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       <>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
           <ImageWithSkeleton
-            src={normalizedImages[0]}
+            src={effectiveImages[0]}
             imageIndex={0}
             onPostClick={onPostClick}
             loading={firstImageLoading}
@@ -155,7 +165,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imgStyle={baseImgStyle}
           />
           <ImageWithSkeleton
-            src={normalizedImages[1]}
+            src={effectiveImages[1]}
             imageIndex={1}
             onPostClick={onPostClick}
             loading="lazy"
@@ -174,7 +184,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
           <div style={{ gridRow: 'span 2' }}>
             <ImageWithSkeleton
-              src={normalizedImages[0]}
+              src={effectiveImages[0]}
               imageIndex={0}
               onPostClick={onPostClick}
               loading={firstImageLoading}
@@ -185,7 +195,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           </div>
           <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
             <ImageWithSkeleton
-              src={normalizedImages[1]}
+              src={effectiveImages[1]}
               imageIndex={1}
               onPostClick={onPostClick}
               loading="lazy"
@@ -193,7 +203,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
           />
             <ImageWithSkeleton
-              src={normalizedImages[2]}
+              src={effectiveImages[2]}
               imageIndex={2}
               onPostClick={onPostClick}
               loading="lazy"
@@ -211,7 +221,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
     return (
       <>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
-          {normalizedImages.map((img, i) => (
+          {effectiveImages.map((img, i) => (
             <ImageWithSkeleton
               key={i}
               src={img}
@@ -235,7 +245,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
-            {normalizedImages.slice(0, 4).map((img, i) => (
+            {effectiveImages.slice(0, 4).map((img, i) => (
               <div
                 key={i}
                 style={{
@@ -287,7 +297,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
-            {normalizedImages.slice(0, 2).map((img, i) => (
+            {effectiveImages.slice(0, 2).map((img, i) => (
               <div
                 key={i}
                 style={{
@@ -310,7 +320,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               </div>
             ))}
             <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
-              {normalizedImages.slice(2, 5).map((img, i) => {
+              {effectiveImages.slice(2, 5).map((img, i) => {
                 const idx = i + 2;
                 return (
                   <div
@@ -375,7 +385,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             }}
           >
             <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap, minHeight: 0 }}>
-              {normalizedImages.slice(0, 2).map((img, i) => (
+              {effectiveImages.slice(0, 2).map((img, i) => (
                 <div
                   key={i}
                   style={{
@@ -400,7 +410,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               ))}
             </div>
             <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', ...gridGap, minHeight: 0 }}>
-              {normalizedImages.slice(2, 5).map((img, i) => {
+              {effectiveImages.slice(2, 5).map((img, i) => {
                 const idx = i + 2;
                 return (
                   <div
@@ -455,7 +465,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
       return (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gridTemplateRows: '1fr 1fr 1fr 1fr 1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative', aspectRatio: '5/6', width: '100%' }}>
-            {normalizedImages.slice(0, 2).map((img, i) => (
+            {effectiveImages.slice(0, 2).map((img, i) => (
               <div
                 key={i}
                 style={{
@@ -479,7 +489,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
                 />
               </div>
             ))}
-            {normalizedImages.slice(2, 5).map((img, i) => {
+            {effectiveImages.slice(2, 5).map((img, i) => {
               const idx = i + 2;
               return (
                 <div
@@ -537,7 +547,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative' }}>
             <div style={{ gridRow: 'span 2' }}>
               <ImageWithSkeleton
-                src={normalizedImages[0]}
+                src={effectiveImages[0]}
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
@@ -547,7 +557,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           />
             </div>
             <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
-              {normalizedImages.slice(1, 3).map((img, i) => {
+              {effectiveImages.slice(1, 3).map((img, i) => {
                 const idx = i + 1;
                 return (
                   <div
@@ -602,7 +612,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           <div style={{ display: 'grid', gridTemplateRows: '2fr 1fr', ...gridGap, cursor: 'pointer', aspectRatio: '1', width: '100%' }}>
             <div style={{ position: 'relative', width: '100%', minHeight: 0 }} onClick={() => onPostClick(0)}>
                   <ImageWithSkeleton
-                src={normalizedImages[0]}
+                src={effectiveImages[0]}
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
@@ -612,7 +622,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap }}>
-              {normalizedImages.slice(1, 3).map((img, i) => {
+              {effectiveImages.slice(1, 3).map((img, i) => {
                 const idx = i + 1;
                 return (
                   <div
@@ -669,7 +679,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           <div style={{ display: 'grid', gridTemplateRows: '2fr 1fr', ...gridGap, cursor: 'pointer', aspectRatio: '1', width: '100%' }}>
             <div style={{ position: 'relative', width: '100%', minHeight: 0 }} onClick={() => onPostClick(0)}>
               <ImageWithSkeleton
-                src={normalizedImages[0]}
+                src={effectiveImages[0]}
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
@@ -679,7 +689,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
               />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
-              {normalizedImages.slice(1, 4).map((img, i) => {
+              {effectiveImages.slice(1, 4).map((img, i) => {
                 const idx = i + 1;
                 return (
                   <div
@@ -736,7 +746,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr 1fr', ...gridGap, cursor: 'pointer', position: 'relative', aspectRatio: '1', width: '100%' }}>
             <div style={{ gridRow: 'span 3', minHeight: 0 }}>
               <ImageWithSkeleton
-                src={normalizedImages[0]}
+                src={effectiveImages[0]}
                 imageIndex={0}
                 onPostClick={onPostClick}
                 loading={firstImageLoading}
@@ -745,7 +755,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
             imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
           />
             </div>
-            {normalizedImages.slice(1, 4).map((img, i) => {
+            {effectiveImages.slice(1, 4).map((img, i) => {
               const idx = i + 1;
               return (
                 <div
@@ -799,7 +809,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
-        {normalizedImages.slice(0, 2).map((img, i) => (
+        {effectiveImages.slice(0, 2).map((img, i) => (
           <ImageWithSkeleton
             key={i}
             src={img}
@@ -812,7 +822,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, onPostClick, prio
           />
         ))}
         <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', ...gridGap }}>
-          {normalizedImages.slice(2, 5).map((img, i) => {
+          {effectiveImages.slice(2, 5).map((img, i) => {
             const idx = i + 2;
             return (
               <div
