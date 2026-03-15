@@ -110,7 +110,10 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
             const next = typeof fn === 'function' ? fn(recommendOnly) : fn;
             if (!Array.isArray(next)) return prev;
             const byId = new Map(next.map((p: any) => [p.id, p]));
-            return prev.map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
+            const nextIds = new Set(next.map((p: any) => p.id));
+            return prev
+              .filter((p: any) => p.status !== 'recommend' || nextIds.has(p.id))
+              .map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
           });
         },
         session: searchData.session,
@@ -134,7 +137,10 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
             const next = typeof fn === 'function' ? fn(soldOnly) : fn;
             if (!Array.isArray(next)) return prev;
             const byId = new Map(next.map((p: any) => [p.id, p]));
-            return prev.map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
+            const nextIds = new Set(next.map((p: any) => p.id));
+            return prev
+              .filter((p: any) => p.status !== 'sold' || nextIds.has(p.id))
+              .map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
           });
         },
         session: searchData.session,
