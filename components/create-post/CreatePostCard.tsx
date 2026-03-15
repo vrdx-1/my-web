@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/Avatar';
 import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
 import { LayoutPreviewSelector } from './LayoutPreviewSelector';
@@ -32,6 +33,7 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     layout,
     onLayoutChange,
   }) => {
+    const router = useRouter();
     return (
       <div>
         <div
@@ -227,11 +229,32 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               gap={PHOTO_GRID_GAP}
             />
             {previews.length >= 6 && (
-              <LayoutPreviewSelector
-                selectedLayout={layout}
-                onLayoutChange={onLayoutChange}
-                previews={previews}
-              />
+              <>
+                <LayoutPreviewSelector
+                  selectedLayout={layout}
+                  onLayoutChange={onLayoutChange}
+                  previews={previews}
+                />
+                <div style={{ padding: '8px 15px 16px' }}>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/create-post/arrange')}
+                    style={{
+                      padding: '10px 0',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#1877f2',
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '0',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    ຈັດລຽນຮູບ
+                  </button>
+                </div>
+              </>
             )}
           </>
         )}

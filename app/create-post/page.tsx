@@ -138,10 +138,17 @@ export default function CreatePost() {
   }, [caption]);
 
   // ขอเปิดแกลเลอรี่ (file picker) อัตโนมัติครั้งแรกเมื่อเข้าหน้า (บางเครื่อง Android เปิดไม่ได้เอง)
+  // อย่าเปิดถ้ามี draft/pending อยู่ (เช่น กลับจากหน้าจัดเรียงรูป) — รอให้โหลด draft ก่อน
   useEffect(() => {
     if (hasRequestedGalleryRef.current) return;
     if (!autoFileInputRef.current) return;
     if (imageUpload.selectedFiles.length > 0 || imageUpload.previews.length > 0) return;
+    if (typeof window === 'undefined') return;
+    const savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
+    const lsBase64 = safeParseJSON<string[]>('create_post_images_base64_ls', []);
+    if ((savedBase64 && savedBase64.length > 0) || (lsBase64 && lsBase64.length > 0)) return;
+    const pending = safeParseSessionJSON<string[]>('pending_images', []);
+    if (pending && pending.length > 0) return;
 
     hasRequestedGalleryRef.current = true;
     try {
