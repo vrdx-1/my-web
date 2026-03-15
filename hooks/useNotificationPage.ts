@@ -281,17 +281,21 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
       const notification = notificationsRef.current.find((n) => n.post_id === postId);
       if (!notification) return;
       const lastSeen = notification.created_at;
-      setClearedPostMap((prev) => {
-        const next = { ...prev, [postId]: lastSeen };
-        saveClearedMap(next);
-        return next;
-      });
-      setNotifications((current) =>
-        current.map((n) =>
-          n.post_id === postId ? { ...n, notification_count: 0 } : n
-        )
-      );
+      // เด้งเข้าไปทันที — ไม่อัปเดต state ก่อน เพื่อไม่ให้รายการเปลี่ยนสีก่อนเข้า
       router.push(`/notification/${postId}`);
+      // เปลี่ยนสีรายการ (ทะเล → ขาว) ทำหลังเข้าไปแล้ว; ตอนกดออกมาจะเห็นเป็นสีขาวทันที
+      requestAnimationFrame(() => {
+        setClearedPostMap((prev) => {
+          const next = { ...prev, [postId]: lastSeen };
+          saveClearedMap(next);
+          return next;
+        });
+        setNotifications((current) =>
+          current.map((n) =>
+            n.post_id === postId ? { ...n, notification_count: 0 } : n
+          )
+        );
+      });
     },
     [router]
   );
