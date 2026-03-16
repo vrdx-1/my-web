@@ -9,6 +9,9 @@ const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
 const RPC_TERMS_PER_CALL = 500;
 
+/** รูปแบบรหัสโพส 5 ตัว: ตัวอักษรเล็ก 1 ตัว + ตัวเลข 4 ตัว */
+const SHORT_ID_REGEX = /^[a-z][0-9]{4}$/;
+
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
 function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest) {
       type RpcRow = { id: string; is_boosted: boolean | null; created_at: string };
       const allOrdered: RpcRow[] = [];
       const seenIds = new Set<string>();
+      const carsClient = getCarsReadClient(supabase);
 
       if (searchTerms.length <= RPC_TERMS_PER_CALL) {
         const { data: rpcRows, error: rpcError } = await supabase.rpc('search_cars_by_caption_terms', {
@@ -96,6 +100,23 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // โพสที่ short_id ตรงกับคำค้นใดคำหนึ่ง (คำค้นต้องเป็นรูปแบบ a1234) — นำมารวมกับผลจาก caption
+      const shortIdTerms = searchTerms.filter((t) => SHORT_ID_REGEX.test(t));
+      if (shortIdTerms.length > 0) {
+        const { data: shortRows } = await carsClient
+          .from('cars')
+          .select('id, is_boosted, created_at')
+          .in('short_id', shortIdTerms)
+          .in('status', ['recommend', 'sold'])
+          .eq('is_hidden', false);
+        for (const r of shortRows || []) {
+          if (r && !seenIds.has(r.id)) {
+            seenIds.add(r.id);
+            allOrdered.push({ id: r.id, is_boosted: r.is_boosted ?? null, created_at: r.created_at });
+          }
+        }
+      }
+
       allOrdered.sort((a, b) => {
         const aBoost = a.is_boosted === true ? 1 : 0;
         const bBoost = b.is_boosted === true ? 1 : 0;
@@ -111,7 +132,6 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const carsClient = getCarsReadClient(supabase);
       const { data: rows, error: fetchError } = await carsClient
         .from('cars')
         .select(POST_WITH_PROFILE_SELECT)
@@ -156,12 +176,17 @@ export async function GET(request: NextRequest) {
 
     const singleQuery = searchTerms[0] ?? query;
     const carsClient = getCarsReadClient(supabase);
+    const matchShortId = SHORT_ID_REGEX.test(singleQuery);
     let dbQuery = carsClient
       .from('cars')
       .select(POST_WITH_PROFILE_SELECT)
       .in('status', ['recommend', 'sold'])
-      .eq('is_hidden', false)
-      .ilike('caption', `%${singleQuery}%`);
+      .eq('is_hidden', false);
+    if (matchShortId) {
+      dbQuery = dbQuery.or(`caption.ilike.%${singleQuery}%,short_id.eq.${singleQuery}`);
+    } else {
+      dbQuery = dbQuery.ilike('caption', `%${singleQuery}%`);
+    }
 
     if (province && province.trim() !== '') {
       dbQuery = dbQuery.eq('province', province.trim());

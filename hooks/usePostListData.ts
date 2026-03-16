@@ -578,15 +578,19 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .order('created_at', { ascending: false });
         if (cancelledRef.current) return;
         if (postsError) {
-          console.error('Error fetching posts:', postsError, { 
+          const msg = postsError?.message ?? (typeof postsError === 'object' ? JSON.stringify(postsError) : String(postsError));
+          console.error('Error fetching posts:', msg, {
             validPostIds,
             validPostIdsCount: validPostIds.length,
             type,
-            errorCode: postsError.code,
-            errorMessage: postsError.message,
-            errorDetails: postsError.details,
-            errorHint: postsError.hint
+            errorCode: postsError?.code,
+            errorMessage: postsError?.message,
+            errorDetails: postsError?.details,
+            errorHint: postsError?.hint,
           });
+          if (msg && /short_id|column.*does not exist/i.test(msg)) {
+            console.error('รันสคริปต์ scripts/cars_short_id.sql ใน Supabase SQL Editor เพื่อเพิ่มคอลัมน์ short_id');
+          }
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }

@@ -191,6 +191,22 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
+                {post.short_id && (
+                  <>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '3px',
+                        height: '3px',
+                        borderRadius: '50%',
+                        backgroundColor: '#4a4d52',
+                        margin: '0 6px',
+                        transform: 'translateY(1px)',
+                      }}
+                    />
+                    <span style={{ color: '#4a4d52' }}>{post.short_id}</span>
+                  </>
+                )}
                 <span
                   style={{
                     display: 'inline-block',
@@ -219,6 +235,22 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
+                {post.short_id && (
+                  <>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '3px',
+                        height: '3px',
+                        borderRadius: '50%',
+                        backgroundColor: '#4a4d52',
+                        margin: '0 6px',
+                        transform: 'translateY(1px)',
+                      }}
+                    />
+                    <span style={{ color: '#4a4d52' }}>{post.short_id}</span>
+                  </>
+                )}
               </span>
             )}
           </div>
