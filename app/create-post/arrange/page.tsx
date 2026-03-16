@@ -55,8 +55,12 @@ export default function ArrangePostImagesPage() {
 
   const handleTapImage = useCallback((index: number) => {
     setTappedOrder((prev) => {
-      if (prev.includes(index)) return prev;
-      return [...prev, index];
+      const lastSelected = prev.length > 0 ? prev[prev.length - 1] : undefined;
+      if (lastSelected !== undefined && lastSelected === index) {
+        return prev.slice(0, -1); // กดรูปล่าสุดอีกครั้ง = ยกเลิก (ย้อนหลังได้ทีละรูป)
+      }
+      if (prev.includes(index)) return prev; // เลือกไปแล้วแต่ไม่ใช่ล่าสุด = ไม่สามารถยกเลิกได้
+      return [...prev, index]; // เลือกรูปใหม่
     });
   }, []);
 
