@@ -21,6 +21,7 @@ export default function CreatePostPrivateNotePage() {
   const [shopName, setShopName] = useState('');
   const [shopPhone, setShopPhone] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -40,18 +41,6 @@ export default function CreatePostPrivateNotePage() {
 
       if (!error && data) {
         setShops(data as PrivateShop[]);
-      }
-
-      if (typeof window !== 'undefined') {
-        const raw = window.sessionStorage.getItem('create_post_private_shop');
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw) as { id: string };
-            setSelectedId(parsed.id);
-          } catch {
-            // ignore
-          }
-        }
       }
 
       setLoading(false);
@@ -111,6 +100,15 @@ export default function CreatePostPrivateNotePage() {
       );
     }
     router.back();
+  };
+
+  const handleConfirmDeleteShop = async () => {
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
+    if (!id || !userId) return;
+    await supabase.from('user_private_shops').delete().eq('id', id).eq('user_id', userId);
+    setShops((prev) => prev.filter((s) => s.id !== id));
+    if (selectedId === id) setSelectedId(null);
   };
 
   if (loading) {
@@ -290,37 +288,74 @@ export default function CreatePostPrivateNotePage() {
               background: '#fff',
             }}
           >
-            <span style={{ fontSize: '14px', marginRight: '2px' }}>020</span>
-            <input
-              type="tel"
-              inputMode="numeric"
-              value={shopPhone + 'x'.repeat(8 - shopPhone.length)}
-              onChange={(e) => {
-                const raw = e.target.value;
-                const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
-                setShopPhone(digitsOnly);
+            <span
+              style={{
+                fontSize: '14px',
+                marginRight: '1px',
+                fontWeight: 600,
               }}
-              onKeyDown={(e) => {
-                const key = e.key;
-                if (key === 'Backspace' && shopPhone.length > 0) {
-                  setShopPhone(shopPhone.slice(0, -1));
-                  e.preventDefault();
-                } else if (key.length === 1 && /[0-9]/.test(key) && shopPhone.length < 8) {
-                  setShopPhone(shopPhone + key);
-                  e.preventDefault();
-                }
-              }}
-              maxLength={8}
+            >
+              020
+            </span>
+            <div
               style={{
                 flex: 1,
                 minWidth: 0,
-                padding: 0,
-                border: 'none',
-                outline: 'none',
-                fontSize: '14px',
-                background: 'transparent',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
               }}
-            />
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  pointerEvents: 'none',
+                  fontSize: '14px',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#111111' }}>{shopPhone}</span>
+                <span style={{ color: '#b0b0b0' }}>{'x'.repeat(8 - shopPhone.length)}</span>
+              </div>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={shopPhone + 'x'.repeat(8 - shopPhone.length)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+                  setShopPhone(digitsOnly);
+                }}
+                onKeyDown={(e) => {
+                  const key = e.key;
+                  if (key === 'Backspace' && shopPhone.length > 0) {
+                    setShopPhone(shopPhone.slice(0, -1));
+                    e.preventDefault();
+                  } else if (key.length === 1 && /[0-9]/.test(key) && shopPhone.length < 8) {
+                    setShopPhone(shopPhone + key);
+                    e.preventDefault();
+                  }
+                }}
+                maxLength={8}
+                style={{
+                  position: 'relative',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: 0,
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '14px',
+                  color: 'transparent',
+                  caretColor: '#111111',
+                  background: 'transparent',
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -333,48 +368,171 @@ export default function CreatePostPrivateNotePage() {
               {shops.map((shop) => {
                 const isSelected = shop.id === selectedId;
                 return (
-                  <button
+                  <div
                     key={shop.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedId(shop.id);
-                      setShopName(shop.shop_name ?? '');
-                      const rawPhone = shop.shop_phone ?? '';
-                      const tail = rawPhone.startsWith('85620') ? rawPhone.slice(5) : rawPhone.startsWith('020') ? rawPhone.slice(3) : rawPhone.replace(/\D/g, '');
-                      setShopPhone(tail.slice(0, 8));
-                    }}
                     style={{
-                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
                       padding: '8px 10px',
                       borderRadius: '10px',
                       border: isSelected ? '2px solid #1877f2' : '1px solid #e0e0e0',
                       background: isSelected ? '#eef3ff' : '#fff',
-                      cursor: 'pointer',
                     }}
                   >
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedId(shop.id);
+                        setShopName(shop.shop_name ?? '');
+                        const rawPhone = shop.shop_phone ?? '';
+                        const tail = rawPhone.startsWith('85620') ? rawPhone.slice(5) : rawPhone.startsWith('020') ? rawPhone.slice(3) : rawPhone.replace(/\D/g, '');
+                        setShopPhone(tail.slice(0, 8));
+                        setShops((prev) => {
+                          const idx = prev.findIndex((s) => s.id === shop.id);
+                          if (idx <= 0) return prev;
+                          const next = [...prev];
+                          const [item] = next.splice(idx, 1);
+                          next.unshift(item);
+                          return next;
+                        });
+                        if (typeof window !== 'undefined') {
+                          window.sessionStorage.setItem(
+                            'create_post_private_shop',
+                            JSON.stringify({
+                              id: shop.id,
+                              shop_name: shop.shop_name,
+                              shop_phone: shop.shop_phone,
+                            }),
+                          );
+                        }
+                      }}
                       style={{
-                        fontWeight: 600,
-                        fontSize: '14px',
-                        marginBottom: '2px',
+                        flex: 1,
+                        textAlign: 'left',
+                        padding: 0,
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        minWidth: 0,
                       }}
                     >
-                      {shop.shop_name ?? '—'}
-                    </div>
-                    {shop.shop_phone && (
-                      <div style={{ fontSize: '13px', color: '#4a4d52' }}>
-                        {shop.shop_phone.startsWith('85620') && shop.shop_phone.length === 13
-                          ? `020${shop.shop_phone.slice(5)}`
-                          : shop.shop_phone}
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          marginBottom: '2px',
+                        }}
+                      >
+                        {shop.shop_name ?? '—'}
                       </div>
-                    )}
-                  </button>
+                      {shop.shop_phone && (
+                        <div style={{ fontSize: '13px', color: '#4a4d52' }}>
+                          {shop.shop_phone.startsWith('85620') && shop.shop_phone.length === 13
+                            ? `020${shop.shop_phone.slice(5)}`
+                            : shop.shop_phone}
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirmId(shop.id);
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        fontSize: '20px',
+                        lineHeight: 1,
+                        color: '#65676b',
+                      }}
+                      aria-label="ລົບລາຍການ"
+                    >
+                      ×
+                    </button>
+                  </div>
                 );
               })}
             </div>
           </div>
         )}
       </div>
+
+      {deleteConfirmId !== null && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 2500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '320px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
+              ທ່ານຕ້ອງການລົບລາຍການອອກບໍ
+            </h3>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#e4e6eb',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#1c1e21',
+                  cursor: 'pointer',
+                }}
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteShop}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#1877f2',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                ລົບ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
