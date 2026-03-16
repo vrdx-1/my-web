@@ -96,8 +96,8 @@ export function useCreatePostDraft({
       // ถ้ามี pending_images จากหน้าโฮม ให้ใช้ก่อน
       if (pendingImages.length > 0) {
         try {
-          // จำกัดสูงสุด 15 รูป (ถ้ามาเกิน เอาแค่ 15 รูปแรก)
-          const limitedPendingImages = pendingImages.slice(0, 15);
+          // จำกัดสูงสุด 30 รูปจากหน้าโฮม (ถ้ามาเกิน เอาแค่ 30 รูปแรก)
+          const limitedPendingImages = pendingImages.slice(0, 30);
 
           // แปลง Blob URL กลับเป็น File Object
           const filePromises = limitedPendingImages.map(async (url: string, index: number) => {
@@ -120,7 +120,8 @@ export function useCreatePostDraft({
           });
 
           const files = await Promise.all(filePromises);
-          const validFiles = files.filter((file): file is File => file !== null).slice(0, 15);
+          // รองรับสูงสุด 30 รูปจาก pending_images
+          const validFiles = files.filter((file): file is File => file !== null).slice(0, 30);
 
           if (validFiles.length > 0) {
             // สร้าง Blob URL สำหรับ preview
@@ -166,8 +167,8 @@ export function useCreatePostDraft({
           }
 
           if (savedBase64 && savedBase64.length > 0) {
-            // จำกัดสูงสุด 15 รูป (ถ้ามาเกิน เอาแค่ 15 รูปแรก)
-            const limitedBase64 = savedBase64.slice(0, 15);
+            // จำกัดสูงสุด 30 รูป (ถ้ามาเกิน เอาแค่ 30 รูปแรก)
+            const limitedBase64 = savedBase64.slice(0, 30);
 
             // แปลง base64 กลับเป็น File objects
             const files = limitedBase64.map((base64, index) =>
@@ -259,12 +260,11 @@ export function useCreatePostDraft({
   useEffect(() => {
     if (!isInitialized) return;
     if (typeof window !== 'undefined' && imageUpload.selectedFiles.length > 0) {
-      // แปลง File objects เป็น base64 และเก็บใน sessionStorage + localStorage
+      // แปลง File objects เป็น base64 และเก็บใน sessionStorage + localStorage (สูงสุด 30 รูป)
       const saveImagesAsBase64 = async () => {
         try {
-          const base64Promises = imageUpload.selectedFiles.map((file: File) =>
-            fileToBase64(file),
-          );
+          const filesToSave = imageUpload.selectedFiles.slice(0, 30);
+          const base64Promises = filesToSave.map((file: File) => fileToBase64(file));
           const base64Strings = await Promise.all(base64Promises);
           sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
           localStorage.setItem('create_post_images_base64_ls', JSON.stringify(base64Strings));

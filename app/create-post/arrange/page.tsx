@@ -33,7 +33,8 @@ export default function ArrangePostImagesPage() {
       router.replace('/create-post');
       return;
     }
-    const list = savedBase64.slice(0, 15);
+    // รองรับสูงสุด 30 รูปในหน้าจัดเรียง (เลือก/จัดลำดับได้สูงสุด 15)
+    const list = savedBase64.slice(0, 30);
     setBase64List(list);
     const files = list.map((base64, i) =>
       base64ToFile(base64, `image-${Date.now()}-${i}.webp`),
@@ -58,6 +59,8 @@ export default function ArrangePostImagesPage() {
       if (lastSelected !== undefined && lastSelected === index) {
         return prev.slice(0, -1); // กดรูปล่าสุดอีกครั้ง = ยกเลิก (ย้อนหลังได้ทีละรูป)
       }
+      // จำกัดจำนวนรูปที่เลือกได้สูงสุด 15 รูป
+      if (prev.length >= 15) return prev;
       if (prev.includes(index)) return prev; // เลือกไปแล้วแต่ไม่ใช่ล่าสุด = ไม่สามารถยกเลิกได้
       return [...prev, index]; // เลือกรูปใหม่
     });
@@ -65,13 +68,16 @@ export default function ArrangePostImagesPage() {
 
   const handleDone = useCallback(() => {
     if (base64List.length === 0) return;
-    const reordered = fullOrder.map((i) => base64List[i]);
+    const minRequired = Math.min(6, previews.length);
+    if (tappedOrder.length < minRequired) return;
+    /** บันทึกเฉพาะรูปที่ผู้ใช้เลือก (ตามลำดับที่กด) — รูปที่ไม่ได้เลือกจะไม่ถูกบันทึกและไม่ส่งไป backend */
+    const selectedBase64 = tappedOrder.map((i) => base64List[i]);
     try {
-      sessionStorage.setItem('create_post_images_base64', JSON.stringify(reordered));
-      localStorage.setItem('create_post_images_base64_ls', JSON.stringify(reordered));
+      sessionStorage.setItem('create_post_images_base64', JSON.stringify(selectedBase64));
+      localStorage.setItem('create_post_images_base64_ls', JSON.stringify(selectedBase64));
     } catch (_) {}
     router.push('/create-post');
-  }, [base64List, fullOrder, router]);
+  }, [base64List, previews.length, tappedOrder, router]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -124,7 +130,7 @@ export default function ArrangePostImagesPage() {
           ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່
         </h3>
         <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
-          {tappedOrder.length === previews.length && (
+          {tappedOrder.length >= Math.min(6, previews.length) && (
             <button
               type="button"
               onClick={handleDone}

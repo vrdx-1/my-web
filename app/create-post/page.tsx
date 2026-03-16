@@ -71,7 +71,7 @@ export default function CreatePost() {
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
   // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
   const imageUpload = useImageUpload({
-    maxFiles: 15,
+    maxFiles: 30,
     compressMaxWidth: 720,
     compressQuality: 0.5,
   });
@@ -332,7 +332,7 @@ if (isUploading) {
             caption={caption}
             setCaption={setCaption}
             textareaRef={textareaRef as any}
-            previews={imageUpload.previews}
+            previews={imageUpload.previews.slice(0, 15)}
             onImageClick={() => setIsViewing(true)}
             onRemoveImage={removeImage}
             layout={layout}
