@@ -204,7 +204,7 @@ export function PostCard({
                         transform: 'translateY(1px)',
                       }}
                     />
-                    <span style={{ color: '#4a4d52' }}>{post.short_id}</span>
+                    <span style={{ color: '#4a4d52' }}>ID: {post.short_id}</span>
                   </>
                 )}
                 <span
@@ -248,7 +248,7 @@ export function PostCard({
                         transform: 'translateY(1px)',
                       }}
                     />
-                    <span style={{ color: '#4a4d52' }}>{post.short_id}</span>
+                    <span style={{ color: '#4a4d52' }}>ID: {post.short_id}</span>
                   </>
                 )}
               </span>

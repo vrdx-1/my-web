@@ -1,19 +1,20 @@
--- คอลัมน์ short_id: รหัสโพส 5 ตัว (อักษรเล็ก 1 ตัว + ตัวเลข 4 ตัว) ใช้แสดงในการ์ดและค้นหา
+-- คอลัมน์ short_id: รหัสโพส 6 ตัว (ตัวเลขล้วน) ใช้แสดงในการ์ดและค้นหา
 -- รันใน Supabase SQL Editor
 
 ALTER TABLE public.cars
   ADD COLUMN IF NOT EXISTS short_id text;
 
-COMMENT ON COLUMN public.cars.short_id IS 'Post display ID: 1 lowercase letter + 4 digits (e.g. a1234)';
+COMMENT ON COLUMN public.cars.short_id IS 'Post display ID: 6 digits (e.g. 123456)';
 
--- สร้างรหัส 5 ตัว: ตัวอักษร a-z 1 ตัว + ตัวเลข 0-9 จำนวน 4 ตัว
+-- สร้างรหัส 6 ตัว: ตัวเลข 0-9 จำนวน 6 ตัว
 CREATE OR REPLACE FUNCTION public.generate_car_short_id()
 RETURNS text
 LANGUAGE plpgsql
 VOLATILE
 AS $$
 BEGIN
-  RETURN chr(97 + floor(random() * 26)::int)
+  RETURN (floor(random() * 10)::int)::text
+    || (floor(random() * 10)::int)::text
     || (floor(random() * 10)::int)::text
     || (floor(random() * 10)::int)::text
     || (floor(random() * 10)::int)::text

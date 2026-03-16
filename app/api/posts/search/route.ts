@@ -9,8 +9,8 @@ const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
 const RPC_TERMS_PER_CALL = 500;
 
-/** รูปแบบรหัสโพส 5 ตัว: ตัวอักษรเล็ก 1 ตัว + ตัวเลข 4 ตัว */
-const SHORT_ID_REGEX = /^[a-z][0-9]{4}$/;
+/** รูปแบบรหัสโพส 6 ตัว: ตัวเลขล้วน */
+const SHORT_ID_REGEX = /^[0-9]{6}$/;
 
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
 function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // โพสที่ short_id ตรงกับคำค้นใดคำหนึ่ง (คำค้นต้องเป็นรูปแบบ a1234) — นำมารวมกับผลจาก caption
+      // โพสที่ short_id ตรงกับคำค้นใดคำหนึ่ง (คำค้นต้องเป็นรูปแบบตัวเลข 6 ตัว) — นำมารวมกับผลจาก caption
       const shortIdTerms = searchTerms.filter((t) => SHORT_ID_REGEX.test(t));
       if (shortIdTerms.length > 0) {
         const { data: shortRows } = await carsClient
