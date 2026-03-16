@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
 import { base64ToFile } from '@/utils/fileEncoding';
-import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { PHOTO_GRID_GAP, LAYOUT_ASPECT_RATIO, LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { EmptyLayoutPreview } from '@/components/create-post/EmptyLayoutPreview';
 
 export default function ArrangePostImagesPage() {
@@ -148,36 +147,27 @@ export default function ArrangePostImagesPage() {
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '12px 15px', display: 'flex', flexDirection: 'column' }}>
+        {/* ถ้าเป็น layout 7 (one-top-two-bottom) ให้เว้นระยะมากขึ้นกันรูปทับ layout */}
         <div
           style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: '600px',
-            aspectRatio: '1',
+            width: '50%',
+            maxWidth: '240px',
+            aspectRatio: LAYOUT_ASPECT_RATIO[previews.length >= 6 ? layout : 'default'] || '1',
             flexShrink: 0,
-            margin: '0 auto 16px',
+            margin: `0 auto ${previews.length >= 6 && layout === 'one-top-two-bottom' ? '32px' : '16px'}`,
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <EmptyLayoutPreview
-              layout={previews.length >= 6 ? layout : 'default'}
-              imageUrls={orderedPreviewsForLayout}
-              gap={PHOTO_GRID_GAP}
-              constrained
-            />
-          </div>
+          <EmptyLayoutPreview
+            layout={previews.length >= 6 ? layout : 'default'}
+            imageUrls={orderedPreviewsForLayout}
+            gap={PHOTO_GRID_GAP}
+            constrained
+          />
         </div>
 
         <div
           style={{
+            marginTop: previews.length >= 6 && layout === 'one-top-two-bottom' ? '40px' : '8px',
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '8px',

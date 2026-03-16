@@ -70,27 +70,20 @@ interface EmptyLayoutPreviewProps {
   constrained?: boolean;
 }
 
+/** เมื่อ constrained: เติมกรอบ 100% (กรอบมี aspect ratio ตรงกับ layout แล้ว) */
 const CONTAINED_LAYOUT_STYLE: React.CSSProperties = {
-  maxWidth: '100%',
-  maxHeight: '100%',
-  width: 'auto',
-  height: 'auto',
-};
-
-/** ตอนยังไม่เลือกรูป ให้ layout เปล่ายังเต็มกรอบ (ไม่หดเป็นศูนย์) */
-const CONTAINED_EMPTY_LAYOUT_STYLE: React.CSSProperties = {
-  ...CONTAINED_LAYOUT_STYLE,
-  minWidth: '100%',
-  minHeight: '100%',
+  width: '100%',
+  height: '100%',
+  minWidth: 0,
+  minHeight: 0,
+  boxSizing: 'border-box',
 };
 
 /** แสดง layout เปล่าหรือเติมรูปตามลำดับที่ส่งมา (ช่องที่ไม่มีรูปแสดงเป็นพื้นสีเทาอ่อน) */
 export const EmptyLayoutPreview = React.memo<EmptyLayoutPreviewProps>(
   ({ layout, imageUrls, gap, constrained }) => {
     const g = gap;
-    const rootStyle = constrained
-      ? (imageUrls.length === 0 ? CONTAINED_EMPTY_LAYOUT_STYLE : CONTAINED_LAYOUT_STYLE)
-      : undefined;
+    const rootStyle = constrained ? CONTAINED_LAYOUT_STYLE : undefined;
 
     if (layout === 'default') {
       const slotCount = 4;
@@ -128,19 +121,20 @@ export const EmptyLayoutPreview = React.memo<EmptyLayoutPreviewProps>(
             width: '100%',
             aspectRatio: '1',
             background: '#ffffff',
+            minHeight: 0,
             ...rootStyle,
           }}
         >
-          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: g, background: '#ffffff' }}>
+          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: g, background: '#ffffff', minHeight: 0 }}>
             {[0, 1].map((i) => (
-              <SlotWithPlusN key={i} url={imageUrls[i]} style={{ aspectRatio: '1' }} slotStyle={{}} />
+              <SlotWithPlusN key={i} url={imageUrls[i]} style={{ aspectRatio: '1' }} slotStyle={{ minHeight: 0 }} />
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', gap: g, background: '#ffffff' }}>
+          <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', gap: g, background: '#ffffff', minHeight: 0 }}>
             {[2, 3].map((i) => (
-              <SlotWithPlusN key={i} url={imageUrls[i]} slotStyle={{}} />
+              <SlotWithPlusN key={i} url={imageUrls[i]} slotStyle={{ minHeight: 0 }} />
             ))}
-            <SlotWithPlusN url={imageUrls[4]} plusN={plusN} slotStyle={{}} />
+            <SlotWithPlusN url={imageUrls[4]} plusN={plusN} slotStyle={{ minHeight: 0 }} />
           </div>
         </div>
       );
@@ -159,14 +153,15 @@ export const EmptyLayoutPreview = React.memo<EmptyLayoutPreviewProps>(
             width: '100%',
             aspectRatio: '5/6',
             background: '#ffffff',
+            minHeight: 0,
             ...rootStyle,
           }}
         >
-          <SlotWithPlusN url={imageUrls[0]} slotStyle={{ gridColumn: 1, gridRow: '1 / 4' }} />
-          <SlotWithPlusN url={imageUrls[1]} slotStyle={{ gridColumn: 1, gridRow: '4 / 7' }} />
-          <SlotWithPlusN url={imageUrls[2]} slotStyle={{ gridColumn: 2, gridRow: '1 / 3' }} />
-          <SlotWithPlusN url={imageUrls[3]} slotStyle={{ gridColumn: 2, gridRow: '3 / 5' }} />
-          <SlotWithPlusN url={imageUrls[4]} plusN={plusN} slotStyle={{ gridColumn: 2, gridRow: '5 / 7' }} />
+          <SlotWithPlusN url={imageUrls[0]} slotStyle={{ gridColumn: 1, gridRow: '1 / 4', minHeight: 0 }} />
+          <SlotWithPlusN url={imageUrls[1]} slotStyle={{ gridColumn: 1, gridRow: '4 / 7', minHeight: 0 }} />
+          <SlotWithPlusN url={imageUrls[2]} slotStyle={{ gridColumn: 2, gridRow: '1 / 3', minHeight: 0 }} />
+          <SlotWithPlusN url={imageUrls[3]} slotStyle={{ gridColumn: 2, gridRow: '3 / 5', minHeight: 0 }} />
+          <SlotWithPlusN url={imageUrls[4]} plusN={plusN} slotStyle={{ gridColumn: 2, gridRow: '5 / 7', minHeight: 0 }} />
         </div>
       );
     }
@@ -179,6 +174,7 @@ export const EmptyLayoutPreview = React.memo<EmptyLayoutPreviewProps>(
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
             gap: g,
             width: '100%',
             aspectRatio: '1',
@@ -278,10 +274,11 @@ export const EmptyLayoutPreview = React.memo<EmptyLayoutPreviewProps>(
             width: '100%',
             aspectRatio: '1',
             background: '#ffffff',
+            minHeight: 0,
             ...rootStyle,
           }}
         >
-          <SlotWithPlusN url={imageUrls[0]} slotStyle={{}} />
+          <SlotWithPlusN url={imageUrls[0]} slotStyle={{ minHeight: 0 }} />
           <div
             style={{
               display: 'grid',

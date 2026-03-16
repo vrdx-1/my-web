@@ -9,6 +9,18 @@ import { LAO_FONT } from './constants';
 /** Gap เส้นแบ่งรูปใน grid — เท่ากับ layout 2×2 ใช้กับทุก template (PhotoGrid, PhotoPreviewGrid, PostCard) */
 export const PHOTO_GRID_GAP = '3px';
 
+/** Aspect ratio ของแต่ละ layout (ใช้ในหน้าจัดเรียงให้ตัวอย่างขนาดสมจริง) */
+export const LAYOUT_ASPECT_RATIO: Record<string, string> = {
+  default: '1',
+  'car-gallery': '1',
+  'two-left-three-right': '5/6',
+  'five-images': '1',
+  'one-top-three-bottom': '1',
+  'one-left-three-right': '1',
+  'one-top-two-bottom': '1',
+  'three-images': '1',
+};
+
 export const LAYOUT_CONSTANTS = {
   // Container widths
   MAIN_CONTAINER_WIDTH: '600px',
