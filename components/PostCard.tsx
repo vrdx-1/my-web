@@ -7,7 +7,7 @@ import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { PostCardMenu } from './PostCardMenu';
-import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
+import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { formatCompactNumber } from '@/utils/currency';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
@@ -85,8 +85,6 @@ export function PostCard({
 }: PostCardProps) {
   const router = useRouter();
   const isOwner = isPostOwner(post, session);
-  const status = isOwner ? { isOnline: true, text: 'ອອນລາຍ' } : getOnlineStatus(post.profiles?.last_seen);
-  const statusLabel = status.text ? (status.isOnline ? 'ອອນລາຍ' : status.text) : '';
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
@@ -176,18 +174,6 @@ export function PostCard({
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
               {post.profiles?.username?.toLowerCase() === 'guest user' ? 'User' : (post.profiles?.username || 'User')}
             </span>
-            {status.isOnline ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                <div style={{ ...commonStyles.onlineIndicator, width: '11px', height: '11px', marginTop: '2px' }}></div>
-                <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal' }}>{statusLabel}</span>
-              </div>
-            ) : (
-              statusLabel && (
-                <span style={{ fontSize: '13px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>
-                  {statusLabel}
-                </span>
-              )
-            )}
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
             {post.is_boosted && !hideBoost && post.status !== 'sold' ? (

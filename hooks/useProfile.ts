@@ -8,7 +8,6 @@ interface Profile {
   username: string;
   avatar_url: string | null;
   phone?: string | null;
-  last_seen?: string | null;
 }
 
 interface UseProfileReturn {
@@ -48,7 +47,7 @@ export function useProfile(userId?: string): UseProfileReturn {
 
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('username, avatar_url, phone, last_seen')
+        .select('username, avatar_url, phone')
         .eq('id', uid)
         .single();
 
@@ -65,7 +64,6 @@ export function useProfile(userId?: string): UseProfileReturn {
           username: data.username || 'User',
           avatar_url: avatarUrl,
           phone: data.phone || null,
-          last_seen: data.last_seen || null,
         });
       }
     } catch (err) {

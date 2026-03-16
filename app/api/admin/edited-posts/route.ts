@@ -77,7 +77,7 @@ export async function GET() {
   const carIds = [...new Set(editsData.map((e) => e.car_id).filter(Boolean))];
   const { data: carsData, error: carsError } = await admin
     .from('cars')
-    .select('id, caption, province, images, status, created_at, user_id, likes, views, saves, shares, is_hidden, profiles(username, avatar_url, last_seen)')
+    .select('id, caption, province, images, status, created_at, user_id, likes, views, saves, shares, is_hidden, profiles(username, avatar_url)')
     .in('id', carIds);
 
   if (carsError) {

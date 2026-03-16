@@ -1026,45 +1026,6 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   return sortSuggestionsByClosenessAndLanguage(asItems, prefix);
 }
 
-export interface OnlineStatus {
-  isOnline: boolean;
-  text: string;
-}
-
-/**
- * Get online status based on last seen timestamp
- */
-export const getOnlineStatus = (lastSeen: string | null): OnlineStatus => {
-  if (!lastSeen) return { isOnline: false, text: '' };
-  const now = new Date().getTime();
-  const lastActive = new Date(lastSeen).getTime();
-  const diffInSeconds = Math.floor((now - lastActive) / 1000);
-  
-  if (diffInSeconds < 60) return { isOnline: true, text: 'ອອນລາຍ' };
-  if (diffInSeconds < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ເມື່ອຄູ່` };
-  
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMinutes} ນາທີທີ່ແລ້ວ` };
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInDays} ມື້ທີ່ແລ້ວ` };
-  
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  if (diffInWeeks < 4) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດທີ່ແລ້ວ` };
-  
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) {
-    if (diffInMonths < 1) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInWeeks} ອາທິດທີ່ແລ້ວ` }; // 4–5 ອາທິດ ແທນ "0 ເດືອນ"
-    return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMonths} ເດືອນທີ່ແລ້ວ` };
-  }
-  
-  const diffInYears = Math.floor(diffInDays / 365);
-  return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInYears} ປີທີ່ແລ້ວ` };
-};
-
 /**
  * Format time difference from now
  */

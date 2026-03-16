@@ -47,6 +47,8 @@ export default function RedirectToHomeOnReturn() {
       if (pathname === '/home' || pathname.startsWith('/profile')) return;
       // อยู่หน้าสร้างโพสต์ (เช่น หลังเลือกรูปจาก file picker) — อย่า redirect เพื่อให้เขียน caption และเลือก layout ได้
       if (pathname === '/create-post') return;
+      // กำลังเปิด viewing mode หรือ fullscreen viewer — อย่า redirect เพื่อไม่ให้ปิด modal กระทันหัน
+      if (typeof document !== 'undefined' && document.body.getAttribute('data-viewing-mode') === 'open') return;
       // เปิดจากลิงก์หน้าจอ (PWA): ห้าม redirect เด็ดขาด เพื่อไม่ให้กระพริบ
       if (isStandalone()) return;
       const lastHidden = getLastHidden();

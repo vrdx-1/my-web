@@ -1,6 +1,6 @@
 {"badBrands":73,"changes":73}
 *** Begin Patch
-*** Update File: /Users/a0000/Desktop/my-car-web/data/cars.json
+*** Update File: /Users/a0000/Desktop/jutpai/data/cars.json
 @@
 -      "brandNameLo": "GWM",
 +      "brandNameLo": "ເກຣທ ວອລລ ມອເຕອຣ",

@@ -96,13 +96,4 @@ export const commonStyles = {
     alignItems: 'flex-start',
     gap: '10px',
   },
-
-  // Online status indicator
-  onlineIndicator: {
-    width: '10px',
-    height: '10px',
-    background: '#31a24c',
-    borderRadius: '50%',
-    border: '1.5px solid #fff',
-  },
 };

@@ -6,8 +6,8 @@ import { supabase } from '@/lib/supabase';
 export interface SessionProfileValue {
   session: any;
   sessionReady: boolean;
-  userProfile: { id?: string; username?: string | null; avatar_url?: string | null; phone?: string | null; last_seen?: string | null } | null;
-  /** เรียกเมื่อโหลดโพสต์ชุดแรกเสร็จแล้ว — ระบบจะเริ่มตรวจว่าใครอยู่ */
+  userProfile: { id?: string; username?: string | null; avatar_url?: string | null; phone?: string | null } | null;
+  /** เรียกเมื่อโหลดโพสต์ชุดแรกเสร็จแล้ว */
   startSessionCheck: () => void;
 }
 
@@ -44,7 +44,7 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     currentUserIdRef.current = userId;
     supabase
       .from('profiles')
-      .select('id, username, avatar_url, phone, last_seen')
+      .select('id, username, avatar_url, phone')
       .eq('id', userId)
       .maybeSingle()
       .then(({ data, error }) => {

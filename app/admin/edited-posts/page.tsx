@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { AdminPostCard } from '@/components/AdminPostCard';
 import { EmptyState } from '@/components/EmptyState';
-import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTime } from '@/utils/postUtils';
 import { lazyNamed } from '@/utils/lazyLoad';
 import { PageSpinner } from '@/components/LoadingSpinner';
 
@@ -231,38 +231,6 @@ export default function AdminEditedPostsPage() {
                   >
                     {viewingPost.profiles?.username || 'User'}
                   </span>
-                  {(() => {
-                    const status = getOnlineStatus(viewingPost.profiles?.last_seen);
-                    return status.isOnline ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                        <div
-                          style={{
-                            width: '10px',
-                            height: '10px',
-                            background: '#31a24c',
-                            borderRadius: '50%',
-                            border: '1.5px solid #fff',
-                          }}
-                        />
-                        <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>
-                          {status.text}
-                        </span>
-                      </div>
-                    ) : (
-                      status.text && (
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: '#31a24c',
-                            fontWeight: 'normal',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {status.text}
-                        </span>
-                      )
-                    );
-                  })()}
                 </div>
                 <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
                   {formatTime(viewingPost.created_at)} · {viewingPost.province}

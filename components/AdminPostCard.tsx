@@ -3,7 +3,7 @@
 import React from 'react';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';
-import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTime } from '@/utils/postUtils';
 import { formatCompactNumber } from '@/utils/currency';
 
 interface AdminPostCardProps {
@@ -30,8 +30,6 @@ export const AdminPostCard = React.memo<AdminPostCardProps>(({
   showStats = true,
   className = '',
 }) => {
-  const status = getOnlineStatus(post.profiles?.last_seen);
-
   return (
     <div 
       className={className}
@@ -53,14 +51,6 @@ export const AdminPostCard = React.memo<AdminPostCardProps>(({
 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
             {post.profiles?.username || 'User'}
             </span>
-            {status.isOnline ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>
-                <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
-              </div>
-            ) : (
-              status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
-            )}
           </div>
           <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
             {formatTime(post.created_at)} · {post.province}

@@ -93,15 +93,9 @@ export function useCreatePostUpload({
             {
               id: guestToken,
               username: 'Guest User',
-              last_seen: new Date().toISOString(),
             },
             { onConflict: 'id' },
           );
-      } else if (session) {
-        await supabase
-          .from('profiles')
-          .update({ last_seen: new Date().toISOString() })
-          .eq('id', session.user.id);
       }
 
       // ลอง insert โดยใส่ layout field ก่อน

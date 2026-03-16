@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
-  // ปิด error ตอนรัน next dev (Turbopack) ที่บอกว่ามี webpack config จาก next-pwa
+  // Turbopack กับ next-pwa / profile route บางที panic "Next.js package not found" — ใช้ `npm run dev` (webpack) แทน
   turbopack: {},
   images: {
     remotePatterns: [

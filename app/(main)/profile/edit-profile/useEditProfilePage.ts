@@ -24,7 +24,7 @@ export function useEditProfilePage() {
   const fetchProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('username, avatar_url, phone, last_seen')
+      .select('username, avatar_url, phone')
       .eq('id', uid)
       .single();
     if (data) {

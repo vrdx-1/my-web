@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { AdminPostCard } from '@/components/AdminPostCard';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { EmptyState } from '@/components/EmptyState';
-import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTime } from '@/utils/postUtils';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { lazyNamed } from '@/utils/lazyLoad';
 import { PageSpinner } from '@/components/LoadingSpinner';
@@ -56,7 +56,7 @@ export default function AdminReviewPage() {
         
         const { data: postsData, error: postsError } = await supabase
           .from('cars')
-          .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
+          .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
           .in('id', postIds)
           .order('created_at', { ascending: false });
 
@@ -94,21 +94,6 @@ export default function AdminReviewPage() {
   };
 
   // --- Helper Functions (แกะมาจาก reporting/page.tsx เป๊ะๆ) ---
-  // Removed duplicate functions - using from shared utils/components
-  const getOnlineStatusOld_removed = (lastSeen: string | null) => {
-    if (!lastSeen) return { isOnline: false, text: '' };
-    const now = new Date().getTime();
-    const lastActive = new Date(lastSeen).getTime();
-    const diffInSeconds = Math.floor((now - lastActive) / 1000);
-    if (diffInSeconds < 300) return { isOnline: true, text: 'ອອນລາຍ' };
-    if (diffInSeconds < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ເມື່ອຄູ່` };
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInMinutes} ນາທີທີ່ແລ້ວ` };
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${diffInHours} ຊົ່ວໂມງທີ່ແລ້ວ` };
-    return { isOnline: false, text: `ອອນລາຍລ່າສຸດ ${Math.floor(diffInHours / 24)} ມື້ທີ່ແລ้ວ` };
-  };
-
   const formatTime = (dateString: string) => {
     const now = new Date().getTime();
     const postTime = new Date(dateString).getTime();
@@ -231,17 +216,6 @@ export default function AdminReviewPage() {
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
                         {viewingPost.profiles?.username || 'User'}
                       </span>
-                      {(() => {
-                        const status = getOnlineStatus(viewingPost.profiles?.last_seen);
-                        return status.isOnline ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                            <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>
-                            <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
-                          </div>
-                        ) : (
-                          status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
-                        );
-                      })()}
                     </div>
                     <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
                       {formatTime(viewingPost.created_at)} · {viewingPost.province}

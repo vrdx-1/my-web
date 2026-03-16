@@ -1,6 +1,6 @@
 {"bad":62,"changes":61}
 *** Begin Patch
-*** Update File: /Users/a0000/Desktop/my-car-web/data/cars.json
+*** Update File: /Users/a0000/Desktop/jutpai/data/cars.json
 @@
 -        { "modelId": "ora-good-cat", "modelName": "ORA Good Cat", "modelNameTh": "โอร่า กู๊ดแคท", "modelNameLo": "ORA Good Cat", "searchNames": ["good cat", "ora good cat", "กู๊ดแคท", "โอร่า"], "categoryIds": ["hatchback", "citycar", "ev"] },
 +        { "modelId": "ora-good-cat", "modelName": "ORA Good Cat", "modelNameTh": "โอร่า กู๊ดแคท", "modelNameLo": "ໂອຣາ ກູດແຄທ", "searchNames": ["good cat", "ora good cat", "กู๊ดแคท", "โอร่า"], "categoryIds": ["hatchback", "citycar", "ev"] },

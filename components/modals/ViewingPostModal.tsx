@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Avatar } from '../Avatar';
-import { formatTime, getOnlineStatus, isPostOwner } from '@/utils/postUtils';
+import { formatTime } from '@/utils/postUtils';
 
 /** จำนวนรูปที่โหลดก่อน (eager) เพื่อให้รูปแรกๆ โผล่เร็ว ส่วนที่เหลือใช้ loading="lazy" */
 const VIEWING_MODE_EAGER_COUNT = 5;
@@ -85,7 +85,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
 }) => {
   const shouldHide = !viewingPost;
 
-  const status = isPostOwner(viewingPost, session) ? { isOnline: true, text: 'ອອນລາຍ' } : getOnlineStatus(viewingPost?.profiles?.last_seen);
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'entered'>('offscreen');
   const [enterTransitionActive, setEnterTransitionActive] = useState(false);
   const [initialImageLoaded, setInitialImageLoaded] = useState(false);
@@ -297,12 +296,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 'bold', fontSize: 15, lineHeight: '20px', display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, color: '#111' }}>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{viewingPost.profiles?.username || 'User'}</span>
-              {status.isOnline ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                  <div style={{ width: 10, height: 10, background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }} />
-                  <span style={{ fontSize: 12, color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
-                </div>
-              ) : status.text ? <span style={{ fontSize: 12, color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span> : null}
             </div>
             <div style={{ fontSize: 12, color: META_COLOR, lineHeight: '16px', display: 'inline-flex', alignItems: 'center' }}>
               {metaParts.map((part, i) => (

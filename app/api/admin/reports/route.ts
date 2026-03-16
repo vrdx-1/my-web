@@ -78,7 +78,7 @@ export async function GET() {
   const carIds = reportsData.map((r) => r.car_id).filter(Boolean);
   const { data: carsData, error: carsError } = await admin
     .from('cars')
-    .select('id, caption, province, images, status, created_at, user_id, likes, views, saves, shares, profiles(username, avatar_url, last_seen)')
+    .select('id, caption, province, images, status, created_at, user_id, likes, views, saves, shares, profiles(username, avatar_url)')
     .in('id', carIds);
 
   if (carsError) {

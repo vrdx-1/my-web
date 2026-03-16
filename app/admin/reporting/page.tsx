@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react';
-import { formatTime, getOnlineStatus } from '@/utils/postUtils';
+import { formatTime } from '@/utils/postUtils';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -124,14 +124,13 @@ export default function AdminReportingPage() {
  {reports.map((report) => {
  const post = report.cars;
  if (!post) return null;
- const status = getOnlineStatus(post.profiles?.last_seen);
  
  return (
  <div key={report.id} style={{ display: 'flex', gap: '15px', marginBottom: '30px', alignItems: 'flex-start' }}>
  
  {/* ฝั่งซ้าย: โพสต์ฟีด (เหมือนหน้าแรก) */}
  <div style={{ flex: '1.2', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
- {/* Header: รูปโปรไฟล์ + ออนไลน์ + เวลา + แขวง */}
+ {/* Header: รูปโปรไฟล์ + เวลา + แขวง */}
  <div style={{ padding: '12px 15px 8px 15px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden' }}>
  {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
@@ -141,14 +140,6 @@ export default function AdminReportingPage() {
 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
               {post.profiles?.username || 'User'}
             </span>
- {status.isOnline ? (
- <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
- <div style={{ width: '10px', height: '10px', background: '#31a24c', borderRadius: '50%', border: '1.5px solid #fff' }}></div>
- <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal' }}>{status.text}</span>
- </div>
- ) : (
- status.text && <span style={{ fontSize: '12px', color: '#31a24c', fontWeight: 'normal', flexShrink: 0 }}>{status.text}</span>
- )}
  </div>
  <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
  {formatTime(post.created_at)} · {post.province}

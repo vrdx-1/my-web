@@ -97,7 +97,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'All Post', path: '/admin/post' },
     { name: 'Top User', path: '/admin/top-user' },
     { name: 'Search History', path: '/admin/search-history' },
-    { name: 'Online Status', path: '/admin/online-status' },
     { name: 'Visits per Day', path: '/admin/visits-per-day' },
     { name: 'Website Traffic', path: '/admin/website-traffic' },
   ];

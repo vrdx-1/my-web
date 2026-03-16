@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { AdminPostCard } from "@/components/AdminPostCard";
-import { formatTime, getOnlineStatus } from "@/utils/postUtils";
+import { formatTime } from "@/utils/postUtils";
 import { formatTimeAgo } from "@/utils/formatTime";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { lazyNamed } from "@/utils/lazyLoad";
@@ -57,7 +57,7 @@ export default function AdminBoostingPage() {
       }
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
+        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
         .in('id', soldPostIds);
       if (carsError || !allCarsData?.length) {
         setLoading(false);
@@ -104,7 +104,7 @@ export default function AdminBoostingPage() {
       // โหลด posts ทั้งหมด
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, last_seen)')
+        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
         .in('id', postIds);
 
       if (!boostsErr && !carsError && allBoostsData && allCarsData) {
@@ -229,7 +229,6 @@ export default function AdminBoostingPage() {
         {items.map((item) => {
           const post = item.cars;
           if (!post) return null;
-          const status = getOnlineStatus(post.profiles?.last_seen);
           const slipFullUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/slips/${item.slip_url}`;
 
           return (
@@ -324,15 +323,6 @@ export default function AdminBoostingPage() {
                   <span className="min-w-0 flex-1 truncate">
                     {viewingPost.profiles?.username || 'User'}
                   </span>
-                  {(() => {
-                    const status = getOnlineStatus(viewingPost.profiles?.last_seen);
-                    return (
-                      <>
-                        {status.isOnline && <div className="w-2.5 h-2.5 bg-[#31a24c] rounded-full border border-white shadow-sm" />}
-                        <span className="text-[12px] text-[#31a24c] font-bold shrink-0">{status.text}</span>
-                      </>
-                    )
-                  })()}
                 </div>
                 <div className="text-[12px] text-gray-500">{formatTime(viewingPost.created_at)} · {viewingPost.province}</div>
               </div>

@@ -12,18 +12,6 @@ import {
   setFeedTop100Cache,
 } from '@/lib/redis';
 
-/** อัปเดต last_seen ของ user ที่ล็อกอินอยู่ เพื่อให้สถานะออนไลน์แสดงถูกต้องเมื่อโหลด feed */
-async function touchLastSeen(supabase: ReturnType<typeof createServerClient>) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.id) {
-      await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
-    }
-  } catch (_) {
-    // ไม่บล็อก feed ถ้าอัปเดต last_seen ล้มเหลว
-  }
-}
-
 function runFeedQuery(
   supabase: ReturnType<typeof createServerClient>,
   startIndex: number,
@@ -178,8 +166,6 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    void touchLastSeen(supabase).catch(() => {});
-
     // Cursor-based: โหลดหน้าถัดไปเร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน (ไม่ใช้ OFFSET)
     const cursorBoosted = body.cursorBoosted;
     const cursorCreatedAt = typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
@@ -254,8 +240,6 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-
-    void touchLastSeen(supabase).catch(() => {});
 
     // ช่วง 0–(N-1) ใช้ cache ชุดโพส N รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
     if (endIndex < FEED_TOP_CACHE_SIZE) {
