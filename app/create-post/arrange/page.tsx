@@ -15,6 +15,8 @@ export default function ArrangePostImagesPage() {
   const [ready, setReady] = useState(false);
   /** ลำดับที่ผู้ใช้กดเลือก: กดรูปไหนก่อน = ขึ้นก่อนในโพส (เริ่มต้นเปล่า) */
   const [tappedOrder, setTappedOrder] = useState<number[]>([]);
+  /** แจ้งเตือนเมื่อเลือกเกิน 15 รูป */
+  const [showMaxImageAlert, setShowMaxImageAlert] = useState(false);
 
   useEffect(() => {
     const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
@@ -60,7 +62,11 @@ export default function ArrangePostImagesPage() {
         return prev.slice(0, -1); // กดรูปล่าสุดอีกครั้ง = ยกเลิก (ย้อนหลังได้ทีละรูป)
       }
       // จำกัดจำนวนรูปที่เลือกได้สูงสุด 15 รูป
-      if (prev.length >= 15) return prev;
+      if (prev.length >= 15) {
+        // แสดงป๊อปอัปแจ้งเตือนเมื่อพยายามเลือกเกิน 15 รูป
+        setShowMaxImageAlert(true);
+        return prev;
+      }
       if (prev.includes(index)) return prev; // เลือกไปแล้วแต่ไม่ใช่ล่าสุด = ไม่สามารถยกเลิกได้
       return [...prev, index]; // เลือกรูปใหม่
     });
@@ -234,6 +240,61 @@ export default function ArrangePostImagesPage() {
           })}
         </div>
       </div>
+
+      {showMaxImageAlert && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              padding: '20px 16px 16px',
+              width: '80%',
+              maxWidth: '320px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                marginBottom: '16px',
+                color: '#111',
+              }}
+            >
+              ໂພສໄດ້ສູງສຸດ 15 ຮູບ
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMaxImageAlert(false)}
+              style={{
+                marginTop: '4px',
+                width: '100%',
+                padding: '10px 16px',
+                borderRadius: '999px',
+                border: 'none',
+                background: '#1877f2',
+                color: '#ffffff',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              ຕົກລົງ
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
