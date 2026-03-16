@@ -7,8 +7,8 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 interface PrivateShop {
   id: string;
-  shop_name: string;
-  shop_phone: string;
+  shop_name: string | null;
+  shop_phone: string | null;
 }
 
 export default function CreatePostPrivateNotePage() {
@@ -20,6 +20,7 @@ export default function CreatePostPrivateNotePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [shopName, setShopName] = useState('');
   const [shopPhone, setShopPhone] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -59,41 +60,53 @@ export default function CreatePostPrivateNotePage() {
     void init();
   }, []);
 
-  const handleSaveShop = async () => {
-    if (!userId) return;
-    if (!shopName.trim() || !shopPhone.trim()) return;
+  const handleSaveShop = async (): Promise<PrivateShop | null> => {
+    if (!userId) return null;
+    const hasNote = Boolean(shopName.trim());
+    const hasPhone = Boolean(shopPhone.trim());
+    if (!hasNote && !hasPhone) return null;
     setSaving(true);
     const { data, error } = await supabase
       .from('user_private_shops')
       .insert({
         user_id: userId,
-        shop_name: shopName.trim(),
-        shop_phone: shopPhone.trim(),
+        shop_name: hasNote ? shopName.trim() : null,
+        shop_phone: hasPhone ? `85620${shopPhone.trim()}` : null,
       })
       .select()
       .maybeSingle();
 
     setSaving(false);
-    if (error || !data) return;
-
-    setShops((prev) => [data as PrivateShop, ...prev]);
-    setShopName('');
-    setShopPhone('');
+    if (error) {
+      setSaveError(error.message || 'ບັນທຶກບໍ່ສຳເລັດ');
+      return null;
+    }
+    if (!data) return null;
+    setSaveError(null);
+    const created = data as PrivateShop;
+    setShops((prev) => [created, ...prev]);
+    return created;
   };
 
-  const handleApplyAndBack = () => {
-    if (!selectedId) {
+  const handleApplyAndBack = async () => {
+    setSaveError(null);
+    const hasNote = Boolean(shopName.trim());
+    const hasPhone = Boolean(shopPhone.trim());
+    if (!hasNote && !hasPhone) {
       router.back();
       return;
     }
-    const selected = shops.find((s) => s.id === selectedId);
-    if (typeof window !== 'undefined' && selected) {
+
+    // ทุกครั้งที่กด "ສຳເລັດ" ให้สร้าง record ใหม่ในตารางเสมอ (กรอกโน้ตอย่างเดียว เบอร์อย่างเดียว หรือทั้งคู่ ก็บันทึกได้ — ส่วนที่ไม่กรอกเป็น null)
+    const created = await handleSaveShop();
+    if (!created) return;
+    if (typeof window !== 'undefined') {
       window.sessionStorage.setItem(
         'create_post_private_shop',
         JSON.stringify({
-          id: selected.id,
-          shop_name: selected.shop_name,
-          shop_phone: selected.shop_phone,
+          id: created.id,
+          shop_name: created.shop_name,
+          shop_phone: created.shop_phone,
         }),
       );
     }
@@ -232,18 +245,32 @@ export default function CreatePostPrivateNotePage() {
             cursor: 'pointer',
           }}
         >
-          ບັນທຶກ
+          ສຳເລັດ
         </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 15px 90px' }}>
+        {saveError && (
+          <div
+            style={{
+              marginBottom: '12px',
+              padding: '10px 12px',
+              background: '#fff2f0',
+              border: '1px solid #ffccc7',
+              borderRadius: '8px',
+              fontSize: '14px',
+              color: '#cf1322',
+            }}
+          >
+            {saveError}
+          </div>
+        )}
         <div style={{ marginBottom: '20px' }}>
-          <div style={{ marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>ຊື່ຮ້ານ</div>
           <input
             type="text"
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
-            placeholder="ຊື່ຮ້ານ..."
+            placeholder="ມີພຽງແຕ່ທ່ານເທົ່ານັ້ນທີ່ເຫັນໂນດນີ້"
             style={{
               width: '100%',
               padding: '8px 10px',
@@ -253,52 +280,55 @@ export default function CreatePostPrivateNotePage() {
               marginBottom: '10px',
             }}
           />
-          <div style={{ marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
-            ເບີໂທຮ້ານ
-          </div>
-          <input
-            type="tel"
-            value={shopPhone}
-            onChange={(e) => setShopPhone(e.target.value)}
-            placeholder="020..."
+          <div
             style={{
-              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
               padding: '8px 10px',
               borderRadius: '8px',
               border: '1px solid #d0d0d0',
-              fontSize: '14px',
-            }}
-          />
-          <button
-            type="button"
-            disabled={saving || !shopName.trim() || !shopPhone.trim()}
-            onClick={handleSaveShop}
-            style={{
-              marginTop: '12px',
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: '20px',
-              border: 'none',
-              background: saving ? '#a0bff5' : '#1877f2',
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: saving ? 'default' : 'pointer',
+              background: '#fff',
             }}
           >
-            {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຮ້ານໃໝ່'}
-          </button>
+            <span style={{ fontSize: '14px', marginRight: '2px' }}>020</span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={shopPhone + 'x'.repeat(8 - shopPhone.length)}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+                setShopPhone(digitsOnly);
+              }}
+              onKeyDown={(e) => {
+                const key = e.key;
+                if (key === 'Backspace' && shopPhone.length > 0) {
+                  setShopPhone(shopPhone.slice(0, -1));
+                  e.preventDefault();
+                } else if (key.length === 1 && /[0-9]/.test(key) && shopPhone.length < 8) {
+                  setShopPhone(shopPhone + key);
+                  e.preventDefault();
+                }
+              }}
+              maxLength={8}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                padding: 0,
+                border: 'none',
+                outline: 'none',
+                fontSize: '14px',
+                background: 'transparent',
+              }}
+            />
+          </div>
         </div>
 
-        <div>
-          <div style={{ marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
-            ຮ້ານຂອງທ່ານ
-          </div>
-          {shops.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#888' }}>
-              ຍັງບໍ່ມີຮ້ານທີ່ບັນທຶກໄວ້. ກະລຸນາພິມຂ້າງເທິງແລ້ວກົດບັນທຶກ.
+        {shops.length > 0 && (
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+              ໂນດທີ່ເຄີຍໃຊ້
             </div>
-          ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {shops.map((shop) => {
                 const isSelected = shop.id === selectedId;
@@ -306,7 +336,13 @@ export default function CreatePostPrivateNotePage() {
                   <button
                     key={shop.id}
                     type="button"
-                    onClick={() => setSelectedId(shop.id)}
+                    onClick={() => {
+                      setSelectedId(shop.id);
+                      setShopName(shop.shop_name ?? '');
+                      const rawPhone = shop.shop_phone ?? '';
+                      const tail = rawPhone.startsWith('85620') ? rawPhone.slice(5) : rawPhone.startsWith('020') ? rawPhone.slice(3) : rawPhone.replace(/\D/g, '');
+                      setShopPhone(tail.slice(0, 8));
+                    }}
                     style={{
                       textAlign: 'left',
                       padding: '8px 10px',
@@ -323,17 +359,21 @@ export default function CreatePostPrivateNotePage() {
                         marginBottom: '2px',
                       }}
                     >
-                      {shop.shop_name}
+                      {shop.shop_name ?? '—'}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#4a4d52' }}>
-                      {shop.shop_phone}
-                    </div>
+                    {shop.shop_phone && (
+                      <div style={{ fontSize: '13px', color: '#4a4d52' }}>
+                        {shop.shop_phone.startsWith('85620') && shop.shop_phone.length === 13
+                          ? `020${shop.shop_phone.slice(5)}`
+                          : shop.shop_phone}
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
