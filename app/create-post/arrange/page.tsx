@@ -118,7 +118,7 @@ export default function ArrangePostImagesPage() {
           </button>
         </div>
         <h3 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: 'bold', minWidth: 0, color: '#111' }}>
-          ຈັດລຽນຮູບ
+          ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່
         </h3>
         <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
           {tappedOrder.length === previews.length && (

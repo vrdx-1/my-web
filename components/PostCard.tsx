@@ -12,6 +12,7 @@ import { commonStyles } from '@/utils/commonStyles';
 import { formatCompactNumber } from '@/utils/currency';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { ShareIconTraced } from './icons/ShareIconTraced';
+import { PrivateNotePopup } from './modals/PrivateNotePopup';
 
 interface PostCardProps {
   post: any;
@@ -88,19 +89,20 @@ export function PostCard({
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
+  const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const impressionSentRef = React.useRef(false);
 
   React.useEffect(() => {
-    const anyModalOpen = showMarkSoldConfirm || showSoldInfo;
+    const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
     if (typeof document === 'undefined' || !anyModalOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [showMarkSoldConfirm, showSoldInfo]);
+  }, [showMarkSoldConfirm, showSoldInfo, showPrivateNotePopup]);
 
   // Impression: ใช้ registerImpressionRef จาก PostFeed (observer เดียว) ถ้ามี ไม่สร้าง observer เอง
   React.useEffect(() => {
@@ -269,6 +271,10 @@ export function PostCard({
             onReport={onReport}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
+            onOpenPrivateNote={() => {
+              onSetActiveMenu(null);
+              setShowPrivateNotePopup(true);
+            }}
           />
         </div>
       </div>
@@ -661,6 +667,15 @@ export function PostCard({
           </div>
         </div>,
         document.body
+      )}
+
+      {showPrivateNotePopup && (
+        <PrivateNotePopup
+          show={showPrivateNotePopup}
+          postId={post.id}
+          session={session}
+          onClose={() => setShowPrivateNotePopup(false)}
+        />
       )}
     </div>
   );

@@ -98,6 +98,21 @@ export function useCreatePostUpload({
           );
       }
 
+      let privateShopId: string | null = null;
+      if (typeof window !== 'undefined') {
+        const raw = window.sessionStorage.getItem('create_post_private_shop');
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { id?: string };
+            if (parsed.id) {
+              privateShopId = parsed.id;
+            }
+          } catch {
+            // ignore parse error
+          }
+        }
+      }
+
       // ลอง insert โดยใส่ layout field ก่อน
       let insertData: any = {
         user_id: session ? session.user.id : guestToken,
@@ -110,6 +125,10 @@ export function useCreatePostUpload({
         is_hidden: false,
         created_at: new Date().toISOString(),
       };
+
+      if (privateShopId) {
+        insertData.private_shop_id = privateShopId;
+      }
 
       // เพิ่ม layout field ถ้ามี 6+ รูป
       if (imageUrls.length >= 6) {
@@ -193,6 +212,7 @@ export function useCreatePostUpload({
         sessionStorage.removeItem('create_post_layout');
         sessionStorage.removeItem('create_post_images');
         sessionStorage.removeItem('create_post_images_base64');
+        sessionStorage.removeItem('create_post_private_shop');
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
         localStorage.removeItem('create_post_step_ls');

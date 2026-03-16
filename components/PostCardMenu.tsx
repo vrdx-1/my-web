@@ -15,6 +15,7 @@ interface PostCardMenuProps {
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
+  onOpenPrivateNote?: (post: any) => void;
 }
 
 export const PostCardMenu = React.memo<PostCardMenuProps>(({
@@ -28,6 +29,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onReport,
   onSetActiveMenu,
   onSetMenuAnimating,
+  onOpenPrivateNote,
 }) => {
   const router = useRouter();
 
@@ -105,14 +107,26 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
               onSetActiveMenu(null);
               onDeletePost(post.id);
             }}
-            onBoost={hideBoost ? undefined : () => {
-              onSetActiveMenu(null);
-              router.push(`/boost_post?id=${post.id}`);
-            }}
+            onBoost={
+              hideBoost
+                ? undefined
+                : () => {
+                    onSetActiveMenu(null);
+                    router.push(`/boost_post?id=${post.id}`);
+                  }
+            }
             onReport={() => {
               onSetActiveMenu(null);
               onReport(post);
             }}
+            onPrivateNote={
+              isOwner
+                ? () => {
+                    onSetActiveMenu(null);
+                    onOpenPrivateNote?.();
+                  }
+                : undefined
+            }
           />
         );
       })()}

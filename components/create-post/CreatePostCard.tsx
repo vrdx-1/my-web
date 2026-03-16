@@ -229,33 +229,62 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               gap={PHOTO_GRID_GAP}
             />
             {previews.length >= 6 && (
-              <>
-                <LayoutPreviewSelector
-                  selectedLayout={layout}
-                  onLayoutChange={onLayoutChange}
-                  previews={previews}
-                />
-                <div style={{ padding: '8px 15px 16px' }}>
-                  <button
-                    type="button"
-                    onClick={() => router.push('/create-post/arrange')}
-                    style={{
-                      padding: '10px 0',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#1877f2',
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '0',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                    }}
-                  >
-                    ຈັດລຽນຮູບ
-                  </button>
-                </div>
-              </>
+              <LayoutPreviewSelector
+                selectedLayout={layout}
+                onLayoutChange={onLayoutChange}
+                previews={previews}
+              />
             )}
+            <div
+              style={{
+                padding: '12px 15px 16px',
+                paddingTop: previews.length >= 6 ? '12px' : '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              {previews.length >= 6 && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/create-post/arrange')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#1877f2',
+                    background: '#f0f7ff',
+                    border: '1px solid #b8d4f0',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: '0 1px 2px rgba(24, 119, 242, 0.08)',
+                  }}
+                >
+                  ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => router.push('/create-post/private-note')}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#1877f2',
+                  background: '#f0f7ff',
+                  border: '1px solid #b8d4f0',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  boxShadow: '0 1px 2px rgba(24, 119, 242, 0.08)',
+                }}
+              >
+                ໂນດສ່ວນຕົວ
+              </button>
+            </div>
           </>
         )}
       </div>

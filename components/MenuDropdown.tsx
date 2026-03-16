@@ -17,6 +17,7 @@ interface MenuDropdownProps {
   onDelete?: () => void;
   onBoost?: () => void;
   onReport?: () => void;
+  onPrivateNote?: () => void;
 }
 
 /**
@@ -37,12 +38,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onDelete,
   onBoost,
   onReport,
+  onPrivateNote,
 }) => {
   const router = useRouter();
 
   if (!isOpen) return null;
 
   const showBoost = typeof onBoost === 'function';
+  const showPrivateNote = typeof onPrivateNote === 'function';
 
   const content = (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
@@ -84,12 +87,23 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             <div onClick={onEdit} style={commonStyles.menuItem}>
               ແກ້ໄຂ
             </div>
-            <div onClick={onDelete} style={showBoost ? commonStyles.menuItem : commonStyles.menuItemLast}>
+            <div
+              onClick={onDelete}
+              style={showBoost || showPrivateNote ? commonStyles.menuItem : commonStyles.menuItemLast}
+            >
               ລົບ
             </div>
             {showBoost && (
-              <div onClick={onBoost} style={commonStyles.menuItemLast}>
+              <div
+                onClick={onBoost}
+                style={showPrivateNote ? commonStyles.menuItem : commonStyles.menuItemLast}
+              >
                 boost ໂພສ
+              </div>
+            )}
+            {showPrivateNote && (
+              <div onClick={onPrivateNote} style={commonStyles.menuItemLast}>
+                ໂນດສ່ວນຕົວ
               </div>
             )}
           </>
