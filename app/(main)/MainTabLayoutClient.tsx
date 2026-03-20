@@ -125,8 +125,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
-  /** ความสูงรวมของ fixed block: header (~59) + tab bar (~45) */
-  const HOME_FIXED_BLOCK_HEIGHT = 104;
+  /** ความสูงรวมของ fixed block: header (~59) + tab bar (~36) */
+  const HOME_FIXED_BLOCK_HEIGHT = 95;
 
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 

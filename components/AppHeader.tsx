@@ -144,7 +144,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex', 
           alignItems: 'center', 
           gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
-          borderBottom: '1px solid #f0f0f0',
+          borderBottom: showOnlySearch ? 'none' : '1px solid #f0f0f0',
         }}>
         {/* Logo (brand name removed per request); หน้าโฮม: กดโลโก้ = full refresh (ล้างค้นหา + ທຸກແຂວງ) */}
         <div style={{
