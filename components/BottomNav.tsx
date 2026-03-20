@@ -12,7 +12,11 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
-const BOTTOM_NAV_HEIGHT = 44;
+// ความสูงขั้นต่ำของ Bottom navigation (ไม่รวม safe-area)
+const BOTTOM_NAV_HEIGHT = 64;
+// เพิ่ม padding ด้านล่างเพื่อให้ "ความสูงที่มองเห็น" เพิ่มขึ้นจริง
+const BOTTOM_NAV_PADDING_BOTTOM_EXTRA = 12;
+const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA;
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', icon: Home, match: (p: string) => p === '/home' },
@@ -86,7 +90,7 @@ export function BottomNav() {
         justifyContent: 'space-around',
         zIndex: 400,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.06)',
-        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 8px)`,
+        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${BOTTOM_NAV_PADDING_BOTTOM_EXTRA}px)`,
       }}
     >
       {routes.map(({ path, label, icon: Icon, match }) => {
@@ -218,7 +222,15 @@ export function BottomNav() {
             }}
           >
             {isProfile ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  // ขยับลงเล็กน้อยเมื่อ active เพื่อไม่ให้เส้นสีน้ำเงินไปชน/ติดกับตัวอวาตาร์
+                  transform: isActive ? 'translateY(4px)' : undefined,
+                }}
+              >
                 <Avatar
                   avatarUrl={
                     session
@@ -233,7 +245,16 @@ export function BottomNav() {
                 />
               </div>
             ) : (
-              <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  // ขยับลงเล็กน้อยเมื่อ active เพื่อไม่ให้เส้นสีน้ำเงินไปชน/ติดกับไอคอน
+                  transform: isActive ? 'translateY(4px)' : undefined,
+                }}
+              >
                 <Icon
                   size={28}
                   strokeWidth={isActive ? 2.5 : 2}
@@ -269,6 +290,7 @@ export function BottomNav() {
                 aria-hidden
                 style={{
                   position: 'absolute',
+                  // ขยับขึ้นเล็กน้อยพอให้ไม่ไปชนไอคอน (ค่าเล็กน้อยเพื่อไม่ให้ล้นออก)
                   top: 0,
                   left: '50%',
                   transform: 'translateX(-50%)',
@@ -290,3 +312,4 @@ export function BottomNav() {
 }
 
 export const BOTTOM_NAV_HEIGHT_PX = BOTTOM_NAV_HEIGHT;
+export const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX = BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA;

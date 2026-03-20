@@ -2,7 +2,11 @@
 
 import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
-import { BottomNav } from '@/components/BottomNav';
+import {
+  BottomNav,
+  BOTTOM_NAV_HEIGHT_PX,
+  BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
+} from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
@@ -44,7 +48,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             bottom: 0,
             left: 0,
             right: 0,
-            minHeight: 56,
+            minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
             zIndex: pathname === '/profile' ? 1001 : 400,
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
@@ -52,7 +56,17 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
           }}
         >
-          <Suspense fallback={<div style={{ minHeight: 44, background: '#fff', borderTop: '1px solid #e4e6eb' }} />}>
+          <Suspense
+            fallback={
+              <div
+                style={{
+                  minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
+                  background: '#fff',
+                  borderTop: '1px solid #e4e6eb',
+                }}
+              />
+            }
+          >
             <BottomNav />
           </Suspense>
         </div>
