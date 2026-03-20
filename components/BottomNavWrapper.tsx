@@ -44,7 +44,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             bottom: 0,
             left: 0,
             right: 0,
-            minHeight: 68,
+            minHeight: 56,
             zIndex: pathname === '/profile' ? 1001 : 400,
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
@@ -52,7 +52,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
           }}
         >
-          <Suspense fallback={<div style={{ minHeight: 56, background: '#fff', borderTop: '1px solid #e4e6eb' }} />}>
+          <Suspense fallback={<div style={{ minHeight: 44, background: '#fff', borderTop: '1px solid #e4e6eb' }} />}>
             <BottomNav />
           </Suspense>
         </div>

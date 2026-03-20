@@ -12,7 +12,7 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
-const BOTTOM_NAV_HEIGHT = 56;
+const BOTTOM_NAV_HEIGHT = 44;
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', icon: Home, match: (p: string) => p === '/home' },
@@ -86,7 +86,7 @@ export function BottomNav() {
         justifyContent: 'space-around',
         zIndex: 400,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.06)',
-        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 12px)`,
+        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 8px)`,
       }}
     >
       {routes.map(({ path, label, icon: Icon, match }) => {
@@ -114,23 +114,20 @@ export function BottomNav() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'flex-start',
-                gap: '4px',
+                justifyContent: 'center',
+                gap: '0px',
                 background: 'none',
                 border: 'none',
-                padding: '10px 4px 4px 4px',
+                padding: '6px 4px 6px 4px',
                 cursor: 'pointer',
                 color: '#65676b',
                 touchAction: 'manipulation',
                 minWidth: 0,
-                minHeight: 44,
+                minHeight: 36,
               }}
             >
               <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Plus size={28} strokeWidth={2} style={{ flexShrink: 0 }} />
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 400, color: '#65676b', lineHeight: 1.2 }}>
-                ໂພສ
               </span>
             </button>
           );
@@ -207,16 +204,16 @@ export function BottomNav() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'flex-start',
-              gap: '4px',
+              justifyContent: 'center',
+              gap: '0px',
               background: 'none',
               border: 'none',
-              padding: '10px 4px 4px 4px',
+              padding: '6px 4px 6px 4px',
               cursor: 'pointer',
               color: isActive ? '#1877f2' : '#65676b',
               touchAction: 'manipulation',
               minWidth: 0,
-              minHeight: 44,
+              minHeight: 36,
               overflow: 'visible',
             }}
           >
@@ -267,16 +264,6 @@ export function BottomNav() {
                 )}
               </span>
             )}
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? '#1877f2' : '#65676b',
-                lineHeight: 1.2,
-              }}
-            >
-              {label}
-            </span>
             {isActive && (
               <span
                 aria-hidden

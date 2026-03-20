@@ -65,12 +65,19 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   return (
     <div
       ref={containerRef}
-      style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '36px' }}
+      style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '32px' }}
       className={className}
     >
-      {tabs.map((tab) => {
+      {tabs.map((tab, idx) => {
         const isActive = activeTab === tab.value;
         const isLoading = loadingTab === tab.value;
+        // ให้ข้อความแท็บ “เข้าหากึ่งกลางหน้าจอ” (ฝั่งซ้ายชิดขวา, ฝั่งขวาชิดซ้าย)
+        const alignToCenter = tabs.length <= 1 ? 'center' : idx < tabs.length / 2 ? 'flex-end' : 'flex-start';
+        // ถ้าชิดกันมากไป ให้เพิ่ม padding เฉพาะฝั่งที่ดันเข้าหากัน
+        const baseSidePadding = 15;
+        const centerGapExtraPx = 44;
+        const rightPadding = idx < tabs.length / 2 ? baseSidePadding + centerGapExtraPx : baseSidePadding;
+        const leftPadding = idx < tabs.length / 2 ? baseSidePadding : baseSidePadding + centerGapExtraPx;
         return (
           <button
             key={tab.value}
@@ -84,14 +91,14 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
             }}
             style={{
               flex: 1,
-              minHeight: 36,
-              padding: '4px 15px 2px 15px',
+              minHeight: 32,
+              padding: `0px ${rightPadding}px 0px ${leftPadding}px`,
               color: isActive ? '#111111' : '#65676b',
               fontWeight: 'bold',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              alignItems: alignToCenter,
               // ทำให้ข้อความแท็บอยู่ชิดด้านบนมากขึ้น (เทียบกับแถบค้นหา)
               justifyContent: 'flex-start',
               touchAction: 'manipulation',
@@ -111,7 +118,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               {isLoading ? (
                 <TabNavSpinner />
               ) : (
-                <span style={{ fontSize: '14px', lineHeight: 1.15, color: isActive ? '#111111' : '#65676b' }}>{tab.label}</span>
+                <span style={{ fontSize: '14px', lineHeight: 0.95, color: isActive ? '#111111' : '#65676b' }}>{tab.label}</span>
               )}
             </div>
           </button>
