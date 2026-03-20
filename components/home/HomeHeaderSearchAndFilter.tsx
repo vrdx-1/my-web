@@ -29,7 +29,8 @@ export function HomeHeaderSearchAndFilter() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [filterButtonRect, setFilterButtonRect] = useState<DOMRect | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  // Anchor สำหรับจัดตำแหน่งป๊อปอัป (เดิมใช้ปุ่มฟิลเตอร์วงกลม แต่รอบนี้ย้ายไปไว้ที่ "ข้อความแขวงสีแดง")
+  const filterButtonRef = useRef<HTMLSpanElement>(null);
   /** กันไม่ให้การกดที่เปิดป๊อปถูกนับเป็นคลิกนอก (ต้องกดครั้งเดียวแล้วเปิดได้เสถียร) */
   const justOpenedRef = useRef(false);
 
@@ -201,53 +202,28 @@ export function HomeHeaderSearchAndFilter() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              cursor: 'pointer',
+            }}
+            ref={filterButtonRef}
+            data-home-filter-btn
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              // ไม่ให้งานคลิกนี้ไป trigger search button ข้างนอก
+              e.preventDefault();
+              e.stopPropagation();
+              handleFilterClick();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFilterClick();
+              }
             }}
           >
             {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
           </span>
-        </button>
-
-        {/* ปุ่มฟิลเตอร์ province — เปิดด้วยคลิกเดียว (ไม่ใช้ pointerDown + preventDefault เพื่อให้มือถือตอบสนองครั้งเดียว) */}
-        <button
-          ref={filterButtonRef}
-          type="button"
-          data-home-filter-btn
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleFilterClick();
-          }}
-          aria-label="Filter by province"
-          style={{
-            width: `${CONTROL_SIZE}px`,
-            height: `${CONTROL_SIZE}px`,
-            borderRadius: '50%',
-            background: '#e4e6eb',
-            color: '#000',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            touchAction: 'manipulation',
-          }}
-        >
-          <svg
-            width={ICON_SIZE}
-            height={ICON_SIZE}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="6" cy="8" r="2" fill="currentColor" />
-            <line x1="8" y1="8" x2="20" y2="8" />
-            <line x1="4" y1="16" x2="16" y2="16" />
-            <circle cx="18" cy="16" r="2" fill="currentColor" />
-          </svg>
         </button>
       </div>
 
