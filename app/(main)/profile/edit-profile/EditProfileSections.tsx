@@ -185,6 +185,8 @@ type ProfileSectionProps = {
   onAvatarChange: (event: any) => void;
   onEditNameClick: () => void;
   onEditPhoneClick: () => void;
+  /** ปิด/เปิดเส้นแบ่งใต้ส่วนโปรไฟล์ (ใช้กับหน้า my-posts เท่านั้น) */
+  showDivider?: boolean;
 };
 
 const ProfileSectionComponent = ({
@@ -194,8 +196,9 @@ const ProfileSectionComponent = ({
   onAvatarChange,
   onEditNameClick,
   onEditPhoneClick,
+  showDivider = true,
 }: ProfileSectionProps) => (
-  <div style={{ padding: '20px', borderBottom: '1px solid #6b6b6b' }}>
+  <div style={{ padding: '20px', borderBottom: showDivider ? '1px solid #6b6b6b' : 'none' }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
       <div style={{ position: 'relative', width: 90, height: 90, flexShrink: 0 }}>
         <div

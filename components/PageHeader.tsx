@@ -14,6 +14,8 @@ interface PageHeaderProps {
   };
   centerTitle?: boolean;
   className?: string;
+  /** ปิด/เปิดเส้นแบ่งใต้ header (ใช้กับหน้าเฉพาะกรณี) */
+  showDivider?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
   actionButton,
   centerTitle = false,
   className = '',
+  showDivider = true,
 }) => {
   const router = useRouter();
 
@@ -86,7 +89,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         background: '#fff',
         zIndex: 1000,
         flexShrink: 0,
-        borderBottom: '1px solid #f0f0f0',
+        borderBottom: showDivider ? '1px solid #f0f0f0' : 'none',
         isolation: 'isolate',
       }}
       className={className}

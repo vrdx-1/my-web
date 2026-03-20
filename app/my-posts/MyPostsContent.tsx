@@ -240,6 +240,14 @@ export function MyPostsContent() {
     [interactionModalHook],
   );
 
+  // สำหรับหน้า refresh: ต้องแสดง skeleton ทั้งหมด (ยกเว้น PageHeader)
+  const showFullSkeleton =
+    !mounted ||
+    !feedReady ||
+    profileLoading ||
+    sessionState === undefined ||
+    (postListData.posts.length === 0 && !postListData.loadingMore && postListData.hasMore);
+
   return (
     <main
       style={{
@@ -310,10 +318,10 @@ export function MyPostsContent() {
       />
 
       <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} />
-      {profileLoading ? (
+      {showFullSkeleton ? (
         <div
           className="my-posts-profile-skeleton"
-          style={{ padding: '20px', borderBottom: '1px solid #6b6b6b' }}
+          style={{ padding: '20px', borderBottom: 'none' }}
           aria-hidden
         >
           <style>{`
@@ -367,34 +375,101 @@ export function MyPostsContent() {
           onAvatarChange={uploadAvatar}
           onEditNameClick={handleEditNameClick}
           onEditPhoneClick={handleEditPhoneClick}
+          showDivider={false}
         />
       )}
-      <div style={{ position: 'sticky', top: 60, zIndex: 99, background: '#ffffff', backgroundColor: '#ffffff' }}>
-        <TabNavigation
-          tabs={[
-            { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-            { value: 'sold', label: 'ຂາຍແລ້ວ' },
-          ]}
-          activeTab={tab}
-          onTabChange={(v) => {
-            if (v === tab) {
-              setTabRefreshing(true);
-              const list = v === 'recommend' ? recommendListData : soldListData;
-              list.setPage(0);
-              list.setHasMore(true);
-              list.fetchPosts(true);
-              if (v === 'sold') hasFetchedSoldRef.current = true;
-            } else {
-              setTab(v);
-              const targetList = v === 'recommend' ? recommendListData : soldListData;
-              if (targetList.posts.length === 0) setTabRefreshing(true);
-            }
+      {showFullSkeleton ? (
+        <div
+          style={{
+            position: 'sticky',
+            top: 60,
+            zIndex: 99,
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
+            display: 'flex',
+            minHeight: 32,
+            height: 32,
           }}
-          loadingTab={tabRefreshing ? tab : null}
-        />
-      </div>
+          aria-hidden
+        >
+          <div style={{ position: 'relative', display: 'flex', flex: 1, minHeight: 32, width: '100%' }}>
+            {/* Skeleton tabs: ไม่แสดงตัวหนังสือ */}
+            <div
+              style={{
+                flex: 1,
+                minHeight: 32,
+                padding: '0px 15px 0px 15px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <div
+                style={{
+                  height: 14,
+                  width: '70%',
+                  maxWidth: 140,
+                  borderRadius: 8,
+                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
+                  marginTop: 4,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                flex: 1,
+                minHeight: 32,
+                padding: '0px 15px 0px 15px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <div
+                style={{
+                  height: 14,
+                  width: '60%',
+                  maxWidth: 140,
+                  borderRadius: 8,
+                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
+                  marginTop: 4,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ position: 'sticky', top: 60, zIndex: 99, background: '#ffffff', backgroundColor: '#ffffff' }}>
+          <TabNavigation
+            tabs={[
+              { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+              { value: 'sold', label: 'ຂາຍແລ້ວ' },
+            ]}
+            activeTab={tab}
+            onTabChange={(v) => {
+              if (v === tab) {
+                setTabRefreshing(true);
+                const list = v === 'recommend' ? recommendListData : soldListData;
+                list.setPage(0);
+                list.setHasMore(true);
+                list.fetchPosts(true);
+                if (v === 'sold') hasFetchedSoldRef.current = true;
+              } else {
+                setTab(v);
+                const targetList = v === 'recommend' ? recommendListData : soldListData;
+                if (targetList.posts.length === 0) setTabRefreshing(true);
+              }
+            }}
+            loadingTab={tabRefreshing ? tab : null}
+          />
+        </div>
+      )}
 
-      {!mounted || !feedReady ? (
+      {showFullSkeleton ? (
         <FeedSkeleton count={3} />
       ) : (
         <MyPostsFeedBlock

@@ -10,6 +10,8 @@ interface TabNavigationProps {
   className?: string;
   /** แท็บที่กำลัง refresh (แสดง loading เหมือนปุ่มเข้าสู่ระบบ) */
   loadingTab?: string | null;
+  /** ซ่อนเส้น indicator (ใช้เฉพาะช่วง skeleton เพื่อไม่ให้เห็นเส้นสี) */
+  hideIndicator?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   onTabChange,
   className = '',
   loadingTab = null,
+  hideIndicator = false,
 }) => {
   const activeIndex = tabs.findIndex((t) => t.value === activeTab);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -145,12 +148,15 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           bottom: indicatorPx.bottom,
           left: indicatorPx.left,
           width: indicatorPx.width || '28%',
-          height: '3px',
-          background: '#1877f2',
+          height: hideIndicator ? '0px' : '3px',
+          background: hideIndicator ? 'transparent' : '#1877f2',
           borderRadius: '999px',
           transform: 'translateX(-50%)',
+          opacity: hideIndicator ? 0 : 1,
           transition: enableTransition
-            ? 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+            ? hideIndicator
+              ? 'none'
+              : 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
             : 'none',
           pointerEvents: 'none',
         }}
