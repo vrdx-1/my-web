@@ -2,7 +2,9 @@
 
 import React, { useRef, useState, useEffect, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Home, Plus, PenSquare, Bell, User } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { AiFillHome, AiOutlineHome } from 'react-icons/ai';
+import { RiNotificationFill, RiNotificationLine } from 'react-icons/ri';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -19,10 +21,10 @@ const BOTTOM_NAV_PADDING_BOTTOM_EXTRA = 12;
 const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA;
 
 const routes = [
-  { path: '/home', label: 'ໜ້າຫຼັກ', icon: Home, match: (p: string) => p === '/home' },
-  { path: '/create-post', label: 'ໂພສ', icon: PenSquare, match: (p: string) => p === '/create-post' },
-  { path: '/notification', label: 'ການແຈ້ງເຕືອນ', icon: Bell, match: (p: string) => p === '/notification' },
-  { path: '/profile', label: 'ໂປຣຟາຍ', icon: User, match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
+  { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
+  { path: '/create-post', label: 'ໂພສ', match: (p: string) => p === '/create-post' },
+  { path: '/notification', label: 'ການແຈ້ງເຕືອນ', match: (p: string) => p === '/notification' },
+  { path: '/profile', label: 'ໂປຣຟາຍ', match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
 ] as const;
 
 const NAV_DEBOUNCE_MS = 400;
@@ -56,7 +58,10 @@ export function BottomNav() {
       pendingPath === '/profile'
         ? pathname === '/profile' || pathname.startsWith('/profile/')
         : pathname === pendingPath;
-    if (arrived) setPendingPath(null);
+    if (arrived) {
+      // Delay to avoid synchronous setState inside effect (eslint rule)
+      setTimeout(() => setPendingPath(null), 0);
+    }
   }, [pathname, pendingPath]);
 
   /** บันทึก URL หน้าโฮม (รวม ?q=) เพื่อเมื่อสลับไปหน้าอื่นแล้วกลับมาได้คำค้นและ scroll คืน */
@@ -93,7 +98,7 @@ export function BottomNav() {
         paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${BOTTOM_NAV_PADDING_BOTTOM_EXTRA}px)`,
       }}
     >
-      {routes.map(({ path, label, icon: Icon, match }) => {
+      {routes.map(({ path, label, match }) => {
         const isPostSlot = path === '/create-post';
         const isCreatePostButton = isPostSlot && (isHome || isNotificationOrProfile);
 
@@ -227,8 +232,7 @@ export function BottomNav() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  // ขยับลงเล็กน้อยเมื่อ active เพื่อไม่ให้เส้นสีน้ำเงินไปชน/ติดกับตัวอวาตาร์
-                  transform: isActive ? 'translateY(4px)' : undefined,
+                  transform: 'translateY(0px)',
                 }}
               >
                 <Avatar
@@ -251,15 +255,63 @@ export function BottomNav() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  // ขยับลงเล็กน้อยเมื่อ active เพื่อไม่ให้เส้นสีน้ำเงินไปชน/ติดกับไอคอน
-                  transform: isActive ? 'translateY(4px)' : undefined,
+                  transform: 'translateY(0px)',
                 }}
               >
-                <Icon
-                  size={28}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  style={{ flexShrink: 0 }}
-                />
+                {path === '/home' && (
+                  <>
+                    <AiOutlineHome
+                      size={28}
+                      color={isActive ? '#65676b' : '#65676b'}
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        margin: 'auto',
+                        opacity: isActive ? 0 : 1,
+                        transition: 'opacity 0.15s ease-out',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                    <AiFillHome
+                      size={28}
+                      color={'#1877f2'}
+                      style={{
+                        flexShrink: 0,
+                        opacity: isActive ? 1 : 0,
+                        transition: 'opacity 0.15s ease-out',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  </>
+                )}
+                {path === '/notification' && (
+                  <>
+                    <RiNotificationLine
+                      size={28}
+                      color={'#65676b'}
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        margin: 'auto',
+                        opacity: isActive ? 0 : 1,
+                        transition: 'opacity 0.15s ease-out',
+                        pointerEvents: 'none',
+                        transform: 'translateY(0px)',
+                      }}
+                    />
+                    <RiNotificationFill
+                      size={28}
+                      color={'#1877f2'}
+                      style={{
+                        flexShrink: 0,
+                        opacity: isActive ? 1 : 0,
+                        transition: 'opacity 0.15s ease-out',
+                        pointerEvents: 'none',
+                        transform: 'translateY(0px)',
+                      }}
+                    />
+                  </>
+                )}
                 {showBadge && (
                   <span
                     style={{
@@ -271,6 +323,8 @@ export function BottomNav() {
                       padding: '0 4px',
                       borderRadius: 999,
                       background: '#e0245e',
+                      border: '1px solid #ffffff',
+                      boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
                       color: '#fff',
                       fontSize: 10,
                       fontWeight: 'bold',
@@ -278,31 +332,13 @@ export function BottomNav() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       lineHeight: '16px',
+                      zIndex: 2,
                     }}
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </span>
-            )}
-            {isActive && (
-              <span
-                aria-hidden
-                style={{
-                  position: 'absolute',
-                  // ขยับขึ้นเล็กน้อยพอให้ไม่ไปชนไอคอน (ค่าเล็กน้อยเพื่อไม่ให้ล้นออก)
-                  top: 0,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '40%',
-                  maxWidth: 48,
-                  height: 3,
-                  borderRadius: '0 0 3px 3px',
-                  background: '#1877f2',
-                  zIndex: 2,
-                  pointerEvents: 'none',
-                }}
-              />
             )}
           </button>
         );
