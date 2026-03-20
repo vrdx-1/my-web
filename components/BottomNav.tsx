@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { AiFillHome, AiOutlineHome } from 'react-icons/ai';
-import { RiNotificationFill, RiNotificationLine } from 'react-icons/ri';
+import { RiNotification2Fill, RiNotification2Line, RiNotificationFill, RiNotificationLine } from 'react-icons/ri';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -15,10 +15,17 @@ import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
 // ความสูงขั้นต่ำของ Bottom navigation (ไม่รวม safe-area)
-const BOTTOM_NAV_HEIGHT = 64;
+const BOTTOM_NAV_HEIGHT = 80;
 // เพิ่ม padding ด้านล่างเพื่อให้ "ความสูงที่มองเห็น" เพิ่มขึ้นจริง
 const BOTTOM_NAV_PADDING_BOTTOM_EXTRA = 12;
 const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA;
+
+// ขนาดองค์ประกอบใน BottomNav (ให้สมดุลกันทุกปุ่ม)
+const NAV_ICON_SIZE = 32;
+const NAV_BUTTON_MIN_HEIGHT = 48;
+const NAV_BUTTON_PADDING_Y = 6; // ใช้เป็น padding top/bottom
+const NAV_PROFILE_RING_SIZE = 40;
+const NAV_ICON_SHIFT_UP_PX = -4;
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
@@ -33,6 +40,15 @@ const CREATE_POST_DEBOUNCE_MS = 400;
 
 const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
 
+const NOTIFICATION_ICON_VARIANTS = [
+  { id: 'n2', inactiveIcon: RiNotification2Line, activeIcon: RiNotification2Fill },
+  { id: 'n1', inactiveIcon: RiNotificationLine, activeIcon: RiNotificationFill },
+] as const;
+
+const NOTIFICATION_ICON_STORAGE_KEY = 'bottom_nav_notification_icon_variant';
+const NOTIFICATION_ICON_LONG_PRESS_MS = 450;
+const NOTIFICATION_ICON_CYCLE_MS = 650;
+
 export function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,6 +62,74 @@ export function BottomNav() {
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
   const mainTabScroll = useMainTabScroll();
+
+  const [notificationIconVariantId, setNotificationIconVariantId] =
+    useState<(typeof NOTIFICATION_ICON_VARIANTS)[number]['id']>(() => {
+      if (typeof window === 'undefined') return NOTIFICATION_ICON_VARIANTS[0].id;
+      const saved = window.localStorage.getItem(NOTIFICATION_ICON_STORAGE_KEY);
+
+      // ถ้าเคยเก็บไว้เป็นไอคอนเก่า (n1) จะอัปเกรดเป็นไอคอนแบบใหม่ (n2) ทันที
+      if (saved === 'n1') return 'n2';
+
+      const match = NOTIFICATION_ICON_VARIANTS.find((v) => v.id === saved);
+      return match ? match.id : NOTIFICATION_ICON_VARIANTS[0].id;
+    });
+  const notificationIconVariantIdRef = useRef(notificationIconVariantId);
+  useEffect(() => {
+    notificationIconVariantIdRef.current = notificationIconVariantId;
+  }, [notificationIconVariantId]);
+
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const cycleIntervalRef = useRef<number | null>(null);
+  const ignoreNextClickRef = useRef(false);
+
+  const notificationVariant =
+    NOTIFICATION_ICON_VARIANTS.find((v) => v.id === notificationIconVariantId) ?? NOTIFICATION_ICON_VARIANTS[0];
+  const NotificationInactiveIcon = notificationVariant.inactiveIcon;
+  const NotificationActiveIcon = notificationVariant.activeIcon;
+
+  const persistNotificationVariant = (id: (typeof NOTIFICATION_ICON_VARIANTS)[number]['id']) => {
+    try {
+      window.localStorage.setItem(NOTIFICATION_ICON_STORAGE_KEY, id);
+    } catch {
+      // ignore
+    }
+  };
+
+  const stopNotificationIconCycling = (opts?: { preserveIgnoreNextClick?: boolean }) => {
+    if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current);
+    longPressTimeoutRef.current = null;
+
+    if (cycleIntervalRef.current) window.clearInterval(cycleIntervalRef.current);
+    cycleIntervalRef.current = null;
+
+    // ถ้าออกเพราะปล่อยนิ้วบนปุ่ม → ให้ ignore click นั้นไว้ (เพื่อไม่ให้เข้า /notification ระหว่างสุ่ม)
+    if (!opts?.preserveIgnoreNextClick) ignoreNextClickRef.current = false;
+
+    persistNotificationVariant(notificationIconVariantIdRef.current);
+  };
+
+  const startNotificationIconCycling = () => {
+    if (cycleIntervalRef.current) return;
+
+    // กันไม่ให้ onClick ไปยัง /notification หลังจาก long-press
+    ignoreNextClickRef.current = true;
+
+    cycleIntervalRef.current = window.setInterval(() => {
+      setNotificationIconVariantId((prev) => {
+        const idx = NOTIFICATION_ICON_VARIANTS.findIndex((v) => v.id === prev);
+        const next = NOTIFICATION_ICON_VARIANTS[(idx + 1) % NOTIFICATION_ICON_VARIANTS.length];
+        return next.id;
+      });
+    }, NOTIFICATION_ICON_CYCLE_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current);
+      if (cycleIntervalRef.current) window.clearInterval(cycleIntervalRef.current);
+    };
+  }, []);
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
@@ -127,16 +211,27 @@ export function BottomNav() {
                 gap: '0px',
                 background: 'none',
                 border: 'none',
-                padding: '6px 4px 6px 4px',
+                padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
                 cursor: 'pointer',
                 color: '#65676b',
                 touchAction: 'manipulation',
                 minWidth: 0,
-                minHeight: 36,
+                minHeight: NAV_BUTTON_MIN_HEIGHT,
               }}
             >
-              <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Plus size={28} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <span
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: NAV_ICON_SIZE,
+                  height: NAV_ICON_SIZE,
+                  transform: `translateY(${NAV_ICON_SHIFT_UP_PX}px)`,
+                  flexShrink: 0,
+                }}
+              >
+                <Plus size={NAV_ICON_SIZE} strokeWidth={2} style={{ flexShrink: 0 }} />
               </span>
             </button>
           );
@@ -144,6 +239,7 @@ export function BottomNav() {
 
         const isProfile = path === '/profile';
         const showBadge = path === '/notification' && !!session && unreadCount > 0;
+        const isNotificationTab = path === '/notification';
 
         const runNav = () => {
           const now = Date.now();
@@ -203,9 +299,17 @@ export function BottomNav() {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              if (isNotificationTab && ignoreNextClickRef.current) {
+                // long-press จนสุ่มแล้ว → ไม่เข้า /notification
+                ignoreNextClickRef.current = false;
+                return;
+              }
               runNav();
             }}
             aria-label={label}
+            title={
+              isNotificationTab ? 'กดค้างเพื่อสุ่มไอคอนแจ้งเตือน (ปล่อยเพื่อใช้ตัวนั้น)' : undefined
+            }
             aria-current={isActive ? 'page' : undefined}
             style={{
               position: 'relative',
@@ -217,13 +321,40 @@ export function BottomNav() {
               gap: '0px',
               background: 'none',
               border: 'none',
-              padding: '6px 4px 6px 4px',
+              padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
               cursor: 'pointer',
               color: isActive ? '#1877f2' : '#65676b',
               touchAction: 'manipulation',
               minWidth: 0,
-              minHeight: 36,
+              minHeight: NAV_BUTTON_MIN_HEIGHT,
               overflow: 'visible',
+            }}
+            onPointerDown={() => {
+              if (!isNotificationTab) return;
+              // long-press เพื่อสุ่มไอคอนแจ้งเตือนโดยไม่เข้า /notification
+              longPressTimeoutRef.current = window.setTimeout(() => {
+                startNotificationIconCycling();
+              }, NOTIFICATION_ICON_LONG_PRESS_MS);
+            }}
+            onPointerUp={() => {
+              if (!isNotificationTab) return;
+
+              // หากยังไม่เข้า long-press (ปล่อยเร็ว) → ยกเลิก timeout
+              if (longPressTimeoutRef.current) {
+                window.clearTimeout(longPressTimeoutRef.current);
+                longPressTimeoutRef.current = null;
+              }
+
+              // หาก long-press เริ่มสุ่มแล้ว → หยุดและ "ล็อก" ไอคอนตัวที่เห็นอยู่
+              if (cycleIntervalRef.current) stopNotificationIconCycling({ preserveIgnoreNextClick: true });
+            }}
+            onPointerCancel={() => {
+              if (!isNotificationTab) return;
+              stopNotificationIconCycling();
+            }}
+            onPointerLeave={() => {
+              if (!isNotificationTab) return;
+              stopNotificationIconCycling();
             }}
           >
             {isProfile ? (
@@ -232,21 +363,35 @@ export function BottomNav() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transform: 'translateY(0px)',
+                  transform: `translateY(${NAV_ICON_SHIFT_UP_PX}px)`,
                 }}
               >
-                <Avatar
-                  avatarUrl={
-                    session
-                      ? userProfile?.avatar_url ??
-                        session?.user?.user_metadata?.avatar_url ??
-                        session?.user?.user_metadata?.picture
-                      : undefined
-                  }
-                  size={28}
-                  session={session}
-                  useProfileImage
-                />
+                <div
+                  style={{
+                    width: NAV_PROFILE_RING_SIZE,
+                    height: NAV_PROFILE_RING_SIZE,
+                    borderRadius: 999,
+                    border: isActive ? '2px solid #1877f2' : '2px solid transparent',
+                    background: isActive ? 'rgba(24, 119, 242, 0.12)' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Avatar
+                    avatarUrl={
+                      session
+                        ? userProfile?.avatar_url ??
+                          session?.user?.user_metadata?.avatar_url ??
+                          session?.user?.user_metadata?.picture
+                        : undefined
+                    }
+                    size={NAV_ICON_SIZE}
+                    session={session}
+                    useProfileImage
+                  />
+                </div>
               </div>
             ) : (
               <span
@@ -255,13 +400,15 @@ export function BottomNav() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transform: 'translateY(0px)',
+                  width: NAV_ICON_SIZE,
+                  height: NAV_ICON_SIZE,
+                  transform: `translateY(${NAV_ICON_SHIFT_UP_PX}px)`,
                 }}
               >
                 {path === '/home' && (
                   <>
                     <AiOutlineHome
-                      size={28}
+                      size={NAV_ICON_SIZE}
                       color={isActive ? '#65676b' : '#65676b'}
                       style={{
                         position: 'absolute',
@@ -273,7 +420,7 @@ export function BottomNav() {
                       }}
                     />
                     <AiFillHome
-                      size={28}
+                      size={NAV_ICON_SIZE}
                       color={'#1877f2'}
                       style={{
                         flexShrink: 0,
@@ -286,8 +433,8 @@ export function BottomNav() {
                 )}
                 {path === '/notification' && (
                   <>
-                    <RiNotificationLine
-                      size={28}
+                    <NotificationInactiveIcon
+                      size={NAV_ICON_SIZE}
                       color={'#65676b'}
                       style={{
                         position: 'absolute',
@@ -299,8 +446,8 @@ export function BottomNav() {
                         transform: 'translateY(0px)',
                       }}
                     />
-                    <RiNotificationFill
-                      size={28}
+                    <NotificationActiveIcon
+                      size={NAV_ICON_SIZE}
                       color={'#1877f2'}
                       style={{
                         flexShrink: 0,
@@ -316,22 +463,22 @@ export function BottomNav() {
                   <span
                     style={{
                       position: 'absolute',
-                      top: -4,
-                      right: -8,
-                      minWidth: 16,
-                      height: 16,
-                      padding: '0 4px',
+                      top: -6,
+                      right: -10,
+                      minWidth: 18,
+                      height: 18,
+                      padding: '0 5px',
                       borderRadius: 999,
                       background: '#e0245e',
                       border: '1px solid #ffffff',
                       boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
                       color: '#fff',
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 'bold',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      lineHeight: '16px',
+                      lineHeight: '18px',
                       zIndex: 2,
                     }}
                   >
