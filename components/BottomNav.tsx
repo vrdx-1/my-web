@@ -2,9 +2,7 @@
 
 import React, { useRef, useState, useEffect, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
-import { AiFillHome, AiOutlineHome } from 'react-icons/ai';
-import { RiNotification2Fill, RiNotification2Line, RiNotificationFill, RiNotificationLine } from 'react-icons/ri';
+import { Bell, Home, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -40,14 +38,7 @@ const CREATE_POST_DEBOUNCE_MS = 400;
 
 const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
 
-const NOTIFICATION_ICON_VARIANTS = [
-  { id: 'n2', inactiveIcon: RiNotification2Line, activeIcon: RiNotification2Fill },
-  { id: 'n1', inactiveIcon: RiNotificationLine, activeIcon: RiNotificationFill },
-] as const;
-
-const NOTIFICATION_ICON_STORAGE_KEY = 'bottom_nav_notification_icon_variant';
-const NOTIFICATION_ICON_LONG_PRESS_MS = 450;
-const NOTIFICATION_ICON_CYCLE_MS = 650;
+// ไอคอนการแจ้งเตือน: ใช้แบบใหม่คงที่
 
 export function BottomNav() {
   const router = useRouter();
@@ -62,74 +53,6 @@ export function BottomNav() {
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
   const mainTabScroll = useMainTabScroll();
-
-  const [notificationIconVariantId, setNotificationIconVariantId] =
-    useState<(typeof NOTIFICATION_ICON_VARIANTS)[number]['id']>(() => {
-      if (typeof window === 'undefined') return NOTIFICATION_ICON_VARIANTS[0].id;
-      const saved = window.localStorage.getItem(NOTIFICATION_ICON_STORAGE_KEY);
-
-      // ถ้าเคยเก็บไว้เป็นไอคอนเก่า (n1) จะอัปเกรดเป็นไอคอนแบบใหม่ (n2) ทันที
-      if (saved === 'n1') return 'n2';
-
-      const match = NOTIFICATION_ICON_VARIANTS.find((v) => v.id === saved);
-      return match ? match.id : NOTIFICATION_ICON_VARIANTS[0].id;
-    });
-  const notificationIconVariantIdRef = useRef(notificationIconVariantId);
-  useEffect(() => {
-    notificationIconVariantIdRef.current = notificationIconVariantId;
-  }, [notificationIconVariantId]);
-
-  const longPressTimeoutRef = useRef<number | null>(null);
-  const cycleIntervalRef = useRef<number | null>(null);
-  const ignoreNextClickRef = useRef(false);
-
-  const notificationVariant =
-    NOTIFICATION_ICON_VARIANTS.find((v) => v.id === notificationIconVariantId) ?? NOTIFICATION_ICON_VARIANTS[0];
-  const NotificationInactiveIcon = notificationVariant.inactiveIcon;
-  const NotificationActiveIcon = notificationVariant.activeIcon;
-
-  const persistNotificationVariant = (id: (typeof NOTIFICATION_ICON_VARIANTS)[number]['id']) => {
-    try {
-      window.localStorage.setItem(NOTIFICATION_ICON_STORAGE_KEY, id);
-    } catch {
-      // ignore
-    }
-  };
-
-  const stopNotificationIconCycling = (opts?: { preserveIgnoreNextClick?: boolean }) => {
-    if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current);
-    longPressTimeoutRef.current = null;
-
-    if (cycleIntervalRef.current) window.clearInterval(cycleIntervalRef.current);
-    cycleIntervalRef.current = null;
-
-    // ถ้าออกเพราะปล่อยนิ้วบนปุ่ม → ให้ ignore click นั้นไว้ (เพื่อไม่ให้เข้า /notification ระหว่างสุ่ม)
-    if (!opts?.preserveIgnoreNextClick) ignoreNextClickRef.current = false;
-
-    persistNotificationVariant(notificationIconVariantIdRef.current);
-  };
-
-  const startNotificationIconCycling = () => {
-    if (cycleIntervalRef.current) return;
-
-    // กันไม่ให้ onClick ไปยัง /notification หลังจาก long-press
-    ignoreNextClickRef.current = true;
-
-    cycleIntervalRef.current = window.setInterval(() => {
-      setNotificationIconVariantId((prev) => {
-        const idx = NOTIFICATION_ICON_VARIANTS.findIndex((v) => v.id === prev);
-        const next = NOTIFICATION_ICON_VARIANTS[(idx + 1) % NOTIFICATION_ICON_VARIANTS.length];
-        return next.id;
-      });
-    }, NOTIFICATION_ICON_CYCLE_MS);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current);
-      if (cycleIntervalRef.current) window.clearInterval(cycleIntervalRef.current);
-    };
-  }, []);
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
@@ -299,17 +222,10 @@ export function BottomNav() {
             type="button"
             onClick={(e) => {
               e.preventDefault();
-              if (isNotificationTab && ignoreNextClickRef.current) {
-                // long-press จนสุ่มแล้ว → ไม่เข้า /notification
-                ignoreNextClickRef.current = false;
-                return;
-              }
               runNav();
             }}
             aria-label={label}
-            title={
-              isNotificationTab ? 'กดค้างเพื่อสุ่มไอคอนแจ้งเตือน (ปล่อยเพื่อใช้ตัวนั้น)' : undefined
-            }
+            title={isNotificationTab ? 'ไอคอนการแจ้งเตือน' : undefined}
             aria-current={isActive ? 'page' : undefined}
             style={{
               position: 'relative',
@@ -328,33 +244,6 @@ export function BottomNav() {
               minWidth: 0,
               minHeight: NAV_BUTTON_MIN_HEIGHT,
               overflow: 'visible',
-            }}
-            onPointerDown={() => {
-              if (!isNotificationTab) return;
-              // long-press เพื่อสุ่มไอคอนแจ้งเตือนโดยไม่เข้า /notification
-              longPressTimeoutRef.current = window.setTimeout(() => {
-                startNotificationIconCycling();
-              }, NOTIFICATION_ICON_LONG_PRESS_MS);
-            }}
-            onPointerUp={() => {
-              if (!isNotificationTab) return;
-
-              // หากยังไม่เข้า long-press (ปล่อยเร็ว) → ยกเลิก timeout
-              if (longPressTimeoutRef.current) {
-                window.clearTimeout(longPressTimeoutRef.current);
-                longPressTimeoutRef.current = null;
-              }
-
-              // หาก long-press เริ่มสุ่มแล้ว → หยุดและ "ล็อก" ไอคอนตัวที่เห็นอยู่
-              if (cycleIntervalRef.current) stopNotificationIconCycling({ preserveIgnoreNextClick: true });
-            }}
-            onPointerCancel={() => {
-              if (!isNotificationTab) return;
-              stopNotificationIconCycling();
-            }}
-            onPointerLeave={() => {
-              if (!isNotificationTab) return;
-              stopNotificationIconCycling();
             }}
           >
             {isProfile ? (
@@ -406,52 +295,33 @@ export function BottomNav() {
                 }}
               >
                 {path === '/home' && (
-                  <>
-                    <AiOutlineHome
-                      size={NAV_ICON_SIZE}
-                      color={isActive ? '#65676b' : '#65676b'}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        margin: 'auto',
-                        opacity: isActive ? 0 : 1,
-                        transition: 'opacity 0.15s ease-out',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                    <AiFillHome
-                      size={NAV_ICON_SIZE}
-                      color={'#1877f2'}
-                      style={{
-                        flexShrink: 0,
-                        opacity: isActive ? 1 : 0,
-                        transition: 'opacity 0.15s ease-out',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                  </>
+                  <Home
+                    size={NAV_ICON_SIZE}
+                    strokeWidth={2}
+                    color={isActive ? '#1877f2' : '#65676b'}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      margin: 'auto',
+                      zIndex: 1,
+                      pointerEvents: 'none',
+                      transform: 'translateY(0px)',
+                      transition: 'color 0.15s ease-out',
+                    }}
+                  />
                 )}
                 {path === '/notification' && (
                   <>
-                    <NotificationInactiveIcon
+                    <Bell
                       size={NAV_ICON_SIZE}
-                      color={'#65676b'}
+                      strokeWidth={2}
+                      color={isActive ? '#1877f2' : '#65676b'}
                       style={{
                         position: 'absolute',
                         inset: 0,
                         margin: 'auto',
-                        opacity: isActive ? 0 : 1,
-                        transition: 'opacity 0.15s ease-out',
-                        pointerEvents: 'none',
-                        transform: 'translateY(0px)',
-                      }}
-                    />
-                    <NotificationActiveIcon
-                      size={NAV_ICON_SIZE}
-                      color={'#1877f2'}
-                      style={{
-                        flexShrink: 0,
-                        opacity: isActive ? 1 : 0,
+                        zIndex: 1,
+                        opacity: 1,
                         transition: 'opacity 0.15s ease-out',
                         pointerEvents: 'none',
                         transform: 'translateY(0px)',
