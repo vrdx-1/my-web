@@ -18,6 +18,8 @@ interface CreatePostCardProps {
   onRemoveImage: (index: number) => void;
   layout: string;
   onLayoutChange: (layout: string) => void;
+  onGoArrange: () => void;
+  isPreparingArrange: boolean;
 }
 
 export const CreatePostCard = React.memo<CreatePostCardProps>(
@@ -32,6 +34,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     onRemoveImage,
     layout,
     onLayoutChange,
+    onGoArrange,
+    isPreparingArrange,
   }) => {
     const router = useRouter();
     return (
@@ -247,22 +251,23 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               {previews.length >= 6 && (
                 <button
                   type="button"
-                  onClick={() => router.push('/create-post/arrange')}
+                  onClick={onGoArrange}
+                  disabled={isPreparingArrange}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '14px',
                     fontWeight: '600',
-                    color: '#1877f2',
-                    background: '#f0f7ff',
+                    color: isPreparingArrange ? '#8a8d91' : '#1877f2',
+                    background: isPreparingArrange ? '#f5f6f7' : '#f0f7ff',
                     border: '1px solid #b8d4f0',
                     borderRadius: '12px',
-                    cursor: 'pointer',
+                    cursor: isPreparingArrange ? 'not-allowed' : 'pointer',
                     textAlign: 'center',
                     boxShadow: '0 1px 2px rgba(24, 119, 242, 0.08)',
                   }}
                 >
-                  ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່
+                  {isPreparingArrange ? 'ກຳລັງກຽມຮູບ...' : 'ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່'}
                 </button>
               )}
               <button

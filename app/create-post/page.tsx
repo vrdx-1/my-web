@@ -80,6 +80,7 @@ export default function CreatePost() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showVideoAlert, setShowVideoAlert] = useState(false);
+  const [isPreparingArrange, setIsPreparingArrange] = useState(false);
 
   // Use shared profile hook
   const { profile: userProfile } = useProfile();
@@ -238,6 +239,26 @@ const handleLeaveCancel = () => {
   setShowLeaveConfirm(false);
 };
 
+const handleGoArrange = async () => {
+  if (isPreparingArrange) return;
+  if (imageUpload.selectedFiles.length === 0) return;
+
+  setIsPreparingArrange(true);
+  try {
+    const filesToSave = imageUpload.selectedFiles.slice(0, 30);
+    const base64Strings = await Promise.all(filesToSave.map((file: File) => fileToBase64(file)));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
+      localStorage.setItem('create_post_images_base64_ls', JSON.stringify(base64Strings));
+    }
+    router.push('/create-post/arrange');
+  } catch (error) {
+    console.error('Error preparing images for arrange page:', error);
+  } finally {
+    setIsPreparingArrange(false);
+  }
+};
+
 // Lock background scroll when overlay layers are open
 useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert);
 
@@ -337,6 +358,8 @@ if (isUploading) {
             onRemoveImage={removeImage}
             layout={layout}
             onLayoutChange={setLayout}
+            onGoArrange={handleGoArrange}
+            isPreparingArrange={isPreparingArrange}
           />
         </div>
         <div
