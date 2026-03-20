@@ -15,17 +15,17 @@ import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
 // ความสูงขั้นต่ำของ Bottom navigation (ไม่รวม safe-area)
-const BOTTOM_NAV_HEIGHT = 80;
+const BOTTOM_NAV_HEIGHT = 72;
 // เพิ่ม padding ด้านล่างเพื่อให้ "ความสูงที่มองเห็น" เพิ่มขึ้นจริง
 const BOTTOM_NAV_PADDING_BOTTOM_EXTRA = 12;
 const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA;
 
 // ขนาดองค์ประกอบใน BottomNav (ให้สมดุลกันทุกปุ่ม)
-const NAV_ICON_SIZE = 32;
-const NAV_BUTTON_MIN_HEIGHT = 48;
+const NAV_ICON_SIZE = 28;
+const NAV_BUTTON_MIN_HEIGHT = 44;
 const NAV_BUTTON_PADDING_Y = 6; // ใช้เป็น padding top/bottom
-const NAV_PROFILE_RING_SIZE = 40;
-const NAV_ICON_SHIFT_UP_PX = -4;
+const NAV_PROFILE_RING_SIZE = 36;
+const NAV_ICON_SHIFT_UP_PX = -3;
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
@@ -463,22 +463,22 @@ export function BottomNav() {
                   <span
                     style={{
                       position: 'absolute',
-                      top: -6,
-                      right: -10,
-                      minWidth: 18,
-                      height: 18,
-                      padding: '0 5px',
+                      top: -5,
+                      right: -9,
+                      minWidth: 16,
+                      height: 16,
+                      padding: '0 4px',
                       borderRadius: 999,
                       background: '#e0245e',
                       border: '1px solid #ffffff',
                       boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
                       color: '#fff',
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 'bold',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      lineHeight: '18px',
+                      lineHeight: '16px',
                       zIndex: 2,
                     }}
                   >

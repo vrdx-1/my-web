@@ -29,7 +29,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     top: 0,
     left: 0,
     right: 0,
-    bottom: isProfileSubPage ? 0 : 'calc(88px + env(safe-area-inset-bottom, 0px))',
+    bottom: isProfileSubPage ? 0 : 'calc(80px + env(safe-area-inset-bottom, 0px))',
     background: '#ffffff',
     backgroundColor: '#ffffff',
     zIndex: 1000,
