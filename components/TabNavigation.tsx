@@ -26,10 +26,14 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   const activeIndex = tabs.findIndex((t) => t.value === activeTab);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [indicatorPx, setIndicatorPx] = useState<{ left: number; width: number }>(() => {
-    const initialIndex = activeIndex >= 0 ? activeIndex : 0;
-    return { left: initialIndex * 50 + 25, width: 0 };
+  const LINE_HEIGHT_PX = 3;
+  const LINE_GAP_BELOW_TEXT_PX = 1;
+  const [indicatorPx, setIndicatorPx] = useState<{ left: number; width: number; bottom: number }>({
+    left: 0,
+    width: 0,
+    bottom: 0,
   });
+  const [enableTransition, setEnableTransition] = useState(false);
 
   const updateIndicator = () => {
     const container = containerRef.current;
@@ -47,11 +51,19 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     // ทำให้เส้นสมมาตรกึ่งกลางตรงกับกึ่งกลางของตัวหนังสือ (ไม่ใช่กึ่งกลางของเส้นที่ขยายแล้ว)
     const centerX = rect.left - containerRect.left + rect.width / 2;
 
-    setIndicatorPx({ left: centerX, width });
+    // วางเส้นให้ "อยู่ใต้ตัวหนังสือ" โดยอิงจากตำแหน่ง bottom ของ label
+    const bottomPx = containerRect.bottom - rect.bottom - LINE_HEIGHT_PX - LINE_GAP_BELOW_TEXT_PX;
+    setIndicatorPx({
+      left: centerX,
+      width,
+      bottom: Math.max(0, bottomPx),
+    });
   };
 
   useLayoutEffect(() => {
     updateIndicator();
+    // ปิด transition ตอน mount/วัดตำแหน่งครั้งแรก เพื่อไม่ให้เส้นกระโดดจากซ้ายทุกครั้ง
+    requestAnimationFrame(() => setEnableTransition(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, loadingTab, tabs.length]);
 
@@ -65,7 +77,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   return (
     <div
       ref={containerRef}
-      style={{ position: 'relative', display: 'flex', borderBottom: '1px solid #ddd', minHeight: '32px' }}
+      style={{ position: 'relative', display: 'flex', borderBottom: 'none', minHeight: '32px' }}
       className={className}
     >
       {tabs.map((tab, idx) => {
@@ -75,7 +87,8 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         const alignToCenter = tabs.length <= 1 ? 'center' : idx < tabs.length / 2 ? 'flex-end' : 'flex-start';
         // ถ้าชิดกันมากไป ให้เพิ่ม padding เฉพาะฝั่งที่ดันเข้าหากัน
         const baseSidePadding = 15;
-        const centerGapExtraPx = 44;
+        // หน้า home อยากให้ข้อความแท็บ “เข้าหากัน” มากขึ้นเล็กน้อย
+        const centerGapExtraPx = className.includes('home-tab-navigation') ? 18 : 44;
         const rightPadding = idx < tabs.length / 2 ? baseSidePadding + centerGapExtraPx : baseSidePadding;
         const leftPadding = idx < tabs.length / 2 ? baseSidePadding : baseSidePadding + centerGapExtraPx;
         return (
@@ -129,14 +142,16 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         aria-hidden
         style={{
           position: 'absolute',
-          bottom: 0,
+          bottom: indicatorPx.bottom,
           left: indicatorPx.left,
           width: indicatorPx.width || '28%',
           height: '3px',
           background: '#1877f2',
           borderRadius: '999px',
           transform: 'translateX(-50%)',
-          transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: enableTransition
+            ? 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+            : 'none',
           pointerEvents: 'none',
         }}
       />

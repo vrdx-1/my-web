@@ -126,7 +126,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
   /** ความสูงรวมของ fixed block: header + tab bar (สำหรับ header โฮมที่เตี้ยลง) */
-  const HOME_FIXED_BLOCK_HEIGHT = 91;
+  // ต้องชดเชยความสูงที่เพิ่มขึ้นจากการขยับแท็บลงในหน้า home (ดู wrapper ด้านล่าง)
+  const HOME_FIXED_BLOCK_HEIGHT = 98;
 
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
@@ -171,22 +172,25 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               setProfileOverlayOpen={setProfileOverlayOpen}
               showOnlySearch={true}
             />
-            <TabNavigation
-              tabs={[
-                { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-                { value: 'sold', label: 'ຂາຍແລ້ວ' },
-              ]}
-              activeTab={mainTab?.homeTab ?? 'recommend'}
-              onTabChange={(v) => {
-                if (pathname === '/home') {
-                  homeTabScroll?.saveCurrentHomeTabScroll();
-                  headerVisibility?.setHeaderVisible(true);
-                }
-                homeProvince?.setSelectedProvince('');
-                mainTab?.triggerTabChange(v as 'recommend' | 'sold');
-              }}
-              loadingTab={loadingTab}
-            />
+            <div style={{ marginTop: 7 }}>
+              <TabNavigation
+                className="home-tab-navigation"
+                tabs={[
+                  { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+                  { value: 'sold', label: 'ຂາຍແລ້ວ' },
+                ]}
+                activeTab={mainTab?.homeTab ?? 'recommend'}
+                onTabChange={(v) => {
+                  if (pathname === '/home') {
+                    homeTabScroll?.saveCurrentHomeTabScroll();
+                    headerVisibility?.setHeaderVisible(true);
+                  }
+                  homeProvince?.setSelectedProvince('');
+                  mainTab?.triggerTabChange(v as 'recommend' | 'sold');
+                }}
+                loadingTab={loadingTab}
+              />
+            </div>
           </div>
           <div
             style={{

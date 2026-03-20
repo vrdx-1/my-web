@@ -22,7 +22,8 @@ const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_N
 const NAV_ICON_SIZE = 28;
 const NAV_BUTTON_MIN_HEIGHT = 44;
 const NAV_BUTTON_PADDING_Y = 6; // ใช้เป็น padding top/bottom
-const NAV_PROFILE_RING_SIZE = 36;
+// วงกลมขอบโปรไฟล์: เท่ากับขนาดรูป + เผื่อ border 2px ด้านละ 1 ฝั่ง
+const NAV_PROFILE_RING_SIZE = NAV_ICON_SIZE + 4;
 const NAV_ICON_SHIFT_UP_PX = -3;
 
 const routes = [
