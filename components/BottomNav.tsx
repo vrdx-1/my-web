@@ -261,6 +261,10 @@ export function BottomNav() {
                     width: NAV_PROFILE_RING_SIZE,
                     height: NAV_PROFILE_RING_SIZE,
                     borderRadius: 999,
+                    // Important: include the border inside the ring size.
+                    // Without this, the border grows the ring and leaves a visual gap
+                    // between the blue border and the inner avatar image.
+                    boxSizing: 'border-box',
                     border: isActive ? '2px solid #1877f2' : '2px solid transparent',
                     background: isActive ? 'rgba(24, 119, 242, 0.12)' : 'transparent',
                     display: 'flex',

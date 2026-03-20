@@ -135,7 +135,36 @@ export function HomeHeaderSearchAndFilter() {
         {/* แท็บค้นหา — ยาวจากซ้ายเกือบติดโลโก้ ถึงขวาเกือบติดปุ่มฟิลเตอร์, มีไอคอน + "ຄົ້ນຫາ" */}
         <button
           type="button"
-          onClick={handleSearchClick}
+          onClick={(e) => {
+            // ปุ่มค้นหาครอบทั้งแถบไว้ ทำให้ click พลาด "ตัวหนังสือสีแดงเลือกแขวง" แล้วไป trigger ค้นหาได้
+            // ถ้า click อยู่ในพื้นที่ปุ่มแขวง (มี tolerance) ให้เปิด province picker แทน
+            const target = e.target;
+            const el = target instanceof Element ? target : target?.parentElement;
+            const filterBtnHit =
+              !!el?.closest?.('[data-home-filter-btn]') ||
+              (() => {
+                const rect = filterButtonRef.current?.getBoundingClientRect();
+                if (!rect) return false;
+                const tolerance = 16; // เผื่อพื้นที่คลิกกรณีไม่โดนตัวอักษรเป๊ะ
+                const x = e.clientX;
+                const y = e.clientY;
+                return (
+                  x >= rect.left - tolerance &&
+                  x <= rect.right + tolerance &&
+                  y >= rect.top - tolerance &&
+                  y <= rect.bottom + tolerance
+                );
+              })();
+
+            if (filterBtnHit) {
+              e.preventDefault();
+              e.stopPropagation();
+              handleFilterClick();
+              return;
+            }
+
+            handleSearchClick();
+          }}
           aria-label="Search"
           style={{
             flex: 1,
