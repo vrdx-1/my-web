@@ -39,18 +39,23 @@ const DOT_STYLE: React.CSSProperties = {
   display: 'inline-block', width: 3, height: 3, borderRadius: '50%', backgroundColor: META_COLOR, margin: '0 6px', transform: 'translateY(1px)',
 };
 const IMAGE_WRAP_STYLE: React.CSSProperties = {
-  position: 'relative', background: '#ffffff', backgroundColor: '#ffffff', marginBottom: 12, width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw',
+  // Use container width instead of `100vw` to avoid width drift when the overlay
+  // is animated with `transform` (can cause "stepped" scaling on wide images).
+  position: 'relative',
+  background: '#ffffff',
+  backgroundColor: '#ffffff',
+  marginBottom: 12,
+  width: '100%',
 };
 const IMG_STYLE: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', cursor: 'pointer', margin: 0, padding: 0 };
 const IMAGE_PLACEHOLDER_STYLE: React.CSSProperties = {
-  position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0, minHeight: 280,
+  position: 'relative', width: '100%', overflow: 'hidden', padding: 0, margin: 0,
 };
 /** Skeleton ขณะรอโหลดรูป — แบบ Facebook (เทาอ่อน + shimmer) ให้ผู้ใช้รู้ว่ายังมีรูปถัดไป */
 const IMAGE_SKELETON_STYLE: React.CSSProperties = {
   position: 'absolute',
   inset: 0,
   width: '100%',
-  minHeight: 280,
   background: 'linear-gradient(90deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)',
   backgroundSize: '200% 100%',
   animation: 'viewing-image-shimmer 1.5s ease-in-out infinite',
@@ -84,6 +89,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   onImageClick,
 }) => {
   const shouldHide = !viewingPost;
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/i.test(navigator.userAgent);
 
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'entered'>('offscreen');
   const [enterTransitionActive, setEnterTransitionActive] = useState(false);
@@ -282,7 +288,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         <div
           ref={scrollContainerRef}
           id="viewing-mode-container"
-          style={CONTAINER_STYLE_IOS_CLIP}
+          style={isIOS ? CONTAINER_STYLE_IOS_CLIP : CONTAINER_STYLE}
           onTouchMove={handleContainerTouchMove}
           onWheel={handleContainerWheel}
         >
@@ -311,7 +317,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
           const isLoaded = loadedIndices.has(idx);
           return (
             <div key={idx} id={`viewing-image-${idx}`} style={IMAGE_WRAP_STYLE}>
-              <div style={IMAGE_PLACEHOLDER_STYLE}>
+              <div style={{ ...IMAGE_PLACEHOLDER_STYLE, minHeight: isLoaded ? 0 : 280 }}>
                 {!isLoaded && <div style={IMAGE_SKELETON_STYLE} aria-hidden="true" />}
                 <img
                   src={img}
