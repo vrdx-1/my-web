@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useLayoutEffect, useCallback, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { useMainTabScroll, type MainTabId } from '@/contexts/MainTabScrollContext';
 import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { HomePageContent } from './home/HomePageContent';
 
 const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile'];
 
@@ -13,11 +14,6 @@ const feedFallback = (
   <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
     <FeedSkeleton count={3} />
   </main>
-);
-
-const LazyHomePageContent = dynamic(
-  () => import('./home/HomePageContent').then((m) => ({ default: m.HomePageContent })),
-  { ssr: true, loading: () => feedFallback }
 );
 
 const LazyNotificationPage = dynamic(() => import('./notification/page'), {
@@ -31,9 +27,10 @@ const LazyProfileContent = dynamic(
 );
 
 function HomePanel() {
+  /** import แบบ static — ไม่รอโหลด chunk แยกตอนกลับมาโฮม (ลดจอขาว/กระพริบจาก dynamic) */
   return (
     <Suspense fallback={feedFallback}>
-      <LazyHomePageContent />
+      <HomePageContent />
     </Suspense>
   );
 }
@@ -46,25 +43,18 @@ function ProfilePanel() {
   return <LazyProfileContent />;
 }
 
-/** ลงทะเบียน scroll ของ tab ที่ใช้ window (home, profile). notification ลงทะเบียนใน useNotificationPage.
- * เรียก restore เฉพาะเมื่อเพิ่งสลับมาแท็บนี้ (prev !== tabId && active === tabId) — ไม่เรียกทุกครั้งที่ effect รัน ไม่งั้นเลื่อนขึ้นแล้วจะกระโดดไปบนสุดเพราะ scrollCtx เปลี่ยน reference ตอน re-render */
+/** ลงทะเบียน scroll ของหน้าโฮม (window) — ใช้ useLayoutEffect ให้ทันก่อน restore ใน context
+ * การคืน scroll หลังไปหน้าอื่นแล้วกลับมาโฮมทำใน HomePageContent หลังฟีด + virtualizer พร้อม (ไม่ restore ที่นี่) */
 function PanelScrollRegister({ tabId, children }: { tabId: MainTabId; children: React.ReactNode }) {
   const scrollCtx = useMainTabScroll();
-  const activeTabId = scrollCtx?.activeTabId ?? null;
-  const prevActiveTabIdRef = useRef<MainTabId | null>(null);
   const getScroll = useCallback(() => (typeof window !== 'undefined' ? window.scrollY : 0), []);
   const setScroll = useCallback((y: number) => window.scrollTo(0, y), []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!scrollCtx) return;
     scrollCtx.registerScroll(tabId, getScroll, setScroll);
-    const justSwitchedToThisTab = prevActiveTabIdRef.current !== tabId && activeTabId === tabId;
-    prevActiveTabIdRef.current = activeTabId;
-    if (justSwitchedToThisTab) {
-      scrollCtx.restoreScrollForTab(tabId);
-    }
     return () => scrollCtx.unregisterScroll(tabId);
-  }, [scrollCtx, tabId, getScroll, setScroll, activeTabId]);
+  }, [scrollCtx, tabId, getScroll, setScroll]);
 
   return <>{children}</>;
 }

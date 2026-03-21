@@ -43,6 +43,11 @@ function getStoredScroll(tabId: MainTabId): number | undefined {
   }
 }
 
+/** อ่านค่าที่บันทึกไว้ (เช่น ก่อน retry คืน scroll หน้าโฮมหลังฟีดพร้อม) */
+export function readMainTabScrollStorage(tabId: MainTabId): number | undefined {
+  return getStoredScroll(tabId);
+}
+
 function setStoredScroll(tabId: MainTabId, y: number) {
   if (typeof window === 'undefined') return;
   try {
@@ -54,8 +59,14 @@ function setStoredScroll(tabId: MainTabId, y: number) {
 
 export function MainTabScrollProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const pathnameRef = useRef<string | null>(pathname ?? null);
+  pathnameRef.current = pathname ?? null;
+
   const registryRef = useRef<Map<MainTabId, ScrollEntry>>(new Map());
   const savedScrollRef = useRef<Partial<Record<MainTabId, number>>>({});
+  /** ตำแหน่งล่าสุดขณะอยู่แท็บหลัก — ใช้แทน window.scrollY ตอนออกจากหน้า (Next อาจรีเซ็ต scroll ก่อน effect cleanup) */
+  const lastWindowScrollByTabRef = useRef<Partial<Record<MainTabId, number>>>({});
+  const prevPathnameForPersistRef = useRef<string | null>(null);
 
   const registerScroll = useCallback((tabId: MainTabId, getScroll: GetScroll, setScroll: SetScroll) => {
     registryRef.current.set(tabId, { getScroll, setScroll });
@@ -103,12 +114,42 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
 
   const prevTabIdRef = useRef<MainTabId | null>(null);
 
+  /** อัปเดตตำแหน่ง scroll ล่าสุดของแท็บหลัก — pathname อ่านจาก ref เพื่อไม่ให้ถูกเขียนทับเมื่อ Next รีเซ็ต scroll หลังนำทาง */
+  useEffect(() => {
+    const onScroll = () => {
+      const p = pathnameRef.current;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
+      lastWindowScrollByTabRef.current[p as MainTabId] = window.scrollY;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /** ออกจาก /home (หรือแท็บหลักอื่น) ไปหน้าย่อย — บันทึก scroll ลง ref + sessionStorage (กรณีไม่ได้ผ่าน BottomNav.saveCurrentScroll) */
+  useLayoutEffect(() => {
+    const prev = prevPathnameForPersistRef.current;
+    const current = pathname ?? null;
+    prevPathnameForPersistRef.current = current;
+    if (prev == null) return;
+    if (prev !== '/home' && prev !== '/notification' && prev !== '/profile') return;
+    if (current === prev) return;
+    const left = prev as MainTabId;
+    const y = lastWindowScrollByTabRef.current[left];
+    if (typeof y === 'number' && Number.isFinite(y)) {
+      savedScrollRef.current[left] = y;
+      setStoredScroll(left, y);
+    }
+  }, [pathname]);
+
   /** เมื่อ pathname เปลี่ยน: คืนค่า scroll ก่อน paint — ให้เห็นจุดเดิมทันที (ใช้ sessionStorage เป็น fallback เผื่อ context ถูก remount ตอน deploy) */
   useLayoutEffect(() => {
     const registry = registryRef.current;
     prevTabIdRef.current = activeTabId;
 
     if (!activeTabId) return;
+    /** /home รอ header + virtual feed สูงพอก่อน — คืนใน HomePageContent (retry) */
+    if (activeTabId === '/home') return;
     const entry = registry.get(activeTabId);
     if (entry) {
       const toRestore = getSavedScroll(activeTabId);
@@ -121,6 +162,16 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
       }
     }
   }, [activeTabId, getSavedScroll]);
+
+  /** ให้ lastWindowScrollByTabRef ตรงกับ window หลัง restore (ก่อน useEffect scroll listener) */
+  useLayoutEffect(() => {
+    if (!activeTabId) return;
+    try {
+      lastWindowScrollByTabRef.current[activeTabId] = window.scrollY;
+    } catch {
+      // ignore
+    }
+  }, [activeTabId]);
 
   const value: MainTabScrollContextValue = {
     registerScroll,

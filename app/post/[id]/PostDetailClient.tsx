@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
@@ -17,6 +17,11 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 export default function PostDetail() {
   const router = useRouter();
   const { id } = useParams();
+
+  /** โหลดแพ็กเก็จ /home ล่วงหน้า — กดกลับแล้วโฮมขึ้นเร็ว ไม่นิ่งจอขาว */
+  useEffect(() => {
+    router.prefetch('/home');
+  }, [router]);
 
   const handleBack = useCallback(() => {
     if (typeof window === 'undefined') {

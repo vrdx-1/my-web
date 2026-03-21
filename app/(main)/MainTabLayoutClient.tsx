@@ -142,7 +142,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
         style={{ display: 'none' }}
         aria-hidden
       />
-      {showHomeHeader && (
+      {showHomeHeader ? (
         <>
           <div
             style={{
@@ -200,7 +200,17 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
             }}
           />
         </>
-      )}
+      ) : pathname === '/home' && !firstFeedLoaded ? (
+        /** จองความสูงเดียวกับ spacer ตอนมี header — ลดการกระโดดของฟีดเมื่อ firstFeedLoaded เป็น true */
+        <div
+          aria-hidden
+          style={{
+            height: HOME_FIXED_BLOCK_HEIGHT,
+            background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+            backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
+          }}
+        />
+      ) : null}
 
       {isProfileOverlayOpen && (
         <ProfileOverlay

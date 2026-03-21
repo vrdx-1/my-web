@@ -25,6 +25,7 @@ import { useHomeRefresh } from '@/hooks/useHomeRefresh';
 import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
+import { useMainTabScroll, readMainTabScrollStorage } from '@/contexts/MainTabScrollContext';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
@@ -67,6 +68,10 @@ export function HomePageContent() {
   const soldScrollRef = useRef(0);
   const prevShowSoldRef = useRef<boolean | null>(null);
   const prevPathnameRef = useRef<string | null>(null);
+  /** true = เพิ่งนำทางกลับมา /home จากหน้าอื่น — คืน scroll หลังฟีดพร้อม (ไม่คืนตอน skeleton/ก่อน virtualizer) */
+  const pendingHomeRouteScrollRestoreRef = useRef(false);
+  /** ห่อฟีดแนะนำ+ขายแล้ว — ซ่อนชั่วคราวระหว่างคืน scroll ลึกเพื่อไม่ให้ virtualizer วาดโพสบนสุดแล้วกระโดด */
+  const feedRestoreWrapRef = useRef<HTMLDivElement | null>(null);
   const suppressHideUntilRef = useRef<number | null>(null);
 
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
@@ -204,6 +209,7 @@ export function HomePageContent() {
 
   /** บันทึก scroll ก่อนสลับแท็บ — ใช้แบบเดียวกับ saveCurrentScroll ก่อน router.push (ลงทะเบียนให้ header เรียกตอนกดแท็บ) */
   const homeTabScroll = useHomeTabScroll();
+  const mainTabScroll = useMainTabScroll();
   const headerVisibility = useHeaderVisibilityContext();
 
   /** สลับจากหน้าอื่นกลับมาหน้าโฮม → แสดง header/nav ทันที และกันไม่ให้ scroll ที่เกิดจากการ restore ซ่อน header (ให้หายเฉพาะตอนผู้ใช้เลื่อนจริง) */
@@ -211,9 +217,13 @@ export function HomePageContent() {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
     if (pathname === '/home' && prev !== '/home' && prev != null) {
+      pendingHomeRouteScrollRestoreRef.current = true;
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       suppressHideUntilRef.current = now + 500;
       headerVisibility?.setHeaderVisible(true);
+    }
+    if (pathname !== '/home') {
+      pendingHomeRouteScrollRestoreRef.current = false;
     }
   }, [pathname, headerVisibility]);
 
@@ -496,24 +506,92 @@ export function HomePageContent() {
         (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
       (tabRefreshing && postList.loadingMore));
 
-  if (!clientMounted) {
-    if (hasSearch && !isSoldTabNoSearch) {
-      return (
-        <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-          <div>
-            <div ref={recommendPanelRef} style={{ display: 'block' }} aria-hidden={false}>
-              <FeedSkeleton count={3} />
-            </div>
-          </div>
-        </main>
-      );
+  /** ก่อน paint: ซ่อนฟีดชั่วคราวเมื่อจะคืน scroll ลึก — กัน virtualizer วาดโพสบนสุดแวบหนึ่ง */
+  useLayoutEffect(() => {
+    if (pathname !== '/home') {
+      const w = feedRestoreWrapRef.current;
+      if (w) w.style.visibility = '';
+      return;
     }
-    return null;
+    if (!pendingHomeRouteScrollRestoreRef.current) return;
+    if (!clientMounted) return;
+    if (!firstFeedLoaded) return;
+    if (showFeedSkeleton) return;
+    const targetY = readMainTabScrollStorage('/home');
+    if (typeof targetY !== 'number' || !Number.isFinite(targetY)) return;
+    const wrap = feedRestoreWrapRef.current;
+    if (targetY > 48 && wrap) wrap.style.visibility = 'hidden';
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton]);
+
+  /** คืน scroll หลัง layout นิ่ง — ใช้ retry แบบเดียวกับสลับแท็บพร้อมขาย (recommendPanelRef + rAF หลายรอบจน scrollHeight พอ) */
+  useEffect(() => {
+    if (pathname !== '/home') return;
+    if (!pendingHomeRouteScrollRestoreRef.current) return;
+    if (!clientMounted) return;
+    if (!firstFeedLoaded) return;
+    if (showFeedSkeleton) return;
+
+    const targetY = readMainTabScrollStorage('/home');
+    if (typeof targetY !== 'number' || !Number.isFinite(targetY)) {
+      pendingHomeRouteScrollRestoreRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
+    const useMask = targetY > 48;
+
+    const unmask = () => {
+      const w = feedRestoreWrapRef.current;
+      if (useMask && w) w.style.visibility = '';
+    };
+
+    let attempts = 0;
+    const maxAttempts = 40;
+    const tryScroll = () => {
+      if (cancelled) return;
+      const el = recommendPanelRef.current;
+      if (el) void el.offsetHeight;
+      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      attempts += 1;
+      const current = window.scrollY;
+      const diff = Math.abs(current - targetY);
+      if (diff > 3 && attempts < maxAttempts) {
+        requestAnimationFrame(tryScroll);
+      } else {
+        unmask();
+        pendingHomeRouteScrollRestoreRef.current = false;
+        if (diff <= 4) {
+          mainTabScroll?.saveCurrentScroll('/home');
+        }
+      }
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(tryScroll);
+    });
+
+    return () => {
+      cancelled = true;
+      unmask();
+    };
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll]);
+
+  /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
+  if (!clientMounted) {
+    return (
+      <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+        <div>
+          <div ref={recommendPanelRef} style={{ display: 'block' }} aria-hidden={false}>
+            <FeedSkeleton count={3} />
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-      <div>
+      <div ref={feedRestoreWrapRef}>
         {/* แท็บพร้อมขาย (หรือค้นหา): เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll */}
         <div ref={recommendPanelRef} style={{ display: isSoldTabNoSearch ? 'none' : 'block' }} aria-hidden={isSoldTabNoSearch}>
           <HomeFeedBody
