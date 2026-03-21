@@ -6,6 +6,7 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
+import { HomePostImageGate } from '@/components/home/HomePostImageGate';
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
@@ -16,6 +17,10 @@ export type HomeFeedBodyProps = {
   /** true = กำลังโหลดผลค้นหา → ถ้า posts ว่างให้แสดง skeleton เท่านั้น */
   isSearchLoading?: boolean;
   skeletonCount: number;
+  /** แท็บแนะนำ: รอโหลดรูปที่เห็นใน layout ก่อนแสดงการ์ด */
+  gateImageReady?: boolean;
+  /** เรียกเมื่อโพสสุดท้ายในลิสต์โหลดรูปครบ — โหลดโพสถัดไปล่วงหน้า (เมื่อมีโพสในคิวไม่เกิน 2) */
+  onPrefetchNextPost?: () => void;
   postFeedProps: {
     posts: any[];
     session: any;
@@ -47,7 +52,7 @@ export type HomeFeedBodyProps = {
 };
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
-export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, postFeedProps }: HomeFeedBodyProps) {
+export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, postFeedProps }: HomeFeedBodyProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -108,19 +113,31 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
   }
 
   const showNoMoreOnly = !hasMore && !loadingMore;
-  const bottomSlotStyle: React.CSSProperties = {
-    minHeight: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
-    height: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
-    paddingTop: showNoMoreOnly ? 28 : 0,
-    flexShrink: 0,
-    width: '100%',
-    boxSizing: 'border-box',
-    flexDirection: 'column',
-    gap: 8,
-  };
+  /**
+   * ตอน loadingMore เคยบีบความสูง 88px ทำให้ FeedSkeleton การ์ดเต็มดูคนละแบบกับ HomePostImageGate (การ์ดเต็ม)
+   * ใช้ container ไม่จำกัดความสูง — รูปแบบเดียวกับ FeedSkeleton count={1} ที่อื่น
+   */
+  const bottomSlotStyle: React.CSSProperties = loadingMore
+    ? {
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        width: '100%',
+        boxSizing: 'border-box',
+      }
+    : {
+        minHeight: showNoMoreOnly ? 120 : 88,
+        height: showNoMoreOnly ? 120 : 88,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
+        paddingTop: showNoMoreOnly ? 28 : 0,
+        flexShrink: 0,
+        width: '100%',
+        boxSizing: 'border-box',
+        flexDirection: 'column',
+        gap: 8,
+      };
 
   const bottomSlot = (
     <div key="feed-bottom-slot" className="feed-bottom-slot" style={bottomSlotStyle}>
@@ -144,36 +161,46 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     <FeedWithPreload showSkeleton={false} skeletonCount={skeletonCount}>
       <div style={{ display: 'contents' }}>
         {posts.map((post, index) => (
-          <PostCard
+          <HomePostImageGate
             key={`${post.id}-${index}`}
             post={post}
-            index={index}
-            isLastElement={index === posts.length - 1}
-            priority={index === 0}
-            imageFetchPriority={index < 3 ? 'high' : 'low'}
-            session={session}
-            likedPosts={likedPosts}
-            savedPosts={savedPosts}
-            justLikedPosts={justLikedPosts}
-            justSavedPosts={justSavedPosts}
-            activeMenuState={activeMenuState}
-            isMenuAnimating={isMenuAnimating}
-            lastPostElementRef={index === posts.length - 1 ? lastPostElementRef : undefined}
-            menuButtonRefs={menuButtonRefs}
-            onViewPost={onViewPost}
-            onLike={onLike}
-            onSave={onSave}
-            onShare={onShare}
-            onViewLikes={onViewLikes}
-            onViewSaves={onViewSaves}
-            onTogglePostStatus={onTogglePostStatus}
-            onDeletePost={onDeletePost}
-            onReport={onReport}
-            onSetActiveMenu={onSetActiveMenu}
-            onSetMenuAnimating={onSetMenuAnimating}
-            onImpression={onImpression}
-            hideBoost={hideBoost}
-          />
+            enabled={gateImageReady}
+            onImagesReady={
+              gateImageReady && index === posts.length - 1
+                ? onPrefetchNextPost
+                : undefined
+            }
+          >
+            <PostCard
+              post={post}
+              index={index}
+              isLastElement={index === posts.length - 1}
+              priority={index === 0}
+              imageFetchPriority={index < 3 ? 'high' : 'low'}
+              session={session}
+              likedPosts={likedPosts}
+              savedPosts={savedPosts}
+              justLikedPosts={justLikedPosts}
+              justSavedPosts={justSavedPosts}
+              activeMenuState={activeMenuState}
+              isMenuAnimating={isMenuAnimating}
+              lastPostElementRef={index === posts.length - 1 ? lastPostElementRef : undefined}
+              menuButtonRefs={menuButtonRefs}
+              onViewPost={onViewPost}
+              onLike={onLike}
+              onSave={onSave}
+              onShare={onShare}
+              onViewLikes={onViewLikes}
+              onViewSaves={onViewSaves}
+              onTogglePostStatus={onTogglePostStatus}
+              onDeletePost={onDeletePost}
+              onReport={onReport}
+              onSetActiveMenu={onSetActiveMenu}
+              onSetMenuAnimating={onSetMenuAnimating}
+              onImpression={onImpression}
+              hideBoost={hideBoost}
+            />
+          </HomePostImageGate>
         ))}
         {bottomSlot}
       </div>

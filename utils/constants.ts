@@ -36,6 +36,8 @@ export const LIST_FEED_PAGE_SIZE = 1000;
 export const FEED_PAGE_SIZE = 10;
 /** จำนวนโพสต์ชุดแรกที่โหลดในหน้าโฮม (6 รายการ — balance ระหว่างโหลดเร็วกับความสมูท) */
 export const INITIAL_FEED_PAGE_SIZE = 6;
+/** หน้าโฮม (แท็บแนะนำ): ดึงโพสจากเซิร์ฟเวอร์ทีละ 1 โพส */
+export const HOME_FEED_PAGE_SIZE = 1;
 /** อายุ cache ฟีดหน้าโฮม (มิลลิวินาที) — ใช้แสดงผลทันทีเมื่อกลับมาเปิดเว็บ แล้วค่อยโหลดที่อัปเดตใหม่ทีหลัง */
 export const FEED_CACHE_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000; // 2 วัน
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */

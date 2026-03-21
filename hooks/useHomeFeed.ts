@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
+import { HOME_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { preloadPostImages } from '@/utils/imagePreload';
+import { preloadPostsVisibleImages } from '@/utils/imagePreload';
 
 const FEED_CACHE_KEY = 'home_feed_cache';
 
@@ -22,7 +22,7 @@ function getInitialPostsFromStorage(province?: string): any[] {
         if (parsed?.province === province && Array.isArray(parsed.posts)) {
           const age = Date.now() - (parsed.ts || 0);
           if (age < FEED_CACHE_MAX_AGE_MS) {
-            return parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
+            return parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
           }
         }
       }
@@ -36,11 +36,11 @@ function getInitialPostsFromStorage(province?: string): any[] {
     const cacheRaw = window.localStorage.getItem(FEED_CACHE_KEY);
     if (cacheRaw) {
       const parsed = JSON.parse(cacheRaw);
-      if (parsed?.province === province && Array.isArray(parsed.posts)) {
-        const age = Date.now() - (parsed.ts || 0);
-        if (age < FEED_CACHE_MAX_AGE_MS) {
-          const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
-          const rest = cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id));
+        if (parsed?.province === province && Array.isArray(parsed.posts)) {
+          const age = Date.now() - (parsed.ts || 0);
+          if (age < FEED_CACHE_MAX_AGE_MS) {
+            const cachedPosts = parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
+            const rest = cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id));
           return [justPostedPost, ...rest];
         }
       }
@@ -201,7 +201,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
     // โหลดเพิ่มใช้ offset จากจำนวนโพสต์จริง (ไม่ใช้ page) เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ
     const rangeStart = currentPage === 0 ? 0 : postsLengthRef.current;
-    const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
+    const pageSize = HOME_FEED_PAGE_SIZE;
     const rangeEnd = rangeStart + pageSize - 1;
 
     try {
@@ -300,7 +300,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           }
         }
         setPosts(initialList);
-        preloadPostImages(initialList, 2);
+        preloadPostsVisibleImages(initialList, 2);
         fireInitialLoadDone();
         try {
           if (typeof window !== 'undefined') {
@@ -377,13 +377,13 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           if (parsed && parsed.province === province && Array.isArray(parsed.posts)) {
             const age = Date.now() - (parsed.ts || 0);
             if (age < FEED_CACHE_MAX_AGE_MS) {
-              const cachedPosts = parsed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
+              const cachedPosts = parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
               const initialPosts = justPostedPost
                 ? [justPostedPost, ...cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id))]
                 : cachedPosts;
               setPosts(initialPosts);
               setLoadingMore(false);
-              preloadPostImages(initialPosts, 2);
+              preloadPostsVisibleImages(initialPosts, 2);
               setHasMore(!!parsed.hasMore);
               initialLoadFromCacheRef.current = true;
               fromCache = true;

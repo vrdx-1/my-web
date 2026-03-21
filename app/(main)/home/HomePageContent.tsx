@@ -278,8 +278,13 @@ export function HomePageContent() {
   const viewingPostHook = useViewingPost();
   const interactionModalHook = useInteractionModal();
   const isBottomSheetOpen = interactionModalHook.interactionModal.show;
+  /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
+  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
   const headerScroll = useHeaderScroll({
     disableScrollHide: isBottomSheetOpen,
+    loadingMore: effectiveLoadingMore,
+    /** โพสเพิ่มในลิสต์ → กัน scroll ปลอมช่วง layout/รูปนิ่ง */
+    feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
     suppressHideUntilRef,
   });
@@ -301,8 +306,6 @@ export function HomePageContent() {
     setJustLikedPosts,
     setJustSavedPosts,
   });
-
-  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;
@@ -383,6 +386,23 @@ export function HomePageContent() {
 
   const searchWaitingResults =
     hasSearch && posts.length === 0 && !searchResolvedForEmpty;
+
+  /** โหลดโพสถัดไปล่วงหน้าเมื่อโพสสุดท้ายโหลดรูปครบ — จำกัดเมื่อมีโพสในคิวไม่เกิน 2 เพื่อไม่ดึงยิงทั้งฟีด */
+  const onPrefetchNextPost = useCallback(() => {
+    if (hasSearch || isSoldTabNoSearch || tab !== 'recommend') return;
+    if (recommendFeed.posts.length > 2) return;
+    if (!recommendFeed.hasMore || recommendFeed.loadingMore) return;
+    recommendFeed.setPage((p) => p + 1);
+  }, [
+    hasSearch,
+    isSoldTabNoSearch,
+    tab,
+    recommendFeed.posts.length,
+    recommendFeed.hasMore,
+    recommendFeed.loadingMore,
+    recommendFeed.setPage,
+  ]);
+
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
@@ -416,6 +436,8 @@ export function HomePageContent() {
             mayShowEmptyState={!searchWaitingResults}
             isSearchLoading={hasSearch && searchData.loading}
             skeletonCount={3}
+            gateImageReady={tab === 'recommend' && !hasSearch && !isSoldTabNoSearch}
+            onPrefetchNextPost={onPrefetchNextPost}
             postFeedProps={{
               posts,
               session: postList.session,

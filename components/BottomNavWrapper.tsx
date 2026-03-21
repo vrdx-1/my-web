@@ -2,11 +2,7 @@
 
 import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
-import {
-  BottomNav,
-  BOTTOM_NAV_HEIGHT_PX,
-  BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
-} from '@/components/BottomNav';
+import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
@@ -22,7 +18,8 @@ function shouldShowBottomNav(pathname: string): boolean {
   return BOTTOM_NAV_PATHS.includes(pathname);
 }
 
-function isHomeOrSold(pathname: string | null): boolean {
+/** หน้าโฮม: ซ่อนแถบล่างตาม header ตอนเลื่อนลง — แท็บอื่นแสดงคงที่ */
+function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
   return pathname === '/home';
 }
 
@@ -32,7 +29,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const showNav = shouldShowBottomNav(pathname ?? '');
   // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
   const needCreatePostHandler = showNav;
-  const hideNavWithScroll = showNav && isHomeOrSold(pathname ?? '');
+  const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(pathname ?? '');
   const isNavVisible = hideNavWithScroll ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   return (
@@ -53,7 +50,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
             visibility: isNavVisible ? 'visible' : 'hidden',
-            transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+            transition: 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease-out',
           }}
         >
           <Suspense

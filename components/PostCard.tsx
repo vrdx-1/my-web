@@ -143,13 +143,11 @@ export function PostCard({
     return () => registerVisibilityRef(null, index);
   }, [registerVisibilityRef, index]);
 
-  // content-visibility: auto — ให้เบราว์เซอร์ข้ามการ paint การ์ดที่อยู่นอกจอ (scroll สมูทแบบ Facebook)
-    const cardStyle: React.CSSProperties = {
-      borderBottom: '1px solid #6b6b6b',
-      position: 'relative',
-      contentVisibility: 'auto',
-      containIntrinsicBlockSize: '320px',
-    };
+  // ไม่ใช้ content-visibility:auto บนฟีด — ตอนโพสโหลด/สูงเปลี่ยน ทำให้ scroll anchor กระตุกแล้ว header สั่น
+  const cardStyle: React.CSSProperties = {
+    borderBottom: '1px solid #6b6b6b',
+    position: 'relative',
+  };
 
     return (
     <div
