@@ -15,8 +15,8 @@ const VISIBILITY_THROTTLE_MS = 100;
  * 8px ยังกัน jitter จาก layout ~1–3px ได้
  */
 const MIN_SCROLL_DELTA_PX = 8;
-/** หลังโหลดโพส/เปลี่ยนจำนวนโพส — ไม่ตอบ scroll ช่วงสั้นๆ ให้ layout นิ่ง */
-const LAYOUT_SETTLE_IGNORE_MS = 180;
+/** หลังโหลดโพส/เปลี่ยนจำนวนโพส — ไม่ตอบ scroll ช่วงสั้นๆ ให้ layout นิ่ง (virtualizer วัดความสูงท้ายฟีดทำให้มี scroll ปลอม) */
+const LAYOUT_SETTLE_IGNORE_MS = 260;
 
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;

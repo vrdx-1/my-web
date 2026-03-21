@@ -207,6 +207,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
           {virtualizer.getVirtualItems().map((virtualItem) => {
             const index = virtualItem.index;
             if (index >= posts.length) {
+              /** ความสูงคงที่เท่า estimateSize — ลดการวัดซ้ำ/กระโดดของ totalSize ตอน shimmer + รูป skeleton เปลี่ยน (คู่กับ shouldAdjustScrollPositionOnItemSizeChange: false) */
               return (
                 <div
                   key={virtualItem.key}
@@ -218,10 +219,15 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
                     top: 0,
                     left: 0,
                     width: '100%',
+                    height: FEED_CARD_ESTIMATE_PX,
+                    minHeight: FEED_CARD_ESTIMATE_PX,
+                    maxHeight: FEED_CARD_ESTIMATE_PX,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     transform: `translateY(${virtualItem.start}px)`,
                   }}
                 >
-                  <FeedSkeleton count={1} />
+                  <FeedSkeleton count={1} animate={false} />
                 </div>
               );
             }

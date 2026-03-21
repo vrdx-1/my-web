@@ -17,24 +17,39 @@ const CAPTION_PADDING = '0 15px 10px 15px';
 interface FeedSkeletonProps {
   /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 5 สำหรับโหลดครั้งแรก, 1 สำหรับโหลดเพิ่มที่ท้าย feed) */
   count?: number;
+  /** ปิด shimmer animation — ลด repaint ตอนเลื่อนเร็วชิดแถวโหลดเพิ่ม (virtual list + scroll) */
+  animate?: boolean;
 }
 
 /**
  * Skeleton แบบ Facebook — โครงเหมือนโพสจริง (feed-card) ใช้ทั้งโหลดครั้งแรกและโหลดเพิ่มที่ท้าย
  */
-export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_CARD_COUNT }: FeedSkeletonProps) {
+export const FeedSkeleton = React.memo(function FeedSkeleton({
+  count = DEFAULT_CARD_COUNT,
+  animate = true,
+}: FeedSkeletonProps) {
+  const blockBase = animate
+    ? shimmerStyle
+    : {
+        background: '#e8e8e8',
+        backgroundSize: '100% 100%',
+        borderRadius: 8,
+      };
+
   return (
     <div
       className="feed-skeleton"
       style={{ display: 'flex', flexDirection: 'column', width: '100%' }}
       aria-hidden="true"
     >
-      <style>{`
+      {animate ? (
+        <style>{`
         @keyframes feed-skeleton-shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
       `}</style>
+      ) : null}
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
@@ -50,7 +65,7 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_C
           <div style={{ padding: CARD_PADDING, display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
             <div
               style={{
-                ...shimmerStyle,
+                ...blockBase,
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
@@ -58,19 +73,19 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_C
               }}
             />
             <div style={{ flex: 1, minWidth: 0, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ ...shimmerStyle, height: 18, width: '50%', maxWidth: 140 }} />
-              <div style={{ ...shimmerStyle, height: 14, width: '40%', maxWidth: 100 }} />
+              <div style={{ ...blockBase, height: 18, width: '50%', maxWidth: 140 }} />
+              <div style={{ ...blockBase, height: 14, width: '40%', maxWidth: 100 }} />
             </div>
           </div>
           {/* Caption — ตรงกับ caption block */}
           <div style={{ padding: CAPTION_PADDING, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ ...shimmerStyle, height: 15, width: '100%' }} />
-            <div style={{ ...shimmerStyle, height: 15, width: '88%' }} />
+            <div style={{ ...blockBase, height: 15, width: '100%' }} />
+            <div style={{ ...blockBase, height: 15, width: '88%' }} />
           </div>
           {/* รูป — ตรงกับ PhotoGrid */}
           <div
             style={{
-              ...shimmerStyle,
+              ...blockBase,
               width: '100%',
               minHeight: 320,
               margin: '0 15px',
@@ -86,7 +101,7 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({ count = DEFAULT_C
             }}
           >
             {[1, 2, 3].map((j) => (
-              <div key={j} style={{ ...shimmerStyle, height: 20, width: 56 }} />
+              <div key={j} style={{ ...blockBase, height: 20, width: 56 }} />
             ))}
           </div>
         </div>

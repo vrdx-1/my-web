@@ -239,8 +239,9 @@ export function HomePageContent() {
     };
   }, [homeTabScroll, isSoldTabNoSearch]);
 
-  /** สลับแท็บแล้ว: คืนค่า scroll — ฝั่งพร้อมขายเลื่อนลึกแล้วต้อง retry จน layout สูงพอ (เบราว์เซอร์ clamp ถ้า scrollHeight ยังไม่พอ) */
+  /** สลับแท็บแล้ว: คืนค่า scroll — ทั้งພ້ອມຂາຍ/ຂາຍແລ້ວ ใช้ retry + ref บังคับ reflow เหมือนกัน (virtualizer / scrollHeight) */
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
+  const soldPanelRef = useRef<HTMLDivElement | null>(null);
   const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
   setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
   useLayoutEffect(() => {
@@ -248,42 +249,41 @@ export function HomePageContent() {
     const prev = prevShowSoldRef.current;
     prevShowSoldRef.current = showSold;
     if (prev === null) return;
-    if (prev !== showSold) {
-      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      suppressHideUntilRef.current = now + 400;
-      const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
-      const showHeaderAfterRestore = () => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setHeaderVisibleRef.current?.(true));
-        });
-      };
-      if (typeof window !== 'undefined' && Number.isFinite(toRestore)) {
-        if (showSold) {
-          window.scrollTo(0, toRestore);
-          showHeaderAfterRestore();
-        } else {
-          const targetY = toRestore;
-          let attempts = 0;
-          const maxAttempts = 25;
-          const tryScroll = () => {
-            const el = recommendPanelRef.current;
-            if (el) void el.offsetHeight;
-            window.scrollTo(0, targetY);
-            attempts += 1;
-            const current = window.scrollY;
-            const diff = Math.abs(current - targetY);
-            if (diff > 2 && attempts < maxAttempts) {
-              requestAnimationFrame(tryScroll);
-            } else {
-              showHeaderAfterRestore();
-            }
-          };
-          requestAnimationFrame(() => requestAnimationFrame(tryScroll));
-        }
+    if (prev === showSold) return;
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    suppressHideUntilRef.current = now + 400;
+    const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
+    const activePanelRef = showSold ? soldPanelRef : recommendPanelRef;
+
+    const showHeaderAfterRestore = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setHeaderVisibleRef.current?.(true));
+      });
+    };
+
+    if (typeof window === 'undefined' || !Number.isFinite(toRestore)) {
+      showHeaderAfterRestore();
+      return;
+    }
+
+    const targetY = toRestore;
+    let attempts = 0;
+    const maxAttempts = 25;
+    const tryScroll = () => {
+      const el = activePanelRef.current;
+      if (el) void el.offsetHeight;
+      window.scrollTo(0, targetY);
+      attempts += 1;
+      const current = window.scrollY;
+      const diff = Math.abs(current - targetY);
+      if (diff > 2 && attempts < maxAttempts) {
+        requestAnimationFrame(tryScroll);
       } else {
         showHeaderAfterRestore();
       }
-    }
+    };
+    requestAnimationFrame(() => requestAnimationFrame(tryScroll));
   }, [isSoldTabNoSearch, headerVisibility]);
 
   const menu = useMenu();
@@ -523,7 +523,7 @@ export function HomePageContent() {
     if (targetY > 48 && wrap) wrap.style.visibility = 'hidden';
   }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton]);
 
-  /** คืน scroll หลัง layout นิ่ง — ใช้ retry แบบเดียวกับสลับแท็บพร้อมขาย (recommendPanelRef + rAF หลายรอบจน scrollHeight พอ) */
+  /** คืน scroll หลัง layout นิ่ง — panel ref ตามแท็บที่เปิด (ພ້ອມຂາຍ / ຂາຍແລ້ວ) เหมือนตอนสลับแท็บ */
   useEffect(() => {
     if (pathname !== '/home') return;
     if (!pendingHomeRouteScrollRestoreRef.current) return;
@@ -539,6 +539,7 @@ export function HomePageContent() {
 
     let cancelled = false;
     const useMask = targetY > 48;
+    const activePanelRef = isSoldTabNoSearch ? soldPanelRef : recommendPanelRef;
 
     const unmask = () => {
       const w = feedRestoreWrapRef.current;
@@ -549,7 +550,7 @@ export function HomePageContent() {
     const maxAttempts = 40;
     const tryScroll = () => {
       if (cancelled) return;
-      const el = recommendPanelRef.current;
+      const el = activePanelRef.current;
       if (el) void el.offsetHeight;
       window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
       attempts += 1;
@@ -574,7 +575,7 @@ export function HomePageContent() {
       cancelled = true;
       unmask();
     };
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll]);
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch]);
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {
@@ -605,8 +606,8 @@ export function HomePageContent() {
             postFeedProps={recommendPostFeedProps}
           />
         </div>
-        {/* แท็บขายแล้ว: เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll */}
-        <div style={{ display: isSoldTabNoSearch ? 'block' : 'none' }} aria-hidden={!isSoldTabNoSearch}>
+        {/* แท็บขายแล้ว: เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll (ref สำหรับคืน scroll แบบเดียวกับพร้อมขาย) */}
+        <div ref={soldPanelRef} style={{ display: isSoldTabNoSearch ? 'block' : 'none' }} aria-hidden={!isSoldTabNoSearch}>
           <SoldTabFeedWrapper
             soldListData={soldListData}
             menu={menu}
