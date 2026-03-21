@@ -103,6 +103,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
   const setSavedPostsOut = sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
   const fetchIdRef = useRef(0);
+  /** ใช้คำนวณเวลาแสดง skeleton โหลดเพิ่มขั้นต่ำ — API ตอบเร็วมากจะไม่ให้ loadingMore=false ทันทีจน skeleton ไม่ทัน paint */
+  const loadMoreStartedAtRef = useRef<number | null>(null);
   const initialLoadDoneFiredRef = useRef(false);
   /** ยกเลิกการโหลดเมื่อออกจากหน้า — ใช้ใน cleanup และก่อน setState หลัง await */
   const cancelledRef = useRef(false);
@@ -197,7 +199,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     const currentFetchId = ++fetchIdRef.current;
-    if (!(isInitial && backgroundRefresh)) setLoadingMore(true);
+    if (!(isInitial && backgroundRefresh)) {
+      if (!isInitial) loadMoreStartedAtRef.current = typeof performance !== 'undefined' ? performance.now() : 0;
+      else loadMoreStartedAtRef.current = null;
+      setLoadingMore(true);
+    }
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
     // โหลดเพิ่มใช้ offset จากจำนวนโพสต์จริง (ไม่ใช้ page) เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ
     const rangeStart = currentPage === 0 ? 0 : postsLengthRef.current;
@@ -325,7 +331,26 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (e instanceof Error && e.name === 'AbortError') return;
       throw e;
     } finally {
-      if (!cancelledRef.current && fetchIdRef.current === currentFetchId) setLoadingMore(false);
+      if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+        if (isInitial) {
+          loadMoreStartedAtRef.current = null;
+          setLoadingMore(false);
+        } else {
+          const MIN_LOAD_MORE_SKELETON_MS = 200;
+          const start = loadMoreStartedAtRef.current;
+          loadMoreStartedAtRef.current = null;
+          const elapsed =
+            start != null && typeof performance !== 'undefined' ? performance.now() - start : MIN_LOAD_MORE_SKELETON_MS;
+          const remaining = Math.max(0, MIN_LOAD_MORE_SKELETON_MS - elapsed);
+          if (remaining > 0) {
+            window.setTimeout(() => {
+              if (!cancelledRef.current && fetchIdRef.current === currentFetchId) setLoadingMore(false);
+            }, remaining);
+          } else {
+            setLoadingMore(false);
+          }
+        }
+      }
     }
   }, [page, loadingMore, province, fireInitialLoadDone]);
   const fetchPostsRef = useRef(fetchPosts);

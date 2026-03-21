@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -57,10 +57,28 @@ export function SoldTabFeedWrapper({
   postsRef,
   handleSubmitReportRef,
 }: SoldTabFeedWrapperProps) {
+  /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
+  const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
+
+  const handleSoldLoadMore = useCallback(() => {
+    setSoldLoadMoreShell(true);
+    soldListData.setPage((p) => p + 1);
+  }, [soldListData.setPage]);
+
+  useEffect(() => {
+    if (soldListData.loadingMore) setSoldLoadMoreShell(false);
+  }, [soldListData.loadingMore]);
+
+  useEffect(() => {
+    if (!soldLoadMoreShell) return;
+    const t = window.setTimeout(() => setSoldLoadMoreShell(false), 8000);
+    return () => clearTimeout(t);
+  }, [soldLoadMoreShell]);
+
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: soldListData.loadingMore,
     hasMore: soldListData.hasMore,
-    onLoadMore: () => soldListData.setPage((p) => p + 1),
+    onLoadMore: handleSoldLoadMore,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({
@@ -125,9 +143,9 @@ export function SoldTabFeedWrapper({
             onReport: handlers.handleReport,
             onSetActiveMenu: menu.setActiveMenu,
             onSetMenuAnimating: menu.setIsMenuAnimating,
-            loadingMore: soldListData.hasMore ? soldListData.loadingMore : false,
+            loadingMore: soldListData.loadingMore || soldLoadMoreShell,
             hasMore: soldListData.hasMore ?? true,
-            onLoadMore: () => soldListData.setPage((p) => p + 1),
+            onLoadMore: handleSoldLoadMore,
             hideBoost: true,
           }}
         />

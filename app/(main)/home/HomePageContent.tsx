@@ -95,6 +95,9 @@ export function HomePageContent() {
     searchParams,
   } = tabData;
 
+  /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel/prefetch ยิง setPage — ก่อน loadingMore จาก API (ช่วงรอ useEffect เรียก fetchPosts) */
+  const [recommendLoadMoreShell, setRecommendLoadMoreShell] = useState(false);
+
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const soldListData = usePostListData({
     type: 'sold',
@@ -277,12 +280,10 @@ export function HomePageContent() {
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
   const interactionModalHook = useInteractionModal();
-  const isBottomSheetOpen = interactionModalHook.interactionModal.show;
   /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
   const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
-  /** ซ่อน/แสดง header + bottom nav ตาม scroll ตามปกติ — ปิดเฉพาะตอนเปิด sheet ไลก์/เซฟ (ไม่ให้ซ่อนขณะโต้ตอบกับ sheet) */
+  /** ไม่ disableScrollHide ตอนเปิด sheet — จะบังคับ header แสดงและเลื่อนลงมาแม้เคยซ่อนจาก scroll; body ล็อก overflow อยู่แล้ว */
   const headerScroll = useHeaderScroll({
-    disableScrollHide: isBottomSheetOpen,
     loadingMore: effectiveLoadingMore,
     /** โพสเพิ่มในลิสต์ → กัน scroll ปลอมช่วง layout/รูปนิ่ง */
     feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
@@ -290,10 +291,33 @@ export function HomePageContent() {
     suppressHideUntilRef,
   });
 
+  const handleRecommendLoadMore = useCallback(() => {
+    setRecommendLoadMoreShell(true);
+    postList.setPage((p: number) => p + 1);
+  }, [postList.setPage]);
+
+  useEffect(() => {
+    if (postList.loadingMore) setRecommendLoadMoreShell(false);
+  }, [postList.loadingMore]);
+
+  useEffect(() => {
+    if (!recommendLoadMoreShell) return;
+    const t = window.setTimeout(() => setRecommendLoadMoreShell(false), 8000);
+    return () => clearTimeout(t);
+  }, [recommendLoadMoreShell]);
+
+  useEffect(() => {
+    if (isSoldTabNoSearch) setRecommendLoadMoreShell(false);
+  }, [isSoldTabNoSearch]);
+
+  useEffect(() => {
+    setRecommendLoadMoreShell(false);
+  }, [selectedProvince]);
+
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postList.loadingMore,
     hasMore: postList.hasMore,
-    onLoadMore: () => postList.setPage((p: number) => p + 1),
+    onLoadMore: handleRecommendLoadMore,
     /** ผลค้นหาโฮมโหลดเพิ่มแบบ client slice — ไม่มี loadingMore สลับ ต้องรีเซ็ต sentinel เมื่อจำนวนโพสเปลี่ยน */
     feedPostCount: postList.posts.length,
   });
@@ -395,6 +419,7 @@ export function HomePageContent() {
     if (isSoldTabNoSearch || tab !== 'recommend') return;
     if (postList.posts.length > 2) return;
     if (!postList.hasMore || postList.loadingMore) return;
+    setRecommendLoadMoreShell(true);
     postList.setPage((p: number) => p + 1);
   }, [
     isSoldTabNoSearch,
@@ -429,9 +454,10 @@ export function HomePageContent() {
       onReport: handlers.handleReport,
       onSetActiveMenu: menu.setActiveMenu,
       onSetMenuAnimating: menu.setIsMenuAnimating,
-      loadingMore: postList.hasMore ? postList.loadingMore : false,
+      /** ห้าม mask ด้วย hasMore: ใน useHomeFeed หลัง API จะ setHasMore ก่อน แล้วค่อย await supabase โหลดโพสเต็ม — ช่วงนั้น hasMore อาจเป็น false แต่ loadingMore ยัง true → ถ้าส่ง false จะไม่มี skeleton + totalSize สั้นลง = พื้นขาวด้านล่าง */
+      loadingMore: postList.loadingMore || recommendLoadMoreShell,
       hasMore: postList.hasMore ?? true,
-      onLoadMore: () => postList.setPage((p: number) => p + 1),
+      onLoadMore: handleRecommendLoadMore,
       hideBoost: false,
     }),
     [
@@ -441,7 +467,8 @@ export function HomePageContent() {
       postList.savedPosts,
       postList.hasMore,
       postList.loadingMore,
-      postList.setPage,
+      recommendLoadMoreShell,
+      handleRecommendLoadMore,
       justLikedPosts,
       justSavedPosts,
       menu.activeMenuState,

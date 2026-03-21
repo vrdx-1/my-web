@@ -105,11 +105,18 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
   const virtualizeEnabled = mounted && !effectivelyShowSkeleton && posts.length > 0;
 
   /**
+   * แถว skeleton โหลดเพิ่มอยู่ใน virtual list (เป็นส่วนหนึ่งของ totalSize)
+   * เดิมวาง skeleton ใน bottomSlot ใต้กล่องความสูง totalSize → อยู่ท้ายเอกสารจริง ตอนเลื่อนลึกแต่ยังไม่ถึงท้ายสุดจะไม่เห็น skeleton แม้ loadingMore เป็น true
+   */
+  const appendLoadMoreSkeletonRow = Boolean(loadingMore);
+  const virtualItemCount = posts.length + (appendLoadMoreSkeletonRow ? 1 : 0);
+
+  /**
    * scrollMargin ต้องเป็น 0: MainTabLayoutClient ใส่ spacer ความสูงคงที่ให้แล้วใต้ header+แท็บแบบ fixed
    * ถ้าวัด offsetTop ของกล่องฟีดแล้วส่งเป็น scrollMargin จะได้ช่องว่างซ้ำ (spacer + padding ภายใน virtual list)
    */
   const virtualizer = useWindowVirtualizer({
-    count: posts.length,
+    count: virtualItemCount,
     estimateSize: () => FEED_CARD_ESTIMATE_PX,
     overscan: FEED_VIRTUAL_OVERSCAN,
     scrollMargin: 0,
@@ -124,6 +131,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     /** นานขึ้น = ช่วงหลังปล่อยนิ้วยังถือว่า "กำลังเลื่อน" ไม่สลับไปโหมดชดเชย scroll เร็วเกินไป */
     isScrollingResetDelay: 450,
     getItemKey: (index) => {
+      if (index >= posts.length) return '__home-feed-loading-more__';
       const p = posts[index];
       return p != null && p.id != null ? String(p.id) : String(index);
     },
@@ -151,35 +159,23 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
   }
 
   const showNoMoreOnly = !hasMore && !loadingMore;
-  /**
-   * ตอน loadingMore เคยบีบความสูง 88px ทำให้ FeedSkeleton การ์ดเต็มดูคนละแบบกับ HomePostImageGate (การ์ดเต็ม)
-   * ใช้ container ไม่จำกัดความสูง — รูปแบบเดียวกับ FeedSkeleton count={1} ที่อื่น
-   */
-  const bottomSlotStyle: React.CSSProperties = loadingMore
-    ? {
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        width: '100%',
-        boxSizing: 'border-box',
-      }
-    : {
-        minHeight: showNoMoreOnly ? 120 : 88,
-        height: showNoMoreOnly ? 120 : 88,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
-        paddingTop: showNoMoreOnly ? 28 : 0,
-        flexShrink: 0,
-        width: '100%',
-        boxSizing: 'border-box',
-        flexDirection: 'column',
-        gap: 8,
-      };
+  /** skeleton โหลดเพิ่มอยู่ในแถว virtual แล้ว — ช่องล่างเหลือแค่ข้อความ “ไม่มีเพิ่ม” + spacer สำหรับ sentinel โหลดล่วงหน้า */
+  const bottomSlotStyle: React.CSSProperties = {
+    minHeight: showNoMoreOnly ? 120 : 88,
+    height: showNoMoreOnly ? 120 : 88,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
+    paddingTop: showNoMoreOnly ? 28 : 0,
+    flexShrink: 0,
+    width: '100%',
+    boxSizing: 'border-box',
+    flexDirection: 'column',
+    gap: 8,
+  };
 
   const bottomSlot = (
     <div key="feed-bottom-slot" className="feed-bottom-slot" style={bottomSlotStyle}>
-      {loadingMore ? <FeedSkeleton count={1} /> : null}
       <span
         style={{
           fontSize: '13px',
@@ -210,6 +206,25 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
         >
           {virtualizer.getVirtualItems().map((virtualItem) => {
             const index = virtualItem.index;
+            if (index >= posts.length) {
+              return (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  data-loading-more-row
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <FeedSkeleton count={1} />
+                </div>
+              );
+            }
             const post = posts[index];
             if (!post) return null;
             const isLastInFeed = index === posts.length - 1;
