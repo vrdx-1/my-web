@@ -264,6 +264,7 @@ export function SavedPostsContent() {
             </div>
           ) : (
             <TabNavigation
+              className="home-tab-navigation"
               tabs={[
                 { value: 'recommend', label: 'ພ້ອມຂາຍ' },
                 { value: 'sold', label: 'ຂາຍແລ້ວ' },

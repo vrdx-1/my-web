@@ -445,6 +445,7 @@ export function MyPostsContent() {
       ) : (
         <div style={{ position: 'sticky', top: 60, zIndex: 99, background: '#ffffff', backgroundColor: '#ffffff' }}>
           <TabNavigation
+            className="home-tab-navigation"
             tabs={[
               { value: 'recommend', label: 'ພ້ອມຂາຍ' },
               { value: 'sold', label: 'ຂາຍແລ້ວ' },
