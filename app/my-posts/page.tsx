@@ -5,6 +5,10 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { PageHeader } from '@/components/PageHeader';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
+/** ตรงกับ MyPostsContent — แท็ບ sticky ใต้ header ไม่ชิดตัวหนังสือ */
+const MY_POSTS_STICKY_TABS_TOP_PX = 64;
+const MY_POSTS_TAB_STRIP_PADDING_Y = { top: 8, bottom: 8 } as const;
+
 const feedFallback = (
   <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
     <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#fff' }} aria-hidden>
@@ -60,13 +64,14 @@ const feedFallback = (
     <div
       style={{
         position: 'sticky',
-        top: 60,
+        top: MY_POSTS_STICKY_TABS_TOP_PX,
         zIndex: 99,
         background: '#ffffff',
         backgroundColor: '#ffffff',
         display: 'flex',
         minHeight: 32,
-        height: 32,
+        paddingTop: MY_POSTS_TAB_STRIP_PADDING_Y.top,
+        paddingBottom: MY_POSTS_TAB_STRIP_PADDING_Y.bottom,
       }}
       aria-hidden
     >

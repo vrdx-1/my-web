@@ -36,6 +36,11 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
+/** ระยะจากด้านบน viewport ตอนแท็ບພ້ອມຂາຍ/ຂາຍແລ້ວ ติด sticky — ใกล้ความสูง PageHeader (~10+44+10) ไม่ให้ตัวหนังสือแท็บชิด header */
+const MY_POSTS_STICKY_TABS_TOP_PX = 64;
+/** ช่องว่างใต้ header / เหนือรายการโพสต์ เวลาเลื่อน */
+const MY_POSTS_TAB_STRIP_PADDING_Y = { top: 8, bottom: 8 } as const;
+
 /** ใช้ MyPostsFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 const MyPostsFeedBlock = dynamic(
   () => import('./MyPostsFeedBlock').then((mod) => ({ default: mod.MyPostsFeedBlock })),
@@ -240,13 +245,13 @@ export function MyPostsContent() {
     [interactionModalHook],
   );
 
-  // สำหรับหน้า refresh: ต้องแสดง skeleton ทั้งหมด (ยกเว้น PageHeader)
+  // Skeleton ทั้งบล็อกโปรไฟล์+แท็บ+feed — ห้ามใช้สถานะ “โพสต์ว่าง+ยังไม่โหลด” ของแท็บปัจจุบัน เพราะตอนสลับไป ຂາຍແລ້ວ ครั้งแรกจะทำให้กระพริบทั้งหน้า
   const showFullSkeleton =
-    !mounted ||
-    !feedReady ||
-    profileLoading ||
-    sessionState === undefined ||
-    (postListData.posts.length === 0 && !postListData.loadingMore && postListData.hasMore);
+    !mounted || !feedReady || profileLoading || sessionState === undefined;
+
+  /** ฟีดว่างและยังโหลด/ยังมีหน้าถัดไปได้ — รวมช่วงก่อน loadingMore เป็น true (ไม่กระพริบ EmptyState) */
+  const showFeedBlockSkeleton =
+    postListData.posts.length === 0 && (postListData.loadingMore || postListData.hasMore);
 
   return (
     <main
@@ -330,7 +335,7 @@ export function MyPostsContent() {
               100% { background-position: -200% 0; }
             }
           `}</style>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
             <div
               style={{
                 width: 90,
@@ -342,7 +347,7 @@ export function MyPostsContent() {
                 animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
               }}
             />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, paddingTop: 10 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, paddingTop: 0 }}>
               <div
                 style={{
                   height: 18,
@@ -376,19 +381,21 @@ export function MyPostsContent() {
           onEditNameClick={handleEditNameClick}
           onEditPhoneClick={handleEditPhoneClick}
           showDivider={false}
+          variant="my-posts"
         />
       )}
       {showFullSkeleton ? (
         <div
           style={{
             position: 'sticky',
-            top: 60,
+            top: MY_POSTS_STICKY_TABS_TOP_PX,
             zIndex: 99,
             background: '#ffffff',
             backgroundColor: '#ffffff',
             display: 'flex',
             minHeight: 32,
-            height: 32,
+            paddingTop: MY_POSTS_TAB_STRIP_PADDING_Y.top,
+            paddingBottom: MY_POSTS_TAB_STRIP_PADDING_Y.bottom,
           }}
           aria-hidden
         >
@@ -443,7 +450,17 @@ export function MyPostsContent() {
           </div>
         </div>
       ) : (
-        <div style={{ position: 'sticky', top: 60, zIndex: 99, background: '#ffffff', backgroundColor: '#ffffff' }}>
+        <div
+          style={{
+            position: 'sticky',
+            top: MY_POSTS_STICKY_TABS_TOP_PX,
+            zIndex: 99,
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
+            paddingTop: MY_POSTS_TAB_STRIP_PADDING_Y.top,
+            paddingBottom: MY_POSTS_TAB_STRIP_PADDING_Y.bottom,
+          }}
+        >
           <TabNavigation
             className="home-tab-navigation"
             tabs={[
@@ -474,7 +491,7 @@ export function MyPostsContent() {
         <FeedSkeleton count={3} />
       ) : (
         <MyPostsFeedBlock
-          showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
+          showSkeleton={showFeedBlockSkeleton}
           skeletonCount={3}
           posts={postListData.posts}
           session={postListData.session}

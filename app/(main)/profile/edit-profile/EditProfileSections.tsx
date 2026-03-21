@@ -187,6 +187,8 @@ type ProfileSectionProps = {
   onEditPhoneClick: () => void;
   /** ปิด/เปิดเส้นแบ่งใต้ส่วนโปรไฟล์ (ใช้กับหน้า my-posts เท่านั้น) */
   showDivider?: boolean;
+  /** หน้า my-posts: จัดชื่อ/เบอร์ให้สมดุลแนวตั้งกับรูปโปรไฟล์ (กึ่งกลางข้างรูป ไม่ดันต่ำลงด้วย padding) */
+  variant?: 'default' | 'my-posts';
 };
 
 const ProfileSectionComponent = ({
@@ -197,9 +199,19 @@ const ProfileSectionComponent = ({
   onEditNameClick,
   onEditPhoneClick,
   showDivider = true,
-}: ProfileSectionProps) => (
+  variant = 'default',
+}: ProfileSectionProps) => {
+  const isMyPosts = variant === 'my-posts';
+  return (
   <div style={{ padding: '20px', borderBottom: showDivider ? '1px solid #6b6b6b' : 'none' }}>
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: isMyPosts ? 'center' : 'flex-start',
+        gap: '20px',
+        marginBottom: '20px',
+      }}
+    >
       <div style={{ position: 'relative', width: 90, height: 90, flexShrink: 0 }}>
         <div
           style={{
@@ -253,7 +265,16 @@ const ProfileSectionComponent = ({
           <input id="avatar-up" type="file" hidden onChange={onAvatarChange} accept="image/*" />
         </label>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, paddingTop: 10 }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          minWidth: 0,
+          paddingTop: isMyPosts ? 0 : 10,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <h2
             style={{
@@ -324,6 +345,7 @@ const ProfileSectionComponent = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export const ProfileSection = memo(ProfileSectionComponent);
