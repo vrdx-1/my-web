@@ -128,12 +128,7 @@ html:has(body[data-page="home"]) {
   overscroll-behavior-y: none;
 }
 
-/* การ์ดโพสต์: ข้าม paint เมื่ออยู่นอกจอ ลด jank ตอน scroll */
-.feed-card {
-  content-visibility: auto;
-  -webkit-contain-intrinsic-size: auto 480px;
-  contain-intrinsic-size: auto 480px;
-}
+/* ไม่ใส่ content-visibility บน .feed-card — หน้าโฮมใช้ virtual list; cv + contain-intrinsic-size ทำให้กระพริบ/กระตุกตอนเลื่อน */
 
 /* Feed โหลดเสร็จ — fade-in แบบ Facebook */
 @keyframes feed-content-fade-in {

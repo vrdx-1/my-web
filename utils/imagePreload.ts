@@ -1,12 +1,14 @@
 'use client';
 
 import { getVisibleImageUrlsForPost } from '@/utils/photoGridVisibleImages';
+import { markPhotoGridImageUrlLoaded } from '@/utils/photoGridImageCache';
 
 function preloadOneUrl(url: string): Promise<void> {
   if (url.startsWith('data:')) return Promise.resolve();
   return new Promise<void>((resolve) => {
     const img = new Image();
     const done = () => {
+      markPhotoGridImageUrlLoaded(url);
       resolve();
     };
     img.onload = done;

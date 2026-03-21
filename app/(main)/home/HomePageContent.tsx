@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from 'react';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -280,6 +280,7 @@ export function HomePageContent() {
   const isBottomSheetOpen = interactionModalHook.interactionModal.show;
   /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
   const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
+  /** ซ่อน/แสดง header + bottom nav ตาม scroll ตามปกติ — ปิดเฉพาะตอนเปิด sheet ไลก์/เซฟ (ไม่ให้ซ่อนขณะโต้ตอบกับ sheet) */
   const headerScroll = useHeaderScroll({
     disableScrollHide: isBottomSheetOpen,
     loadingMore: effectiveLoadingMore,
@@ -404,6 +405,63 @@ export function HomePageContent() {
     postList.setPage,
   ]);
 
+  const recommendPostFeedProps = useMemo(
+    () => ({
+      posts,
+      session: postList.session,
+      likedPosts: postList.likedPosts,
+      savedPosts: postList.savedPosts,
+      justLikedPosts,
+      justSavedPosts,
+      activeMenuState: menu.activeMenuState,
+      isMenuAnimating: menu.isMenuAnimating,
+      lastPostElementRef,
+      menuButtonRefs: menu.menuButtonRefs,
+      onViewPost: handlers.handleViewPost,
+      onImpression: handlers.handleImpression,
+      onLike: toggleLike,
+      onSave: toggleSave,
+      onShare: handlers.handleShare,
+      onViewLikes: (postId: string) => fetchInteractions('likes', postId),
+      onViewSaves: (postId: string) => fetchInteractions('saves', postId),
+      onTogglePostStatus: handlers.handleTogglePostStatus,
+      onDeletePost: handlers.handleDeletePost,
+      onReport: handlers.handleReport,
+      onSetActiveMenu: menu.setActiveMenu,
+      onSetMenuAnimating: menu.setIsMenuAnimating,
+      loadingMore: postList.hasMore ? postList.loadingMore : false,
+      hasMore: postList.hasMore ?? true,
+      onLoadMore: () => postList.setPage((p: number) => p + 1),
+      hideBoost: false,
+    }),
+    [
+      posts,
+      postList.session,
+      postList.likedPosts,
+      postList.savedPosts,
+      postList.hasMore,
+      postList.loadingMore,
+      postList.setPage,
+      justLikedPosts,
+      justSavedPosts,
+      menu.activeMenuState,
+      menu.isMenuAnimating,
+      menu.menuButtonRefs,
+      menu.setActiveMenu,
+      menu.setIsMenuAnimating,
+      lastPostElementRef,
+      handlers.handleViewPost,
+      handlers.handleImpression,
+      handlers.handleShare,
+      handlers.handleTogglePostStatus,
+      handlers.handleDeletePost,
+      handlers.handleReport,
+      toggleLike,
+      toggleSave,
+      fetchInteractions,
+    ],
+  );
+
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
@@ -439,34 +497,7 @@ export function HomePageContent() {
             skeletonCount={3}
             gateImageReady={tab === 'recommend' && !isSoldTabNoSearch}
             onPrefetchNextPost={onPrefetchNextPost}
-            postFeedProps={{
-              posts,
-              session: postList.session,
-              likedPosts: postList.likedPosts,
-              savedPosts: postList.savedPosts,
-              justLikedPosts,
-              justSavedPosts,
-              activeMenuState: menu.activeMenuState,
-              isMenuAnimating: menu.isMenuAnimating,
-              lastPostElementRef,
-              menuButtonRefs: menu.menuButtonRefs,
-              onViewPost: handlers.handleViewPost,
-              onImpression: handlers.handleImpression,
-              onLike: toggleLike,
-              onSave: toggleSave,
-              onShare: handlers.handleShare,
-              onViewLikes: (postId) => fetchInteractions('likes', postId),
-              onViewSaves: (postId) => fetchInteractions('saves', postId),
-              onTogglePostStatus: handlers.handleTogglePostStatus,
-              onDeletePost: handlers.handleDeletePost,
-              onReport: handlers.handleReport,
-              onSetActiveMenu: menu.setActiveMenu,
-              onSetMenuAnimating: menu.setIsMenuAnimating,
-              loadingMore: postList.hasMore ? postList.loadingMore : false,
-              hasMore: postList.hasMore ?? true,
-              onLoadMore: () => postList.setPage((p: number) => p + 1),
-              hideBoost: false,
-            }}
+            postFeedProps={recommendPostFeedProps}
           />
         </div>
         {/* แท็บขายแล้ว: เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll */}

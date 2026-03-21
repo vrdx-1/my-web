@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 
 /** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
 const HEADER_TOP_ZONE_PX = 200;
@@ -88,6 +88,14 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     setIsHeaderVisible(visible);
     onVisibilityChangeRef.current?.(visible);
   };
+
+  /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
+  useLayoutEffect(() => {
+    if (!disableScrollHide) return;
+    lastAppliedVisibleRef.current = true;
+    setIsHeaderVisible(true);
+    onVisibilityChangeRef.current?.(true);
+  }, [disableScrollHide]);
 
   useEffect(() => {
     if (disableScrollHide) return;

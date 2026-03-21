@@ -2,11 +2,18 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
+import { useFeedImpressionObserver } from '@/hooks/useFeedImpressionObserver';
+
+/** ความสูงโดยประมาณของการ์ดโพส (รวมเส้นขอบ) — virtualizer จะวัดจริงหลัง mount */
+const FEED_CARD_ESTIMATE_PX = 520;
+/** เผื่อแถวเหนือ/ใต้ viewport — เลื่อนลึกแล้วเลื่อนกลับเร็ว: overscan สูงขึ้นลดพายุ mount+measure พร้อมกัน */
+const FEED_VIRTUAL_OVERSCAN = 18;
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
@@ -59,10 +66,6 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return <FeedSkeleton count={skeletonCount} />;
-  }
-
   const {
     posts,
     session,
@@ -91,10 +94,45 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     hideBoost = false,
   } = postFeedProps;
 
+  /** 1 observer แทน N ตัวใน PostCard — ลดภาระ main thread ตอนเลื่อนลึก (เหมือน PostFeed) */
+  const registerImpressionRef = useFeedImpressionObserver(onImpression);
+
   const effectivelyShowSkeleton =
     showSkeleton ||
     (forceSkeletonWhenEmpty && posts.length === 0) ||
     (isSearchLoading && posts.length === 0);
+
+  const virtualizeEnabled = mounted && !effectivelyShowSkeleton && posts.length > 0;
+
+  /**
+   * scrollMargin ต้องเป็น 0: MainTabLayoutClient ใส่ spacer ความสูงคงที่ให้แล้วใต้ header+แท็บแบบ fixed
+   * ถ้าวัด offsetTop ของกล่องฟีดแล้วส่งเป็น scrollMargin จะได้ช่องว่างซ้ำ (spacer + padding ภายใน virtual list)
+   */
+  const virtualizer = useWindowVirtualizer({
+    count: posts.length,
+    estimateSize: () => FEED_CARD_ESTIMATE_PX,
+    overscan: FEED_VIRTUAL_OVERSCAN,
+    scrollMargin: 0,
+    enabled: virtualizeEnabled,
+    /**
+     * ไม่ปรับ window.scroll เมื่อความสูงการ์ดเปลี่ยนหลังวัด — โดยเฉพาะหลังเลื่อนลึกแล้วเลื่อนกลับ:
+     * หยุดเลื่อนแล้ว isScrolling=false แต่หลายการ์ดยังวัด/โหลดรูป การชดเชย scroll เป็นระลอกจะกระตุกและกระพริบ
+     * (แลกกับอาจมี drift เล็กน้อยถ้า estimate ห่างจากจริงมาก — โฮมรับได้มากกว่า)
+     */
+    // @ts-expect-error VirtualizerOptions ในแพ็กเกจยังไม่รวมฟิลด์นี้ใน .d.ts แต่รันไทม์รองรับ
+    shouldAdjustScrollPositionOnItemSizeChange: () => false,
+    /** นานขึ้น = ช่วงหลังปล่อยนิ้วยังถือว่า "กำลังเลื่อน" ไม่สลับไปโหมดชดเชย scroll เร็วเกินไป */
+    isScrollingResetDelay: 450,
+    getItemKey: (index) => {
+      const p = posts[index];
+      return p != null && p.id != null ? String(p.id) : String(index);
+    },
+  });
+
+  if (!mounted) {
+    return <FeedSkeleton count={skeletonCount} />;
+  }
+
   if (effectivelyShowSkeleton) {
     return (
       <FeedWithPreload showSkeleton={true} skeletonCount={skeletonCount}>
@@ -157,51 +195,92 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     </div>
   );
 
+  const totalSize = virtualizer.getTotalSize();
+
   return (
     <FeedWithPreload showSkeleton={false} skeletonCount={skeletonCount}>
-      <div style={{ display: 'contents' }}>
-        {posts.map((post, index) => (
-          <HomePostImageGate
-            key={`${post.id}-${index}`}
-            post={post}
-            enabled={gateImageReady}
-            onImagesReady={
-              gateImageReady && index === posts.length - 1
-                ? onPrefetchNextPost
-                : undefined
-            }
-          >
-            <PostCard
-              post={post}
-              index={index}
-              isLastElement={index === posts.length - 1}
-              priority={index === 0}
-              imageFetchPriority={index < 3 ? 'high' : 'low'}
-              session={session}
-              likedPosts={likedPosts}
-              savedPosts={savedPosts}
-              justLikedPosts={justLikedPosts}
-              justSavedPosts={justSavedPosts}
-              activeMenuState={activeMenuState}
-              isMenuAnimating={isMenuAnimating}
-              lastPostElementRef={index === posts.length - 1 ? lastPostElementRef : undefined}
-              menuButtonRefs={menuButtonRefs}
-              onViewPost={onViewPost}
-              onLike={onLike}
-              onSave={onSave}
-              onShare={onShare}
-              onViewLikes={onViewLikes}
-              onViewSaves={onViewSaves}
-              onTogglePostStatus={onTogglePostStatus}
-              onDeletePost={onDeletePost}
-              onReport={onReport}
-              onSetActiveMenu={onSetActiveMenu}
-              onSetMenuAnimating={onSetMenuAnimating}
-              onImpression={onImpression}
-              hideBoost={hideBoost}
+      <div style={{ width: '100%', overflowAnchor: 'none' }}>
+        <div
+          style={{
+            height: totalSize,
+            position: 'relative',
+            width: '100%',
+            overflowAnchor: 'none',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const index = virtualItem.index;
+            const post = posts[index];
+            if (!post) return null;
+            const isLastInFeed = index === posts.length - 1;
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <HomePostImageGate
+                  post={post}
+                  enabled={gateImageReady}
+                  onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
+                >
+                  <PostCard
+                    post={post}
+                    index={index}
+                    isLastElement={false}
+                    priority={index === 0}
+                    imageFetchPriority={index < 3 ? 'high' : 'low'}
+                    session={session}
+                    likedPosts={likedPosts}
+                    savedPosts={savedPosts}
+                    justLikedPosts={justLikedPosts}
+                    justSavedPosts={justSavedPosts}
+                    activeMenuState={activeMenuState}
+                    isMenuAnimating={isMenuAnimating}
+                    menuButtonRefs={menuButtonRefs}
+                    onViewPost={onViewPost}
+                    onLike={onLike}
+                    onSave={onSave}
+                    onShare={onShare}
+                    onViewLikes={onViewLikes}
+                    onViewSaves={onViewSaves}
+                    onTogglePostStatus={onTogglePostStatus}
+                    onDeletePost={onDeletePost}
+                    onReport={onReport}
+                    onSetActiveMenu={onSetActiveMenu}
+                    onSetMenuAnimating={onSetMenuAnimating}
+                    onImpression={onImpression}
+                    registerImpressionRef={registerImpressionRef}
+                    hideBoost={hideBoost}
+                  />
+                </HomePostImageGate>
+              </div>
+            );
+          })}
+          {lastPostElementRef && totalSize > 0 ? (
+            <div
+              ref={lastPostElementRef}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: 1,
+                transform: `translateY(${Math.max(0, totalSize - 1)}px)`,
+                pointerEvents: 'none',
+                visibility: 'hidden',
+              }}
+              aria-hidden
             />
-          </HomePostImageGate>
-        ))}
+          ) : null}
+        </div>
         {bottomSlot}
       </div>
     </FeedWithPreload>

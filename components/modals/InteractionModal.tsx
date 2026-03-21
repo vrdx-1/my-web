@@ -78,25 +78,29 @@ export const InteractionModal = React.memo<InteractionModalProps>(({
     }
   }, [interactionLoading, interactionUsers.length]);
 
-  // Lock body scroll when modal is open
+  /**
+   * Lock background scroll โดยไม่ใช้ position:fixed + top:-scrollY บน body
+   * — แบบเดิมทำให้ window.scrollY กลายเป็น 0 หลายเบราว์เซอร์ ทำลาย useWindowVirtualizer
+   * (ฟีดคิดว่าเลื่อนอยู่บนสุด → แสดงแค่โพสต้นๆ พื้นหลังหลัง overlay เลยเปลี่ยนโพส)
+   */
   useEffect(() => {
     if (show && !shouldHide) {
-      const originalOverflow = document.body.style.overflow;
-      const originalPosition = document.body.style.position;
-      const originalTop = document.body.style.top;
-      const scrollY = window.scrollY;
-      
+      const html = document.documentElement;
+      const prevHtmlOverflow = html.style.overflow;
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevHtmlOverscroll = html.style.overscrollBehavior;
+      const prevBodyOverscroll = document.body.style.overscrollBehavior;
+
+      html.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      
+      html.style.overscrollBehavior = 'none';
+      document.body.style.overscrollBehavior = 'none';
+
       return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.position = originalPosition;
-        document.body.style.top = originalTop;
-        document.body.style.width = '';
-        window.scrollTo(0, scrollY);
+        html.style.overflow = prevHtmlOverflow;
+        document.body.style.overflow = prevBodyOverflow;
+        html.style.overscrollBehavior = prevHtmlOverscroll;
+        document.body.style.overscrollBehavior = prevBodyOverscroll;
       };
     }
   }, [show, shouldHide]);

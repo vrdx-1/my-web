@@ -1,5 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
+import { isPhotoGridImageUrlLoaded, markPhotoGridImageUrlLoaded } from '@/utils/photoGridImageCache';
+
+function computeImageLoadedState(src: string): boolean {
+  if (typeof src === 'string' && src.startsWith('data:')) return true;
+  return isPhotoGridImageUrlLoaded(src);
+}
 
 const imagePlaceholderShimmerStyle: React.CSSProperties = {
   position: 'absolute',
@@ -29,8 +35,12 @@ function ImageWithSkeleton({
   containerStyle: React.CSSProperties;
   imgStyle: React.CSSProperties;
 }) {
-  // รูปที่เป็น data URL (จากโพสที่พึ่งโพส) มีข้อมูลในหน่วยความจำแล้ว ไม่ต้องแสดง Skeleton
-  const [loaded, setLoaded] = useState(() => typeof src === 'string' && src.startsWith('data:'));
+  const [loaded, setLoaded] = useState(() => computeImageLoadedState(src));
+
+  useEffect(() => {
+    setLoaded(computeImageLoadedState(src));
+  }, [src]);
+
   return (
     <div style={{ position: 'relative', overflow: 'hidden', ...containerStyle }}>
       {/* Facebook-style placeholder: grey shimmer until image loads */}
@@ -44,7 +54,14 @@ function ImageWithSkeleton({
       <img
         src={src}
         onClick={() => onPostClick(imageIndex)}
-        onLoad={() => setLoaded(true)}
+        onLoad={() => {
+          markPhotoGridImageUrlLoaded(src);
+          setLoaded(true);
+        }}
+        onError={() => {
+          markPhotoGridImageUrlLoaded(src);
+          setLoaded(true);
+        }}
         loading={loading}
         decoding={decoding}
         fetchPriority={fetchPriority}
