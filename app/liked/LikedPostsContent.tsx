@@ -205,9 +205,9 @@ export function LikedPostsContent() {
     router.push('/profile');
   }, [router]);
 
-  // สำหรับ refresh: ต้องแสดง skeleton ทั้งหน้า (ยกเว้น header)
+  // Skeleton เฉพาะพื้นที่โพสต์ — Header + แท็บພ້ອມຂາຍ/ຂາຍແລ້ວ แสดงจริงเสมอ เพื่อไม่ให้ตำแหน่งแท็บเพี้ยนตอน refresh
   const isFeedSkeleton = postListData.posts.length === 0 && postListData.loadingMore;
-  const showFullSkeleton =
+  const showFeedSkeleton =
     !mounted ||
     !feedReady ||
     sessionState === undefined ||
@@ -217,78 +217,42 @@ export function LikedPostsContent() {
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: '#ffffff', backgroundColor: '#ffffff' }}>
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
+        }}
+      >
         <PageHeader title="ລາຍການທີ່ມັກ" centerTitle onBack={handleBack} showDivider={false} />
-        <div style={{ minHeight: 32 }} aria-hidden={showFullSkeleton}>
-          {showFullSkeleton ? (
-            <div
-              aria-hidden
-              style={{
-                display: 'flex',
-                padding: '0px 15px',
-                gap: 10,
-                minHeight: 32,
-                alignItems: 'flex-start',
-              }}
-            >
-              <style>{`
-                @keyframes liked-saved-tab-skeleton-shimmer {
-                  0% { background-position: 200% 0; }
-                  100% { background-position: -200% 0; }
-                }
-              `}</style>
-              <div
-                style={{
-                  flex: 1,
-                  height: 14,
-                  marginTop: 4,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'liked-saved-tab-skeleton-shimmer 1.2s ease-in-out infinite',
-                }}
-              />
-              <div
-                style={{
-                  flex: 1,
-                  height: 14,
-                  marginTop: 4,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'liked-saved-tab-skeleton-shimmer 1.2s ease-in-out infinite',
-                }}
-              />
-            </div>
-          ) : (
-            <TabNavigation
-              className="home-tab-navigation"
-              tabs={[
-                { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-                { value: 'sold', label: 'ຂາຍແລ້ວ' },
-              ]}
-              activeTab={tab}
-              onTabChange={(v) => {
-                if (v === tab) {
-                  setTabRefreshing(true);
-                  const list = v === 'recommend' ? recommendListData : soldListData;
-                  list.setPage(0);
-                  list.setHasMore(true);
-                  list.fetchPosts(true);
-                  if (v === 'sold') hasFetchedSoldRef.current = true;
-                } else {
-                  setTab(v);
-                  const targetList = v === 'recommend' ? recommendListData : soldListData;
-                  if (targetList.posts.length === 0) setTabRefreshing(true);
-                }
-              }}
-              loadingTab={tabRefreshing ? tab : null}
-            />
-          )}
-        </div>
+        <TabNavigation
+          className="home-tab-navigation"
+          tabs={[
+            { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+            { value: 'sold', label: 'ຂາຍແລ້ວ' },
+          ]}
+          activeTab={tab}
+          onTabChange={(v) => {
+            if (v === tab) {
+              setTabRefreshing(true);
+              const list = v === 'recommend' ? recommendListData : soldListData;
+              list.setPage(0);
+              list.setHasMore(true);
+              list.fetchPosts(true);
+              if (v === 'sold') hasFetchedSoldRef.current = true;
+            } else {
+              setTab(v);
+              const targetList = v === 'recommend' ? recommendListData : soldListData;
+              if (targetList.posts.length === 0) setTabRefreshing(true);
+            }
+          }}
+          loadingTab={tabRefreshing ? tab : null}
+        />
       </div>
 
-      {showFullSkeleton ? (
+      {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
       ) : (
         <LikedFeedBlock

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { TabNavSpinner } from '@/components/LoadingSpinner';
 
 interface TabNavigationProps {
@@ -27,7 +27,6 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   hideIndicator = false,
 }) => {
   const isHomeNav = className.includes('home-tab-navigation');
-  const activeIndex = tabs.findIndex((t) => t.value === activeTab);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const LINE_HEIGHT_PX = 3;
@@ -39,7 +38,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   });
   const [enableTransition, setEnableTransition] = useState(false);
 
-  const updateIndicator = () => {
+  const updateIndicator = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -62,21 +61,53 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       width,
       bottom: Math.max(0, bottomPx),
     });
-  };
+  }, [activeTab]);
 
   useLayoutEffect(() => {
     updateIndicator();
     // ปิด transition ตอน mount/วัดตำแหน่งครั้งแรก เพื่อไม่ให้เส้นกระโดดจากซ้ายทุกครั้ง
     requestAnimationFrame(() => setEnableTransition(true));
+
+    // หลัง skeleton / โหลดฟอนต์ / reflow ข้อความ — วัดตำแหน่งใหม่ (เดิมวัดแค่ครั้งเดียวจึงเพี้ยน)
+    let cancelled = false;
+    const ro =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            updateIndicator();
+          })
+        : null;
+    const container = containerRef.current;
+    if (ro && container) {
+      ro.observe(container);
+      tabs.forEach((t) => {
+        const el = labelRefs.current[t.value];
+        if (el) ro.observe(el);
+      });
+    }
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) updateIndicator();
+      });
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) updateIndicator();
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      ro?.disconnect();
+    };
+    // tabs เป็น array literal จาก parent ทุกครั้ง — ใช้แค่ length กับค่าที่มีผลต่อการวัด
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, loadingTab, tabs.length]);
+  }, [activeTab, loadingTab, tabs.length, updateIndicator]);
 
   useLayoutEffect(() => {
     const onResize = () => updateIndicator();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [updateIndicator]);
 
   return (
     <div
@@ -191,12 +222,21 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           position: 'absolute',
           bottom: indicatorPx.bottom,
           left: indicatorPx.left,
-          width: indicatorPx.width || '28%',
+          // home-tab: อย่าใช้ 28% ก่อนวัดได้ — จะอยู่กลางจอผิดตำแหน่ง; แสดงเส้นหลัง width > 0
+          width:
+            indicatorPx.width > 0
+              ? indicatorPx.width
+              : isHomeNav
+                ? 0
+                : '28%',
           height: hideIndicator ? '0px' : '3px',
           background: hideIndicator ? 'transparent' : '#1877f2',
           borderRadius: '999px',
           transform: 'translateX(-50%)',
-          opacity: hideIndicator ? 0 : 1,
+          opacity:
+            hideIndicator || (isHomeNav && indicatorPx.width <= 0)
+              ? 0
+              : 1,
           transition: enableTransition
             ? hideIndicator
               ? 'none'
