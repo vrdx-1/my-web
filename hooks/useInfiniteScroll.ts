@@ -9,6 +9,12 @@ interface UseInfiniteScrollProps {
   rootMargin?: string;
   /** เมื่อมี scroll อยู่ใน container (เช่น overflowY: auto) ต้องส่ง ref ของ container นี้เป็น root เพื่อให้โหลดเพิ่มเมื่อเลื่อนถึงล่าง container */
   rootRef?: RefObject<HTMLElement | null>;
+  /**
+   * จำนวนโพสในลิสต์ปัจจุบัน (เช่น posts.length)
+   * ใช้เมื่อโหลดเพิ่มแบบ client-side โดยไม่มี loadingMore สลับ true/false (เช่น ผลค้นหาโฮม)
+   * เพื่อรีเซ็ต sentinel หลังโหลดเพิ่ม — ไม่ส่งก็ยังใช้ร่วมกับ loadingMore แบบเดิมได้
+   */
+  feedPostCount?: number;
 }
 
 /**
@@ -22,6 +28,7 @@ export const useInfiniteScroll = ({
   threshold = FEED_PRELOAD_THRESHOLD,
   rootMargin = FEED_PRELOAD_ROOT_MARGIN,
   rootRef,
+  feedPostCount,
 }: UseInfiniteScrollProps) => {
   const observer = useRef<IntersectionObserver | null>(null);
   const nodeRef = useRef<HTMLElement | null>(null);
@@ -38,6 +45,8 @@ export const useInfiniteScroll = ({
       observer.current = null;
     }
     if (!node) return;
+    /** sentinel เปลี่ยน (โพสใหม่ท้ายลิสต์) — ต้องยิงโหลดเพิ่มได้อีก แม้ loadingMore ไม่สลับ (เช่น slice ผลค้นหา) */
+    triggeredRef.current = false;
     const root = rootRef?.current ?? undefined;
     observer.current = new IntersectionObserver(
       (entries) => {
@@ -80,7 +89,7 @@ export const useInfiniteScroll = ({
         observer.current = null;
       }
     };
-  }, [loadingMore, hasMore, threshold, rootMargin, rootRef]);
+  }, [loadingMore, hasMore, threshold, rootMargin, rootRef, feedPostCount]);
 
   return { lastElementRef };
 };

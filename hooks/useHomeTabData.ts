@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useSearchFeedSlice } from '@/hooks/useSearchFeedSlice';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeLikedSaved } from '@/hooks/useHomeLikedSaved';
@@ -101,9 +102,31 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
 
   const hasSearch = searchQuery.trim().length > 0;
 
+  const recommendFiltered = useMemo(
+    () => (hasSearch ? searchData.posts.filter((p: any) => p.status === 'recommend') : []),
+    [hasSearch, searchData.posts],
+  );
+  const soldFiltered = useMemo(
+    () => (hasSearch ? searchData.posts.filter((p: any) => p.status === 'sold') : []),
+    [hasSearch, searchData.posts],
+  );
+
+  const searchRecommendSlice = useSearchFeedSlice({
+    enabled: hasSearch,
+    allPosts: recommendFiltered,
+    loading: searchData.loading,
+    queryKey: `${searchQuery}|rec`,
+  });
+  const searchSoldSlice = useSearchFeedSlice({
+    enabled: hasSearch,
+    allPosts: soldFiltered,
+    loading: searchData.loading,
+    queryKey: `${searchQuery}|sold`,
+  });
+
   const recommendSource: PostListSource = hasSearch
     ? {
-        posts: searchData.posts.filter((p: any) => p.status === 'recommend'),
+        posts: searchRecommendSlice.displayPosts,
         setPosts: (fn: any) => {
           searchData.setPosts((prev: any[]) => {
             const recommendOnly = prev.filter((p: any) => p.status === 'recommend');
@@ -121,16 +144,16 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
         savedPosts: searchData.savedPosts,
         setLikedPosts: searchData.setLikedPosts,
         setSavedPosts: searchData.setSavedPosts,
-        loadingMore: searchData.loading,
-        hasMore: false,
-        setPage: () => {},
+        loadingMore: searchRecommendSlice.loadingMore,
+        hasMore: searchRecommendSlice.hasMore,
+        setPage: searchRecommendSlice.setPage,
         fetchPosts: () => searchData.fetchSearch(),
       }
     : recommendFeed;
 
   const soldSource: PostListSource = hasSearch
     ? {
-        posts: searchData.posts.filter((p: any) => p.status === 'sold'),
+        posts: searchSoldSlice.displayPosts,
         setPosts: (fn: any) => {
           searchData.setPosts((prev: any[]) => {
             const soldOnly = prev.filter((p: any) => p.status === 'sold');
@@ -148,9 +171,9 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
         savedPosts: searchData.savedPosts,
         setLikedPosts: searchData.setLikedPosts,
         setSavedPosts: searchData.setSavedPosts,
-        loadingMore: searchData.loading,
-        hasMore: false,
-        setPage: () => {},
+        loadingMore: searchSoldSlice.loadingMore,
+        hasMore: searchSoldSlice.hasMore,
+        setPage: searchSoldSlice.setPage,
         fetchPosts: () => searchData.fetchSearch(),
       }
     : SOLD_STUB;

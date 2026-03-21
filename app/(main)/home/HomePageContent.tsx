@@ -293,6 +293,8 @@ export function HomePageContent() {
     loadingMore: postList.loadingMore,
     hasMore: postList.hasMore,
     onLoadMore: () => postList.setPage((p: number) => p + 1),
+    /** ผลค้นหาโฮมโหลดเพิ่มแบบ client slice — ไม่มี loadingMore สลับ ต้องรีเซ็ต sentinel เมื่อจำนวนโพสเปลี่ยน */
+    feedPostCount: postList.posts.length,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({
@@ -389,18 +391,17 @@ export function HomePageContent() {
 
   /** โหลดโพสถัดไปล่วงหน้าเมื่อโพสสุดท้ายโหลดรูปครบ — จำกัดเมื่อมีโพสในคิวไม่เกิน 2 เพื่อไม่ดึงยิงทั้งฟีด */
   const onPrefetchNextPost = useCallback(() => {
-    if (hasSearch || isSoldTabNoSearch || tab !== 'recommend') return;
-    if (recommendFeed.posts.length > 2) return;
-    if (!recommendFeed.hasMore || recommendFeed.loadingMore) return;
-    recommendFeed.setPage((p) => p + 1);
+    if (isSoldTabNoSearch || tab !== 'recommend') return;
+    if (postList.posts.length > 2) return;
+    if (!postList.hasMore || postList.loadingMore) return;
+    postList.setPage((p: number) => p + 1);
   }, [
-    hasSearch,
     isSoldTabNoSearch,
     tab,
-    recommendFeed.posts.length,
-    recommendFeed.hasMore,
-    recommendFeed.loadingMore,
-    recommendFeed.setPage,
+    postList.posts.length,
+    postList.hasMore,
+    postList.loadingMore,
+    postList.setPage,
   ]);
 
   const showFeedSkeleton =
@@ -436,7 +437,7 @@ export function HomePageContent() {
             mayShowEmptyState={!searchWaitingResults}
             isSearchLoading={hasSearch && searchData.loading}
             skeletonCount={3}
-            gateImageReady={tab === 'recommend' && !hasSearch && !isSoldTabNoSearch}
+            gateImageReady={tab === 'recommend' && !isSoldTabNoSearch}
             onPrefetchNextPost={onPrefetchNextPost}
             postFeedProps={{
               posts,
