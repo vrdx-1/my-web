@@ -97,7 +97,12 @@ html:has(body[data-viewing-mode="open"]) {
   background: transparent !important;
 }
 
-/* ซ่อน scrollbar หน้าโฮม – Android/Desktop ใช้ webkit; iOS ไม่รองรับ ::-webkit-scrollbar (scroll อยู่ที่ body) จึงอาจยังเห็นจนกว่าจะใช้ inner scroll container */
+/* iPhone โฮม: เลื่อนในกล่องภายใน — ซ่อน spacer ซ้ำที่อยู่นอกกล่อง (ความสูงมาจาก HomeScrollShell แทน) */
+body[data-ios-home-scroll="true"] .home-main-tab-spacer {
+  display: none !important;
+}
+
+/* ซ่อน scrollbar หน้าโฮม – Android/Desktop ใช้ webkit; iOS ใช้กล่องเลื่อนภายใน (HomeScrollShell) */
 html:has(body[data-page="home"]) {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;

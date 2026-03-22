@@ -126,8 +126,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
   /** ความสูงรวมของ fixed block: header + tab bar (สำหรับ header โฮมที่เตี้ยลง) */
-  // ต้องชดเชยความสูงที่เพิ่มขึ้นจากการขยับแท็บลงในหน้า home (ดู wrapper ด้านล่าง)
-  const HOME_FIXED_BLOCK_HEIGHT = 98;
+  const HOME_FIXED_BLOCK_HEIGHT = LAYOUT_CONSTANTS.HOME_MAIN_TAB_SPACER_PX;
 
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
@@ -193,6 +192,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div
+            className="home-main-tab-spacer"
             style={{
               height: HOME_FIXED_BLOCK_HEIGHT,
               background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
@@ -203,6 +203,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       ) : pathname === '/home' && !firstFeedLoaded ? (
         /** จองความสูงเดียวกับ spacer ตอนมี header — ลดการกระโดดของฟีดเมื่อ firstFeedLoaded เป็น true */
         <div
+          className="home-main-tab-spacer"
           aria-hidden
           style={{
             height: HOME_FIXED_BLOCK_HEIGHT,

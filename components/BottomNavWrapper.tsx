@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
@@ -26,6 +26,15 @@ function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
 export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const headerVisibility = useHeaderVisibilityContext();
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (pathname === '/home') {
+      document.body.setAttribute('data-page', 'home');
+    } else {
+      document.body.removeAttribute('data-page');
+    }
+  }, [pathname]);
   const showNav = shouldShowBottomNav(pathname ?? '');
   // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
   const needCreatePostHandler = showNav;

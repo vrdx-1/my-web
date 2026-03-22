@@ -21,7 +21,7 @@ interface UseViewingPostReturn {
   handleViewingModeTouchEnd: (e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => void;
 }
 
-export function useViewingPost(): UseViewingPostReturn {
+export function useViewingPost(options?: { getScrollY?: () => number }): UseViewingPostReturn {
   const [viewingPost, setViewingPost] = useState<any | null>(null);
   const [isViewingModeOpen, setIsViewingModeOpen] = useState(false);
   const [viewingModeDragOffset, setViewingModeDragOffset] = useState(0);
@@ -35,7 +35,8 @@ export function useViewingPost(): UseViewingPostReturn {
     _setPosts: (updater: (prev: any[]) => any[]) => void,
     setIsHeaderVisible: (visible: boolean) => void
   ): Promise<void> => {
-    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const scrollY =
+      options?.getScrollY?.() ?? (typeof window !== 'undefined' ? window.scrollY : 0);
     if (scrollY > HEADER_TOP_ZONE_PX) setIsHeaderVisible(false);
     setSavedScrollPosition(scrollY);
     setInitialImageIndex(imageIndex);
@@ -43,7 +44,7 @@ export function useViewingPost(): UseViewingPostReturn {
     setViewingPost(post);
     setIsViewingModeOpen(true);
     return Promise.resolve();
-  }, []);
+  }, [options?.getScrollY]);
 
   const closeViewingMode = useCallback((setIsHeaderVisible?: (visible: boolean) => void) => {
     const wasAtTop = savedScrollPosition <= HEADER_TOP_ZONE_PX;

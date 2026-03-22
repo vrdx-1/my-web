@@ -29,6 +29,9 @@ export const LAYOUT_CONSTANTS = {
   // Heights
   HEADER_HEIGHT: '118px',
 
+  /** ความสูง spacer ใต้ header+แท็บโฮม (fixed) — ตรงกับ MainTabLayoutClient HOME_FIXED_BLOCK */
+  HOME_MAIN_TAB_SPACER_PX: 98,
+
   /** ขนาดโลโก้และปุ่มฟิลเตอร์ใน header หน้า Home (ให้ปุ่มฟิลเตอร์ใหญ่เท่าโลโก้) */
   HEADER_LOGO_SIZE: 40,
   

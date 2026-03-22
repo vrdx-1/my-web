@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type RefObject } from 'react';
 import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -34,6 +34,8 @@ export type SoldTabFeedWrapperProps = {
   fetchInteractions: (type: 'likes' | 'saves', postId: string) => Promise<void>;
   postsRef: React.MutableRefObject<any[]>;
   handleSubmitReportRef: React.MutableRefObject<(() => void) | null>;
+  /** มือถือ iPhone โฮม: sentinel โหลดเพิ่มอิงกล่องเลื่อนภายใน */
+  infiniteScrollRootRef?: RefObject<HTMLElement | null>;
 };
 
 /** แสดง feed แท็บขายแล้ว — รับข้อมูลจากหน้าหลัก เพื่อให้สลับแท็บแล้วแสดงทันทีโดยไม่โหลดใหม่ */
@@ -56,6 +58,7 @@ export function SoldTabFeedWrapper({
   fetchInteractions,
   postsRef,
   handleSubmitReportRef,
+  infiniteScrollRootRef,
 }: SoldTabFeedWrapperProps) {
   /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
@@ -79,6 +82,7 @@ export function SoldTabFeedWrapper({
     loadingMore: soldListData.loadingMore,
     hasMore: soldListData.hasMore,
     onLoadMore: handleSoldLoadMore,
+    rootRef: infiniteScrollRootRef,
   });
 
   const { toggleLike, toggleSave } = usePostInteractions({

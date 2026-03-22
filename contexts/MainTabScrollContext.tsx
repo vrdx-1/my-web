@@ -25,6 +25,8 @@ interface MainTabScrollContextValue {
   saveCurrentScroll: (tabId: MainTabId) => void;
   /** เรียกหลัง registerScroll แล้ว เพื่อคืนค่า scroll (ใช้ในหน้าแจ้งเตือนที่ลงทะเบียนใน useLayoutEffect หลัง context) */
   restoreScrollForTab: (tabId: MainTabId) => void;
+  /** หน้าโฮมบน iPhone: scroll อยู่ที่กล่องภายใน ไม่ใช่ window — อัปเดตตำแหน่งล่าสุดให้ตรงกับ sessionStorage */
+  notifyTabScrollPosition: (tabId: MainTabId, y: number) => void;
   /** ใช้ใน panel เพื่อรู้ว่า tab นี้เป็นหน้าปัจจุบันหรือไม่ (สำหรับหยุดโหลดเมื่อไม่แสดง) */
   activeTabId: MainTabId | null;
 }
@@ -109,6 +111,12 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     }
   }, [getSavedScroll]);
 
+  const notifyTabScrollPosition = useCallback((tabId: MainTabId, y: number) => {
+    if (tabId !== '/home' && tabId !== '/notification' && tabId !== '/profile') return;
+    if (typeof y !== 'number' || !Number.isFinite(y)) return;
+    lastWindowScrollByTabRef.current[tabId] = y;
+  }, []);
+
   const activeTabId: MainTabId | null =
     pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? pathname : null;
 
@@ -119,7 +127,9 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     const onScroll = () => {
       const p = pathnameRef.current;
       if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
-      lastWindowScrollByTabRef.current[p as MainTabId] = window.scrollY;
+      const entry = registryRef.current.get(p as MainTabId);
+      const y = entry ? entry.getScroll() : window.scrollY;
+      lastWindowScrollByTabRef.current[p as MainTabId] = y;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -163,11 +173,13 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     }
   }, [activeTabId, getSavedScroll]);
 
-  /** ให้ lastWindowScrollByTabRef ตรงกับ window หลัง restore (ก่อน useEffect scroll listener) */
+  /** ให้ lastWindowScrollByTabRef ตรงกับตำแหน่งเลื่อนจริง (window หรือกล่องโฮมบน iPhone) */
   useLayoutEffect(() => {
     if (!activeTabId) return;
     try {
-      lastWindowScrollByTabRef.current[activeTabId] = window.scrollY;
+      const entry = registryRef.current.get(activeTabId);
+      const y = entry ? entry.getScroll() : window.scrollY;
+      lastWindowScrollByTabRef.current[activeTabId] = y;
     } catch {
       // ignore
     }
@@ -178,6 +190,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     unregisterScroll,
     saveCurrentScroll,
     restoreScrollForTab,
+    notifyTabScrollPosition,
     activeTabId,
   };
 

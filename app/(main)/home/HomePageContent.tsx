@@ -26,6 +26,7 @@ import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 import { useMainTabScroll, readMainTabScrollStorage } from '@/contexts/MainTabScrollContext';
+import { useHomeScrollRootOptional } from '@/contexts/HomeScrollRootContext';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
@@ -210,7 +211,38 @@ export function HomePageContent() {
   /** บันทึก scroll ก่อนสลับแท็บ — ใช้แบบเดียวกับ saveCurrentScroll ก่อน router.push (ลงทะเบียนให้ header เรียกตอนกดแท็บ) */
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
+  const homeScroll = useHomeScrollRootOptional();
   const headerVisibility = useHeaderVisibilityContext();
+
+  const getScrollY = useCallback(() => {
+    if (homeScroll?.useElementScroll && homeScroll.scrollElementRef.current) {
+      return homeScroll.scrollElementRef.current.scrollTop;
+    }
+    return typeof window !== 'undefined' ? window.scrollY : 0;
+  }, [homeScroll]);
+
+  const scrollToY = useCallback(
+    (y: number) => {
+      if (homeScroll?.useElementScroll && homeScroll.scrollElementRef.current) {
+        const el = homeScroll.scrollElementRef.current;
+        const maxY = Math.max(0, el.scrollHeight - el.clientHeight);
+        el.scrollTop = Math.min(Math.max(0, y), maxY);
+      } else {
+        window.scrollTo(0, y);
+      }
+    },
+    [homeScroll],
+  );
+
+  const applyScrollRestoreToHomeElement = useCallback(
+    (y: number) => {
+      const el = homeScroll?.scrollElementRef.current;
+      if (!el) return;
+      const maxY = Math.max(0, el.scrollHeight - el.clientHeight);
+      el.scrollTop = Math.min(Math.max(0, y), maxY);
+    },
+    [homeScroll],
+  );
 
   /** สลับจากหน้าอื่นกลับมาหน้าโฮม → แสดง header/nav ทันที และกันไม่ให้ scroll ที่เกิดจากการ restore ซ่อน header (ให้หายเฉพาะตอนผู้ใช้เลื่อนจริง) */
   useLayoutEffect(() => {
@@ -230,14 +262,14 @@ export function HomePageContent() {
   useEffect(() => {
     if (!homeTabScroll?.saveBeforeSwitchRef) return;
     homeTabScroll.saveBeforeSwitchRef.current = () => {
-      const y = typeof window !== 'undefined' ? window.scrollY : 0;
+      const y = getScrollY();
       if (isSoldTabNoSearch) soldScrollRef.current = y;
       else recommendScrollRef.current = y;
     };
     return () => {
       homeTabScroll.saveBeforeSwitchRef.current = null;
     };
-  }, [homeTabScroll, isSoldTabNoSearch]);
+  }, [homeTabScroll, isSoldTabNoSearch, getScrollY]);
 
   /** สลับแท็บแล้ว: คืนค่า scroll — ทั้งພ້ອມຂາຍ/ຂາຍແລ້ວ ใช้ retry + ref บังคับ reflow เหมือนกัน (virtualizer / scrollHeight) */
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
@@ -273,9 +305,9 @@ export function HomePageContent() {
     const tryScroll = () => {
       const el = activePanelRef.current;
       if (el) void el.offsetHeight;
-      window.scrollTo(0, targetY);
+      scrollToY(targetY);
       attempts += 1;
-      const current = window.scrollY;
+      const current = getScrollY();
       const diff = Math.abs(current - targetY);
       if (diff > 2 && attempts < maxAttempts) {
         requestAnimationFrame(tryScroll);
@@ -288,7 +320,7 @@ export function HomePageContent() {
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
-  const viewingPostHook = useViewingPost();
+  const viewingPostHook = useViewingPost({ getScrollY });
   const interactionModalHook = useInteractionModal();
   /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
   const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
@@ -297,6 +329,8 @@ export function HomePageContent() {
     loadingMore: effectiveLoadingMore,
     /** โพสเพิ่มในลิสต์ → กัน scroll ปลอมช่วง layout/รูปนิ่ง */
     feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
+    scrollRootRef: homeScroll?.useElementScroll ? homeScroll.scrollElementRef : undefined,
+    scrollRootMountKey: homeScroll?.useElementScroll ? homeScroll.boundScrollEl : undefined,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
     suppressHideUntilRef,
   });
@@ -391,6 +425,7 @@ export function HomePageContent() {
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
     interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+    applyScrollRestore: homeScroll?.useElementScroll ? applyScrollRestoreToHomeElement : undefined,
   });
 
   const { addBackStep } = useBackHandler();
@@ -575,7 +610,7 @@ export function HomePageContent() {
       cancelled = true;
       unmask();
     };
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch]);
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch, scrollToY, getScrollY]);
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {
@@ -627,6 +662,7 @@ export function HomePageContent() {
             fetchInteractions={fetchInteractions}
             postsRef={postsRef}
             handleSubmitReportRef={handleSubmitReportRef}
+            infiniteScrollRootRef={homeScroll?.useElementScroll ? homeScroll.scrollElementRef : undefined}
           />
         </div>
       </div>

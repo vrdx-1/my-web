@@ -19,6 +19,8 @@ interface UsePostModalsProps {
   setFullScreenShowDetails: (show: boolean | ((prev: boolean) => boolean)) => void;
   interactionModalShow: boolean;
   setIsHeaderVisible: (visible: boolean) => void;
+  /** มือถือ iPhone โฮม: คืนตำแหน่งเลื่อนที่กล่องภายใน แทน window */
+  applyScrollRestore?: (targetY: number) => void;
 }
 
 /** คืน scroll แบบซิงค์ — เรียกซ้ำหลังบังคับ layout หนึ่งครั้งเพื่อให้ฟีด virtual คำนวณความสูงแล้ว clamp ถูก (ไม่ใช้ rAF หลายรอบ = ลดกระพริบ) */
@@ -51,6 +53,7 @@ export function usePostModals({
   setFullScreenShowDetails,
   interactionModalShow,
   setIsHeaderVisible: _setIsHeaderVisible,
+  applyScrollRestore,
 }: UsePostModalsProps) {
   void _isViewingModeOpen;
   void _setIsHeaderVisible;
@@ -87,10 +90,16 @@ export function usePostModals({
     document.body.style.msOverflowStyle = '';
     document.body.removeAttribute('data-viewing-mode');
 
-    applyWindowScrollY(savedScrollPosition);
-    if (typeof document !== 'undefined') void document.documentElement.offsetHeight;
-    applyWindowScrollY(savedScrollPosition);
-  }, [viewingPost, savedScrollPosition, setIsViewingModeOpen, setViewingModeDragOffset]);
+    if (applyScrollRestore) {
+      applyScrollRestore(savedScrollPosition);
+      if (typeof document !== 'undefined') void document.documentElement.offsetHeight;
+      applyScrollRestore(savedScrollPosition);
+    } else {
+      applyWindowScrollY(savedScrollPosition);
+      if (typeof document !== 'undefined') void document.documentElement.offsetHeight;
+      applyWindowScrollY(savedScrollPosition);
+    }
+  }, [viewingPost, savedScrollPosition, setIsViewingModeOpen, setViewingModeDragOffset, applyScrollRestore]);
 
   /** เลื่อนรูปในกล่อง viewing หลัง layout (ใช้ rAF แค่ส่วนใน modal) */
   useEffect(() => {

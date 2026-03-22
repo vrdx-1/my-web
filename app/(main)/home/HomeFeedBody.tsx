@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
 import { useFeedImpressionObserver } from '@/hooks/useFeedImpressionObserver';
+import { useHomeScrollRootOptional } from '@/contexts/HomeScrollRootContext';
 
 /** ความสูงโดยประมาณของการ์ดโพส (รวมเส้นขอบ) — virtualizer จะวัดจริงหลัง mount */
 const FEED_CARD_ESTIMATE_PX = 520;
@@ -103,6 +104,9 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     (isSearchLoading && posts.length === 0);
 
   const virtualizeEnabled = mounted && !effectivelyShowSkeleton && posts.length > 0;
+  const homeScroll = useHomeScrollRootOptional();
+  const useElementScroll = homeScroll?.useElementScroll ?? false;
+  const scrollReady = !useElementScroll || homeScroll?.boundScrollEl != null;
 
   /**
    * แถว skeleton โหลดเพิ่มอยู่ใน virtual list (เป็นส่วนหนึ่งของ totalSize)
@@ -115,12 +119,18 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
    * scrollMargin ต้องเป็น 0: MainTabLayoutClient ใส่ spacer ความสูงคงที่ให้แล้วใต้ header+แท็บแบบ fixed
    * ถ้าวัด offsetTop ของกล่องฟีดแล้วส่งเป็น scrollMargin จะได้ช่องว่างซ้ำ (spacer + padding ภายใน virtual list)
    */
-  const virtualizer = useWindowVirtualizer({
+  const virtualizer = useVirtualizer({
     count: virtualItemCount,
+    getScrollElement: () => {
+      if (useElementScroll && homeScroll?.scrollElementRef.current) {
+        return homeScroll.scrollElementRef.current;
+      }
+      return typeof document !== 'undefined' ? document.documentElement : null;
+    },
     estimateSize: () => FEED_CARD_ESTIMATE_PX,
     overscan: FEED_VIRTUAL_OVERSCAN,
     scrollMargin: 0,
-    enabled: virtualizeEnabled,
+    enabled: virtualizeEnabled && scrollReady,
     /**
      * ไม่ปรับ window.scroll เมื่อความสูงการ์ดเปลี่ยนหลังวัด — โดยเฉพาะหลังเลื่อนลึกแล้วเลื่อนกลับ:
      * หยุดเลื่อนแล้ว isScrolling=false แต่หลายการ์ดยังวัด/โหลดรูป การชดเชย scroll เป็นระลอกจะกระตุกและกระพริบ

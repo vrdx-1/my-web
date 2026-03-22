@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type RefObject, type MutableRefObject } from 'react';
 
 /** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
 const HEADER_TOP_ZONE_PX = 200;
@@ -22,12 +22,16 @@ interface UseHeaderScrollOptions {
   loadingMore?: boolean;
   /** จำนวนโพสในฟีด (เช่น posts.length) — เมื่อเพิ่มโพสจะกัน scroll ปลอมช่วง layout settle */
   feedPostCount?: number;
+  /** มือถือ iPhone: เลื่อนในกล่องภายใน ไม่ใช่ window */
+  scrollRootRef?: RefObject<HTMLElement | null>;
+  /** บังคับ subscribe ใหม่เมื่อกล่อง scroll โมง */
+  scrollRootMountKey?: HTMLElement | null;
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
   disableScrollHide?: boolean;
   /** เรียกทันทีใน scroll handler (ไม่รอ re-render) เพื่อให้ header/nav ตามจังหวะเลื่อน */
   onVisibilityChange?: (visible: boolean) => void;
   /** ถ้า ref.current เป็น timestamp และ performance.now() < ref.current จะไม่ซ่อน header (ใช้หลังสลับแท็บโฮมเพื่อกันกระตุก) */
-  suppressHideUntilRef?: React.MutableRefObject<number | null>;
+  suppressHideUntilRef?: MutableRefObject<number | null>;
 }
 
 interface UseHeaderScrollReturn {
@@ -37,7 +41,15 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { loadingMore = false, feedPostCount, disableScrollHide = false, onVisibilityChange, suppressHideUntilRef } = options ?? {};
+  const {
+    loadingMore = false,
+    feedPostCount,
+    scrollRootRef,
+    scrollRootMountKey,
+    disableScrollHide = false,
+    onVisibilityChange,
+    suppressHideUntilRef,
+  } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
@@ -101,8 +113,14 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     if (disableScrollHide) return;
     let rafId: number | null = null;
 
+    const getScrollY = () => {
+      const root = scrollRootRef?.current;
+      if (root) return root.scrollTop;
+      return window.scrollY;
+    };
+
     const runScrollLogic = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = getScrollY();
       const lastY = lastScrollYRef.current;
       const scrollDelta = currentScrollY - lastY;
 
@@ -145,16 +163,22 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       });
     };
 
-    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const scrollY = typeof window !== 'undefined' ? getScrollY() : 0;
     lastScrollYRef.current = scrollY;
     if (scrollY <= HEADER_SHOW_THRESHOLD_PX) applyVisible(true, false);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const root = scrollRootRef?.current;
+    if (root) {
+      root.addEventListener('scroll', handleScroll, { passive: true });
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', handleScroll);
+      if (root) root.removeEventListener('scroll', handleScroll);
+      else if (typeof window !== 'undefined') window.removeEventListener('scroll', handleScroll);
     };
-  }, [loadingMore, disableScrollHide]);
+  }, [loadingMore, disableScrollHide, scrollRootRef, scrollRootMountKey]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = (visible: boolean) => {
