@@ -55,7 +55,7 @@ export const FeedSkeleton = React.memo(function FeedSkeleton({
           key={i}
           className="feed-card"
           style={{
-            borderBottom: '1px solid #6b6b6b',
+            borderBottom: '1px solid #c8ccd4',
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',

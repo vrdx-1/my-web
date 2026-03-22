@@ -25,6 +25,8 @@ const NAV_BUTTON_PADDING_Y = 6; // ใช้เป็น padding top/bottom
 // วงกลมขอบโปรไฟล์: เท่ากับขนาดรูป + เผื่อ border 2px ด้านละ 1 ฝั่ง
 const NAV_PROFILE_RING_SIZE = NAV_ICON_SIZE + 4;
 const NAV_ICON_SHIFT_UP_PX = -3;
+/** ไอคอนแท็บที่ไม่ active — เข้มขึ้นเล็กน้อยจาก #65676b ขนาดไอคอนไม่เปลี่ยน */
+const NAV_ICON_INACTIVE = '#2f3238';
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
@@ -137,7 +139,7 @@ export function BottomNav() {
                 border: 'none',
                 padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
                 cursor: 'pointer',
-                color: '#65676b',
+                color: NAV_ICON_INACTIVE,
                 touchAction: 'manipulation',
                 minWidth: 0,
                 minHeight: NAV_BUTTON_MIN_HEIGHT,
@@ -240,7 +242,7 @@ export function BottomNav() {
               border: 'none',
               padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
               cursor: 'pointer',
-              color: isActive ? '#1877f2' : '#65676b',
+              color: isActive ? '#1877f2' : NAV_ICON_INACTIVE,
               touchAction: 'manipulation',
               minWidth: 0,
               minHeight: NAV_BUTTON_MIN_HEIGHT,
@@ -303,7 +305,7 @@ export function BottomNav() {
                   <Home
                     size={NAV_ICON_SIZE}
                     strokeWidth={2}
-                    color={isActive ? '#1877f2' : '#65676b'}
+                    color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
                     style={{
                       position: 'absolute',
                       inset: 0,
@@ -320,7 +322,7 @@ export function BottomNav() {
                     <Bell
                       size={NAV_ICON_SIZE}
                       strokeWidth={2}
-                      color={isActive ? '#1877f2' : '#65676b'}
+                      color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
                       style={{
                         position: 'absolute',
                         inset: 0,
