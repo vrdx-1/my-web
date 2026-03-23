@@ -15,6 +15,7 @@ interface MenuDropdownProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onShare?: () => void;
   onBoost?: () => void;
   onReport?: () => void;
   onPrivateNote?: () => void;
@@ -36,6 +37,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onClose,
   onEdit,
   onDelete,
+  onShare,
   onBoost,
   onReport,
   onPrivateNote,
@@ -84,6 +86,9 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
       >
         {isOwner ? (
           <>
+            <div onClick={onShare} style={commonStyles.menuItem}>
+              ແຊໂພສ
+            </div>
             <div onClick={onEdit} style={commonStyles.menuItem}>
               ແກ້ໄຂ
             </div>
@@ -108,9 +113,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             )}
           </>
         ) : (
-          <div onClick={onReport} style={commonStyles.menuItemLast}>
-            ລາຍງານ
-          </div>
+          <>
+            <div onClick={onShare} style={commonStyles.menuItem}>
+              ແຊໂພສ
+            </div>
+            <div onClick={onReport} style={commonStyles.menuItemLast}>
+              ລາຍງານ
+            </div>
+          </>
         )}
       </div>
     </div>

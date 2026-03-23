@@ -9,7 +9,6 @@ import { useMenu } from '@/hooks/useMenu';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useBackHandler } from '@/components/BackHandlerContext';
 
@@ -17,9 +16,7 @@ export function useNotificationDetail(id: string | undefined) {
   const [post, setPost] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
-  const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
@@ -37,7 +34,6 @@ export function useNotificationDetail(id: string | undefined) {
   const viewingPostHook = useViewingPost();
   const fullScreenViewer = useFullScreenViewer();
   const headerScroll = useHeaderScroll();
-  const interactionModalHook = useInteractionModal();
 
   const posts = post ? [post] : [];
   const setPostsFromSingle = useCallback((updater: React.SetStateAction<any[]>) => {
@@ -63,7 +59,6 @@ export function useNotificationDetail(id: string | undefined) {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
 
@@ -87,18 +82,6 @@ export function useNotificationDetail(id: string | undefined) {
     return addBackStep(() => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible));
   }, [viewingPostHook.viewingPost]);
 
-  const fetchLikedStatus = useCallback(async (userIdOrToken: string, isUser: boolean) => {
-    const table = isUser ? 'post_likes' : 'post_likes_guest';
-    const column = isUser ? 'user_id' : 'guest_token';
-    const { data } = await supabase.from(table).select('post_id').eq(column, userIdOrToken);
-    if (cancelledRef.current) return;
-    if (data) {
-      const map: { [key: string]: boolean } = {};
-      data.forEach((item: { post_id: string }) => { map[item.post_id] = true; });
-      setLikedPosts(map);
-    }
-  }, []);
-
   const fetchSavedStatus = useCallback(async (userIdOrToken: string, isUser: boolean) => {
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
@@ -117,16 +100,14 @@ export function useNotificationDetail(id: string | undefined) {
       if (cancelled) return;
       setSession(s);
       if (s) {
-        fetchLikedStatus(s.user.id, true);
         fetchSavedStatus(s.user.id, true);
       } else {
         const token = getPrimaryGuestToken();
-        fetchLikedStatus(token, false);
         fetchSavedStatus(token, false);
       }
     });
     return () => { cancelled = true; };
-  }, [fetchLikedStatus, fetchSavedStatus]);
+  }, [fetchSavedStatus]);
 
   const fetchPostDetail = useCallback(async () => {
     if (!id) return;
@@ -162,15 +143,12 @@ export function useNotificationDetail(id: string | undefined) {
     if (id) fetchBoostInfo();
   }, [id, fetchBoostInfo]);
 
-  const { toggleLike, toggleSave } = usePostInteractions({
+  const { toggleSave } = usePostInteractions({
     session,
     posts,
     setPosts: setPostsFromSingle,
-    likedPosts,
     savedPosts,
-    setLikedPosts,
     setSavedPosts,
-    setJustLikedPosts,
     setJustSavedPosts,
   });
 
@@ -197,13 +175,6 @@ export function useNotificationDetail(id: string | undefined) {
     setIsSubmittingReport,
   });
 
-  const fetchInteractions = useCallback(
-    async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, posts);
-    },
-    [interactionModalHook, posts],
-  );
-
   const isBoostExpired =
     !!boostInfo &&
     boostInfo.status === 'success' &&
@@ -214,9 +185,7 @@ export function useNotificationDetail(id: string | undefined) {
     post,
     session,
     loading,
-    likedPosts,
     savedPosts,
-    justLikedPosts,
     justSavedPosts,
     reportingPost,
     setReportingPost,
@@ -232,11 +201,8 @@ export function useNotificationDetail(id: string | undefined) {
     viewingPostHook,
     fullScreenViewer,
     headerScroll,
-    interactionModalHook,
     handlers,
-    toggleLike,
     toggleSave,
     handleTogglePostStatus,
-    fetchInteractions,
   };
 }

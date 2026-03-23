@@ -18,7 +18,6 @@ import { useEditProfilePage } from '@/app/(main)/profile/edit-profile/useEditPro
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-import { InteractionModal } from '@/components/modals/InteractionModal';
 
 // Shared Hooks
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -30,7 +29,6 @@ import { useViewingPost } from '@/hooks/useViewingPost';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
-import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
@@ -62,7 +60,6 @@ export function MyPostsContent() {
     const id = requestAnimationFrame(() => setFeedReady(true));
     return () => cancelAnimationFrame(id);
   }, [mounted]);
-  const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
@@ -71,7 +68,6 @@ export function MyPostsContent() {
   const [sessionState, setSessionState] = useState<any>(undefined);
   const hasFetchedRecommendRef = useRef(false);
   const hasFetchedSoldRef = useRef(false);
-  const postsRef = useRef<any[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
@@ -89,7 +85,6 @@ export function MyPostsContent() {
   });
 
   const postListData = tab === 'recommend' ? recommendListData : soldListData;
-  postsRef.current = postListData.posts;
 
   const {
     username,
@@ -115,7 +110,6 @@ export function MyPostsContent() {
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
   const headerScroll = useHeaderScroll();
-  const interactionModalHook = useInteractionModal();
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
@@ -123,15 +117,12 @@ export function MyPostsContent() {
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
   });
 
-  const { toggleLike, toggleSave } = usePostInteractions({
+  const { toggleSave } = usePostInteractions({
     session: postListData.session,
     posts: postListData.posts,
     setPosts: postListData.setPosts,
-    likedPosts: postListData.likedPosts,
     savedPosts: postListData.savedPosts,
-    setLikedPosts: postListData.setLikedPosts,
     setSavedPosts: postListData.setSavedPosts,
-    setJustLikedPosts,
     setJustSavedPosts,
   });
 
@@ -200,7 +191,6 @@ export function MyPostsContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
 
@@ -237,13 +227,6 @@ export function MyPostsContent() {
     const close = () => viewingPostHook.closeViewingMode();
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
-
-  const fetchInteractions = useCallback(
-    async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
-    },
-    [interactionModalHook],
-  );
 
   // Skeleton ทั้งบล็อกโปรไฟล์+แท็บ+feed — ห้ามใช้สถานะ “โพสต์ว่าง+ยังไม่โหลด” ของแท็บปัจจุบัน เพราะตอนสลับไป ຂາຍແລ້ວ ครั้งแรกจะทำให้กระพริบทั้งหน้า
   const showFullSkeleton =
@@ -495,21 +478,15 @@ export function MyPostsContent() {
           skeletonCount={3}
           posts={postListData.posts}
           session={postListData.session}
-          likedPosts={postListData.likedPosts}
           savedPosts={postListData.savedPosts}
-          justLikedPosts={justLikedPosts}
           justSavedPosts={justSavedPosts}
           activeMenuState={menu.activeMenuState}
           isMenuAnimating={menu.isMenuAnimating}
           lastPostElementRef={lastPostElementRef}
           menuButtonRefs={menu.menuButtonRefs}
           onViewPost={handlers.handleViewPost}
-          onImpression={handlers.handleImpression}
-          onLike={toggleLike}
           onSave={toggleSave}
           onShare={handlers.handleShare}
-          onViewLikes={(postId) => fetchInteractions('likes', postId)}
-          onViewSaves={(postId) => fetchInteractions('saves', postId)}
           onTogglePostStatus={handlers.handleTogglePostStatus}
           onDeletePost={handlers.handleDeletePost}
           onReport={handlers.handleReport}
@@ -521,24 +498,6 @@ export function MyPostsContent() {
           hideBoost={tab === 'sold'}
         />
       )}
-
-      <InteractionModal
-        show={interactionModalHook.interactionModal.show}
-        type={interactionModalHook.interactionModal.type}
-        postId={interactionModalHook.interactionModal.postId}
-        posts={postListData.posts}
-        interactionUsers={interactionModalHook.interactionUsers}
-        interactionLoading={interactionModalHook.interactionLoading}
-        interactionSheetMode={interactionModalHook.interactionSheetMode}
-        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
-        startY={interactionModalHook.startY}
-        currentY={interactionModalHook.currentY}
-        onClose={interactionModalHook.closeModal}
-        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
-        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
-        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
-        onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
-      />
 
       <PostFeedModals
         viewingPost={viewingPostHook.viewingPost}

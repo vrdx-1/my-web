@@ -28,8 +28,8 @@ export const LAO_PROVINCES = [
 ] as const;
 
 // Pagination Constants
-export const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว (ใช้ที่ InteractionModal ฯลฯ)
-export const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items (ใช้ที่ InteractionModal ฯลฯ)
+export const PAGE_SIZE = 5; // โหลดครั้งแรก 5 items เพื่อให้เห็นผลเร็ว
+export const PREFETCH_COUNT = 3; // โหลดเพิ่มทีละ 3 items
 /** จำนวนโพสต์ต่อหนึ่งหน้าในฟีดลิสต์ (saved / liked / sold / my-posts) — โหลดทั้งหมดในครั้งเดียว */
 export const LIST_FEED_PAGE_SIZE = 1000;
 /** จำนวนโพสต์ที่โหลดในหน้าโฮมต่อหนึ่งครั้ง (เมื่อเลื่อนลง) — โหลดเพิ่มทีละ 10 รายการ */

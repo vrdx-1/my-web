@@ -27,12 +27,8 @@ export type SoldTabFeedWrapperProps = {
   setReportReason: (r: string) => void;
   isSubmittingReport: boolean;
   setIsSubmittingReport: (v: boolean) => void;
-  justLikedPosts: { [key: string]: boolean };
-  setJustLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   justSavedPosts: { [key: string]: boolean };
   setJustSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
-  fetchInteractions: (type: 'likes' | 'saves', postId: string) => Promise<void>;
-  postsRef: React.MutableRefObject<any[]>;
   handleSubmitReportRef: React.MutableRefObject<(() => void) | null>;
 };
 
@@ -49,12 +45,8 @@ export function SoldTabFeedWrapper({
   setReportReason,
   isSubmittingReport,
   setIsSubmittingReport,
-  justLikedPosts,
-  setJustLikedPosts,
   justSavedPosts,
   setJustSavedPosts,
-  fetchInteractions,
-  postsRef,
   handleSubmitReportRef,
 }: SoldTabFeedWrapperProps) {
   /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
@@ -81,15 +73,12 @@ export function SoldTabFeedWrapper({
     onLoadMore: handleSoldLoadMore,
   });
 
-  const { toggleLike, toggleSave } = usePostInteractions({
+  const { toggleSave } = usePostInteractions({
     session: soldListData.session,
     posts: soldListData.posts,
     setPosts: soldListData.setPosts,
-    likedPosts: soldListData.likedPosts,
     savedPosts: soldListData.savedPosts,
-    setLikedPosts: soldListData.setLikedPosts,
     setSavedPosts: soldListData.setSavedPosts,
-    setJustLikedPosts,
     setJustSavedPosts,
   });
 
@@ -123,21 +112,15 @@ export function SoldTabFeedWrapper({
           postFeedProps={{
             posts: soldListData.posts,
             session: soldListData.session,
-            likedPosts: soldListData.likedPosts,
             savedPosts: soldListData.savedPosts,
-            justLikedPosts,
             justSavedPosts,
             activeMenuState: menu.activeMenuState,
             isMenuAnimating: menu.isMenuAnimating,
             lastPostElementRef,
             menuButtonRefs: menu.menuButtonRefs,
             onViewPost: handlers.handleViewPost,
-            onImpression: handlers.handleImpression,
-            onLike: toggleLike,
             onSave: toggleSave,
             onShare: handlers.handleShare,
-            onViewLikes: (postId) => fetchInteractions('likes', postId),
-            onViewSaves: (postId) => fetchInteractions('saves', postId),
             onTogglePostStatus: handlers.handleTogglePostStatus,
             onDeletePost: handlers.handleDeletePost,
             onReport: handlers.handleReport,

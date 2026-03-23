@@ -9,9 +9,7 @@ import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { PostCardMenu } from './PostCardMenu';
 import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
-import { formatCompactNumber } from '@/utils/currency';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
-import { ShareIconTraced } from './icons/ShareIconTraced';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 
 interface PostCardProps {
@@ -19,28 +17,20 @@ interface PostCardProps {
   index: number;
   isLastElement: boolean;
   session: any;
-  likedPosts: { [key: string]: boolean };
   savedPosts: { [key: string]: boolean };
-  justLikedPosts: { [key: string]: boolean };
   justSavedPosts: { [key: string]: boolean };
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   lastPostElementRef?: (node: HTMLElement | null) => void;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
   onViewPost: (post: any, imageIndex: number) => void;
-  onLike: (postId: string) => void;
   onSave: (postId: string) => void;
   onShare: (post: any) => void;
-  onViewLikes: (postId: string) => void;
-  onViewSaves: (postId: string) => void;
   onTogglePostStatus: (postId: string, currentStatus: string) => void | Promise<void>;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
-  onImpression?: (postId: string) => void;
-  /** ลงทะเบียน element กับ observer เดียวของ feed (ลดจำนวน IntersectionObserver จาก N เป็น 1) */
-  registerImpressionRef?: (el: HTMLElement | null, postId: string) => void;
   /** ลงทะเบียนการ์ดกับ observer สำหรับ viewport — ให้โพสต์ในจอได้ priority โหลดรูปก่อน */
   registerVisibilityRef?: (el: HTMLElement | null, index: number) => void;
   hideBoost?: boolean;
@@ -57,27 +47,20 @@ export function PostCard({
   index,
   isLastElement,
   session,
-  likedPosts,
   savedPosts,
-  justLikedPosts,
   justSavedPosts,
   activeMenuState,
   isMenuAnimating,
   lastPostElementRef,
   menuButtonRefs,
   onViewPost,
-  onLike,
   onSave,
   onShare,
-  onViewLikes,
-  onViewSaves,
   onTogglePostStatus,
   onDeletePost,
   onReport,
   onSetActiveMenu,
   onSetMenuAnimating,
-  onImpression,
-  registerImpressionRef,
   registerVisibilityRef,
   hideBoost = false,
   leftOfAvatar,
@@ -92,7 +75,6 @@ export function PostCard({
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement | null>(null);
-  const impressionSentRef = React.useRef(false);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
@@ -103,38 +85,6 @@ export function PostCard({
       document.body.style.overflow = prevOverflow;
     };
   }, [showMarkSoldConfirm, showSoldInfo, showPrivateNotePopup]);
-
-  // Impression: ใช้ registerImpressionRef จาก PostFeed (observer เดียว) ถ้ามี ไม่สร้าง observer เอง
-  React.useEffect(() => {
-    if (registerImpressionRef) return;
-    const el = cardRef.current;
-    if (!el || !onImpression) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting || impressionSentRef.current) return;
-        impressionSentRef.current = true;
-        const postId = post.id;
-        const cb = () => onImpression?.(postId);
-        if (typeof requestIdleCallback !== 'undefined') {
-          (requestIdleCallback as typeof requestIdleCallback)(cb, { timeout: 500 });
-        } else {
-          setTimeout(cb, 100);
-        }
-      },
-      { threshold: 0.25, rootMargin: '0px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [post.id, onImpression, registerImpressionRef]);
-
-  // ลงทะเบียนกับ observer เดียวของ feed ใน useEffect (ไม่ทำใน ref callback เพื่อไม่ให้เกิด React internal "Expected static flag" error)
-  React.useEffect(() => {
-    if (!registerImpressionRef) return;
-    const el = cardRef.current;
-    if (el) registerImpressionRef(el, post.id);
-    return () => registerImpressionRef(null, post.id);
-  }, [registerImpressionRef, post.id]);
 
   React.useEffect(() => {
     if (!registerVisibilityRef) return;
@@ -191,22 +141,6 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
-                {post.short_id && (
-                  <>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '3px',
-                        height: '3px',
-                        borderRadius: '50%',
-                        backgroundColor: '#4a4d52',
-                        margin: '0 6px',
-                        transform: 'translateY(1px)',
-                      }}
-                    />
-                    <span style={{ color: '#4a4d52' }}>ID: {post.short_id}</span>
-                  </>
-                )}
                 <span
                   style={{
                     display: 'inline-block',
@@ -235,22 +169,6 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
-                {post.short_id && (
-                  <>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '3px',
-                        height: '3px',
-                        borderRadius: '50%',
-                        backgroundColor: '#4a4d52',
-                        margin: '0 6px',
-                        transform: 'translateY(1px)',
-                      }}
-                    />
-                    <span style={{ color: '#4a4d52' }}>ID: {post.short_id}</span>
-                  </>
-                )}
               </span>
             )}
           </div>
@@ -265,6 +183,7 @@ export function PostCard({
             activeMenuState={activeMenuState}
             isMenuAnimating={isMenuAnimating}
             menuButtonRefs={menuButtonRefs}
+            onShare={onShare}
             onDeletePost={onDeletePost}
             onReport={onReport}
             onSetActiveMenu={onSetActiveMenu}
@@ -309,129 +228,12 @@ export function PostCard({
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-            {/* Like Button */}
-            <div 
-              onClick={() => onViewLikes?.(post.id)} 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                minHeight: '28px',
-              }}
-            >
-              <svg 
-                width="22" 
-                height="22" 
-                viewBox="0 0 24 24" 
-                className={justLikedPosts[post.id] ? "animate-pop" : ""} 
-                fill={likedPosts[post.id] ? "#e0245e" : "none"} 
-                stroke={likedPosts[post.id] ? "#e0245e" : "#383c44"} 
-                strokeWidth={likedPosts[post.id] ? 2 : 1.5} 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLike(post.id);
-                }}
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path>
-              </svg>
-              <span style={{ fontSize: '13px', fontWeight: likedPosts[post.id] ? 600 : 500, color: likedPosts[post.id] ? '#e0245e' : '#383c44' }}>
-                {formatCompactNumber(post.likes || 0)}
+          <div style={{ minWidth: '32px', flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
+            {post.short_id ? (
+              <span style={{ fontSize: '13px', color: '#4a4d52', fontWeight: 500 }}>
+                Post ID: {String(post.short_id).slice(0, 6)}
               </span>
-            </div>
-
-            {/* Save Button */}
-            <div 
-              onClick={() => onViewSaves?.(post.id)} 
-              style={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                minHeight: '28px',
-              }}
-            >
-              <svg 
-                width="22" 
-                height="22" 
-                viewBox="0 0 24 24" 
-                className={justSavedPosts[post.id] ? "animate-pop" : ""} 
-                fill={savedPosts[post.id] ? "#FFD700" : "none"} 
-                stroke={savedPosts[post.id] ? "#FFD700" : "#383c44"} 
-                strokeWidth={savedPosts[post.id] ? 2 : 1.5} 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave(post.id);
-                }}
-              >
-                <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
-              </svg>
-              <span style={{ fontSize: '13px', fontWeight: savedPosts[post.id] ? 600 : 500, color: savedPosts[post.id] ? '#FFD700' : '#383c44' }}>
-                {formatCompactNumber(post.saves || 0)}
-              </span>
-            </div>
-
-            {/* View Count */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: '#383c44',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                minHeight: '28px',
-              }}
-            >
-              <svg 
-                width="22" 
-                height="22" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="#383c44" 
-                strokeWidth={1.5} 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <span style={{ fontSize: '13px', fontWeight: 500, color: '#383c44' }}>
-                {formatCompactNumber(post.views || 0)}
-              </span>
-            </div>
-
-            {/* Share Button */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                onShare(post);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                minHeight: '28px',
-              }}
-            >
-              <ShareIconTraced size={22} fillColor="#565e6b" />
-              <span style={{ fontSize: '13px', fontWeight: 500, color: '#565e6b' }}>
-                {formatCompactNumber(post.shares || 0)}
-              </span>
-            </div>
-
+            ) : null}
           </div>
 
           {/* Action Buttons */}
@@ -521,6 +323,7 @@ export function PostCard({
                     fontWeight: 600,
                     letterSpacing: '0.01em',
                     whiteSpace: 'nowrap',
+                    marginRight: '6px',
                   }}
                 >
                   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -532,6 +335,37 @@ export function PostCard({
                 })()
               )
             )}
+
+            {/* Save Button (moved to far right) */}
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onSave(post.id);
+              }}
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px 6px 4px 10px',
+                borderRadius: '999px',
+                minHeight: '28px',
+                marginLeft: '6px',
+              }}
+            >
+              <svg 
+                width="22" 
+                height="22" 
+                viewBox="0 0 24 24" 
+                className={justSavedPosts[post.id] ? "animate-pop" : ""} 
+                fill={savedPosts[post.id] ? "#FFD700" : "none"} 
+                stroke={savedPosts[post.id] ? "#FFD700" : "#4a4d52"} 
+                strokeWidth={savedPosts[post.id] ? 2 : 1.25} 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              >
+                <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
+              </svg>
+            </div>
           </div>
         </div>
       </div>

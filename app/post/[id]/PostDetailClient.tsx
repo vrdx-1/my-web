@@ -7,7 +7,6 @@ import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/EmptyState';
-import { InteractionModal } from '@/components/modals/InteractionModal';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -39,9 +38,7 @@ export default function PostDetail() {
     post,
     session,
     loading,
-    likedPosts,
     savedPosts,
-    justLikedPosts,
     justSavedPosts,
     reportingPost,
     setReportingPost,
@@ -52,12 +49,9 @@ export default function PostDetail() {
     viewingPostHook,
     fullScreenViewer,
     headerScroll,
-    interactionModalHook,
     handlers,
-    toggleLike,
     toggleSave,
     handleTogglePostStatus,
-    fetchInteractions,
   } = usePostDetail(id as string | undefined);
 
   return (
@@ -76,20 +70,14 @@ export default function PostDetail() {
               index={0}
               isLastElement={false}
               session={session}
-              likedPosts={likedPosts}
               savedPosts={savedPosts}
-              justLikedPosts={justLikedPosts}
               justSavedPosts={justSavedPosts}
               activeMenuState={menu.activeMenuState}
               isMenuAnimating={menu.isMenuAnimating}
               menuButtonRefs={menu.menuButtonRefs}
               onViewPost={handlers.handleViewPost}
-              onImpression={handlers.handleImpression}
-              onLike={toggleLike}
               onSave={toggleSave}
               onShare={handlers.handleShare}
-              onViewLikes={(postId) => fetchInteractions('likes', postId)}
-              onViewSaves={(postId) => fetchInteractions('saves', postId)}
               onTogglePostStatus={handleTogglePostStatus}
               onDeletePost={handlers.handleDeletePost}
               onReport={handlers.handleReport}
@@ -100,24 +88,6 @@ export default function PostDetail() {
           )}
         </main>
       </FeedWithPreload>
-
-      <InteractionModal
-        show={interactionModalHook.interactionModal.show}
-        type={interactionModalHook.interactionModal.type}
-        postId={interactionModalHook.interactionModal.postId}
-        posts={post ? [post] : []}
-        interactionUsers={interactionModalHook.interactionUsers}
-        interactionLoading={interactionModalHook.interactionLoading}
-        interactionSheetMode={interactionModalHook.interactionSheetMode}
-        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
-        startY={interactionModalHook.startY}
-        currentY={interactionModalHook.currentY}
-        onClose={interactionModalHook.closeModal}
-        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
-        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
-        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
-        onFetchInteractions={fetchInteractions}
-      />
 
       <PostFeedModals
         viewingPost={viewingPostHook.viewingPost}

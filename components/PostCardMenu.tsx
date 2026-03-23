@@ -11,6 +11,7 @@ interface PostCardMenuProps {
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
+  onShare: (post: any) => void;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
@@ -25,6 +26,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   activeMenuState,
   isMenuAnimating,
   menuButtonRefs,
+  onShare,
   onDeletePost,
   onReport,
   onSetActiveMenu,
@@ -106,6 +108,10 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             onDelete={() => {
               onSetActiveMenu(null);
               onDeletePost(post.id);
+            }}
+            onShare={() => {
+              onSetActiveMenu(null);
+              onShare(post);
             }}
             onBoost={
               hideBoost

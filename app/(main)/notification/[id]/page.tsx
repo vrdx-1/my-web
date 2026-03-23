@@ -6,7 +6,6 @@ import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/EmptyState';
-import { InteractionModal } from '@/components/modals/InteractionModal';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -35,9 +34,7 @@ export default function NotificationDetail() {
     post,
     session,
     loading,
-    likedPosts,
     savedPosts,
-    justLikedPosts,
     justSavedPosts,
     reportingPost,
     setReportingPost,
@@ -53,12 +50,9 @@ export default function NotificationDetail() {
     viewingPostHook,
     fullScreenViewer,
     headerScroll,
-    interactionModalHook,
     handlers,
-    toggleLike,
     toggleSave,
     handleTogglePostStatus,
-    fetchInteractions,
   } = useNotificationDetail(id as string | undefined);
 
   return (
@@ -78,20 +72,14 @@ export default function NotificationDetail() {
                 index={0}
                 isLastElement={false}
                 session={session}
-                likedPosts={likedPosts}
                 savedPosts={savedPosts}
-                justLikedPosts={justLikedPosts}
                 justSavedPosts={justSavedPosts}
                 activeMenuState={menu.activeMenuState}
                 isMenuAnimating={menu.isMenuAnimating}
                 menuButtonRefs={menu.menuButtonRefs}
                 onViewPost={handlers.handleViewPost}
-                onImpression={handlers.handleImpression}
-                onLike={toggleLike}
                 onSave={toggleSave}
                 onShare={handlers.handleShare}
-                onViewLikes={(postId) => fetchInteractions('likes', postId)}
-                onViewSaves={(postId) => fetchInteractions('saves', postId)}
                 onTogglePostStatus={handleTogglePostStatus}
                 onDeletePost={handlers.handleDeletePost}
                 onReport={handlers.handleReport}
@@ -129,24 +117,6 @@ export default function NotificationDetail() {
         confirmOnly
         zIndex={2000}
         onClose={() => setShowBoostDetails(false)}
-      />
-
-      <InteractionModal
-        show={interactionModalHook.interactionModal.show}
-        type={interactionModalHook.interactionModal.type}
-        postId={interactionModalHook.interactionModal.postId}
-        posts={post ? [post] : []}
-        interactionUsers={interactionModalHook.interactionUsers}
-        interactionLoading={interactionModalHook.interactionLoading}
-        interactionSheetMode={interactionModalHook.interactionSheetMode}
-        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
-        startY={interactionModalHook.startY}
-        currentY={interactionModalHook.currentY}
-        onClose={interactionModalHook.closeModal}
-        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
-        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
-        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
-        onFetchInteractions={fetchInteractions}
       />
 
       <PostFeedModals

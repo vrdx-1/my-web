@@ -11,21 +11,15 @@ export interface LikedFeedBlockProps {
   skeletonCount: number;
   posts: any[];
   session: any;
-  likedPosts: { [key: string]: boolean };
   savedPosts: { [key: string]: boolean };
-  justLikedPosts: { [key: string]: boolean };
   justSavedPosts: { [key: string]: boolean };
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   lastPostElementRef?: (node: HTMLElement | null) => void;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
   onViewPost: (post: any, imageIndex: number) => void;
-  onImpression?: (postId: string) => void;
-  onLike: (postId: string) => void;
   onSave: (postId: string) => void;
   onShare: (post: any) => void;
-  onViewLikes: (postId: string) => void;
-  onViewSaves: (postId: string) => void;
   onTogglePostStatus: (postId: string, currentStatus: string) => void;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
@@ -44,21 +38,15 @@ export function LikedFeedBlock(props: LikedFeedBlockProps) {
     skeletonCount,
     posts,
     session,
-    likedPosts,
     savedPosts,
-    justLikedPosts,
     justSavedPosts,
     activeMenuState,
     isMenuAnimating,
     lastPostElementRef,
     menuButtonRefs,
     onViewPost,
-    onImpression,
-    onLike,
     onSave,
     onShare,
-    onViewLikes,
-    onViewSaves,
     onTogglePostStatus,
     onDeletePost,
     onReport,
@@ -130,26 +118,20 @@ export function LikedFeedBlock(props: LikedFeedBlockProps) {
             priority={index === 0}
             imageFetchPriority={index < 3 ? 'high' : 'low'}
             session={session}
-            likedPosts={likedPosts}
             savedPosts={savedPosts}
-            justLikedPosts={justLikedPosts}
             justSavedPosts={justSavedPosts}
             activeMenuState={activeMenuState}
             isMenuAnimating={isMenuAnimating}
             lastPostElementRef={index === posts.length - 1 ? lastPostElementRef : undefined}
             menuButtonRefs={menuButtonRefs}
             onViewPost={onViewPost}
-            onLike={onLike}
             onSave={onSave}
             onShare={onShare}
-            onViewLikes={onViewLikes}
-            onViewSaves={onViewSaves}
             onTogglePostStatus={onTogglePostStatus}
             onDeletePost={onDeletePost}
             onReport={onReport}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
-            onImpression={onImpression}
             hideBoost={hideBoost}
           />
         ))}

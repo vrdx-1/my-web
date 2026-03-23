@@ -17,7 +17,6 @@ interface UsePostModalsProps {
   setFullScreenIsDragging: (dragging: boolean) => void;
   setFullScreenTransitionDuration: (duration: number) => void;
   setFullScreenShowDetails: (show: boolean | ((prev: boolean) => boolean)) => void;
-  interactionModalShow: boolean;
   setIsHeaderVisible: (visible: boolean) => void;
 }
 
@@ -49,7 +48,6 @@ export function usePostModals({
   setFullScreenIsDragging,
   setFullScreenTransitionDuration,
   setFullScreenShowDetails,
-  interactionModalShow,
   setIsHeaderVisible: _setIsHeaderVisible,
 }: UsePostModalsProps) {
   void _isViewingModeOpen;
@@ -135,14 +133,9 @@ export function usePostModals({
     setFullScreenShowDetails,
   ]);
 
-  // Handle interaction modal effects
   useEffect(() => {
-    if (interactionModalShow) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      if (!viewingPost && !fullScreenImages) {
-        document.body.style.overflow = '';
-      }
+    if (!viewingPost && !fullScreenImages) {
+      document.body.style.overflow = '';
     }
-  }, [interactionModalShow, viewingPost, fullScreenImages]);
+  }, [viewingPost, fullScreenImages]);
 }

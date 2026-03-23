@@ -5,7 +5,6 @@ import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-import { InteractionModal } from '@/components/modals/InteractionModal';
 
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -16,7 +15,6 @@ import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
-import { useInteractionModal } from '@/hooks/useInteractionModal';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
@@ -42,13 +40,11 @@ export function HomePageContent() {
   }, []);
 
   const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [justLikedPosts, setJustLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const postsRef = useRef<any[]>([]);
   const prevLoadingMoreRef = useRef(false);
   const soldTabRefreshRef = useRef<{
     setPage: (v: number | ((p: number) => number)) => void;
@@ -140,7 +136,6 @@ export function HomePageContent() {
   }, [selectedProvince]);
 
   const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
-  postsRef.current = posts;
 
   if (!hasSearch) {
     searchResolvedRef.current = false;
@@ -289,7 +284,6 @@ export function HomePageContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const interactionModalHook = useInteractionModal();
   /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
   const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
   /** ไม่ disableScrollHide ตอนเปิด sheet — จะบังคับ header แสดงและเลื่อนลงมาแม้เคยซ่อนจาก scroll; body ล็อก overflow อยู่แล้ว */
@@ -332,15 +326,12 @@ export function HomePageContent() {
     feedPostCount: postList.posts.length,
   });
 
-  const { toggleLike, toggleSave } = usePostInteractions({
+  const { toggleSave } = usePostInteractions({
     session: postList.session,
     posts: postList.posts,
     setPosts: postList.setPosts,
-    likedPosts: postList.likedPosts,
     savedPosts: postList.savedPosts,
-    setLikedPosts: postList.setLikedPosts,
     setSavedPosts: postList.setSavedPosts,
-    setJustLikedPosts,
     setJustSavedPosts,
   });
 
@@ -389,7 +380,6 @@ export function HomePageContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    interactionModalShow: interactionModalHook.interactionModal.show,
     setIsHeaderVisible: headerScroll.setIsHeaderVisible,
   });
 
@@ -414,13 +404,6 @@ export function HomePageContent() {
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
 
-  const fetchInteractions = useCallback(
-    async (type: 'likes' | 'saves', postId: string) => {
-      await interactionModalHook.fetchInteractions(type, postId, postsRef.current);
-    },
-    [interactionModalHook],
-  );
-
   const searchWaitingResults =
     hasSearch && posts.length === 0 && !searchResolvedForEmpty;
 
@@ -444,21 +427,15 @@ export function HomePageContent() {
     () => ({
       posts,
       session: postList.session,
-      likedPosts: postList.likedPosts,
       savedPosts: postList.savedPosts,
-      justLikedPosts,
       justSavedPosts,
       activeMenuState: menu.activeMenuState,
       isMenuAnimating: menu.isMenuAnimating,
       lastPostElementRef,
       menuButtonRefs: menu.menuButtonRefs,
       onViewPost: handlers.handleViewPost,
-      onImpression: handlers.handleImpression,
-      onLike: toggleLike,
       onSave: toggleSave,
       onShare: handlers.handleShare,
-      onViewLikes: (postId: string) => fetchInteractions('likes', postId),
-      onViewSaves: (postId: string) => fetchInteractions('saves', postId),
       onTogglePostStatus: handlers.handleTogglePostStatus,
       onDeletePost: handlers.handleDeletePost,
       onReport: handlers.handleReport,
@@ -473,13 +450,11 @@ export function HomePageContent() {
     [
       posts,
       postList.session,
-      postList.likedPosts,
       postList.savedPosts,
       postList.hasMore,
       postList.loadingMore,
       recommendLoadMoreShell,
       handleRecommendLoadMore,
-      justLikedPosts,
       justSavedPosts,
       menu.activeMenuState,
       menu.isMenuAnimating,
@@ -488,14 +463,11 @@ export function HomePageContent() {
       menu.setIsMenuAnimating,
       lastPostElementRef,
       handlers.handleViewPost,
-      handlers.handleImpression,
       handlers.handleShare,
       handlers.handleTogglePostStatus,
       handlers.handleDeletePost,
       handlers.handleReport,
-      toggleLike,
       toggleSave,
-      fetchInteractions,
     ],
   );
 
@@ -620,34 +592,12 @@ export function HomePageContent() {
             setReportReason={setReportReason}
             isSubmittingReport={isSubmittingReport}
             setIsSubmittingReport={setIsSubmittingReport}
-            justLikedPosts={justLikedPosts}
-            setJustLikedPosts={setJustLikedPosts}
             justSavedPosts={justSavedPosts}
             setJustSavedPosts={setJustSavedPosts}
-            fetchInteractions={fetchInteractions}
-            postsRef={postsRef}
             handleSubmitReportRef={handleSubmitReportRef}
           />
         </div>
       </div>
-
-      <InteractionModal
-        show={interactionModalHook.interactionModal.show}
-        type={interactionModalHook.interactionModal.type}
-        postId={interactionModalHook.interactionModal.postId}
-        posts={posts}
-        interactionUsers={interactionModalHook.interactionUsers}
-        interactionLoading={interactionModalHook.interactionLoading}
-        interactionSheetMode={interactionModalHook.interactionSheetMode}
-        isInteractionModalAnimating={interactionModalHook.isInteractionModalAnimating}
-        startY={interactionModalHook.startY}
-        currentY={interactionModalHook.currentY}
-        onClose={interactionModalHook.closeModal}
-        onSheetTouchStart={interactionModalHook.onSheetTouchStart}
-        onSheetTouchMove={interactionModalHook.onSheetTouchMove}
-        onSheetTouchEnd={interactionModalHook.onSheetTouchEnd}
-        onFetchInteractions={(type, postId) => fetchInteractions(type, postId)}
-      />
 
       {(viewingPostHook.viewingPost ||
         fullScreenViewer.fullScreenImages ||

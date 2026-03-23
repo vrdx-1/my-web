@@ -113,18 +113,23 @@ export async function sharePost(
   session: any,
   setPosts: (updater: (prev: any[]) => any[]) => void
 ): Promise<void> {
+  void session;
+  void setPosts;
   const shareUrl = `${window.location.origin}/post/${post.id}`;
   const shareData = { url: shareUrl };
-
-  // นับยอดแชร์ลง DB ทันที (ยอดบน UI อัพเดทหลัง refresh เท่านั้น)
-  await supabase.from('cars').update({ shares: (post.shares || 0) + 1 }).eq('id', post.id);
 
   try {
     if (navigator.share) {
       await navigator.share(shareData);
     } else {
-      navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(shareUrl);
     }
+
+    // อัปเดตยอดแชร์หลังแชร์สำเร็จแบบ background เพื่อไม่บล็อก user gesture
+    void supabase
+      .from('cars')
+      .update({ shares: (post.shares || 0) + 1 })
+      .eq('id', post.id);
   } catch (err) {
     console.log('User cancelled share');
   }
