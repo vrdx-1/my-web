@@ -3,7 +3,11 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
-import { fileToBase64, base64ToFile } from '@/utils/fileEncoding';
+import {
+  clearCreatePostDraft,
+  loadCreatePostDraft,
+  saveCreatePostDraft,
+} from '@/utils/createPostDraftPersistence';
 
 interface UseCreatePostDraftParams {
   caption: string;
@@ -20,6 +24,9 @@ interface UseCreatePostDraftParams {
   setLayout: (value: string) => void;
   /** คืนค่า caption ที่เก็บไว้ระดับโมดูล — กัน caption หายเมื่อหน้า remount */
   getCaptionBackup?: () => string;
+  sharedDraftFiles?: File[];
+  sharedDraftLayout?: string;
+  setSharedDraft?: (draft: { files: File[]; layout: string }) => void;
 }
 
 export function useCreatePostDraft({
@@ -36,63 +43,74 @@ export function useCreatePostDraft({
   layout,
   setLayout,
   getCaptionBackup,
+  sharedDraftFiles = [],
+  sharedDraftLayout = 'default',
+  setSharedDraft,
 }: UseCreatePostDraftParams) {
   // Initial load: session + caption/province/step + images
   useEffect(() => {
-    const checkUser = async () => {
+    const initializeDraft = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
-    };
-    checkUser();
 
-    // โหลดข้อมูลจาก sessionStorage (ถ้าไม่มี ค่อย fallback จาก localStorage)
-    const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
-    const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
-    const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
-    const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
+      // โหลดข้อมูลจาก sessionStorage (ถ้าไม่มี ค่อย fallback จาก localStorage)
+      const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
+      const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
+      const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
+      const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
 
-    // โหลด caption — ใช้ค่าที่ยาวที่สุดระหว่าง session / localStorage / backup ระดับโมดูล (กัน caption หายเมื่อ remount)
-    const sessionCaption = typeof savedCaption === 'string' ? savedCaption : '';
-    const lsCaption = safeParseJSON<string>('create_post_caption_ls', '');
-    const lsCaptionStr = typeof lsCaption === 'string' ? lsCaption : '';
-    const fromStorage =
-      sessionCaption.length >= lsCaptionStr.length ? sessionCaption : lsCaptionStr;
-    const backup = typeof getCaptionBackup === 'function' ? getCaptionBackup() : '';
-    const backupStr = typeof backup === 'string' ? backup : '';
-    const captionToUse =
-      backupStr.length > fromStorage.length ? backupStr : fromStorage;
-    // อย่าเขียนทับด้วยค่าที่สั้นกว่า — state อาจถูก init จาก getLongestStoredCaption() แล้ว
-    if (captionToUse && captionToUse.length > caption.length) setCaption(captionToUse);
+      // โหลด caption — ใช้ค่าที่ยาวที่สุดระหว่าง session / localStorage / backup ระดับโมดูล (กัน caption หายเมื่อ remount)
+      const sessionCaption = typeof savedCaption === 'string' ? savedCaption : '';
+      const lsCaption = safeParseJSON<string>('create_post_caption_ls', '');
+      const lsCaptionStr = typeof lsCaption === 'string' ? lsCaption : '';
+      const fromStorage =
+        sessionCaption.length >= lsCaptionStr.length ? sessionCaption : lsCaptionStr;
+      const backup = typeof getCaptionBackup === 'function' ? getCaptionBackup() : '';
+      const backupStr = typeof backup === 'string' ? backup : '';
+      const captionToUse =
+        backupStr.length > fromStorage.length ? backupStr : fromStorage;
+      // อย่าเขียนทับด้วยค่าที่สั้นกว่า — state อาจถูก init จาก getLongestStoredCaption() แล้ว
+      if (captionToUse && captionToUse.length > caption.length) setCaption(captionToUse);
 
-    if (savedProvince) {
-      setProvince(savedProvince);
-    } else {
-      // ถ้าไม่มี province จาก sessionStorage ให้โหลดจาก localStorage (แขวงที่เลือกล่าสุด)
-      const lastProvince = safeParseJSON<string>('last_selected_province', '');
-      if (lastProvince) setProvince(lastProvince);
-    }
+      if (savedProvince) {
+        setProvince(savedProvince);
+      } else {
+        // ถ้าไม่มี province จาก sessionStorage ให้โหลดจาก localStorage (แขวงที่เลือกล่าสุด)
+        const lastProvince = safeParseJSON<string>('last_selected_province', '');
+        if (lastProvince) setProvince(lastProvince);
+      }
 
-    if (savedStep) {
-      setStep(savedStep);
-    } else {
-      const lsStep = safeParseJSON<number>('create_post_step_ls', 2);
-      if (lsStep) setStep(lsStep);
-    }
+      if (savedStep) {
+        setStep(savedStep);
+      } else {
+        const lsStep = safeParseJSON<number>('create_post_step_ls', 2);
+        if (lsStep) setStep(lsStep);
+      }
 
-    if (savedLayout) {
-      setLayout(savedLayout);
-    } else {
-      const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'default');
-      if (lsLayout) setLayout(lsLayout);
-    }
+      if (sharedDraftFiles.length > 0) {
+        setLayout(sharedDraftLayout || 'default');
+      } else if (savedLayout) {
+        setLayout(savedLayout);
+      } else {
+        const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'default');
+        if (lsLayout) setLayout(lsLayout);
+      }
 
-    // ดึงข้อมูลจากหน้าโฮม
-    const pendingImages = safeParseSessionJSON<string[]>('pending_images', []);
+      // ดึงข้อมูลจากหน้าโฮม
+      const pendingImages = safeParseSessionJSON<string[]>('pending_images', []);
 
-    // โหลดรูปภาพจาก sessionStorage (ถ้ามี)
-    const loadSavedImages = async () => {
+      // โหลดรูปภาพจาก sessionStorage (ถ้ามี)
+      if (sharedDraftFiles.length > 0) {
+        const files = sharedDraftFiles.slice(0, 30);
+        const previewUrls = files.map((file) => URL.createObjectURL(file));
+        imageUpload.setPreviews(previewUrls);
+        imageUpload.setSelectedFiles(files);
+        setStep(2);
+        return;
+      }
+
       // ถ้ามี pending_images จากหน้าโฮม ให้ใช้ก่อน
       if (pendingImages.length > 0) {
         try {
@@ -130,13 +148,7 @@ export function useCreatePostDraft({
             // IMPORTANT: อย่า append ซ้ำ (React StrictMode ใน dev อาจเรียก useEffect ซ้ำ)
             // ให้ set ทับเพื่อป้องกันรูปถูกอัปโหลด/บันทึกซ้ำจนเห็นเป็น ×2 หลังโพสต์
             imageUpload.setSelectedFiles(validFiles);
-
-            // แปลงเป็น base64 และเก็บใน sessionStorage
-            const base64Promises = validFiles.map((file) => fileToBase64(file));
-            const base64Strings = await Promise.all(base64Promises);
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
-            }
+            setSharedDraft?.({ files: validFiles, layout: sharedDraftLayout || savedLayout || 'default' });
 
             setStep(2);
           }
@@ -148,57 +160,30 @@ export function useCreatePostDraft({
           console.error('Error processing pending images', e);
         }
       }
-      // โหลดรูปภาพจาก sessionStorage (base64) หรือ fallback จาก localStorage
       else {
         try {
-          // ตรวจสอบว่ามี base64 data หรือไม่
-          let savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
+          const persistedDraft = await loadCreatePostDraft();
 
-          // ถ้า sessionStorage ไม่มี ให้ลอง fallback จาก localStorage
-          if (!savedBase64 || savedBase64.length === 0) {
-            const lsBase64 = safeParseJSON<string[]>('create_post_images_base64_ls', []);
-            if (lsBase64 && lsBase64.length > 0) {
-              savedBase64 = lsBase64;
-              // sync กลับเข้า sessionStorage ด้วย
-              if (typeof window !== 'undefined') {
-                sessionStorage.setItem('create_post_images_base64', JSON.stringify(lsBase64));
-              }
-            }
-          }
-
-          if (savedBase64 && savedBase64.length > 0) {
-            // จำกัดสูงสุด 30 รูป (ถ้ามาเกิน เอาแค่ 30 รูปแรก)
-            const limitedBase64 = savedBase64.slice(0, 30);
-
-            // แปลง base64 กลับเป็น File objects
-            const files = limitedBase64.map((base64, index) =>
-              base64ToFile(base64, `image-${Date.now()}-${index}.webp`),
-            );
-
-            // สร้าง Blob URL สำหรับ preview
+          if (persistedDraft && persistedDraft.files.length > 0) {
+            const files = persistedDraft.files.slice(0, 30);
             const previewUrls = files.map((file) => URL.createObjectURL(file));
 
             imageUpload.setPreviews(previewUrls);
-            // IMPORTANT: set ทับเพื่อป้องกันการซ้ำจากการ mount ซ้ำใน dev/StrictMode
             imageUpload.setSelectedFiles(files);
-          } else {
-            // ถ้าไม่มี base64 data แต่มี Blob URLs (กรณีเก่า) ให้ลบออก
-            if (typeof window !== 'undefined') {
-              sessionStorage.removeItem('create_post_images');
-            }
+            const draftLayout = persistedDraft.layout || savedLayout || sharedDraftLayout || 'default';
+            setLayout(draftLayout);
+            setSharedDraft?.({ files, layout: draftLayout });
+            setStep(2);
           }
         } catch (e) {
-          console.error('Error loading saved images', e);
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('create_post_images');
-            sessionStorage.removeItem('create_post_images_base64');
-          }
+          console.error('Error loading persisted create-post draft', e);
         }
       }
     };
 
-    loadSavedImages();
-    setIsInitialized(true);
+    initializeDraft().finally(() => {
+      setIsInitialized(true);
+    });
   }, []);
 
   // บันทึก caption ลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
@@ -256,29 +241,26 @@ export function useCreatePostDraft({
     }
   }, [layout, isInitialized]);
 
-  // บันทึกรูปภาพลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  // ซิงก์รูปกับ shared context ในหน่วยความจำ และล้าง storage เก่าเมื่อไม่มีรูปเหลือ
   useEffect(() => {
     if (!isInitialized) return;
-    if (typeof window !== 'undefined' && imageUpload.selectedFiles.length > 0) {
-      // แปลง File objects เป็น base64 และเก็บใน sessionStorage + localStorage (สูงสุด 30 รูป)
-      const saveImagesAsBase64 = async () => {
-        try {
-          const filesToSave = imageUpload.selectedFiles.slice(0, 30);
-          const base64Promises = filesToSave.map((file: File) => fileToBase64(file));
-          const base64Strings = await Promise.all(base64Promises);
-          sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
-          localStorage.setItem('create_post_images_base64_ls', JSON.stringify(base64Strings));
-        } catch (error) {
-          console.error('Error saving images as base64:', error);
+    setSharedDraft?.({
+      files: imageUpload.selectedFiles.slice(0, 30),
+      layout,
+    });
+    const persistDraft = async () => {
+      try {
+        if (imageUpload.selectedFiles.length > 0) {
+          await saveCreatePostDraft(imageUpload.selectedFiles, layout);
+        } else {
+          await clearCreatePostDraft();
         }
-      };
-      saveImagesAsBase64();
-    } else if (typeof window !== 'undefined' && imageUpload.selectedFiles.length === 0) {
-      // ลบข้อมูลรูปภาพออกเมื่อไม่มีรูปแล้ว
-      sessionStorage.removeItem('create_post_images');
-      sessionStorage.removeItem('create_post_images_base64');
-      localStorage.removeItem('create_post_images_base64_ls');
-    }
-  }, [imageUpload.selectedFiles, isInitialized]);
+      } catch (error) {
+        console.error('Error persisting create-post draft', error);
+      }
+    };
+
+    persistDraft();
+  }, [imageUpload.selectedFiles, layout, isInitialized, setSharedDraft]);
 }
 

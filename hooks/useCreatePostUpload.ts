@@ -210,14 +210,11 @@ export function useCreatePostUpload({
         sessionStorage.removeItem('create_post_province');
         sessionStorage.removeItem('create_post_step');
         sessionStorage.removeItem('create_post_layout');
-        sessionStorage.removeItem('create_post_images');
-        sessionStorage.removeItem('create_post_images_base64');
         sessionStorage.removeItem('create_post_private_shop');
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
         localStorage.removeItem('create_post_step_ls');
         localStorage.removeItem('create_post_layout_ls');
-        localStorage.removeItem('create_post_images_base64_ls');
       }
       onDraftCleared?.();
 

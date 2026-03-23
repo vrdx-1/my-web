@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '@/hooks/useProfile';
@@ -10,12 +10,13 @@ import { LAO_PROVINCES } from '@/utils/constants';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
+import { safeParseSessionJSON } from '@/utils/storageUtils';
 import { compressImage } from '@/utils/imageCompression';
-import { fileToBase64, base64ToFile } from '@/utils/fileEncoding';
+import { clearCreatePostDraft as clearPersistedCreatePostDraft } from '@/utils/createPostDraftPersistence';
 import { useCreatePostDraft } from '@/hooks/useCreatePostDraft';
 import { useCreatePostUpload } from '@/hooks/useCreatePostUpload';
 import { useOverlayScrollLock } from '@/hooks/useOverlayScrollLock';
+import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import {
   CreatePostUploadingOverlay,
   CreatePostViewingOverlay,
@@ -56,6 +57,7 @@ function getCaptionForStep2(refValue: string): string {
 
 export default function CreatePost() {
   const router = useRouter();
+  const createPostContext = useCreatePostContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const autoFileInputRef = useRef<HTMLInputElement | null>(null);
   const hasRequestedGalleryRef = useRef<boolean>(false);
@@ -82,6 +84,10 @@ export default function CreatePost() {
   const [showVideoAlert, setShowVideoAlert] = useState(false);
   const [isPreparingArrange, setIsPreparingArrange] = useState(false);
 
+  const setSharedDraft = useCallback((draft: { files: File[]; layout: string }) => {
+    createPostContext?.setDraft(draft);
+  }, [createPostContext]);
+
   // Use shared profile hook
   const { profile: userProfile } = useProfile();
 
@@ -99,6 +105,9 @@ export default function CreatePost() {
     layout,
     setLayout,
     getCaptionBackup: () => createPostCaptionBackup,
+    sharedDraftFiles: createPostContext?.draft.files || [],
+    sharedDraftLayout: createPostContext?.draft.layout || 'default',
+    setSharedDraft,
   });
 
   // อัปเดต backup + ref ล่าสุดทุกครั้งที่ caption เปลี่ยน
@@ -141,13 +150,12 @@ export default function CreatePost() {
   // ขอเปิดแกลเลอรี่ (file picker) อัตโนมัติครั้งแรกเมื่อเข้าหน้า (บางเครื่อง Android เปิดไม่ได้เอง)
   // อย่าเปิดถ้ามี draft/pending อยู่ (เช่น กลับจากหน้าจัดเรียงรูป) — รอให้โหลด draft ก่อน
   useEffect(() => {
+    if (!isInitialized) return;
     if (hasRequestedGalleryRef.current) return;
     if (!autoFileInputRef.current) return;
     if (imageUpload.selectedFiles.length > 0 || imageUpload.previews.length > 0) return;
+    if ((createPostContext?.draft.files.length || 0) > 0) return;
     if (typeof window === 'undefined') return;
-    const savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
-    const lsBase64 = safeParseJSON<string[]>('create_post_images_base64_ls', []);
-    if ((savedBase64 && savedBase64.length > 0) || (lsBase64 && lsBase64.length > 0)) return;
     const pending = safeParseSessionJSON<string[]>('pending_images', []);
     if (pending && pending.length > 0) return;
 
@@ -157,7 +165,7 @@ export default function CreatePost() {
     } catch {
       // บราวเซอร์บางตัวอาจบล็อกการ click แบบโปรแกรม แต่จะไม่กระทบ UX เดิม
     }
-  }, [imageUpload.selectedFiles.length, imageUpload.previews.length]);
+  }, [isInitialized, imageUpload.selectedFiles.length, imageUpload.previews.length, createPostContext?.draft.files.length]);
 
   // Removed duplicate functions - using from hooks/useImageUpload.ts and utils/imageCompression.ts
  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,19 +226,18 @@ export default function CreatePost() {
    createPostCaptionBackup = '';
    captionWhenLeavingStep2Module = '';
    captionWhenLeavingStep2Ref.current = '';
+   void clearPersistedCreatePostDraft();
    if (typeof window !== 'undefined') {
      sessionStorage.removeItem('create_post_caption');
      sessionStorage.removeItem('create_post_province');
      sessionStorage.removeItem('create_post_step');
      sessionStorage.removeItem('create_post_layout');
-     sessionStorage.removeItem('create_post_images');
-     sessionStorage.removeItem('create_post_images_base64');
     localStorage.removeItem('create_post_caption_ls');
     localStorage.removeItem('create_post_province_ls');
     localStorage.removeItem('create_post_step_ls');
     localStorage.removeItem('create_post_layout_ls');
-    localStorage.removeItem('create_post_images_base64_ls');
    }
+   createPostContext?.clearDraft();
    setShowLeaveConfirm(false);
    router.push('/');
  };
@@ -241,16 +248,23 @@ const handleLeaveCancel = () => {
 
 const handleGoArrange = async () => {
   if (isPreparingArrange) return;
-  if (imageUpload.selectedFiles.length === 0) return;
+  if (imageUpload.previews.length === 0) return;
 
   setIsPreparingArrange(true);
   try {
-    const filesToSave = imageUpload.selectedFiles.slice(0, 30);
-    const base64Strings = await Promise.all(filesToSave.map((file: File) => fileToBase64(file)));
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('create_post_images_base64', JSON.stringify(base64Strings));
-      localStorage.setItem('create_post_images_base64_ls', JSON.stringify(base64Strings));
+    const filesToArrange = imageUpload.selectedFiles.length > 0
+      ? imageUpload.selectedFiles.slice(0, 30)
+      : (createPostContext?.draft.files || []).slice(0, 30);
+
+    if (filesToArrange.length === 0) {
+      return;
     }
+
+    createPostContext?.setDraft({
+      files: filesToArrange,
+      layout,
+    });
+
     router.push('/create-post/arrange');
   } catch (error) {
     console.error('Error preparing images for arrange page:', error);
@@ -276,6 +290,8 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
     createPostCaptionBackup = '';
     captionWhenLeavingStep2Module = '';
     captionWhenLeavingStep2Ref.current = '';
+    void clearPersistedCreatePostDraft();
+    createPostContext?.clearDraft();
   },
 });
 

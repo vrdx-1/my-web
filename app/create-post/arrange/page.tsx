@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
-import { base64ToFile } from '@/utils/fileEncoding';
+import { loadCreatePostDraft } from '@/utils/createPostDraftPersistence';
 import { PHOTO_GRID_GAP, LAYOUT_ASPECT_RATIO, LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { EmptyLayoutPreview } from '@/components/create-post/EmptyLayoutPreview';
 
 export default function ArrangePostImagesPage() {
   const router = useRouter();
+  const createPostContext = useCreatePostContext();
   const [previews, setPreviews] = useState<string[]>([]);
-  const [base64List, setBase64List] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [layout, setLayout] = useState('default');
   const [ready, setReady] = useState(false);
   /** ลำดับที่ผู้ใช้กดเลือก: กดรูปไหนก่อน = ขึ้นก่อนในโพส (เริ่มต้นเปล่า) */
@@ -19,35 +21,55 @@ export default function ArrangePostImagesPage() {
   const [showMaxImageAlert, setShowMaxImageAlert] = useState(false);
 
   useEffect(() => {
-    const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
-    if (!savedLayout) {
-      const ls = safeParseJSON<string>('create_post_layout_ls', 'default');
-      setLayout(ls || 'default');
-    } else {
-      setLayout(savedLayout);
-    }
+    let isActive = true;
+    let urls: string[] = [];
 
-    let savedBase64 = safeParseSessionJSON<string[]>('create_post_images_base64', []);
-    if (!savedBase64 || savedBase64.length === 0) {
-      savedBase64 = safeParseJSON<string[]>('create_post_images_base64_ls', []);
-    }
-    if (!savedBase64 || savedBase64.length === 0) {
-      router.replace('/create-post');
-      return;
-    }
-    // รองรับสูงสุด 30 รูปในหน้าจัดเรียง (เลือก/จัดลำดับได้สูงสุด 15)
-    const list = savedBase64.slice(0, 30);
-    setBase64List(list);
-    const files = list.map((base64, i) =>
-      base64ToFile(base64, `image-${Date.now()}-${i}.webp`),
-    );
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    setReady(true);
+    const hydrateArrangeDraft = async () => {
+      const sharedFiles = createPostContext?.draft.files || [];
+      const sharedLayout = createPostContext?.draft.layout || 'default';
+
+      let files: File[] = [];
+      let nextLayout = sharedLayout;
+
+      if (sharedFiles.length > 0) {
+        files = sharedFiles.slice(0, 30);
+      } else {
+        const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
+        if (!savedLayout) {
+          const ls = safeParseJSON<string>('create_post_layout_ls', 'default');
+          nextLayout = ls || 'default';
+        } else {
+          nextLayout = savedLayout;
+        }
+
+        const persistedDraft = await loadCreatePostDraft();
+        if (!persistedDraft || persistedDraft.files.length === 0) {
+          router.replace('/create-post');
+          return;
+        }
+
+        files = persistedDraft.files.slice(0, 30);
+        nextLayout = persistedDraft.layout || nextLayout || 'default';
+        createPostContext?.setDraft({ files, layout: nextLayout });
+      }
+
+      if (!isActive) {
+        return;
+      }
+
+      setLayout(nextLayout || 'default');
+      setSelectedFiles(files);
+      urls = files.map((file) => URL.createObjectURL(file));
+      setPreviews(urls);
+      setReady(true);
+    };
+
+    hydrateArrangeDraft();
     return () => {
+      isActive = false;
       urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [router]);
+  }, [router, createPostContext]);
 
   const n = previews.length;
   const restOrder = n > 0 ? Array.from({ length: n }, (_, i) => i).filter((i) => !tappedOrder.includes(i)) : [];
@@ -73,17 +95,17 @@ export default function ArrangePostImagesPage() {
   }, []);
 
   const handleDone = useCallback(() => {
-    if (base64List.length === 0) return;
+    if (selectedFiles.length === 0) return;
     const minRequired = Math.min(6, previews.length);
     if (tappedOrder.length < minRequired) return;
     /** บันทึกเฉพาะรูปที่ผู้ใช้เลือก (ตามลำดับที่กด) — รูปที่ไม่ได้เลือกจะไม่ถูกบันทึกและไม่ส่งไป backend */
-    const selectedBase64 = tappedOrder.map((i) => base64List[i]);
-    try {
-      sessionStorage.setItem('create_post_images_base64', JSON.stringify(selectedBase64));
-      localStorage.setItem('create_post_images_base64_ls', JSON.stringify(selectedBase64));
-    } catch (_) {}
+    const arrangedFiles = tappedOrder.map((i) => selectedFiles[i]).filter(Boolean);
+    createPostContext?.setDraft({
+      files: arrangedFiles,
+      layout,
+    });
     router.push('/create-post');
-  }, [base64List, previews.length, tappedOrder, router]);
+  }, [selectedFiles, previews.length, tappedOrder, router, createPostContext, layout]);
 
   const handleBack = useCallback(() => {
     router.back();
