@@ -1,20 +1,13 @@
 'use client'
 
 import React from 'react';
-import { Avatar } from '@/components/Avatar';
 
 export interface NotificationPostPreviewItem {
   id: string;
   post_id: string;
   post_images?: string[];
   notification_count?: number;
-  interaction_total?: number;
-  likes?: number;
-  saves?: number;
-  interaction_avatars?: (string | null)[];
-  /** ชื่อบัญชีของคนที่กดล่าสุด (จาก notification row) */
   sender_name?: string;
-  /** Avatar ของคนที่กดล่าสุด */
   sender_avatar?: string | null;
   boost_status?: 'pending' | 'reject' | 'success' | string | null;
   boost_expires_at?: string | null;
@@ -32,16 +25,7 @@ export const NotificationPostPreviewCard = React.memo<{
   /** เมื่อ false ไม่โหลดรูปจนกว่าจะใกล้เห็น (ลดการโหลดพร้อมกัน) */
   shouldLoadImage?: boolean;
 }>(({ notification, isReadStyle, timeAgoText, onNavigateToPost, priority = false, shouldLoadImage = true }) => {
-  const interactionTotal =
-    typeof notification.interaction_total === 'number'
-      ? notification.interaction_total
-      : (notification.likes || 0) + (notification.saves || 0);
-
-  const latestAvatar =
-    notification.sender_avatar ??
-    (notification.interaction_avatars && notification.interaction_avatars.length > 0
-      ? notification.interaction_avatars[0]
-      : null);
+  const firstPostImage = notification.post_images?.[0] ?? null;
   const latestName = notification.sender_name ?? 'User';
 
   const captionPreview =
@@ -86,14 +70,33 @@ export const NotificationPostPreviewCard = React.memo<{
         e.currentTarget.style.backgroundColor = isReadStyle ? '#fff' : '#e7f3ff';
       }}
     >
-      {/* Avatar ของคนที่กดล่าสุด — ด้านซ้าย */}
+      {/* รูปรถ: ใช้รูปแรกของโพสต์ */}
       <div style={{ flexShrink: 0 }}>
-        <Avatar avatarUrl={latestAvatar} size={64} />
+        {firstPostImage && shouldLoadImage ? (
+          <img
+            src={firstPostImage}
+            alt="Post thumbnail"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding="async"
+            style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '12px', background: '#f1f3f5' }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '12px',
+              background: '#f1f3f5',
+              border: '1px solid #e5e7eb',
+            }}
+          />
+        )}
       </div>
 
       {/* Notification Content */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
-        {/* แถวบนสุด: (ชื่อคนล่าสุด) + ແລະອີກ x ຄົນມັກໂພສຂອງທ່ານ */}
+        {/* แถวบนสุด: ข้อความแจ้งเตือน boost */}
         <div
           style={{
             fontSize: '14px',
@@ -109,21 +112,10 @@ export const NotificationPostPreviewCard = React.memo<{
             userSelect: 'none',
           }}
         >
-          {interactionTotal <= 1 ? (
-            <>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
-              <span style={{ color: '#050505', flexShrink: 0 }}>
-                ມັກໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
-              </span>
-            </>
-          ) : (
-            <>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
-              <span style={{ color: '#050505', flexShrink: 0 }}>
-                ແລະອີກ {interactionTotal - 1} ຄົນມັກໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
-              </span>
-            </>
-          )}
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
+          <span style={{ color: '#050505', flexShrink: 0 }}>
+            ອັບເດດສະຖານະ Boost ໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
+          </span>
         </div>
 
         {/* แถวที่สอง: ตัวอย่างแคปชั่นของโพสต์ */}

@@ -123,20 +123,6 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
 
   /** ไม่ผูก isMountedRef กับ isActive — ให้รับผล fetch เสมอ เก็บข้อมูลไว้ พอสลับมาแจ้งเตือนจะได้โชว์ทันที ไม่ช้า */
 
-  const markPageAsRead = useCallback(async (userId: string, rawFeed: any[]) => {
-    if (rawFeed.length === 0) return;
-    try {
-      await supabase
-        .from('notification_reads')
-        .upsert(
-          rawFeed.map((n: { id: string }) => ({ user_id: userId, notification_id: n.id })),
-          { onConflict: 'user_id,notification_id' }
-        );
-    } catch {
-      // ignore
-    }
-  }, []);
-
   const fetchFirstPage = useCallback(async (userId: string, backgroundRefresh = false) => {
     userIdRef.current = userId;
     if (!backgroundRefresh) setLoading(true);
@@ -147,7 +133,6 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
         { limit: NOTIFICATION_PAGE_SIZE }
       );
       if (!isMountedRef.current) return;
-      markPageAsRead(userId, result.rawFeed).catch(() => {});
       if (result.boostsForCache) boostsCacheRef.current = result.boostsForCache;
       setNotifications(result.list);
       setHasMore(result.hasMore ?? false);
@@ -173,7 +158,7 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
         requestAnimationFrame(() => requestAnimationFrame(scrollToTop));
       }
     }
-  }, [markPageAsRead]);
+  }, []);
 
   useEffect(() => {
     if (!clearedMapReady) return;
@@ -235,7 +220,6 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
         lastCursorRef.current = { created_at: raw[raw.length - 1].created_at, id: raw[raw.length - 1].id };
       }
       debugLog('API returned', result.list.length, 'items, hasMore=', result.hasMore, 'rawRows=', raw?.length);
-      markPageAsRead(userId, raw).catch(() => {});
       if (result.boostsForCache) boostsCacheRef.current = result.boostsForCache;
       setNotifications((prev) => {
         const existingPostIds = new Set(prev.map((n) => String(n.post_id)));
@@ -253,7 +237,7 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
     } finally {
       if (isMountedRef.current) setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, markPageAsRead]);
+  }, [loadingMore, hasMore]);
 
   // Preloading ระดับสากล — โหลดหน้าถัดไปล่วงหน้า 800px ก่อนถึงล่าง (เหมือน feed)
   const { lastElementRef } = useInfiniteScroll({

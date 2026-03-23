@@ -1,5 +1,5 @@
 -- Supabase SQL (run in SQL editor)
--- Purpose: คืนจำนวน "โพสต์ที่มีแจ้งเตือนยังไม่อ่าน" เฉพาะตัวเลข ไม่ดึงรายการ (ใช้สำหรับ badge)
+-- Purpose: คืนจำนวนโพสต์ที่มี boost (boost-only notifications)
 -- Usage: supabase.rpc('get_notification_unread_count', { p_owner_id: userId })
 
 drop function if exists public.get_notification_unread_count(text);
@@ -11,13 +11,22 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(count(distinct n.post_id), 0)::int
-  from public.all_notifications n
-  where n.owner_id::text = p_owner_id
-  and not exists (
-    select 1 from public.notification_reads r
-    where r.user_id::text = p_owner_id and r.notification_id = n.id
-  );
+  with latest_boost as (
+    select distinct on (pb.post_id)
+      pb.post_id,
+      coalesce(pb.updated_at, pb.created_at) as event_at
+    from public.post_boosts pb
+    where pb.user_id::text = p_owner_id
+    order by pb.post_id, coalesce(pb.updated_at, pb.created_at) desc
+  ),
+  not_sold as (
+    select lb.post_id
+    from latest_boost lb
+    left join public.cars c on c.id = lb.post_id
+    where c.id is null or c.status <> 'sold'
+  )
+  select coalesce(count(*), 0)::int
+  from not_sold;
 $$;
 
 revoke all on function public.get_notification_unread_count(text) from public;

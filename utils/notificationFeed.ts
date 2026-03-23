@@ -1,6 +1,7 @@
 /**
- * Shared notification feed: fetch feed + boosts, merge, and return list + totalUnread.
- * Uses boost updated_at when present so status changes (e.g. pending→success) count as new and sort latest first.
+ * Shared notification feed: boost-only notifications.
+ * Uses boost updated_at when present so status changes (e.g. pending->success)
+ * count as new and sort latest first.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -10,17 +11,11 @@ export interface NotificationFeedItem {
   post_id: string;
   type: string;
   created_at: string;
-  /** เวลาจาก all_notifications ใช้สำหรับ cursor เท่านั้น (ไม่ merge กับ boost) */
-  cursor_created_at?: string;
   sender_name: string;
   sender_avatar: string | null;
   post_caption?: string;
   post_images?: string[];
-  likes?: number;
-  saves?: number;
   notification_count?: number;
-  interaction_avatars?: (string | null)[];
-  interaction_total?: number;
   boost_status?: 'pending' | 'reject' | 'success' | string | null;
   boost_expires_at?: string | null;
 }
@@ -37,13 +32,71 @@ export interface FetchNotificationFeedResult {
 
 export type CachedBoosts = { data: any[] | null; error: any } | null;
 
-/** ดึงเฉพาะจำนวนแจ้งเตือนยังไม่อ่าน (สำหรับ badge) — ไม่ดึงรายการ */
+const CLEARED_MAP_STORAGE_KEY = 'notification_cleared_posts';
+
+function loadClearedMapForUnread(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(CLEARED_MAP_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, string>;
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+/** ดึงจำนวน boost notification ที่ยังไม่อ่าน (สำหรับ badge) */
 export async function fetchNotificationUnreadCount(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('get_notification_unread_count', {
-    p_owner_id: userId,
+  const { data, error } = await supabase
+    .from('post_boosts')
+    .select('post_id, created_at, updated_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return 0;
+
+  const clearedMap = loadClearedMapForUnread();
+  const latestBoostByPost = new Map<string, string>();
+
+  (data as any[]).forEach((row) => {
+    const postId = String(row.post_id);
+    const eventAt = String(row.updated_at ?? row.created_at);
+    const current = latestBoostByPost.get(postId);
+    if (!current || new Date(eventAt).getTime() > new Date(current).getTime()) {
+      latestBoostByPost.set(postId, eventAt);
+    }
   });
-  if (error) return 0;
-  return typeof data === 'number' ? data : 0;
+
+  const boostPostIds = Array.from(latestBoostByPost.keys());
+  if (boostPostIds.length === 0) return 0;
+
+  let soldPostIds = new Set<string>();
+  const { data: carsStatusData } = await supabase
+    .from('cars')
+    .select('id, status')
+    .in('id', boostPostIds);
+  if (carsStatusData) {
+    soldPostIds = new Set(
+      (carsStatusData as { id: string; status: string }[])
+        .filter((c) => c.status === 'sold')
+        .map((c) => String(c.id))
+    );
+  }
+
+  let unread = 0;
+  latestBoostByPost.forEach((eventAt, postId) => {
+    if (soldPostIds.has(postId)) return;
+    const clearedAt = clearedMap[postId];
+    const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
+    const eventTime = new Date(eventAt).getTime();
+    if (eventTime > clearedTime) unread += 1;
+  });
+
+  return unread;
 }
 
 export async function fetchNotificationFeed(
@@ -52,21 +105,6 @@ export async function fetchNotificationFeed(
   options?: { limit: number; cursor?: { created_at: string; id: string } },
   cachedBoosts?: CachedBoosts
 ): Promise<FetchNotificationFeedResult> {
-  const rpcParams: {
-    p_owner_id: string;
-    p_limit?: number;
-    p_after_created_at?: string;
-    p_after_id?: string;
-  } = { p_owner_id: userId };
-  if (options && options.limit > 0) {
-    rpcParams.p_limit = options.limit;
-    if (options.cursor?.created_at && options.cursor?.id) {
-      rpcParams.p_after_created_at = options.cursor.created_at;
-      rpcParams.p_after_id = options.cursor.id;
-    }
-  }
-
-  const rpcPromise = supabase.rpc('get_notifications_feed', rpcParams);
   const boostsPromise = cachedBoosts
     ? Promise.resolve({ data: cachedBoosts.data, error: cachedBoosts.error })
     : supabase
@@ -75,61 +113,7 @@ export async function fetchNotificationFeed(
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-  const [{ data, error }, boostsRes] = await Promise.all([rpcPromise, boostsPromise]);
-
-  if (error) throw error;
-
-  const rawList = data && Array.isArray(data) ? (data as any[]) : [];
-  const hasMore = options && options.limit > 0 ? rawList.length >= options.limit : false;
-  const formatted: NotificationFeedItem[] = rawList.map((item: any) => ({
-    id: item.id,
-    type: item.type,
-    post_id: item.post_id,
-    created_at: item.created_at,
-    cursor_created_at: item.created_at,
-    sender_name: item.username || 'User',
-    sender_avatar: item.avatar_url,
-    post_caption: item.car_data?.caption || '',
-    post_images: item.car_data?.images || [],
-    likes: item.likes_count || 0,
-    saves: item.saves_count || 0,
-    interaction_avatars: item.interaction_avatars || [],
-    interaction_total: item.interaction_total || 0,
-  }));
-
-  const perPost = new Map<string, { notif: NotificationFeedItem; count: number }>();
-  formatted.forEach((notif) => {
-    const existing = perPost.get(notif.post_id);
-    const clearedAt = clearedMap[notif.post_id];
-    const clearedTime = clearedAt ? new Date(clearedAt).getTime() : 0;
-    const notifTime = new Date(notif.created_at).getTime();
-    const isNewForUser = notifTime > clearedTime;
-
-    if (!existing) {
-      perPost.set(notif.post_id, {
-        notif,
-        count: isNewForUser ? 1 : 0,
-      });
-    } else {
-      const existingDate = new Date(existing.notif.created_at).getTime();
-      if (notifTime > existingDate) {
-        existing.notif = notif;
-      }
-      if (isNewForUser) {
-        existing.count += 1;
-      }
-    }
-  });
-
-  let uniqueList: NotificationFeedItem[] = Array.from(perPost.values())
-    .map(({ notif, count }) => ({
-      ...notif,
-      notification_count: count,
-    }))
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+  const boostsRes = await boostsPromise;
 
   let boostsData: any[] | null = boostsRes?.data ?? null;
   let boostsError: any = boostsRes?.error ?? null;
@@ -156,7 +140,8 @@ export async function fetchNotificationFeed(
     (boostsData as any[]).forEach((b) => {
       const pid = String(b.post_id);
       const eventAt = (b as any).updated_at ?? b.created_at;
-      if (!boostByPostId.has(pid)) {
+      const current = boostByPostId.get(pid);
+      if (!current || new Date(eventAt).getTime() > new Date(current.event_at).getTime()) {
         boostByPostId.set(pid, {
           status: String(b.status),
           created_at: b.created_at,
@@ -184,89 +169,79 @@ export async function fetchNotificationFeed(
     }
   }
 
-  const feedPostIds = new Set(uniqueList.map((n) => String(n.post_id)));
-  const mergedList: NotificationFeedItem[] = uniqueList.map((n) => {
-    const pid = String(n.post_id);
-    if (soldPostIds.has(pid)) return n;
-    const boost = boostByPostId.get(pid);
-    if (!boost) return n;
-    const notifTime = new Date(n.created_at).getTime();
-    const boostTime = new Date(boost.event_at).getTime();
-    const clearedTime = clearedMap[n.post_id]
-      ? new Date(clearedMap[n.post_id]).getTime()
-      : 0;
-    const latestTime = Math.max(notifTime, boostTime);
-    const created_at = new Date(latestTime).toISOString();
-    const boostCount = boostTime > clearedTime ? 1 : 0;
-    return {
-      ...n,
-      boost_status: boost.status,
-      boost_expires_at: boost.expires_at,
-      created_at,
-      cursor_created_at: n.cursor_created_at ?? n.created_at,
-      notification_count: (n.notification_count ?? 0) + boostCount,
-    };
-  });
-
-  const boostOnlyPostIds = Array.from(boostByPostId.keys()).filter(
-    (pid) => !feedPostIds.has(pid) && !soldPostIds.has(pid)
-  );
-
-  // โหลดแบบแบ่งหน้า: เติม boost-only เฉพาะหน้าแรก (offset 0) เพื่อไม่ให้ซ้ำ
-  const isFirstPage = !options || options.offset === 0 || !options.cursor;
-  const boostOnlyToAdd = isFirstPage ? boostOnlyPostIds : [];
-
-  if (boostOnlyToAdd.length > 0) {
-    const { data: carsData } = await supabase
-      .from('cars')
-      .select('id, caption, images')
-      .in('id', boostOnlyToAdd);
-
-    const carsByPostId = new Map<
-      string,
-      { caption?: string; images?: string[] }
-    >();
-    if (carsData) {
-      (carsData as any[]).forEach((c) => {
-        carsByPostId.set(String(c.id), {
-          caption: c.caption,
-          images: c.images ?? [],
-        });
-      });
-    }
-
-    boostOnlyToAdd.forEach((postId) => {
-      const boost = boostByPostId.get(postId);
-      if (!boost) return;
+  let boostList: NotificationFeedItem[] = Array.from(boostByPostId.entries())
+    .filter(([pid]) => !soldPostIds.has(pid))
+    .map(([postId, boost]) => {
       const clearedTime = clearedMap[postId]
         ? new Date(clearedMap[postId]).getTime()
         : 0;
       const boostTime = new Date(boost.event_at).getTime();
-      const car = carsByPostId.get(postId);
-      mergedList.push({
+      return {
         id: `boost-${postId}`,
         post_id: postId,
         type: 'boost',
         created_at: boost.event_at,
         sender_name: 'ລະບົບ',
         sender_avatar: null,
-        post_caption: car?.caption ?? '',
-        post_images: car?.images ?? [],
-        likes: 0,
-        saves: 0,
-        interaction_avatars: [],
-        interaction_total: 0,
         boost_status: boost.status,
         boost_expires_at: boost.expires_at,
         notification_count: boostTime > clearedTime ? 1 : 0,
-      });
+      };
+    })
+    .sort(
+      (a, b) => {
+        const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return String(b.post_id).localeCompare(String(a.post_id));
+      }
+    );
+
+  if (options?.cursor?.created_at && options?.cursor?.id) {
+    const cursorTime = new Date(options.cursor.created_at).getTime();
+    const cursorPostId = options.cursor.id;
+    boostList = boostList.filter((item) => {
+      const itemTime = new Date(item.created_at).getTime();
+      if (itemTime < cursorTime) return true;
+      if (itemTime > cursorTime) return false;
+      return String(item.post_id) < String(cursorPostId);
     });
   }
 
-  const sortedList = mergedList.sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  const limit = options?.limit && options.limit > 0 ? options.limit : 0;
+  const hasMore = limit > 0 ? boostList.length > limit : false;
+  const pagedList = limit > 0 ? boostList.slice(0, limit) : boostList;
+
+  const pagedPostIds = pagedList.map((n) => n.post_id);
+  let carsByPostId = new Map<string, { caption?: string; images?: string[] }>();
+  if (pagedPostIds.length > 0) {
+    const { data: carsData } = await supabase
+      .from('cars')
+      .select('id, caption, images')
+      .in('id', pagedPostIds);
+
+    if (carsData) {
+      carsByPostId = new Map(
+        (carsData as any[]).map((c) => [String(c.id), { caption: c.caption, images: c.images ?? [] }])
+      );
+    }
+  }
+
+  const sortedList = pagedList
+    .map((n) => {
+      const car = carsByPostId.get(String(n.post_id));
+      return {
+        ...n,
+        post_caption: car?.caption ?? '',
+        post_images: car?.images ?? [],
+      };
+    })
+    .sort(
+      (a, b) => {
+        const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return String(b.post_id).localeCompare(String(a.post_id));
+      }
+    );
 
   const totalUnread = sortedList.reduce(
     (sum, n) => sum + (n.notification_count ?? 0),
@@ -276,7 +251,7 @@ export async function fetchNotificationFeed(
   return {
     list: sortedList,
     totalUnread,
-    rawFeed: rawList,
+    rawFeed: sortedList.map((item) => ({ id: item.post_id, created_at: item.created_at })),
     hasMore,
     boostsForCache: { data: boostsData, error: boostsError },
   };
