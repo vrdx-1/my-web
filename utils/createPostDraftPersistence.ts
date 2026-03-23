@@ -1,4 +1,5 @@
 export interface PersistedCreatePostDraft {
+  schemaVersion: number;
   files: File[];
   layout: string;
   updatedAt: number;
@@ -8,6 +9,8 @@ const DB_NAME = 'jutpai-create-post';
 const DB_VERSION = 1;
 const STORE_NAME = 'drafts';
 const DRAFT_KEY = 'active-create-post-draft';
+const CURRENT_SCHEMA_VERSION = 1;
+const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function canUseIndexedDb() {
   return typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
@@ -49,10 +52,20 @@ export async function loadCreatePostDraft(): Promise<PersistedCreatePostDraft | 
         return;
       }
 
+      const isExpired = !result.updatedAt || Date.now() - result.updatedAt > DRAFT_TTL_MS;
+      const hasValidSchema = result.schemaVersion === CURRENT_SCHEMA_VERSION;
+
+      if (!hasValidSchema || isExpired) {
+        void clearCreatePostDraft();
+        resolve(null);
+        return;
+      }
+
       resolve({
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         files: result.files.slice(0, 30),
         layout: result.layout || 'default',
-        updatedAt: result.updatedAt || Date.now(),
+        updatedAt: result.updatedAt,
       });
     };
     request.onerror = () => reject(request.error);
@@ -64,6 +77,7 @@ export async function saveCreatePostDraft(files: File[], layout: string): Promis
   if (!db) return;
 
   const payload: PersistedCreatePostDraft = {
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     files: files.slice(0, 30),
     layout: layout || 'default',
     updatedAt: Date.now(),

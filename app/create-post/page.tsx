@@ -1,17 +1,12 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { useProfile } from '@/hooks/useProfile';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import { Avatar } from '@/components/Avatar';
 
-import { LAO_PROVINCES } from '@/utils/constants';
 import { REGISTER_PATH } from '@/utils/authRoutes';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { safeParseSessionJSON } from '@/utils/storageUtils';
-import { compressImage } from '@/utils/imageCompression';
 import { clearCreatePostDraft as clearPersistedCreatePostDraft } from '@/utils/createPostDraftPersistence';
 import { useCreatePostDraft } from '@/hooks/useCreatePostDraft';
 import { useCreatePostUpload } from '@/hooks/useCreatePostUpload';
@@ -48,21 +43,12 @@ function getLongestStoredCaption(): string {
   }
 }
 
-/** คืน caption ที่ยาวที่สุดสำหรับแสดงเมื่อกลับมา step 2 (ref + โมดูล + storage) */
-function getCaptionForStep2(refValue: string): string {
-  const fromModule = captionWhenLeavingStep2Module;
-  const fromStorage = getLongestStoredCaption();
-  return [refValue, fromModule, fromStorage].reduce((a, b) => (a.length >= b.length ? a : b), '');
-}
-
 export default function CreatePost() {
   const router = useRouter();
   const createPostContext = useCreatePostContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const autoFileInputRef = useRef<HTMLInputElement | null>(null);
   const hasRequestedGalleryRef = useRef<boolean>(false);
-  /** เก็บ caption ตอนกด "ຕໍ່ໄປ" — ใช้คืนเมื่อกดย้อนกลับ */
-  const captionWhenLeavingStep2Ref = useRef<string>('');
   /** ref ที่ sync กับ caption ทุกครั้ง — ใช้ตอนกด "ຕໍ່ໄປ" เพื่อไม่ให้ได้ค่าเก่าจาก closure */
   const captionLatestRef = useRef<string>('');
 
@@ -225,7 +211,6 @@ export default function CreatePost() {
  const handleDiscardAndBack = () => {
    createPostCaptionBackup = '';
    captionWhenLeavingStep2Module = '';
-   captionWhenLeavingStep2Ref.current = '';
    void clearPersistedCreatePostDraft();
    if (typeof window !== 'undefined') {
      sessionStorage.removeItem('create_post_caption');
@@ -289,7 +274,6 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   onDraftCleared: () => {
     createPostCaptionBackup = '';
     captionWhenLeavingStep2Module = '';
-    captionWhenLeavingStep2Ref.current = '';
     void clearPersistedCreatePostDraft();
     createPostContext?.clearDraft();
   },
@@ -334,7 +318,6 @@ if (isUploading) {
    type="button"
    onClick={() => {
      const latest = captionLatestRef.current ?? caption;
-     captionWhenLeavingStep2Ref.current = latest;
      captionWhenLeavingStep2Module = latest;
      if (typeof window !== 'undefined') {
        try {
