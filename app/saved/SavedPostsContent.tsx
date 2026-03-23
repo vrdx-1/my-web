@@ -88,13 +88,24 @@ export function SavedPostsContent() {
     onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
   });
 
-  const { toggleSave } = usePostInteractions({
+  const { toggleSave, removeSave } = usePostInteractions({
     session: postListData.session,
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     savedPosts: postListData.savedPosts,
     setSavedPosts: postListData.setSavedPosts,
     setJustSavedPosts,
+    onExistingSaveRefresh: (postId: string) => {
+      postListData.setPosts((prev) => {
+        const target = prev.find((post) => post.id === postId);
+        if (!target) return prev;
+        return [target, ...prev.filter((post) => post.id !== postId)];
+      });
+    },
+    onRemoveSaveSuccess: (postId: string) => {
+      postListData.setPosts((prev) => prev.filter((post) => post.id !== postId));
+      postListData.setSavedPosts((prev) => ({ ...prev, [postId]: false }));
+    },
   });
 
   useEffect(() => {
@@ -253,6 +264,8 @@ export function SavedPostsContent() {
           menuButtonRefs={menu.menuButtonRefs}
           onViewPost={handlers.handleViewPost}
           onSave={toggleSave}
+          onMenuSave={removeSave}
+          menuSaveLabel="ຍົກເລີກບັນທຶກ"
           onShare={handlers.handleShare}
           onTogglePostStatus={handlers.handleTogglePostStatus}
           onDeletePost={handlers.handleDeletePost}

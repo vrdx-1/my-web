@@ -15,6 +15,8 @@ interface MenuDropdownProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onSave?: () => void;
+  saveLabel?: string;
   onShare?: () => void;
   onBoost?: () => void;
   onReport?: () => void;
@@ -37,6 +39,8 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onClose,
   onEdit,
   onDelete,
+  onSave,
+  saveLabel,
   onShare,
   onBoost,
   onReport,
@@ -48,6 +52,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   const showBoost = typeof onBoost === 'function';
   const showPrivateNote = typeof onPrivateNote === 'function';
+  const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
 
   const content = (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none' }}>
@@ -86,17 +91,20 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
       >
         {isOwner ? (
           <>
+            <div onClick={onSave} style={commonStyles.menuItem}>
+              {resolvedSaveLabel}
+            </div>
             <div onClick={onShare} style={commonStyles.menuItem}>
               ແຊໂພສ
             </div>
             <div onClick={onEdit} style={commonStyles.menuItem}>
-              ແກ້ໄຂ
+              ແກ້ໄຂໂພສ
             </div>
             <div
               onClick={onDelete}
               style={showBoost || showPrivateNote ? commonStyles.menuItem : commonStyles.menuItemLast}
             >
-              ລົບ
+              ລົບໂພສ
             </div>
             {showBoost && (
               <div
@@ -114,11 +122,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           </>
         ) : (
           <>
+            <div onClick={onSave} style={commonStyles.menuItem}>
+              {resolvedSaveLabel}
+            </div>
             <div onClick={onShare} style={commonStyles.menuItem}>
               ແຊໂພສ
             </div>
             <div onClick={onReport} style={commonStyles.menuItemLast}>
-              ລາຍງານ
+              ລາຍງານໂພສ
             </div>
           </>
         )}

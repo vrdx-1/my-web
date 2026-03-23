@@ -10,6 +10,7 @@ import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { BottomNavWrapper } from "@/components/BottomNavWrapper";
+import { SavePostSuccessPopupHost } from "@/components/modals/SavePostSuccessPopupHost";
 import { HeaderVisibilityProvider } from "@/contexts/HeaderVisibilityContext";
 import { SessionProfileProvider } from "@/contexts/SessionProfileContext";
 import { CreatePostProvider } from "@/contexts/CreatePostContext";
@@ -79,6 +80,7 @@ export default function RootLayout({
               {/* ออกจากเว็บ/เบราว์เซอร์ แล้วกลับเข้ามา → อยู่หน้า home เท่านั้น */}
               <RedirectToHomeOnReturn />
               <PWAInstallPrompt />
+              <SavePostSuccessPopupHost />
               <HeaderVisibilityProvider>
                 <SessionProfileProvider>
                   <BottomNavWrapper>{children}</BottomNavWrapper>

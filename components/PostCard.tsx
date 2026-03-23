@@ -25,6 +25,8 @@ interface PostCardProps {
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
   onViewPost: (post: any, imageIndex: number) => void;
   onSave: (postId: string) => void;
+  onMenuSave?: (postId: string) => void;
+  menuSaveLabel?: string;
   onShare: (post: any) => void;
   onTogglePostStatus: (postId: string, currentStatus: string) => void | Promise<void>;
   onDeletePost: (postId: string) => void;
@@ -47,14 +49,16 @@ export function PostCard({
   index,
   isLastElement,
   session,
-  savedPosts,
-  justSavedPosts,
+  savedPosts: _savedPosts,
+  justSavedPosts: _justSavedPosts,
   activeMenuState,
   isMenuAnimating,
   lastPostElementRef,
   menuButtonRefs,
   onViewPost,
   onSave,
+  onMenuSave,
+  menuSaveLabel,
   onShare,
   onTogglePostStatus,
   onDeletePost,
@@ -183,6 +187,8 @@ export function PostCard({
             activeMenuState={activeMenuState}
             isMenuAnimating={isMenuAnimating}
             menuButtonRefs={menuButtonRefs}
+            onSave={onMenuSave || onSave}
+            saveLabel={menuSaveLabel}
             onShare={onShare}
             onDeletePost={onDeletePost}
             onReport={onReport}
@@ -323,7 +329,6 @@ export function PostCard({
                     fontWeight: 600,
                     letterSpacing: '0.01em',
                     whiteSpace: 'nowrap',
-                    marginRight: '6px',
                   }}
                 >
                   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -336,36 +341,6 @@ export function PostCard({
               )
             )}
 
-            {/* Save Button (moved to far right) */}
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                onSave(post.id);
-              }}
-              style={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '4px 6px 4px 10px',
-                borderRadius: '999px',
-                minHeight: '28px',
-                marginLeft: '6px',
-              }}
-            >
-              <svg 
-                width="22" 
-                height="22" 
-                viewBox="0 0 24 24" 
-                className={justSavedPosts[post.id] ? "animate-pop" : ""} 
-                fill={savedPosts[post.id] ? "#FFD700" : "none"} 
-                stroke={savedPosts[post.id] ? "#FFD700" : "#4a4d52"} 
-                strokeWidth={savedPosts[post.id] ? 2 : 1.25} 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-              >
-                <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"></path>
-              </svg>
-            </div>
           </div>
         </div>
       </div>

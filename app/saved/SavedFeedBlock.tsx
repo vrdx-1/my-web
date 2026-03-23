@@ -19,6 +19,8 @@ export interface SavedFeedBlockProps {
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
   onViewPost: (post: any, imageIndex: number) => void;
   onSave: (postId: string) => void;
+  onMenuSave?: (postId: string) => void;
+  menuSaveLabel?: string;
   onShare: (post: any) => void;
   onTogglePostStatus: (postId: string, currentStatus: string) => void;
   onDeletePost: (postId: string) => void;
@@ -49,6 +51,8 @@ export function SavedFeedBlock(props: SavedFeedBlockProps) {
     menuButtonRefs,
     onViewPost,
     onSave,
+    onMenuSave,
+    menuSaveLabel,
     onShare,
     onTogglePostStatus,
     onDeletePost,
@@ -129,6 +133,8 @@ export function SavedFeedBlock(props: SavedFeedBlockProps) {
             menuButtonRefs={menuButtonRefs}
             onViewPost={onViewPost}
             onSave={onSave}
+            onMenuSave={onMenuSave}
+            menuSaveLabel={menuSaveLabel}
             onShare={onShare}
             onTogglePostStatus={onTogglePostStatus}
             onDeletePost={onDeletePost}
