@@ -9,12 +9,6 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
-import {
-  EditNameModal,
-  EditPhoneModal,
-  ProfileSection,
-} from '@/app/(main)/profile/edit-profile/EditProfileSections';
-import { useEditProfilePage } from '@/app/(main)/profile/edit-profile/useEditProfilePage';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -33,11 +27,6 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-
-/** ระยะจากด้านบน viewport ตอนแท็ບພ້ອມຂາຍ/ຂາຍແລ້ວ ติด sticky — ใกล้ความสูง PageHeader (~10+44+10) ไม่ให้ตัวหนังสือแท็บชิด header */
-const MY_POSTS_STICKY_TABS_TOP_PX = 64;
-/** ช่องว่างใต้ header / เหนือรายการโพสต์ เวลาเลื่อน */
-const MY_POSTS_TAB_STRIP_PADDING_Y = { top: 8, bottom: 8 } as const;
 
 /** ใช้ MyPostsFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 const MyPostsFeedBlock = dynamic(
@@ -85,26 +74,6 @@ export function MyPostsContent() {
   });
 
   const postListData = tab === 'recommend' ? recommendListData : soldListData;
-
-  const {
-    username,
-    phone,
-    avatarUrl,
-    profileLoading,
-    isEditingName,
-    isEditingPhone,
-    editingUsername,
-    editingPhone,
-    setEditingUsername,
-    setEditingPhone,
-    uploadAvatar,
-    handleEditNameClick,
-    handleEditPhoneClick,
-    handleCancelPhoneEdit,
-    handleCloseNameModal,
-    handleSaveUsername,
-    handleSavePhone,
-  } = useEditProfilePage();
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
@@ -228,253 +197,56 @@ export function MyPostsContent() {
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
 
-  // Skeleton ทั้งบล็อกโปรไฟล์+แท็บ+feed — ห้ามใช้สถานะ “โพสต์ว่าง+ยังไม่โหลด” ของแท็บปัจจุบัน เพราะตอนสลับไป ຂາຍແລ້ວ ครั้งแรกจะทำให้กระพริบทั้งหน้า
-  const showFullSkeleton =
-    !mounted || !feedReady || profileLoading || sessionState === undefined;
-
-  /** ฟีดว่างและยังโหลด/ยังมีหน้าถัดไปได้ — รวมช่วงก่อน loadingMore เป็น true (ไม่กระพริบ EmptyState) */
-  const showFeedBlockSkeleton =
-    postListData.posts.length === 0 && (postListData.loadingMore || postListData.hasMore);
+  const isFeedSkeleton = postListData.posts.length === 0 && postListData.loadingMore;
+  const showFeedSkeleton =
+    !mounted ||
+    !feedReady ||
+    sessionState === undefined ||
+    isFeedSkeleton ||
+    (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
 
   return (
-    <main
-      style={{
-        ...LAYOUT_CONSTANTS.MAIN_CONTAINER,
-        ...((isEditingName || isEditingPhone)
-          ? {
-              overflow: 'hidden',
-              touchAction: 'none',
-              overscrollBehavior: 'contain',
+    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
+        }}
+      >
+        <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} showDivider={false} />
+        <TabNavigation
+          className="home-tab-navigation"
+          tabs={[
+            { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+            { value: 'sold', label: 'ຂາຍແລ້ວ' },
+          ]}
+          activeTab={tab}
+          onTabChange={(v) => {
+            if (v === tab) {
+              setTabRefreshing(true);
+              const list = v === 'recommend' ? recommendListData : soldListData;
+              list.setPage(0);
+              list.setHasMore(true);
+              list.fetchPosts(true);
+              if (v === 'sold') hasFetchedSoldRef.current = true;
+            } else {
+              setTab(v);
+              const targetList = v === 'recommend' ? recommendListData : soldListData;
+              if (targetList.posts.length === 0) setTabRefreshing(true);
             }
-          : { touchAction: 'manipulation' }),
-      }}
-      onTouchMove={
-        isEditingName || isEditingPhone
-          ? (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          : undefined
-      }
-      onWheel={
-        isEditingName || isEditingPhone
-          ? (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          : undefined
-      }
-    >
-      {/* Overlay when editing name or phone - คลุมทั้งจอและล็อกพื้นหลัง ไม่ให้แตะหรือสกรอล์ส่วนอื่นขณะเปลี่ยนชื่อ/กรอกเบอร์โทร */}
-      {(isEditingName || isEditingPhone) && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            zIndex: 999,
-            pointerEvents: 'auto',
-            touchAction: 'none',
-            overscrollBehavior: 'contain',
-            overflow: 'hidden',
           }}
-          onTouchMove={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onWheel={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+          loadingTab={tabRefreshing ? tab : null}
         />
-      )}
+      </div>
 
-      <EditNameModal
-        isOpen={isEditingName}
-        editingUsername={editingUsername}
-        setEditingUsername={setEditingUsername}
-        onClose={handleCloseNameModal}
-        onSave={handleSaveUsername}
-      />
-
-      <EditPhoneModal
-        isOpen={isEditingPhone}
-        editingPhone={editingPhone}
-        setEditingPhone={setEditingPhone}
-        onCancel={handleCancelPhoneEdit}
-        onSave={handleSavePhone}
-      />
-
-      <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} />
-      {showFullSkeleton ? (
-        <div
-          className="my-posts-profile-skeleton"
-          style={{ padding: '20px', borderBottom: 'none' }}
-          aria-hidden
-        >
-          <style>{`
-            @keyframes my-posts-profile-skeleton-shimmer {
-              0% { background-position: 200% 0; }
-              100% { background-position: -200% 0; }
-            }
-          `}</style>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-            <div
-              style={{
-                width: 90,
-                height: 90,
-                borderRadius: '50%',
-                flexShrink: 0,
-                background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
-              }}
-            />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, paddingTop: 0 }}>
-              <div
-                style={{
-                  height: 18,
-                  width: '70%',
-                  maxWidth: 160,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
-                }}
-              />
-              <div
-                style={{
-                  height: 44,
-                  width: '100%',
-                  borderRadius: 10,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <ProfileSection
-          avatarUrl={avatarUrl}
-          username={username}
-          phone={phone}
-          onAvatarChange={uploadAvatar}
-          onEditNameClick={handleEditNameClick}
-          onEditPhoneClick={handleEditPhoneClick}
-          showDivider={false}
-          variant="my-posts"
-        />
-      )}
-      {showFullSkeleton ? (
-        <div
-          style={{
-            position: 'sticky',
-            top: MY_POSTS_STICKY_TABS_TOP_PX,
-            zIndex: 99,
-            background: '#ffffff',
-            backgroundColor: '#ffffff',
-            display: 'flex',
-            minHeight: 32,
-            paddingTop: MY_POSTS_TAB_STRIP_PADDING_Y.top,
-            paddingBottom: MY_POSTS_TAB_STRIP_PADDING_Y.bottom,
-          }}
-          aria-hidden
-        >
-          <div style={{ position: 'relative', display: 'flex', flex: 1, minHeight: 32, width: '100%' }}>
-            {/* Skeleton tabs: ไม่แสดงตัวหนังสือ */}
-            <div
-              style={{
-                flex: 1,
-                minHeight: 32,
-                padding: '0px 15px 0px 15px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-              }}
-            >
-              <div
-                style={{
-                  height: 14,
-                  width: '70%',
-                  maxWidth: 140,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
-                  marginTop: 4,
-                }}
-              />
-            </div>
-            <div
-              style={{
-                flex: 1,
-                minHeight: 32,
-                padding: '0px 15px 0px 15px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-              }}
-            >
-              <div
-                style={{
-                  height: 14,
-                  width: '60%',
-                  maxWidth: 140,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'my-posts-profile-skeleton-shimmer 1.2s ease-in-out infinite',
-                  marginTop: 4,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div
-          style={{
-            position: 'sticky',
-            top: MY_POSTS_STICKY_TABS_TOP_PX,
-            zIndex: 99,
-            background: '#ffffff',
-            backgroundColor: '#ffffff',
-            paddingTop: MY_POSTS_TAB_STRIP_PADDING_Y.top,
-            paddingBottom: MY_POSTS_TAB_STRIP_PADDING_Y.bottom,
-          }}
-        >
-          <TabNavigation
-            className="home-tab-navigation"
-            tabs={[
-              { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-              { value: 'sold', label: 'ຂາຍແລ້ວ' },
-            ]}
-            activeTab={tab}
-            onTabChange={(v) => {
-              if (v === tab) {
-                setTabRefreshing(true);
-                const list = v === 'recommend' ? recommendListData : soldListData;
-                list.setPage(0);
-                list.setHasMore(true);
-                list.fetchPosts(true);
-                if (v === 'sold') hasFetchedSoldRef.current = true;
-              } else {
-                setTab(v);
-                const targetList = v === 'recommend' ? recommendListData : soldListData;
-                if (targetList.posts.length === 0) setTabRefreshing(true);
-              }
-            }}
-            loadingTab={tabRefreshing ? tab : null}
-          />
-        </div>
-      )}
-
-      {showFullSkeleton ? (
+      {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
       ) : (
         <MyPostsFeedBlock
-          showSkeleton={showFeedBlockSkeleton}
+          showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
           skeletonCount={3}
           posts={postListData.posts}
           session={postListData.session}
