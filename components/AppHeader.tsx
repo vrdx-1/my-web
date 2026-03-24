@@ -133,7 +133,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
         backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
         zIndex: 500,
-        boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+        boxShadow: 'none',
         transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out',
       };
 
@@ -144,7 +144,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex', 
           alignItems: 'center', 
           gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
-          borderBottom: showOnlySearch ? 'none' : '1px solid #f0f0f0',
+          borderBottom: 'none',
         }}>
         {/* Logo (brand name removed per request); หน้าโฮม: กดโลโก้ = full refresh (ล้างค้นหา + ທຸກແຂວງ) */}
         <div style={{

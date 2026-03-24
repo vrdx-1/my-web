@@ -154,7 +154,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
-              boxShadow: isHeaderVisible ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+              boxShadow: 'none',
               transition: 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.2s ease-out',
             }}
           >

@@ -99,12 +99,12 @@ export function BottomNav() {
         minHeight: BOTTOM_NAV_HEIGHT,
         background: '#ffffff',
         backgroundColor: '#ffffff',
-        borderTop: '1px solid #e4e6eb',
+        borderTop: 'none',
         display: 'flex',
         alignItems: 'stretch',
         justifyContent: 'space-around',
         zIndex: 400,
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.06)',
+        boxShadow: 'none',
         paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${BOTTOM_NAV_PADDING_BOTTOM_EXTRA}px)`,
       }}
     >

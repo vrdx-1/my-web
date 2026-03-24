@@ -137,7 +137,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         const labelTextStyle = {
           fontSize: '14px',
           lineHeight: 0.95,
-          color: isActive ? '#111111' : '#65676b',
+          color: isActive ? '#111111' : '#a6acb3',
         } as const;
         return (
           <button
@@ -154,7 +154,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               flex: isHomeNav ? '0 0 auto' : 1,
               minHeight: 32,
               padding: isHomeNav ? homeTabPadding : `0px ${rightPadding}px 0px ${leftPadding}px`,
-              color: isActive ? '#111111' : '#65676b',
+              color: isActive ? '#111111' : '#a6acb3',
               fontWeight: 'bold',
               cursor: 'pointer',
               display: 'flex',

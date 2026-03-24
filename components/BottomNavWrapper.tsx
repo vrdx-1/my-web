@@ -59,7 +59,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
                 style={{
                   minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
                   background: '#fff',
-                  borderTop: '1px solid #e4e6eb',
+                  borderTop: 'none',
                 }}
               />
             }

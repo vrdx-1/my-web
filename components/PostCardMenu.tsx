@@ -82,10 +82,10 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           touchAction: 'manipulation' 
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#4a4d52">
-          <circle cx="5" cy="12" r="2.5" />
-          <circle cx="12" cy="12" r="2.5" />
-          <circle cx="19" cy="12" r="2.5" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#b0b3b8">
+           <circle cx="5" cy="12" r="2.5" />
+           <circle cx="12" cy="12" r="2.5" />
+           <circle cx="19" cy="12" r="2.5" />
         </svg>
       </button>
       
