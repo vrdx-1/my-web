@@ -225,7 +225,7 @@ export function PostCard({
       </div>
 
       {/* Post Actions */}
-      <div style={{ borderTop: '1px solid #f0f2f5' }}>
+      <div>
         <div
           style={{
             padding: '6px 12px',
