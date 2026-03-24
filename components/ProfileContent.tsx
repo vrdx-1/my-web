@@ -384,25 +384,28 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-            <div style={{ width: 210, height: 28, borderRadius: 10, ...shimmerStyle }} />
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 210, height: 28, borderRadius: 10, ...shimmerStyle }} />
+              <div style={{ width: 32, height: 32, borderRadius: 8, ...shimmerStyle }} />
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
-            <div style={{ width: 220, height: 40, borderRadius: 24, ...shimmerStyle }} />
+            <div style={{ width: 206, height: 40, borderRadius: 24, ...shimmerStyle }} />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0' }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, ...shimmerStyle }} />
-              <div style={{ marginLeft: 16, width: 150, height: 18, borderRadius: 8, ...shimmerStyle }} />
+              <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, ...shimmerStyle }} />
+              <div style={{ marginLeft: 16, width: 116, height: 18, borderRadius: 8, ...shimmerStyle }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0' }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, ...shimmerStyle }} />
-              <div style={{ marginLeft: 16, width: 180, height: 18, borderRadius: 8, ...shimmerStyle }} />
+              <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, ...shimmerStyle }} />
+              <div style={{ marginLeft: 16, width: 142, height: 18, borderRadius: 8, ...shimmerStyle }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0' }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, ...shimmerStyle }} />
-              <div style={{ marginLeft: 16, width: 120, height: 18, borderRadius: 8, ...shimmerStyle }} />
+              <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, ...shimmerStyle }} />
+              <div style={{ marginLeft: 16, width: 88, height: 18, borderRadius: 8, ...shimmerStyle }} />
             </div>
           </div>
         </div>
@@ -583,11 +586,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 <span style={{ fontSize: '15px', color: hasPhone ? '#111111' : '#9ca3af', fontWeight: hasPhone ? '500' : '400' }}>
                   {hasPhone ? phone : 'ເບີ WhatsApp'}
                 </span>
-                {hasPhone && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
-                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                  </svg>
-                )}
               </button>
             );
           })()}
