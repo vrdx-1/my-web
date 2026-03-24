@@ -55,8 +55,8 @@ export const commonStyles = {
 
   // Menu styles
   menuItem: {
-    padding: '12px 15px',
-    fontSize: '14px',
+    padding: '16px 20px',
+    fontSize: '17px',
     color: '#000',
     cursor: 'pointer',
     background: '#ffffff',
@@ -67,8 +67,8 @@ export const commonStyles = {
   },
 
   menuItemLast: {
-    padding: '12px 15px',
-    fontSize: '14px',
+    padding: '16px 20px',
+    fontSize: '17px',
     color: '#000',
     cursor: 'pointer',
     background: '#ffffff',

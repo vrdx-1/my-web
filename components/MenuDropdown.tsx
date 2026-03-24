@@ -8,12 +8,13 @@ import { commonStyles } from '@/utils/commonStyles';
 const menuItemContentStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: '10px',
 };
 
 const menuItemIconStyle: React.CSSProperties = {
-  width: '16px',
-  height: '16px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   color: '#4a4d52',
   flexShrink: 0,
 };
@@ -34,14 +35,15 @@ const ActionLabel = ({
 const LineIcon = ({ children }: { children: React.ReactNode }) => (
   <svg
     viewBox="0 0 24 24"
-    width="16"
-    height="16"
+    width="22"
+    height="22"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
+    style={{ display: 'block' }}
   >
     {children}
   </svg>
@@ -176,7 +178,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           borderRadius: '8px',
           zIndex: 10002,
-          width: '130px',
+          width: '230px',
           overflow: 'hidden',
           touchAction: 'manipulation',
           transform: isAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',
