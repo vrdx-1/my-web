@@ -13,6 +13,29 @@ const ICON_SIZE = 20;
 const SEARCH_BAR_GAP = 10; // ช่องว่างระหว่างแท็บค้นหา กับ ปุ่มฟิลเตอร์ (ให้แท็บค้นหาสั้นลง ไม่ชิดเกินไป)
 const PROVINCE_ROW_HEIGHT = 32; // ความสูงต่อแถว (6+6 + 15*1.3) สำหรับอ้างอิง
 
+function SelectedCheckBadge() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 18,
+        height: 18,
+        borderRadius: '50%',
+        background: '#1877f2',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        boxShadow: '0 1px 2px rgba(24,119,242,0.35)',
+      }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </span>
+  );
+}
+
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -332,7 +355,6 @@ export function HomeHeaderSearchAndFilter() {
                   padding: '10px 12px',
                   minHeight: 42,
                   boxSizing: 'border-box',
-                  borderBottom: '1px solid #f0f0f0',
                   fontSize: '16px',
                   lineHeight: '1.3',
                   background: selectedProvince === '' ? '#e7f3ff' : '#fff',
@@ -341,10 +363,13 @@ export function HomeHeaderSearchAndFilter() {
                   color: '#111111',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
                   flexShrink: 0,
                 }}
               >
-                ທຸກແຂວງ {selectedProvince === '' && ' ✓'}
+                <span>ທຸກແຂວງ</span>
+                {selectedProvince === '' && <SelectedCheckBadge />}
               </div>
               <div
                 style={{
@@ -356,7 +381,7 @@ export function HomeHeaderSearchAndFilter() {
                   touchAction: 'pan-y',
                 }}
               >
-                {LAO_PROVINCES.map((p, i) => (
+                {LAO_PROVINCES.map((p) => (
                   <div
                     key={p}
                     onClick={() => handleSelectProvince(p)}
@@ -364,7 +389,6 @@ export function HomeHeaderSearchAndFilter() {
                       padding: '6px 12px',
                       minHeight: 34,
                       boxSizing: 'border-box',
-                      borderBottom: i === LAO_PROVINCES.length - 1 ? 'none' : '1px solid #f0f0f0',
                       fontSize: '15px',
                       lineHeight: '1.3',
                       background: selectedProvince === p ? '#e7f3ff' : '#fff',
@@ -373,9 +397,12 @@ export function HomeHeaderSearchAndFilter() {
                       color: '#111111',
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
                     }}
                   >
-                    {p} {selectedProvince === p && ' ✓'}
+                    <span>{p}</span>
+                    {selectedProvince === p && <SelectedCheckBadge />}
                   </div>
                 ))}
               </div>

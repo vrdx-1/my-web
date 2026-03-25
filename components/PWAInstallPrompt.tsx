@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -10,6 +11,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
+const APP_NAME = 'Jutpai';
+const APP_ICON = '/icons/icon-192x192.png';
 
 const HINT_IOS_LINES = [
   '1. ຄິກປຸ່ມແຊຂອງ Safari',
@@ -17,25 +20,6 @@ const HINT_IOS_LINES = [
   '3. ເພີ່ມ (Add)',
 ];
 const HINT_ANDROID = 'ໃຊ້ເມນູ Chrome (⋮) → ຕິດຕັ້ງແອັບ';
-
-function InstallIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
 
 export function PWAInstallPrompt() {
   const pathname = usePathname();
@@ -45,14 +29,12 @@ export function PWAInstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     if (isAdmin) return;
 
     const standalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-    setIsStandalone(standalone);
 
     const dismissed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DISMISS_KEY);
     if (standalone || dismissed) return;
@@ -101,8 +83,6 @@ export function PWAInstallPrompt() {
     }
   }, []);
 
-  const hintText = isIOS ? null : HINT_ANDROID;
-
   if (isAdmin || !visible) return null;
 
   return (
@@ -110,125 +90,112 @@ export function PWAInstallPrompt() {
       role="banner"
       style={{
         position: 'fixed',
-        bottom: 16,
-        left: 16,
-        right: 16,
-        maxWidth: 400,
+        bottom: 'calc(72px + env(safe-area-inset-bottom, 0px) + 8px)',
+        left: 12,
+        right: 12,
+        maxWidth: 480,
         margin: '0 auto',
-        background: '#3b82f6',
-        color: '#fff',
-        borderRadius: 16,
-        padding: 0,
-        boxShadow: '0 4px 24px rgba(59,130,246,0.4), 0 0 0 1px rgba(255,255,255,0.2)',
+        background: '#fff',
+        borderRadius: 18,
+        boxShadow: '0 4px 32px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.08)',
         zIndex: 9998,
         fontFamily: 'inherit',
         overflow: 'hidden',
-        animation: 'pwaInstallSlideUp 0.35s ease-out',
+        animation: 'pwaInstallSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1)',
       }}
     >
       <style>{`
         @keyframes pwaInstallSlideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
         }
       `}</style>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px 14px 18px' }}>
-        <button
-          type="button"
-          onClick={handleInstall}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            background: 'rgba(255,255,255,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-          aria-label={LABEL}
-        >
-          <InstallIcon />
-        </button>
-        <button
-          type="button"
-          onClick={handleInstall}
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            padding: '6px 0',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: 20,
-            textAlign: 'left',
-            letterSpacing: '0.01em',
-          }}
-        >
-          {LABEL}
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px' }}>
+        {/* Close button */}
         <button
           type="button"
           onClick={handleDismiss}
-          aria-label="ปิด"
+          aria-label="ປິດ"
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: 'rgba(255,255,255,0.25)',
-            border: 'none',
-            color: '#fff',
+            width: 30,
+            height: 30,
+            borderRadius: '50%',
+            border: '1.5px solid #e5e7eb',
+            background: '#f3f4f6',
+            color: '#6b7280',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
+            padding: 0,
           }}
         >
-          <CloseIcon />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* App icon */}
+        <Image
+          src={APP_ICON}
+          alt={APP_NAME}
+          width={44}
+          height={44}
+          style={{ borderRadius: 12, flexShrink: 0, objectFit: 'cover' }}
+        />
+
+        {/* App info */}
+        <div style={{ flex: 1, minWidth: 0, height: 44, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+          <div style={{ fontWeight: 700, fontSize: 20, color: '#111827', lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
+            {APP_NAME}
+          </div>
+        </div>
+
+        {/* Install button */}
+        <button
+          type="button"
+          onClick={handleInstall}
+          style={{
+            flexShrink: 0,
+            background: '#1877f2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 999,
+            padding: '9px 20px',
+            fontWeight: 700,
+            fontSize: 14,
+            cursor: 'pointer',
+            letterSpacing: '0.01em',
+            whiteSpace: 'nowrap',
+          }}
+          aria-label={LABEL}
+        >
+          {LABEL}
         </button>
       </div>
 
       {showHint && (
         <div
           style={{
-            padding: '12px 18px 16px',
-            borderTop: '1px solid rgba(255,255,255,0.3)',
-            background: 'rgba(0,0,0,0.1)',
+            padding: '10px 16px 14px',
+            borderTop: '1px solid #f3f4f6',
+            background: '#fafafa',
           }}
         >
           {isIOS ? (
-            <div
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#fff',
-                lineHeight: 1.7,
-                letterSpacing: '0.01em',
-              }}
-            >
+            <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
               {HINT_IOS_LINES.map((line, i) => (
-                <div key={i} style={{ marginBottom: i < HINT_IOS_LINES.length - 1 ? 8 : 0 }}>
+                <div key={i} style={{ marginBottom: i < HINT_IOS_LINES.length - 1 ? 4 : 0 }}>
                   {line}
                 </div>
               ))}
             </div>
           ) : (
-            <p
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#fff',
-                lineHeight: 1.5,
-                letterSpacing: '0.01em',
-              }}
-            >
-              {hintText}
+            <p style={{ margin: 0, fontSize: 13, color: '#374151', lineHeight: 1.5 }}>
+              {HINT_ANDROID}
             </p>
           )}
         </div>
