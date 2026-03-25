@@ -7,6 +7,48 @@ import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
 import { LayoutPreviewSelector } from './LayoutPreviewSelector';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
+const actionIconStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#4b5563',
+  flexShrink: 0,
+};
+
+const ActionLineIcon = ({ children }: { children: React.ReactNode }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    style={{ display: 'block' }}
+  >
+    {children}
+  </svg>
+);
+
+const arrangeIcon = (
+  <ActionLineIcon>
+    <rect x="3" y="4" width="18" height="16" rx="2.4" />
+    <circle cx="8" cy="9" r="1.2" fill="currentColor" stroke="none" />
+    <path d="M5.5 16.5l3.5-3.6 2.6 2.4 3.1-3.3 3.8 4.5" />
+  </ActionLineIcon>
+);
+
+const privateNoteIcon = (
+  <ActionLineIcon>
+    <rect x="4" y="3" width="16" height="18" rx="2" />
+    <path d="M8 8h8" />
+    <path d="M8 12h8" />
+    <path d="M8 16h5" />
+  </ActionLineIcon>
+);
+
 interface CreatePostCardProps {
   userProfile: any;
   session: any;
@@ -245,7 +287,7 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 paddingTop: previews.length >= 6 ? '12px' : '8px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px',
+                gap: '0',
               }}
             >
               {previews.length >= 6 && (
@@ -255,19 +297,21 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                   disabled={isPreparingArrange}
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    fontSize: '14px',
+                    padding: '14px 0',
+                    fontSize: '16px',
                     fontWeight: '600',
-                    color: isPreparingArrange ? '#8a8d91' : '#1877f2',
-                    background: isPreparingArrange ? '#f5f6f7' : '#f0f7ff',
-                    border: '1px solid #b8d4f0',
-                    borderRadius: '12px',
+                    color: isPreparingArrange ? '#8a8d91' : '#1c1e21',
+                    background: 'transparent',
+                    border: 'none',
                     cursor: isPreparingArrange ? 'not-allowed' : 'pointer',
-                    textAlign: 'center',
-                    boxShadow: '0 1px 2px rgba(24, 119, 242, 0.08)',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
                   }}
                 >
-                  {isPreparingArrange ? 'ກຳລັງກຽມຮູບ...' : 'ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່'}
+                  <span style={actionIconStyle}>{arrangeIcon}</span>
+                  <span>{isPreparingArrange ? 'ກຳລັງກຽມຮູບ...' : 'ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່'}</span>
                 </button>
               )}
               <button
@@ -275,19 +319,21 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 onClick={() => router.push('/create-post/private-note')}
                 style={{
                   width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '14px',
+                  padding: '14px 0',
+                  fontSize: '16px',
                   fontWeight: '600',
-                  color: '#1877f2',
-                  background: '#f0f7ff',
-                  border: '1px solid #b8d4f0',
-                  borderRadius: '12px',
+                  color: '#1c1e21',
+                  background: 'transparent',
+                  border: 'none',
                   cursor: 'pointer',
-                  textAlign: 'center',
-                  boxShadow: '0 1px 2px rgba(24, 119, 242, 0.08)',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
                 }}
               >
-                ໂນດສ່ວນຕົວ
+                <span style={actionIconStyle}>{privateNoteIcon}</span>
+                <span>ໂນດສ່ວນຕົວ</span>
               </button>
             </div>
           </>
