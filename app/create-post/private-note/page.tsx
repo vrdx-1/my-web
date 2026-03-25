@@ -1,15 +1,65 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { commonStyles } from '@/utils/commonStyles';
 
 interface PrivateShop {
   id: string;
   shop_name: string | null;
   shop_phone: string | null;
 }
+
+const menuItemContentStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+} as const;
+
+const menuItemIconStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#4a4d52',
+  flexShrink: 0,
+} as const;
+
+const LineIcon = ({ children }: { children: React.ReactNode }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    style={{ display: 'block' }}
+  >
+    {children}
+  </svg>
+);
+
+const editIcon = (
+  <LineIcon>
+    <path d="M12 20h9" />
+    <path d="M17.5 3.5a2.12 2.12 0 1 1 3 3L9 18l-4 1 1-4 11.5-11.5z" />
+  </LineIcon>
+);
+
+const deleteIcon = (
+  <LineIcon>
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+  </LineIcon>
+);
 
 export default function CreatePostPrivateNotePage() {
   const router = useRouter();
@@ -22,6 +72,25 @@ export default function CreatePostPrivateNotePage() {
   const [shopPhone, setShopPhone] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [activeMenuShopId, setActiveMenuShopId] = useState<string | null>(null);
+  const [menuAnimating, setMenuAnimating] = useState(false);
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [editingShopId, setEditingShopId] = useState<string | null>(null);
+  const [editingShopName, setEditingShopName] = useState('');
+  const [editingShopPhone, setEditingShopPhone] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [hiddenShopIds, setHiddenShopIds] = useState<string[]>([]);
+
+  const getHiddenStorageKey = (uid: string) => `create_post_hidden_private_shops_${uid}`;
+  const getLastUsedStorageKey = (uid: string) => `create_post_last_used_private_shop_${uid}`;
+
+  const getPhoneTail = (phone: string | null | undefined) => {
+    const rawPhone = phone ?? '';
+    if (rawPhone.startsWith('85620')) return rawPhone.slice(5, 13);
+    if (rawPhone.startsWith('020')) return rawPhone.slice(3, 11);
+    return rawPhone.replace(/\D/g, '').slice(0, 8);
+  };
 
   useEffect(() => {
     async function init() {
@@ -33,6 +102,22 @@ export default function CreatePostPrivateNotePage() {
       }
       setUserId(uid);
 
+      let hiddenIds: string[] = [];
+      if (typeof window !== 'undefined') {
+        const raw = window.localStorage.getItem(getHiddenStorageKey(uid));
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              hiddenIds = parsed.filter((item): item is string => typeof item === 'string');
+            }
+          } catch {
+            hiddenIds = [];
+          }
+        }
+      }
+      setHiddenShopIds(hiddenIds);
+
       const { data, error } = await supabase
         .from('user_private_shops')
         .select('id, shop_name, shop_phone')
@@ -40,7 +125,25 @@ export default function CreatePostPrivateNotePage() {
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setShops(data as PrivateShop[]);
+        const visibleShops = (data as PrivateShop[]).filter((shop) => !hiddenIds.includes(shop.id));
+        if (typeof window !== 'undefined') {
+          const lastUsedId = window.localStorage.getItem(getLastUsedStorageKey(uid));
+          if (lastUsedId) {
+            const idx = visibleShops.findIndex((shop) => shop.id === lastUsedId);
+            if (idx > 0) {
+              const next = [...visibleShops];
+              const [item] = next.splice(idx, 1);
+              next.unshift(item);
+              setShops(next);
+            } else {
+              setShops(visibleShops);
+            }
+          } else {
+            setShops(visibleShops);
+          }
+        } else {
+          setShops(visibleShops);
+        }
       }
 
       setLoading(false);
@@ -81,6 +184,23 @@ export default function CreatePostPrivateNotePage() {
     setSaveError(null);
     const hasNote = Boolean(shopName.trim());
     const hasPhone = Boolean(shopPhone.trim());
+
+    if (!hasNote && !hasPhone && selectedId) {
+      const selectedShop = shops.find((shop) => shop.id === selectedId);
+      if (selectedShop && typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          'create_post_private_shop',
+          JSON.stringify({
+            id: selectedShop.id,
+            shop_name: selectedShop.shop_name,
+            shop_phone: selectedShop.shop_phone,
+          }),
+        );
+      }
+      router.back();
+      return;
+    }
+
     if (!hasNote && !hasPhone) {
       router.back();
       return;
@@ -105,10 +225,92 @@ export default function CreatePostPrivateNotePage() {
   const handleConfirmDeleteShop = async () => {
     const id = deleteConfirmId;
     setDeleteConfirmId(null);
-    if (!id || !userId) return;
-    await supabase.from('user_private_shops').delete().eq('id', id).eq('user_id', userId);
+    if (!id) return;
     setShops((prev) => prev.filter((s) => s.id !== id));
     if (selectedId === id) setSelectedId(null);
+    if (activeMenuShopId === id) setActiveMenuShopId(null);
+    if (editingShopId === id) setEditingShopId(null);
+
+    setHiddenShopIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      if (typeof window !== 'undefined' && userId) {
+        window.localStorage.setItem(getHiddenStorageKey(userId), JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  const closeMenuWithAnimation = () => {
+    setMenuAnimating(true);
+    setTimeout(() => {
+      setActiveMenuShopId(null);
+      setMenuAnimating(false);
+    }, 220);
+  };
+
+  const handleMenuClick = (shopId: string) => {
+    if (activeMenuShopId === shopId) {
+      closeMenuWithAnimation();
+      return;
+    }
+    setActiveMenuShopId(shopId);
+    setMenuAnimating(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setMenuAnimating(false);
+      });
+    });
+  };
+
+  const handleOpenEditShop = (shop: PrivateShop) => {
+    setEditingShopId(shop.id);
+    setEditingShopName(shop.shop_name ?? '');
+    setEditingShopPhone(getPhoneTail(shop.shop_phone));
+    setEditError(null);
+    closeMenuWithAnimation();
+  };
+
+  const handleSaveEditedShop = async () => {
+    if (!editingShopId || !userId) return;
+    const trimmedName = editingShopName.trim();
+    const trimmedPhone = editingShopPhone.trim();
+    const hasNote = Boolean(trimmedName);
+    const hasPhone = Boolean(trimmedPhone);
+
+    if (!hasNote && !hasPhone) {
+      setEditError('ກະລຸນາປ້ອນໂນດ ຫຼື ເບີໂທ');
+      return;
+    }
+
+    setEditSaving(true);
+    const { data, error } = await supabase
+      .from('user_private_shops')
+      .update({
+        shop_name: hasNote ? trimmedName : null,
+        shop_phone: hasPhone ? `85620${trimmedPhone}` : null,
+      })
+      .eq('id', editingShopId)
+      .eq('user_id', userId)
+      .select('id, shop_name, shop_phone')
+      .maybeSingle();
+
+    setEditSaving(false);
+    if (error || !data) {
+      setEditError(error?.message || 'ແກ້ໄຂບໍ່ສຳເລັດ');
+      return;
+    }
+
+    const updated = data as PrivateShop;
+    setShops((prev) => prev.map((shop) => (shop.id === editingShopId ? updated : shop)));
+
+    if (selectedId === editingShopId) {
+      setShopName(updated.shop_name ?? '');
+      setShopPhone(getPhoneTail(updated.shop_phone));
+    }
+
+    setEditingShopId(null);
+    setEditError(null);
   };
 
   if (loading) {
@@ -180,6 +382,8 @@ export default function CreatePostPrivateNotePage() {
     );
   }
 
+  const canShowCompleteButton = Boolean(shopName.trim()) || Boolean(shopPhone.trim()) || Boolean(selectedId);
+
   return (
     <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
       <div
@@ -229,22 +433,26 @@ export default function CreatePostPrivateNotePage() {
         >
           ໂນດສ່ວນຕົວ
         </h3>
-        <button
-          type="button"
-          onClick={handleApplyAndBack}
-          style={{
-            padding: '6px 12px',
-            background: '#1877f2',
-            border: 'none',
-            borderRadius: '20px',
-            color: '#fff',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            cursor: 'pointer',
-          }}
-        >
-          ສຳເລັດ
-        </button>
+        {canShowCompleteButton ? (
+          <button
+            type="button"
+            onClick={handleApplyAndBack}
+            style={{
+              padding: '6px 12px',
+              background: '#1877f2',
+              border: 'none',
+              borderRadius: '20px',
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            ສຳເລັດ
+          </button>
+        ) : (
+          <div style={{ width: '40px' }} />
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 15px 90px' }}>
@@ -384,19 +592,11 @@ export default function CreatePostPrivateNotePage() {
                       type="button"
                       onClick={() => {
                         setSelectedId(shop.id);
-                        setShopName(shop.shop_name ?? '');
-                        const rawPhone = shop.shop_phone ?? '';
-                        const tail = rawPhone.startsWith('85620') ? rawPhone.slice(5) : rawPhone.startsWith('020') ? rawPhone.slice(3) : rawPhone.replace(/\D/g, '');
-                        setShopPhone(tail.slice(0, 8));
-                        setShops((prev) => {
-                          const idx = prev.findIndex((s) => s.id === shop.id);
-                          if (idx <= 0) return prev;
-                          const next = [...prev];
-                          const [item] = next.splice(idx, 1);
-                          next.unshift(item);
-                          return next;
-                        });
+                        setSaveError(null);
                         if (typeof window !== 'undefined') {
+                          if (userId) {
+                            window.localStorage.setItem(getLastUsedStorageKey(userId), shop.id);
+                          }
                           window.sessionStorage.setItem(
                             'create_post_private_shop',
                             JSON.stringify({
@@ -436,28 +636,34 @@ export default function CreatePostPrivateNotePage() {
                     </button>
                     <button
                       type="button"
+                      ref={(el) => {
+                        menuButtonRefs.current[shop.id] = el;
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setDeleteConfirmId(shop.id);
+                        handleMenuClick(shop.id);
                       }}
+                      data-menu-button
                       style={{
                         flexShrink: 0,
-                        width: '32px',
-                        height: '32px',
+                        width: '36px',
+                        height: '36px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         border: 'none',
                         background: 'none',
                         cursor: 'pointer',
-                        padding: 0,
-                        fontSize: '20px',
-                        lineHeight: 1,
-                        color: '#65676b',
+                        padding: '6px',
+                        touchAction: 'manipulation',
                       }}
-                      aria-label="ລົບລາຍການ"
+                      aria-label="ເປີດເມນູໂນດ"
                     >
-                      ×
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ea2a7" aria-hidden>
+                        <circle cx="5" cy="12" r="2.5" />
+                        <circle cx="12" cy="12" r="2.5" />
+                        <circle cx="19" cy="12" r="2.5" />
+                      </svg>
                     </button>
                   </div>
                 );
@@ -466,6 +672,77 @@ export default function CreatePostPrivateNotePage() {
           </div>
         )}
       </div>
+
+      {activeMenuShopId && (() => {
+        const buttonEl = menuButtonRefs.current[activeMenuShopId];
+        const rect = buttonEl?.getBoundingClientRect();
+        const menuTop = rect ? rect.bottom + 4 : 0;
+        const menuRight = rect ? window.innerWidth - rect.right : 0;
+        const currentShop = shops.find((shop) => shop.id === activeMenuShopId) ?? null;
+
+        if (!currentShop) return null;
+
+        const dropdown = (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 2600, pointerEvents: 'none' }}>
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.3)',
+                zIndex: 2601,
+                pointerEvents: 'auto',
+              }}
+              onClick={closeMenuWithAnimation}
+            />
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              style={{
+                position: 'fixed',
+                right: `${menuRight}px`,
+                top: `${menuTop}px`,
+                background: '#ffffff',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                borderRadius: '8px',
+                zIndex: 2602,
+                width: '230px',
+                overflow: 'hidden',
+                touchAction: 'manipulation',
+                transform: menuAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',
+                opacity: menuAnimating ? 0 : 1,
+                transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                pointerEvents: 'auto',
+              }}
+            >
+              <div onClick={() => handleOpenEditShop(currentShop)} style={commonStyles.menuItem}>
+                <span style={menuItemContentStyle}>
+                  <span style={menuItemIconStyle}>{editIcon}</span>
+                  <span>ແກ້ໄຂໂນດ</span>
+                </span>
+              </div>
+              <div
+                onClick={() => {
+                  setDeleteConfirmId(currentShop.id);
+                  closeMenuWithAnimation();
+                }}
+                style={commonStyles.menuItemLast}
+              >
+                <span style={menuItemContentStyle}>
+                  <span style={menuItemIconStyle}>{deleteIcon}</span>
+                  <span>ລົບໂນດ</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+        if (typeof document !== 'undefined' && document.body) {
+          return createPortal(dropdown, document.body);
+        }
+        return dropdown;
+      })()}
 
       {deleteConfirmId !== null && (
         <div
@@ -492,7 +769,7 @@ export default function CreatePostPrivateNotePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ທ່ານຕ້ອງການລົບລາຍການອອກບໍ
+              ທ່ານຕ້ອງການລົບໂນດບໍ
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
               <button
@@ -528,6 +805,197 @@ export default function CreatePostPrivateNotePage() {
                 }}
               >
                 ລົບ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingShopId !== null && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 2700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => {
+            setEditingShopId(null);
+            setEditError(null);
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              padding: '16px',
+              maxWidth: '360px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '14px', textAlign: 'center', color: '#111111' }}>
+              ແກ້ໄຂໂນດ
+            </h3>
+
+            {editError && (
+              <div
+                style={{
+                  marginBottom: '12px',
+                  padding: '10px 12px',
+                  background: '#fff2f0',
+                  border: '1px solid #ffccc7',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: '#cf1322',
+                }}
+              >
+                {editError}
+              </div>
+            )}
+
+            <input
+              type="text"
+              value={editingShopName}
+              onChange={(e) => setEditingShopName(e.target.value)}
+              placeholder="ແກ້ໄຂໂນດ"
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1px solid #d0d0d0',
+                fontSize: '14px',
+                marginBottom: '10px',
+              }}
+            />
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1px solid #d0d0d0',
+                background: '#fff',
+                marginBottom: '14px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '14px',
+                  marginRight: '1px',
+                  fontWeight: 600,
+                }}
+              >
+                020
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    pointerEvents: 'none',
+                    fontSize: '14px',
+                  }}
+                >
+                  <span style={{ fontWeight: 600, color: '#111111' }}>{editingShopPhone}</span>
+                  <span style={{ color: '#b0b0b0' }}>{'x'.repeat(8 - editingShopPhone.length)}</span>
+                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={editingShopPhone + 'x'.repeat(8 - editingShopPhone.length)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+                    setEditingShopPhone(digitsOnly);
+                  }}
+                  onKeyDown={(e) => {
+                    const key = e.key;
+                    if (key === 'Backspace' && editingShopPhone.length > 0) {
+                      setEditingShopPhone(editingShopPhone.slice(0, -1));
+                      e.preventDefault();
+                    } else if (key.length === 1 && /[0-9]/.test(key) && editingShopPhone.length < 8) {
+                      setEditingShopPhone(editingShopPhone + key);
+                      e.preventDefault();
+                    }
+                  }}
+                  maxLength={8}
+                  style={{
+                    position: 'relative',
+                    flex: 1,
+                    minWidth: 0,
+                    padding: 0,
+                    border: 'none',
+                    outline: 'none',
+                    fontSize: '14px',
+                    color: 'transparent',
+                    caretColor: '#111111',
+                    background: 'transparent',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingShopId(null);
+                  setEditError(null);
+                }}
+                disabled={editSaving}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#e4e6eb',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#1c1e21',
+                  cursor: editSaving ? 'not-allowed' : 'pointer',
+                  opacity: editSaving ? 0.7 : 1,
+                }}
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditedShop}
+                disabled={editSaving}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#1877f2',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  cursor: editSaving ? 'not-allowed' : 'pointer',
+                  opacity: editSaving ? 0.7 : 1,
+                }}
+              >
+                ບັນທຶກ
               </button>
             </div>
           </div>
