@@ -40,6 +40,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
       </div>
       {showNav && (
         <div
+          className="bottom-nav-visibility-surface"
           style={{
             position: 'fixed',
             bottom: 0,

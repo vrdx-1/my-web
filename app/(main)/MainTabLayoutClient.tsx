@@ -145,6 +145,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       {showHomeHeader ? (
         <>
           <div
+            className="header-visibility-surface"
             style={{
               position: 'fixed',
               top: 0,

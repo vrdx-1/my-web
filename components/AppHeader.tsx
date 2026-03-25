@@ -138,7 +138,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
       };
 
   return (
-    <div style={rootStyle}>
+    <div className={!slideWithContainer ? 'header-visibility-surface' : undefined} style={rootStyle}>
       <div style={{ 
           padding: '9px 15px', 
           display: 'flex', 

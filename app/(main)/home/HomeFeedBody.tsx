@@ -209,6 +209,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
                     boxSizing: 'border-box',
                     overflow: 'hidden',
                     transform: `translateY(${virtualItem.start}px)`,
+                    overflowAnchor: 'none',
                   }}
                 >
                   <FeedSkeleton count={1} animate={false} />
@@ -229,6 +230,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
                   left: 0,
                   width: '100%',
                   transform: `translateY(${virtualItem.start}px)`,
+                  overflowAnchor: 'none',
                 }}
               >
                 <HomePostImageGate
@@ -274,6 +276,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
                 transform: `translateY(${Math.max(0, totalSize - 1)}px)`,
                 pointerEvents: 'none',
                 visibility: 'hidden',
+                overflowAnchor: 'none',
               }}
               aria-hidden
             />

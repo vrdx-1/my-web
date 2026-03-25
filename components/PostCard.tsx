@@ -12,6 +12,9 @@ import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 
+const CAPTION_TOGGLE_SCROLL_LOCK_FRAMES = 6;
+const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
+
 interface PostCardProps {
   post: any;
   index: number;
@@ -84,10 +87,26 @@ export function PostCard({
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const captionRef = React.useRef<HTMLDivElement | null>(null);
   const captionToggleScrollYRef = React.useRef<number | null>(null);
+  const captionToggleRafRef = React.useRef<number | null>(null);
+  const captionToggleUnlockTimeoutRef = React.useRef<number | null>(null);
   const normalizedCaption = React.useMemo(() => {
     const rawCaption = typeof post.caption === 'string' ? post.caption : '';
     return rawCaption.replace(/\s+$/u, '');
   }, [post.caption]);
+
+  const clearCaptionToggleStabilizers = React.useCallback(() => {
+    if (typeof window !== 'undefined' && captionToggleRafRef.current != null) {
+      window.cancelAnimationFrame(captionToggleRafRef.current);
+      captionToggleRafRef.current = null;
+    }
+    if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
+      window.clearTimeout(captionToggleUnlockTimeoutRef.current);
+      captionToggleUnlockTimeoutRef.current = null;
+    }
+    if (typeof document !== 'undefined') {
+      delete document.body.dataset.captionToggleActive;
+    }
+  }, []);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
@@ -107,8 +126,11 @@ export function PostCard({
   }, [registerVisibilityRef, index]);
 
   React.useEffect(() => {
+    clearCaptionToggleStabilizers();
     setIsCaptionExpanded(false);
-  }, [post.id, normalizedCaption]);
+  }, [post.id, normalizedCaption, clearCaptionToggleStabilizers]);
+
+  React.useEffect(() => clearCaptionToggleStabilizers, [clearCaptionToggleStabilizers]);
 
   const updateCollapsedCaption = React.useCallback(() => {
     const captionEl = captionRef.current;
@@ -190,9 +212,25 @@ export function PostCard({
     if (captionToggleScrollYRef.current == null || typeof window === 'undefined') return;
     const targetScrollY = captionToggleScrollYRef.current;
     captionToggleScrollYRef.current = null;
-    if (window.scrollY !== targetScrollY) {
-      window.scrollTo(window.scrollX, targetScrollY);
+    if (captionToggleRafRef.current != null) {
+      window.cancelAnimationFrame(captionToggleRafRef.current);
+      captionToggleRafRef.current = null;
     }
+
+    let frameCount = 0;
+    const restoreScroll = () => {
+      if (window.scrollY !== targetScrollY) {
+        window.scrollTo(window.scrollX, targetScrollY);
+      }
+      frameCount += 1;
+      if (frameCount < CAPTION_TOGGLE_SCROLL_LOCK_FRAMES) {
+        captionToggleRafRef.current = window.requestAnimationFrame(restoreScroll);
+        return;
+      }
+      captionToggleRafRef.current = null;
+    };
+
+    restoreScroll();
   }, [isCaptionExpanded]);
 
   const handleCaptionToggle = React.useCallback((e: React.MouseEvent) => {
@@ -200,6 +238,18 @@ export function PostCard({
     if (!isCaptionOverflowing) return;
     if (typeof window !== 'undefined') {
       captionToggleScrollYRef.current = window.scrollY;
+      if (typeof document !== 'undefined') {
+        document.body.dataset.captionToggleActive = 'true';
+      }
+      if (captionToggleUnlockTimeoutRef.current != null) {
+        window.clearTimeout(captionToggleUnlockTimeoutRef.current);
+      }
+      captionToggleUnlockTimeoutRef.current = window.setTimeout(() => {
+        captionToggleUnlockTimeoutRef.current = null;
+        if (typeof document !== 'undefined') {
+          delete document.body.dataset.captionToggleActive;
+        }
+      }, CAPTION_TOGGLE_TRANSITION_LOCK_MS);
       window.dispatchEvent(new CustomEvent('postcard:caption-toggle'));
     }
     setIsCaptionExpanded((prev) => !prev);

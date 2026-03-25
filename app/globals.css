@@ -66,6 +66,22 @@ body {
   background: transparent;
 }
 
+/*
+ * กัน CSS Scroll Anchoring ยิงภายใน feed-card
+ * overflow-anchor: none บน .feed-card (outer div) ไม่กระจายลงลูก — ต้องระบุ * ด้วย
+ * ผลคือเมื่อ caption ขยาย/ยุบ browser จะไม่เลื่อน scrollY ตาม PhotoGrid ข้างในการ์ด
+ * (ถ้าไม่ทำ header/avatar ของการ์ดจะ "ดันขึ้น" เพราะ scrollY ถูก anchoring ดันหลัง useLayoutEffect ทำงานแล้ว)
+ */
+.feed-card * {
+  overflow-anchor: none;
+}
+
+/* ระหว่าง expand/collapse caption ให้ header/nav ค้างนิ่งชั่วคราว ไม่เล่น transition 1-2 เฟรมจาก layout/virtualizer */
+body[data-caption-toggle-active="true"] .header-visibility-surface,
+body[data-caption-toggle-active="true"] .bottom-nav-visibility-surface {
+  transition: none !important;
+}
+
 /* ซ่อน scrollbar ของ feed หลักเมื่อเปิด viewing mode (body + html เผื่อ browser ใช้ html เป็น scroll; iOS ใช้ clip) */
 body[data-viewing-mode="open"]::-webkit-scrollbar,
 html:has(body[data-viewing-mode="open"])::-webkit-scrollbar {
@@ -176,6 +192,7 @@ html:has(body[data-page="home"]) {
 .feed-bottom-slot {
   contain: layout style paint;
   transform: translateZ(0);
+  overflow-anchor: none;
 }
 
 .spinner-ring {
