@@ -115,7 +115,7 @@ function SearchPageContent() {
       <div
         style={{
           padding: '10px 12px 10px 8px',
-          borderBottom: '1px solid #f0f0f0',
+          borderBottom: 'none',
           background: '#fff',
           position: 'sticky',
           top: 0,
@@ -154,6 +154,25 @@ function SearchPageContent() {
           </svg>
         </button>
         <div style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: 13,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#6b7280',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
           <input
             ref={inputRef}
             type="text"
@@ -166,13 +185,13 @@ function SearchPageContent() {
               flex: 1,
               minWidth: 0,
               height: 40,
-              paddingLeft: 16,
+              paddingLeft: 42,
               paddingRight: query.trim().length > 0 ? 34 : 16,
               fontSize: '16px',
-              border: 'none',
+              border: '1px solid #d0d5dd',
               borderRadius: 20,
-              background: '#e4e6eb',
-              color: '#000',
+              background: '#ffffff',
+              color: '#101828',
               fontFamily: LAO_FONT,
               boxSizing: 'border-box',
               outline: 'none',
@@ -346,7 +365,7 @@ function SearchPageFallback() {
       <div
         style={{
           padding: '10px 12px 10px 8px',
-          borderBottom: '1px solid #f0f0f0',
+          borderBottom: 'none',
           background: '#fff',
           minHeight: 56,
           display: 'flex',
@@ -355,7 +374,7 @@ function SearchPageFallback() {
         }}
       >
         <div style={{ width: 36, height: 36, flexShrink: 0 }} />
-        <div style={{ flex: 1, height: 40, borderRadius: 20, background: '#e4e6eb' }} />
+        <div style={{ flex: 1, height: 40, borderRadius: 20, background: '#fff', border: '1px solid #d0d5dd' }} />
         <div style={{ width: 72, height: 40, borderRadius: 20, background: '#e4e6eb' }} />
       </div>
     </main>
