@@ -26,7 +26,8 @@ export const NotificationPostPreviewCard = React.memo<{
   shouldLoadImage?: boolean;
 }>(({ notification, isReadStyle, timeAgoText, onNavigateToPost, priority = false, shouldLoadImage = true }) => {
   const firstPostImage = notification.post_images?.[0] ?? null;
-  const latestName = notification.sender_name ?? 'User';
+  const latestName = notification.sender_name?.trim() ?? '';
+  const shouldShowSenderName = latestName !== '' && latestName !== 'ລະບົບ';
 
   const captionPreview =
     notification.post_caption && notification.post_caption.trim() !== ''
@@ -112,7 +113,9 @@ export const NotificationPostPreviewCard = React.memo<{
             userSelect: 'none',
           }}
         >
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
+          {shouldShowSenderName && (
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
+          )}
           <span style={{ color: '#050505', flexShrink: 0 }}>
             ອັບເດດສະຖານະ Boost ໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
           </span>

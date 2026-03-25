@@ -185,7 +185,7 @@ function SearchPageContent() {
               flex: 1,
               minWidth: 0,
               height: 40,
-              paddingLeft: 42,
+              paddingLeft: 37,
               paddingRight: query.trim().length > 0 ? 34 : 16,
               fontSize: '16px',
               border: '1px solid #d0d5dd',

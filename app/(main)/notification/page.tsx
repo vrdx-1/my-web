@@ -209,11 +209,7 @@ export default function NotificationPage() {
           })}
           <div ref={lastElementRef} style={{ minHeight: 8, pointerEvents: 'none' }} aria-hidden="true" />
           {loadingMore && <NotificationSkeleton count={2} />}
-          <div style={BOTTOM_SLOT_STYLE} className="notification-bottom-slot">
-            {!hasMore && !loadingMore && visibleItemsWithTime.length > 0 && (
-              <span style={{ fontSize: 13, color: '#888' }}>ບໍ່ມີລາຍການເພີ່ມເຕີມ</span>
-            )}
-          </div>
+          <div style={BOTTOM_SLOT_STYLE} className="notification-bottom-slot" />
         </div>
       )}
     </main>

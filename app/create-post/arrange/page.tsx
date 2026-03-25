@@ -303,7 +303,7 @@ export default function ArrangePostImagesPage() {
                 marginTop: '4px',
                 width: '100%',
                 padding: '10px 16px',
-                borderRadius: '999px',
+                borderRadius: '8px',
                 border: 'none',
                 background: '#1877f2',
                 color: '#ffffff',

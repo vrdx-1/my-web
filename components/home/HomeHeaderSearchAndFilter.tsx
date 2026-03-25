@@ -200,7 +200,7 @@ export function HomeHeaderSearchAndFilter() {
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '4px',
             paddingLeft: '13px',
             paddingRight: '11px',
             touchAction: 'manipulation',
@@ -248,7 +248,7 @@ export function HomeHeaderSearchAndFilter() {
             style={{
               flexShrink: 0,
               fontSize: '15px',
-              color: '#2f5f8f',
+              color: '#4a4d52',
               fontWeight: 500,
               fontFamily: LAO_FONT,
               maxWidth: '140px',
