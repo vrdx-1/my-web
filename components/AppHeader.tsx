@@ -140,7 +140,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   return (
     <div className={!slideWithContainer ? 'header-visibility-surface' : undefined} style={rootStyle}>
       <div style={{ 
-          padding: '9px 15px', 
+          padding: showOnlySearch && homeCenterContent ? '9px 12px 7px' : '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
           gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
@@ -151,7 +151,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex',
           alignItems: 'center',
           flexShrink: 0,
-          marginRight: showOnlySearch && homeCenterContent ? '4px' : '8px',
+          marginRight: showOnlySearch && homeCenterContent ? '2px' : '8px',
         }}>
           {pathname === '/home' && onTabRefresh ? (
             <button

@@ -127,7 +127,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
   /** ความสูงรวมของ fixed block: header + tab bar (สำหรับ header โฮมที่เตี้ยลง) */
   // ต้องชดเชยความสูงที่เพิ่มขึ้นจากการขยับแท็บลงในหน้า home (ดู wrapper ด้านล่าง)
-  const HOME_FIXED_BLOCK_HEIGHT = 98;
+  const HOME_FIXED_BLOCK_HEIGHT = 102;
 
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 

@@ -10,7 +10,7 @@ import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 const ICON_SIZE = 20;
-const SEARCH_BAR_GAP = 10; // ช่องว่างระหว่างแท็บค้นหา กับ ปุ่มฟิลเตอร์ (ให้แท็บค้นหาสั้นลง ไม่ชิดเกินไป)
+const SEARCH_BAR_GAP = 8;
 const PROVINCE_ROW_HEIGHT = 32; // ความสูงต่อแถว (6+6 + 15*1.3) สำหรับอ้างอิง
 
 function SelectedCheckBadge() {
@@ -192,17 +192,17 @@ export function HomeHeaderSearchAndFilter() {
           style={{
             flex: 1,
             minWidth: 0,
-            height: `${CONTROL_SIZE}px`,
-            borderRadius: '20px',
-            background: '#e4e6eb',
-            color: '#000',
-            border: 'none',
+            height: `${Math.max(CONTROL_SIZE + 2, 42)}px`,
+            borderRadius: '999px',
+            background: '#ffffff',
+            color: '#1f2937',
+            border: '1px solid #d0d5dd',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            paddingLeft: '12px',
-            paddingRight: '12px',
+            paddingLeft: '13px',
+            paddingRight: '11px',
             touchAction: 'manipulation',
           }}
         >
@@ -211,7 +211,7 @@ export function HomeHeaderSearchAndFilter() {
             height={ICON_SIZE}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="currentColor"
+            stroke="#6b7280"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -237,7 +237,7 @@ export function HomeHeaderSearchAndFilter() {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 fontSize: '15px',
-                color: queryToShow.trim() ? '#111' : '#65676b',
+                color: queryToShow.trim() ? '#101828' : '#7b818d',
                 fontFamily: LAO_FONT,
               }}
             >
@@ -247,14 +247,18 @@ export function HomeHeaderSearchAndFilter() {
           <span
             style={{
               flexShrink: 0,
-              fontSize: '14px',
-              color: '#c00',
+              fontSize: '15px',
+              color: '#2f5f8f',
+              fontWeight: 500,
               fontFamily: LAO_FONT,
-              maxWidth: '120px',
+              maxWidth: '140px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
             }}
             ref={filterButtonRef}
             data-home-filter-btn
@@ -274,7 +278,18 @@ export function HomeHeaderSearchAndFilter() {
               }
             }}
           >
-            {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </span>
         </button>
       </div>

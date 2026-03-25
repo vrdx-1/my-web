@@ -116,8 +116,8 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         position: 'relative',
         display: 'flex',
         borderBottom: 'none',
-        minHeight: '32px',
-        ...(isHomeNav ? { justifyContent: 'center', gap: 20 } : {}),
+        minHeight: isHomeNav ? '40px' : '32px',
+        ...(isHomeNav ? { justifyContent: 'center', gap: 30, paddingTop: 2, paddingBottom: 2 } : {}),
       }}
       className={className}
     >
@@ -135,9 +135,10 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         /** หน้า home: กดได้เฉพาะบริเวณข้อความ + padding พอดีมือ — ไม่เต็มครึ่งจอ */
         const homeTabPadding = '0px 10px';
         const labelTextStyle = {
-          fontSize: '14px',
-          lineHeight: 0.95,
-          color: isActive ? '#111111' : '#7e868f',
+          fontSize: isHomeNav ? '15px' : '14px',
+          lineHeight: isHomeNav ? 1.05 : 0.95,
+          color: isActive ? '#111111' : '#8b929b',
+          fontWeight: isActive ? 700 : 600,
         } as const;
         return (
           <button
@@ -155,7 +156,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               minHeight: 32,
               padding: isHomeNav ? homeTabPadding : `0px ${rightPadding}px 0px ${leftPadding}px`,
               color: isActive ? '#111111' : '#7e868f',
-              fontWeight: 'bold',
+              fontWeight: isHomeNav ? 600 : 'bold',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
