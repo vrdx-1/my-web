@@ -148,6 +148,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   if (!isOpen) return null;
 
+  const menuItemStyleBalanced: React.CSSProperties = {
+    ...commonStyles.menuItemLast,
+    padding: '14px 18px',
+    minHeight: '50px',
+    display: 'flex',
+    alignItems: 'center',
+  };
+
   const showBoost = typeof onBoost === 'function';
   const showPrivateNote = typeof onPrivateNote === 'function';
   const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
@@ -189,19 +197,19 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
       >
         {isOwner ? (
           <>
-            <div onClick={onSave} style={commonStyles.menuItem}>
+            <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}
                 icon={saveIcon}
               />
             </div>
-            <div onClick={onShare} style={commonStyles.menuItem}>
+            <div onClick={onShare} style={menuItemStyleBalanced}>
               <ActionLabel
                 label="ແຊໂພສ"
                 icon={shareIcon}
               />
             </div>
-            <div onClick={onEdit} style={commonStyles.menuItem}>
+            <div onClick={onEdit} style={menuItemStyleBalanced}>
               <ActionLabel
                 label="ແກ້ໄຂໂພສ"
                 icon={editIcon}
@@ -209,7 +217,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             </div>
             <div
               onClick={onDelete}
-              style={showBoost || showPrivateNote ? commonStyles.menuItem : commonStyles.menuItemLast}
+              style={menuItemStyleBalanced}
             >
               <ActionLabel
                 label="ລົບໂພສ"
@@ -219,7 +227,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             {showBoost && (
               <div
                 onClick={onBoost}
-                style={showPrivateNote ? commonStyles.menuItem : commonStyles.menuItemLast}
+                style={menuItemStyleBalanced}
               >
                 <ActionLabel
                   label="boost ໂພສ"
@@ -228,7 +236,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
               </div>
             )}
             {showPrivateNote && (
-              <div onClick={onPrivateNote} style={commonStyles.menuItemLast}>
+              <div onClick={onPrivateNote} style={menuItemStyleBalanced}>
                 <ActionLabel
                   label="ໂນດສ່ວນຕົວ"
                   icon={privateNoteIcon}
@@ -238,19 +246,19 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           </>
         ) : (
           <>
-            <div onClick={onSave} style={commonStyles.menuItem}>
+            <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}
                 icon={saveIcon}
               />
             </div>
-            <div onClick={onShare} style={commonStyles.menuItem}>
+            <div onClick={onShare} style={menuItemStyleBalanced}>
               <ActionLabel
                 label="ແຊໂພສ"
                 icon={shareIcon}
               />
             </div>
-            <div onClick={onReport} style={commonStyles.menuItemLast}>
+            <div onClick={onReport} style={menuItemStyleBalanced}>
               <ActionLabel
                 label="ລາຍງານໂພສ"
                 icon={reportIcon}
