@@ -83,6 +83,11 @@ export function PostCard({
   const [collapsedCaption, setCollapsedCaption] = React.useState('');
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const captionRef = React.useRef<HTMLDivElement | null>(null);
+  const captionToggleScrollYRef = React.useRef<number | null>(null);
+  const normalizedCaption = React.useMemo(() => {
+    const rawCaption = typeof post.caption === 'string' ? post.caption : '';
+    return rawCaption.replace(/\s+$/u, '');
+  }, [post.caption]);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
@@ -103,11 +108,11 @@ export function PostCard({
 
   React.useEffect(() => {
     setIsCaptionExpanded(false);
-  }, [post.id, post.caption]);
+  }, [post.id, normalizedCaption]);
 
   const updateCollapsedCaption = React.useCallback(() => {
     const captionEl = captionRef.current;
-    const fullCaption = post.caption || '';
+    const fullCaption = normalizedCaption;
 
     if (!captionEl || fullCaption.trim() === '') {
       setIsCaptionOverflowing(false);
@@ -178,11 +183,25 @@ export function PostCard({
     document.body.removeChild(measureEl);
     setIsCaptionOverflowing(true);
     setCollapsedCaption(`${fullCaption.slice(0, best).trimEnd()}${ellipsis}`);
-  }, [post.caption]);
+  }, [normalizedCaption]);
+
+  // บันทึก scrollY ก่อน toggle แล้ว restore หลัง DOM อัปเดต — การ์ดอยู่เดิมในเอกสาร ดังนั้น scrollY เดิม = header อยู่วิวพอร์ตเดิมเสมอ
+  React.useLayoutEffect(() => {
+    if (captionToggleScrollYRef.current == null || typeof window === 'undefined') return;
+    const targetScrollY = captionToggleScrollYRef.current;
+    captionToggleScrollYRef.current = null;
+    if (window.scrollY !== targetScrollY) {
+      window.scrollTo(window.scrollX, targetScrollY);
+    }
+  }, [isCaptionExpanded]);
 
   const handleCaptionToggle = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isCaptionOverflowing) return;
+    if (typeof window !== 'undefined') {
+      captionToggleScrollYRef.current = window.scrollY;
+      window.dispatchEvent(new CustomEvent('postcard:caption-toggle'));
+    }
     setIsCaptionExpanded((prev) => !prev);
   }, [isCaptionOverflowing]);
 
@@ -208,6 +227,7 @@ export function PostCard({
   const cardStyle: React.CSSProperties = {
     borderBottom: '1px solid #c8ccd4',
     position: 'relative',
+    overflowAnchor: 'none',
   };
 
     return (
@@ -315,7 +335,7 @@ export function PostCard({
         ref={captionRef}
         onClick={handleCaptionToggle}
         style={{
-          padding: '0 15px 10px 15px',
+          padding: isCaptionExpanded ? '0 15px 0 15px' : '0 15px 10px 15px',
           marginBottom: '8px',
           fontSize: '15px',
           lineHeight: '21px',
@@ -327,10 +347,11 @@ export function PostCard({
           WebkitUserSelect: 'text',
           overflow: isCaptionExpanded ? 'visible' : 'hidden',
           maxHeight: isCaptionExpanded ? 'none' : '42px',
+          overflowAnchor: 'none',
           cursor: isCaptionOverflowing ? 'pointer' : 'text',
         }}
       >
-        {isCaptionExpanded || !isCaptionOverflowing ? post.caption : collapsedCaption}
+        {isCaptionExpanded || !isCaptionOverflowing ? normalizedCaption : collapsedCaption}
         {!isCaptionExpanded && isCaptionOverflowing && (
           <button
             type="button"
@@ -342,7 +363,7 @@ export function PostCard({
               color: '#8a8d91',
               fontSize: '15px',
               lineHeight: '21px',
-              fontWeight: 600,
+              fontWeight: 400,
               cursor: 'pointer',
               marginLeft: '4px',
               padding: 0,

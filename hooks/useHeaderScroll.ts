@@ -17,6 +17,8 @@ const VISIBILITY_THROTTLE_MS = 100;
 const MIN_SCROLL_DELTA_PX = 8;
 /** หลังโหลดโพส/เปลี่ยนจำนวนโพส — ไม่ตอบ scroll ช่วงสั้นๆ ให้ layout นิ่ง (virtualizer วัดความสูงท้ายฟีดทำให้มี scroll ปลอม) */
 const LAYOUT_SETTLE_IGNORE_MS = 260;
+/** หลัง expand/collapse caption ของโพสต์ ให้ข้าม scroll-driven visibility ชั่วคราว กัน header/nav กระตุก */
+const CAPTION_TOGGLE_IGNORE_MS = 420;
 
 interface UseHeaderScrollOptions {
   loadingMore?: boolean;
@@ -77,6 +79,19 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       scheduleLayoutSettleIgnore();
     }
   }, [feedPostCount]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || disableScrollHide) return;
+
+    const handleCaptionToggle = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      ignoreScrollDrivenVisibilityUntilRef.current = now + CAPTION_TOGGLE_IGNORE_MS;
+      lastScrollYRef.current = window.scrollY;
+    };
+
+    window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+    return () => window.removeEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+  }, [disableScrollHide]);
 
   const applyVisible = (visible: boolean, throttleHideOnly = true) => {
     if (lastAppliedVisibleRef.current === visible) return;
