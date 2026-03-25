@@ -78,7 +78,11 @@ export function PostCard({
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
+  const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
+  const [isCaptionOverflowing, setIsCaptionOverflowing] = React.useState(false);
+  const [collapsedCaption, setCollapsedCaption] = React.useState('');
   const cardRef = React.useRef<HTMLDivElement | null>(null);
+  const captionRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
@@ -96,6 +100,109 @@ export function PostCard({
     if (el) registerVisibilityRef(el, index);
     return () => registerVisibilityRef(null, index);
   }, [registerVisibilityRef, index]);
+
+  React.useEffect(() => {
+    setIsCaptionExpanded(false);
+  }, [post.id, post.caption]);
+
+  const updateCollapsedCaption = React.useCallback(() => {
+    const captionEl = captionRef.current;
+    const fullCaption = post.caption || '';
+
+    if (!captionEl || fullCaption.trim() === '') {
+      setIsCaptionOverflowing(false);
+      setCollapsedCaption(fullCaption);
+      return;
+    }
+
+    const style = window.getComputedStyle(captionEl);
+    const paddingLeft = parseFloat(style.paddingLeft || '0');
+    const paddingRight = parseFloat(style.paddingRight || '0');
+    const contentWidth = Math.max(0, captionEl.clientWidth - paddingLeft - paddingRight);
+    const lineHeight = 21;
+    const maxHeight = lineHeight * 2;
+
+    if (contentWidth <= 0) {
+      setIsCaptionOverflowing(false);
+      setCollapsedCaption(fullCaption);
+      return;
+    }
+
+    const measureEl = document.createElement('div');
+    measureEl.style.position = 'fixed';
+    measureEl.style.left = '-99999px';
+    measureEl.style.top = '0';
+    measureEl.style.width = `${contentWidth}px`;
+    measureEl.style.whiteSpace = 'pre-wrap';
+    measureEl.style.wordBreak = 'break-word';
+    measureEl.style.fontSize = style.fontSize;
+    measureEl.style.fontWeight = style.fontWeight;
+    measureEl.style.fontFamily = style.fontFamily;
+    measureEl.style.lineHeight = `${lineHeight}px`;
+    measureEl.style.letterSpacing = style.letterSpacing;
+    measureEl.style.visibility = 'hidden';
+    measureEl.style.pointerEvents = 'none';
+
+    document.body.appendChild(measureEl);
+
+    const readMoreSuffix = ' ອ່ານເພີ່ມ';
+    const ellipsis = '...';
+
+    measureEl.textContent = fullCaption;
+    const fullFits = measureEl.scrollHeight <= maxHeight + 1;
+
+    if (fullFits) {
+      document.body.removeChild(measureEl);
+      setIsCaptionOverflowing(false);
+      setCollapsedCaption(fullCaption);
+      return;
+    }
+
+    let low = 0;
+    let high = fullCaption.length;
+    let best = 0;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const candidate = `${fullCaption.slice(0, mid).trimEnd()}${ellipsis}${readMoreSuffix}`;
+      measureEl.textContent = candidate;
+
+      if (measureEl.scrollHeight <= maxHeight + 1) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    document.body.removeChild(measureEl);
+    setIsCaptionOverflowing(true);
+    setCollapsedCaption(`${fullCaption.slice(0, best).trimEnd()}${ellipsis}`);
+  }, [post.caption]);
+
+  const handleCaptionToggle = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isCaptionOverflowing) return;
+    setIsCaptionExpanded((prev) => !prev);
+  }, [isCaptionOverflowing]);
+
+  React.useEffect(() => {
+    if (isCaptionExpanded) return;
+
+    updateCollapsedCaption();
+
+    const captionEl = captionRef.current;
+    if (!captionEl) return;
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateCollapsedCaption);
+      return () => window.removeEventListener('resize', updateCollapsedCaption);
+    }
+
+    const observer = new ResizeObserver(() => updateCollapsedCaption());
+    observer.observe(captionEl);
+    return () => observer.disconnect();
+  }, [isCaptionExpanded, updateCollapsedCaption]);
 
   // ไม่ใช้ content-visibility:auto บนฟีด — ตอนโพสโหลด/สูงเปลี่ยน ทำให้ scroll anchor กระตุกแล้ว header สั่น
   const cardStyle: React.CSSProperties = {
@@ -205,18 +312,45 @@ export function PostCard({
       {/* Caption */}
       <div
         role="text"
+        ref={captionRef}
+        onClick={handleCaptionToggle}
         style={{
           padding: '0 15px 10px 15px',
+          marginBottom: '8px',
           fontSize: '15px',
-          lineHeight: '1.4',
+          lineHeight: '21px',
           whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
           color: '#111111',
           fontWeight: 500,
           userSelect: 'text',
           WebkitUserSelect: 'text',
+          overflow: isCaptionExpanded ? 'visible' : 'hidden',
+          maxHeight: isCaptionExpanded ? 'none' : '42px',
+          cursor: isCaptionOverflowing ? 'pointer' : 'text',
         }}
       >
-        {post.caption}
+        {isCaptionExpanded || !isCaptionOverflowing ? post.caption : collapsedCaption}
+        {!isCaptionExpanded && isCaptionOverflowing && (
+          <button
+            type="button"
+            onClick={handleCaptionToggle}
+            aria-label="ອ່ານເພີ່ມ"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: '#8a8d91',
+              fontSize: '15px',
+              lineHeight: '21px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginLeft: '4px',
+              padding: 0,
+            }}
+          >
+            ອ່ານເພີ່ມ
+          </button>
+        )}
       </div>
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
