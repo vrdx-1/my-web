@@ -19,6 +19,8 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
   const headerSlideProgressRef = useRef(0);
   const isHeaderInteractingRef = useRef(false);
   const motionFrameRef = useRef<number | null>(null);
+  const pendingMotionProgressRef = useRef(0);
+  const pendingMotionInteractingRef = useRef(false);
   const lastBodyPanActiveRef = useRef<string>('0');
   const headerSurfacesRef = useRef<HTMLElement[]>([]);
   const bottomNavSurfacesRef = useRef<HTMLElement[]>([]);
@@ -63,38 +65,40 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
 
   const applyMotionToDom = (progress: number, interacting: boolean) => {
     if (typeof document === 'undefined') return;
-    if (motionFrameRef.current != null) {
-      cancelAnimationFrame(motionFrameRef.current);
-    }
+    pendingMotionProgressRef.current = progress;
+    pendingMotionInteractingRef.current = interacting;
+    if (motionFrameRef.current != null) return;
 
     motionFrameRef.current = requestAnimationFrame(() => {
       motionFrameRef.current = null;
       const motionTimer = startHomeMotionTimer('motion-apply', 'apply-motion-to-dom');
       refreshMotionSurfacesIfNeeded();
+      const nextProgress = pendingMotionProgressRef.current;
+      const nextInteracting = pendingMotionInteractingRef.current;
 
       const headerSurfaces = headerSurfacesRef.current;
       const bottomNavSurfaces = bottomNavSurfacesRef.current;
 
       headerSurfaces.forEach((element) => {
-        const transform = `translate3d(0, ${-progress * 100}%, 0)`;
+        const transform = `translate3d(0, ${-nextProgress * 100}%, 0)`;
         setTransformIfChanged(element, transform, headerTransformCacheRef.current);
       });
 
       bottomNavSurfaces.forEach((element) => {
         const shouldHideWithScroll = element.dataset.hideWithScroll === '1';
-        const progressPercent = shouldHideWithScroll ? progress * 100 : 0;
+        const progressPercent = shouldHideWithScroll ? nextProgress * 100 : 0;
         const transform = `translate3d(0, ${progressPercent}%, 0)`;
         setTransformIfChanged(element, transform, bottomTransformCacheRef.current);
       });
 
-      const nextPanActive = interacting ? '1' : '0';
+      const nextPanActive = nextInteracting ? '1' : '0';
       if (lastBodyPanActiveRef.current !== nextPanActive) {
         lastBodyPanActiveRef.current = nextPanActive;
         document.body?.setAttribute('data-header-pan-active', nextPanActive);
       }
       endHomeMotionTimer(motionTimer, {
-        progress,
-        interacting,
+        progress: nextProgress,
+        interacting: nextInteracting,
         headerSurfaceCount: headerSurfaces.length,
         bottomNavSurfaceCount: bottomNavSurfaces.length,
       });

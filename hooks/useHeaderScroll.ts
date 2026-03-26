@@ -7,6 +7,12 @@ import {
   recordHomeMotionDuration,
   startHomeMotionTimer,
 } from '@/lib/homeMotionProfiler';
+import {
+  createMotionInputTracker,
+  createMotionRenderer,
+  MotionPlatformTier,
+  resolveScrollStateMachine,
+} from '@/lib/homeMotionEngine';
 
 /** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
 const HEADER_TOP_ZONE_PX = 200;
@@ -62,7 +68,6 @@ interface UseHeaderScrollOptions {
 }
 
 type MotionProfile = 'auto' | 'ios' | 'android';
-type MotionPlatformTier = 'desktop' | 'mobile-normal' | 'mobile-low-end';
 
 interface ResolvedMotionTuning {
   showThresholdPx: number;
@@ -195,14 +200,30 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const touchLastYRef = useRef<number | null>(null);
   const platformProfileRef = useRef<Exclude<MotionProfile, 'auto'>>('android');
   const platformTierRef = useRef<MotionPlatformTier>('desktop');
-  /** EMA of scroll-event inter-arrival gap in ms — drives adaptive interaction window */
-  const frameGapEmaRef = useRef<number>(16.7);
+  const motionZoneRef = useRef<'show-interacting' | 'interacting-transform-only' | 'show' | 'hide' | 'between'>('show');
+  const lastInputAtRef = useRef<number>(0);
+  const inputTrackerRef = useRef<ReturnType<typeof createMotionInputTracker> | null>(null);
+  const motionRendererRef = useRef<ReturnType<typeof createMotionRenderer> | null>(null);
   const lastScrollFrameAtRef = useRef<number | null>(null);
-  const interactionActiveUntilRef = useRef<number>(0);
+  const lastScrollLogicAtRef = useRef<number>(0);
   const activePlatformProfile = detectPlatformProfile(motionProfile);
   const activePlatformTier = detectPlatformTier(motionProfile);
   platformProfileRef.current = activePlatformProfile;
   platformTierRef.current = activePlatformTier;
+
+  if (!inputTrackerRef.current) {
+    inputTrackerRef.current = createMotionInputTracker({
+      getPlatformTier: () => platformTierRef.current,
+    });
+  }
+
+  if (!motionRendererRef.current) {
+    motionRendererRef.current = createMotionRenderer({
+      onRender: (progress, interacting) => {
+        onMotionChangeRef.current?.(progress, interacting);
+      },
+    });
+  }
 
   const callSiteOverrides: Partial<ResolvedMotionTuning> = {
     showThresholdPx: scrollTuning?.showThresholdPx,
@@ -231,21 +252,21 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const emitMotion = (progress: number, interacting: boolean) => {
     const clamped = Math.max(0, Math.min(1, progress));
     motionProgressRef.current = clamped;
-    onMotionChangeRef.current?.(clamped, interacting);
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    motionRendererRef.current?.emit(clamped, interacting, {
+      platform: platformProfileRef.current,
+      tier: platformTierRef.current,
+      zone: motionZoneRef.current,
+      progress: clamped,
+      interacting,
+      frameGapEmaMs: inputTrackerRef.current?.getFrameGapEmaMs() ?? 16.7,
+      frameGapMs:
+        lastScrollFrameAtRef.current != null
+          ? Math.max(0, now - lastScrollFrameAtRef.current)
+          : 0,
+      inputToEmitLatencyMs: Math.max(0, now - (lastInputAtRef.current || now)),
+    });
   };
-
-  const getInteractionWindowMs = () => {
-    // window ≈ N frames worth of interaction — adaptive to actual scroll event frequency
-    const tier = platformTierRef.current;
-    const framesMultiplier = tier === 'mobile-low-end' ? 6 : tier === 'mobile-normal' ? 5 : 4;
-    return Math.min(200, Math.max(64, Math.round(frameGapEmaRef.current * framesMultiplier)));
-  };
-
-  const bumpInteractionWindow = (now: number) => {
-    interactionActiveUntilRef.current = now + getInteractionWindowMs();
-  };
-
-  const isInteractionActive = (now: number) => now <= interactionActiveUntilRef.current;
 
   const getAdaptiveDragDistancePx = () => {
     // จอ 120Hz จะยิง event ถี่กว่า จึงต้องเพิ่มระยะเลื่อนเล็กน้อยให้รู้สึกใกล้เคียง 60Hz
@@ -393,6 +414,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     });
   }, [activePlatformProfile, activePlatformTier]);
 
+  useEffect(() => {
+    return () => {
+      motionRendererRef.current?.destroy();
+      motionRendererRef.current = null;
+    };
+  }, []);
+
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useLayoutEffect(() => {
     if (!disableScrollHide) return;
@@ -404,7 +432,6 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
   useEffect(() => {
     if (disableScrollHide) return;
-    let rafId: number | null = null;
 
     const runScrollLogic = () => {
       const scrollTimer = startHomeMotionTimer('scroll-handler', 'run-scroll-logic');
@@ -438,81 +465,47 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         return;
       }
 
-      // During active interaction, keep hot path to transform writes only.
-      if (isInteractionActive(now)) {
-        if (currentScrollY <= showThresholdPx) {
-          emitMotion(0, true);
-          scheduleSettle();
-          endHomeMotionTimer(scrollTimer, { zone: 'show-interacting', currentScrollY, scrollDelta });
-          return;
-        }
+      const state = resolveScrollStateMachine({
+        currentScrollY,
+        scrollDelta,
+        showThresholdPx,
+        hideThresholdPx,
+        activeDeltaThreshold,
+        interactionActive: inputTrackerRef.current?.isInteractionActive(now) ?? false,
+      });
+      motionZoneRef.current = state.zone;
 
-        if (scrollDelta !== 0) {
-          const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
-          emitMotion(nextProgress, true);
-        }
-        scheduleSettle();
-        endHomeMotionTimer(scrollTimer, {
-          zone: 'interacting-transform-only',
-          currentScrollY,
-          scrollDelta,
-          activeDeltaThreshold,
-          platform: platformProfileRef.current,
-          platformTier: platformTierRef.current,
-        });
-        return;
-      }
-
-      // อยู่โซนบนสุดจริง (แสดง header ทันที ไม่ throttle)
-      if (currentScrollY <= showThresholdPx) {
-        emitMotion(0, false);
-        applyVisible(true, false);
-        scheduleSettle();
-        endHomeMotionTimer(scrollTimer, { zone: 'show', currentScrollY, scrollDelta });
-        return;
-      }
-      // เลื่อนลงลึกเกิน threshold ค่อยซ่อน (hysteresis ไม่กระตุกที่ขอบ)
-      if (currentScrollY >= hideThresholdPx) {
-        if (scrollDelta !== 0) {
-          const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
-          emitMotion(nextProgress, false);
-        }
-        if (scrollDelta > activeDeltaThreshold) {
-          applyVisible(false, !isFastScroll);
-        } else if (scrollDelta < -activeDeltaThreshold) {
-          applyVisible(true, false);
-        }
-        scheduleSettle();
-        endHomeMotionTimer(scrollTimer, {
-          zone: 'hide',
-          currentScrollY,
-          scrollDelta,
-          activeDeltaThreshold,
-          platform: platformProfileRef.current,
-        });
-        return;
-      }
-      // ระหว่าง SHOW–HIDE: เลื่อนขึ้นชัดเจนเท่านั้นค่อยแสดง header (delta จิ๋วจาก layout = ไม่สน)
-      if (scrollDelta !== 0) {
+      if (state.forceProgress != null) {
+        emitMotion(state.forceProgress, state.zone.includes('interacting'));
+      } else if (state.shouldProgressFollowDelta && scrollDelta !== 0) {
         const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
-        emitMotion(nextProgress, false);
+        emitMotion(nextProgress, state.zone.includes('interacting'));
       }
-      if (scrollDelta < -activeDeltaThreshold) {
+
+      if (state.applyVisibility === 'hide') {
+        applyVisible(false, state.useHideThrottle ? !isFastScroll : false);
+      } else if (state.applyVisibility === 'show') {
         applyVisible(true, false);
       }
-      scheduleSettle();
+
+      if (state.shouldSettle) {
+        scheduleSettle();
+      }
+
       endHomeMotionTimer(scrollTimer, {
-        zone: 'between',
+        zone: state.zone,
         currentScrollY,
         scrollDelta,
         activeDeltaThreshold,
         platform: platformProfileRef.current,
+        platformTier: platformTierRef.current,
       });
     };
 
     const handleScroll = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      bumpInteractionWindow(now);
+      const inputSnapshot = inputTrackerRef.current?.markInteraction(now);
+      lastInputAtRef.current = now;
       if (touchPanActiveRef.current) {
         lastScrollFrameAtRef.current = now;
         return;
@@ -520,23 +513,18 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       const lastFrameAt = lastScrollFrameAtRef.current;
       if (lastFrameAt != null) {
         const frameGap = now - lastFrameAt;
-        // Update EMA of scroll inter-arrival time for adaptive interaction window
-        if (frameGap > 4 && frameGap < 500) {
-          frameGapEmaRef.current = frameGapEmaRef.current * 0.85 + frameGap * 0.15;
-        }
         if (frameGap > 19) {
           recordHomeMotionDuration('frame-gap', 'scroll-frame-gap', frameGap, {
             platform: platformProfileRef.current,
+            frameGapEmaMs: inputSnapshot?.frameGapEmaMs,
           });
         }
       }
       lastScrollFrameAtRef.current = now;
 
-      if (rafId != null) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        runScrollLogic();
-      });
+      if (now - lastScrollLogicAtRef.current < 8) return;
+      lastScrollLogicAtRef.current = now;
+      runScrollLogic();
     };
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -544,7 +532,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       touchPanActiveRef.current = true;
       touchLastYRef.current = e.touches[0].clientY;
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      bumpInteractionWindow(now);
+      inputTrackerRef.current?.markInteraction(now);
+      lastInputAtRef.current = now;
+      motionZoneRef.current = 'interacting-transform-only';
       emitMotion(motionProgressRef.current, true);
     };
 
@@ -562,7 +552,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       if (Math.abs(delta) < 0.5) return;
 
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      bumpInteractionWindow(now);
+      inputTrackerRef.current?.markInteraction(now);
+      lastInputAtRef.current = now;
+      motionZoneRef.current = 'interacting-transform-only';
 
       const nextProgress = motionProgressRef.current + delta / getAdaptiveDragDistancePx();
       emitMotion(nextProgress, true);
@@ -591,7 +583,6 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         window.clearTimeout(settleTimeoutRef.current);
         settleTimeoutRef.current = null;
       }
-      if (rafId != null) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
