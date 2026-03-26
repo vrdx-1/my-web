@@ -1,33 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { useSearchFeedSlice } from '@/hooks/useSearchFeedSlice';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeLikedSaved } from '@/hooks/useHomeLikedSaved';
 import { useSearchPosts } from '@/hooks/useSearchPosts';
+import { useHomeSearchResultSources, HOME_SOLD_STUB, type HomePostListSource } from '@/hooks/useHomeSearchResultSources';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 
 export type HomeTab = 'recommend' | 'sold';
 
-/** Stub sold source เมื่อยังไม่เปิดแท็บขายแล้ว — ใช้ตอนมีคำค้น (sold จาก search) */
-const SOLD_STUB = {
-  posts: [] as any[],
-  setPosts: (_: any) => {},
-  session: undefined as any,
-  likedPosts: {} as { [key: string]: boolean },
-  savedPosts: {} as { [key: string]: boolean },
-  setLikedPosts: (_: any) => {},
-  setSavedPosts: (_: any) => {},
-  loadingMore: false,
-  hasMore: false,
-  setPage: (_: any) => {},
-  fetchPosts: (_?: boolean) => Promise.resolve(),
-};
-
-export type PostListSource = typeof SOLD_STUB;
+export type PostListSource = HomePostListSource;
 
 export interface UseHomeTabDataOptions {
   session: any;
@@ -102,81 +87,12 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
 
   const hasSearch = searchQuery.trim().length > 0;
 
-  const recommendFiltered = useMemo(
-    () => (hasSearch ? searchData.posts.filter((p: any) => p.status === 'recommend') : []),
-    [hasSearch, searchData.posts],
-  );
-  const soldFiltered = useMemo(
-    () => (hasSearch ? searchData.posts.filter((p: any) => p.status === 'sold') : []),
-    [hasSearch, searchData.posts],
-  );
-
-  const searchRecommendSlice = useSearchFeedSlice({
-    enabled: hasSearch,
-    allPosts: recommendFiltered,
-    loading: searchData.loading,
-    queryKey: `${searchQuery}|rec`,
+  const { recommendSource, soldSource } = useHomeSearchResultSources({
+    hasSearch,
+    searchQuery,
+    searchData,
+    recommendFeed,
   });
-  const searchSoldSlice = useSearchFeedSlice({
-    enabled: hasSearch,
-    allPosts: soldFiltered,
-    loading: searchData.loading,
-    queryKey: `${searchQuery}|sold`,
-  });
-
-  const recommendSource: PostListSource = hasSearch
-    ? {
-        posts: searchRecommendSlice.displayPosts,
-        setPosts: (fn: any) => {
-          searchData.setPosts((prev: any[]) => {
-            const recommendOnly = prev.filter((p: any) => p.status === 'recommend');
-            const next = typeof fn === 'function' ? fn(recommendOnly) : fn;
-            if (!Array.isArray(next)) return prev;
-            const byId = new Map(next.map((p: any) => [p.id, p]));
-            const nextIds = new Set(next.map((p: any) => p.id));
-            return prev
-              .filter((p: any) => p.status !== 'recommend' || nextIds.has(p.id))
-              .map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
-          });
-        },
-        session: searchData.session,
-        likedPosts: searchData.likedPosts,
-        savedPosts: searchData.savedPosts,
-        setLikedPosts: searchData.setLikedPosts,
-        setSavedPosts: searchData.setSavedPosts,
-        loadingMore: searchRecommendSlice.loadingMore,
-        hasMore: searchRecommendSlice.hasMore,
-        setPage: searchRecommendSlice.setPage,
-        fetchPosts: () => searchData.fetchSearch(),
-      }
-    : recommendFeed;
-
-  const soldSource: PostListSource = hasSearch
-    ? {
-        posts: searchSoldSlice.displayPosts,
-        setPosts: (fn: any) => {
-          searchData.setPosts((prev: any[]) => {
-            const soldOnly = prev.filter((p: any) => p.status === 'sold');
-            const next = typeof fn === 'function' ? fn(soldOnly) : fn;
-            if (!Array.isArray(next)) return prev;
-            const byId = new Map(next.map((p: any) => [p.id, p]));
-            const nextIds = new Set(next.map((p: any) => p.id));
-            return prev
-              .filter((p: any) => p.status !== 'sold' || nextIds.has(p.id))
-              .map((p: any) => (byId.has(p.id) ? byId.get(p.id) : p));
-          });
-        },
-        session: searchData.session,
-        likedPosts: searchData.likedPosts,
-        savedPosts: searchData.savedPosts,
-        setLikedPosts: searchData.setLikedPosts,
-        setSavedPosts: searchData.setSavedPosts,
-        loadingMore: searchSoldSlice.loadingMore,
-        hasMore: searchSoldSlice.hasMore,
-        setPage: searchSoldSlice.setPage,
-        fetchPosts: () => searchData.fetchSearch(),
-      }
-    : SOLD_STUB;
 
   const isSoldTabNoSearch = tab === 'sold' && !hasSearch;
   const posts =
@@ -186,7 +102,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
         ? [] // soldTabPosts จะถูก set จาก SoldTabFeedWrapper ที่ parent
         : soldSource.posts;
   const postList =
-    tab === 'recommend' ? recommendSource : isSoldTabNoSearch ? SOLD_STUB : soldSource;
+    tab === 'recommend' ? recommendSource : isSoldTabNoSearch ? HOME_SOLD_STUB : soldSource;
 
   return {
     sharedLikedSaved,

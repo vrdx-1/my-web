@@ -24,6 +24,7 @@ import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeScrollCoordinator } from '@/hooks/useHomeScrollCoordinator';
 import { useHomeRefreshState } from '@/hooks/useHomeRefreshState';
+import { useHomeSearchState } from '@/hooks/useHomeSearchState';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
@@ -46,13 +47,6 @@ export function HomePageContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
-  /** ใช้แยก "กำลังรอผลค้นหา" (แสดง skeleton) กับ "ค้นหาเสร็จแล้วไม่มีรายการ" (แสดง ຍັງບໍ່ມີລາຍການ) */
-  const searchResolvedRef = useRef(false);
-  const prevSearchQueryRef = useRef<string>('');
-  const prevSearchLoadingRef = useRef(false);
-  /** แสดง "ຍັງບໍ່ມີລາຍການ" ได้เฉพาะเมื่อ true = โหลดค้นหาเสร็จแล้ว (loading เปลี่ยนจาก true → false) */
-  const [searchResolvedForEmpty, setSearchResolvedForEmpty] = useState(false);
-  const prevQueryForEmptyRef = useRef<string>('');
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
 
@@ -104,43 +98,12 @@ export function HomePageContent() {
 
   const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
 
-  if (!hasSearch) {
-    searchResolvedRef.current = false;
-    prevSearchQueryRef.current = '';
-    prevSearchLoadingRef.current = false;
-  } else {
-    if (searchQuery !== prevSearchQueryRef.current) {
-      prevSearchQueryRef.current = searchQuery;
-      searchResolvedRef.current = false;
-      prevSearchLoadingRef.current = false;
-    }
-  }
-
-  useEffect(() => {
-    if (!hasSearch) {
-      setSearchResolvedForEmpty(false);
-      return;
-    }
-    if (prevSearchQueryRef.current !== searchQuery) return;
-    const wasLoading = prevSearchLoadingRef.current;
-    prevSearchLoadingRef.current = searchData.loading;
-    if (wasLoading && !searchData.loading) {
-      searchResolvedRef.current = true;
-      setSearchResolvedForEmpty(true);
-    }
-  }, [hasSearch, searchQuery, searchData.loading]);
-
-  useEffect(() => {
-    if (!hasSearch) {
-      setSearchResolvedForEmpty(false);
-      prevQueryForEmptyRef.current = '';
-      return;
-    }
-    if (prevQueryForEmptyRef.current !== searchQuery) {
-      setSearchResolvedForEmpty(false);
-      prevQueryForEmptyRef.current = searchQuery;
-    }
-  }, [hasSearch, searchQuery]);
+  const { searchWaitingResults } = useHomeSearchState({
+    hasSearch,
+    searchQuery,
+    searchLoading: searchData.loading,
+    postsLength: posts.length,
+  });
 
   useHomeRefresh({
     tab,
@@ -214,9 +177,6 @@ export function HomePageContent() {
     setJustSavedPosts,
   });
 
-  const searchWaitingResults =
-    hasSearch && posts.length === 0 && !searchResolvedForEmpty;
-
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
@@ -243,12 +203,14 @@ export function HomePageContent() {
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
     suppressHideUntilRef,
     scrollTuning: {
-      showThresholdPx: 130,
-      hideThresholdPx: 300,
-      minScrollDeltaPx: 14,
-      visibilityThrottleMs: 180,
-      layoutSettleIgnoreMs: 320,
-      captionToggleIgnoreMs: 520,
+      showThresholdPx: 120,
+      hideThresholdPx: 360,
+      minScrollDeltaPx: 20,
+      fastScrollDeltaPx: 30,
+      fastMinScrollDeltaPx: 24,
+      visibilityThrottleMs: 240,
+      layoutSettleIgnoreMs: 420,
+      captionToggleIgnoreMs: 650,
     },
   });
 

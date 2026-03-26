@@ -35,6 +35,8 @@ interface UseHeaderScrollOptions {
     showThresholdPx?: number;
     hideThresholdPx?: number;
     minScrollDeltaPx?: number;
+    fastScrollDeltaPx?: number;
+    fastMinScrollDeltaPx?: number;
     visibilityThrottleMs?: number;
     layoutSettleIgnoreMs?: number;
     captionToggleIgnoreMs?: number;
@@ -52,6 +54,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const showThresholdPx = scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX;
   const hideThresholdPx = scrollTuning?.hideThresholdPx ?? HEADER_HIDE_THRESHOLD_PX;
   const minScrollDeltaPx = scrollTuning?.minScrollDeltaPx ?? MIN_SCROLL_DELTA_PX;
+  const fastScrollDeltaPx = scrollTuning?.fastScrollDeltaPx ?? 26;
+  const fastMinScrollDeltaPx = scrollTuning?.fastMinScrollDeltaPx ?? 20;
   const visibilityThrottleMs = scrollTuning?.visibilityThrottleMs ?? VISIBILITY_THROTTLE_MS;
   const layoutSettleIgnoreMs = scrollTuning?.layoutSettleIgnoreMs ?? LAYOUT_SETTLE_IGNORE_MS;
   const captionToggleIgnoreMs = scrollTuning?.captionToggleIgnoreMs ?? CAPTION_TOGGLE_IGNORE_MS;
@@ -135,6 +139,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       const currentScrollY = window.scrollY;
       const lastY = lastScrollYRef.current;
       const scrollDelta = currentScrollY - lastY;
+      const absDelta = Math.abs(scrollDelta);
+      const isFastScroll = absDelta >= fastScrollDeltaPx;
+      const activeDeltaThreshold = isFastScroll ? fastMinScrollDeltaPx : minScrollDeltaPx;
 
       lastScrollYRef.current = currentScrollY;
 
@@ -154,15 +161,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       }
       // เลื่อนลงลึกเกิน threshold ค่อยซ่อน (hysteresis ไม่กระตุกที่ขอบ)
       if (currentScrollY >= hideThresholdPx) {
-        if (scrollDelta > minScrollDeltaPx) {
-          applyVisible(false);
-        } else if (scrollDelta < -minScrollDeltaPx) {
+        if (scrollDelta > activeDeltaThreshold) {
+          applyVisible(false, !isFastScroll);
+        } else if (scrollDelta < -activeDeltaThreshold) {
           applyVisible(true, false);
         }
         return;
       }
       // ระหว่าง SHOW–HIDE: เลื่อนขึ้นชัดเจนเท่านั้นค่อยแสดง header (delta จิ๋วจาก layout = ไม่สน)
-      if (scrollDelta < -minScrollDeltaPx) {
+      if (scrollDelta < -activeDeltaThreshold) {
         applyVisible(true, false);
       }
     };
@@ -184,7 +191,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       if (rafId != null) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [loadingMore, disableScrollHide, showThresholdPx, hideThresholdPx, minScrollDeltaPx]);
+  }, [loadingMore, disableScrollHide, showThresholdPx, hideThresholdPx, minScrollDeltaPx, fastScrollDeltaPx, fastMinScrollDeltaPx]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = (visible: boolean) => {

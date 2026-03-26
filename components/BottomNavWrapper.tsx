@@ -51,7 +51,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
             opacity: isNavVisible ? 1 : 0,
             visibility: isNavVisible ? 'visible' : 'hidden',
-            transition: 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease-out',
+            transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out',
           }}
         >
           <Suspense
