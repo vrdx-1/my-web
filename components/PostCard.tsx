@@ -12,7 +12,6 @@ import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 
-const CAPTION_TOGGLE_SCROLL_LOCK_FRAMES = 6;
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
 interface PostCardProps {
@@ -86,8 +85,6 @@ export function PostCard({
   const [collapsedCaption, setCollapsedCaption] = React.useState('');
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const captionRef = React.useRef<HTMLDivElement | null>(null);
-  const captionToggleScrollYRef = React.useRef<number | null>(null);
-  const captionToggleRafRef = React.useRef<number | null>(null);
   const captionToggleUnlockTimeoutRef = React.useRef<number | null>(null);
   const normalizedCaption = React.useMemo(() => {
     const rawCaption = typeof post.caption === 'string' ? post.caption : '';
@@ -95,10 +92,6 @@ export function PostCard({
   }, [post.caption]);
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
-    if (typeof window !== 'undefined' && captionToggleRafRef.current != null) {
-      window.cancelAnimationFrame(captionToggleRafRef.current);
-      captionToggleRafRef.current = null;
-    }
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
       window.clearTimeout(captionToggleUnlockTimeoutRef.current);
       captionToggleUnlockTimeoutRef.current = null;
@@ -207,37 +200,10 @@ export function PostCard({
     setCollapsedCaption(`${fullCaption.slice(0, best).trimEnd()}${ellipsis}`);
   }, [normalizedCaption]);
 
-  // บันทึก scrollY ก่อน toggle แล้ว restore หลัง DOM อัปเดต — การ์ดอยู่เดิมในเอกสาร ดังนั้น scrollY เดิม = header อยู่วิวพอร์ตเดิมเสมอ
-  React.useLayoutEffect(() => {
-    if (captionToggleScrollYRef.current == null || typeof window === 'undefined') return;
-    const targetScrollY = captionToggleScrollYRef.current;
-    captionToggleScrollYRef.current = null;
-    if (captionToggleRafRef.current != null) {
-      window.cancelAnimationFrame(captionToggleRafRef.current);
-      captionToggleRafRef.current = null;
-    }
-
-    let frameCount = 0;
-    const restoreScroll = () => {
-      if (window.scrollY !== targetScrollY) {
-        window.scrollTo(window.scrollX, targetScrollY);
-      }
-      frameCount += 1;
-      if (frameCount < CAPTION_TOGGLE_SCROLL_LOCK_FRAMES) {
-        captionToggleRafRef.current = window.requestAnimationFrame(restoreScroll);
-        return;
-      }
-      captionToggleRafRef.current = null;
-    };
-
-    restoreScroll();
-  }, [isCaptionExpanded]);
-
   const handleCaptionToggle = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isCaptionOverflowing) return;
     if (typeof window !== 'undefined') {
-      captionToggleScrollYRef.current = window.scrollY;
       if (typeof document !== 'undefined') {
         document.body.dataset.captionToggleActive = 'true';
       }
