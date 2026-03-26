@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -25,6 +25,12 @@ import { usePostListData } from '@/hooks/usePostListData';
 import { useHomeScrollCoordinator } from '@/hooks/useHomeScrollCoordinator';
 import { useHomeRefreshState } from '@/hooks/useHomeRefreshState';
 import { useHomeSearchState } from '@/hooks/useHomeSearchState';
+import { useRecommendLoadMoreShell } from '@/hooks/useRecommendLoadMoreShell';
+import { useReportModalState } from '@/hooks/useReportModalState';
+import { useHomeEffectivePostList } from '@/hooks/useHomeEffectivePostList';
+import { useSavedPostsTracking } from '@/hooks/useSavedPostsTracking';
+import { useRecommendPostFeedProps } from '@/hooks/useRecommendPostFeedProps';
+import { usePostModalsBackHandler } from '@/hooks/usePostModalsBackHandler';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
@@ -41,10 +47,17 @@ export function HomePageContent() {
   }, []);
 
   const [tabRefreshing, setTabRefreshing] = useState(false);
-  const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
-  const [reportingPost, setReportingPost] = useState<any | null>(null);
-  const [reportReason, setReportReason] = useState('');
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const { justSavedPosts, setJustSavedPosts } = useSavedPostsTracking();
+
+  const {
+    reportingPost,
+    setReportingPost,
+    reportReason,
+    setReportReason,
+    isSubmittingReport,
+    setIsSubmittingReport,
+  } = useReportModalState();
 
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
@@ -62,7 +75,6 @@ export function HomePageContent() {
     recommendFeed,
     searchData,
     hasSearch,
-    isSoldTabNoSearch,
     postList,
     searchQuery,
     tab,
@@ -72,9 +84,6 @@ export function HomePageContent() {
     router,
     searchParams,
   } = tabData;
-
-  /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel/prefetch ยิง setPage — ก่อน loadingMore จาก API (ช่วงรอ useEffect เรียก fetchPosts) */
-  const [recommendLoadMoreShell, setRecommendLoadMoreShell] = useState(false);
 
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const soldListData = usePostListData({
@@ -86,7 +95,21 @@ export function HomePageContent() {
     province: selectedProvince,
   });
 
-  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
+  const { isSoldTabNoSearch, effectivePostList } = useHomeEffectivePostList({
+    tab,
+    tabPostList: postList,
+    soldListData,
+    hasSearch,
+  });
+
+  const { shell: recommendLoadMoreShell, triggerLoadMore: triggerRecommendLoadMore } =
+    useRecommendLoadMoreShell({
+      postListLoadingMore: effectivePostList.loadingMore,
+      isSoldTabNoSearch,
+      selectedProvince,
+    });
+
+  const effectiveLoadingMore = effectivePostList.loadingMore;
   const { soldTabRefreshRef } = useHomeRefreshState({
     tab,
     selectedProvince,
@@ -96,7 +119,7 @@ export function HomePageContent() {
     setTabRefreshing,
   });
 
-  const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
+  const posts = effectivePostList.posts;
 
   const { searchWaitingResults } = useHomeSearchState({
     hasSearch,
@@ -137,43 +160,27 @@ export function HomePageContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
+
   const handleRecommendLoadMore = useCallback(() => {
-    setRecommendLoadMoreShell(true);
-    postList.setPage((p: number) => p + 1);
-  }, [postList.setPage]);
-
-  useEffect(() => {
-    if (postList.loadingMore) setRecommendLoadMoreShell(false);
-  }, [postList.loadingMore]);
-
-  useEffect(() => {
-    if (!recommendLoadMoreShell) return;
-    const t = window.setTimeout(() => setRecommendLoadMoreShell(false), 8000);
-    return () => clearTimeout(t);
-  }, [recommendLoadMoreShell]);
-
-  useEffect(() => {
-    if (isSoldTabNoSearch) setRecommendLoadMoreShell(false);
-  }, [isSoldTabNoSearch]);
-
-  useEffect(() => {
-    setRecommendLoadMoreShell(false);
-  }, [selectedProvince]);
+    triggerRecommendLoadMore();
+    effectivePostList.setPage((p: number) => p + 1);
+  }, [triggerRecommendLoadMore, effectivePostList.setPage]);
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
-    loadingMore: postList.loadingMore,
-    hasMore: postList.hasMore,
+    enabled: !isSoldTabNoSearch,
+    loadingMore: effectivePostList.loadingMore,
+    hasMore: effectivePostList.hasMore,
     onLoadMore: handleRecommendLoadMore,
     /** ผลค้นหาโฮมโหลดเพิ่มแบบ client slice — ไม่มี loadingMore สลับ ต้องรีเซ็ต sentinel เมื่อจำนวนโพสเปลี่ยน */
-    feedPostCount: postList.posts.length,
+    feedPostCount: posts.length,
   });
 
   const { toggleSave } = usePostInteractions({
-    session: postList.session,
-    posts: postList.posts,
-    setPosts: postList.setPosts,
-    savedPosts: postList.savedPosts,
-    setSavedPosts: postList.setSavedPosts,
+    session: effectivePostList.session,
+    posts,
+    setPosts: effectivePostList.setPosts,
+    savedPosts: effectivePostList.savedPosts,
+    setSavedPosts: effectivePostList.setSavedPosts,
     setJustSavedPosts,
   });
 
@@ -181,8 +188,8 @@ export function HomePageContent() {
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
       (posts.length === 0 &&
-        (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
-      (tabRefreshing && postList.loadingMore));
+        (effectivePostList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+      (tabRefreshing && effectivePostList.loadingMore));
 
   const {
     feedRestoreWrapRef,
@@ -199,7 +206,7 @@ export function HomePageContent() {
 
   const headerScroll = useHeaderScroll({
     loadingMore: effectiveLoadingMore,
-    feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
+    feedPostCount: posts.length,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
     suppressHideUntilRef,
     scrollTuning: {
@@ -214,11 +221,11 @@ export function HomePageContent() {
     },
   });
 
-  const effectiveSession = isSoldTabNoSearch ? session : postList.session;
+  const effectiveSession = isSoldTabNoSearch ? session : effectivePostList.session;
   const handlers = usePostFeedHandlers({
     session: effectiveSession,
-    posts: postList.posts,
-    setPosts: postList.setPosts,
+    posts,
+    setPosts: effectivePostList.setPosts,
     viewingPostHook,
     headerScroll,
     menu,
@@ -249,89 +256,57 @@ export function HomePageContent() {
   });
 
   const { addBackStep } = useBackHandler();
-  useEffect(() => {
-    if (!fullScreenViewer.fullScreenImages) return;
-    const close = () => {
-      fullScreenViewer.setFullScreenImages(null);
-      if (fullScreenViewer.activePhotoMenu !== null) {
-        fullScreenViewer.setIsPhotoMenuAnimating(true);
-        setTimeout(() => {
-          fullScreenViewer.setActivePhotoMenu(null);
-          fullScreenViewer.setIsPhotoMenuAnimating(false);
-        }, 300);
-      }
-    };
-    return addBackStep(close);
-  }, [fullScreenViewer.fullScreenImages]);
-  useEffect(() => {
-    if (!viewingPostHook.viewingPost) return;
-    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
-    return addBackStep(close);
-  }, [viewingPostHook.viewingPost]);
+  usePostModalsBackHandler({
+    addBackStep,
+    fullScreenImages: fullScreenViewer.fullScreenImages,
+    activePhotoMenu: fullScreenViewer.activePhotoMenu,
+    setFullScreenImages: fullScreenViewer.setFullScreenImages,
+    setIsPhotoMenuAnimating: fullScreenViewer.setIsPhotoMenuAnimating,
+    setActivePhotoMenu: fullScreenViewer.setActivePhotoMenu,
+    viewingPost: viewingPostHook.viewingPost,
+    onCloseViewingPost: () =>
+      viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible),
+  });
 
   /** โหลดโพสถัดไปล่วงหน้าเมื่อโพสสุดท้ายโหลดรูปครบ — จำกัดเมื่อมีโพสในคิวไม่เกิน 2 เพื่อไม่ดึงยิงทั้งฟีด */
   const onPrefetchNextPost = useCallback(() => {
     if (isSoldTabNoSearch || tab !== 'recommend') return;
-    if (postList.posts.length > 2) return;
-    if (!postList.hasMore || postList.loadingMore) return;
-    setRecommendLoadMoreShell(true);
-    postList.setPage((p: number) => p + 1);
+    if (posts.length > 2) return;
+    if (!effectivePostList.hasMore || effectivePostList.loadingMore) return;
+    triggerRecommendLoadMore();
+    effectivePostList.setPage((p: number) => p + 1);
   }, [
     isSoldTabNoSearch,
     tab,
-    postList.posts.length,
-    postList.hasMore,
-    postList.loadingMore,
-    postList.setPage,
+    posts.length,
+    effectivePostList.hasMore,
+    effectivePostList.loadingMore,
+    effectivePostList.setPage,
+    triggerRecommendLoadMore,
   ]);
 
-  const recommendPostFeedProps = useMemo(
-    () => ({
-      posts,
-      session: postList.session,
-      savedPosts: postList.savedPosts,
-      justSavedPosts,
-      activeMenuState: menu.activeMenuState,
-      isMenuAnimating: menu.isMenuAnimating,
-      lastPostElementRef,
-      menuButtonRefs: menu.menuButtonRefs,
-      onViewPost: handlers.handleViewPost,
-      onSave: toggleSave,
-      onShare: handlers.handleShare,
-      onTogglePostStatus: handlers.handleTogglePostStatus,
-      onDeletePost: handlers.handleDeletePost,
-      onReport: handlers.handleReport,
-      onSetActiveMenu: menu.setActiveMenu,
-      onSetMenuAnimating: menu.setIsMenuAnimating,
-      /** ห้าม mask ด้วย hasMore: ใน useHomeFeed หลัง API จะ setHasMore ก่อน แล้วค่อย await supabase โหลดโพสเต็ม — ช่วงนั้น hasMore อาจเป็น false แต่ loadingMore ยัง true → ถ้าส่ง false จะไม่มี skeleton + totalSize สั้นลง = พื้นขาวด้านล่าง */
-      loadingMore: postList.loadingMore || recommendLoadMoreShell,
-      hasMore: postList.hasMore ?? true,
-      onLoadMore: handleRecommendLoadMore,
-      hideBoost: false,
-    }),
-    [
-      posts,
-      postList.session,
-      postList.savedPosts,
-      postList.hasMore,
-      postList.loadingMore,
-      recommendLoadMoreShell,
-      handleRecommendLoadMore,
-      justSavedPosts,
-      menu.activeMenuState,
-      menu.isMenuAnimating,
-      menu.menuButtonRefs,
-      menu.setActiveMenu,
-      menu.setIsMenuAnimating,
-      lastPostElementRef,
-      handlers.handleViewPost,
-      handlers.handleShare,
-      handlers.handleTogglePostStatus,
-      handlers.handleDeletePost,
-      handlers.handleReport,
-      toggleSave,
-    ],
-  );
+  const recommendPostFeedProps = useRecommendPostFeedProps({
+    posts,
+    session: effectivePostList.session,
+    savedPosts: effectivePostList.savedPosts,
+    justSavedPosts,
+    activeMenuState: menu.activeMenuState,
+    isMenuAnimating: menu.isMenuAnimating,
+    lastPostElementRef,
+    menuButtonRefs: menu.menuButtonRefs,
+    onViewPost: handlers.handleViewPost,
+    onSave: toggleSave,
+    onShare: handlers.handleShare,
+    onTogglePostStatus: handlers.handleTogglePostStatus,
+    onDeletePost: handlers.handleDeletePost,
+    onReport: handlers.handleReport,
+    onSetActiveMenu: menu.setActiveMenu,
+    onSetMenuAnimating: menu.setIsMenuAnimating,
+    /** ห้าม mask ด้วย hasMore: ใน useHomeFeed หลัง API จะ setHasMore ก่อน แล้วค่อย await supabase โหลดโพสเต็ม — ช่วงนั้น hasMore อาจเป็น false แต่ loadingMore ยัง true → ถ้าส่ง false จะไม่มี skeleton + totalSize สั้นลง = พื้นขาวด้านล่าง */
+    loadingMore: effectivePostList.loadingMore || recommendLoadMoreShell,
+    hasMore: effectivePostList.hasMore ?? true,
+    onLoadMore: handleRecommendLoadMore,
+  });
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {

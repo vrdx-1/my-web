@@ -2,6 +2,7 @@ import { useRef, useCallback, RefObject, useEffect } from 'react';
 import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 
 interface UseInfiniteScrollProps {
+  enabled?: boolean;
   loadingMore: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
@@ -22,6 +23,7 @@ interface UseInfiniteScrollProps {
  * Triggers load more when the sentinel is still 800px below viewport so next page is ready before user reaches bottom.
  */
 export const useInfiniteScroll = ({
+  enabled = true,
   loadingMore,
   hasMore,
   onLoadMore,
@@ -44,6 +46,7 @@ export const useInfiniteScroll = ({
       observer.current.disconnect();
       observer.current = null;
     }
+    if (!enabled) return;
     if (!node) return;
     /** sentinel เปลี่ยน (โพสใหม่ท้ายลิสต์) — ต้องยิงโหลดเพิ่มได้อีก แม้ loadingMore ไม่สลับ (เช่น slice ผลค้นหา) */
     triggeredRef.current = false;
@@ -61,9 +64,17 @@ export const useInfiniteScroll = ({
       { threshold, rootMargin, root }
     );
     observer.current.observe(node);
-  }, [threshold, rootMargin, rootRef]);
+  }, [enabled, threshold, rootMargin, rootRef]);
 
   useEffect(() => {
+    if (!enabled) {
+      triggeredRef.current = false;
+      if (observer.current) {
+        observer.current.disconnect();
+        observer.current = null;
+      }
+      return;
+    }
     if (loadingMore || !hasMore) return;
     triggeredRef.current = false;
     const node = nodeRef.current;
@@ -89,7 +100,7 @@ export const useInfiniteScroll = ({
         observer.current = null;
       }
     };
-  }, [loadingMore, hasMore, threshold, rootMargin, rootRef, feedPostCount]);
+  }, [enabled, loadingMore, hasMore, threshold, rootMargin, rootRef, feedPostCount]);
 
   return { lastElementRef };
 };

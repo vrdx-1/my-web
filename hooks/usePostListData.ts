@@ -43,7 +43,7 @@ interface UsePostListDataOptions {
   province?: string;
 }
 
-interface UsePostListDataReturn {
+export interface UsePostListDataReturn {
   // State
   posts: any[];
   page: number;
