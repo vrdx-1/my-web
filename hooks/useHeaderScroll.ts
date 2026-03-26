@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
 const TOP_SHOW_THRESHOLD_PX = 24;
 const MIN_SCROLL_DELTA_PX = 6;
@@ -26,7 +26,6 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const latestScrollYRef = useRef(0);
   const scrollFrameRef = useRef<number | null>(null);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
-  onVisibilityChangeRef.current = onVisibilityChange;
   const lastAppliedVisibleRef = useRef(true);
   const applyVisible = (visible: boolean) => {
     if (lastAppliedVisibleRef.current === visible) return;
@@ -35,11 +34,14 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     onVisibilityChangeRef.current?.(visible);
   };
 
+  useEffect(() => {
+    onVisibilityChangeRef.current = onVisibilityChange;
+  }, [onVisibilityChange]);
+
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useEffect(() => {
     if (!disableScrollHide) return;
     lastAppliedVisibleRef.current = true;
-    setIsHeaderVisible(true);
     onVisibilityChangeRef.current?.(true);
   }, [disableScrollHide]);
 
@@ -52,8 +54,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       scrollFrameRef.current = window.requestAnimationFrame(() => {
         scrollFrameRef.current = null;
         const currentScrollY = latestScrollYRef.current;
-        const lastScrollY = lastScrollYRef.current;
-        const scrollDelta = currentScrollY - lastScrollY;
+        const previousScrollY = lastScrollYRef.current;
+        const scrollDelta = currentScrollY - previousScrollY;
         lastScrollYRef.current = currentScrollY;
 
         if (currentScrollY <= TOP_SHOW_THRESHOLD_PX) {
@@ -81,9 +83,6 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
-    if (scrollY <= TOP_SHOW_THRESHOLD_PX) {
-      applyVisible(true);
-    }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
@@ -96,17 +95,20 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   }, [disableScrollHide, suppressHideUntilRef]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
-  const wrappedSetIsHeaderVisible = (visible: boolean) => {
+  const wrappedSetIsHeaderVisible = useCallback((visible: boolean) => {
     if (disableScrollHide) {
       // ไม่ให้เปลี่ยนค่า header เมื่อ disableScrollHide เป็น true
       return;
     }
     applyVisible(visible);
-  };
+  }, [disableScrollHide]);
 
-  return {
-    isHeaderVisible: disableScrollHide ? true : isHeaderVisible,
-    lastScrollY: lastScrollYRef.current,
-    setIsHeaderVisible: wrappedSetIsHeaderVisible,
-  };
+  return useMemo(
+    () => ({
+      isHeaderVisible: disableScrollHide ? true : isHeaderVisible,
+      lastScrollY: 0,
+      setIsHeaderVisible: wrappedSetIsHeaderVisible,
+    }),
+    [disableScrollHide, isHeaderVisible, wrappedSetIsHeaderVisible],
+  );
 }

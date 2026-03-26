@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 interface UseMenuReturn {
   activeMenuState: string | null;
@@ -53,11 +53,14 @@ export function useMenu(): UseMenuReturn {
     };
   }, [activeMenuState]);
 
-  return {
-    activeMenuState,
-    isMenuAnimating,
-    menuButtonRefs,
-    setActiveMenu,
-    setIsMenuAnimating,
-  };
+  return useMemo(
+    () => ({
+      activeMenuState,
+      isMenuAnimating,
+      menuButtonRefs,
+      setActiveMenu,
+      setIsMenuAnimating,
+    }),
+    [activeMenuState, isMenuAnimating],
+  );
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /** ตรงกับ useHeaderScroll — อยู่บนสุดของ feed ไม่ซ่อน header ตอนเปิด/ปิด viewing mode */
 const HEADER_TOP_ZONE_PX = 200;
@@ -75,19 +75,33 @@ export function useViewingPost(): UseViewingPostReturn {
     setViewingModeTouchStart(null);
   }, [viewingModeTouchStart]);
 
-  return {
-    viewingPost,
-    isViewingModeOpen,
-    viewingModeDragOffset,
-    initialImageIndex,
-    savedScrollPosition,
-    setViewingPost,
-    setIsViewingModeOpen,
-    setViewingModeDragOffset,
-    handleViewPost,
-    closeViewingMode,
-    handleViewingModeTouchStart,
-    handleViewingModeTouchMove,
-    handleViewingModeTouchEnd,
-  };
+  return useMemo(
+    () => ({
+      viewingPost,
+      isViewingModeOpen,
+      viewingModeDragOffset,
+      initialImageIndex,
+      savedScrollPosition,
+      setViewingPost,
+      setIsViewingModeOpen,
+      setViewingModeDragOffset,
+      handleViewPost,
+      closeViewingMode,
+      handleViewingModeTouchStart,
+      handleViewingModeTouchMove,
+      handleViewingModeTouchEnd,
+    }),
+    [
+      viewingPost,
+      isViewingModeOpen,
+      viewingModeDragOffset,
+      initialImageIndex,
+      savedScrollPosition,
+      handleViewPost,
+      closeViewingMode,
+      handleViewingModeTouchStart,
+      handleViewingModeTouchMove,
+      handleViewingModeTouchEnd,
+    ],
+  );
 }

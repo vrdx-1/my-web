@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { HomeHeader } from '@/components/home/HomeHeader';
-import { TabNavigation } from '@/components/TabNavigation';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -16,9 +14,9 @@ import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { markRouteVisited } from '@/utils/visitedRoutesStore';
-import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { MainTabPanels } from './MainTabPanels';
 import { HomeTabScrollProvider, useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
+import { HomeHeaderChrome } from './HomeHeaderChrome';
 
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,7 +25,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
     userId: session?.user?.id,
   });
-  const fileUpload = useFileUpload();
+  const { hiddenFileInputRef, handleFileChange, handleCreatePostClick } = useFileUpload();
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
@@ -51,10 +49,10 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [pathname, headerVisibility]);
 
   useEffect(() => {
-    const handler = () => fileUpload.handleCreatePostClick(session);
+    const handler = () => handleCreatePostClick(session);
     createPostContext?.register(handler);
     return () => createPostContext?.register(null);
-  }, [session, createPostContext, fileUpload.handleCreatePostClick]);
+  }, [session, createPostContext, handleCreatePostClick]);
 
   const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
   const setProfileOverlayOpen = mainTab?.setProfileOverlayOpen ?? (() => {});
@@ -125,86 +123,46 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
-  /** ความสูงรวมของ fixed block: header + tab bar (สำหรับ header โฮมที่เตี้ยลง) */
-  // ต้องชดเชยความสูงที่เพิ่มขึ้นจากการขยับแท็บลงในหน้า home (ดู wrapper ด้านล่าง)
-  const HOME_FIXED_BLOCK_HEIGHT = 102;
-
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
+
+  const handleHomeTabChange = useCallback(
+    (tab: 'recommend' | 'sold') => {
+      if (pathname === '/home') {
+        homeTabScroll?.saveCurrentHomeTabScroll();
+        headerVisibility?.setHeaderVisible(true);
+      }
+      homeProvince?.setSelectedProvince('');
+      mainTab?.triggerTabChange(tab);
+    },
+    [pathname, homeTabScroll, headerVisibility, homeProvince, mainTab],
+  );
 
   return (
     <>
       <input
         type="file"
-        ref={fileUpload.hiddenFileInputRef}
+        ref={hiddenFileInputRef}
         multiple
         accept="image/*"
-        onChange={fileUpload.handleFileChange}
+        onChange={handleFileChange}
         style={{ display: 'none' }}
         aria-hidden
       />
       {showHomeHeader ? (
-        <>
-          <div
-            className="header-visibility-surface"
-            data-home-header-motion-surface="1"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              zIndex: 500,
-              background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-              backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-              transform: 'translate3d(0, 0, 0)',
-              boxShadow: 'none',
-              transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease-out',
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              contain: 'paint',
-            }}
-          >
-            <HomeHeader
-              onCreatePostClick={() => fileUpload.handleCreatePostClick(session)}
-              onNotificationClick={handleNotificationClick}
-              unreadCount={unreadCount}
-              userProfile={userProfile}
-              session={session}
-              isHeaderVisible={isHeaderVisible}
-              slideWithContainer={true}
-              onTabRefresh={handleLogoRefresh}
-              onTabSwitchStart={handleTabSwitchStart}
-              loadingTab={loadingTab ?? undefined}
-              setProfileOverlayOpen={setProfileOverlayOpen}
-              showOnlySearch={true}
-            />
-            <div style={{ marginTop: 7 }}>
-              <TabNavigation
-                className="home-tab-navigation"
-                tabs={[
-                  { value: 'recommend', label: 'ພ້ອມຂາຍ' },
-                  { value: 'sold', label: 'ຂາຍແລ້ວ' },
-                ]}
-                activeTab={mainTab?.homeTab ?? 'recommend'}
-                onTabChange={(v) => {
-                  if (pathname === '/home') {
-                    homeTabScroll?.saveCurrentHomeTabScroll();
-                    headerVisibility?.setHeaderVisible(true);
-                  }
-                  homeProvince?.setSelectedProvince('');
-                  mainTab?.triggerTabChange(v as 'recommend' | 'sold');
-                }}
-                loadingTab={loadingTab}
-              />
-            </div>
-          </div>
-          <div
-            style={{
-              height: HOME_FIXED_BLOCK_HEIGHT,
-              background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-              backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-            }}
-          />
-        </>
+        <HomeHeaderChrome
+          session={session}
+          userProfile={userProfile}
+          unreadCount={unreadCount}
+          isHeaderVisible={isHeaderVisible}
+          loadingTab={loadingTab}
+          activeTab={mainTab?.homeTab ?? 'recommend'}
+          onCreatePostClick={() => handleCreatePostClick(session)}
+          onNotificationClick={handleNotificationClick}
+          onTabRefresh={handleLogoRefresh}
+          onTabSwitchStart={handleTabSwitchStart}
+          onTabChange={handleHomeTabChange}
+          setProfileOverlayOpen={setProfileOverlayOpen}
+        />
       ) : null}
 
       {isProfileOverlayOpen && (

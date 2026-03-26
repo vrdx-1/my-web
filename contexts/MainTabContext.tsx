@@ -1,23 +1,29 @@
 'use client';
 
-import React, { createContext, useCallback, useRef, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useRef, useContext, useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 
-type TabRefreshOptions = { fromHomeButton?: boolean };
-type TabRefreshHandler = (options?: TabRefreshOptions) => void;
-type TabChangeHandler = (tab: MainTab) => void;
+export type TabRefreshOptions = { fromHomeButton?: boolean };
 export type MainTab = 'recommend' | 'sold';
+
+interface TabChangeRequest {
+  requestId: number;
+  tab: MainTab;
+}
+
+interface TabRefreshRequest {
+  requestId: number;
+  options?: TabRefreshOptions;
+}
 
 interface MainTabContextValue {
   /** แท็บ Home ปัจจุบัน (ພ້ອມຂາຍ | ຂາຍແລ້ວ) */
   homeTab: MainTab;
   setHomeTab: (v: MainTab) => void;
-  registerTabChangeHandler: (handler: TabChangeHandler) => void;
-  unregisterTabChangeHandler: () => void;
   triggerTabChange: (tab: MainTab) => void;
-  registerTabRefreshHandler: (handler: TabRefreshHandler) => void;
-  unregisterTabRefreshHandler: () => void;
   triggerTabRefresh: (options?: TabRefreshOptions) => void;
+  tabChangeRequest: TabChangeRequest | null;
+  tabRefreshRequest: TabRefreshRequest | null;
   tabRefreshing: boolean;
   setTabRefreshing: (v: boolean) => void;
   navigatingToTab: MainTab | null;
@@ -32,9 +38,11 @@ const HOME_TAB_DEFAULT: MainTab = 'recommend';
 
 export function MainTabProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const handlerRef = useRef<TabRefreshHandler | null>(null);
-  const tabChangeHandlerRef = useRef<TabChangeHandler | null>(null);
+  const tabChangeRequestIdRef = useRef(0);
+  const tabRefreshRequestIdRef = useRef(0);
   const [homeTab, setHomeTabState] = useState<MainTab>(HOME_TAB_DEFAULT);
+  const [tabChangeRequest, setTabChangeRequest] = useState<TabChangeRequest | null>(null);
+  const [tabRefreshRequest, setTabRefreshRequest] = useState<TabRefreshRequest | null>(null);
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [navigatingToTab, setNavigatingToTab] = useState<MainTab | null>(null);
   const [isProfileOverlayOpen, setProfileOverlayOpen] = useState(false);
@@ -51,47 +59,50 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     setHomeTabState(v);
   }, []);
 
-  const registerTabChangeHandler = useCallback((handler: TabChangeHandler) => {
-    tabChangeHandlerRef.current = handler;
-  }, []);
-
-  const unregisterTabChangeHandler = useCallback(() => {
-    tabChangeHandlerRef.current = null;
-  }, []);
-
   const triggerTabChange = useCallback((tab: MainTab) => {
     setHomeTabState(tab);
-    tabChangeHandlerRef.current?.(tab);
-  }, []);
-
-  const registerTabRefreshHandler = useCallback((handler: TabRefreshHandler) => {
-    handlerRef.current = handler;
-  }, []);
-
-  const unregisterTabRefreshHandler = useCallback(() => {
-    handlerRef.current = null;
+    tabChangeRequestIdRef.current += 1;
+    setTabChangeRequest({
+      requestId: tabChangeRequestIdRef.current,
+      tab,
+    });
   }, []);
 
   const triggerTabRefresh = useCallback((options?: TabRefreshOptions) => {
-    handlerRef.current?.(options);
+    tabRefreshRequestIdRef.current += 1;
+    setTabRefreshRequest({
+      requestId: tabRefreshRequestIdRef.current,
+      options,
+    });
   }, []);
 
-  const value: MainTabContextValue = {
-    homeTab,
-    setHomeTab,
-    registerTabChangeHandler,
-    unregisterTabChangeHandler,
-    triggerTabChange,
-    registerTabRefreshHandler,
-    unregisterTabRefreshHandler,
-    triggerTabRefresh,
-    tabRefreshing,
-    setTabRefreshing,
-    navigatingToTab,
-    setNavigatingToTab,
-    isProfileOverlayOpen,
-    setProfileOverlayOpen,
-  };
+  const value = useMemo<MainTabContextValue>(
+    () => ({
+      homeTab,
+      setHomeTab,
+      triggerTabChange,
+      triggerTabRefresh,
+      tabChangeRequest,
+      tabRefreshRequest,
+      tabRefreshing,
+      setTabRefreshing,
+      navigatingToTab,
+      setNavigatingToTab,
+      isProfileOverlayOpen,
+      setProfileOverlayOpen,
+    }),
+    [
+      homeTab,
+      setHomeTab,
+      triggerTabChange,
+      triggerTabRefresh,
+      tabChangeRequest,
+      tabRefreshRequest,
+      tabRefreshing,
+      navigatingToTab,
+      isProfileOverlayOpen,
+    ],
+  );
 
   return (
     <MainTabContext.Provider value={value}>

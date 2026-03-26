@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import type { HomeTab } from './useHomeTabData';
 import type { UseHomeFeedReturn } from './useHomeFeed';
@@ -39,6 +39,7 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
     hasRecommendTabCache = false,
     hasSearchResultsCache = false,
   } = options;
+  const lastHandledTabChangeRequestIdRef = useRef<number | null>(null);
 
   const setTabAndRefresh = useCallback(
     (newTab: HomeTab) => {
@@ -90,9 +91,12 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
   );
 
   useEffect(() => {
-    mainTab?.registerTabChangeHandler(setTabAndRefresh);
-    return () => mainTab?.unregisterTabChangeHandler();
-  }, [mainTab, setTabAndRefresh]);
+    const request = mainTab?.tabChangeRequest;
+    if (!request) return;
+    if (lastHandledTabChangeRequestIdRef.current === request.requestId) return;
+    lastHandledTabChangeRequestIdRef.current = request.requestId;
+    setTabAndRefresh(request.tab);
+  }, [mainTab?.tabChangeRequest, setTabAndRefresh]);
 
   return setTabAndRefresh;
 }

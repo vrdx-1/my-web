@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import type { HomeTab } from './useHomeTabData';
@@ -39,6 +39,7 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
     soldTabRefreshRef,
     setTabRefreshing,
   } = options;
+  const lastHandledRefreshRequestIdRef = useRef<number | null>(null);
 
   const doRefresh = useCallback(
     (refreshOptions?: { fromHomeButton?: boolean }) => {
@@ -93,9 +94,12 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
   );
 
   useEffect(() => {
-    mainTab?.registerTabRefreshHandler(doRefresh);
-    return () => mainTab?.unregisterTabRefreshHandler();
-  }, [mainTab, doRefresh]);
+    const request = mainTab?.tabRefreshRequest;
+    if (!request) return;
+    if (lastHandledRefreshRequestIdRef.current === request.requestId) return;
+    lastHandledRefreshRequestIdRef.current = request.requestId;
+    doRefresh(request.options);
+  }, [mainTab?.tabRefreshRequest, doRefresh]);
 
   return doRefresh;
 }

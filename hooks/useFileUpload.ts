@@ -2,13 +2,12 @@
 
 import { useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { safeParseSessionJSON } from '@/utils/storageUtils';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface UseFileUploadReturn {
   hiddenFileInputRef: React.RefObject<HTMLInputElement>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleCreatePostClick: (session: any) => void;
+  handleCreatePostClick: (session: unknown) => void;
 }
 
 export function useFileUpload(): UseFileUploadReturn {
@@ -27,7 +26,7 @@ export function useFileUpload(): UseFileUploadReturn {
   }, [router]);
 
   const handleCreatePostClick = useCallback((
-    session: any
+    session: unknown
   ) => {
     if (session) {
       hiddenFileInputRef.current?.click();

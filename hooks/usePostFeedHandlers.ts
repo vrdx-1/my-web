@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useViewingPost } from './useViewingPost';
 import { useHeaderScroll } from './useHeaderScroll';
@@ -127,19 +127,34 @@ export function usePostFeedHandlers({
     [session, setPosts]
   );
 
-  return {
-    handleViewPost,
-    handleTogglePostStatus,
-    handleDeletePost,
-    handleReport,
-    handleSubmitReport,
-    handleShare,
-    showDeleteConfirm,
-    handleConfirmDelete,
-    handleCancelDelete,
-    showDeleteSuccess,
-    setShowDeleteSuccess,
-    showReportSuccess,
-    setShowReportSuccess,
-  };
+  return useMemo(
+    () => ({
+      handleViewPost,
+      handleTogglePostStatus,
+      handleDeletePost,
+      handleReport,
+      handleSubmitReport,
+      handleShare,
+      showDeleteConfirm,
+      handleConfirmDelete,
+      handleCancelDelete,
+      showDeleteSuccess,
+      setShowDeleteSuccess,
+      showReportSuccess,
+      setShowReportSuccess,
+    }),
+    [
+      handleViewPost,
+      handleTogglePostStatus,
+      handleDeletePost,
+      handleReport,
+      handleSubmitReport,
+      handleShare,
+      showDeleteConfirm,
+      handleConfirmDelete,
+      handleCancelDelete,
+      showDeleteSuccess,
+      showReportSuccess,
+    ],
+  );
 }

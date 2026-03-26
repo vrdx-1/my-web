@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 interface UseFullScreenViewerReturn {
   fullScreenImages: string[] | null;
@@ -95,7 +95,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
         setTimeout(() => URL.revokeObjectURL(link.href), 100);
         setActivePhotoMenu(null);
       }
-    } catch (err) {
+    } catch {
     }
   }, []);
 
@@ -184,43 +184,67 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     setFullScreenShowDetails((prev) => !prev);
   }, [activePhotoMenu]);
 
-  return {
-    fullScreenImages,
-    currentImgIndex,
-    touchStart,
-    activePhotoMenu,
-    isPhotoMenuAnimating,
-    fullScreenDragOffset,
-    fullScreenEntranceOffset,
-    fullScreenVerticalDragOffset,
-    fullScreenIsDragging,
-    fullScreenTransitionDuration,
-    fullScreenShowDetails,
-    fullScreenZoomScale,
-    fullScreenZoomOrigin,
-    showImageForDownload,
-    showDownloadBottomSheet,
-    isDownloadBottomSheetAnimating,
-    setFullScreenImages,
-    setCurrentImgIndex,
-    setActivePhotoMenu,
-    setIsPhotoMenuAnimating,
-    setShowImageForDownload,
-    setShowDownloadBottomSheet,
-    setIsDownloadBottomSheetAnimating,
-    setFullScreenDragOffset,
-    setFullScreenVerticalDragOffset,
-    setFullScreenZoomScale,
-    setFullScreenZoomOrigin,
-    setFullScreenIsDragging,
-    setFullScreenTransitionDuration,
-    setFullScreenShowDetails,
-    
-    // Handlers
-    fullScreenOnTouchStart,
-    fullScreenOnTouchMove,
-    fullScreenOnTouchEnd,
-    fullScreenOnClick,
-    downloadImage,
-  };
+  return useMemo(
+    () => ({
+      fullScreenImages,
+      currentImgIndex,
+      touchStart,
+      activePhotoMenu,
+      isPhotoMenuAnimating,
+      fullScreenDragOffset,
+      fullScreenEntranceOffset,
+      fullScreenVerticalDragOffset,
+      fullScreenIsDragging,
+      fullScreenTransitionDuration,
+      fullScreenShowDetails,
+      fullScreenZoomScale,
+      fullScreenZoomOrigin,
+      showImageForDownload,
+      showDownloadBottomSheet,
+      isDownloadBottomSheetAnimating,
+      setFullScreenImages,
+      setCurrentImgIndex,
+      setActivePhotoMenu,
+      setIsPhotoMenuAnimating,
+      setShowImageForDownload,
+      setShowDownloadBottomSheet,
+      setIsDownloadBottomSheetAnimating,
+      setFullScreenDragOffset,
+      setFullScreenVerticalDragOffset,
+      setFullScreenZoomScale,
+      setFullScreenZoomOrigin,
+      setFullScreenIsDragging,
+      setFullScreenTransitionDuration,
+      setFullScreenShowDetails,
+      fullScreenOnTouchStart,
+      fullScreenOnTouchMove,
+      fullScreenOnTouchEnd,
+      fullScreenOnClick,
+      downloadImage,
+    }),
+    [
+      fullScreenImages,
+      currentImgIndex,
+      touchStart,
+      activePhotoMenu,
+      isPhotoMenuAnimating,
+      fullScreenDragOffset,
+      fullScreenEntranceOffset,
+      fullScreenVerticalDragOffset,
+      fullScreenIsDragging,
+      fullScreenTransitionDuration,
+      fullScreenShowDetails,
+      fullScreenZoomScale,
+      fullScreenZoomOrigin,
+      showImageForDownload,
+      showDownloadBottomSheet,
+      isDownloadBottomSheetAnimating,
+      setFullScreenImages,
+      fullScreenOnTouchStart,
+      fullScreenOnTouchMove,
+      fullScreenOnTouchEnd,
+      fullScreenOnClick,
+      downloadImage,
+    ],
+  );
 }

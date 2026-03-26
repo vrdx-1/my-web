@@ -1,41 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
+import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPortal';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 const ICON_SIZE = 20;
 const SEARCH_BAR_GAP = 8;
-const PROVINCE_ROW_HEIGHT = 32; // ความสูงต่อแถว (6+6 + 15*1.3) สำหรับอ้างอิง
-
-function SelectedCheckBadge() {
-  return (
-    <span
-      aria-hidden
-      style={{
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        background: '#1877f2',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        boxShadow: '0 1px 2px rgba(24,119,242,0.35)',
-      }}
-    >
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    </span>
-  );
-}
-
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -45,9 +20,8 @@ export function HomeHeaderSearchAndFilter() {
   const searchQuery = searchParams.get('q') ?? '';
   const homeProvince = useHomeProvince();
   const selectedProvince = homeProvince?.selectedProvince ?? '';
-  const setSelectedProvince = homeProvince?.setSelectedProvince ?? (() => {});
+  const setSelectedProvince = homeProvince?.setSelectedProvince;
 
-  const [mounted, setMounted] = useState(false);
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [filterButtonRect, setFilterButtonRect] = useState<DOMRect | null>(null);
@@ -57,26 +31,21 @@ export function HomeHeaderSearchAndFilter() {
   /** กันไม่ให้การกดที่เปิดป๊อปถูกนับเป็นคลิกนอก (ต้องกดครั้งเดียวแล้วเปิดได้เสถียร) */
   const justOpenedRef = useRef(false);
 
-  // ใช้ useLayoutEffect เพื่อให้คำค้นในแถบแสดงทันที (ไม่กระพริบว่าง) — โดยเฉพาะ guest
-  useLayoutEffect(() => {
-    setMounted(true);
-  }, []);
-
   /** แสดงคำค้นและแขวงเสมอ (ไม่ใช้ mounted เพื่อไม่ให้ guest เห็นแถบค้นว่างชั่วคราว) */
   const queryToShow = searchQuery;
   const provinceToShow = selectedProvince;
 
   /** เมื่อผู้ใช้เปลี่ยนหรือแก้ไขคำค้นหา (URL ?q= เปลี่ยน) ให้ฟิลเตอร์กลับเป็น "ທຸກແຂວງ" */
   useEffect(() => {
-    setSelectedProvince('');
+    setSelectedProvince?.('');
   }, [searchQuery, setSelectedProvince]);
 
-  const handleSearchClick = () => {
+  const handleSearchClick = useCallback(() => {
     const q = searchQuery?.trim() ?? '';
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search', { scroll: false });
-  };
+  }, [router, searchQuery]);
 
-  const handleFilterClick = () => {
+  const handleFilterClick = useCallback(() => {
     if (showProvincePicker) return;
     const rect = filterButtonRef.current?.getBoundingClientRect() ?? null;
     setFilterButtonRect(rect);
@@ -92,34 +61,28 @@ export function HomeHeaderSearchAndFilter() {
     setTimeout(() => {
       justOpenedRef.current = false;
     }, 250);
-  };
+  }, [showProvincePicker]);
 
-  const closePicker = () => {
+  const closePicker = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => {
       setShowProvincePicker(false);
       setIsAnimating(false);
     }, 300);
-  };
+  }, []);
 
-  const handleSelectProvince = (p: string) => {
-    setSelectedProvince(p);
+  const handleSelectProvince = useCallback((province: string) => {
+    setSelectedProvince?.(province);
     closePicker();
-  };
+  }, [closePicker, setSelectedProvince]);
 
   // ปิดป๊อปอัพเมื่อเลื่อนหน้าจอ — แบบเดียวกับปุ่มไข่ปลา (useMenu)
   useEffect(() => {
     if (!showProvincePicker) return;
-    const handleScroll = () => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setShowProvincePicker(false);
-        setIsAnimating(false);
-      }, 300);
-    };
+    const handleScroll = () => closePicker();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [showProvincePicker]);
+  }, [showProvincePicker, closePicker]);
 
   // ปิดป๊อปอัพเมื่อคลิกนอก — แบบเดียวกับปุ่มไข่ปลา (useMenu: ไม่ล็อก body, ใช้ mousedown/touchstart)
   useEffect(() => {
@@ -140,7 +103,7 @@ export function HomeHeaderSearchAndFilter() {
       document.removeEventListener('mousedown', handleClickOutside as EventListener);
       document.removeEventListener('touchstart', handleClickOutside as EventListener);
     };
-  }, [showProvincePicker]);
+  }, [showProvincePicker, closePicker]);
 
   return (
     <>
@@ -162,7 +125,7 @@ export function HomeHeaderSearchAndFilter() {
             // ปุ่มค้นหาครอบทั้งแถบไว้ ทำให้ click พลาด "ตัวหนังสือสีแดงเลือกแขวง" แล้วไป trigger ค้นหาได้
             // ถ้า click อยู่ในพื้นที่ปุ่มแขวง (มี tolerance) ให้เปิด province picker แทน
             const target = e.target;
-            const el = target instanceof Element ? target : target?.parentElement;
+            const el = target instanceof Element ? target : null;
             const filterBtnHit =
               !!el?.closest?.('[data-home-filter-btn]') ||
               (() => {
@@ -294,137 +257,15 @@ export function HomeHeaderSearchAndFilter() {
         </button>
       </div>
 
-      {/* Province picker — สร้างไว้ล่วงหน้า (เมื่อ mounted) แล้วแค่สลับแสดง/ซ่อน ตอนกดจะเร็วเหมือนเว็บระดับโลก */}
-      {mounted && typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 10000,
-              pointerEvents: showProvincePicker ? 'none' : 'none',
-              visibility: showProvincePicker ? 'visible' : 'hidden',
-              opacity: showProvincePicker ? 1 : 0,
-              transition: 'opacity 0.15s ease-out',
-            }}
-          >
-            {/* Overlay เต็มหน้าจอ — คลิกปิด; ไม่ล็อก scroll (ให้ปิดเมื่อเลื่อนเหมือนปุ่มไข่ปลา) */}
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0,0,0,0.4)',
-                zIndex: 10001,
-                pointerEvents: showProvincePicker ? 'auto' : 'none',
-              }}
-              onClick={closePicker}
-            />
-            {/* ป๊อบอัพแขวง — ตัวกรอบ scroll ไม่ได้, ให้เฉพาะรายการด้านใน scroll ได้ */}
-            <div
-              ref={pickerRef}
-              data-home-province-picker
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              style={{
-                position: 'fixed',
-                ...(filterButtonRect
-                  ? (() => {
-                      const gap = 8;
-                      const w =
-                        typeof window !== 'undefined'
-                          ? Math.min(220, Math.round(window.innerWidth * 0.62))
-                          : 220;
-                      const left = Math.max(8, filterButtonRect.right - w);
-                      const top = filterButtonRect.bottom + gap;
-                      const fullHeight =
-                        typeof window !== 'undefined' ? window.innerHeight - top - gap : 500;
-                      const height = Math.round(fullHeight * 0.92);
-                      return {
-                        left: `${left}px`,
-                        top: `${top}px`,
-                        width: `${w}px`,
-                        height: `${height}px`,
-                      };
-                    })()
-                  : { left: '50%', top: '8vh', bottom: '8vh', width: 'min(280px, 88vw)', marginLeft: 'min(-140px, -44vw)' }),
-                background: '#fff',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                borderRadius: '12px',
-                zIndex: 10002,
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                transform: showProvincePicker && !isAnimating ? 'scale(1)' : 'scale(0.96)',
-                opacity: showProvincePicker && !isAnimating ? 1 : 0,
-                transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                pointerEvents: showProvincePicker ? 'auto' : 'none',
-              }}
-            >
-              <div
-                onClick={() => handleSelectProvince('')}
-                style={{
-                  padding: '10px 12px',
-                  minHeight: 42,
-                  boxSizing: 'border-box',
-                  fontSize: '16px',
-                  lineHeight: '1.3',
-                  background: selectedProvince === '' ? '#e7f3ff' : '#fff',
-                  cursor: 'pointer',
-                  fontFamily: LAO_FONT,
-                  color: '#111111',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 8,
-                  flexShrink: 0,
-                }}
-              >
-                <span>ທຸກແຂວງ</span>
-                {selectedProvince === '' && <SelectedCheckBadge />}
-              </div>
-              <div
-                style={{
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  WebkitOverflowScrolling: 'touch',
-                  flex: 1,
-                  minHeight: 0,
-                  touchAction: 'pan-y',
-                }}
-              >
-                {LAO_PROVINCES.map((p) => (
-                  <div
-                    key={p}
-                    onClick={() => handleSelectProvince(p)}
-                    style={{
-                      padding: '6px 12px',
-                      minHeight: 34,
-                      boxSizing: 'border-box',
-                      fontSize: '15px',
-                      lineHeight: '1.3',
-                      background: selectedProvince === p ? '#e7f3ff' : '#fff',
-                      cursor: 'pointer',
-                      fontFamily: LAO_FONT,
-                      color: '#111111',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 8,
-                    }}
-                  >
-                    <span>{p}</span>
-                    {selectedProvince === p && <SelectedCheckBadge />}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+      <HomeProvincePickerPortal
+        showProvincePicker={showProvincePicker}
+        isAnimating={isAnimating}
+        filterButtonRect={filterButtonRect}
+        pickerRef={pickerRef}
+        selectedProvince={selectedProvince}
+        onClose={closePicker}
+        onSelectProvince={handleSelectProvince}
+      />
     </>
   );
 }

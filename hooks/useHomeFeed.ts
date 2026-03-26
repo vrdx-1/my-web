@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { HOME_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
+import { HOME_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { preloadPostsVisibleImages } from '@/utils/imagePreload';
@@ -12,50 +12,15 @@ import {
   recordHomeMotionDuration,
   startHomeMotionTimer,
 } from '@/lib/homeMotionProfiler';
-
-const FEED_CACHE_KEY = 'home_feed_cache';
-
-/** อ่านรายการโพสจาก storage ตั้งแต่ state ครั้งแรก — ให้เฟรมแรกเห็นโพสที่พึ่งโพสพร้อมรูปทันที (แทบไม่เห็น Skeleton) */
-function getInitialPostsFromStorage(province?: string): any[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem('just_posted_post');
-    const justPostedPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
-    if (!justPostedPost || justPostedPost.status !== 'recommend' || justPostedPost.is_hidden) {
-      const cacheRaw = window.localStorage.getItem(FEED_CACHE_KEY);
-      if (cacheRaw) {
-        const parsed = JSON.parse(cacheRaw);
-        if (parsed?.province === province && Array.isArray(parsed.posts)) {
-          const age = Date.now() - (parsed.ts || 0);
-          if (age < FEED_CACHE_MAX_AGE_MS) {
-            return parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
-          }
-        }
-      }
-      return [];
-    }
-    const preloadRaw = sessionStorage.getItem('just_posted_post_preload');
-    const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
-    if (preloadArr && Array.isArray(justPostedPost.images) && preloadArr.length === justPostedPost.images.length) {
-      justPostedPost._preloadImages = preloadArr;
-    }
-    const cacheRaw = window.localStorage.getItem(FEED_CACHE_KEY);
-    if (cacheRaw) {
-      const parsed = JSON.parse(cacheRaw);
-        if (parsed?.province === province && Array.isArray(parsed.posts)) {
-          const age = Date.now() - (parsed.ts || 0);
-          if (age < FEED_CACHE_MAX_AGE_MS) {
-            const cachedPosts = parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
-            const rest = cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id));
-          return [justPostedPost, ...rest];
-        }
-      }
-    }
-    return [justPostedPost];
-  } catch {
-    return [];
-  }
-}
+import {
+  clearHomeFeedStorage,
+  getInitialPostsFromStorage,
+  mergeJustPostedPost,
+  prepareInitialHomeFeedState,
+  readJustPostedRecommendPost,
+  writeHomeFeedCache,
+  type HomeFeedPost,
+} from '@/hooks/homeFeedStorage';
 
 export interface HomeLikedSavedShared {
   likedPosts: { [key: string]: boolean };
@@ -65,7 +30,7 @@ export interface HomeLikedSavedShared {
 }
 
 interface UseHomeFeedOptions {
-  session?: any;
+  session?: unknown;
   /** เมื่อ true = รู้แล้วว่าใครล็อกอิน/เกสต์ แล้วค่อยโหลดไลก์/เซฟ */
   sessionReady?: boolean;
   /** แขวงที่เลือกจากฟิลเตอร์หน้า Home — ว่าง = แสดงทุกแขวง */
@@ -79,14 +44,14 @@ interface UseHomeFeedOptions {
 }
 
 interface UseHomeFeedReturn {
-  posts: any[];
-  setPosts: React.Dispatch<React.SetStateAction<any[]>>;
+  posts: HomeFeedPost[];
+  setPosts: React.Dispatch<React.SetStateAction<HomeFeedPost[]>>;
   page: number;
   setPage: (v: number | ((p: number) => number)) => void;
   hasMore: boolean;
   setHasMore: (v: boolean) => void;
   loadingMore: boolean;
-  session: any;
+  session: unknown;
   likedPosts: { [key: string]: boolean };
   savedPosts: { [key: string]: boolean };
   setLikedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
@@ -97,13 +62,13 @@ interface UseHomeFeedReturn {
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
-  const [posts, setPosts] = useState<any[]>(() => getInitialPostsFromStorage(province));
+  const [posts, setPosts] = useState<HomeFeedPost[]>(() => getInitialPostsFromStorage(province));
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [currentSession, setCurrentSession] = useState<any>(session ?? undefined);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const currentSession = session ?? undefined;
   const likedPostsOut = sharedLikedSaved ? sharedLikedSaved.likedPosts : likedPosts;
   const savedPostsOut = sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
   const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
@@ -115,6 +80,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   /** ยกเลิกการโหลดเมื่อออกจากหน้า — ใช้ใน cleanup และก่อน setState หลัง await */
   const cancelledRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const onInitialLoadDoneRef = useRef(onInitialLoadDone);
+
+  useEffect(() => {
+    onInitialLoadDoneRef.current = onInitialLoadDone;
+  }, [onInitialLoadDone]);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -149,12 +119,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const fireInitialLoadDone = useCallback(() => {
     if (initialLoadDoneFiredRef.current) return;
     initialLoadDoneFiredRef.current = true;
-    onInitialLoadDone?.();
-  }, [onInitialLoadDone]);
-
-  useEffect(() => {
-    setCurrentSession(session ?? undefined);
-  }, [session]);
+    onInitialLoadDoneRef.current?.();
+  }, []);
 
   useEffect(() => {
     if (sharedLikedSaved) return;
@@ -171,7 +137,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       try {
         const token = getPrimaryGuestToken();
         if (token && typeof token === 'string' && token !== 'null') idOrToken = token;
-      } catch (_) {}
+      } catch {}
     }
     if (!idOrToken) return;
     const isUser = !!currentSession?.user?.id;
@@ -254,7 +220,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       const fullPage = !isInitial && postIds.length >= pageSize;
       const partialPage = !isInitial && postIds.length > 0 && postIds.length < pageSize;
       const nextHasMore = !!data.hasMore || fullPage || partialPage;
-      const apiPosts: any[] = Array.isArray(data.posts) ? data.posts : [];
+      const apiPosts: HomeFeedPost[] = Array.isArray(data.posts)
+        ? (data.posts as HomeFeedPost[])
+        : [];
 
       setHasMore(nextHasMore);
 
@@ -266,7 +234,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         return;
       }
 
-      let ordered: any[];
+      let ordered: HomeFeedPost[];
       if (apiPosts.length > 0) {
         ordered = apiPosts;
       } else {
@@ -280,8 +248,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
         if (error) return;
         const order = new Map(postIds.map((id, i) => [String(id), i]));
-        ordered = (postsData || []).filter((p: any) => p.status === 'recommend' && !p.is_hidden);
-        ordered.sort((a: any, b: any) => {
+        ordered = ((postsData || []) as HomeFeedPost[]).filter(
+          (post) => post.status === 'recommend' && !post.is_hidden,
+        );
+        ordered.sort((a, b) => {
           const ai = order.get(String(a.id)) ?? 1e9;
           const bi = order.get(String(b.id)) ?? 1e9;
           return ai - bi;
@@ -298,25 +268,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (isInitial) {
         // ใช้โพสที่เก็บไว้จาก create-post แสดงครั้งเดียว ไม่ fetch แยก เพื่อไม่ให้จอกระพริบ
         let initialList = ordered;
-        if (typeof window !== 'undefined') {
-          try {
-            const raw = window.localStorage.getItem('just_posted_post');
-            const justPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
-            if (justPost && justPost.status === 'recommend' && !justPost.is_hidden) {
-              const preloadRaw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('just_posted_post_preload') : null;
-              const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
-              if (preloadArr && Array.isArray(justPost.images) && preloadArr.length === justPost.images.length) {
-                justPost._preloadImages = preloadArr;
-              }
-              const rest = ordered.filter((p: any) => String(p.id) !== String(justPost.id));
-              initialList = [justPost, ...rest];
-            }
-            window.localStorage.removeItem('just_posted_post');
-            window.localStorage.removeItem('just_posted_post_id');
-            try { sessionStorage.removeItem('just_posted_post_preload'); } catch { /* ignore */ }
-          } catch {
-            // ignore
+        try {
+          const justPostedPost = readJustPostedRecommendPost();
+          if (justPostedPost) {
+            initialList = mergeJustPostedPost(ordered, justPostedPost);
           }
+          clearHomeFeedStorage();
+        } catch {
+          // ignore
         }
         setPosts(initialList);
         preloadPostsVisibleImages(initialList, 2);
@@ -326,21 +285,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           backgroundRefresh,
         });
         try {
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({
-              province,
-              posts: ordered,
-              hasMore: nextHasMore,
-              ts: Date.now(),
-            }));
-          }
+          writeHomeFeedCache(province, ordered, nextHasMore);
         } catch {
           // ignore
         }
       } else {
-        setPosts(prev => {
-          const ids = new Set(prev.map(p => String(p.id)));
-          const newOnes = ordered.filter((p: any) => !ids.has(String(p.id)));
+        setPosts((prev) => {
+          const ids = new Set(prev.map((post) => String(post.id)));
+          const newOnes = ordered.filter((post) => !ids.has(String(post.id)));
           return newOnes.length ? [...prev, ...newOnes] : prev;
         });
         recordHomeMotionDuration('feed-hydrate', 'append-feed-posts', 0, {
@@ -387,12 +339,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setPage(0);
     setHasMore(true);
     try {
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('just_posted_post');
-        window.localStorage.removeItem('just_posted_post_id');
-        window.localStorage.removeItem(FEED_CACHE_KEY);
-        try { sessionStorage.removeItem('just_posted_post_preload'); } catch { /* ignore */ }
-      }
+      clearHomeFeedStorage({ clearCache: true });
     } catch {
       // ignore
     }
@@ -401,61 +348,21 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
-    let fromCache = false;
-    // อ่านโพสที่พึ่งโพสกับแคชพร้อมกัน แล้ว set รายการครั้งเดียว เพื่อไม่ให้จอกระพริบ
-    let justPostedPost: any = null;
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = window.localStorage.getItem('just_posted_post');
-        justPostedPost = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
-        if (!justPostedPost || justPostedPost.status !== 'recommend' || justPostedPost.is_hidden) justPostedPost = null;
-        else {
-          const preloadRaw = sessionStorage.getItem('just_posted_post_preload');
-          const preloadArr = preloadRaw ? (() => { try { const a = JSON.parse(preloadRaw); return Array.isArray(a) ? a : null; } catch { return null; } })() : null;
-          if (preloadArr && Array.isArray(justPostedPost.images) && preloadArr.length === justPostedPost.images.length) {
-            justPostedPost._preloadImages = preloadArr;
-          }
-        }
-      } catch {
-        justPostedPost = null;
-      }
-    }
-    try {
-      if (typeof window !== 'undefined') {
-        const raw = window.localStorage.getItem(FEED_CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && parsed.province === province && Array.isArray(parsed.posts)) {
-            const age = Date.now() - (parsed.ts || 0);
-            if (age < FEED_CACHE_MAX_AGE_MS) {
-              const cachedPosts = parsed.posts.slice(0, HOME_FEED_PAGE_SIZE);
-              const initialPosts = justPostedPost
-                ? [justPostedPost, ...cachedPosts.filter((p: any) => String(p.id) !== String(justPostedPost.id))]
-                : cachedPosts;
-              setPosts(initialPosts);
-              setLoadingMore(false);
-              preloadPostsVisibleImages(initialPosts, 2);
-              setHasMore(!!parsed.hasMore);
-              initialLoadFromCacheRef.current = true;
-              fromCache = true;
-              if (onInitialLoadDone && !initialLoadDoneFiredRef.current) {
-                initialLoadDoneFiredRef.current = true;
-                onInitialLoadDone();
-              }
-              recordHomeMotionDuration('feed-cache', 'initial-feed-cache-hit', 0, {
-                cachedPosts: initialPosts.length,
-                province: province ?? '',
-              });
-              // ยังไม่ลบ just_posted_post ที่นี่ — รอให้ fetch ในพื้นหลังเสร็จแล้วเอาโพสนั้นไปไว้บนสุดก่อน ค่อยลบใน fetchPosts
-            }
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
-    if (!fromCache) {
-      const initialPosts = justPostedPost ? [justPostedPost] : [];
+    const { fromCache, initialPosts, hasMore: initialHasMore, justPostedPost } =
+      prepareInitialHomeFeedState(province);
+
+    if (fromCache) {
+      setPosts(initialPosts);
+      setLoadingMore(false);
+      preloadPostsVisibleImages(initialPosts, 2);
+      setHasMore(initialHasMore);
+      initialLoadFromCacheRef.current = true;
+      fireInitialLoadDone();
+      recordHomeMotionDuration('feed-cache', 'initial-feed-cache-hit', 0, {
+        cachedPosts: initialPosts.length,
+        province: province ?? '',
+      });
+    } else {
       setPosts(initialPosts);
       setLoadingMore(!justPostedPost);
       setHasMore(true);
@@ -463,9 +370,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         initialPosts: initialPosts.length,
         province: province ?? '',
       });
-      if (justPostedPost && onInitialLoadDone && !initialLoadDoneFiredRef.current) {
-        initialLoadDoneFiredRef.current = true;
-        onInitialLoadDone();
+      if (justPostedPost) {
+        fireInitialLoadDone();
       }
     }
     setPage(0);
@@ -476,7 +382,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } else {
       fetchPostsRef.current(true);
     }
-  }, [province]);
+  }, [province, fireInitialLoadDone]);
 
   const lastFetchedPageRef = useRef<number | null>(null);
   useEffect(() => {
