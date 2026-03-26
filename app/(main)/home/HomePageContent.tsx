@@ -212,16 +212,6 @@ export function HomePageContent() {
       headerVisibility?.setHeaderMotion(progress, interacting),
     suppressHideUntilRef,
     scrollTuning: {
-      showThresholdPx: 96,
-      hideThresholdPx: 220,
-      minScrollDeltaPx: 10,
-      fastScrollDeltaPx: 24,
-      fastMinScrollDeltaPx: 16,
-      visibilityThrottleMs: 120,
-      layoutSettleIgnoreMs: 220,
-      captionToggleIgnoreMs: 420,
-      dragDistancePx: 112,
-      settleIdleMs: 88,
       motionProfile: 'auto',
     },
   });

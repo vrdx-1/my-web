@@ -62,7 +62,7 @@ interface UseHeaderScrollOptions {
 }
 
 type MotionProfile = 'auto' | 'ios' | 'android';
-type MotionDeviceTier = 'normal' | 'low-end';
+type MotionPlatformTier = 'desktop' | 'mobile-normal' | 'mobile-low-end';
 
 interface ResolvedMotionTuning {
   showThresholdPx: number;
@@ -77,47 +77,67 @@ interface ResolvedMotionTuning {
   settleIdleMs: number;
 }
 
+/** 3 absolute presets — values are explicitly tuned per platform, no runtime multipliers */
+const MOTION_PRESETS: Record<MotionPlatformTier, ResolvedMotionTuning> = {
+  desktop: {
+    showThresholdPx: 96,
+    hideThresholdPx: 220,
+    minScrollDeltaPx: 10,
+    fastScrollDeltaPx: 24,
+    fastMinScrollDeltaPx: 16,
+    visibilityThrottleMs: 120,
+    layoutSettleIgnoreMs: 220,
+    captionToggleIgnoreMs: 420,
+    dragDistancePx: 112,
+    settleIdleMs: 88,
+  },
+  'mobile-normal': {
+    showThresholdPx: 80,
+    hideThresholdPx: 180,
+    minScrollDeltaPx: 9,
+    fastScrollDeltaPx: 20,
+    fastMinScrollDeltaPx: 14,
+    visibilityThrottleMs: 88,
+    layoutSettleIgnoreMs: 160,
+    captionToggleIgnoreMs: 320,
+    dragDistancePx: 92,
+    settleIdleMs: 70,
+  },
+  'mobile-low-end': {
+    showThresholdPx: 72,
+    hideThresholdPx: 160,
+    minScrollDeltaPx: 13,
+    fastScrollDeltaPx: 20,
+    fastMinScrollDeltaPx: 18,
+    visibilityThrottleMs: 72,
+    layoutSettleIgnoreMs: 200,
+    captionToggleIgnoreMs: 380,
+    dragDistancePx: 76,
+    settleIdleMs: 48,
+  },
+};
+
+/**
+ * Picks the correct preset for the given tier, then layers any explicit call-site
+ * overrides on top so individual values can still be tuned without losing the preset baseline.
+ */
 function resolveMotionTuning(
-  base: ResolvedMotionTuning,
-  platform: Exclude<MotionProfile, 'auto'>,
-  deviceTier: MotionDeviceTier,
+  callSiteOverrides: Partial<ResolvedMotionTuning>,
+  platformTier: MotionPlatformTier,
 ): ResolvedMotionTuning {
-  let resolved = base;
-
-  if (platform === 'android') {
-    resolved = {
-      showThresholdPx: Math.max(72, Math.round(resolved.showThresholdPx * 0.88)),
-      hideThresholdPx: Math.max(180, Math.round(resolved.hideThresholdPx * 0.82)),
-      minScrollDeltaPx: Math.max(8, Math.round(resolved.minScrollDeltaPx * 0.9)),
-      fastScrollDeltaPx: Math.max(18, Math.round(resolved.fastScrollDeltaPx * 0.88)),
-      fastMinScrollDeltaPx: Math.max(12, Math.round(resolved.fastMinScrollDeltaPx * 0.88)),
-      visibilityThrottleMs: Math.max(72, Math.round(resolved.visibilityThrottleMs * 0.78)),
-      layoutSettleIgnoreMs: Math.max(120, Math.round(resolved.layoutSettleIgnoreMs * 0.72)),
-      captionToggleIgnoreMs: Math.max(220, Math.round(resolved.captionToggleIgnoreMs * 0.8)),
-      dragDistancePx: Math.max(84, Math.round(resolved.dragDistancePx * 0.86)),
-      settleIdleMs: Math.max(56, Math.round(resolved.settleIdleMs * 0.84)),
-    };
-  }
-
-  if (deviceTier === 'low-end') {
-    resolved = {
-      showThresholdPx: Math.max(64, Math.round(resolved.showThresholdPx * 0.9)),
-      hideThresholdPx: Math.max(150, Math.round(resolved.hideThresholdPx * 0.84)),
-      // increase delta thresholds so tiny noisy deltas are ignored more aggressively
-      minScrollDeltaPx: Math.max(12, Math.round(resolved.minScrollDeltaPx * 1.35)),
-      fastScrollDeltaPx: Math.max(18, Math.round(resolved.fastScrollDeltaPx * 0.9)),
-      fastMinScrollDeltaPx: Math.max(16, Math.round(resolved.fastMinScrollDeltaPx * 1.25)),
-      visibilityThrottleMs: Math.max(64, Math.round(resolved.visibilityThrottleMs * 0.72)),
-      layoutSettleIgnoreMs: Math.max(160, Math.round(resolved.layoutSettleIgnoreMs * 1.2)),
-      captionToggleIgnoreMs: Math.max(260, Math.round(resolved.captionToggleIgnoreMs * 1.25)),
-      // shorter travel to reduce per-frame movement cost
-      dragDistancePx: Math.max(72, Math.round(resolved.dragDistancePx * 0.78)),
-      // shorter settle so animation finishes quicker on low-end devices
-      settleIdleMs: Math.max(44, Math.round(resolved.settleIdleMs * 0.72)),
-    };
-  }
-
-  return resolved;
+  const preset = MOTION_PRESETS[platformTier];
+  return {
+    showThresholdPx: callSiteOverrides.showThresholdPx ?? preset.showThresholdPx,
+    hideThresholdPx: callSiteOverrides.hideThresholdPx ?? preset.hideThresholdPx,
+    minScrollDeltaPx: callSiteOverrides.minScrollDeltaPx ?? preset.minScrollDeltaPx,
+    fastScrollDeltaPx: callSiteOverrides.fastScrollDeltaPx ?? preset.fastScrollDeltaPx,
+    fastMinScrollDeltaPx: callSiteOverrides.fastMinScrollDeltaPx ?? preset.fastMinScrollDeltaPx,
+    visibilityThrottleMs: callSiteOverrides.visibilityThrottleMs ?? preset.visibilityThrottleMs,
+    layoutSettleIgnoreMs: callSiteOverrides.layoutSettleIgnoreMs ?? preset.layoutSettleIgnoreMs,
+    captionToggleIgnoreMs: callSiteOverrides.captionToggleIgnoreMs ?? preset.captionToggleIgnoreMs,
+    dragDistancePx: callSiteOverrides.dragDistancePx ?? preset.dragDistancePx,
+    settleIdleMs: callSiteOverrides.settleIdleMs ?? preset.settleIdleMs,
+  };
 }
 
 function detectPlatformProfile(motionProfile: MotionProfile): Exclude<MotionProfile, 'auto'> {
@@ -128,13 +148,14 @@ function detectPlatformProfile(motionProfile: MotionProfile): Exclude<MotionProf
   return /iPhone|iPad|iPod/i.test(ua) ? 'ios' : 'android';
 }
 
-function detectDeviceTier(platform: Exclude<MotionProfile, 'auto'>): MotionDeviceTier {
-  if (typeof navigator === 'undefined') return 'normal';
+/** Detects which of the 3 tiers this device falls into. */
+function detectPlatformTier(motionProfile: MotionProfile): MotionPlatformTier {
+  if (typeof navigator === 'undefined') return 'desktop';
 
-  const ua = navigator.userAgent || '';
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
-  if (!isMobile) return 'normal';
+  const ua = navigator.userAgent ?? '';
+  if (!/Android|iPhone|iPad|iPod/i.test(ua)) return 'desktop';
 
+  const platform = detectPlatformProfile(motionProfile);
   const hardwareConcurrency = navigator.hardwareConcurrency ?? 8;
   const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
 
@@ -142,7 +163,7 @@ function detectDeviceTier(platform: Exclude<MotionProfile, 'auto'>): MotionDevic
   const lowCpu = hardwareConcurrency <= (isAndroid ? 6 : 4);
   const lowMemory = deviceMemory <= 4;
 
-  return lowCpu || lowMemory ? 'low-end' : 'normal';
+  return lowCpu || lowMemory ? 'mobile-low-end' : 'mobile-normal';
 }
 
 interface UseHeaderScrollReturn {
@@ -172,27 +193,29 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const touchPanActiveRef = useRef(false);
   const touchLastYRef = useRef<number | null>(null);
   const platformProfileRef = useRef<Exclude<MotionProfile, 'auto'>>('android');
-  const deviceTierRef = useRef<MotionDeviceTier>('normal');
+  const platformTierRef = useRef<MotionPlatformTier>('desktop');
+  /** EMA of scroll-event inter-arrival gap in ms — drives adaptive interaction window */
+  const frameGapEmaRef = useRef<number>(16.7);
   const lastScrollFrameAtRef = useRef<number | null>(null);
   const interactionActiveUntilRef = useRef<number>(0);
   const activePlatformProfile = detectPlatformProfile(motionProfile);
-  const activeDeviceTier = detectDeviceTier(activePlatformProfile);
+  const activePlatformTier = detectPlatformTier(motionProfile);
   platformProfileRef.current = activePlatformProfile;
-  deviceTierRef.current = activeDeviceTier;
+  platformTierRef.current = activePlatformTier;
 
-  const baseMotionTuning: ResolvedMotionTuning = {
-    showThresholdPx: scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX,
-    hideThresholdPx: scrollTuning?.hideThresholdPx ?? HEADER_HIDE_THRESHOLD_PX,
-    minScrollDeltaPx: scrollTuning?.minScrollDeltaPx ?? MIN_SCROLL_DELTA_PX,
-    fastScrollDeltaPx: scrollTuning?.fastScrollDeltaPx ?? 26,
-    fastMinScrollDeltaPx: scrollTuning?.fastMinScrollDeltaPx ?? 20,
-    visibilityThrottleMs: scrollTuning?.visibilityThrottleMs ?? VISIBILITY_THROTTLE_MS,
-    layoutSettleIgnoreMs: scrollTuning?.layoutSettleIgnoreMs ?? LAYOUT_SETTLE_IGNORE_MS,
-    captionToggleIgnoreMs: scrollTuning?.captionToggleIgnoreMs ?? CAPTION_TOGGLE_IGNORE_MS,
-    dragDistancePx: scrollTuning?.dragDistancePx ?? HEADER_DRAG_DISTANCE_PX,
-    settleIdleMs: scrollTuning?.settleIdleMs ?? DRAG_SETTLE_IDLE_MS,
+  const callSiteOverrides: Partial<ResolvedMotionTuning> = {
+    showThresholdPx: scrollTuning?.showThresholdPx,
+    hideThresholdPx: scrollTuning?.hideThresholdPx,
+    minScrollDeltaPx: scrollTuning?.minScrollDeltaPx,
+    fastScrollDeltaPx: scrollTuning?.fastScrollDeltaPx,
+    fastMinScrollDeltaPx: scrollTuning?.fastMinScrollDeltaPx,
+    visibilityThrottleMs: scrollTuning?.visibilityThrottleMs,
+    layoutSettleIgnoreMs: scrollTuning?.layoutSettleIgnoreMs,
+    captionToggleIgnoreMs: scrollTuning?.captionToggleIgnoreMs,
+    dragDistancePx: scrollTuning?.dragDistancePx,
+    settleIdleMs: scrollTuning?.settleIdleMs,
   };
-  const resolvedMotionTuning = resolveMotionTuning(baseMotionTuning, activePlatformProfile, activeDeviceTier);
+  const resolvedMotionTuning = resolveMotionTuning(callSiteOverrides, activePlatformTier);
   const showThresholdPx = resolvedMotionTuning.showThresholdPx;
   const hideThresholdPx = resolvedMotionTuning.hideThresholdPx;
   const minScrollDeltaPx = resolvedMotionTuning.minScrollDeltaPx;
@@ -210,7 +233,12 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     onMotionChangeRef.current?.(clamped, interacting);
   };
 
-  const getInteractionWindowMs = () => (deviceTierRef.current === 'low-end' ? 140 : 96);
+  const getInteractionWindowMs = () => {
+    // window ≈ N frames worth of interaction — adaptive to actual scroll event frequency
+    const tier = platformTierRef.current;
+    const framesMultiplier = tier === 'mobile-low-end' ? 6 : tier === 'mobile-normal' ? 5 : 4;
+    return Math.min(200, Math.max(64, Math.round(frameGapEmaRef.current * framesMultiplier)));
+  };
 
   const bumpInteractionWindow = (now: number) => {
     interactionActiveUntilRef.current = now + getInteractionWindowMs();
@@ -219,27 +247,34 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const isInteractionActive = (now: number) => now <= interactionActiveUntilRef.current;
 
   const getAdaptiveDragDistancePx = () => {
-    const platform = platformProfileRef.current;
-    const platformMultiplier = platform === 'ios' ? 1.08 : 0.98;
     // จอ 120Hz จะยิง event ถี่กว่า จึงต้องเพิ่มระยะเลื่อนเล็กน้อยให้รู้สึกใกล้เคียง 60Hz
     const hz = refreshRateRef.current;
     const hzMultiplier = hz >= 100 ? 1.18 : 1;
+    const tier = platformTierRef.current;
+    if (tier === 'desktop') return Math.round(dragDistancePx * hzMultiplier);
+    // iOS momentum scroll ปล่อยนิ้วไกลกว่า Android จึงให้ระยะเล็กน้อย
+    const platform = platformProfileRef.current;
+    const platformMultiplier = platform === 'ios' ? 1.08 : 0.98;
     return Math.round(dragDistancePx * platformMultiplier * hzMultiplier);
   };
 
   const getAdaptiveSettleIdleMs = () => {
+    const tier = platformTierRef.current;
+    if (tier === 'desktop') return settleIdleMs;
     const platform = platformProfileRef.current;
     const platformMultiplier = platform === 'ios' ? 1.06 : 0.94;
     const hz = refreshRateRef.current;
     const hzMultiplier = hz >= 100 ? 0.82 : 1;
-    return Math.max(56, Math.round(settleIdleMs * platformMultiplier * hzMultiplier));
+    return Math.max(32, Math.round(settleIdleMs * platformMultiplier * hzMultiplier));
   };
 
   const getAdaptiveDeltaThreshold = (baseSlow: number, baseFast: number, isFast: boolean) => {
-    const platform = platformProfileRef.current;
-    // iOS ให้ไวขึ้นเล็กน้อย, Android เพิ่มกัน jitter เล็กน้อย
-    const platformMultiplier = platform === 'ios' ? 0.9 : 1.08;
     const base = isFast ? baseFast : baseSlow;
+    const tier = platformTierRef.current;
+    if (tier === 'desktop') return base;
+    // iOS ให้ไวขึ้นเล็กน้อย, Android เพิ่มกัน jitter เล็กน้อย
+    const platform = platformProfileRef.current;
+    const platformMultiplier = platform === 'ios' ? 0.9 : 1.08;
     return Math.max(4, Math.round(base * platformMultiplier));
   };
 
@@ -337,13 +372,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.body?.setAttribute('data-home-motion-platform', activePlatformProfile);
-    document.body?.setAttribute('data-home-motion-tier', activeDeviceTier);
+    document.body?.setAttribute('data-home-motion-tier', activePlatformTier);
     markHomeMotionEvent('platform-profile-resolved', {
       platform: activePlatformProfile,
-      deviceTier: activeDeviceTier,
+      platformTier: activePlatformTier,
       refreshRateHz: refreshRateRef.current,
     });
-  }, [activePlatformProfile, activeDeviceTier]);
+  }, [activePlatformProfile, activePlatformTier]);
 
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useLayoutEffect(() => {
@@ -410,7 +445,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           scrollDelta,
           activeDeltaThreshold,
           platform: platformProfileRef.current,
-          deviceTier: deviceTierRef.current,
+          platformTier: platformTierRef.current,
         });
         return;
       }
@@ -468,6 +503,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       const lastFrameAt = lastScrollFrameAtRef.current;
       if (lastFrameAt != null) {
         const frameGap = now - lastFrameAt;
+        // Update EMA of scroll inter-arrival time for adaptive interaction window
+        if (frameGap > 4 && frameGap < 500) {
+          frameGapEmaRef.current = frameGapEmaRef.current * 0.85 + frameGap * 0.15;
+        }
         if (frameGap > 19) {
           recordHomeMotionDuration('frame-gap', 'scroll-frame-gap', frameGap, {
             platform: platformProfileRef.current,

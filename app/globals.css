@@ -94,8 +94,8 @@ body[data-home-motion-platform="android"] .bottom-nav-visibility-surface {
   transition-timing-function: cubic-bezier(0.24, 0.9, 0.3, 1) !important;
 }
 
-body[data-home-motion-tier="low-end"] .header-visibility-surface,
-body[data-home-motion-tier="low-end"] .bottom-nav-visibility-surface {
+body[data-home-motion-tier="mobile-low-end"] .header-visibility-surface,
+body[data-home-motion-tier="mobile-low-end"] .bottom-nav-visibility-surface {
   transition-duration: 0.12s !important;
   transition-timing-function: cubic-bezier(0.28, 0.88, 0.34, 1) !important;
 }
