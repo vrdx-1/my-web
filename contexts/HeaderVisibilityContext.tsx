@@ -15,6 +15,7 @@ const HeaderVisibilityContext = createContext<HeaderVisibilityContextValue | nul
 
 export function HeaderVisibilityProvider({ children }: { children: React.ReactNode }) {
   const [isHeaderVisible, setHeaderVisible] = useState(true);
+  const isHeaderVisibleRef = useRef(true);
   const headerSlideProgressRef = useRef(0);
   const isHeaderInteractingRef = useRef(false);
   const motionFrameRef = useRef<number | null>(null);
@@ -101,6 +102,7 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
   };
 
   const setHeaderVisibleStable = useCallback((visible: boolean) => {
+    isHeaderVisibleRef.current = visible;
     setHeaderVisible(visible);
     const progress = visible ? 0 : 1;
     headerSlideProgressRef.current = progress;
@@ -120,7 +122,11 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     }
 
     if (!interacting) {
-      setHeaderVisible(clamped < 0.5);
+      const nextVisible = clamped < 0.5;
+      if (isHeaderVisibleRef.current !== nextVisible) {
+        isHeaderVisibleRef.current = nextVisible;
+        setHeaderVisible(nextVisible);
+      }
     }
   }, []);
 

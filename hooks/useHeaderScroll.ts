@@ -189,6 +189,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const prevFeedPostCountRef = useRef(feedPostCount);
   const motionProgressRef = useRef(0);
   const settleTimeoutRef = useRef<number | null>(null);
+  const settleLastInteractionAtRef = useRef(0);
   const refreshRateRef = useRef(60);
   const touchPanActiveRef = useRef(false);
   const touchLastYRef = useRef<number | null>(null);
@@ -333,15 +334,27 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
   const scheduleSettle = () => {
     if (typeof window === 'undefined') return;
-    if (settleTimeoutRef.current != null) {
-      window.clearTimeout(settleTimeoutRef.current);
-    }
-    settleTimeoutRef.current = window.setTimeout(() => {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    settleLastInteractionAtRef.current = now;
+
+    if (settleTimeoutRef.current != null) return;
+
+    const tick = () => {
+      const nowTick = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const idleForMs = nowTick - settleLastInteractionAtRef.current;
+      const settleAfterMs = getAdaptiveSettleIdleMs();
+      if (idleForMs < settleAfterMs) {
+        settleTimeoutRef.current = window.setTimeout(tick, Math.max(10, settleAfterMs - idleForMs));
+        return;
+      }
+
       settleTimeoutRef.current = null;
       const target = motionProgressRef.current >= 0.5 ? 1 : 0;
       emitMotion(target, false);
       applyVisible(target === 0, false);
-    }, getAdaptiveSettleIdleMs());
+    };
+
+    settleTimeoutRef.current = window.setTimeout(tick, getAdaptiveSettleIdleMs());
   };
 
   useEffect(() => {
@@ -500,6 +513,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     const handleScroll = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       bumpInteractionWindow(now);
+      if (touchPanActiveRef.current) {
+        lastScrollFrameAtRef.current = now;
+        return;
+      }
       const lastFrameAt = lastScrollFrameAtRef.current;
       if (lastFrameAt != null) {
         const frameGap = now - lastFrameAt;
