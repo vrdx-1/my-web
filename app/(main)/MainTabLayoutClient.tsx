@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -27,6 +27,10 @@ import {
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [initialPathname] = useState(() =>
+    typeof window !== 'undefined' ? window.location.pathname : ''
+  );
+  const resolvedPathname = pathname ?? initialPathname;
   const { session, userProfile } = useSessionAndProfile();
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
     userId: session?.user?.id,
@@ -62,23 +66,23 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       __homePerfSummary?: () => unknown;
     }).__homePerfSummary = () => getHomeMotionProfilerSummary();
 
-    markHomeMotionEvent('main-tab-layout-mounted', { pathname });
-  }, [pathname]);
+    markHomeMotionEvent('main-tab-layout-mounted', { pathname: resolvedPathname });
+  }, [resolvedPathname]);
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
-    if (pathname) markRouteVisited(pathname);
-  }, [pathname]);
+    if (resolvedPathname) markRouteVisited(resolvedPathname);
+  }, [resolvedPathname]);
 
   /** สลับกลับมาหน้าโฮมเท่านั้น → แสดง navigation bar ครั้งเดียว (ไม่รันทุกครั้งที่ headerVisibility เปลี่ยน ไม่งั้นเลื่อนฟีดแล้ว nav จะไม่หาย) */
   const prevPathnameRef = useRef<string | null>(null);
   useEffect(() => {
     const prev = prevPathnameRef.current;
-    prevPathnameRef.current = pathname;
-    if (pathname === '/home' && prev !== '/home') {
+    prevPathnameRef.current = resolvedPathname;
+    if (resolvedPathname === '/home' && prev !== '/home') {
       headerVisibility?.setHeaderVisible(true);
     }
-  }, [pathname, headerVisibility]);
+  }, [resolvedPathname, headerVisibility]);
 
   useEffect(() => {
     const handler = () => handleCreatePostClick(session);
@@ -117,56 +121,56 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    if (pathname !== '/home') {
+    if (resolvedPathname !== '/home') {
       homeRefreshContext?.register(null);
       return;
     }
     homeRefreshContext?.register(handleTabRefresh);
     return () => homeRefreshContext?.register(null);
-  }, [pathname, mainTab, homeRefreshContext, handleTabRefresh]);
+  }, [resolvedPathname, mainTab, homeRefreshContext, handleTabRefresh]);
 
   /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay 4–5 วินาทีบนโฮมเพื่อลดงานช่วงโหลดหน้าแรก */
   useEffect(() => {
-    const delay = pathname === '/home' ? 4500 : 1000;
+    const delay = resolvedPathname === '/home' ? 4500 : 1000;
     const t = setTimeout(() => {
-      if (pathname === '/home') {
+      if (resolvedPathname === '/home') {
         router.prefetch('/notification');
         router.prefetch('/profile');
-      } else if (pathname === '/notification' || pathname?.startsWith('/profile')) {
+      } else if (resolvedPathname === '/notification' || resolvedPathname?.startsWith('/profile')) {
         router.prefetch('/home');
-        if (pathname === '/notification') router.prefetch('/profile');
+        if (resolvedPathname === '/notification') router.prefetch('/profile');
         else router.prefetch('/notification');
       }
     }, delay);
     return () => clearTimeout(t);
-  }, [pathname, router]);
+  }, [resolvedPathname, router]);
 
   const loadingTab =
     mainTab?.navigatingToTab ?? (mainTab?.tabRefreshing ? mainTab?.homeTab ?? null : null);
 
   const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: ต้อง mount header/tab bar ตั้งแต่เฟรมแรกหลัง refresh เพื่อให้ motion system พร้อมทันที */
-  const showHomeHeader = pathname === '/home';
+  const showHomeHeader = resolvedPathname === '/home';
 
   /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
   useEffect(() => {
-    if (pathname === '/home' && firstFeedLoaded && session?.user?.id) {
+    if (resolvedPathname === '/home' && firstFeedLoaded && session?.user?.id) {
       refetchUnreadCount();
     }
-  }, [pathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
+  }, [resolvedPathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
   const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   const handleHomeTabChange = useCallback(
     (tab: 'recommend' | 'sold') => {
-      if (pathname === '/home') {
+      if (resolvedPathname === '/home') {
         homeTabScroll?.saveCurrentHomeTabScroll();
         headerVisibility?.setHeaderVisible(true);
       }
       homeProvince?.setSelectedProvince('');
       mainTab?.triggerTabChange(tab);
     },
-    [pathname, homeTabScroll, headerVisibility, homeProvince, mainTab],
+    [resolvedPathname, homeTabScroll, headerVisibility, homeProvince, mainTab],
   );
 
   return (
@@ -204,7 +208,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? (
+      {resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' ? (
         <MainTabPanels />
       ) : (
         children

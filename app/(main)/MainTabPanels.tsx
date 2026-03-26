@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useLayoutEffect, useCallback, Suspense } from 'react';
+import React, { useLayoutEffect, useCallback, Suspense, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useMainTabScroll, type MainTabId } from '@/contexts/MainTabScrollContext';
 import dynamic from 'next/dynamic';
@@ -64,11 +64,28 @@ function MainTabPanelsInner() {
   const pathname = usePathname();
   const activeTabId: MainTabId | null =
     pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? pathname : null;
+  const [mountedTabs, setMountedTabs] = useState<Partial<Record<MainTabId, true>>>(() => ({
+    '/home': true,
+  }));
+
+  useEffect(() => {
+    if (!activeTabId) return;
+    setMountedTabs((prev) => (prev[activeTabId] ? prev : { ...prev, [activeTabId]: true }));
+  }, [activeTabId]);
+
+  const shouldRenderTab = useCallback(
+    (tabId: MainTabId) => {
+      if (tabId === '/home') return true;
+      return !!mountedTabs[tabId];
+    },
+    [mountedTabs],
+  );
 
   return (
     <>
       {MAIN_TAB_PATHS.map((tabId) => {
         const active = activeTabId === tabId;
+        const renderTab = shouldRenderTab(tabId);
         return (
           <div
             key={tabId}
@@ -78,13 +95,13 @@ function MainTabPanelsInner() {
               minHeight: '100vh',
             }}
           >
-            {tabId === '/home' && (
+            {renderTab && tabId === '/home' && (
               <PanelScrollRegister tabId={tabId}>
                 <HomePanel />
               </PanelScrollRegister>
             )}
-            {tabId === '/notification' && <NotificationPanel />}
-            {tabId === '/profile' && <ProfilePanel />}
+            {renderTab && tabId === '/notification' && <NotificationPanel />}
+            {renderTab && tabId === '/profile' && <ProfilePanel />}
           </div>
         );
       })}

@@ -26,12 +26,13 @@ function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
 
 export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const resolvedPathname = pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '');
   const headerVisibility = useHeaderVisibilityContext();
-  const showNav = shouldShowBottomNav(pathname ?? '');
+  const showNav = shouldShowBottomNav(resolvedPathname);
   const bottomNavContentPaddingBottom = `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`;
   // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
   const needCreatePostHandler = showNav;
-  const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(pathname ?? '');
+  const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(resolvedPathname);
   const isHeaderVisible = headerVisibility?.isHeaderVisible ?? true;
   const navTransform = hideNavWithScroll && !isHeaderVisible
     ? 'translate3d(0, 100%, 0)'
@@ -54,7 +55,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             left: 0,
             right: 0,
             minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
-            zIndex: pathname === '/profile' ? 1001 : 400,
+            zIndex: resolvedPathname === '/profile' ? 1001 : 400,
             transform: navTransform,
             opacity: 1,
             visibility: 'visible',
