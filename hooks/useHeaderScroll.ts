@@ -62,6 +62,7 @@ interface UseHeaderScrollOptions {
 }
 
 type MotionProfile = 'auto' | 'ios' | 'android';
+type MotionDeviceTier = 'normal' | 'low-end';
 
 interface ResolvedMotionTuning {
   showThresholdPx: number;
@@ -76,23 +77,47 @@ interface ResolvedMotionTuning {
   settleIdleMs: number;
 }
 
-function resolveMotionTuning(base: ResolvedMotionTuning, platform: Exclude<MotionProfile, 'auto'>): ResolvedMotionTuning {
+function resolveMotionTuning(
+  base: ResolvedMotionTuning,
+  platform: Exclude<MotionProfile, 'auto'>,
+  deviceTier: MotionDeviceTier,
+): ResolvedMotionTuning {
+  let resolved = base;
+
   if (platform === 'android') {
-    return {
-      showThresholdPx: Math.max(72, Math.round(base.showThresholdPx * 0.88)),
-      hideThresholdPx: Math.max(180, Math.round(base.hideThresholdPx * 0.82)),
-      minScrollDeltaPx: Math.max(8, Math.round(base.minScrollDeltaPx * 0.9)),
-      fastScrollDeltaPx: Math.max(18, Math.round(base.fastScrollDeltaPx * 0.88)),
-      fastMinScrollDeltaPx: Math.max(12, Math.round(base.fastMinScrollDeltaPx * 0.88)),
-      visibilityThrottleMs: Math.max(72, Math.round(base.visibilityThrottleMs * 0.78)),
-      layoutSettleIgnoreMs: Math.max(120, Math.round(base.layoutSettleIgnoreMs * 0.72)),
-      captionToggleIgnoreMs: Math.max(220, Math.round(base.captionToggleIgnoreMs * 0.8)),
-      dragDistancePx: Math.max(84, Math.round(base.dragDistancePx * 0.86)),
-      settleIdleMs: Math.max(56, Math.round(base.settleIdleMs * 0.84)),
+    resolved = {
+      showThresholdPx: Math.max(72, Math.round(resolved.showThresholdPx * 0.88)),
+      hideThresholdPx: Math.max(180, Math.round(resolved.hideThresholdPx * 0.82)),
+      minScrollDeltaPx: Math.max(8, Math.round(resolved.minScrollDeltaPx * 0.9)),
+      fastScrollDeltaPx: Math.max(18, Math.round(resolved.fastScrollDeltaPx * 0.88)),
+      fastMinScrollDeltaPx: Math.max(12, Math.round(resolved.fastMinScrollDeltaPx * 0.88)),
+      visibilityThrottleMs: Math.max(72, Math.round(resolved.visibilityThrottleMs * 0.78)),
+      layoutSettleIgnoreMs: Math.max(120, Math.round(resolved.layoutSettleIgnoreMs * 0.72)),
+      captionToggleIgnoreMs: Math.max(220, Math.round(resolved.captionToggleIgnoreMs * 0.8)),
+      dragDistancePx: Math.max(84, Math.round(resolved.dragDistancePx * 0.86)),
+      settleIdleMs: Math.max(56, Math.round(resolved.settleIdleMs * 0.84)),
     };
   }
 
-  return base;
+  if (deviceTier === 'low-end') {
+    resolved = {
+      showThresholdPx: Math.max(64, Math.round(resolved.showThresholdPx * 0.9)),
+      hideThresholdPx: Math.max(150, Math.round(resolved.hideThresholdPx * 0.84)),
+      // increase delta thresholds so tiny noisy deltas are ignored more aggressively
+      minScrollDeltaPx: Math.max(12, Math.round(resolved.minScrollDeltaPx * 1.35)),
+      fastScrollDeltaPx: Math.max(18, Math.round(resolved.fastScrollDeltaPx * 0.9)),
+      fastMinScrollDeltaPx: Math.max(16, Math.round(resolved.fastMinScrollDeltaPx * 1.25)),
+      visibilityThrottleMs: Math.max(64, Math.round(resolved.visibilityThrottleMs * 0.72)),
+      layoutSettleIgnoreMs: Math.max(160, Math.round(resolved.layoutSettleIgnoreMs * 1.2)),
+      captionToggleIgnoreMs: Math.max(260, Math.round(resolved.captionToggleIgnoreMs * 1.25)),
+      // shorter travel to reduce per-frame movement cost
+      dragDistancePx: Math.max(72, Math.round(resolved.dragDistancePx * 0.78)),
+      // shorter settle so animation finishes quicker on low-end devices
+      settleIdleMs: Math.max(44, Math.round(resolved.settleIdleMs * 0.72)),
+    };
+  }
+
+  return resolved;
 }
 
 function detectPlatformProfile(motionProfile: MotionProfile): Exclude<MotionProfile, 'auto'> {
@@ -101,6 +126,23 @@ function detectPlatformProfile(motionProfile: MotionProfile): Exclude<MotionProf
 
   const ua = navigator.userAgent || '';
   return /iPhone|iPad|iPod/i.test(ua) ? 'ios' : 'android';
+}
+
+function detectDeviceTier(platform: Exclude<MotionProfile, 'auto'>): MotionDeviceTier {
+  if (typeof navigator === 'undefined') return 'normal';
+
+  const ua = navigator.userAgent || '';
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+  if (!isMobile) return 'normal';
+
+  const hardwareConcurrency = navigator.hardwareConcurrency ?? 8;
+  const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+
+  const isAndroid = platform === 'android';
+  const lowCpu = hardwareConcurrency <= (isAndroid ? 6 : 4);
+  const lowMemory = deviceMemory <= 4;
+
+  return lowCpu || lowMemory ? 'low-end' : 'normal';
 }
 
 interface UseHeaderScrollReturn {
@@ -130,9 +172,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const touchPanActiveRef = useRef(false);
   const touchLastYRef = useRef<number | null>(null);
   const platformProfileRef = useRef<Exclude<MotionProfile, 'auto'>>('android');
+  const deviceTierRef = useRef<MotionDeviceTier>('normal');
   const lastScrollFrameAtRef = useRef<number | null>(null);
+  const interactionActiveUntilRef = useRef<number>(0);
   const activePlatformProfile = detectPlatformProfile(motionProfile);
+  const activeDeviceTier = detectDeviceTier(activePlatformProfile);
   platformProfileRef.current = activePlatformProfile;
+  deviceTierRef.current = activeDeviceTier;
 
   const baseMotionTuning: ResolvedMotionTuning = {
     showThresholdPx: scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX,
@@ -146,7 +192,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     dragDistancePx: scrollTuning?.dragDistancePx ?? HEADER_DRAG_DISTANCE_PX,
     settleIdleMs: scrollTuning?.settleIdleMs ?? DRAG_SETTLE_IDLE_MS,
   };
-  const resolvedMotionTuning = resolveMotionTuning(baseMotionTuning, activePlatformProfile);
+  const resolvedMotionTuning = resolveMotionTuning(baseMotionTuning, activePlatformProfile, activeDeviceTier);
   const showThresholdPx = resolvedMotionTuning.showThresholdPx;
   const hideThresholdPx = resolvedMotionTuning.hideThresholdPx;
   const minScrollDeltaPx = resolvedMotionTuning.minScrollDeltaPx;
@@ -163,6 +209,14 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     motionProgressRef.current = clamped;
     onMotionChangeRef.current?.(clamped, interacting);
   };
+
+  const getInteractionWindowMs = () => (deviceTierRef.current === 'low-end' ? 140 : 96);
+
+  const bumpInteractionWindow = (now: number) => {
+    interactionActiveUntilRef.current = now + getInteractionWindowMs();
+  };
+
+  const isInteractionActive = (now: number) => now <= interactionActiveUntilRef.current;
 
   const getAdaptiveDragDistancePx = () => {
     const platform = platformProfileRef.current;
@@ -283,11 +337,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.body?.setAttribute('data-home-motion-platform', activePlatformProfile);
+    document.body?.setAttribute('data-home-motion-tier', activeDeviceTier);
     markHomeMotionEvent('platform-profile-resolved', {
       platform: activePlatformProfile,
+      deviceTier: activeDeviceTier,
       refreshRateHz: refreshRateRef.current,
     });
-  }, [activePlatformProfile]);
+  }, [activePlatformProfile, activeDeviceTier]);
 
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useLayoutEffect(() => {
@@ -334,9 +390,34 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         return;
       }
 
+      // During active interaction, keep hot path to transform writes only.
+      if (isInteractionActive(now)) {
+        if (currentScrollY <= showThresholdPx) {
+          emitMotion(0, true);
+          scheduleSettle();
+          endHomeMotionTimer(scrollTimer, { zone: 'show-interacting', currentScrollY, scrollDelta });
+          return;
+        }
+
+        if (scrollDelta !== 0) {
+          const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
+          emitMotion(nextProgress, true);
+        }
+        scheduleSettle();
+        endHomeMotionTimer(scrollTimer, {
+          zone: 'interacting-transform-only',
+          currentScrollY,
+          scrollDelta,
+          activeDeltaThreshold,
+          platform: platformProfileRef.current,
+          deviceTier: deviceTierRef.current,
+        });
+        return;
+      }
+
       // อยู่โซนบนสุดจริง (แสดง header ทันที ไม่ throttle)
       if (currentScrollY <= showThresholdPx) {
-        emitMotion(0, true);
+        emitMotion(0, false);
         applyVisible(true, false);
         scheduleSettle();
         endHomeMotionTimer(scrollTimer, { zone: 'show', currentScrollY, scrollDelta });
@@ -346,7 +427,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       if (currentScrollY >= hideThresholdPx) {
         if (scrollDelta !== 0) {
           const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
-          emitMotion(nextProgress, true);
+          emitMotion(nextProgress, false);
         }
         if (scrollDelta > activeDeltaThreshold) {
           applyVisible(false, !isFastScroll);
@@ -366,7 +447,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       // ระหว่าง SHOW–HIDE: เลื่อนขึ้นชัดเจนเท่านั้นค่อยแสดง header (delta จิ๋วจาก layout = ไม่สน)
       if (scrollDelta !== 0) {
         const nextProgress = motionProgressRef.current + scrollDelta / getAdaptiveDragDistancePx();
-        emitMotion(nextProgress, true);
+        emitMotion(nextProgress, false);
       }
       if (scrollDelta < -activeDeltaThreshold) {
         applyVisible(true, false);
@@ -383,6 +464,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
     const handleScroll = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      bumpInteractionWindow(now);
       const lastFrameAt = lastScrollFrameAtRef.current;
       if (lastFrameAt != null) {
         const frameGap = now - lastFrameAt;
@@ -405,6 +487,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       if (e.touches.length !== 1) return;
       touchPanActiveRef.current = true;
       touchLastYRef.current = e.touches[0].clientY;
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      bumpInteractionWindow(now);
       emitMotion(motionProgressRef.current, true);
     };
 
@@ -421,14 +505,11 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       touchLastYRef.current = t.clientY;
       if (Math.abs(delta) < 0.5) return;
 
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      bumpInteractionWindow(now);
+
       const nextProgress = motionProgressRef.current + delta / getAdaptiveDragDistancePx();
       emitMotion(nextProgress, true);
-
-      if (motionProgressRef.current >= 0.98) {
-        applyVisible(false, false);
-      } else if (motionProgressRef.current <= 0.02) {
-        applyVisible(true, false);
-      }
     };
 
     const handleTouchEnd = () => {

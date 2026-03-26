@@ -19,11 +19,45 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
   const isHeaderInteractingRef = useRef(false);
   const motionFrameRef = useRef<number | null>(null);
   const lastBodyPanActiveRef = useRef<string>('0');
+  const headerSurfacesRef = useRef<HTMLElement[]>([]);
+  const bottomNavSurfacesRef = useRef<HTMLElement[]>([]);
+  const lastSurfacesRefreshAtRef = useRef(0);
+  const headerTransformCacheRef = useRef(new WeakMap<HTMLElement, string>());
+  const bottomTransformCacheRef = useRef(new WeakMap<HTMLElement, string>());
 
   const clampProgress = (value: number) => {
     if (value <= 0) return 0;
     if (value >= 1) return 1;
     return value;
+  };
+
+  const refreshMotionSurfacesIfNeeded = (force = false) => {
+    if (typeof document === 'undefined') return;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const stale = now - lastSurfacesRefreshAtRef.current > 1000;
+
+    if (!force && !stale && headerSurfacesRef.current.length > 0 && bottomNavSurfacesRef.current.length > 0) {
+      return;
+    }
+
+    headerSurfacesRef.current = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-home-header-motion-surface="1"]'),
+    );
+    bottomNavSurfacesRef.current = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-home-bottom-nav-motion-surface="1"]'),
+    );
+    lastSurfacesRefreshAtRef.current = now;
+  };
+
+  const setTransformIfChanged = (
+    element: HTMLElement,
+    nextTransform: string,
+    cache: WeakMap<HTMLElement, string>,
+  ) => {
+    const prev = cache.get(element);
+    if (prev === nextTransform) return;
+    cache.set(element, nextTransform);
+    element.style.transform = nextTransform;
   };
 
   const applyMotionToDom = (progress: number, interacting: boolean) => {
@@ -35,17 +69,21 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     motionFrameRef.current = requestAnimationFrame(() => {
       motionFrameRef.current = null;
       const motionTimer = startHomeMotionTimer('motion-apply', 'apply-motion-to-dom');
+      refreshMotionSurfacesIfNeeded();
 
-      const headerSurfaces = document.querySelectorAll<HTMLElement>('[data-home-header-motion-surface="1"]');
+      const headerSurfaces = headerSurfacesRef.current;
+      const bottomNavSurfaces = bottomNavSurfacesRef.current;
+
       headerSurfaces.forEach((element) => {
-        element.style.transform = `translate3d(0, ${-progress * 100}%, 0)`;
+        const transform = `translate3d(0, ${-progress * 100}%, 0)`;
+        setTransformIfChanged(element, transform, headerTransformCacheRef.current);
       });
 
-      const bottomNavSurfaces = document.querySelectorAll<HTMLElement>('[data-home-bottom-nav-motion-surface="1"]');
       bottomNavSurfaces.forEach((element) => {
         const shouldHideWithScroll = element.dataset.hideWithScroll === '1';
         const progressPercent = shouldHideWithScroll ? progress * 100 : 0;
-        element.style.transform = `translate3d(0, ${progressPercent}%, 0)`;
+        const transform = `translate3d(0, ${progressPercent}%, 0)`;
+        setTransformIfChanged(element, transform, bottomTransformCacheRef.current);
       });
 
       const nextPanActive = interacting ? '1' : '0';
