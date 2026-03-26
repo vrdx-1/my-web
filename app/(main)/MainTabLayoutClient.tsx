@@ -18,6 +18,8 @@ import { MainTabPanels } from './MainTabPanels';
 import { HomeTabScrollProvider, useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 import { HomeHeaderChrome } from './HomeHeaderChrome';
 import {
+  clearHomeMotionProfilerEntries,
+  getHomeMotionProfilerEntries,
   getHomeMotionProfilerSummary,
   markHomeMotionEvent,
   setHomeMotionProfilerEnabled,
@@ -46,6 +48,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     syncHomeMotionProfilerFromLocationSearch(window.location.search);
+    const qs = new URLSearchParams(window.location.search);
+    const traceOneShot = qs.get('homePerfTrace') === '1';
 
     // Console helpers for real-device profiling (before/after comparison).
     (window as typeof window & {
@@ -64,7 +68,55 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfReset?: () => void;
+      __homePerfTraceOnce?: () => void;
     }).__homePerfSummary = () => getHomeMotionProfilerSummary();
+
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+      __homePerfReset?: () => void;
+      __homePerfTraceOnce?: () => void;
+    }).__homePerfReset = () => clearHomeMotionProfilerEntries();
+
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+      __homePerfReset?: () => void;
+      __homePerfTraceOnce?: () => void;
+    }).__homePerfTraceOnce = () => {
+      clearHomeMotionProfilerEntries();
+      setHomeMotionProfilerEnabled(true);
+      window.setTimeout(() => {
+        const summary = getHomeMotionProfilerSummary(30);
+        const entries = getHomeMotionProfilerEntries();
+        if (summary.length > 0) console.table(summary);
+        if (entries.length > 0) {
+          const topEntries = [...entries]
+            .sort((a, b) => b.durationMs - a.durationMs)
+            .slice(0, 20)
+            .map((entry) => ({
+              channel: entry.channel,
+              name: entry.name,
+              durationMs: Number(entry.durationMs.toFixed(2)),
+              at: entry.at,
+              detail: entry.detail,
+            }));
+          console.table(topEntries);
+        }
+      }, 8000);
+    };
+
+    if (traceOneShot) {
+      clearHomeMotionProfilerEntries();
+      setHomeMotionProfilerEnabled(true);
+      window.setTimeout(() => {
+        const summary = getHomeMotionProfilerSummary(30);
+        if (summary.length > 0) console.table(summary);
+      }, 8000);
+    }
 
     markHomeMotionEvent('main-tab-layout-mounted', { pathname: resolvedPathname });
   }, [resolvedPathname]);

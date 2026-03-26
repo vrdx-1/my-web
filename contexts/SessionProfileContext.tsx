@@ -23,21 +23,13 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
   const [userProfile, setUserProfile] = useState<SessionProfileValue['userProfile']>(null);
   const currentUserIdRef = useRef<string | null>(null);
   const sessionCheckStartedRef = useRef(false);
+  const deferredProfileFetchTimerRef = useRef<number | null>(null);
 
-  const startSessionCheck = useCallback(() => {
-    if (sessionCheckStartedRef.current) return;
-    sessionCheckStartedRef.current = true;
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setSessionReady(true);
-      if (s?.user?.id) {
-        currentUserIdRef.current = s.user.id;
-        fetchProfileIfMatch(s.user.id);
-      } else {
-        currentUserIdRef.current = null;
-        setUserProfile(null);
-      }
-    });
+  const clearDeferredProfileFetch = useCallback(() => {
+    if (deferredProfileFetchTimerRef.current != null) {
+      window.clearTimeout(deferredProfileFetchTimerRef.current);
+      deferredProfileFetchTimerRef.current = null;
+    }
   }, []);
 
   const fetchProfileIfMatch = useCallback((userId: string) => {
@@ -64,20 +56,57 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
       });
   }, []);
 
+  const startSessionCheck = useCallback(() => {
+    if (sessionCheckStartedRef.current) return;
+    sessionCheckStartedRef.current = true;
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setSessionReady(true);
+      if (s?.user?.id) {
+        currentUserIdRef.current = s.user.id;
+        clearDeferredProfileFetch();
+        const scheduleFetch = () => {
+          deferredProfileFetchTimerRef.current = window.setTimeout(() => {
+            deferredProfileFetchTimerRef.current = null;
+            fetchProfileIfMatch(s.user.id);
+          }, 1200);
+        };
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as Window & { requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number })
+            .requestIdleCallback?.(() => scheduleFetch(), { timeout: 1800 });
+        } else {
+          scheduleFetch();
+        }
+      } else {
+        clearDeferredProfileFetch();
+        currentUserIdRef.current = null;
+        setUserProfile(null);
+      }
+    });
+  }, [clearDeferredProfileFetch, fetchProfileIfMatch]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       if (!sessionCheckStartedRef.current) return;
       setSession(s);
       if (s?.user?.id) {
         currentUserIdRef.current = s.user.id;
-        fetchProfileIfMatch(s.user.id);
+        clearDeferredProfileFetch();
+        deferredProfileFetchTimerRef.current = window.setTimeout(() => {
+          deferredProfileFetchTimerRef.current = null;
+          fetchProfileIfMatch(s.user.id);
+        }, 1200);
       } else {
+        clearDeferredProfileFetch();
         currentUserIdRef.current = null;
         setUserProfile(null);
       }
     });
-    return () => subscription.unsubscribe();
-  }, [fetchProfileIfMatch]);
+    return () => {
+      clearDeferredProfileFetch();
+      subscription.unsubscribe();
+    };
+  }, [clearDeferredProfileFetch, fetchProfileIfMatch]);
 
   // ถ้าไม่ใช่หน้าโฮม (ไม่มีฟีดโหลด) ให้เริ่มตรวจ session หลังดีเลย์
   useEffect(() => {

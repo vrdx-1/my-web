@@ -39,25 +39,38 @@ export function useHomeLikedSaved(session: any, sessionReady: boolean): HomeLike
     const likesColumn = isUser ? 'user_id' : 'guest_token';
     const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
     const savesColumn = isUser ? 'user_id' : 'guest_token';
-    Promise.all([
-      supabase.from(likesTable).select('post_id').eq(likesColumn, idOrToken),
-      supabase.from(savesTable).select('post_id').eq(savesColumn, idOrToken),
-    ]).then(([likedRes, savedRes]) => {
-      if (likedRes.data) {
-        const map: { [key: string]: boolean } = {};
-        likedRes.data.forEach((item: { post_id: string }) => {
-          map[item.post_id] = true;
-        });
-        setLikedPosts((prev) => ({ ...prev, ...map }));
-      }
-      if (savedRes.data) {
-        const map: { [key: string]: boolean } = {};
-        savedRes.data.forEach((item: { post_id: string }) => {
-          map[item.post_id] = true;
-        });
-        setSavedPosts((prev) => ({ ...prev, ...map }));
-      }
-    });
+    let cancelled = false;
+    const runFetch = () => {
+      Promise.all([
+        supabase.from(likesTable).select('post_id').eq(likesColumn, idOrToken),
+        supabase.from(savesTable).select('post_id').eq(savesColumn, idOrToken),
+      ]).then(([likedRes, savedRes]) => {
+        if (cancelled) return;
+        if (likedRes.data) {
+          const map: { [key: string]: boolean } = {};
+          likedRes.data.forEach((item: { post_id: string }) => {
+            map[item.post_id] = true;
+          });
+          setLikedPosts((prev) => ({ ...prev, ...map }));
+        }
+        if (savedRes.data) {
+          const map: { [key: string]: boolean } = {};
+          savedRes.data.forEach((item: { post_id: string }) => {
+            map[item.post_id] = true;
+          });
+          setSavedPosts((prev) => ({ ...prev, ...map }));
+        }
+      });
+    };
+
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const delayMs = path === '/home' ? 1200 : 250;
+    const timerId = window.setTimeout(runFetch, delayMs);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
   }, [sessionReady, session]);
 
   return { likedPosts, savedPosts, setLikedPosts, setSavedPosts };

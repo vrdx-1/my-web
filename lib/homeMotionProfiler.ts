@@ -241,3 +241,15 @@ export function getHomeMotionProfilerSummary(limit = 20): HomeMotionProfilerSumm
   items.sort((a, b) => b.maxMs - a.maxMs);
   return items.slice(0, limit);
 }
+
+export function getHomeMotionProfilerEntries() {
+  const store = getStore();
+  if (!store) return [] as HomeMotionProfilerEntry[];
+  return [...store.entries];
+}
+
+export function clearHomeMotionProfilerEntries() {
+  const store = getStore();
+  if (!store) return;
+  store.entries = [];
+}

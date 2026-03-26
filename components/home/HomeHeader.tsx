@@ -16,4 +16,33 @@ function HomeHeaderBase(props: HomeHeaderProps) {
   return <AppHeader {...APP_HEADER_PRESET} {...props} homeCenterContent={homeCenterContent} />;
 }
 
-export const HomeHeader = React.memo(HomeHeaderBase);
+function areHomeHeaderPropsEqual(prev: HomeHeaderProps, next: HomeHeaderProps) {
+  const bothSearchOnly = !!prev.showOnlySearch && !!next.showOnlySearch;
+  if (bothSearchOnly) {
+    return (
+      prev.showOnlySearch === next.showOnlySearch &&
+      prev.isHeaderVisible === next.isHeaderVisible &&
+      prev.slideWithContainer === next.slideWithContainer &&
+      prev.onTabRefresh === next.onTabRefresh
+    );
+  }
+
+  return (
+    prev.showOnlySearch === next.showOnlySearch &&
+    prev.isHeaderVisible === next.isHeaderVisible &&
+    prev.slideWithContainer === next.slideWithContainer &&
+    prev.onCreatePostClick === next.onCreatePostClick &&
+    prev.onNotificationClick === next.onNotificationClick &&
+    prev.unreadCount === next.unreadCount &&
+    prev.userProfile === next.userProfile &&
+    prev.session === next.session &&
+    prev.iconSize === next.iconSize &&
+    prev.controlSize === next.controlSize &&
+    prev.onTabRefresh === next.onTabRefresh &&
+    prev.onTabSwitchStart === next.onTabSwitchStart &&
+    prev.loadingTab === next.loadingTab &&
+    prev.setProfileOverlayOpen === next.setProfileOverlayOpen
+  );
+}
+
+export const HomeHeader = React.memo(HomeHeaderBase, areHomeHeaderPropsEqual);
