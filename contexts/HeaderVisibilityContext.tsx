@@ -5,6 +5,9 @@ import { endHomeMotionTimer, startHomeMotionTimer } from '@/lib/homeMotionProfil
 
 interface HeaderVisibilityContextValue {
   isHeaderVisible: boolean;
+  /** แสดง/ซ่อน header พร้อม snap DOM ทันที — ใช้เมื่อ route เปลี่ยนหรือสลับแท็บ ไม่ใช่ระหว่าง scroll */
+  snapHeaderVisible: (visible: boolean) => void;
+  /** @deprecated ใช้ snapHeaderVisible แทน */
   setHeaderVisible: (visible: boolean) => void;
   headerSlideProgress: number;
   isHeaderInteracting: boolean;
@@ -63,6 +66,48 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     element.style.transform = nextTransform;
   };
 
+  /**
+   * เขียน transform ลง DOM ตรงทันที (synchronous, ไม่มี RAF)
+   * ใช้สำหรับ: ตามนิ้วระหว่าง scroll/pan — ต้องการ 0-latency ต่อเฟรม
+   * ระวัง: อย่าเรียกจาก useState/useEffect (ไม่ใช่ paint phase) เพราะ layout thrash
+   */
+  const applyMotionToDomSync = (progress: number, interacting: boolean) => {
+    if (typeof document === 'undefined') return;
+    const motionTimer = startHomeMotionTimer('motion-apply', 'apply-motion-to-dom');
+    refreshMotionSurfacesIfNeeded();
+
+    const headerSurfaces = headerSurfacesRef.current;
+    const bottomNavSurfaces = bottomNavSurfacesRef.current;
+
+    headerSurfaces.forEach((element) => {
+      const transform = `translate3d(0, ${-progress * 100}%, 0)`;
+      setTransformIfChanged(element, transform, headerTransformCacheRef.current);
+    });
+
+    bottomNavSurfaces.forEach((element) => {
+      const shouldHideWithScroll = element.dataset.hideWithScroll === '1';
+      const progressPercent = shouldHideWithScroll ? progress * 100 : 0;
+      const transform = `translate3d(0, ${progressPercent}%, 0)`;
+      setTransformIfChanged(element, transform, bottomTransformCacheRef.current);
+    });
+
+    const nextPanActive = interacting ? '1' : '0';
+    if (lastBodyPanActiveRef.current !== nextPanActive) {
+      lastBodyPanActiveRef.current = nextPanActive;
+      document.body?.setAttribute('data-header-pan-active', nextPanActive);
+    }
+    endHomeMotionTimer(motionTimer, {
+      progress,
+      interacting,
+      headerSurfaceCount: headerSurfaces.length,
+      bottomNavSurfaceCount: bottomNavSurfaces.length,
+    });
+  };
+
+  /**
+   * เขียน transform ผ่าน RAF (coalesced) — ใช้เมื่อต้องการ snap พร้อม settle animation
+   * เช่น route change, tab switch, scroll settle
+   */
   const applyMotionToDom = (progress: number, interacting: boolean) => {
     if (typeof document === 'undefined') return;
     pendingMotionProgressRef.current = progress;
@@ -71,41 +116,19 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
 
     motionFrameRef.current = requestAnimationFrame(() => {
       motionFrameRef.current = null;
-      const motionTimer = startHomeMotionTimer('motion-apply', 'apply-motion-to-dom');
-      refreshMotionSurfacesIfNeeded();
-      const nextProgress = pendingMotionProgressRef.current;
-      const nextInteracting = pendingMotionInteractingRef.current;
-
-      const headerSurfaces = headerSurfacesRef.current;
-      const bottomNavSurfaces = bottomNavSurfacesRef.current;
-
-      headerSurfaces.forEach((element) => {
-        const transform = `translate3d(0, ${-nextProgress * 100}%, 0)`;
-        setTransformIfChanged(element, transform, headerTransformCacheRef.current);
-      });
-
-      bottomNavSurfaces.forEach((element) => {
-        const shouldHideWithScroll = element.dataset.hideWithScroll === '1';
-        const progressPercent = shouldHideWithScroll ? nextProgress * 100 : 0;
-        const transform = `translate3d(0, ${progressPercent}%, 0)`;
-        setTransformIfChanged(element, transform, bottomTransformCacheRef.current);
-      });
-
-      const nextPanActive = nextInteracting ? '1' : '0';
-      if (lastBodyPanActiveRef.current !== nextPanActive) {
-        lastBodyPanActiveRef.current = nextPanActive;
-        document.body?.setAttribute('data-header-pan-active', nextPanActive);
-      }
-      endHomeMotionTimer(motionTimer, {
-        progress: nextProgress,
-        interacting: nextInteracting,
-        headerSurfaceCount: headerSurfaces.length,
-        bottomNavSurfaceCount: bottomNavSurfaces.length,
-      });
+      applyMotionToDomSync(
+        pendingMotionProgressRef.current,
+        pendingMotionInteractingRef.current,
+      );
     });
   };
 
-  const setHeaderVisibleStable = useCallback((visible: boolean) => {
+  /**
+   * snapHeaderVisible — snap DOM ทันทีแล้วอัปเดต React state
+   * ใช้สำหรับ: route change, tab switch, scroll coordinator
+   * ไม่ใช้ระหว่าง scroll เพราะจะ override smooth progress ที่ setHeaderMotion กำลังเขียน
+   */
+  const snapHeaderVisible = useCallback((visible: boolean) => {
     isHeaderVisibleRef.current = visible;
     setHeaderVisible(visible);
     const progress = visible ? 0 : 1;
@@ -114,6 +137,9 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     applyMotionToDom(progress, false);
   }, []);
 
+  /** @deprecated ใช้ snapHeaderVisible แทน */
+  const setHeaderVisibleStable = snapHeaderVisible;
+
   const setHeaderMotion = useCallback((progress: number, interacting: boolean) => {
     const clamped = clampProgress(progress);
     const prevProgress = headerSlideProgressRef.current;
@@ -121,8 +147,10 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     headerSlideProgressRef.current = clamped;
     isHeaderInteractingRef.current = interacting;
 
+    // เขียน DOM ตรงทันที ไม่รอ RAF เพื่อให้ตามนิ้วได้ทุกเฟรม
+    // (applyMotionToDomSync จะ early-return ถ้า transform ไม่เปลี่ยน)
     if (Math.abs(clamped - prevProgress) > 0.002 || prevInteracting !== interacting) {
-      applyMotionToDom(clamped, interacting);
+      applyMotionToDomSync(clamped, interacting);
     }
 
     if (!interacting) {
@@ -136,6 +164,7 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
 
   const value: HeaderVisibilityContextValue = {
     isHeaderVisible,
+    snapHeaderVisible,
     setHeaderVisible: setHeaderVisibleStable,
     headerSlideProgress: headerSlideProgressRef.current,
     isHeaderInteracting: isHeaderInteractingRef.current,
