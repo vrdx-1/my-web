@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
@@ -22,8 +22,8 @@ import { useHomeTabData, type HomeTab } from '@/hooks/useHomeTabData';
 import { useHomeRefresh } from '@/hooks/useHomeRefresh';
 import { useHomeTabSwitch } from '@/hooks/useHomeTabSwitch';
 import { usePostListData } from '@/hooks/usePostListData';
-import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
-import { useMainTabScroll, readMainTabScrollStorage } from '@/contexts/MainTabScrollContext';
+import { useHomeScrollCoordinator } from '@/hooks/useHomeScrollCoordinator';
+import { useHomeRefreshState } from '@/hooks/useHomeRefreshState';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomeFeedBody } from './HomeFeedBody';
@@ -45,12 +45,6 @@ export function HomePageContent() {
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const prevLoadingMoreRef = useRef(false);
-  const soldTabRefreshRef = useRef<{
-    setPage: (v: number | ((p: number) => number)) => void;
-    setHasMore: (v: boolean) => void;
-    fetchPosts: (isInitial?: boolean) => Promise<void>;
-  } | null>(null);
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
   /** ใช้แยก "กำลังรอผลค้นหา" (แสดง skeleton) กับ "ค้นหาเสร็จแล้วไม่มีรายการ" (แสดง ຍັງບໍ່ມີລາຍການ) */
   const searchResolvedRef = useRef(false);
@@ -59,17 +53,6 @@ export function HomePageContent() {
   /** แสดง "ຍັງບໍ່ມີລາຍການ" ได้เฉพาะเมื่อ true = โหลดค้นหาเสร็จแล้ว (loading เปลี่ยนจาก true → false) */
   const [searchResolvedForEmpty, setSearchResolvedForEmpty] = useState(false);
   const prevQueryForEmptyRef = useRef<string>('');
-  /** จำ scroll ของแท็บพร้อมขาย/ขายแล้ว — สลับแท็บแล้วกลับมาเห็นจุดเดิม (แบบ MainTabPanels) */
-  const recommendScrollRef = useRef(0);
-  const soldScrollRef = useRef(0);
-  const prevShowSoldRef = useRef<boolean | null>(null);
-  const prevPathnameRef = useRef<string | null>(null);
-  /** true = เพิ่งนำทางกลับมา /home จากหน้าอื่น — คืน scroll หลังฟีดพร้อม (ไม่คืนตอน skeleton/ก่อน virtualizer) */
-  const pendingHomeRouteScrollRestoreRef = useRef(false);
-  /** ห่อฟีดแนะนำ+ขายแล้ว — ซ่อนชั่วคราวระหว่างคืน scroll ลึกเพื่อไม่ให้ virtualizer วาดโพสบนสุดแล้วกระโดด */
-  const feedRestoreWrapRef = useRef<HTMLDivElement | null>(null);
-  const suppressHideUntilRef = useRef<number | null>(null);
-
   const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
 
@@ -109,31 +92,15 @@ export function HomePageContent() {
     province: selectedProvince,
   });
 
-  useEffect(() => {
-    soldTabRefreshRef.current = {
-      setPage: soldListData.setPage,
-      setHasMore: soldListData.setHasMore,
-      fetchPosts: soldListData.fetchPosts,
-    };
-    return () => {
-      soldTabRefreshRef.current = null;
-    };
-  }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
-
-  useEffect(() => {
-    if (tab === 'sold' && soldListData.posts.length === 0 && !soldListData.loadingMore) {
-      soldListData.setPage(0);
-      soldListData.setHasMore(true);
-      soldListData.fetchPosts(true);
-    }
-  }, [tab, soldListData.posts.length, soldListData.loadingMore]);
-
-  useEffect(() => {
-    if (tab !== 'sold') return;
-    soldListData.setPage(0);
-    soldListData.setHasMore(true);
-    soldListData.fetchPosts(true);
-  }, [selectedProvince]);
+  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
+  const { soldTabRefreshRef } = useHomeRefreshState({
+    tab,
+    selectedProvince,
+    soldListData,
+    effectiveLoadingMore,
+    mainTab: mainTab ?? null,
+    setTabRefreshing,
+  });
 
   const posts = isSoldTabNoSearch ? soldListData.posts : tabData.posts;
 
@@ -202,99 +169,11 @@ export function HomePageContent() {
     hasSearchResultsCache: hasSearch && searchData.posts.length > 0,
   });
 
-  /** บันทึก scroll ก่อนสลับแท็บ — ใช้แบบเดียวกับ saveCurrentScroll ก่อน router.push (ลงทะเบียนให้ header เรียกตอนกดแท็บ) */
-  const homeTabScroll = useHomeTabScroll();
-  const mainTabScroll = useMainTabScroll();
   const headerVisibility = useHeaderVisibilityContext();
-
-  /** สลับจากหน้าอื่นกลับมาหน้าโฮม → แสดง header/nav ทันที และกันไม่ให้ scroll ที่เกิดจากการ restore ซ่อน header (ให้หายเฉพาะตอนผู้ใช้เลื่อนจริง) */
-  useLayoutEffect(() => {
-    const prev = prevPathnameRef.current;
-    prevPathnameRef.current = pathname;
-    if (pathname === '/home' && prev !== '/home' && prev != null) {
-      pendingHomeRouteScrollRestoreRef.current = true;
-      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      suppressHideUntilRef.current = now + 500;
-      headerVisibility?.setHeaderVisible(true);
-    }
-    if (pathname !== '/home') {
-      pendingHomeRouteScrollRestoreRef.current = false;
-    }
-  }, [pathname, headerVisibility]);
-
-  useEffect(() => {
-    if (!homeTabScroll?.saveBeforeSwitchRef) return;
-    homeTabScroll.saveBeforeSwitchRef.current = () => {
-      const y = typeof window !== 'undefined' ? window.scrollY : 0;
-      if (isSoldTabNoSearch) soldScrollRef.current = y;
-      else recommendScrollRef.current = y;
-    };
-    return () => {
-      homeTabScroll.saveBeforeSwitchRef.current = null;
-    };
-  }, [homeTabScroll, isSoldTabNoSearch]);
-
-  /** สลับแท็บแล้ว: คืนค่า scroll — ทั้งພ້ອມຂາຍ/ຂາຍແລ້ວ ใช้ retry + ref บังคับ reflow เหมือนกัน (virtualizer / scrollHeight) */
-  const recommendPanelRef = useRef<HTMLDivElement | null>(null);
-  const soldPanelRef = useRef<HTMLDivElement | null>(null);
-  const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
-  setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
-  useLayoutEffect(() => {
-    const showSold = isSoldTabNoSearch;
-    const prev = prevShowSoldRef.current;
-    prevShowSoldRef.current = showSold;
-    if (prev === null) return;
-    if (prev === showSold) return;
-
-    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    suppressHideUntilRef.current = now + 400;
-    const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
-    const activePanelRef = showSold ? soldPanelRef : recommendPanelRef;
-
-    const showHeaderAfterRestore = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setHeaderVisibleRef.current?.(true));
-      });
-    };
-
-    if (typeof window === 'undefined' || !Number.isFinite(toRestore)) {
-      showHeaderAfterRestore();
-      return;
-    }
-
-    const targetY = toRestore;
-    let attempts = 0;
-    const maxAttempts = 25;
-    const tryScroll = () => {
-      const el = activePanelRef.current;
-      if (el) void el.offsetHeight;
-      window.scrollTo(0, targetY);
-      attempts += 1;
-      const current = window.scrollY;
-      const diff = Math.abs(current - targetY);
-      if (diff > 2 && attempts < maxAttempts) {
-        requestAnimationFrame(tryScroll);
-      } else {
-        showHeaderAfterRestore();
-      }
-    };
-    requestAnimationFrame(() => requestAnimationFrame(tryScroll));
-  }, [isSoldTabNoSearch, headerVisibility]);
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  /** ส่งเข้า useHeaderScroll — ตอนโหลดโพสถัดไปจะไม่ขยับ header/bottom nav ตาม scroll ปลอมจาก layout */
-  const effectiveLoadingMore = isSoldTabNoSearch ? soldListData.loadingMore : postList.loadingMore;
-  /** ไม่ disableScrollHide ตอนเปิด sheet — จะบังคับ header แสดงและเลื่อนลงมาแม้เคยซ่อนจาก scroll; body ล็อก overflow อยู่แล้ว */
-  const headerScroll = useHeaderScroll({
-    loadingMore: effectiveLoadingMore,
-    /** โพสเพิ่มในลิสต์ → กัน scroll ปลอมช่วง layout/รูปนิ่ง */
-    feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
-    onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
-    suppressHideUntilRef,
-  });
-
   const handleRecommendLoadMore = useCallback(() => {
     setRecommendLoadMoreShell(true);
     postList.setPage((p: number) => p + 1);
@@ -335,19 +214,43 @@ export function HomePageContent() {
     setJustSavedPosts,
   });
 
-  useEffect(() => {
-    const wasLoading = prevLoadingMoreRef.current;
-    prevLoadingMoreRef.current = effectiveLoadingMore;
-    if (wasLoading && !effectiveLoadingMore) {
-      setTabRefreshing(false);
-      mainTab?.setNavigatingToTab(null);
-      mainTab?.setTabRefreshing(false);
-    } else if (!effectiveLoadingMore) {
-      setTabRefreshing(false);
-      mainTab?.setTabRefreshing(false);
-      mainTab?.setNavigatingToTab(null);
-    }
-  }, [effectiveLoadingMore, mainTab]);
+  const searchWaitingResults =
+    hasSearch && posts.length === 0 && !searchResolvedForEmpty;
+
+  const showFeedSkeleton =
+    !isSoldTabNoSearch &&
+    (searchWaitingResults ||
+      (posts.length === 0 &&
+        (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+      (tabRefreshing && postList.loadingMore));
+
+  const {
+    feedRestoreWrapRef,
+    recommendPanelRef,
+    soldPanelRef,
+    suppressHideUntilRef,
+  } = useHomeScrollCoordinator({
+    pathname,
+    clientMounted,
+    firstFeedLoaded,
+    showFeedSkeleton,
+    isSoldTabNoSearch,
+  });
+
+  const headerScroll = useHeaderScroll({
+    loadingMore: effectiveLoadingMore,
+    feedPostCount: isSoldTabNoSearch ? soldListData.posts.length : postList.posts.length,
+    onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
+    suppressHideUntilRef,
+    scrollTuning: {
+      showThresholdPx: 130,
+      hideThresholdPx: 300,
+      minScrollDeltaPx: 14,
+      visibilityThrottleMs: 180,
+      layoutSettleIgnoreMs: 320,
+      captionToggleIgnoreMs: 520,
+    },
+  });
 
   const effectiveSession = isSoldTabNoSearch ? session : postList.session;
   const handlers = usePostFeedHandlers({
@@ -403,9 +306,6 @@ export function HomePageContent() {
     const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
     return addBackStep(close);
   }, [viewingPostHook.viewingPost]);
-
-  const searchWaitingResults =
-    hasSearch && posts.length === 0 && !searchResolvedForEmpty;
 
   /** โหลดโพสถัดไปล่วงหน้าเมื่อโพสสุดท้ายโหลดรูปครบ — จำกัดเมื่อมีโพสในคิวไม่เกิน 2 เพื่อไม่ดึงยิงทั้งฟีด */
   const onPrefetchNextPost = useCallback(() => {
@@ -470,84 +370,6 @@ export function HomePageContent() {
       toggleSave,
     ],
   );
-
-  const showFeedSkeleton =
-    !isSoldTabNoSearch &&
-    (searchWaitingResults ||
-      (posts.length === 0 &&
-        (postList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
-      (tabRefreshing && postList.loadingMore));
-
-  /** ก่อน paint: ซ่อนฟีดชั่วคราวเมื่อจะคืน scroll ลึก — กัน virtualizer วาดโพสบนสุดแวบหนึ่ง */
-  useLayoutEffect(() => {
-    if (pathname !== '/home') {
-      const w = feedRestoreWrapRef.current;
-      if (w) w.style.visibility = '';
-      return;
-    }
-    if (!pendingHomeRouteScrollRestoreRef.current) return;
-    if (!clientMounted) return;
-    if (!firstFeedLoaded) return;
-    if (showFeedSkeleton) return;
-    const targetY = readMainTabScrollStorage('/home');
-    if (typeof targetY !== 'number' || !Number.isFinite(targetY)) return;
-    const wrap = feedRestoreWrapRef.current;
-    if (targetY > 48 && wrap) wrap.style.visibility = 'hidden';
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton]);
-
-  /** คืน scroll หลัง layout นิ่ง — panel ref ตามแท็บที่เปิด (ພ້ອມຂາຍ / ຂາຍແລ້ວ) เหมือนตอนสลับแท็บ */
-  useEffect(() => {
-    if (pathname !== '/home') return;
-    if (!pendingHomeRouteScrollRestoreRef.current) return;
-    if (!clientMounted) return;
-    if (!firstFeedLoaded) return;
-    if (showFeedSkeleton) return;
-
-    const targetY = readMainTabScrollStorage('/home');
-    if (typeof targetY !== 'number' || !Number.isFinite(targetY)) {
-      pendingHomeRouteScrollRestoreRef.current = false;
-      return;
-    }
-
-    let cancelled = false;
-    const useMask = targetY > 48;
-    const activePanelRef = isSoldTabNoSearch ? soldPanelRef : recommendPanelRef;
-
-    const unmask = () => {
-      const w = feedRestoreWrapRef.current;
-      if (useMask && w) w.style.visibility = '';
-    };
-
-    let attempts = 0;
-    const maxAttempts = 40;
-    const tryScroll = () => {
-      if (cancelled) return;
-      const el = activePanelRef.current;
-      if (el) void el.offsetHeight;
-      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
-      attempts += 1;
-      const current = window.scrollY;
-      const diff = Math.abs(current - targetY);
-      if (diff > 3 && attempts < maxAttempts) {
-        requestAnimationFrame(tryScroll);
-      } else {
-        unmask();
-        pendingHomeRouteScrollRestoreRef.current = false;
-        if (diff <= 4) {
-          mainTabScroll?.saveCurrentScroll('/home');
-        }
-      }
-    };
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(tryScroll);
-    });
-
-    return () => {
-      cancelled = true;
-      unmask();
-    };
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch]);
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {

@@ -2,17 +2,11 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
-
-/** ความสูงโดยประมาณของการ์ดโพส (รวมเส้นขอบ) — virtualizer จะวัดจริงหลัง mount */
-const FEED_CARD_ESTIMATE_PX = 520;
-/** เผื่อแถวเหนือ/ใต้ viewport — เลื่อนลึกแล้วเลื่อนกลับเร็ว: overscan สูงขึ้นลดพายุ mount+measure พร้อมกัน */
-const FEED_VIRTUAL_OVERSCAN = 18;
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
@@ -86,41 +80,6 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     (forceSkeletonWhenEmpty && posts.length === 0) ||
     (isSearchLoading && posts.length === 0);
 
-  const virtualizeEnabled = mounted && !effectivelyShowSkeleton && posts.length > 0;
-
-  /**
-   * แถว skeleton โหลดเพิ่มอยู่ใน virtual list (เป็นส่วนหนึ่งของ totalSize)
-   * เดิมวาง skeleton ใน bottomSlot ใต้กล่องความสูง totalSize → อยู่ท้ายเอกสารจริง ตอนเลื่อนลึกแต่ยังไม่ถึงท้ายสุดจะไม่เห็น skeleton แม้ loadingMore เป็น true
-   */
-  const appendLoadMoreSkeletonRow = Boolean(loadingMore);
-  const virtualItemCount = posts.length + (appendLoadMoreSkeletonRow ? 1 : 0);
-
-  /**
-   * scrollMargin ต้องเป็น 0: MainTabLayoutClient ใส่ spacer ความสูงคงที่ให้แล้วใต้ header+แท็บแบบ fixed
-   * ถ้าวัด offsetTop ของกล่องฟีดแล้วส่งเป็น scrollMargin จะได้ช่องว่างซ้ำ (spacer + padding ภายใน virtual list)
-   */
-  const virtualizer = useWindowVirtualizer({
-    count: virtualItemCount,
-    estimateSize: () => FEED_CARD_ESTIMATE_PX,
-    overscan: FEED_VIRTUAL_OVERSCAN,
-    scrollMargin: 0,
-    enabled: virtualizeEnabled,
-    /**
-     * ไม่ปรับ window.scroll เมื่อความสูงการ์ดเปลี่ยนหลังวัด — โดยเฉพาะหลังเลื่อนลึกแล้วเลื่อนกลับ:
-     * หยุดเลื่อนแล้ว isScrolling=false แต่หลายการ์ดยังวัด/โหลดรูป การชดเชย scroll เป็นระลอกจะกระตุกและกระพริบ
-     * (แลกกับอาจมี drift เล็กน้อยถ้า estimate ห่างจากจริงมาก — โฮมรับได้มากกว่า)
-     */
-    // @ts-expect-error VirtualizerOptions ในแพ็กเกจยังไม่รวมฟิลด์นี้ใน .d.ts แต่รันไทม์รองรับ
-    shouldAdjustScrollPositionOnItemSizeChange: () => false,
-    /** นานขึ้น = ช่วงหลังปล่อยนิ้วยังถือว่า "กำลังเลื่อน" ไม่สลับไปโหมดชดเชย scroll เร็วเกินไป */
-    isScrollingResetDelay: 450,
-    getItemKey: (index) => {
-      if (index >= posts.length) return '__home-feed-loading-more__';
-      const p = posts[index];
-      return p != null && p.id != null ? String(p.id) : String(index);
-    },
-  });
-
   if (!mounted) {
     return <FeedSkeleton count={skeletonCount} />;
   }
@@ -143,10 +102,9 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
   }
 
   const showNoMoreOnly = !hasMore && !loadingMore;
-  /** skeleton โหลดเพิ่มอยู่ในแถว virtual แล้ว — ช่องล่างเหลือแค่ข้อความ “ไม่มีเพิ่ม” + spacer สำหรับ sentinel โหลดล่วงหน้า */
   const bottomSlotStyle: React.CSSProperties = {
-    minHeight: showNoMoreOnly ? 120 : 88,
-    height: showNoMoreOnly ? 120 : 88,
+    minHeight: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
+    height: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
     display: 'flex',
     alignItems: 'center',
     justifyContent: showNoMoreOnly ? 'flex-start' : 'center',
@@ -160,6 +118,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
 
   const bottomSlot = (
     <div key="feed-bottom-slot" className="feed-bottom-slot" style={bottomSlotStyle}>
+      {loadingMore ? <FeedSkeleton count={1} /> : null}
       <span
         style={{
           fontSize: '13px',
@@ -175,113 +134,44 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     </div>
   );
 
-  const totalSize = virtualizer.getTotalSize();
-
   return (
     <FeedWithPreload showSkeleton={false} skeletonCount={skeletonCount}>
-      <div style={{ width: '100%', overflowAnchor: 'none' }}>
-        <div
-          style={{
-            height: totalSize,
-            position: 'relative',
-            width: '100%',
-            overflowAnchor: 'none',
-          }}
-        >
-          {virtualizer.getVirtualItems().map((virtualItem) => {
-            const index = virtualItem.index;
-            if (index >= posts.length) {
-              /** ความสูงคงที่เท่า estimateSize — ลดการวัดซ้ำ/กระโดดของ totalSize ตอน shimmer + รูป skeleton เปลี่ยน (คู่กับ shouldAdjustScrollPositionOnItemSizeChange: false) */
-              return (
-                <div
-                  key={virtualItem.key}
-                  data-index={virtualItem.index}
-                  data-loading-more-row
-                  ref={virtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: FEED_CARD_ESTIMATE_PX,
-                    minHeight: FEED_CARD_ESTIMATE_PX,
-                    maxHeight: FEED_CARD_ESTIMATE_PX,
-                    boxSizing: 'border-box',
-                    overflow: 'hidden',
-                    transform: `translateY(${virtualItem.start}px)`,
-                    overflowAnchor: 'none',
-                  }}
-                >
-                  <FeedSkeleton count={1} animate={false} />
-                </div>
-              );
-            }
-            const post = posts[index];
-            if (!post) return null;
-            const isLastInFeed = index === posts.length - 1;
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualItem.start}px)`,
-                  overflowAnchor: 'none',
-                }}
-              >
-                <HomePostImageGate
-                  post={post}
-                  enabled={gateImageReady}
-                  onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
-                >
-                  <PostCard
-                    post={post}
-                    index={index}
-                    isLastElement={false}
-                    priority={index === 0}
-                    imageFetchPriority={index < 3 ? 'high' : 'low'}
-                    session={session}
-                    savedPosts={savedPosts}
-                    justSavedPosts={justSavedPosts}
-                    activeMenuState={activeMenuState}
-                    isMenuAnimating={isMenuAnimating}
-                    menuButtonRefs={menuButtonRefs}
-                    onViewPost={onViewPost}
-                    onSave={onSave}
-                    onShare={onShare}
-                    onTogglePostStatus={onTogglePostStatus}
-                    onDeletePost={onDeletePost}
-                    onReport={onReport}
-                    onSetActiveMenu={onSetActiveMenu}
-                    onSetMenuAnimating={onSetMenuAnimating}
-                    hideBoost={hideBoost}
-                  />
-                </HomePostImageGate>
-              </div>
-            );
-          })}
-          {lastPostElementRef && totalSize > 0 ? (
-            <div
-              ref={lastPostElementRef}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: 1,
-                transform: `translateY(${Math.max(0, totalSize - 1)}px)`,
-                pointerEvents: 'none',
-                visibility: 'hidden',
-                overflowAnchor: 'none',
-              }}
-              aria-hidden
-            />
-          ) : null}
-        </div>
+      <div style={{ display: 'contents' }}>
+        {posts.map((post, index) => {
+          const isLastInFeed = index === posts.length - 1;
+          return (
+            <HomePostImageGate
+              key={`${post.id}-${index}`}
+              post={post}
+              enabled={gateImageReady}
+              onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
+            >
+              <PostCard
+                post={post}
+                index={index}
+                isLastElement={isLastInFeed}
+                priority={index === 0}
+                imageFetchPriority={index < 3 ? 'high' : 'low'}
+                session={session}
+                savedPosts={savedPosts}
+                justSavedPosts={justSavedPosts}
+                activeMenuState={activeMenuState}
+                isMenuAnimating={isMenuAnimating}
+                lastPostElementRef={isLastInFeed ? lastPostElementRef : undefined}
+                menuButtonRefs={menuButtonRefs}
+                onViewPost={onViewPost}
+                onSave={onSave}
+                onShare={onShare}
+                onTogglePostStatus={onTogglePostStatus}
+                onDeletePost={onDeletePost}
+                onReport={onReport}
+                onSetActiveMenu={onSetActiveMenu}
+                onSetMenuAnimating={onSetMenuAnimating}
+                hideBoost={hideBoost}
+              />
+            </HomePostImageGate>
+          );
+        })}
         {bottomSlot}
       </div>
     </FeedWithPreload>

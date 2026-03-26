@@ -30,6 +30,15 @@ interface UseHeaderScrollOptions {
   onVisibilityChange?: (visible: boolean) => void;
   /** ถ้า ref.current เป็น timestamp และ performance.now() < ref.current จะไม่ซ่อน header (ใช้หลังสลับแท็บโฮมเพื่อกันกระตุก) */
   suppressHideUntilRef?: React.MutableRefObject<number | null>;
+  /** ปรับความไวของพฤติกรรมซ่อน/แสดงตามการเลื่อน โดยไม่ต้องแก้ค่าคงที่ทั้งระบบ */
+  scrollTuning?: {
+    showThresholdPx?: number;
+    hideThresholdPx?: number;
+    minScrollDeltaPx?: number;
+    visibilityThrottleMs?: number;
+    layoutSettleIgnoreMs?: number;
+    captionToggleIgnoreMs?: number;
+  };
 }
 
 interface UseHeaderScrollReturn {
@@ -39,7 +48,13 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { loadingMore = false, feedPostCount, disableScrollHide = false, onVisibilityChange, suppressHideUntilRef } = options ?? {};
+  const { loadingMore = false, feedPostCount, disableScrollHide = false, onVisibilityChange, suppressHideUntilRef, scrollTuning } = options ?? {};
+  const showThresholdPx = scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX;
+  const hideThresholdPx = scrollTuning?.hideThresholdPx ?? HEADER_HIDE_THRESHOLD_PX;
+  const minScrollDeltaPx = scrollTuning?.minScrollDeltaPx ?? MIN_SCROLL_DELTA_PX;
+  const visibilityThrottleMs = scrollTuning?.visibilityThrottleMs ?? VISIBILITY_THROTTLE_MS;
+  const layoutSettleIgnoreMs = scrollTuning?.layoutSettleIgnoreMs ?? LAYOUT_SETTLE_IGNORE_MS;
+  const captionToggleIgnoreMs = scrollTuning?.captionToggleIgnoreMs ?? CAPTION_TOGGLE_IGNORE_MS;
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
@@ -54,7 +69,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const scheduleLayoutSettleIgnore = () => {
     if (typeof window === 'undefined' || typeof performance === 'undefined') return;
     const schedule = () => {
-      ignoreScrollDrivenVisibilityUntilRef.current = performance.now() + LAYOUT_SETTLE_IGNORE_MS;
+      ignoreScrollDrivenVisibilityUntilRef.current = performance.now() + layoutSettleIgnoreMs;
     };
     requestAnimationFrame(() => {
       requestAnimationFrame(schedule);
@@ -85,7 +100,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
     const handleCaptionToggle = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      ignoreScrollDrivenVisibilityUntilRef.current = now + CAPTION_TOGGLE_IGNORE_MS;
+      ignoreScrollDrivenVisibilityUntilRef.current = now + captionToggleIgnoreMs;
       lastScrollYRef.current = window.scrollY;
     };
 
@@ -98,7 +113,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (visible === false && throttleHideOnly && now < throttleUntilRef.current) return;
     if (visible === false && suppressHideUntilRef?.current != null && now < suppressHideUntilRef.current) return;
-    if (visible === false) throttleUntilRef.current = now + VISIBILITY_THROTTLE_MS;
+    if (visible === false) throttleUntilRef.current = now + visibilityThrottleMs;
     lastAppliedVisibleRef.current = visible;
     setIsHeaderVisible(visible);
     onVisibilityChangeRef.current?.(visible);
@@ -133,21 +148,21 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       }
 
       // อยู่โซนบนสุดจริง (แสดง header ทันที ไม่ throttle)
-      if (currentScrollY <= HEADER_SHOW_THRESHOLD_PX) {
+      if (currentScrollY <= showThresholdPx) {
         applyVisible(true, false);
         return;
       }
       // เลื่อนลงลึกเกิน threshold ค่อยซ่อน (hysteresis ไม่กระตุกที่ขอบ)
-      if (currentScrollY >= HEADER_HIDE_THRESHOLD_PX) {
-        if (scrollDelta > MIN_SCROLL_DELTA_PX) {
+      if (currentScrollY >= hideThresholdPx) {
+        if (scrollDelta > minScrollDeltaPx) {
           applyVisible(false);
-        } else if (scrollDelta < -MIN_SCROLL_DELTA_PX) {
+        } else if (scrollDelta < -minScrollDeltaPx) {
           applyVisible(true, false);
         }
         return;
       }
       // ระหว่าง SHOW–HIDE: เลื่อนขึ้นชัดเจนเท่านั้นค่อยแสดง header (delta จิ๋วจาก layout = ไม่สน)
-      if (scrollDelta < -MIN_SCROLL_DELTA_PX) {
+      if (scrollDelta < -minScrollDeltaPx) {
         applyVisible(true, false);
       }
     };
@@ -162,14 +177,14 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
     const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     lastScrollYRef.current = scrollY;
-    if (scrollY <= HEADER_SHOW_THRESHOLD_PX) applyVisible(true, false);
+    if (scrollY <= showThresholdPx) applyVisible(true, false);
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       if (rafId != null) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [loadingMore, disableScrollHide]);
+  }, [loadingMore, disableScrollHide, showThresholdPx, hideThresholdPx, minScrollDeltaPx]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = (visible: boolean) => {
