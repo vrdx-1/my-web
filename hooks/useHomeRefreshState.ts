@@ -32,6 +32,8 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   } = options;
 
   const prevLoadingMoreRef = useRef(false);
+  const prevTabRef = useRef<HomeTab>(tab);
+  const prevProvinceRef = useRef(selectedProvince);
   const soldTabRefreshRef = useRef<{
     setPage: (v: number | ((p: number) => number)) => void;
     setHasMore: (v: boolean) => void;
@@ -50,19 +52,39 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
 
   useEffect(() => {
-    if (tab === 'sold' && soldListData.posts.length === 0 && !soldListData.loadingMore) {
+    const previousTab = prevTabRef.current;
+    const previousProvince = prevProvinceRef.current;
+    const enteredSoldTab = tab === 'sold' && previousTab !== 'sold';
+    const provinceChanged = previousProvince !== selectedProvince;
+
+    prevTabRef.current = tab;
+    prevProvinceRef.current = selectedProvince;
+
+    if (tab !== 'sold') return;
+
+    if (enteredSoldTab) {
+      if (soldListData.posts.length === 0 && !soldListData.loadingMore) {
+        soldListData.setPage(0);
+        soldListData.setHasMore(true);
+        soldListData.fetchPosts(true);
+      }
+      return;
+    }
+
+    if (provinceChanged) {
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true);
     }
-  }, [tab, soldListData.posts.length, soldListData.loadingMore, soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
-
-  useEffect(() => {
-    if (tab !== 'sold') return;
-    soldListData.setPage(0);
-    soldListData.setHasMore(true);
-    soldListData.fetchPosts(true);
-  }, [tab, selectedProvince, soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
+  }, [
+    tab,
+    selectedProvince,
+    soldListData.posts.length,
+    soldListData.loadingMore,
+    soldListData.setPage,
+    soldListData.setHasMore,
+    soldListData.fetchPosts,
+  ]);
 
   useEffect(() => {
     const wasLoading = prevLoadingMoreRef.current;

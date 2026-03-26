@@ -2,21 +2,23 @@
 
 import { useMemo } from 'react';
 
+type PostRecord = Record<string, unknown>;
+
 interface UseRecommendPostFeedPropsOptions {
-  posts: any[];
-  session: any;
+  posts: PostRecord[];
+  session: unknown;
   savedPosts: { [key: string]: boolean };
   justSavedPosts: { [key: string]: boolean };
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   lastPostElementRef?: (node: HTMLElement | null) => void;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
-  onViewPost: (post: any, imageIndex: number) => void;
+  onViewPost: (post: PostRecord, imageIndex: number) => void;
   onSave: (postId: string) => void;
-  onShare: (post: any) => void;
+  onShare: (post: PostRecord) => void;
   onTogglePostStatus: (postId: string, currentStatus: string) => void;
   onDeletePost: (postId: string) => void;
-  onReport: (post: any) => void;
+  onReport: (post: PostRecord) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   loadingMore: boolean;

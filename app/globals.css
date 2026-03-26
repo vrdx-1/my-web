@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --home-header-slide-progress: 0;
 }
 
 @theme inline {
@@ -79,6 +80,12 @@ body {
 /* ระหว่าง expand/collapse caption ให้ header/nav ค้างนิ่งชั่วคราว ไม่เล่น transition 1-2 เฟรมจาก layout/virtualizer */
 body[data-caption-toggle-active="true"] .header-visibility-surface,
 body[data-caption-toggle-active="true"] .bottom-nav-visibility-surface {
+  transition: none !important;
+}
+
+/* ระหว่างลากนิ้วโดยตรง ให้ header/nav ตอบทันทีแบบ 1:1 (ไม่หน่วง transition) */
+body[data-header-pan-active="1"] .header-visibility-surface,
+body[data-header-pan-active="1"] .bottom-nav-visibility-surface {
   transition: none !important;
 }
 
@@ -330,9 +337,6 @@ textarea::placeholder {
 /* Bottom navigation bar — safe area สำหรับ iPhone / notched devices */
 .bottom-nav-bar {
   padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.bottom-nav-content-padding {
-  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 /* หน้า Profile: overlay ไม่ทับ Bottom nav (แสดงแถบล่างเหมือนหน้า Notifications) */

@@ -154,9 +154,10 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               zIndex: 500,
               background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-              transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+              transform: 'translate3d(0, calc(var(--home-header-slide-progress, 0) * -100%), 0)',
               boxShadow: 'none',
-              transition: 'transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.2s ease-out',
+              transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out',
+              willChange: 'transform',
             }}
           >
             <HomeHeader

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
@@ -27,15 +27,24 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const headerVisibility = useHeaderVisibilityContext();
   const showNav = shouldShowBottomNav(pathname ?? '');
+  const shouldUseBottomSafeAreaInset = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const isiOSDevice = /iPad|iPhone|iPod/.test(ua);
+    const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return isiOSDevice || isTouchMac;
+  }, []);
+  const bottomNavContentPaddingBottom = shouldUseBottomSafeAreaInset
+    ? `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`
+    : `${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px`;
   // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
   const needCreatePostHandler = showNav;
   const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(pathname ?? '');
-  const isNavVisible = hideNavWithScroll ? (headerVisibility?.isHeaderVisible ?? true) : true;
 
   return (
     <MainTabScrollProvider>
       {needCreatePostHandler && <CreatePostHandlerRegistration />}
-      <div className={showNav ? 'bottom-nav-content-padding' : undefined}>
+      <div style={showNav ? { paddingBottom: bottomNavContentPaddingBottom } : undefined}>
         {children}
       </div>
       {showNav && (
@@ -48,10 +57,15 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             right: 0,
             minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
             zIndex: pathname === '/profile' ? 1001 : 400,
-            transform: isNavVisible ? 'translateY(0)' : `translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 20px))`,
-            opacity: isNavVisible ? 1 : 0,
-            visibility: isNavVisible ? 'visible' : 'hidden',
-            transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out',
+            transform: hideNavWithScroll
+              ? shouldUseBottomSafeAreaInset
+                ? 'translate3d(0, calc(var(--home-header-slide-progress, 0) * (100% + env(safe-area-inset-bottom, 0px) + 20px)), 0)'
+                : 'translate3d(0, calc(var(--home-header-slide-progress, 0) * 100%), 0)'
+              : 'translate3d(0, 0, 0)',
+            opacity: 1,
+            visibility: 'visible',
+            transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+            willChange: 'transform',
           }}
         >
           <Suspense

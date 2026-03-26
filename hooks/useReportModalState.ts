@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 
 interface UseReportModalStateReturn {
-  reportingPost: any | null;
-  setReportingPost: React.Dispatch<React.SetStateAction<any | null>>;
+  reportingPost: unknown | null;
+  setReportingPost: React.Dispatch<React.SetStateAction<unknown | null>>;
   reportReason: string;
   setReportReason: React.Dispatch<React.SetStateAction<string>>;
   isSubmittingReport: boolean;
@@ -17,7 +17,7 @@ interface UseReportModalStateReturn {
  * รวม 3 state (reportingPost, reportReason, isSubmittingReport) เข้าไว้ใน hook เดียว
  */
 export function useReportModalState(): UseReportModalStateReturn {
-  const [reportingPost, setReportingPost] = useState<any | null>(null);
+  const [reportingPost, setReportingPost] = useState<unknown | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 

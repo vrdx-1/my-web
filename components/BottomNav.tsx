@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect, startTransition } from 'react';
+import React, { useRef, useState, useEffect, useMemo, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Bell, Home, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -12,11 +12,12 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
-// ความสูงขั้นต่ำของ Bottom navigation (ไม่รวม safe-area)
-const BOTTOM_NAV_HEIGHT = 72;
-// เพิ่ม padding ด้านล่างเพื่อให้ "ความสูงที่มองเห็น" เพิ่มขึ้นจริง
-const BOTTOM_NAV_PADDING_BOTTOM_EXTRA = 12;
-const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA = BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA;
+// ความสูงตัวแถบหลัก (ไม่รวม safe-area) ปรับให้ใกล้ native tab bar มากขึ้น
+const BOTTOM_NAV_HEIGHT = 52;
+const BOTTOM_NAV_PADDING_BOTTOM_EXTRA_IOS = 0;
+const BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT = 0;
+const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA =
+  BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT;
 
 // ขนาดองค์ประกอบใน BottomNav (ให้สมดุลกันทุกปุ่ม)
 const NAV_ICON_SIZE = 28;
@@ -56,6 +57,16 @@ export function BottomNav() {
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
   const mainTabScroll = useMainTabScroll();
+  const shouldUseBottomSafeAreaInset = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const isiOSDevice = /iPad|iPhone|iPod/.test(ua);
+    const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return isiOSDevice || isTouchMac;
+  }, []);
+  const bottomNavPaddingBottomExtra = shouldUseBottomSafeAreaInset
+    ? BOTTOM_NAV_PADDING_BOTTOM_EXTRA_IOS
+    : BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT;
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
@@ -92,10 +103,8 @@ export function BottomNav() {
       aria-label="Bottom navigation"
       className="bottom-nav-bar"
         style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: 'relative',
+        width: '100%',
         minHeight: BOTTOM_NAV_HEIGHT,
         background: '#ffffff',
         backgroundColor: '#ffffff',
@@ -103,9 +112,11 @@ export function BottomNav() {
         display: 'flex',
         alignItems: 'stretch',
         justifyContent: 'space-around',
-        zIndex: 400,
+        zIndex: 1,
         boxShadow: 'none',
-        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${BOTTOM_NAV_PADDING_BOTTOM_EXTRA}px)`,
+        paddingBottom: shouldUseBottomSafeAreaInset
+          ? `calc(env(safe-area-inset-bottom, 0px) + ${bottomNavPaddingBottomExtra}px)`
+          : `${bottomNavPaddingBottomExtra}px`,
       }}
     >
       {routes.map(({ path, label, match }) => {

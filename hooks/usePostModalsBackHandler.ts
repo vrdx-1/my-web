@@ -9,7 +9,7 @@ interface UsePostModalsBackHandlerOptions {
   setFullScreenImages: (images: string[] | null) => void;
   setIsPhotoMenuAnimating: (animating: boolean) => void;
   setActivePhotoMenu: (menu: number | null) => void;
-  viewingPost: any;
+  viewingPost: unknown;
   onCloseViewingPost: () => void;
 }
 

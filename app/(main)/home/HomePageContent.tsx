@@ -208,6 +208,8 @@ export function HomePageContent() {
     loadingMore: effectiveLoadingMore,
     feedPostCount: posts.length,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
+    onMotionChange: (progress, interacting) =>
+      headerVisibility?.setHeaderMotion(progress, interacting),
     suppressHideUntilRef,
     scrollTuning: {
       showThresholdPx: 120,
@@ -218,6 +220,9 @@ export function HomePageContent() {
       visibilityThrottleMs: 240,
       layoutSettleIgnoreMs: 420,
       captionToggleIgnoreMs: 650,
+      dragDistancePx: 128,
+      settleIdleMs: 88,
+      motionProfile: 'auto',
     },
   });
 
@@ -340,6 +345,7 @@ export function HomePageContent() {
         {/* แท็บขายแล้ว: เก็บไว้ไม่ปิด แค่ซ่อน/แสดง + จดจำ scroll (ref สำหรับคืน scroll แบบเดียวกับพร้อมขาย) */}
         <div ref={soldPanelRef} style={{ display: isSoldTabNoSearch ? 'block' : 'none' }} aria-hidden={!isSoldTabNoSearch}>
           <SoldTabFeedWrapper
+            isActive={isSoldTabNoSearch}
             soldListData={soldListData}
             menu={menu}
             viewingPostHook={viewingPostHook}
