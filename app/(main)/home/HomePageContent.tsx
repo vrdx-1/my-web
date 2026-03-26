@@ -205,15 +205,8 @@ export function HomePageContent() {
   });
 
   const headerScroll = useHeaderScroll({
-    loadingMore: effectiveLoadingMore,
-    feedPostCount: posts.length,
     onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
-    onMotionChange: (progress, interacting) =>
-      headerVisibility?.setHeaderMotion(progress, interacting),
     suppressHideUntilRef,
-    scrollTuning: {
-      motionProfile: 'auto',
-    },
   });
 
   const effectiveSession = isSoldTabNoSearch ? session : effectivePostList.session;

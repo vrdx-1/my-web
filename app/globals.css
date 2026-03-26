@@ -76,30 +76,6 @@ body {
   overflow-anchor: none;
 }
 
-/* ระหว่าง expand/collapse caption ให้ header/nav ค้างนิ่งชั่วคราว ไม่เล่น transition 1-2 เฟรมจาก layout/virtualizer */
-body[data-caption-toggle-active="true"] .header-visibility-surface,
-body[data-caption-toggle-active="true"] .bottom-nav-visibility-surface {
-  transition: none !important;
-}
-
-/* ระหว่างลากนิ้วโดยตรง ให้ header/nav ตอบทันทีแบบ 1:1 (ไม่หน่วง transition) */
-body[data-header-pan-active="1"] .header-visibility-surface,
-body[data-header-pan-active="1"] .bottom-nav-visibility-surface {
-  transition: none !important;
-}
-
-body[data-home-motion-platform="android"] .header-visibility-surface,
-body[data-home-motion-platform="android"] .bottom-nav-visibility-surface {
-  transition-duration: 0.16s !important;
-  transition-timing-function: cubic-bezier(0.24, 0.9, 0.3, 1) !important;
-}
-
-body[data-home-motion-tier="mobile-low-end"] .header-visibility-surface,
-body[data-home-motion-tier="mobile-low-end"] .bottom-nav-visibility-surface {
-  transition-duration: 0.12s !important;
-  transition-timing-function: cubic-bezier(0.28, 0.88, 0.34, 1) !important;
-}
-
 /* ซ่อน scrollbar ของ feed หลักเมื่อเปิด viewing mode (body + html เผื่อ browser ใช้ html เป็น scroll; iOS ใช้ clip) */
 body[data-viewing-mode="open"]::-webkit-scrollbar,
 html:has(body[data-viewing-mode="open"])::-webkit-scrollbar {

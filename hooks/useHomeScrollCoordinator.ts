@@ -31,8 +31,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
   const soldPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const setHeaderVisibleRef = useRef(headerVisibility?.snapHeaderVisible ?? headerVisibility?.setHeaderVisible);
-  setHeaderVisibleRef.current = headerVisibility?.snapHeaderVisible ?? headerVisibility?.setHeaderVisible;
+  const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
+  setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
 
   useLayoutEffect(() => {
     const prev = prevPathnameRef.current;
@@ -41,7 +41,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       pendingHomeRouteScrollRestoreRef.current = true;
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       suppressHideUntilRef.current = now + 500;
-      headerVisibility?.snapHeaderVisible?.(true) ?? headerVisibility?.setHeaderVisible(true);
+      headerVisibility?.setHeaderVisible(true);
     }
     if (pathname !== '/home') {
       pendingHomeRouteScrollRestoreRef.current = false;

@@ -4,7 +4,6 @@ import React, { Suspense, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
-import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
 
 const BOTTOM_NAV_PATHS = ['/home', '/notification', '/profile'];
@@ -25,7 +24,6 @@ function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
 
 export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const headerVisibility = useHeaderVisibilityContext();
   const showNav = shouldShowBottomNav(pathname ?? '');
   const shouldUseBottomSafeAreaInset = useMemo(() => {
     if (typeof navigator === 'undefined') return false;
@@ -62,7 +60,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transform: 'translate3d(0, 0, 0)',
             opacity: 1,
             visibility: 'visible',
-            transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+            transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
             willChange: 'transform',
             backfaceVisibility: 'hidden',
             contain: 'paint',

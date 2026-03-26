@@ -46,7 +46,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
     if (pathname === '/home' && prev !== '/home') {
-      headerVisibility?.snapHeaderVisible?.(true) ?? headerVisibility?.setHeaderVisible(true);
+      headerVisibility?.setHeaderVisible(true);
     }
   }, [pathname, headerVisibility]);
 
@@ -157,7 +157,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               transform: 'translate3d(0, 0, 0)',
               boxShadow: 'none',
-              transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out',
+              transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease-out',
               willChange: 'transform',
               backfaceVisibility: 'hidden',
               contain: 'paint',
@@ -188,7 +188,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
                 onTabChange={(v) => {
                   if (pathname === '/home') {
                     homeTabScroll?.saveCurrentHomeTabScroll();
-                    headerVisibility?.snapHeaderVisible?.(true) ?? headerVisibility?.setHeaderVisible(true);
+                    headerVisibility?.setHeaderVisible(true);
                   }
                   homeProvince?.setSelectedProvince('');
                   mainTab?.triggerTabChange(v as 'recommend' | 'sold');
