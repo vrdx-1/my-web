@@ -330,3 +330,27 @@ textarea::placeholder {
 .profile-layout-overlay-bottom {
   bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
 }
+
+/* =========================================================
+   Header & Bottom-Nav motion surfaces
+   =========================================================
+   GPU layer promotion เกิดจาก CSS stylesheet ก่อน JS โหลด
+   (inline style ใน React จะ merge ทีหลัง แต่ layer ถูก promote แล้ว)
+   ========================================================= */
+[data-home-header-motion-surface="1"],
+[data-home-bottom-nav-motion-surface="1"] {
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: paint;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Block transitions ก่อน React mount เสร็จ
+   ป้องกัน animation slide-in ตอน refresh / initial page load
+   ใช้ !important เพื่อ override transition ที่ React set ใน inline style
+   body[data-motion-ready] ถูก set โดย HeaderVisibilityContext หลัง double-rAF */
+body:not([data-motion-ready]) [data-home-header-motion-surface="1"],
+body:not([data-motion-ready]) [data-home-bottom-nav-motion-surface="1"] {
+  transition: none !important;
+  animation: none !important;
+}

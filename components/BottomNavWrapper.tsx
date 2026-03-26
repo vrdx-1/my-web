@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useMemo } from 'react';
+import React from 'react';
 import { usePathname } from 'next/navigation';
 import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
@@ -25,16 +25,7 @@ function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
 export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const showNav = shouldShowBottomNav(pathname ?? '');
-  const shouldUseBottomSafeAreaInset = useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
-    const ua = navigator.userAgent || '';
-    const isiOSDevice = /iPad|iPhone|iPod/.test(ua);
-    const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-    return isiOSDevice || isTouchMac;
-  }, []);
-  const bottomNavContentPaddingBottom = shouldUseBottomSafeAreaInset
-    ? `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`
-    : `${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px`;
+  const bottomNavContentPaddingBottom = `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`;
   // ลงทะเบียน handler ตอนแสดงแถบล่างทุกหน้า (รวมโฮม) เพื่อให้กดปุ่มโพสได้ทันที — ไม่งั้นหน้าโฮมต้องรอ MainTabLayoutClient mount ก่อนถึงจะกดได้
   const needCreatePostHandler = showNav;
   const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(pathname ?? '');
@@ -66,19 +57,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             contain: 'paint',
           }}
         >
-          <Suspense
-            fallback={
-              <div
-                style={{
-                  minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
-                  background: '#fff',
-                  borderTop: 'none',
-                }}
-              />
-            }
-          >
-            <BottomNav />
-          </Suspense>
+          <BottomNav />
         </div>
       )}
     </MainTabScrollProvider>

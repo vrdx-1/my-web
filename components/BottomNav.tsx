@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useMemo, startTransition } from 'react';
+import React, { useRef, useState, useEffect, Suspense, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Bell, Home, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -14,10 +14,27 @@ import { Avatar } from '@/components/Avatar';
 
 // ความสูงตัวแถบหลัก (ไม่รวม safe-area) ปรับให้ใกล้ native tab bar มากขึ้น
 const BOTTOM_NAV_HEIGHT = 52;
-const BOTTOM_NAV_PADDING_BOTTOM_EXTRA_IOS = 0;
 const BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT = 0;
 const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA =
   BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT;
+
+// -------------------------------------------------------
+// HomeUrlSync — บันทึก URL ปัจจุบัน (รวม ?q=) ลง sessionStorage
+// แยกออกมาเพราะ useSearchParams() ต้องการ <Suspense> boundary
+// WrappedในBottomNav ด้วย <Suspense fallback={null}> ดังนั้นตัวหลักไม่ต้องใช้ Suspense
+// -------------------------------------------------------
+function HomeUrlSync({ pathname }: { pathname: string | null }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (pathname !== '/home' || typeof window === 'undefined') return;
+    const qs = searchParams.toString();
+    const homeUrl = qs ? `/home?${qs}` : '/home';
+    try {
+      window.sessionStorage.setItem(LAST_HOME_URL_KEY, homeUrl);
+    } catch {}
+  }, [pathname, searchParams]);
+  return null;
+}
 
 // ขนาดองค์ประกอบใน BottomNav (ให้สมดุลกันทุกปุ่ม)
 const NAV_ICON_SIZE = 28;
@@ -47,7 +64,6 @@ const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
 export function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const lastNavRef = useRef<{ path: string; at: number } | null>(null);
   const lastCreatePostTriggerRef = useRef<number>(0);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
@@ -57,16 +73,6 @@ export function BottomNav() {
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
   const mainTabScroll = useMainTabScroll();
-  const shouldUseBottomSafeAreaInset = useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
-    const ua = navigator.userAgent || '';
-    const isiOSDevice = /iPad|iPhone|iPod/.test(ua);
-    const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-    return isiOSDevice || isTouchMac;
-  }, []);
-  const bottomNavPaddingBottomExtra = shouldUseBottomSafeAreaInset
-    ? BOTTOM_NAV_PADDING_BOTTOM_EXTRA_IOS
-    : BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT;
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
@@ -85,38 +91,24 @@ export function BottomNav() {
     }
   }, [pathname, pendingPath]);
 
-  /** บันทึก URL หน้าโฮม (รวม ?q=) เพื่อเมื่อสลับไปหน้าอื่นแล้วกลับมาได้คำค้นและ scroll คืน */
-  useEffect(() => {
-    if (pathname !== '/home' || typeof window === 'undefined') return;
-    const qs = searchParams.toString();
-    const homeUrl = qs ? `/home?${qs}` : '/home';
-    try {
-      window.sessionStorage.setItem(LAST_HOME_URL_KEY, homeUrl);
-    } catch {
-      // ignore
-    }
-  }, [pathname, searchParams]);
-
   return (
     <nav
       role="navigation"
       aria-label="Bottom navigation"
       className="bottom-nav-bar"
         style={{
-        position: 'relative',
-        width: '100%',
-        minHeight: BOTTOM_NAV_HEIGHT,
-        background: '#ffffff',
-        backgroundColor: '#ffffff',
-        borderTop: 'none',
-        display: 'flex',
-        alignItems: 'stretch',
-        justifyContent: 'space-around',
-        zIndex: 1,
-        boxShadow: 'none',
-        paddingBottom: shouldUseBottomSafeAreaInset
-          ? `calc(env(safe-area-inset-bottom, 0px) + ${bottomNavPaddingBottomExtra}px)`
-          : `${bottomNavPaddingBottomExtra}px`,
+            position: 'relative',
+            width: '100%',
+            minHeight: BOTTOM_NAV_HEIGHT,
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
+            borderTop: 'none',
+            display: 'flex',
+            alignItems: 'stretch',
+            justifyContent: 'space-around',
+            zIndex: 1,
+            boxShadow: 'none',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
       {routes.map(({ path, label, match }) => {
@@ -378,6 +370,9 @@ export function BottomNav() {
           </button>
         );
       })}
+      <Suspense fallback={null}>
+        <HomeUrlSync pathname={pathname} />
+      </Suspense>
     </nav>
   );
 }
