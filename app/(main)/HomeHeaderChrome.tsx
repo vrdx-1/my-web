@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { TabNavigation } from '@/components/TabNavigation';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 const HOME_FIXED_BLOCK_HEIGHT = 102;
 
@@ -53,7 +54,7 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
           backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
           transform: isHeaderVisible ? 'translate3d(0, 0, 0)' : 'translate3d(0, -100%, 0)',
           boxShadow: 'none',
-          transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease-out',
+          transition: MOTION_TRANSITIONS.HOME_CHROME,
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           contain: 'paint',

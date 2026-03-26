@@ -17,6 +17,12 @@ import { markRouteVisited } from '@/utils/visitedRoutesStore';
 import { MainTabPanels } from './MainTabPanels';
 import { HomeTabScrollProvider, useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 import { HomeHeaderChrome } from './HomeHeaderChrome';
+import {
+  getHomeMotionProfilerSummary,
+  markHomeMotionEvent,
+  setHomeMotionProfilerEnabled,
+  syncHomeMotionProfilerFromLocationSearch,
+} from '@/lib/homeMotionProfiler';
 
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -32,6 +38,32 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const homeProvince = useHomeProvince();
   const headerVisibility = useHeaderVisibilityContext();
   const homeTabScroll = useHomeTabScroll();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    syncHomeMotionProfilerFromLocationSearch(window.location.search);
+
+    // Console helpers for real-device profiling (before/after comparison).
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+    }).__homePerfEnable = () => setHomeMotionProfilerEnabled(true);
+
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+    }).__homePerfDisable = () => setHomeMotionProfilerEnabled(false);
+
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+    }).__homePerfSummary = () => getHomeMotionProfilerSummary();
+
+    markHomeMotionEvent('main-tab-layout-mounted', { pathname });
+  }, [pathname]);
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {

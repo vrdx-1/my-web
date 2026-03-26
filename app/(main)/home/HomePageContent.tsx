@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomePagePanels } from './HomePagePanels';
@@ -8,6 +8,11 @@ import { HomePageModals } from './HomePageModals';
 import { useHomePageController } from './useHomePageController';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import {
+  isHomeMotionProfilerEnabled,
+  markHomeMotionEvent,
+  recordHomeMotionDuration,
+} from '@/lib/homeMotionProfiler';
 
 function subscribeToClientMount() {
   return () => {};
@@ -44,6 +49,38 @@ export function HomePageContent() {
     tab,
     viewingPostHook,
   } = useHomePageController({ clientMounted });
+
+  useEffect(() => {
+    if (!clientMounted || typeof window === 'undefined') return;
+    if (!isHomeMotionProfilerEnabled()) return;
+
+    markHomeMotionEvent('home-feed-content-mounted');
+
+    let rafId: number | null = null;
+    let prev = performance.now();
+    const start = prev;
+
+    const loop = () => {
+      const now = performance.now();
+      const gap = now - prev;
+      prev = now;
+
+      if (gap > 34) {
+        recordHomeMotionDuration('frame-gap', 'home-feed-frame-gap', gap, {
+          pathname: '/home',
+        });
+      }
+
+      if (now - start < 10000) {
+        rafId = requestAnimationFrame(loop);
+      }
+    };
+
+    rafId = requestAnimationFrame(loop);
+    return () => {
+      if (rafId != null) cancelAnimationFrame(rafId);
+    };
+  }, [clientMounted]);
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {

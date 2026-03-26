@@ -1,6 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import {
+  endHomeMotionTimer,
+  recordHomeMotionDuration,
+  startHomeMotionTimer,
+} from '@/lib/homeMotionProfiler';
 
 const TOP_SHOW_THRESHOLD_PX = 24;
 const MIN_SCROLL_DELTA_PX = 6;
@@ -30,6 +35,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const applyVisible = (visible: boolean) => {
     if (lastAppliedVisibleRef.current === visible) return;
     lastAppliedVisibleRef.current = visible;
+    recordHomeMotionDuration('motion-apply', visible ? 'header-show' : 'header-hide', 0, {
+      source: 'useHeaderScroll',
+    });
     setIsHeaderVisible(visible);
     onVisibilityChangeRef.current?.(visible);
   };
@@ -53,6 +61,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       if (scrollFrameRef.current != null) return;
       scrollFrameRef.current = window.requestAnimationFrame(() => {
         scrollFrameRef.current = null;
+        const timer = startHomeMotionTimer('scroll-handler', 'header-scroll-frame');
         const currentScrollY = latestScrollYRef.current;
         const previousScrollY = lastScrollYRef.current;
         const scrollDelta = currentScrollY - previousScrollY;
@@ -60,23 +69,48 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
 
         if (currentScrollY <= TOP_SHOW_THRESHOLD_PX) {
           applyVisible(true);
+          endHomeMotionTimer(timer, {
+            action: 'top-threshold-show',
+            currentScrollY,
+            scrollDelta,
+          });
           return;
         }
 
         if (Math.abs(scrollDelta) < MIN_SCROLL_DELTA_PX) {
+          endHomeMotionTimer(timer, {
+            action: 'ignore-small-delta',
+            currentScrollY,
+            scrollDelta,
+          });
           return;
         }
 
         if (scrollDelta > 0) {
           const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
           if (suppressHideUntilRef?.current != null && now < suppressHideUntilRef.current) {
+            endHomeMotionTimer(timer, {
+              action: 'suppressed-hide',
+              currentScrollY,
+              scrollDelta,
+            });
             return;
           }
           applyVisible(false);
+          endHomeMotionTimer(timer, {
+            action: 'hide',
+            currentScrollY,
+            scrollDelta,
+          });
           return;
         }
 
         applyVisible(true);
+        endHomeMotionTimer(timer, {
+          action: 'show',
+          currentScrollY,
+          scrollDelta,
+        });
       });
     };
 

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useState, useEffect } from 'react';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
@@ -47,12 +46,6 @@ export type HomeFeedBodyProps = {
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, postFeedProps }: HomeFeedBodyProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const {
     posts,
     session,
@@ -79,10 +72,6 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     showSkeleton ||
     (forceSkeletonWhenEmpty && posts.length === 0) ||
     (isSearchLoading && posts.length === 0);
-
-  if (!mounted) {
-    return <FeedSkeleton count={skeletonCount} />;
-  }
 
   if (effectivelyShowSkeleton) {
     return (

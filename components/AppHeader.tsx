@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Poppins } from 'next/font/google';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 import { TabSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
 
@@ -134,7 +135,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
         zIndex: 500,
         boxShadow: 'none',
-        transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease-out',
+        transition: MOTION_TRANSITIONS.APP_HEADER,
       };
 
   return (

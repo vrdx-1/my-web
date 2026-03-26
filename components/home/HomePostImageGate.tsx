@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { preloadPostVisibleImages } from '@/utils/imagePreload';
 import { getVisibleImageUrlsForPost } from '@/utils/photoGridVisibleImages';
+import { endHomeMotionTimer, recordHomeMotionDuration, startHomeMotionTimer } from '@/lib/homeMotionProfiler';
 
 function preloadKey(post: any): string {
   const urls = getVisibleImageUrlsForPost(post || {});
@@ -56,15 +57,20 @@ export function HomePostImageGate({ post, enabled, onImagesReady, children }: Ho
     }
     if (PRELOAD_DONE_KEYS.has(stableKey)) {
       setReady(true);
+      recordHomeMotionDuration('feed-hydrate', 'post-visible-images-cache-hit', 0);
       queueMicrotask(() => onReadyRef.current?.());
       return;
     }
     let cancelled = false;
     setReady(false);
+    const timer = startHomeMotionTimer('feed-hydrate', 'post-visible-images-preload');
     preloadPostVisibleImages(postRef.current).then(() => {
       if (cancelled) return;
       rememberPreloadDone(stableKey);
       setReady(true);
+      endHomeMotionTimer(timer, {
+        imageCount: getVisibleImageUrlsForPost(postRef.current).length,
+      });
       onReadyRef.current?.();
     });
     return () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { isPhotoGridImageUrlLoaded, markPhotoGridImageUrlLoaded } from '@/utils/photoGridImageCache';
 
@@ -16,7 +16,7 @@ const imagePlaceholderShimmerStyle: React.CSSProperties = {
   borderRadius: 0,
 };
 
-function ImageWithSkeleton({
+const ImageWithSkeleton = memo(function ImageWithSkeleton({
   src,
   imageIndex,
   onPostClick,
@@ -56,11 +56,11 @@ function ImageWithSkeleton({
         onClick={() => onPostClick(imageIndex)}
         onLoad={() => {
           markPhotoGridImageUrlLoaded(src);
-          setLoaded(true);
+          setLoaded((prev) => (prev ? prev : true));
         }}
         onError={() => {
           markPhotoGridImageUrlLoaded(src);
-          setLoaded(true);
+          setLoaded((prev) => (prev ? prev : true));
         }}
         loading={loading}
         decoding={decoding}
@@ -76,7 +76,7 @@ function ImageWithSkeleton({
       />
     </div>
   );
-}
+});
 
 interface PhotoGridProps {
   images: string[];
@@ -102,7 +102,7 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, preloadImages, on
   // รูปแรกของการ์ด: โพสบนสุด = high, โพสถัดไป = high, โพสล่าง = low
   const firstImgFetchPriority = priority ? 'high' : (firstImageFetchPriority ?? undefined);
   // Defensive: some rows may return images as a JSON string (e.g. '["url1","url2"]').
-  const normalizedImages: string[] = (() => {
+  const normalizedImages: string[] = useMemo(() => {
     if (Array.isArray(images)) {
       return images.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
     }
@@ -126,13 +126,17 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, preloadImages, on
       return [];
     }
     return [];
-  })();
+  }, [images]);
 
   // โพสที่พึ่งโพส: ใช้ preload (data URL) แทน URL จากเน็ต เพื่อแสดงรูปทันที
-  const effectiveImages: string[] = normalizedImages.map((url, i) =>
-    preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
-      ? preloadImages[i].trim()
-      : url
+  const effectiveImages: string[] = useMemo(
+    () =>
+      normalizedImages.map((url, i) =>
+        preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
+          ? preloadImages[i].trim()
+          : url,
+      ),
+    [normalizedImages, preloadImages],
   );
 
   const count = normalizedImages.length;

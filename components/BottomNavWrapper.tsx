@@ -6,6 +6,7 @@ import { BottomNav, BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/com
 import { CreatePostHandlerRegistration } from '@/components/CreatePostHandlerRegistration';
 import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
 import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 const BOTTOM_NAV_PATHS = ['/home', '/notification', '/profile'];
 
@@ -57,7 +58,7 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transform: navTransform,
             opacity: 1,
             visibility: 'visible',
-            transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+            transition: MOTION_TRANSITIONS.HOME_CHROME_TRANSFORM,
             willChange: 'transform',
             backfaceVisibility: 'hidden',
             contain: 'paint',
