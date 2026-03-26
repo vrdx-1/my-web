@@ -128,11 +128,12 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
       <div style={{ display: 'contents' }}>
         {posts.map((post, index) => {
           const isLastInFeed = index === posts.length - 1;
+          const shouldGateImages = gateImageReady && index >= 2;
           return (
             <HomePostImageGate
               key={`${post.id}-${index}`}
               post={post}
-              enabled={gateImageReady}
+              enabled={shouldGateImages}
               onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
             >
               <PostCard

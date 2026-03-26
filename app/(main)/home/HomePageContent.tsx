@@ -52,6 +52,7 @@ export function HomePageContent() {
 
   useEffect(() => {
     if (!clientMounted || typeof window === 'undefined') return;
+    if (process.env.NODE_ENV !== 'development') return;
     if (!isHomeMotionProfilerEnabled()) return;
 
     markHomeMotionEvent('home-feed-content-mounted');

@@ -37,6 +37,8 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     bottom: 0,
   });
   const [enableTransition, setEnableTransition] = useState(false);
+  const rafUpdateRef = useRef<number | null>(null);
+  const transitionEnabledRef = useRef(false);
 
   const updateIndicator = useCallback(() => {
     const container = containerRef.current;
@@ -56,24 +58,43 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
 
     // วางเส้นให้ "อยู่ใต้ตัวหนังสือ" โดยอิงจากตำแหน่ง bottom ของ label
     const bottomPx = containerRect.bottom - rect.bottom - LINE_HEIGHT_PX - LINE_GAP_BELOW_TEXT_PX;
-    setIndicatorPx({
+    const next = {
       left: centerX,
       width,
       bottom: Math.max(0, bottomPx),
+    };
+
+    setIndicatorPx((prev) => {
+      const sameLeft = Math.abs(prev.left - next.left) < 0.5;
+      const sameWidth = Math.abs(prev.width - next.width) < 0.5;
+      const sameBottom = Math.abs(prev.bottom - next.bottom) < 0.5;
+      return sameLeft && sameWidth && sameBottom ? prev : next;
     });
   }, [activeTab]);
+
+  const scheduleUpdateIndicator = useCallback(() => {
+    if (rafUpdateRef.current != null) return;
+    rafUpdateRef.current = requestAnimationFrame(() => {
+      rafUpdateRef.current = null;
+      updateIndicator();
+    });
+  }, [updateIndicator]);
 
   useLayoutEffect(() => {
     updateIndicator();
     // ปิด transition ตอน mount/วัดตำแหน่งครั้งแรก เพื่อไม่ให้เส้นกระโดดจากซ้ายทุกครั้ง
-    requestAnimationFrame(() => setEnableTransition(true));
+    if (!transitionEnabledRef.current) {
+      transitionEnabledRef.current = true;
+      requestAnimationFrame(() => setEnableTransition(true));
+    }
+  }, [activeTab, loadingTab, updateIndicator]);
 
-    // หลัง skeleton / โหลดฟอนต์ / reflow ข้อความ — วัดตำแหน่งใหม่ (เดิมวัดแค่ครั้งเดียวจึงเพี้ยน)
+  useLayoutEffect(() => {
     let cancelled = false;
     const ro =
       typeof ResizeObserver !== 'undefined'
         ? new ResizeObserver(() => {
-            updateIndicator();
+            scheduleUpdateIndicator();
           })
         : null;
     const container = containerRef.current;
@@ -86,28 +107,28 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     }
     if (typeof document !== 'undefined' && document.fonts?.ready) {
       document.fonts.ready.then(() => {
-        if (!cancelled) updateIndicator();
+        if (!cancelled) scheduleUpdateIndicator();
       });
     }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) updateIndicator();
-      });
-    });
+    scheduleUpdateIndicator();
 
     return () => {
       cancelled = true;
       ro?.disconnect();
+      if (rafUpdateRef.current != null) {
+        cancelAnimationFrame(rafUpdateRef.current);
+        rafUpdateRef.current = null;
+      }
     };
     // tabs เป็น array literal จาก parent ทุกครั้ง — ใช้แค่ length กับค่าที่มีผลต่อการวัด
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, loadingTab, tabs.length, updateIndicator]);
+  }, [tabs.length, scheduleUpdateIndicator]);
 
   useLayoutEffect(() => {
-    const onResize = () => updateIndicator();
-    window.addEventListener('resize', onResize);
+    const onResize = () => scheduleUpdateIndicator();
+    window.addEventListener('resize', onResize, { passive: true });
     return () => window.removeEventListener('resize', onResize);
-  }, [updateIndicator]);
+  }, [scheduleUpdateIndicator]);
 
   return (
     <div

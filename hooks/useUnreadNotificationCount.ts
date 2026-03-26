@@ -6,6 +6,9 @@ import { fetchNotificationUnreadCount } from '@/utils/notificationFeed';
 
 const UNREAD_COUNT_CACHE_KEY_PREFIX = 'notification_unread_count_cache_';
 const UNREAD_COUNT_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
+const UNREAD_MEMORY_CACHE_MAX_AGE_MS = 15000;
+const inFlightUnreadByUser = new Map<string, Promise<number>>();
+const unreadMemoryCache = new Map<string, { count: number; ts: number }>();
 
 function getCachedUnreadCount(userId: string | undefined): number {
   if (typeof window === 'undefined' || !userId) return 0;
@@ -38,6 +41,26 @@ interface UseUnreadNotificationCountOptions {
   userId: string | undefined;
 }
 
+async function fetchUnreadCountShared(userId: string): Promise<number> {
+  const cached = unreadMemoryCache.get(userId);
+  if (cached && Date.now() - cached.ts <= UNREAD_MEMORY_CACHE_MAX_AGE_MS) return cached.count;
+
+  const existing = inFlightUnreadByUser.get(userId);
+  if (existing) return existing;
+
+  const promise = fetchNotificationUnreadCount(userId)
+    .then((count) => {
+      unreadMemoryCache.set(userId, { count, ts: Date.now() });
+      return count;
+    })
+    .finally(() => {
+      inFlightUnreadByUser.delete(userId);
+    });
+
+  inFlightUnreadByUser.set(userId, promise);
+  return promise;
+}
+
 /**
  * Hook สำหรับจัดการการนับ unread notification count
  * นับแบบ 1 ต่อ 1 โพสต์ (ไม่บวกตามจำนวนคนที่กด)
@@ -54,12 +77,11 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
       return;
     }
     try {
-      const count = await fetchNotificationUnreadCount(userId);
+      const count = await fetchUnreadCountShared(userId);
       setUnreadCount(count);
       setCachedUnreadCount(userId, count);
     } catch {
-      setUnreadCount(0);
-      setCachedUnreadCount(userId, 0);
+      setUnreadCount((prev) => prev);
     }
   }, [userId]);
 
