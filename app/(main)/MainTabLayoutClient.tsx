@@ -115,8 +115,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     mainTab?.navigatingToTab ?? (mainTab?.tabRefreshing ? mainTab?.homeTab ?? null : null);
 
   const { firstFeedLoaded } = useFirstFeedLoaded();
-  /** หน้าโฮม: แสดงแถบหัวและแท็บหลังโหลดโพสต์แรกเสร็จ */
-  const showHomeHeader = pathname === '/home' && firstFeedLoaded;
+  /** หน้าโฮม: ต้อง mount header/tab bar ตั้งแต่เฟรมแรกหลัง refresh เพื่อให้ motion system พร้อมทันที */
+  const showHomeHeader = pathname === '/home';
 
   /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
   useEffect(() => {
@@ -146,6 +146,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
         <>
           <div
             className="header-visibility-surface"
+            data-home-header-motion-surface="1"
             style={{
               position: 'fixed',
               top: 0,
@@ -154,10 +155,12 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
               zIndex: 500,
               background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
               backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-              transform: 'translate3d(0, calc(var(--home-header-slide-progress, 0) * -100%), 0)',
+              transform: 'translate3d(0, 0, 0)',
               boxShadow: 'none',
               transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out',
               willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              contain: 'paint',
             }}
           >
             <HomeHeader
@@ -202,16 +205,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
             }}
           />
         </>
-      ) : pathname === '/home' && !firstFeedLoaded ? (
-        /** จองความสูงเดียวกับ spacer ตอนมี header — ลดการกระโดดของฟีดเมื่อ firstFeedLoaded เป็น true */
-        <div
-          aria-hidden
-          style={{
-            height: HOME_FIXED_BLOCK_HEIGHT,
-            background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-            backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-          }}
-        />
       ) : null}
 
       {isProfileOverlayOpen && (

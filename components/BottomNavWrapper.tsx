@@ -50,6 +50,8 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
       {showNav && (
         <div
           className="bottom-nav-visibility-surface"
+          data-home-bottom-nav-motion-surface="1"
+          data-hide-with-scroll={hideNavWithScroll ? '1' : '0'}
           style={{
             position: 'fixed',
             bottom: 0,
@@ -57,15 +59,13 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             right: 0,
             minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
             zIndex: pathname === '/profile' ? 1001 : 400,
-            transform: hideNavWithScroll
-              ? shouldUseBottomSafeAreaInset
-                ? 'translate3d(0, calc(var(--home-header-slide-progress, 0) * (100% + env(safe-area-inset-bottom, 0px) + 20px)), 0)'
-                : 'translate3d(0, calc(var(--home-header-slide-progress, 0) * 100%), 0)'
-              : 'translate3d(0, 0, 0)',
+            transform: 'translate3d(0, 0, 0)',
             opacity: 1,
             visibility: 'visible',
             transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
             willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            contain: 'paint',
           }}
         >
           <Suspense

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { endHomeMotionTimer, startHomeMotionTimer } from '@/lib/homeMotionProfiler';
 
 interface HeaderVisibilityContextValue {
   isHeaderVisible: boolean;
@@ -16,6 +17,8 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
   const [isHeaderVisible, setHeaderVisible] = useState(true);
   const headerSlideProgressRef = useRef(0);
   const isHeaderInteractingRef = useRef(false);
+  const motionFrameRef = useRef<number | null>(null);
+  const lastBodyPanActiveRef = useRef<string>('0');
 
   const clampProgress = (value: number) => {
     if (value <= 0) return 0;
@@ -25,8 +28,38 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
 
   const applyMotionToDom = (progress: number, interacting: boolean) => {
     if (typeof document === 'undefined') return;
-    document.documentElement.style.setProperty('--home-header-slide-progress', String(progress));
-    document.body?.setAttribute('data-header-pan-active', interacting ? '1' : '0');
+    if (motionFrameRef.current != null) {
+      cancelAnimationFrame(motionFrameRef.current);
+    }
+
+    motionFrameRef.current = requestAnimationFrame(() => {
+      motionFrameRef.current = null;
+      const motionTimer = startHomeMotionTimer('motion-apply', 'apply-motion-to-dom');
+
+      const headerSurfaces = document.querySelectorAll<HTMLElement>('[data-home-header-motion-surface="1"]');
+      headerSurfaces.forEach((element) => {
+        element.style.transform = `translate3d(0, ${-progress * 100}%, 0)`;
+      });
+
+      const bottomNavSurfaces = document.querySelectorAll<HTMLElement>('[data-home-bottom-nav-motion-surface="1"]');
+      bottomNavSurfaces.forEach((element) => {
+        const shouldHideWithScroll = element.dataset.hideWithScroll === '1';
+        const progressPercent = shouldHideWithScroll ? progress * 100 : 0;
+        element.style.transform = `translate3d(0, ${progressPercent}%, 0)`;
+      });
+
+      const nextPanActive = interacting ? '1' : '0';
+      if (lastBodyPanActiveRef.current !== nextPanActive) {
+        lastBodyPanActiveRef.current = nextPanActive;
+        document.body?.setAttribute('data-header-pan-active', nextPanActive);
+      }
+      endHomeMotionTimer(motionTimer, {
+        progress,
+        interacting,
+        headerSurfaceCount: headerSurfaces.length,
+        bottomNavSurfaceCount: bottomNavSurfaces.length,
+      });
+    });
   };
 
   const setHeaderVisibleStable = useCallback((visible: boolean) => {

@@ -6,6 +6,12 @@ import { HOME_FEED_PAGE_SIZE, FEED_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { preloadPostsVisibleImages } from '@/utils/imagePreload';
+import {
+  endHomeMotionTimer,
+  markHomeMotionEvent,
+  recordHomeMotionDuration,
+  startHomeMotionTimer,
+} from '@/lib/homeMotionProfiler';
 
 const FEED_CACHE_KEY = 'home_feed_cache';
 
@@ -195,6 +201,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
+    const fetchTimer = startHomeMotionTimer('feed-fetch', isInitial ? 'initial-feed-fetch' : 'load-more-feed-fetch');
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -263,6 +270,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (apiPosts.length > 0) {
         ordered = apiPosts;
       } else {
+        const hydrateTimer = startHomeMotionTimer('feed-hydrate', 'supabase-post-hydrate');
         const { data: postsData, error } = await supabase
           .from('cars')
           .select(POST_WITH_PROFILE_SELECT)
@@ -277,6 +285,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           const ai = order.get(String(a.id)) ?? 1e9;
           const bi = order.get(String(b.id)) ?? 1e9;
           return ai - bi;
+        });
+        endHomeMotionTimer(hydrateTimer, {
+          isInitial,
+          postCount: ordered.length,
+          from: 'supabase',
         });
       }
 
@@ -308,6 +321,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         setPosts(initialList);
         preloadPostsVisibleImages(initialList, 2);
         fireInitialLoadDone();
+        markHomeMotionEvent('initial-feed-ready', {
+          postCount: initialList.length,
+          backgroundRefresh,
+        });
         try {
           if (typeof window !== 'undefined') {
             window.localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({
@@ -326,11 +343,20 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           const newOnes = ordered.filter((p: any) => !ids.has(String(p.id)));
           return newOnes.length ? [...prev, ...newOnes] : prev;
         });
+        recordHomeMotionDuration('feed-hydrate', 'append-feed-posts', 0, {
+          appendedCount: ordered.length,
+        });
       }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
       throw e;
     } finally {
+      endHomeMotionTimer(fetchTimer, {
+        isInitial,
+        backgroundRefresh,
+        page: currentPage,
+        postCount: postsLengthRef.current,
+      });
       if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
         if (isInitial) {
           loadMoreStartedAtRef.current = null;
@@ -416,6 +442,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
                 initialLoadDoneFiredRef.current = true;
                 onInitialLoadDone();
               }
+              recordHomeMotionDuration('feed-cache', 'initial-feed-cache-hit', 0, {
+                cachedPosts: initialPosts.length,
+                province: province ?? '',
+              });
               // ยังไม่ลบ just_posted_post ที่นี่ — รอให้ fetch ในพื้นหลังเสร็จแล้วเอาโพสนั้นไปไว้บนสุดก่อน ค่อยลบใน fetchPosts
             }
           }
@@ -429,6 +459,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       setPosts(initialPosts);
       setLoadingMore(!justPostedPost);
       setHasMore(true);
+      recordHomeMotionDuration('feed-cache', 'initial-feed-cache-miss', 0, {
+        initialPosts: initialPosts.length,
+        province: province ?? '',
+      });
       if (justPostedPost && onInitialLoadDone && !initialLoadDoneFiredRef.current) {
         initialLoadDoneFiredRef.current = true;
         onInitialLoadDone();

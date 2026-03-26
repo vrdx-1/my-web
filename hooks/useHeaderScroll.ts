@@ -1,6 +1,12 @@
 'use client'
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import {
+  endHomeMotionTimer,
+  markHomeMotionEvent,
+  recordHomeMotionDuration,
+  startHomeMotionTimer,
+} from '@/lib/homeMotionProfiler';
 
 /** เมื่อ scroll อยู่ในโซนนี้ (โพสบนสุด) Header ต้องไม่เลื่อนออก — ครอบคลุม spacer + โพสต์แรกของ feed */
 const HEADER_TOP_ZONE_PX = 200;
@@ -57,6 +63,46 @@ interface UseHeaderScrollOptions {
 
 type MotionProfile = 'auto' | 'ios' | 'android';
 
+interface ResolvedMotionTuning {
+  showThresholdPx: number;
+  hideThresholdPx: number;
+  minScrollDeltaPx: number;
+  fastScrollDeltaPx: number;
+  fastMinScrollDeltaPx: number;
+  visibilityThrottleMs: number;
+  layoutSettleIgnoreMs: number;
+  captionToggleIgnoreMs: number;
+  dragDistancePx: number;
+  settleIdleMs: number;
+}
+
+function resolveMotionTuning(base: ResolvedMotionTuning, platform: Exclude<MotionProfile, 'auto'>): ResolvedMotionTuning {
+  if (platform === 'android') {
+    return {
+      showThresholdPx: Math.max(72, Math.round(base.showThresholdPx * 0.88)),
+      hideThresholdPx: Math.max(180, Math.round(base.hideThresholdPx * 0.82)),
+      minScrollDeltaPx: Math.max(8, Math.round(base.minScrollDeltaPx * 0.9)),
+      fastScrollDeltaPx: Math.max(18, Math.round(base.fastScrollDeltaPx * 0.88)),
+      fastMinScrollDeltaPx: Math.max(12, Math.round(base.fastMinScrollDeltaPx * 0.88)),
+      visibilityThrottleMs: Math.max(72, Math.round(base.visibilityThrottleMs * 0.78)),
+      layoutSettleIgnoreMs: Math.max(120, Math.round(base.layoutSettleIgnoreMs * 0.72)),
+      captionToggleIgnoreMs: Math.max(220, Math.round(base.captionToggleIgnoreMs * 0.8)),
+      dragDistancePx: Math.max(84, Math.round(base.dragDistancePx * 0.86)),
+      settleIdleMs: Math.max(56, Math.round(base.settleIdleMs * 0.84)),
+    };
+  }
+
+  return base;
+}
+
+function detectPlatformProfile(motionProfile: MotionProfile): Exclude<MotionProfile, 'auto'> {
+  if (motionProfile !== 'auto') return motionProfile;
+  if (typeof navigator === 'undefined') return 'android';
+
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/i.test(ua) ? 'ios' : 'android';
+}
+
 interface UseHeaderScrollReturn {
   isHeaderVisible: boolean;
   lastScrollY: number;
@@ -65,16 +111,6 @@ interface UseHeaderScrollReturn {
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
   const { loadingMore = false, feedPostCount, disableScrollHide = false, onVisibilityChange, onMotionChange, suppressHideUntilRef, scrollTuning } = options ?? {};
-  const showThresholdPx = scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX;
-  const hideThresholdPx = scrollTuning?.hideThresholdPx ?? HEADER_HIDE_THRESHOLD_PX;
-  const minScrollDeltaPx = scrollTuning?.minScrollDeltaPx ?? MIN_SCROLL_DELTA_PX;
-  const fastScrollDeltaPx = scrollTuning?.fastScrollDeltaPx ?? 26;
-  const fastMinScrollDeltaPx = scrollTuning?.fastMinScrollDeltaPx ?? 20;
-  const visibilityThrottleMs = scrollTuning?.visibilityThrottleMs ?? VISIBILITY_THROTTLE_MS;
-  const layoutSettleIgnoreMs = scrollTuning?.layoutSettleIgnoreMs ?? LAYOUT_SETTLE_IGNORE_MS;
-  const captionToggleIgnoreMs = scrollTuning?.captionToggleIgnoreMs ?? CAPTION_TOGGLE_IGNORE_MS;
-  const dragDistancePx = scrollTuning?.dragDistancePx ?? HEADER_DRAG_DISTANCE_PX;
-  const settleIdleMs = scrollTuning?.settleIdleMs ?? DRAG_SETTLE_IDLE_MS;
   const motionProfile = scrollTuning?.motionProfile ?? 'auto';
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
@@ -94,6 +130,33 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const touchPanActiveRef = useRef(false);
   const touchLastYRef = useRef<number | null>(null);
   const platformProfileRef = useRef<Exclude<MotionProfile, 'auto'>>('android');
+  const lastScrollFrameAtRef = useRef<number | null>(null);
+  const activePlatformProfile = detectPlatformProfile(motionProfile);
+  platformProfileRef.current = activePlatformProfile;
+
+  const baseMotionTuning: ResolvedMotionTuning = {
+    showThresholdPx: scrollTuning?.showThresholdPx ?? HEADER_SHOW_THRESHOLD_PX,
+    hideThresholdPx: scrollTuning?.hideThresholdPx ?? HEADER_HIDE_THRESHOLD_PX,
+    minScrollDeltaPx: scrollTuning?.minScrollDeltaPx ?? MIN_SCROLL_DELTA_PX,
+    fastScrollDeltaPx: scrollTuning?.fastScrollDeltaPx ?? 26,
+    fastMinScrollDeltaPx: scrollTuning?.fastMinScrollDeltaPx ?? 20,
+    visibilityThrottleMs: scrollTuning?.visibilityThrottleMs ?? VISIBILITY_THROTTLE_MS,
+    layoutSettleIgnoreMs: scrollTuning?.layoutSettleIgnoreMs ?? LAYOUT_SETTLE_IGNORE_MS,
+    captionToggleIgnoreMs: scrollTuning?.captionToggleIgnoreMs ?? CAPTION_TOGGLE_IGNORE_MS,
+    dragDistancePx: scrollTuning?.dragDistancePx ?? HEADER_DRAG_DISTANCE_PX,
+    settleIdleMs: scrollTuning?.settleIdleMs ?? DRAG_SETTLE_IDLE_MS,
+  };
+  const resolvedMotionTuning = resolveMotionTuning(baseMotionTuning, activePlatformProfile);
+  const showThresholdPx = resolvedMotionTuning.showThresholdPx;
+  const hideThresholdPx = resolvedMotionTuning.hideThresholdPx;
+  const minScrollDeltaPx = resolvedMotionTuning.minScrollDeltaPx;
+  const fastScrollDeltaPx = resolvedMotionTuning.fastScrollDeltaPx;
+  const fastMinScrollDeltaPx = resolvedMotionTuning.fastMinScrollDeltaPx;
+  const visibilityThrottleMs = resolvedMotionTuning.visibilityThrottleMs;
+  const layoutSettleIgnoreMs = resolvedMotionTuning.layoutSettleIgnoreMs;
+  const captionToggleIgnoreMs = resolvedMotionTuning.captionToggleIgnoreMs;
+  const dragDistancePx = resolvedMotionTuning.dragDistancePx;
+  const settleIdleMs = resolvedMotionTuning.settleIdleMs;
 
   const emitMotion = (progress: number, interacting: boolean) => {
     const clamped = Math.max(0, Math.min(1, progress));
@@ -218,18 +281,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   }, []);
 
   useEffect(() => {
-    if (motionProfile !== 'auto') {
-      platformProfileRef.current = motionProfile;
-      return;
-    }
-    if (typeof navigator === 'undefined') {
-      platformProfileRef.current = 'android';
-      return;
-    }
-    const ua = navigator.userAgent || '';
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-    platformProfileRef.current = isIOS ? 'ios' : 'android';
-  }, [motionProfile]);
+    if (typeof document === 'undefined') return;
+    document.body?.setAttribute('data-home-motion-platform', activePlatformProfile);
+    markHomeMotionEvent('platform-profile-resolved', {
+      platform: activePlatformProfile,
+      refreshRateHz: refreshRateRef.current,
+    });
+  }, [activePlatformProfile]);
 
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useLayoutEffect(() => {
@@ -245,6 +303,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     let rafId: number | null = null;
 
     const runScrollLogic = () => {
+      const scrollTimer = startHomeMotionTimer('scroll-handler', 'run-scroll-logic');
       const currentScrollY = window.scrollY;
       const lastY = lastScrollYRef.current;
       const scrollDelta = currentScrollY - lastY;
@@ -259,15 +318,19 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       lastScrollYRef.current = currentScrollY;
 
       if (touchPanActiveRef.current) {
+        endHomeMotionTimer(scrollTimer, { reason: 'touch-pan-active' });
         return;
       }
 
-      // กำลังโหลดโพสถัดไป — ไม่เปลี่ยน header จาก scroll (กันโหลด DOM/รูป ทำให้ scroll event ปลอม)
-      if (loadingMore) {
+      // ตอนโหลดเพิ่มหลังมีโพสแล้ว ค่อย ignore scroll-driven visibility เพื่อกัน event ปลอมจาก layout
+      // แต่ initial load ของหน้าโฮมต้องยังตอบสนอง gesture/motion ได้ทันทีหลัง refresh
+      if (loadingMore && (feedPostCount ?? 0) > 0) {
+        endHomeMotionTimer(scrollTimer, { reason: 'loading-more' });
         return;
       }
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       if (now < ignoreScrollDrivenVisibilityUntilRef.current) {
+        endHomeMotionTimer(scrollTimer, { reason: 'layout-settle-ignore' });
         return;
       }
 
@@ -276,6 +339,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         emitMotion(0, true);
         applyVisible(true, false);
         scheduleSettle();
+        endHomeMotionTimer(scrollTimer, { zone: 'show', currentScrollY, scrollDelta });
         return;
       }
       // เลื่อนลงลึกเกิน threshold ค่อยซ่อน (hysteresis ไม่กระตุกที่ขอบ)
@@ -290,6 +354,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           applyVisible(true, false);
         }
         scheduleSettle();
+        endHomeMotionTimer(scrollTimer, {
+          zone: 'hide',
+          currentScrollY,
+          scrollDelta,
+          activeDeltaThreshold,
+          platform: platformProfileRef.current,
+        });
         return;
       }
       // ระหว่าง SHOW–HIDE: เลื่อนขึ้นชัดเจนเท่านั้นค่อยแสดง header (delta จิ๋วจาก layout = ไม่สน)
@@ -301,9 +372,28 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         applyVisible(true, false);
       }
       scheduleSettle();
+      endHomeMotionTimer(scrollTimer, {
+        zone: 'between',
+        currentScrollY,
+        scrollDelta,
+        activeDeltaThreshold,
+        platform: platformProfileRef.current,
+      });
     };
 
     const handleScroll = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const lastFrameAt = lastScrollFrameAtRef.current;
+      if (lastFrameAt != null) {
+        const frameGap = now - lastFrameAt;
+        if (frameGap > 19) {
+          recordHomeMotionDuration('frame-gap', 'scroll-frame-gap', frameGap, {
+            platform: platformProfileRef.current,
+          });
+        }
+      }
+      lastScrollFrameAtRef.current = now;
+
       if (rafId != null) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
@@ -371,7 +461,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [loadingMore, disableScrollHide, showThresholdPx, hideThresholdPx, minScrollDeltaPx, fastScrollDeltaPx, fastMinScrollDeltaPx, dragDistancePx, settleIdleMs]);
+  }, [loadingMore, disableScrollHide, showThresholdPx, hideThresholdPx, minScrollDeltaPx, fastScrollDeltaPx, fastMinScrollDeltaPx, dragDistancePx, settleIdleMs, feedPostCount, visibilityThrottleMs, layoutSettleIgnoreMs, captionToggleIgnoreMs]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = (visible: boolean) => {
