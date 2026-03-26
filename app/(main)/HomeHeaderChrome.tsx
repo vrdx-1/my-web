@@ -51,7 +51,7 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
           zIndex: 500,
           background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
           backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-          transform: 'translate3d(0, 0, 0)',
+          transform: isHeaderVisible ? 'translate3d(0, 0, 0)' : 'translate3d(0, -100%, 0)',
           boxShadow: 'none',
           transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease-out',
           willChange: 'transform',
