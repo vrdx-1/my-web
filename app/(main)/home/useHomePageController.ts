@@ -270,6 +270,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     onTogglePostStatus: handlers.handleTogglePostStatus,
     onDeletePost: handlers.handleDeletePost,
     onReport: handlers.handleReport,
+    onRepost: handlers.handleRepost,
     onSetActiveMenu: menu.setActiveMenu,
     onSetMenuAnimating: menu.setIsMenuAnimating,
     loadingMore: effectivePostList.loadingMore || recommendLoadMoreShell,

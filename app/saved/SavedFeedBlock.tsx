@@ -25,6 +25,7 @@ export interface SavedFeedBlockProps {
   onTogglePostStatus: (postId: string, currentStatus: string) => void;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   loadingMore?: boolean;
@@ -57,6 +58,7 @@ export function SavedFeedBlock(props: SavedFeedBlockProps) {
     onTogglePostStatus,
     onDeletePost,
     onReport,
+    onRepost,
     onSetActiveMenu,
     onSetMenuAnimating,
     loadingMore = false,
@@ -139,6 +141,7 @@ export function SavedFeedBlock(props: SavedFeedBlockProps) {
             onTogglePostStatus={onTogglePostStatus}
             onDeletePost={onDeletePost}
             onReport={onReport}
+            onRepost={onRepost}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
             hideBoost={hideBoost}

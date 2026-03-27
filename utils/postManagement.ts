@@ -134,3 +134,40 @@ export async function sharePost(
     console.log('User cancelled share');
   }
 }
+
+/**
+ * Repost a post by refreshing its created_at timestamp to current time.
+ * Performs optimistic update so the UI shows "just now" immediately.
+ */
+export async function repostPost(
+  postId: string,
+  setPosts: (updater: (prev: any[]) => any[]) => void,
+  /** ใช้ rollback ถ้าอัปเดต DB ไม่สำเร็จ */
+  postToRestore?: any,
+): Promise<void> {
+  const nowIso = new Date().toISOString();
+
+  setPosts((prev) => {
+    const updated = prev.map((p) => (String(p.id) === String(postId) ? { ...p, created_at: nowIso } : p));
+    updated.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+    return updated;
+  });
+
+  const { error } = await supabase.from('cars').update({ created_at: nowIso }).eq('id', postId);
+  if (error) {
+    if (postToRestore) {
+      setPosts((prev) => {
+        const restored = prev.map((p) =>
+          String(p.id) === String(postId)
+            ? { ...p, created_at: postToRestore.created_at }
+            : p
+        );
+        restored.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+        return restored;
+      });
+    }
+    throw error;
+  }
+
+  invalidateFeedCacheClient();
+}

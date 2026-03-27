@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
 
 interface PostCardMenuProps {
@@ -19,6 +19,7 @@ interface PostCardMenuProps {
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   onOpenPrivateNote?: (post: any) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
 }
 
 export const PostCardMenu = React.memo<PostCardMenuProps>(({
@@ -36,8 +37,13 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onSetActiveMenu,
   onSetMenuAnimating,
   onOpenPrivateNote,
+  onRepost,
 }) => {
-  const router = useRouter();
+  const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
+  const postCreatedAt = new Date(post.created_at).getTime();
+  const canRepost = Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;
+  const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
+  const [isReposting, setIsReposting] = React.useState(false);
 
   const handleMenuClick = () => {
     if (activeMenuState === post.id) {
@@ -142,9 +148,96 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                   }
                 : undefined
             }
+            onRepost={
+              isOwner && canRepost && typeof onRepost === 'function'
+                ? () => {
+                    onSetActiveMenu(null);
+                    setShowRepostConfirm(true);
+                  }
+                : undefined
+            }
           />
         );
       })()}
+
+      {typeof document !== 'undefined' && showRepostConfirm && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 2500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '320px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
+              ຢືນຢັນການໂພສໃໝ່?
+            </h3>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+              <button
+                type="button"
+                onClick={() => setShowRepostConfirm(false)}
+                disabled={isReposting}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#e4e6eb',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#1c1e21',
+                  cursor: isReposting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (typeof onRepost !== 'function') return;
+                  setIsReposting(true);
+                  try {
+                    await onRepost(post.id);
+                    setShowRepostConfirm(false);
+                  } finally {
+                    setIsReposting(false);
+                  }
+                }}
+                disabled={isReposting}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  background: '#1877f2',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  cursor: isReposting ? 'not-allowed' : 'pointer',
+                  opacity: isReposting ? 0.6 : 1,
+                }}
+              >
+                {isReposting ? 'ກຳລັງໂພສໃໝ່...' : 'ຢືນຢັນ'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 });

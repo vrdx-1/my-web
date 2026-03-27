@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useViewingPost } from './useViewingPost';
 import { useHeaderScroll } from './useHeaderScroll';
 import { useMenu } from './useMenu';
-import { togglePostStatus, deletePost, openReportModal, submitReport, sharePost } from '@/utils/postManagement';
+import { togglePostStatus, deletePost, openReportModal, submitReport, sharePost, repostPost } from '@/utils/postManagement';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface UsePostFeedHandlersProps {
@@ -104,6 +104,7 @@ export function usePostFeedHandlers({
   );
 
   const [showReportSuccess, setShowReportSuccess] = useState(false);
+  const [showRepostSuccess, setShowRepostSuccess] = useState(false);
 
   const handleSubmitReport = useCallback(async () => {
     if (!reportingPost || !setReportingPost || !setReportReason || !setIsSubmittingReport) return;
@@ -127,6 +128,15 @@ export function usePostFeedHandlers({
     [session, setPosts]
   );
 
+  const handleRepost = useCallback(
+    async (postId: string) => {
+      const postToRestore = posts.find((p) => String(p.id) === String(postId));
+      await repostPost(postId, setPosts, postToRestore);
+      setShowRepostSuccess(true);
+    },
+    [posts, setPosts]
+  );
+
   return useMemo(
     () => ({
       handleViewPost,
@@ -135,6 +145,7 @@ export function usePostFeedHandlers({
       handleReport,
       handleSubmitReport,
       handleShare,
+      handleRepost,
       showDeleteConfirm,
       handleConfirmDelete,
       handleCancelDelete,
@@ -142,6 +153,8 @@ export function usePostFeedHandlers({
       setShowDeleteSuccess,
       showReportSuccess,
       setShowReportSuccess,
+      showRepostSuccess,
+      setShowRepostSuccess,
     }),
     [
       handleViewPost,
@@ -150,11 +163,13 @@ export function usePostFeedHandlers({
       handleReport,
       handleSubmitReport,
       handleShare,
+      handleRepost,
       showDeleteConfirm,
       handleConfirmDelete,
       handleCancelDelete,
       showDeleteSuccess,
       showReportSuccess,
+      showRepostSuccess,
     ],
   );
 }

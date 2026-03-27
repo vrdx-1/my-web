@@ -63,6 +63,8 @@ interface PostFeedHandlersLike {
   handleCancelDelete: () => void;
   showDeleteSuccess: boolean;
   setShowDeleteSuccess?: (visible: boolean) => void;
+  showRepostSuccess: boolean;
+  setShowRepostSuccess?: (visible: boolean) => void;
 }
 
 export interface HomePageModalsProps {
@@ -189,6 +191,12 @@ function HomePageModalsBase(props: HomePageModalsProps) {
         <SuccessPopup
           message="ລົບໂພສສຳເລັດ"
           onClose={() => handlers.setShowDeleteSuccess?.(false)}
+        />
+      )}
+      {!isSoldTabNoSearch && handlers.showRepostSuccess && (
+        <SuccessPopup
+          message="ໂພສໃໝ່ສຳເລັດ"
+          onClose={() => handlers.setShowRepostSuccess?.(false)}
         />
       )}
     </>

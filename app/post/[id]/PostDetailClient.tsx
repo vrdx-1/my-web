@@ -81,6 +81,7 @@ export default function PostDetail() {
               onTogglePostStatus={handleTogglePostStatus}
               onDeletePost={handlers.handleDeletePost}
               onReport={handlers.handleReport}
+              onRepost={handlers.handleRepost}
               onSetActiveMenu={menu.setActiveMenu}
               onSetMenuAnimating={menu.setIsMenuAnimating}
               hideBoost={post.status === 'sold'}
@@ -180,6 +181,9 @@ export default function PostDetail() {
       )}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
+      {handlers.showRepostSuccess && (
+        <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
       )}
     </>
   );

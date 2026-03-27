@@ -33,6 +33,7 @@ interface PostCardProps {
   onTogglePostStatus: (postId: string, currentStatus: string) => void | Promise<void>;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   /** ลงทะเบียนการ์ดกับ observer สำหรับ viewport — ให้โพสต์ในจอได้ priority โหลดรูปก่อน */
@@ -65,6 +66,7 @@ export function PostCard({
   onTogglePostStatus,
   onDeletePost,
   onReport,
+  onRepost,
   onSetActiveMenu,
   onSetMenuAnimating,
   registerVisibilityRef,
@@ -335,6 +337,7 @@ export function PostCard({
             onShare={onShare}
             onDeletePost={onDeletePost}
             onReport={onReport}
+            onRepost={onRepost}
             onSetActiveMenu={onSetActiveMenu}
             onSetMenuAnimating={onSetMenuAnimating}
             onOpenPrivateNote={() => {

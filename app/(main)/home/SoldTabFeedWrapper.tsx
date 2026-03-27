@@ -127,6 +127,7 @@ export function SoldTabFeedWrapper({
             onTogglePostStatus: handlers.handleTogglePostStatus,
             onDeletePost: handlers.handleDeletePost,
             onReport: handlers.handleReport,
+            onRepost: handlers.handleRepost,
             onSetActiveMenu: menu.setActiveMenu,
             onSetMenuAnimating: menu.setIsMenuAnimating,
             loadingMore: soldListData.loadingMore || soldLoadMoreShell,
@@ -147,6 +148,9 @@ export function SoldTabFeedWrapper({
       )}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
+      {handlers.showRepostSuccess && (
+        <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
       )}
     </>
   );

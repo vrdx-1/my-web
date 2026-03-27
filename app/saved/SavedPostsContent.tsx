@@ -278,6 +278,7 @@ export function SavedPostsContent() {
           onTogglePostStatus={handlers.handleTogglePostStatus}
           onDeletePost={handlers.handleDeletePost}
           onReport={handlers.handleReport}
+          onRepost={handlers.handleRepost}
           onSetActiveMenu={menu.setActiveMenu}
           onSetMenuAnimating={menu.setIsMenuAnimating}
           loadingMore={postListData.hasMore ? postListData.loadingMore : false}
@@ -371,6 +372,9 @@ export function SavedPostsContent() {
       {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
+      {handlers.showRepostSuccess && (
+        <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
       )}
     </main>
   );

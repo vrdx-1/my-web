@@ -19,6 +19,7 @@ interface UseRecommendPostFeedPropsOptions {
   onTogglePostStatus: (postId: string, currentStatus: string) => void;
   onDeletePost: (postId: string) => void;
   onReport: (post: PostRecord) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   loadingMore: boolean;
@@ -43,6 +44,7 @@ export function useRecommendPostFeedProps(options: UseRecommendPostFeedPropsOpti
       onTogglePostStatus: options.onTogglePostStatus,
       onDeletePost: options.onDeletePost,
       onReport: options.onReport,
+      onRepost: options.onRepost,
       onSetActiveMenu: options.onSetActiveMenu,
       onSetMenuAnimating: options.onSetMenuAnimating,
       loadingMore: options.loadingMore,
@@ -65,6 +67,7 @@ export function useRecommendPostFeedProps(options: UseRecommendPostFeedPropsOpti
       options.onTogglePostStatus,
       options.onDeletePost,
       options.onReport,
+      options.onRepost,
       options.onSetActiveMenu,
       options.onSetMenuAnimating,
       options.loadingMore,

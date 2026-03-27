@@ -83,6 +83,7 @@ export default function NotificationDetail() {
                 onTogglePostStatus={handleTogglePostStatus}
                 onDeletePost={handlers.handleDeletePost}
                 onReport={handlers.handleReport}
+                onRepost={handlers.handleRepost}
                 onSetActiveMenu={menu.setActiveMenu}
                 onSetMenuAnimating={menu.setIsMenuAnimating}
                 hideBoost={post.status === 'sold'}
@@ -210,6 +211,9 @@ export default function NotificationDetail() {
       )}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
+      )}
+      {handlers.showRepostSuccess && (
+        <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
       )}
     </>
   );

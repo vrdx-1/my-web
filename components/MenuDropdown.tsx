@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
 import { commonStyles } from '@/utils/commonStyles';
 
 const menuItemContentStyle: React.CSSProperties = {
@@ -103,6 +102,15 @@ const reportIcon = (
   </LineIcon>
 );
 
+const repostIcon = (
+  <LineIcon>
+    <path d="M17 1l4 4-4 4" />
+    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+    <path d="M7 23l-4-4 4-4" />
+    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+  </LineIcon>
+);
+
 interface MenuDropdownProps {
   postId: string;
   isOwner: boolean;
@@ -119,6 +127,7 @@ interface MenuDropdownProps {
   onBoost?: () => void;
   onReport?: () => void;
   onPrivateNote?: () => void;
+  onRepost?: () => void;
 }
 
 /**
@@ -143,9 +152,8 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onBoost,
   onReport,
   onPrivateNote,
+  onRepost,
 }) => {
-  const router = useRouter();
-
   if (!isOpen) return null;
 
   const menuItemStyleBalanced: React.CSSProperties = {
@@ -158,6 +166,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   const showBoost = typeof onBoost === 'function';
   const showPrivateNote = typeof onPrivateNote === 'function';
+  const showRepost = typeof onRepost === 'function';
   const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
 
   const content = (
@@ -240,6 +249,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
                 <ActionLabel
                   label="ໂນດສ່ວນຕົວ"
                   icon={privateNoteIcon}
+                />
+              </div>
+            )}
+            {showRepost && (
+              <div onClick={onRepost} style={menuItemStyleBalanced}>
+                <ActionLabel
+                  label="ໂພສໃໝ່"
+                  icon={repostIcon}
                 />
               </div>
             )}
