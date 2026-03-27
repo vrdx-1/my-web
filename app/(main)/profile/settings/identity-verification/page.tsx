@@ -260,8 +260,19 @@ export default function IdentityVerificationPage() {
             padding: '20px', textAlign: 'center', marginBottom: '20px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="#10b981">
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-2 14.5l-4-4 1.41-1.41L10 13.67l6.59-6.58L18 8.5l-8 8z"/>
+              <svg width="48" height="48" viewBox="0 0 24 24">
+                <g fill="#2d9bf0">
+                  <circle cx="12" cy="12" r="8.2"/>
+                  <circle cx="12" cy="4.7" r="3.5"/>
+                  <circle cx="17.2" cy="6.8" r="3.5"/>
+                  <circle cx="19.3" cy="12" r="3.5"/>
+                  <circle cx="17.2" cy="17.2" r="3.5"/>
+                  <circle cx="12" cy="19.3" r="3.5"/>
+                  <circle cx="6.8" cy="17.2" r="3.5"/>
+                  <circle cx="4.7" cy="12" r="3.5"/>
+                  <circle cx="6.8" cy="6.8" r="3.5"/>
+                </g>
+                <path d="M7.1 12.9L10.3 16.1L17.1 9.2L15.5 7.6L10.3 12.8L8.7 11.3L7.1 12.9Z" fill="white"/>
               </svg>
             </div>
             <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#065f46', margin: 0 }}>ຢືນຢັນຕົວຕົນສຳເລັດແລ້ວ</p>
