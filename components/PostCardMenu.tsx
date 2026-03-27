@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
 
@@ -39,6 +40,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onOpenPrivateNote,
   onRepost,
 }) => {
+  const router = useRouter();
   const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
   const postCreatedAt = new Date(post.created_at).getTime();
   const canRepost = Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;

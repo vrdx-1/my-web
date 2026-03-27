@@ -87,7 +87,7 @@ export default function ChangeEmail() {
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT }}>
 
-      <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100, borderBottom: '1px solid #ddd' }}>
+      <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#ffffff', backgroundColor: '#ffffff', zIndex: 100 }}>
         <button
           onClick={() => router.back()}
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1c1e21', padding: '0', position: 'absolute', left: '15px' }}
@@ -125,7 +125,8 @@ export default function ChangeEmail() {
                 width: '100%',
                 padding: '14px',
                 borderRadius: '12px',
-                background: '#e0e0e0',
+                border: '1px solid #d0d5dd',
+                background: '#ffffff',
                 color: '#111111',
                 fontSize: '16px',
                 boxSizing: 'border-box',
@@ -148,11 +149,11 @@ export default function ChangeEmail() {
                 width: '100%',
                 padding: '14px',
                 borderRadius: '12px',
-                border: 'none',
+                border: '1px solid #d0d5dd',
                 fontSize: '16px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                background: '#e0e0e0',
+                background: '#ffffff',
                 color: '#111111'
               }}
             />

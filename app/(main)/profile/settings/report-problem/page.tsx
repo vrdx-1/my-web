@@ -146,7 +146,6 @@ export default function ReportProblemPage() {
           background: '#ffffff',
           backgroundColor: '#ffffff',
           zIndex: 100,
-          borderBottom: '1px solid #ddd',
         }}
       >
         <button
