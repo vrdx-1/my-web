@@ -5,6 +5,7 @@ import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
 import { supabase } from '@/lib/supabase'
+import { compressImage } from '@/utils/imageCompression'
 
 const DOCUMENT_TYPES = [
   { value: 'id_card', label: 'ບັດປະຈຳຕົວ' },
@@ -136,10 +137,25 @@ export default function IdentityVerificationPage() {
     setSubmitting(true)
     setError(null)
 
+    // Compress images client-side first (same as create-post)
+    // This converts HEIC/large iPhone photos to WebP and keeps size well under server limits
+    let compressedDoc: File
+    let compressedSelfie: File
+    try {
+      ;[compressedDoc, compressedSelfie] = await Promise.all([
+        compressImage(documentFile, 1600, 0.85),
+        compressImage(selfieFile, 1600, 0.85),
+      ])
+    } catch {
+      setError('ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນຮູບ ກະລຸນາລອງໃໝ່')
+      setSubmitting(false)
+      return
+    }
+
     const formData = new FormData()
     formData.append('document_type', documentType)
-    formData.append('document_photo', documentFile)
-    formData.append('selfie_photo', selfieFile)
+    formData.append('document_photo', compressedDoc)
+    formData.append('selfie_photo', compressedSelfie)
 
     try {
       let { data: { session } } = await supabase.auth.getSession()
