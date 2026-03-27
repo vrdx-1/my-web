@@ -2,37 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { processImageSmart } from '@/lib/smartImageProcessing';
+
+export const runtime = 'nodejs';
 
 const ALLOWED_TYPES = ['id_card', 'driver_license', 'passport'] as const;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-// Image extensions recognised as photos (includes iPhone HEIC/HEIF)
-const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp', 'tiff', 'tif', 'avif'];
-
-function getFileExtension(fileName: string) {
-  return (fileName.split('.').pop() ?? '').toLowerCase();
-}
-
-// Very lenient check: accept anything that looks like a photo.
-// iPhone PWA can send empty MIME, "application/octet-stream", or "image/heic" for the same file.
-function isAllowedImage(file: File): boolean {
-  const mime = (file.type ?? '').toLowerCase();
-  if (mime.startsWith('image/')) return true;
-  if (!mime || mime === 'application/octet-stream') return true; // iOS edge case
-  return IMAGE_EXTS.includes(getFileExtension(file.name));
-}
-
-function getContentType(file: File): string {
-  const mime = (file.type ?? '').toLowerCase();
-  if (mime.startsWith('image/')) return mime;
-  const ext = getFileExtension(file.name);
-  if (ext === 'png') return 'image/png';
-  if (ext === 'webp') return 'image/webp';
-  if (ext === 'heic') return 'image/heic';
-  if (ext === 'heif') return 'image/heif';
-  if (ext === 'gif') return 'image/gif';
-  if (ext === 'avif') return 'image/avif';
-  return 'image/jpeg'; // safe default for iOS photos
-}
+// Accept up to 30MB raw — Sharp will compress it before storing
+const MAX_RAW_FILE_SIZE = 30 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -116,32 +92,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Both document and selfie photos are required' }, { status: 400 });
   }
 
-  // Validate file sizes (type check is intentionally lenient to support all iPhone formats)
+  // Reject only truly oversized raw files before processing
   for (const [label, file] of [['document', documentFile], ['selfie', selfieFile]] as [string, File][]) {
-    if (!isAllowedImage(file)) {
-      return NextResponse.json({ error: `ປະເພດໄຟລ໌ ${label} ບໍ່ຖືກຕ້ອງ ກະລຸນາໃຊ້ຮູບພາບ` }, { status: 400 });
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `ຮູບ ${label} ມີຂະໜາດໃຫຍ່ເກີນໄປ (ສູງສຸດ 10MB)` }, { status: 400 });
+    if (file.size > MAX_RAW_FILE_SIZE) {
+      return NextResponse.json({ error: `ຮູບ ${label} ມີຂະໜາດໃຫຍ່ເກີນໄປ (ສູງສຸດ 30MB)` }, { status: 400 });
     }
   }
 
-  const ts = Date.now();
-  const docExt = getFileExtension(documentFile.name) || 'jpg';
-  const selfieExt = getFileExtension(selfieFile.name) || 'jpg';
-  const documentPath = `verifications/${userId}/${ts}-document.${docExt}`;
-  const selfiePath = `verifications/${userId}/${ts}-selfie.${selfieExt}`;
+  // Process images through Sharp (converts HEIC/HEIF → WebP, compresses, auto-rotates)
+  // This is the same pipeline used by create-post, so any format iPhone sends will work.
+  let docResult: Awaited<ReturnType<typeof processImageSmart>>;
+  let selfieResult: Awaited<ReturnType<typeof processImageSmart>>;
+  try {
+    const [docRaw, selfieRaw] = await Promise.all([
+      documentFile.arrayBuffer(),
+      selfieFile.arrayBuffer(),
+    ]);
+    [docResult, selfieResult] = await Promise.all([
+      processImageSmart(Buffer.from(docRaw)),
+      processImageSmart(Buffer.from(selfieRaw)),
+    ]);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'image processing error';
+    return NextResponse.json({ error: `ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນຮູບ: ${msg}` }, { status: 400 });
+  }
 
-  const docBuffer = Buffer.from(await documentFile.arrayBuffer());
-  const selfieBuffer = Buffer.from(await selfieFile.arrayBuffer());
+  const ts = Date.now();
+  const documentPath = `verifications/${userId}/${ts}-document.${docResult.outputExtension}`;
+  const selfiePath    = `verifications/${userId}/${ts}-selfie.${selfieResult.outputExtension}`;
 
   const [docUpload, selfieUpload] = await Promise.all([
-    adminClient.storage.from('car-images').upload(documentPath, docBuffer, {
-      contentType: getContentType(documentFile),
+    adminClient.storage.from('car-images').upload(documentPath, docResult.buffer, {
+      contentType: docResult.outputMimeType,
       upsert: false,
     }),
-    adminClient.storage.from('car-images').upload(selfiePath, selfieBuffer, {
-      contentType: getContentType(selfieFile),
+    adminClient.storage.from('car-images').upload(selfiePath, selfieResult.buffer, {
+      contentType: selfieResult.outputMimeType,
       upsert: false,
     }),
   ]);
