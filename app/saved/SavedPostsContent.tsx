@@ -81,7 +81,7 @@ export function SavedPostsContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const headerScroll = useHeaderScroll();
+  const headerScroll = useHeaderScroll({ hideOnScrollUp: false });
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,

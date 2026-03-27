@@ -18,6 +18,8 @@ const VISIBILITY_TOGGLE_COOLDOWN_MS = 170;
 interface UseHeaderScrollOptions {
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
   disableScrollHide?: boolean;
+  /** ถ้า true จะซ่อน header เมื่อเลื่อนขึ้น และแสดงเมื่อเลื่อนลง */
+  hideOnScrollUp?: boolean;
   onVisibilityChange?: (visible: boolean) => void;
   /** ถ้า ref.current เป็น timestamp และ performance.now() < ref.current จะไม่ซ่อน header (ใช้หลังสลับแท็บโฮมเพื่อกันกระตุก) */
   suppressHideUntilRef?: React.MutableRefObject<number | null>;
@@ -30,7 +32,12 @@ interface UseHeaderScrollReturn {
 }
 
 export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScrollReturn {
-  const { disableScrollHide = false, onVisibilityChange, suppressHideUntilRef } = options ?? {};
+  const {
+    disableScrollHide = false,
+    hideOnScrollUp = false,
+    onVisibilityChange,
+    suppressHideUntilRef,
+  } = options ?? {};
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const latestScrollYRef = useRef(0);
@@ -42,7 +49,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const lastVisibilityToggleAtRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
   const lastAppliedVisibleRef = useRef(true);
-  const applyVisible = (visible: boolean) => {
+  const applyVisible = useCallback((visible: boolean) => {
     if (lastAppliedVisibleRef.current === visible) return;
     lastAppliedVisibleRef.current = visible;
     lastVisibilityToggleAtRef.current =
@@ -54,7 +61,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     });
     setIsHeaderVisible(visible);
     onVisibilityChangeRef.current?.(visible);
-  };
+  }, []);
 
   useEffect(() => {
     onVisibilityChangeRef.current = onVisibilityChange;
@@ -81,8 +88,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     };
 
     window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
-    window.addEventListener('touchmove', markUserScrollIntent, { passive: true });
+    // Use touchstart instead of touchmove to avoid ref writes on every finger-move frame.
+    window.addEventListener('touchstart', markUserScrollIntent, { passive: true });
     window.addEventListener('wheel', markUserScrollIntent, { passive: true });
+    window.addEventListener('keydown', markUserScrollIntent);
 
     const handleScroll = () => {
       latestScrollYRef.current = window.scrollY;
@@ -95,6 +104,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         const scrollDelta = currentScrollY - previousScrollY;
         lastScrollYRef.current = currentScrollY;
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+        if (scrollDelta === 0) {
+          endHomeMotionTimer(timer, {
+            action: 'ignore-zero-delta',
+            currentScrollY,
+            scrollDelta,
+          });
+          return;
+        }
 
         const captionToggleActive =
           typeof document !== 'undefined' && document.body?.dataset.captionToggleActive === 'true';
@@ -128,7 +146,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           return;
         }
 
-        if (scrollDelta > 0) {
+        const isHideDelta = hideOnScrollUp ? scrollDelta < 0 : scrollDelta > 0;
+        if (isHideDelta) {
           const hasUserIntent = now < userScrollIntentUntilRef.current;
           if (!hasUserIntent) {
             endHomeMotionTimer(timer, {
@@ -138,11 +157,12 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
             });
             return;
           }
-          if (lastDeltaDirectionRef.current !== 1) {
+          const hideDirection: 1 | -1 = hideOnScrollUp ? -1 : 1;
+          if (lastDeltaDirectionRef.current !== hideDirection) {
             accumulatedScrollDeltaRef.current = 0;
-            lastDeltaDirectionRef.current = 1;
+            lastDeltaDirectionRef.current = hideDirection;
           }
-          accumulatedScrollDeltaRef.current += scrollDelta;
+          accumulatedScrollDeltaRef.current += Math.abs(scrollDelta);
 
           const inCooldown = now - lastVisibilityToggleAtRef.current < VISIBILITY_TOGGLE_COOLDOWN_MS;
           if (inCooldown) {
@@ -179,11 +199,12 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           return;
         }
 
-        if (lastDeltaDirectionRef.current !== -1) {
+        const showDirection: 1 | -1 = hideOnScrollUp ? 1 : -1;
+        if (lastDeltaDirectionRef.current !== showDirection) {
           accumulatedScrollDeltaRef.current = 0;
-          lastDeltaDirectionRef.current = -1;
+          lastDeltaDirectionRef.current = showDirection;
         }
-        accumulatedScrollDeltaRef.current += -scrollDelta;
+        accumulatedScrollDeltaRef.current += Math.abs(scrollDelta);
 
         const inCooldown = now - lastVisibilityToggleAtRef.current < VISIBILITY_TOGGLE_COOLDOWN_MS;
         if (inCooldown) {
@@ -223,11 +244,12 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         scrollFrameRef.current = null;
       }
       window.removeEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
-      window.removeEventListener('touchmove', markUserScrollIntent);
+      window.removeEventListener('touchstart', markUserScrollIntent);
       window.removeEventListener('wheel', markUserScrollIntent);
+      window.removeEventListener('keydown', markUserScrollIntent);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [disableScrollHide, suppressHideUntilRef]);
+  }, [applyVisible, disableScrollHide, hideOnScrollUp, suppressHideUntilRef]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = useCallback((visible: boolean) => {
@@ -236,7 +258,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       return;
     }
     applyVisible(visible);
-  }, [disableScrollHide]);
+  }, [applyVisible, disableScrollHide]);
 
   return useMemo(
     () => ({
