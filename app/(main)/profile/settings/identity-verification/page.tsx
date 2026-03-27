@@ -13,6 +13,14 @@ const DOCUMENT_TYPES = [
 
 type DocType = typeof DOCUMENT_TYPES[number]['value']
 
+function isIOSStandalonePWA() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  const isStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+  return isIOS && isStandalone
+}
+
 export default function IdentityVerificationPage() {
   const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -28,11 +36,27 @@ export default function IdentityVerificationPage() {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
   const [cameraLoading, setCameraLoading] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [previewModal, setPreviewModal] = useState<{ url: string; target: 'document' | 'selfie' } | null>(null)
+  const [resumeTick, setResumeTick] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none')
   const [checkingStatus, setCheckingStatus] = useState(true)
+
+  const getCameraErrorMessage = (err: unknown) => {
+    const name = typeof err === 'object' && err !== null && 'name' in err ? String((err as { name?: string }).name) : ''
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      return 'ກະລຸນາອະນຸຍາດການໃຊ້ງານກ້ອງ ແລ້ວລອງອີກຄັ້ງ'
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      return 'ບໍ່ພົບກ້ອງໃນອຸປະກອນນີ້'
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+      return 'ກ້ອງຖືກໃຊ້ງານຢູ່ ກະລຸນາປິດແອັບທີ່ໃຊ້ກ້ອງແລ້ວລອງອີກຄັ້ງ'
+    }
+    return 'ບໍ່ສາມາດເປີດກ້ອງໄດ້ ກະລຸນາລອງອີກຄັ້ງ'
+  }
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -70,10 +94,28 @@ export default function IdentityVerificationPage() {
   }
 
   const openCamera = async (target: 'document' | 'selfie') => {
+    if (cameraLoading) return
     try {
       setCameraLoading(true)
       setCameraError(null)
+      setPreviewModal(null)
       setCaptureTarget(target)
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const msg = 'ອຸປະກອນ/ເບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ'
+        setCameraError(msg)
+        setError(msg)
+        return
+      }
+
+      if (!window.isSecureContext) {
+        const msg = 'ການໃຊ້ກ້ອງຕ້ອງໃຊ້ຜ່ານ HTTPS ຫຼື localhost'
+        setCameraError(msg)
+        setError(msg)
+        return
+      }
+
+      stopCameraStream()
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -87,8 +129,10 @@ export default function IdentityVerificationPage() {
       setCameraStream(stream)
       setCameraOpen(true)
       setError(null)
-    } catch {
-      setCameraError('ບໍ່ສາມາດເຂົ້າເຖິງກ້ອງໄດ້ ກະລຸນາອະນຸຍາດການໃຊ້ງານກ້ອງ')
+    } catch (err) {
+      const msg = getCameraErrorMessage(err)
+      setCameraError(msg)
+      setError(msg)
     } finally {
       setCameraLoading(false)
     }
@@ -150,6 +194,42 @@ export default function IdentityVerificationPage() {
     }
   }, [documentPreview, selfiePreview])
 
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        stopCameraStream()
+        setCameraOpen(false)
+        setCaptureTarget(null)
+      }
+      if (document.visibilityState === 'visible' && isIOSStandalonePWA()) {
+        // iOS PWA sometimes resumes with a stale compositing layer after camera usage.
+        setResumeTick((v) => v + 1)
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event('resize'))
+          document.body.style.transform = 'translateZ(0)'
+          requestAnimationFrame(() => {
+            document.body.style.transform = ''
+          })
+        })
+      }
+    }
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (!isIOSStandalonePWA()) return
+      if (event.persisted) {
+        setResumeTick((v) => v + 1)
+        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('pageshow', handlePageShow)
+    }
+  }, [cameraStream])
+
   const handleSubmit = async () => {
     if (!documentFile || !selfieFile) {
       setError('ກະລຸນາອັບໂຫລດທັງ 2 ຮູບ')
@@ -192,7 +272,7 @@ export default function IdentityVerificationPage() {
   }
 
   return (
-    <main style={{
+    <main key={resumeTick} style={{
       maxWidth: '600px',
       margin: '0 auto',
       background: '#ffffff',
@@ -335,16 +415,19 @@ export default function IdentityVerificationPage() {
                   <img
                     src={documentPreview}
                     alt="Document preview"
+                    onClick={() => setPreviewModal({ url: documentPreview, target: 'document' })}
                     style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb' }}
                   />
                   <button
                     type="button"
                     onClick={() => openCamera('document')}
+                    disabled={cameraLoading}
                     style={{
                       position: 'absolute', bottom: '10px', right: '10px',
                       background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
                       borderRadius: '8px', padding: '6px 12px', fontSize: '13px',
-                      cursor: 'pointer', fontWeight: '600',
+                      cursor: cameraLoading ? 'not-allowed' : 'pointer', fontWeight: '600',
+                      opacity: cameraLoading ? 0.7 : 1,
                     }}
                   >
                     ປ່ຽນຮູບ
@@ -354,11 +437,14 @@ export default function IdentityVerificationPage() {
                 <button
                   type="button"
                   onClick={() => openCamera('document')}
+                  disabled={cameraLoading}
                   style={{
                     width: '100%', padding: '28px 20px', border: '2px dashed #d1d5db',
-                    borderRadius: '10px', background: '#f9fafb', cursor: 'pointer',
+                    borderRadius: '10px', background: '#f9fafb',
                     display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px',
                     transition: 'border-color 0.15s ease',
+                    opacity: cameraLoading ? 0.7 : 1,
+                    cursor: cameraLoading ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -366,7 +452,7 @@ export default function IdentityVerificationPage() {
                     <circle cx="8" cy="12" r="2"/>
                     <path d="M14 9h4M14 12h4M14 15h2"/>
                   </svg>
-                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>ຖ່າຍຮູບເອກະສານ</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>{cameraLoading ? 'ກຳລັງເປີດກ້ອງ...' : 'ຖ່າຍຮູບເອກະສານ'}</span>
                 </button>
               )}
             </div>
@@ -378,16 +464,19 @@ export default function IdentityVerificationPage() {
                   <img
                     src={selfiePreview}
                     alt="Selfie preview"
+                    onClick={() => setPreviewModal({ url: selfiePreview, target: 'selfie' })}
                     style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb' }}
                   />
                   <button
                     type="button"
                     onClick={() => openCamera('selfie')}
+                    disabled={cameraLoading}
                     style={{
                       position: 'absolute', bottom: '10px', right: '10px',
                       background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
                       borderRadius: '8px', padding: '6px 12px', fontSize: '13px',
-                      cursor: 'pointer', fontWeight: '600',
+                      cursor: cameraLoading ? 'not-allowed' : 'pointer', fontWeight: '600',
+                      opacity: cameraLoading ? 0.7 : 1,
                     }}
                   >
                     ປ່ຽນຮູບ
@@ -397,15 +486,18 @@ export default function IdentityVerificationPage() {
                 <button
                   type="button"
                   onClick={() => openCamera('selfie')}
+                  disabled={cameraLoading}
                   style={{
                     width: '100%', padding: '28px 20px', border: '2px dashed #d1d5db',
-                    borderRadius: '10px', background: '#f9fafb', cursor: 'pointer',
+                    borderRadius: '10px', background: '#f9fafb',
                     display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px',
                     transition: 'border-color 0.15s ease',
+                    opacity: cameraLoading ? 0.7 : 1,
+                    cursor: cameraLoading ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <GuestAvatarIcon size={40} stroke="#9ca3af" strokeWidth={1.5} />
-                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>ຖ່າຍຮູບທ່ານຕອນຖືເອກະສານ</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>{cameraLoading ? 'ກຳລັງເປີດກ້ອງ...' : 'ຖ່າຍຮູບທ່ານຕອນຖືເອກະສານ'}</span>
                 </button>
               )}
             </div>
@@ -526,6 +618,50 @@ export default function IdentityVerificationPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {previewModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.86)',
+            zIndex: 3100,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => setPreviewModal(null)}
+        >
+          <img
+            src={previewModal.url}
+            alt="Captured preview"
+            style={{ maxWidth: '92vw', maxHeight: '78vh', objectFit: 'contain', borderRadius: '12px' }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const target = previewModal.target
+              setPreviewModal(null)
+              void openCamera(target)
+            }}
+            style={{
+              marginTop: '14px',
+              background: 'transparent',
+              color: '#ffffff',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            ຖ່າຍໃໝ່
+          </button>
         </div>
       )}
     </main>
