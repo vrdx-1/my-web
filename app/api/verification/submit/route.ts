@@ -5,7 +5,32 @@ import { cookies } from 'next/headers';
 
 const ALLOWED_TYPES = ['id_card', 'driver_license', 'passport'] as const;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'] as const;
+const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'] as const;
+
+function getFileExtension(fileName: string) {
+  return fileName.split('.').pop()?.toLowerCase() ?? '';
+}
+
+function isAllowedImage(file: File) {
+  const mime = (file.type || '').toLowerCase();
+  const ext = getFileExtension(file.name);
+  return ALLOWED_MIME.includes(mime as typeof ALLOWED_MIME[number])
+    || ALLOWED_EXT.includes(ext as typeof ALLOWED_EXT[number]);
+}
+
+function getContentType(file: File) {
+  const mime = (file.type || '').toLowerCase();
+  if (ALLOWED_MIME.includes(mime as typeof ALLOWED_MIME[number])) {
+    return mime;
+  }
+  const ext = getFileExtension(file.name);
+  if (ext === 'png') return 'image/png';
+  if (ext === 'webp') return 'image/webp';
+  if (ext === 'heic') return 'image/heic';
+  if (ext === 'heif') return 'image/heif';
+  return 'image/jpeg';
+}
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -91,8 +116,8 @@ export async function POST(req: NextRequest) {
 
   // Validate file types and sizes
   for (const [label, file] of [['document', documentFile], ['selfie', selfieFile]] as [string, File][]) {
-    if (!ALLOWED_MIME.includes(file.type)) {
-      return NextResponse.json({ error: `Invalid file type for ${label}` }, { status: 400 });
+    if (!isAllowedImage(file)) {
+      return NextResponse.json({ error: `Invalid file type for ${label}. Please use JPG, PNG, WEBP, HEIC, or HEIF` }, { status: 400 });
     }
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: `File too large for ${label} (max 10MB)` }, { status: 400 });
@@ -100,8 +125,8 @@ export async function POST(req: NextRequest) {
   }
 
   const ts = Date.now();
-  const docExt = documentFile.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const selfieExt = selfieFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const docExt = getFileExtension(documentFile.name) || 'jpg';
+  const selfieExt = getFileExtension(selfieFile.name) || 'jpg';
   const documentPath = `verifications/${userId}/${ts}-document.${docExt}`;
   const selfiePath = `verifications/${userId}/${ts}-selfie.${selfieExt}`;
 
@@ -110,11 +135,11 @@ export async function POST(req: NextRequest) {
 
   const [docUpload, selfieUpload] = await Promise.all([
     adminClient.storage.from('car-images').upload(documentPath, docBuffer, {
-      contentType: documentFile.type,
+      contentType: getContentType(documentFile),
       upsert: false,
     }),
     adminClient.storage.from('car-images').upload(selfiePath, selfieBuffer, {
-      contentType: selfieFile.type,
+      contentType: getContentType(selfieFile),
       upsert: false,
     }),
   ]);
