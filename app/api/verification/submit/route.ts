@@ -9,6 +9,17 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,14 +38,26 @@ export async function POST(req: NextRequest) {
   );
 
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.id) {
+  let userId = session?.user?.id ?? null;
+
+  // Fallback for PWA/browser contexts where auth cookies are unavailable.
+  if (!userId) {
+    const authHeader = req.headers.get('authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    if (token) {
+      const { data: userData } = await adminClient.auth.getUser(token);
+      if (userData?.user?.id) {
+        userId = userData.user.id;
+      }
+    }
+  }
+
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const userId = session.user.id;
-
   // Check if user already has a pending or approved request
-  const { data: existingRequest } = await supabase
+  const { data: existingRequest } = await adminClient
     .from('verification_requests')
     .select('id, status')
     .eq('user_id', userId)
@@ -75,17 +98,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `File too large for ${label} (max 10MB)` }, { status: 400 });
     }
   }
-
-  // Use service role for storage uploads (to bypass RLS on private bucket)
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
-  }
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    { auth: { persistSession: false } }
-  );
 
   const ts = Date.now();
   const docExt = documentFile.name.split('.').pop()?.toLowerCase() || 'jpg';

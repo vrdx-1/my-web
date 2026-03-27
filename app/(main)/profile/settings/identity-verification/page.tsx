@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
+import { supabase } from '@/lib/supabase'
 
 const DOCUMENT_TYPES = [
   { value: 'id_card', label: 'ບັດປະຈຳຕົວ' },
@@ -30,13 +31,33 @@ export default function IdentityVerificationPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none')
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(true)
+  const [requiresLogin, setRequiresLogin] = useState(false)
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const res = await fetch('/api/verification/status', { credentials: 'include' })
+        let { data: { session } } = await supabase.auth.getSession()
+        let accessToken = session?.access_token ?? ''
+        if (!accessToken) {
+          const refreshed = await supabase.auth.refreshSession()
+          accessToken = refreshed.data.session?.access_token ?? ''
+          session = refreshed.data.session ?? session
+        }
+
+        const res = await fetch('/api/verification/status', {
+          credentials: 'include',
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        })
         if (!res.ok) {
+          if (res.status === 401) {
+            const hasSession = !!session?.user?.id
+            setRequiresLogin(!hasSession)
+            if (!hasSession) {
+              setError('ກະລຸນາລ໋ອກອິນກ່ອນສົ່ງຄຳຂໍຢືນຢັນຕົວຕົນ')
+            }
+          }
           setCheckingStatus(false)
           return
         }
@@ -45,6 +66,9 @@ export default function IdentityVerificationPage() {
           setCurrentStatus('approved')
         } else if (data.latest_request) {
           setCurrentStatus(data.latest_request.status)
+          if (data.latest_request.status === 'rejected') {
+            setRejectionReason(data.latest_request.reject_reason ?? null)
+          }
         }
       } catch {
         // ignore
@@ -100,6 +124,11 @@ export default function IdentityVerificationPage() {
   }
 
   const handleSubmit = async () => {
+    if (requiresLogin) {
+      setError('ກະລຸນາລ໋ອກອິນກ່ອນສົ່ງຄຳຂໍຢືນຢັນຕົວຕົນ')
+      return
+    }
+
     if (!documentFile || !selfieFile) {
       setError('ກະລຸນາອັບໂຫລດທັງ 2 ຮູບ')
       return
@@ -113,13 +142,27 @@ export default function IdentityVerificationPage() {
     formData.append('selfie_photo', selfieFile)
 
     try {
+      let { data: { session } } = await supabase.auth.getSession()
+      let accessToken = session?.access_token ?? ''
+
+      if (!accessToken) {
+        const refreshed = await supabase.auth.refreshSession()
+        accessToken = refreshed.data.session?.access_token ?? ''
+      }
+
       const res = await fetch('/api/verification/submit', {
         method: 'POST',
         credentials: 'include',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
         body: formData,
       })
       const data = await res.json()
       if (!res.ok) {
+        if (res.status === 401) {
+          setRequiresLogin(true)
+          setError('ຫມົດເວລາການລ໋ອກອິນ ກະລຸນາລ໋ອກອິນໃໝ່')
+          return
+        }
         setError(data.error || 'ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່')
       } else {
         setSuccess(true)
@@ -209,7 +252,7 @@ export default function IdentityVerificationPage() {
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>
-            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#92400e', margin: 0 }}>ກຳລັງລໍຖ້າກວດສອບ</p>
+            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#92400e', margin: 0 }}>ກຳລັງລໍຖ້າການກວດສອບ</p>
             <p style={{ fontSize: '14px', color: '#b45309', marginTop: '8px' }}>ທີມງານກຳລັງກວດສອບເອກະສານຂອງທ່ານ ກະລຸນາລໍຖ້າ</p>
           </div>
         )}
@@ -236,13 +279,58 @@ export default function IdentityVerificationPage() {
             background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px',
             padding: '16px', marginBottom: '20px'
           }}>
-            <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#991b1b', margin: '0 0 4px 0' }}>ຄຳຂໍຖືກປະຕິເສດ</p>
+            <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#991b1b', margin: '0 0 8px 0' }}>ຄຳຂໍຖືກປະຕິເສດ</p>
+            {rejectionReason && (
+              <div style={{
+                background: '#ffffff', border: '1px solid #fecaca', borderRadius: '8px',
+                padding: '12px', marginBottom: '12px'
+              }}>
+                <p style={{ fontSize: '13px', color: '#7f1d1d', margin: 0 }}>
+                  <strong>ເຫດຜົນ:</strong> {rejectionReason}
+                </p>
+              </div>
+            )}
             <p style={{ fontSize: '14px', color: '#b91c1c', margin: 0 }}>ທ່ານສາມາດສົ່ງຄຳຂໍໃໝ່ໄດ້ ກະລຸນາອັບໂຫລດເອກະສານທີ່ຊັດເຈນ</p>
           </div>
         )}
 
+        {/* Session missing: show clear message instead of blank screen */}
+        {requiresLogin && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fca5a5',
+            borderRadius: '12px',
+            padding: '18px',
+            marginBottom: '20px',
+            textAlign: 'center',
+          }}>
+            <p style={{ margin: 0, color: '#991b1b', fontSize: '15px', fontWeight: 700 }}>
+              ກະລຸນາລ໋ອກອິນກ່ອນ
+            </p>
+            <p style={{ margin: '8px 0 14px 0', color: '#b91c1c', fontSize: '14px' }}>
+              ເຊສຊັນຂອງທ່ານໝົດອາຍຸ ຫຼື ບໍ່ໄດ້ລ໋ອກອິນ
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/login')}
+              style={{
+                background: '#1877f2',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              ໄປໜ້າລ໋ອກອິນ
+            </button>
+          </div>
+        )}
+
         {/* Form — only if not already approved/pending */}
-        {currentStatus !== 'approved' && currentStatus !== 'pending' && !success && (
+        {currentStatus !== 'approved' && currentStatus !== 'pending' && !success && !requiresLogin && (
           <>
             {/* Document Type */}
             <div style={{ marginBottom: '24px' }}>
