@@ -5,31 +5,33 @@ import { cookies } from 'next/headers';
 
 const ALLOWED_TYPES = ['id_card', 'driver_license', 'passport'] as const;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'] as const;
-const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'] as const;
+// Image extensions recognised as photos (includes iPhone HEIC/HEIF)
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp', 'tiff', 'tif', 'avif'];
 
 function getFileExtension(fileName: string) {
-  return fileName.split('.').pop()?.toLowerCase() ?? '';
+  return (fileName.split('.').pop() ?? '').toLowerCase();
 }
 
-function isAllowedImage(file: File) {
-  const mime = (file.type || '').toLowerCase();
-  const ext = getFileExtension(file.name);
-  return ALLOWED_MIME.includes(mime as typeof ALLOWED_MIME[number])
-    || ALLOWED_EXT.includes(ext as typeof ALLOWED_EXT[number]);
+// Very lenient check: accept anything that looks like a photo.
+// iPhone PWA can send empty MIME, "application/octet-stream", or "image/heic" for the same file.
+function isAllowedImage(file: File): boolean {
+  const mime = (file.type ?? '').toLowerCase();
+  if (mime.startsWith('image/')) return true;
+  if (!mime || mime === 'application/octet-stream') return true; // iOS edge case
+  return IMAGE_EXTS.includes(getFileExtension(file.name));
 }
 
-function getContentType(file: File) {
-  const mime = (file.type || '').toLowerCase();
-  if (ALLOWED_MIME.includes(mime as typeof ALLOWED_MIME[number])) {
-    return mime;
-  }
+function getContentType(file: File): string {
+  const mime = (file.type ?? '').toLowerCase();
+  if (mime.startsWith('image/')) return mime;
   const ext = getFileExtension(file.name);
   if (ext === 'png') return 'image/png';
   if (ext === 'webp') return 'image/webp';
   if (ext === 'heic') return 'image/heic';
   if (ext === 'heif') return 'image/heif';
-  return 'image/jpeg';
+  if (ext === 'gif') return 'image/gif';
+  if (ext === 'avif') return 'image/avif';
+  return 'image/jpeg'; // safe default for iOS photos
 }
 
 export async function POST(req: NextRequest) {
@@ -114,13 +116,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Both document and selfie photos are required' }, { status: 400 });
   }
 
-  // Validate file types and sizes
+  // Validate file sizes (type check is intentionally lenient to support all iPhone formats)
   for (const [label, file] of [['document', documentFile], ['selfie', selfieFile]] as [string, File][]) {
     if (!isAllowedImage(file)) {
-      return NextResponse.json({ error: `Invalid file type for ${label}. Please use JPG, PNG, WEBP, HEIC, or HEIF` }, { status: 400 });
+      return NextResponse.json({ error: `ປະເພດໄຟລ໌ ${label} ບໍ່ຖືກຕ້ອງ ກະລຸນາໃຊ້ຮູບພາບ` }, { status: 400 });
     }
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `File too large for ${label} (max 10MB)` }, { status: 400 });
+      return NextResponse.json({ error: `ຮູບ ${label} ມີຂະໜາດໃຫຍ່ເກີນໄປ (ສູງສຸດ 10MB)` }, { status: 400 });
     }
   }
 

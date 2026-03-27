@@ -163,7 +163,21 @@ export default function IdentityVerificationPage() {
           setError('ຫມົດເວລາການລ໋ອກອິນ ກະລຸນາລ໋ອກອິນໃໝ່')
           return
         }
-        setError(data.error || 'ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່')
+        // Translate known server errors to Lao
+        const serverErr: string = data.error ?? ''
+        if (serverErr.includes('pending')) {
+          setError('ທ່ານມີຄຳຂໍລໍຖ້າກວດສອບຢູ່ແລ້ວ ກະລຸນາລໍຖ້າ')
+        } else if (serverErr.includes('Already verified') || serverErr.includes('approved')) {
+          setError('ບັນຊີຂອງທ່ານໄດ້ຮັບການຢືນຢັນແລ້ວ')
+        } else if (serverErr.includes('file type') || serverErr.includes('ປະເພດໄຟລ')) {
+          setError('ປະເພດຮູບບໍ່ຖືກຕ້ອງ ກະລຸນາໃຊ້ຮູບພາບ')
+        } else if (serverErr.includes('too large') || serverErr.includes('ຂະໜາດໃຫ')) {
+          setError('ຮູບມີຂະໜາດໃຫ່ຍເກີນໄປ (ສູງສຸດ 10MB)')
+        } else if (serverErr.includes('upload')) {
+          setError('ອັບໂຫລດຮູບບໍ່ສຳເລັດ ກະລຸນາລອງໃໝ່')
+        } else {
+          setError('ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່')
+        }
       } else {
         setSuccess(true)
         setCurrentStatus('pending')
@@ -370,7 +384,7 @@ export default function IdentityVerificationPage() {
               <input
                 ref={docInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 style={{ display: 'none' }}
                 onChange={handleDocumentSelect}
               />
@@ -422,7 +436,7 @@ export default function IdentityVerificationPage() {
               <input
                 ref={selfieInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 style={{ display: 'none' }}
                 onChange={handleSelfieSelect}
               />
