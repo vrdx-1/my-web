@@ -56,8 +56,10 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     // ทำให้เส้นสมมาตรกึ่งกลางตรงกับกึ่งกลางของตัวหนังสือ (ไม่ใช่กึ่งกลางของเส้นที่ขยายแล้ว)
     const centerX = rect.left - containerRect.left + rect.width / 2;
 
-    // วางเส้นให้ "อยู่ใต้ตัวหนังสือ" โดยอิงจากตำแหน่ง bottom ของ label
-    const bottomPx = containerRect.bottom - rect.bottom - LINE_HEIGHT_PX - LINE_GAP_BELOW_TEXT_PX;
+    // หน้า home: ให้เส้นฟ้าชิดขอบล่าง (ไม่มีช่องว่างกับขอบ)
+    const bottomPx = isHomeNav
+      ? 0
+      : containerRect.bottom - rect.bottom - LINE_HEIGHT_PX - LINE_GAP_BELOW_TEXT_PX;
     const next = {
       left: centerX,
       width,
@@ -70,7 +72,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       const sameBottom = Math.abs(prev.bottom - next.bottom) < 0.5;
       return sameLeft && sameWidth && sameBottom ? prev : next;
     });
-  }, [activeTab]);
+  }, [activeTab, isHomeNav]);
 
   const scheduleUpdateIndicator = useCallback(() => {
     if (rafUpdateRef.current != null) return;
@@ -137,7 +139,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         position: 'relative',
         display: 'flex',
         borderBottom: 'none',
-        minHeight: isHomeNav ? '40px' : '32px',
+        minHeight: isHomeNav ? '38px' : '32px',
         ...(isHomeNav ? { justifyContent: 'center', gap: 30, paddingTop: 2, paddingBottom: 2 } : {}),
       }}
       className={className}
