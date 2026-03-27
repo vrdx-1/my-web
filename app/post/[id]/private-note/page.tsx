@@ -99,7 +99,6 @@ export default function PostPrivateNotePage() {
             padding: '10px 15px',
             display: 'flex',
             alignItems: 'center',
-            borderBottom: '1px solid #f0f0f0',
           }}
         >
           <button
@@ -153,7 +152,6 @@ export default function PostPrivateNotePage() {
           padding: '10px 15px',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid #f0f0f0',
         }}
       >
         <button

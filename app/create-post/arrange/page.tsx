@@ -127,7 +127,6 @@ export default function ArrangePostImagesPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid #f0f0f0',
           position: 'sticky',
           top: 0,
           background: '#fff',

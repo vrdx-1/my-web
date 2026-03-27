@@ -335,7 +335,6 @@ export default function CreatePostPrivateNotePage() {
             padding: '10px 15px',
             display: 'flex',
             alignItems: 'center',
-            borderBottom: '1px solid #f0f0f0',
           }}
         >
           <button
@@ -391,7 +390,6 @@ export default function CreatePostPrivateNotePage() {
           padding: '10px 15px',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid #f0f0f0',
           position: 'sticky',
           top: 0,
           background: '#fff',

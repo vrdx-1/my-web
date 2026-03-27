@@ -157,7 +157,6 @@ function BoostSlipPageContent() {
           background: "#ffffff",
           backgroundColor: "#ffffff",
           zIndex: 10,
-          borderBottom: "1px solid #f0f0f0",
         }}
       >
         <div style={{ width: "72px", flexShrink: 0, display: "flex", justifyContent: "flex-start" }}>

@@ -48,7 +48,6 @@ export default function TermsAndPolicies() {
         position: 'sticky', 
         top: 0, 
         background: '#fff', 
-        borderBottom: '1px solid #eee',
         zIndex: 100 
       }}>
         <button 

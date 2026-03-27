@@ -237,7 +237,6 @@ function BoostPostContent() {
           background: "#ffffff",
           backgroundColor: "#ffffff",
           zIndex: 10,
-          borderBottom: "1px solid #f0f0f0",
         }}
       >
         <div

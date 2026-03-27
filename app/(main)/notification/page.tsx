@@ -48,7 +48,6 @@ const BOTTOM_SLOT_STYLE = {
 
 const HEADER_STYLE = {
   padding: '15px',
-  borderBottom: '1px solid #f0f0f0',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
