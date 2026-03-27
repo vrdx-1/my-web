@@ -282,7 +282,7 @@ export function PostCard({
                     width: '3px',
                     height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#4a4d52',
+                    backgroundColor: '#9ea2a7',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}
@@ -294,7 +294,7 @@ export function PostCard({
                     width: '3px',
                     height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#4a4d52',
+                    backgroundColor: '#9ea2a7',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}
@@ -310,7 +310,7 @@ export function PostCard({
                     width: '3px',
                     height: '3px',
                     borderRadius: '50%',
-                    backgroundColor: '#4a4d52',
+                    backgroundColor: '#9ea2a7',
                     margin: '0 6px',
                     transform: 'translateY(1px)',
                   }}
@@ -442,7 +442,7 @@ export function PostCard({
                   cursor: 'pointer',
                 }}
               >
-                {isSoldPost ? 'ຂາຍແລ້ວ' : 'ຍ້າຍໄປຂາຍແລ້ວ'}
+                {isSoldPost ? 'ຂາຍແລ້ວ' : 'ແຈ້ງວ່າຂາຍແລ້ວ'}
               </button>
             ) : (
               isSoldPost ? (
@@ -489,13 +489,13 @@ export function PostCard({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    background: '#128c7e',
+                    background: '#e4e6eb',
                     padding: '6px 14px',
                     minHeight: '28px',
                     borderRadius: '10px',
                     textDecoration: 'none',
-                    color: '#fff',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+                    color: '#1c1e21',
+                    boxShadow: 'none',
                     fontSize: '12px',
                     fontWeight: 600,
                     letterSpacing: '0.01em',
