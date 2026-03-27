@@ -273,6 +273,15 @@ export function PostCard({
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
               {post.profiles?.username?.toLowerCase() === 'guest user' ? 'User' : (post.profiles?.username || 'User')}
             </span>
+            {post.profiles?.is_verified && (
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="#1877f2"
+                style={{ flexShrink: 0 }}
+                aria-label="Verified"
+              >
+                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-2 14.5l-4-4 1.41-1.41L10 13.67l6.59-6.58L18 8.5l-8 8z"/>
+              </svg>
+            )}
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
             {post.is_boosted && !hideBoost && post.status !== 'sold' ? (

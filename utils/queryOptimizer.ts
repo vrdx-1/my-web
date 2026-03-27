@@ -12,7 +12,7 @@ export const POST_SELECT_FIELDS = 'id, caption, province, images, status, create
 /**
  * Optimized fields for profile queries
  */
-export const PROFILE_SELECT_FIELDS = 'username, avatar_url, phone';
+export const PROFILE_SELECT_FIELDS = 'username, avatar_url, phone, is_verified';
 
 /**
  * Full post query with profile join

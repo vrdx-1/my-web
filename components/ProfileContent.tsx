@@ -11,7 +11,7 @@ import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 
 /** แคชโปรไฟล์ล่าสุด — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
-let profileCache: { userId: string; username: string; avatarUrl: string; phone: string } | null = null;
+let profileCache: { userId: string; username: string; avatarUrl: string; phone: string; isVerified: boolean } | null = null;
 
 interface ProfileContentProps {
   /** ไม่ส่ง = ไม่แสดงปุ่ม back (เช่น หน้า App profile) */
@@ -34,7 +34,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [editingUsername, setEditingUsername] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editingPhone, setEditingPhone] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [isVerified, setIsVerified] = useState(false);
 
   const mainTabScroll = useMainTabScroll();
   useLayoutEffect(() => {
@@ -73,6 +74,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           setUsername(profileCache.username);
           setAvatarUrl(profileCache.avatarUrl);
           setPhone(profileCache.phone ?? '');
+          setIsVerified(profileCache.isVerified ?? false);
           setLoading(false);
         }
         setSession(currentSession);
@@ -82,7 +84,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, avatar_url, phone')
+          .select('username, avatar_url, phone, is_verified')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -134,7 +136,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               );
               setUsername(defaultName);
               setAvatarUrl('');
-              profileCache = { userId: user.id, username: defaultName, avatarUrl: '', phone: '' };
+              profileCache = { userId: user.id, username: defaultName, avatarUrl: '', phone: '', isVerified: false };
             } catch {}
           }
         }
@@ -152,11 +154,13 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           const displayPhone = rawPhone.startsWith('85620') && rawPhone.length === 13
             ? '020' + rawPhone.slice(5)
             : rawPhone;
+          const verified = profile.is_verified ?? false;
           setUsername(name);
           setAvatarUrl(url);
           setPhone(displayPhone);
+          setIsVerified(verified);
           if (currentSession.user?.id) {
-            profileCache = { userId: currentSession.user.id, username: name, avatarUrl: url, phone: displayPhone };
+            profileCache = { userId: currentSession.user.id, username: name, avatarUrl: url, phone: displayPhone, isVerified: verified };
           }
         }
       }
@@ -270,7 +274,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
       setAvatarUrl(publicUrl);
       if (session.user?.id) {
-        profileCache = { userId: session.user.id, username, avatarUrl: publicUrl, phone };
+        profileCache = { userId: session.user.id, username, avatarUrl: publicUrl, phone, isVerified };
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -295,7 +299,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       setUsername(tempUsername.trim());
       setEditingUsername(false);
       if (session.user?.id) {
-        profileCache = { userId: session.user.id, username: tempUsername.trim(), avatarUrl, phone };
+        profileCache = { userId: session.user.id, username: tempUsername.trim(), avatarUrl, phone, isVerified };
       }
     } catch (error) {
       console.error('Error updating username:', error);
@@ -343,7 +347,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       setPhone(phoneNum);
       setIsEditingPhone(false);
       if (session.user?.id) {
-        profileCache = { userId: session.user.id, username, avatarUrl, phone: phoneNum };
+        profileCache = { userId: session.user.id, username, avatarUrl, phone: phoneNum, isVerified };
       }
     }
   };
@@ -531,6 +535,15 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             >
               {username || 'ຊື່ຜູ້ໃຊ້'}
             </h2>
+            {isVerified && (
+              <svg
+                width="22" height="22" viewBox="0 0 24 24" fill="#1877f2"
+                style={{ flexShrink: 0 }}
+                aria-label="Verified"
+              >
+                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-2 14.5l-4-4 1.41-1.41L10 13.67l6.59-6.58L18 8.5l-8 8z"/>
+              </svg>
+            )}
             <button
               type="button"
               onClick={handleEditNameClick}
