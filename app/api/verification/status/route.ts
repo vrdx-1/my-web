@@ -67,8 +67,14 @@ export async function GET(req: Request) {
     .limit(1)
     .maybeSingle();
 
+  // If latest request is rejected, show rejected status regardless of is_verified flag
+  let finalIsVerified = profile?.is_verified ?? false;
+  if (request?.status === 'rejected') {
+    finalIsVerified = false;
+  }
+
   return NextResponse.json({
-    is_verified: profile?.is_verified ?? false,
+    is_verified: finalIsVerified,
     latest_request: request ?? null,
   });
 }

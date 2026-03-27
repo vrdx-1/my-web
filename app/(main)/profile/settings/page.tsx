@@ -14,7 +14,18 @@ export default function Settings() {
   useEffect(() => {
     const fetchVerificationStatus = async () => {
       try {
-        const res = await fetch('/api/verification/status', { credentials: 'include' })
+        let { data: { session } } = await supabase.auth.getSession()
+        let accessToken = session?.access_token ?? ''
+        if (!accessToken) {
+          const refreshed = await supabase.auth.refreshSession()
+          accessToken = refreshed.data.session?.access_token ?? ''
+          session = refreshed.data.session ?? session
+        }
+
+        const res = await fetch('/api/verification/status', {
+          credentials: 'include',
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        })
         if (!res.ok) return
         const data = await res.json()
         if (data.is_verified) {
@@ -174,19 +185,15 @@ export default function Settings() {
           {/* ║   ຢືນຢັນຕົວຕົນ (Verify)     ║ */}
           {/* ╚══════════════════════════════╝ */}
           <div
-            onClick={() => {
-              if (verificationStatus !== 'approved') {
-                router.push('/profile/settings/identity-verification')
-              }
-            }}
+            onClick={() => router.push('/profile/settings/identity-verification')}
             style={{
               display: 'flex',
               alignItems: 'center',
               padding: '16px 0',
-              cursor: verificationStatus === 'approved' ? 'default' : 'pointer',
+              cursor: 'pointer',
               transition: 'background 0.15s ease'
             }}
-            onMouseEnter={(e) => { if (verificationStatus !== 'approved' && e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = '#f9fafb'; }}
+            onMouseEnter={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = '#f9fafb'; }}
             onMouseLeave={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = 'transparent'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
@@ -197,18 +204,6 @@ export default function Settings() {
               </svg>
               <span style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600' }}>ຢືນຢັນຕົວຕົນ</span>
             </div>
-            {verificationStatus === 'approved' && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#1877f2', fontWeight: '600' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-2 14.5l-4-4 1.41-1.41L10 13.67l6.59-6.58L18 8.5l-8 8z"/></svg>
-                ຢືນຢັນແລ້ວ
-              </span>
-            )}
-            {verificationStatus === 'pending' && (
-              <span style={{ fontSize: '13px', color: '#f59e0b', fontWeight: '600' }}>ລໍຖ້າກວດສອບ</span>
-            )}
-            {verificationStatus === 'rejected' && (
-              <span style={{ fontSize: '13px', color: '#ef4444', fontWeight: '600' }}>ຖືກປະຕິເສດ</span>
-            )}
           </div>
 
           {/* ຕິດຕໍ່ທີມງານ Jutpai */}
