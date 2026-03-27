@@ -13,56 +13,33 @@ const DOCUMENT_TYPES = [
 
 type DocType = typeof DOCUMENT_TYPES[number]['value']
 
-function isIOSStandalonePWA() {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent || ''
-  const isIOS = /iPhone|iPad|iPod/i.test(ua)
-  const isStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
-  return isIOS && isStandalone
-}
-
 export default function IdentityVerificationPage() {
   const router = useRouter()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
+  const selfieInputRef = useRef<HTMLInputElement>(null)
+  const documentPreviewRef = useRef<string | null>(null)
+  const selfiePreviewRef = useRef<string | null>(null)
 
   const [documentType, setDocumentType] = useState<DocType>('id_card')
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [documentPreview, setDocumentPreview] = useState<string | null>(null)
   const [selfieFile, setSelfieFile] = useState<File | null>(null)
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null)
-  const [cameraOpen, setCameraOpen] = useState(false)
-  const [captureTarget, setCaptureTarget] = useState<'document' | 'selfie' | null>(null)
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
-  const [cameraLoading, setCameraLoading] = useState(false)
-  const [cameraError, setCameraError] = useState<string | null>(null)
   const [previewModal, setPreviewModal] = useState<{ url: string; target: 'document' | 'selfie' } | null>(null)
-  const [resumeTick, setResumeTick] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none')
   const [checkingStatus, setCheckingStatus] = useState(true)
 
-  const getCameraErrorMessage = (err: unknown) => {
-    const name = typeof err === 'object' && err !== null && 'name' in err ? String((err as { name?: string }).name) : ''
-    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-      return 'ກະລຸນາອະນຸຍາດການໃຊ້ງານກ້ອງ ແລ້ວລອງອີກຄັ້ງ'
-    }
-    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-      return 'ບໍ່ພົບກ້ອງໃນອຸປະກອນນີ້'
-    }
-    if (name === 'NotReadableError' || name === 'TrackStartError') {
-      return 'ກ້ອງຖືກໃຊ້ງານຢູ່ ກະລຸນາປິດແອັບທີ່ໃຊ້ກ້ອງແລ້ວລອງອີກຄັ້ງ'
-    }
-    return 'ບໍ່ສາມາດເປີດກ້ອງໄດ້ ກະລຸນາລອງອີກຄັ້ງ'
-  }
-
   useEffect(() => {
     const checkStatus = async () => {
       try {
         const res = await fetch('/api/verification/status', { credentials: 'include' })
-        if (!res.ok) { setCheckingStatus(false); return }
+        if (!res.ok) {
+          setCheckingStatus(false)
+          return
+        }
         const data = await res.json()
         if (data.is_verified) {
           setCurrentStatus('approved')
@@ -78,157 +55,49 @@ export default function IdentityVerificationPage() {
     checkStatus()
   }, [])
 
-  const stopCameraStream = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop())
-      setCameraStream(null)
-    }
-  }
-
-  const closeCamera = () => {
-    stopCameraStream()
-    setCameraOpen(false)
-    setCaptureTarget(null)
-    setCameraLoading(false)
-    setCameraError(null)
-  }
-
-  const openCamera = async (target: 'document' | 'selfie') => {
-    if (cameraLoading) return
-    try {
-      setCameraLoading(true)
-      setCameraError(null)
-      setPreviewModal(null)
-      setCaptureTarget(target)
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const msg = 'ອຸປະກອນ/ເບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ'
-        setCameraError(msg)
-        setError(msg)
-        return
-      }
-
-      if (!window.isSecureContext) {
-        const msg = 'ການໃຊ້ກ້ອງຕ້ອງໃຊ້ຜ່ານ HTTPS ຫຼື localhost'
-        setCameraError(msg)
-        setError(msg)
-        return
-      }
-
-      stopCameraStream()
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: target === 'selfie' ? 'user' : { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      })
-
-      setCameraStream(stream)
-      setCameraOpen(true)
-      setError(null)
-    } catch (err) {
-      const msg = getCameraErrorMessage(err)
-      setCameraError(msg)
-      setError(msg)
-    } finally {
-      setCameraLoading(false)
-    }
-  }
-
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current || !captureTarget) return
-
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const width = video.videoWidth
-    const height = video.videoHeight
-
-    if (!width || !height) return
-
-    canvas.width = width
-    canvas.height = height
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.drawImage(video, 0, 0, width, height)
-
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      const timestamp = Date.now()
-      const fileName = captureTarget === 'document'
-        ? `document-${timestamp}.jpg`
-        : `selfie-${timestamp}.jpg`
-      const file = new File([blob], fileName, { type: 'image/jpeg' })
-      const url = URL.createObjectURL(file)
-
-      if (captureTarget === 'document') {
-        if (documentPreview) URL.revokeObjectURL(documentPreview)
-        setDocumentFile(file)
-        setDocumentPreview(url)
-      } else {
-        if (selfiePreview) URL.revokeObjectURL(selfiePreview)
-        setSelfieFile(file)
-        setSelfiePreview(url)
-      }
-
-      closeCamera()
-    }, 'image/jpeg', 0.92)
-  }
+  useEffect(() => {
+    documentPreviewRef.current = documentPreview
+  }, [documentPreview])
 
   useEffect(() => {
-    if (!cameraOpen || !videoRef.current || !cameraStream) return
-    videoRef.current.srcObject = cameraStream
-    void videoRef.current.play().catch(() => {
-      setCameraError('ບໍ່ສາມາດເປີດກ້ອງໄດ້')
-    })
-  }, [cameraOpen, cameraStream])
+    selfiePreviewRef.current = selfiePreview
+  }, [selfiePreview])
 
   useEffect(() => {
     return () => {
-      stopCameraStream()
-      if (documentPreview) URL.revokeObjectURL(documentPreview)
-      if (selfiePreview) URL.revokeObjectURL(selfiePreview)
+      if (documentPreviewRef.current) URL.revokeObjectURL(documentPreviewRef.current)
+      if (selfiePreviewRef.current) URL.revokeObjectURL(selfiePreviewRef.current)
     }
-  }, [documentPreview, selfiePreview])
+  }, [])
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        stopCameraStream()
-        setCameraOpen(false)
-        setCaptureTarget(null)
-      }
-      if (document.visibilityState === 'visible' && isIOSStandalonePWA()) {
-        // iOS PWA sometimes resumes with a stale compositing layer after camera usage.
-        setResumeTick((v) => v + 1)
-        requestAnimationFrame(() => {
-          window.dispatchEvent(new Event('resize'))
-          document.body.style.transform = 'translateZ(0)'
-          requestAnimationFrame(() => {
-            document.body.style.transform = ''
-          })
-        })
-      }
-    }
+  const handleDocumentSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (documentPreviewRef.current) URL.revokeObjectURL(documentPreviewRef.current)
+    const url = URL.createObjectURL(file)
+    setDocumentFile(file)
+    setDocumentPreview(url)
+    setError(null)
+  }
 
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (!isIOSStandalonePWA()) return
-      if (event.persisted) {
-        setResumeTick((v) => v + 1)
-        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
-      }
-    }
+  const handleSelfieSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (selfiePreviewRef.current) URL.revokeObjectURL(selfiePreviewRef.current)
+    const url = URL.createObjectURL(file)
+    setSelfieFile(file)
+    setSelfiePreview(url)
+    setError(null)
+  }
 
-    document.addEventListener('visibilitychange', handleVisibility)
-    window.addEventListener('pageshow', handlePageShow)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-      window.removeEventListener('pageshow', handlePageShow)
+  const handleReselect = (target: 'document' | 'selfie') => {
+    setPreviewModal(null)
+    if (target === 'document') {
+      docInputRef.current?.click()
+      return
     }
-  }, [cameraStream])
+    selfieInputRef.current?.click()
+  }
 
   const handleSubmit = async () => {
     if (!documentFile || !selfieFile) {
@@ -272,7 +141,7 @@ export default function IdentityVerificationPage() {
   }
 
   return (
-    <main key={resumeTick} style={{
+    <main style={{
       maxWidth: '600px',
       margin: '0 auto',
       background: '#ffffff',
@@ -410,41 +279,44 @@ export default function IdentityVerificationPage() {
 
             {/* Document Photo Upload */}
             <div style={{ marginBottom: '24px' }}>
+              <input
+                ref={docInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleDocumentSelect}
+              />
               {documentPreview ? (
                 <div style={{ position: 'relative' }}>
                   <img
                     src={documentPreview}
                     alt="Document preview"
                     onClick={() => setPreviewModal({ url: documentPreview, target: 'document' })}
-                    style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb' }}
+                    style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb', cursor: 'pointer' }}
                   />
                   <button
                     type="button"
-                    onClick={() => openCamera('document')}
-                    disabled={cameraLoading}
+                    onClick={() => docInputRef.current?.click()}
                     style={{
                       position: 'absolute', bottom: '10px', right: '10px',
-                      background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
-                      borderRadius: '8px', padding: '6px 12px', fontSize: '13px',
-                      cursor: cameraLoading ? 'not-allowed' : 'pointer', fontWeight: '600',
-                      opacity: cameraLoading ? 0.7 : 1,
+                      background: '#1877f2', color: '#fff', border: 'none',
+                      borderRadius: '20px', padding: '6px 12px', fontSize: '13px',
+                      cursor: 'pointer', fontWeight: '600',
                     }}
                   >
-                    ປ່ຽນຮູບ
+                    ເລືອກຮູບໃໝ່
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
-                  onClick={() => openCamera('document')}
-                  disabled={cameraLoading}
+                  onClick={() => docInputRef.current?.click()}
                   style={{
                     width: '100%', padding: '28px 20px', border: '2px dashed #d1d5db',
                     borderRadius: '10px', background: '#f9fafb',
                     display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px',
                     transition: 'border-color 0.15s ease',
-                    opacity: cameraLoading ? 0.7 : 1,
-                    cursor: cameraLoading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                   }}
                 >
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -452,52 +324,55 @@ export default function IdentityVerificationPage() {
                     <circle cx="8" cy="12" r="2"/>
                     <path d="M14 9h4M14 12h4M14 15h2"/>
                   </svg>
-                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>{cameraLoading ? 'ກຳລັງເປີດກ້ອງ...' : 'ຖ່າຍຮູບເອກະສານ'}</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>ອັບໂຫລດຮູບເອກະສານ</span>
                 </button>
               )}
             </div>
 
             {/* Selfie with Document Upload */}
             <div style={{ marginBottom: '24px' }}>
+              <input
+                ref={selfieInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleSelfieSelect}
+              />
               {selfiePreview ? (
                 <div style={{ position: 'relative' }}>
                   <img
                     src={selfiePreview}
                     alt="Selfie preview"
                     onClick={() => setPreviewModal({ url: selfiePreview, target: 'selfie' })}
-                    style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb' }}
+                    style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px', border: '2px solid #e5e7eb', cursor: 'pointer' }}
                   />
                   <button
                     type="button"
-                    onClick={() => openCamera('selfie')}
-                    disabled={cameraLoading}
+                    onClick={() => selfieInputRef.current?.click()}
                     style={{
                       position: 'absolute', bottom: '10px', right: '10px',
-                      background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
-                      borderRadius: '8px', padding: '6px 12px', fontSize: '13px',
-                      cursor: cameraLoading ? 'not-allowed' : 'pointer', fontWeight: '600',
-                      opacity: cameraLoading ? 0.7 : 1,
+                      background: '#1877f2', color: '#fff', border: 'none',
+                      borderRadius: '20px', padding: '6px 12px', fontSize: '13px',
+                      cursor: 'pointer', fontWeight: '600',
                     }}
                   >
-                    ປ່ຽນຮູບ
+                    ເລືອກຮູບໃໝ່
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
-                  onClick={() => openCamera('selfie')}
-                  disabled={cameraLoading}
+                  onClick={() => selfieInputRef.current?.click()}
                   style={{
                     width: '100%', padding: '28px 20px', border: '2px dashed #d1d5db',
                     borderRadius: '10px', background: '#f9fafb',
                     display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px',
                     transition: 'border-color 0.15s ease',
-                    opacity: cameraLoading ? 0.7 : 1,
-                    cursor: cameraLoading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                   }}
                 >
                   <GuestAvatarIcon size={40} stroke="#9ca3af" strokeWidth={1.5} />
-                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>{cameraLoading ? 'ກຳລັງເປີດກ້ອງ...' : 'ຖ່າຍຮູບທ່ານຕອນຖືເອກະສານ'}</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>ອັບໂຫລດຮູບຖ່າຍຕອນຖືເອກະສານ</span>
                 </button>
               )}
             </div>
@@ -540,87 +415,6 @@ export default function IdentityVerificationPage() {
         )}
       </div>
 
-      {cameraOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.88)',
-            zIndex: 3000,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>
-              {captureTarget === 'document' ? 'ຖ່າຍຮູບເອກະສານ' : 'ຖ່າຍຮູບທ່ານຕອນຖືເອກະສານ'}
-            </span>
-            <button
-              type="button"
-              onClick={closeCamera}
-              style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
-              aria-label="Close camera"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ width: '100%', maxHeight: '70vh', objectFit: 'cover', borderRadius: '12px', background: '#000' }}
-            />
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-          </div>
-
-          <div style={{ padding: '18px 20px 26px' }}>
-            {cameraError && (
-              <p style={{ color: '#fecaca', fontSize: '13px', textAlign: 'center', margin: '0 0 12px 0' }}>{cameraError}</p>
-            )}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={closeCamera}
-                style={{
-                  flex: 1,
-                  background: '#374151',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: '#fff',
-                  padding: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                ຍົກເລີກ
-              </button>
-              <button
-                type="button"
-                onClick={capturePhoto}
-                disabled={cameraLoading}
-                style={{
-                  flex: 1,
-                  background: '#1877f2',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: '#fff',
-                  padding: '12px',
-                  fontWeight: 700,
-                  cursor: cameraLoading ? 'not-allowed' : 'pointer',
-                  opacity: cameraLoading ? 0.7 : 1,
-                }}
-              >
-                {cameraLoading ? 'ກຳລັງເປີດກ້ອງ...' : 'ຖ່າຍຮູບ'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {previewModal && (
         <div
           style={{
@@ -636,6 +430,30 @@ export default function IdentityVerificationPage() {
           }}
           onClick={() => setPreviewModal(null)}
         >
+          <button
+            type="button"
+            onClick={() => setPreviewModal(null)}
+            aria-label="Close preview"
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.18)',
+              color: '#ffffff',
+              fontSize: '22px',
+              lineHeight: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            ×
+          </button>
           <img
             src={previewModal.url}
             alt="Captured preview"
@@ -644,23 +462,20 @@ export default function IdentityVerificationPage() {
           />
           <button
             type="button"
-            onClick={() => {
-              const target = previewModal.target
-              setPreviewModal(null)
-              void openCamera(target)
-            }}
+            onClick={() => handleReselect(previewModal.target)}
             style={{
               marginTop: '14px',
-              background: 'transparent',
+              background: '#1877f2',
               color: '#ffffff',
               border: 'none',
+              borderRadius: '20px',
+              padding: '8px 14px',
               fontSize: '16px',
               fontWeight: 700,
-              textDecoration: 'underline',
               cursor: 'pointer',
             }}
           >
-            ຖ່າຍໃໝ່
+            ເລືອກຮູບໃໝ່
           </button>
         </div>
       )}
