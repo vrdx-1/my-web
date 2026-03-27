@@ -156,7 +156,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         const rightPadding = idx < tabs.length / 2 ? baseSidePadding + centerGapExtraPx : baseSidePadding;
         const leftPadding = idx < tabs.length / 2 ? baseSidePadding : baseSidePadding + centerGapExtraPx;
         /** หน้า home: กดได้เฉพาะบริเวณข้อความ + padding พอดีมือ — ไม่เต็มครึ่งจอ */
-        const homeTabPadding = '0px 10px';
+        const homeTabPadding = '5px 10px 0px';
         const labelTextStyle = {
           fontSize: isHomeNav ? '15px' : '14px',
           lineHeight: isHomeNav ? 1.05 : 0.95,

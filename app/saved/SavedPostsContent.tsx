@@ -27,6 +27,7 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 /** Feed อยู่ใน chunk แยก โหลดฝั่ง client เท่านั้น เพื่อหลีกเลี่ยง React "Expected static flag was missing" */
 const SavedFeedBlock = dynamic(
@@ -209,6 +210,7 @@ export function SavedPostsContent() {
     sessionState === undefined ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
+  const isHeaderVisible = headerScroll.isHeaderVisible;
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -220,6 +222,12 @@ export function SavedPostsContent() {
           zIndex: 100,
           background: '#ffffff',
           backgroundColor: '#ffffff',
+          transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+          marginBottom: isHeaderVisible ? 0 : `-${LAYOUT_CONSTANTS.HEADER_HEIGHT}`,
+          transition:
+            `${MOTION_TRANSITIONS.APP_HEADER}, margin-bottom 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+          willChange: 'transform, margin-bottom',
+          pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
         <PageHeader title="ລາຍການທີ່ບັນທຶກ" centerTitle onBack={handleBack} showDivider={false} />

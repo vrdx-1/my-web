@@ -27,6 +27,7 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 /** ใช้ MyPostsFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 const MyPostsFeedBlock = dynamic(
@@ -204,6 +205,7 @@ export function MyPostsContent() {
     sessionState === undefined ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
+  const isHeaderVisible = headerScroll.isHeaderVisible;
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -214,6 +216,12 @@ export function MyPostsContent() {
           zIndex: 100,
           background: '#ffffff',
           backgroundColor: '#ffffff',
+          transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+          marginBottom: isHeaderVisible ? 0 : `-${LAYOUT_CONSTANTS.HEADER_HEIGHT}`,
+          transition:
+            `${MOTION_TRANSITIONS.APP_HEADER}, margin-bottom 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+          willChange: 'transform, margin-bottom',
+          pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
         <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} showDivider={false} />
