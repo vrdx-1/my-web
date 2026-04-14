@@ -12,7 +12,7 @@ const shimmerStyle: React.CSSProperties = {
 
 /** โครงเดียวกับ PostCard — header (avatar + ชื่อ/เวลา) + แคปชั่น + รูป + แถบปุ่ม */
 const CARD_PADDING = '12px 15px 8px 15px';
-const CAPTION_PADDING = '0 15px 10px 15px';
+const CAPTION_PADDING = '0 15px 8px 15px';
 
 interface FeedSkeletonProps {
   /** จำนวนการ์ด skeleton (ค่าเริ่มต้น 5 สำหรับโหลดครั้งแรก, 1 สำหรับโหลดเพิ่มที่ท้าย feed) */

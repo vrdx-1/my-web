@@ -85,6 +85,7 @@ export function PostCard({
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [isCaptionOverflowing, setIsCaptionOverflowing] = React.useState(false);
+  const [isCaptionSingleLine, setIsCaptionSingleLine] = React.useState(false);
   const [collapsedCaption, setCollapsedCaption] = React.useState('');
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const captionRef = React.useRef<HTMLDivElement | null>(null);
@@ -149,6 +150,7 @@ export function PostCard({
 
     if (!captionEl || fullCaption.trim() === '') {
       setIsCaptionOverflowing(false);
+      setIsCaptionSingleLine(false);
       setCollapsedCaption(fullCaption);
       return;
     }
@@ -162,6 +164,7 @@ export function PostCard({
 
     if (contentWidth <= 0) {
       setIsCaptionOverflowing(false);
+      setIsCaptionSingleLine(false);
       setCollapsedCaption(fullCaption);
       return;
     }
@@ -187,7 +190,9 @@ export function PostCard({
     const ellipsis = '...';
 
     measureEl.textContent = fullCaption;
-    const fullFits = measureEl.scrollHeight <= maxHeight + 1;
+    const measuredHeight = measureEl.scrollHeight;
+    const fullFits = measuredHeight <= maxHeight + 1;
+    setIsCaptionSingleLine(measuredHeight <= lineHeight + 1);
 
     if (fullFits) {
       document.body.removeChild(measureEl);
@@ -340,7 +345,7 @@ export function PostCard({
                       }}
                     />
                     <span style={{ color: '#4a4d52', fontWeight: 500 }}>
-                      Post ID: {String(post.short_id).slice(0, 6)}
+                      ID: {String(post.short_id).slice(0, 6)}
                     </span>
                   </>
                 ) : null}
@@ -386,7 +391,7 @@ export function PostCard({
                       }}
                     />
                     <span style={{ color: '#4a4d52', fontWeight: 500 }}>
-                      Post ID: {String(post.short_id).slice(0, 6)}
+                      ID: {String(post.short_id).slice(0, 6)}
                     </span>
                   </>
                 ) : null}
@@ -421,49 +426,55 @@ export function PostCard({
       </div>
 
       {/* Caption */}
-      <div
-        role="text"
-        ref={captionRef}
-        onClick={handleCaptionToggle}
-        style={{
-          padding: isCaptionExpanded ? '0 15px 0 15px' : '0 15px 10px 15px',
-          marginBottom: '8px',
-          fontSize: '15px',
-          lineHeight: '21px',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          color: '#111111',
-          fontWeight: 500,
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-          overflow: isCaptionExpanded ? 'visible' : 'hidden',
-          maxHeight: isCaptionExpanded ? 'none' : '42px',
-          overflowAnchor: 'none',
-          cursor: isCaptionOverflowing ? 'pointer' : 'text',
-        }}
-      >
-        {isCaptionExpanded || !isCaptionOverflowing ? normalizedCaption : collapsedCaption}
-        {!isCaptionExpanded && isCaptionOverflowing && (
-          <button
-            type="button"
-            onClick={handleCaptionToggle}
-            aria-label="ອ່ານເພີ່ມ"
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#8a8d91',
-              fontSize: '15px',
-              lineHeight: '21px',
-              fontWeight: 400,
-              cursor: 'pointer',
-              marginLeft: '4px',
-              padding: 0,
-            }}
-          >
-            ອ່ານເພີ່ມ
-          </button>
-        )}
-      </div>
+      {normalizedCaption.trim() !== '' && (
+        <div
+          role="text"
+          ref={captionRef}
+          onClick={handleCaptionToggle}
+          style={{
+            padding: isCaptionExpanded
+              ? '0 15px 0 15px'
+              : isCaptionSingleLine
+                ? '0 15px 4px 15px'
+                : '0 15px 8px 15px',
+            marginBottom: isCaptionExpanded ? '6px' : isCaptionSingleLine ? '2px' : '6px',
+            fontSize: '15px',
+            lineHeight: '21px',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            color: '#111111',
+            fontWeight: 500,
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+            overflow: isCaptionExpanded ? 'visible' : 'hidden',
+            maxHeight: isCaptionExpanded ? 'none' : '42px',
+            overflowAnchor: 'none',
+            cursor: isCaptionOverflowing ? 'pointer' : 'text',
+          }}
+        >
+          {isCaptionExpanded || !isCaptionOverflowing ? normalizedCaption : collapsedCaption}
+          {!isCaptionExpanded && isCaptionOverflowing && (
+            <button
+              type="button"
+              onClick={handleCaptionToggle}
+              aria-label="ອ່ານເພີ່ມ"
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#8a8d91',
+                fontSize: '15px',
+                lineHeight: '21px',
+                fontWeight: 400,
+                cursor: 'pointer',
+                marginLeft: '4px',
+                padding: 0,
+              }}
+            >
+              ອ່ານເພີ່ມ
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Photo Grid — เต็มความกว้างหน้าจอ (รูปเต็มหน้าจอ) */}
       <div style={{ padding: 0 }}>
@@ -485,17 +496,18 @@ export function PostCard({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                background: '#e4e6eb',
+                gap: '6px',
+                background: '#f8fafc',
                 padding: '4px 12px',
                 minHeight: '28px',
                 lineHeight: '18px',
                 borderRadius: '10px',
                 color: '#1c1e21',
-                fontSize: '12px',
-                fontWeight: 'bold',
+                border: '1px solid #d1d5db',
               }}
             >
-              ລາຄາ: {priceText}
+              <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: '20px', color: '#4a4d52' }}>ລາຄາ:</span>
+              <span style={{ fontSize: '15px', fontWeight: 800, lineHeight: '20px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
             </span>
           </div>
 
