@@ -216,10 +216,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       const data = await res.json().catch(() => ({}));
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
       const postIds: string[] = Array.isArray(data.postIds) ? data.postIds : [];
-      // ได้ครบหนึ่งหน้า = มีหน้าถัดไป; ได้น้อยกว่าแต่ยังมีรายการ = โหลดต่อ (กรณี backend limit) ไม่หยุดก่อนถึงจริง
-      const fullPage = !isInitial && postIds.length >= pageSize;
-      const partialPage = !isInitial && postIds.length > 0 && postIds.length < pageSize;
-      const nextHasMore = !!data.hasMore || fullPage || partialPage;
+      // ถ้า API บอก hasMore มาแล้ว ให้เชื่อตามนั้น
+      // ไม่ควรถือว่า "หน้าไม่เต็มแต่ยังมีข้อมูล" = มีหน้าถัดไป เพราะจะทำให้ท้ายฟีดวนโหลด skeleton ไม่หยุด
+      const nextHasMore =
+        typeof data.hasMore === 'boolean' ? data.hasMore : postIds.length >= pageSize;
       const apiPosts: HomeFeedPost[] = Array.isArray(data.posts)
         ? (data.posts as HomeFeedPost[])
         : [];

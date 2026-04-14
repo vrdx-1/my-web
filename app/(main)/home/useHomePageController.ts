@@ -148,6 +148,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const viewingPostHook = useViewingPost();
 
   const handleRecommendLoadMore = useCallback(() => {
+    if (effectivePostList.loadingMore || !effectivePostList.hasMore) return;
     triggerRecommendLoadMore();
     effectivePostList.setPage((page: number) => page + 1);
   }, [triggerRecommendLoadMore, effectivePostList]);
