@@ -10,6 +10,7 @@ import { PostCardMenu } from './PostCardMenu';
 import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
+import { formatCurrency } from '@/utils/currency';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
@@ -92,6 +93,21 @@ export function PostCard({
     const rawCaption = typeof post.caption === 'string' ? post.caption : '';
     return rawCaption.replace(/\s+$/u, '');
   }, [post.caption]);
+  const priceValue = React.useMemo(() => {
+    const rawPrice = post.price;
+    if (typeof rawPrice === 'number' && Number.isFinite(rawPrice)) return rawPrice;
+    if (typeof rawPrice === 'string') {
+      const digitsOnly = rawPrice.replace(/\D/g, '');
+      if (!digitsOnly) return null;
+      const parsed = Number(digitsOnly);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }, [post.price]);
+  const currencySymbol = post.price_currency === '฿' || post.price_currency === '$'
+    ? post.price_currency
+    : '₭';
+  const priceText = priceValue && priceValue > 0 ? formatCurrency(priceValue, currencySymbol) : 'ບໍ່ລະບຸ';
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -296,7 +312,7 @@ export function PostCard({
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px', marginTop: '0px' }}>
             {post.is_boosted && !hideBoost && post.status !== 'sold' ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52', flexWrap: 'wrap' }}>
                 <span style={{ color: '#4a4d52' }}>{formatTime(post.created_at)}</span>
                 <span
                   style={{
@@ -310,6 +326,24 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
+                {post.short_id ? (
+                  <>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '3px',
+                        height: '3px',
+                        borderRadius: '50%',
+                        backgroundColor: '#9ea2a7',
+                        margin: '0 6px',
+                        transform: 'translateY(1px)',
+                      }}
+                    />
+                    <span style={{ color: '#4a4d52', fontWeight: 500 }}>
+                      Post ID: {String(post.short_id).slice(0, 6)}
+                    </span>
+                  </>
+                ) : null}
                 <span
                   style={{
                     display: 'inline-block',
@@ -324,7 +358,7 @@ export function PostCard({
                 <span style={{ fontSize: '13px', color: '#4a4d52' }}>Ad</span>
               </span>
             ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', color: '#4a4d52', flexWrap: 'wrap' }}>
                 <span style={{ color: '#4a4d52' }}>{formatTime(post.created_at)}</span>
                 <span
                   style={{
@@ -338,6 +372,24 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
+                {post.short_id ? (
+                  <>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '3px',
+                        height: '3px',
+                        borderRadius: '50%',
+                        backgroundColor: '#9ea2a7',
+                        margin: '0 6px',
+                        transform: 'translateY(1px)',
+                      }}
+                    />
+                    <span style={{ color: '#4a4d52', fontWeight: 500 }}>
+                      Post ID: {String(post.short_id).slice(0, 6)}
+                    </span>
+                  </>
+                ) : null}
               </span>
             )}
           </div>
@@ -429,11 +481,22 @@ export function PostCard({
           }}
         >
           <div style={{ minWidth: '32px', flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
-            {post.short_id ? (
-              <span style={{ fontSize: '13px', color: '#4a4d52', fontWeight: 500 }}>
-                Post ID: {String(post.short_id).slice(0, 6)}
-              </span>
-            ) : null}
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                background: '#e4e6eb',
+                padding: '4px 12px',
+                minHeight: '28px',
+                lineHeight: '18px',
+                borderRadius: '10px',
+                color: '#1c1e21',
+                fontSize: '12px',
+                fontWeight: 'bold',
+              }}
+            >
+              ລາຄາ: {priceText}
+            </span>
           </div>
 
           {/* Action Buttons */}

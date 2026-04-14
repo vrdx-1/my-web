@@ -12,6 +12,8 @@ interface UseCreatePostUploadParams {
   session: any;
   caption: string;
   province: string;
+  carPrice: string;
+  carCurrency: '₭' | '฿' | '$';
   imageUpload: any;
   layout?: string;
   /** เรียกหลังลบ draft จาก storage เมื่อโพสต์สำเร็จ (เช่น ล้าง caption backup ระดับโมดูล) */
@@ -22,6 +24,8 @@ export function useCreatePostUpload({
   session,
   caption,
   province,
+  carPrice,
+  carCurrency,
   imageUpload,
   layout = 'five-images-side',
   onDraftCleared,
@@ -113,8 +117,11 @@ export function useCreatePostUpload({
         }
       }
 
-      // ลอง insert โดยใส่ layout field ก่อน
-      let insertData: any = {
+      const normalizedPrice = carPrice.replace(/\D/g, '');
+      const priceValue = normalizedPrice ? Number(normalizedPrice) : null;
+
+      // ลอง insert โดยใส่ layout / price field ก่อน
+      const insertData: any = {
         user_id: session ? session.user.id : guestToken,
         is_guest: isGuest,
         guest_token: guestToken,
@@ -125,6 +132,11 @@ export function useCreatePostUpload({
         is_hidden: false,
         created_at: new Date().toISOString(),
       };
+
+      if (priceValue && Number.isFinite(priceValue)) {
+        insertData.price = priceValue;
+        insertData.price_currency = carCurrency || '₭';
+      }
 
       if (privateShopId) {
         insertData.private_shop_id = privateShopId;
@@ -140,9 +152,17 @@ export function useCreatePostUpload({
         .insert([insertData])
         .select();
 
-      // ถ้า error เกี่ยวกับ layout column ให้ลอง insert อีกครั้งโดยไม่ใส่ layout field
-      if (insertError && insertError.message && insertError.message.includes('layout')) {
+      // ถ้า DB ยังไม่มี optional columns บางตัว ให้ลอง insert อีกครั้งโดยตัด field นั้นออก
+      if (
+        insertError &&
+        insertError.message &&
+        (insertError.message.includes('layout') ||
+          insertError.message.includes('price') ||
+          insertError.message.includes('price_currency'))
+      ) {
         delete insertData.layout;
+        delete insertData.price;
+        delete insertData.price_currency;
         const retryResult = await supabase
           .from('cars')
           .insert([insertData])
@@ -208,11 +228,15 @@ export function useCreatePostUpload({
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('create_post_caption');
         sessionStorage.removeItem('create_post_province');
+        sessionStorage.removeItem('create_post_price');
+        sessionStorage.removeItem('create_post_currency');
         sessionStorage.removeItem('create_post_step');
         sessionStorage.removeItem('create_post_layout');
         sessionStorage.removeItem('create_post_private_shop');
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
+        localStorage.removeItem('create_post_price_ls');
+        localStorage.removeItem('create_post_currency_ls');
         localStorage.removeItem('create_post_step_ls');
         localStorage.removeItem('create_post_layout_ls');
       }

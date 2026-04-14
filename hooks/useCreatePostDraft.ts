@@ -14,6 +14,10 @@ interface UseCreatePostDraftParams {
   setCaption: (value: string) => void;
   province: string;
   setProvince: (value: string) => void;
+  carPrice: string;
+  setCarPrice: (value: string) => void;
+  carCurrency: '₭' | '฿' | '$';
+  setCarCurrency: (value: '₭' | '฿' | '$') => void;
   step: number;
   setStep: (value: number) => void;
   imageUpload: any;
@@ -34,6 +38,10 @@ export function useCreatePostDraft({
   setCaption,
   province,
   setProvince,
+  carPrice,
+  setCarPrice,
+  carCurrency,
+  setCarCurrency,
   step,
   setStep,
   imageUpload,
@@ -58,6 +66,8 @@ export function useCreatePostDraft({
       // โหลดข้อมูลจาก sessionStorage (ถ้าไม่มี ค่อย fallback จาก localStorage)
       const savedCaption = safeParseSessionJSON<string>('create_post_caption', '');
       const savedProvince = safeParseSessionJSON<string>('create_post_province', '');
+      const savedPrice = safeParseSessionJSON<string>('create_post_price', '');
+      const savedCurrency = safeParseSessionJSON<'₭' | '฿' | '$'>('create_post_currency', '₭');
       const savedStep = safeParseSessionJSON<number>('create_post_step', 2);
       const savedLayout = safeParseSessionJSON<string>('create_post_layout', 'default');
 
@@ -80,6 +90,20 @@ export function useCreatePostDraft({
         // ถ้าไม่มี province จาก sessionStorage ให้โหลดจาก localStorage (แขวงที่เลือกล่าสุด)
         const lastProvince = safeParseJSON<string>('last_selected_province', '');
         if (lastProvince) setProvince(lastProvince);
+      }
+
+      if (savedPrice) {
+        setCarPrice(savedPrice);
+      } else {
+        const lsPrice = safeParseJSON<string>('create_post_price_ls', '');
+        if (lsPrice) setCarPrice(lsPrice);
+      }
+
+      if (savedCurrency) {
+        setCarCurrency(savedCurrency);
+      } else {
+        const lsCurrency = safeParseJSON<'₭' | '฿' | '$'>('create_post_currency_ls', '₭');
+        if (lsCurrency) setCarCurrency(lsCurrency);
       }
 
       if (savedStep) {
@@ -222,6 +246,29 @@ export function useCreatePostDraft({
       }
     }
   }, [province, isInitialized]);
+
+  // บันทึกราคารถลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (typeof window !== 'undefined') {
+      if (carPrice) {
+        sessionStorage.setItem('create_post_price', JSON.stringify(carPrice));
+        localStorage.setItem('create_post_price_ls', JSON.stringify(carPrice));
+      } else {
+        sessionStorage.removeItem('create_post_price');
+        localStorage.removeItem('create_post_price_ls');
+      }
+    }
+  }, [carPrice, isInitialized]);
+
+  // บันทึก currency ลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('create_post_currency', JSON.stringify(carCurrency || '₭'));
+      localStorage.setItem('create_post_currency_ls', JSON.stringify(carCurrency || '₭'));
+    }
+  }, [carCurrency, isInitialized]);
 
   // บันทึก step ลง sessionStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
   useEffect(() => {

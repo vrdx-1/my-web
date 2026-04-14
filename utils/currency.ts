@@ -10,7 +10,8 @@
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number, currency: string = 'ກີບ'): string {
-  return amount.toLocaleString('de-DE') + ' ' + currency;
+  const formatted = amount.toLocaleString('de-DE');
+  return `${formatted} ${currency}`;
 }
 
 /**

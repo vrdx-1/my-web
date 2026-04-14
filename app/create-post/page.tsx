@@ -43,6 +43,32 @@ function getLongestStoredCaption(): string {
   }
 }
 
+function getStoredPrice(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const rawS = sessionStorage.getItem('create_post_price');
+    const rawL = localStorage.getItem('create_post_price_ls');
+    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as string; } catch { return ''; } })() : '';
+    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as string; } catch { return ''; } })() : '';
+    return fromS || fromL || '';
+  } catch {
+    return '';
+  }
+}
+
+function getStoredCurrency(): '₭' | '฿' | '$' {
+  if (typeof window === 'undefined') return '₭';
+  try {
+    const rawS = sessionStorage.getItem('create_post_currency');
+    const rawL = localStorage.getItem('create_post_currency_ls');
+    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as '₭' | '฿' | '$'; } catch { return '₭'; } })() : '₭';
+    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as '₭' | '฿' | '$'; } catch { return '₭'; } })() : '₭';
+    return fromS || fromL || '₭';
+  } catch {
+    return '₭';
+  }
+}
+
 export default function CreatePost() {
   const router = useRouter();
   const createPostContext = useCreatePostContext();
@@ -55,6 +81,8 @@ export default function CreatePost() {
   const [step, setStep] = useState(2);
   const [caption, setCaption] = useState(getLongestStoredCaption);
   const [province, setProvince] = useState('');
+  const [carPrice, setCarPrice] = useState(getStoredPrice);
+  const [carCurrency, setCarCurrency] = useState<'₭' | '฿' | '$'>(getStoredCurrency);
   const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
   // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
@@ -82,6 +110,10 @@ export default function CreatePost() {
     setCaption,
     province,
     setProvince,
+    carPrice,
+    setCarPrice,
+    carCurrency,
+    setCarCurrency,
     step,
     setStep,
     imageUpload,
@@ -191,6 +223,7 @@ export default function CreatePost() {
    isInitialized && (
      caption.trim().length > 0 ||
      province.length > 0 ||
+     carPrice.length > 0 ||
      imageUpload.previews.length > 0
    )
  );
@@ -215,10 +248,14 @@ export default function CreatePost() {
    if (typeof window !== 'undefined') {
      sessionStorage.removeItem('create_post_caption');
      sessionStorage.removeItem('create_post_province');
+     sessionStorage.removeItem('create_post_price');
+     sessionStorage.removeItem('create_post_currency');
      sessionStorage.removeItem('create_post_step');
      sessionStorage.removeItem('create_post_layout');
     localStorage.removeItem('create_post_caption_ls');
     localStorage.removeItem('create_post_province_ls');
+    localStorage.removeItem('create_post_price_ls');
+    localStorage.removeItem('create_post_currency_ls');
     localStorage.removeItem('create_post_step_ls');
     localStorage.removeItem('create_post_layout_ls');
    }
@@ -269,6 +306,8 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   session,
   caption,
   province,
+  carPrice,
+  carCurrency,
   imageUpload,
   layout,
   onDraftCleared: () => {
@@ -313,7 +352,7 @@ if (isUploading) {
  {step === 3 && 'ລົດຢູ່ແຂວງ'}
  </h3>
  <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
- {step === 2 && caption.trim().length > 0 && (
+ {step === 2 && (caption.trim().length > 0 || carPrice.trim().length > 0 || imageUpload.previews.length > 0) && (
  <button
    type="button"
    onClick={() => {
@@ -351,6 +390,10 @@ if (isUploading) {
             session={session}
             caption={caption}
             setCaption={setCaption}
+            carPrice={carPrice}
+            setCarPrice={setCarPrice}
+            carCurrency={carCurrency}
+            setCarCurrency={setCarCurrency}
             textareaRef={textareaRef as any}
             previews={imageUpload.previews.slice(0, 15)}
             onImageClick={() => setIsViewing(true)}

@@ -54,6 +54,10 @@ interface CreatePostCardProps {
   session: any;
   caption: string;
   setCaption: (value: string) => void;
+  carPrice: string;
+  setCarPrice: (value: string) => void;
+  carCurrency: '₭' | '฿' | '$';
+  setCarCurrency: (value: '₭' | '฿' | '$') => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   previews: string[];
   onImageClick: () => void;
@@ -70,6 +74,10 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     session,
     caption,
     setCaption,
+    carPrice,
+    setCarPrice,
+    carCurrency,
+    setCarCurrency,
     textareaRef,
     previews,
     onImageClick,
@@ -80,6 +88,9 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     isPreparingArrange,
   }) => {
     const router = useRouter();
+    const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('de-DE') : '';
+    const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
+
     return (
       <div>
         <div
@@ -114,7 +125,7 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
             justifyContent: 'center',
           }}
         >
-          <div style={{ width: '100%', maxWidth: '600px' }}>
+          <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <textarea
               ref={textareaRef}
               autoFocus
@@ -263,8 +274,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
             )}
           </div>
         </div>
-        {previews.length > 0 && (
-          <>
+        <div style={{ padding: previews.length > 0 ? '0' : '0 15px 16px' }}>
+          {previews.length > 0 && (
             <PhotoPreviewGrid
               existingImages={[]}
               newPreviews={previews}
@@ -274,13 +285,85 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               layout={previews.length >= 6 ? layout : 'default'}
               gap={PHOTO_GRID_GAP}
             />
-            {previews.length >= 6 && (
-              <LayoutPreviewSelector
-                selectedLayout={layout}
-                onLayoutChange={onLayoutChange}
-                previews={previews}
+          )}
+
+          <div
+            style={{
+              padding: previews.length > 0 ? '8px 12px 0' : '0',
+              display: 'flex',
+              justifyContent: 'flex-start',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap',
+                padding: '6px 10px',
+                borderRadius: '12px',
+                background: '#f0f2f5',
+                maxWidth: '100%',
+              }}
+            >
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#111111' }}>ລາຄາ:</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={formattedCarPrice}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
+                  setCarPrice(digitsOnly);
+                }}
+                placeholder="120.000.000"
+                style={{
+                  minWidth: '110px',
+                  width: '120px',
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#111111',
+                  padding: 0,
+                }}
               />
-            )}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                {currencyOptions.map((option) => {
+                  const isActive = carCurrency === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setCarCurrency(option)}
+                      style={{
+                        border: 'none',
+                        borderRadius: '999px',
+                        padding: '4px 8px',
+                        background: isActive ? '#1877f2' : '#ffffff',
+                        color: isActive ? '#ffffff' : '#4a4d52',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        boxShadow: isActive ? 'none' : 'inset 0 0 0 1px #d0d7de',
+                      }}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {previews.length >= 6 && (
+            <LayoutPreviewSelector
+              selectedLayout={layout}
+              onLayoutChange={onLayoutChange}
+              previews={previews}
+            />
+          )}
+          {previews.length > 0 && (
             <div
               style={{
                 padding: '12px 15px 16px',
@@ -336,8 +419,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 <span>ໂນດສ່ວນຕົວ</span>
               </button>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     );
   },
