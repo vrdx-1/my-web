@@ -273,7 +273,7 @@ export default function AdminBoostingPage() {
                 <div className="mt-auto flex gap-2">
                   {activeTab === 'sold' ? (
                     <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 rounded-lg py-3 px-4 text-center font-bold text-xs uppercase tracking-wider">
-                      ປິດ Boost อັດຕະໂນມັດ (ຂາຍແລ້ວ)
+                      ປິດ Boost ອັດຕະໂນມັດ (ຂາຍແລ້ວ)
                     </div>
                   ) : item.status === 'pending' ? (
                     <>
