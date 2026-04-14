@@ -25,6 +25,17 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
   const sessionCheckStartedRef = useRef(false);
   const deferredProfileFetchTimerRef = useRef<number | null>(null);
 
+  const isTransientFetchError = useCallback((error: unknown) => {
+    const message = String((error as { message?: string } | null)?.message ?? '').toLowerCase();
+    const code = String((error as { code?: string } | null)?.code ?? '').toLowerCase();
+    return (
+      message.includes('failed to fetch') ||
+      message.includes('networkerror') ||
+      message.includes('load failed') ||
+      code === 'aborterror'
+    );
+  }, []);
+
   const clearDeferredProfileFetch = useCallback(() => {
     if (deferredProfileFetchTimerRef.current != null) {
       window.clearTimeout(deferredProfileFetchTimerRef.current);
@@ -32,29 +43,51 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  const fetchProfileIfMatch = useCallback((userId: string) => {
+  const fetchProfileIfMatch = useCallback(async (userId: string, retryCount = 0) => {
     currentUserIdRef.current = userId;
-    supabase
-      .from('profiles')
-      .select('id, username, avatar_url, phone')
-      .eq('id', userId)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('[SessionProfileContext] profile fetch error:', error.message, error.code);
-          }
-          setUserProfile(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, phone')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        if (isTransientFetchError(error) && retryCount < 2 && typeof window !== 'undefined') {
+          window.setTimeout(() => {
+            void fetchProfileIfMatch(userId, retryCount + 1);
+          }, 800 * (retryCount + 1));
           return;
         }
-        const currentId = currentUserIdRef.current;
-        if (data && currentId != null && String(currentId) === String(data.id)) {
-          setUserProfile(data);
-        } else {
-          setUserProfile(null);
+
+        if (process.env.NODE_ENV === 'development' && !isTransientFetchError(error)) {
+          console.error('[SessionProfileContext] profile fetch error:', error.message, error.code);
         }
-      });
-  }, []);
+        setUserProfile(null);
+        return;
+      }
+
+      const currentId = currentUserIdRef.current;
+      if (data && currentId != null && String(currentId) === String(data.id)) {
+        setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    } catch (error) {
+      if (isTransientFetchError(error) && retryCount < 2 && typeof window !== 'undefined') {
+        window.setTimeout(() => {
+          void fetchProfileIfMatch(userId, retryCount + 1);
+        }, 800 * (retryCount + 1));
+        return;
+      }
+
+      if (process.env.NODE_ENV === 'development' && !isTransientFetchError(error)) {
+        console.error('[SessionProfileContext] unexpected profile fetch error:', error);
+      }
+      setUserProfile(null);
+    }
+  }, [isTransientFetchError]);
 
   const startSessionCheck = useCallback(() => {
     if (sessionCheckStartedRef.current) return;
