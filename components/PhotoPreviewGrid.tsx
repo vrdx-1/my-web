@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
+import { normalizeImageUrl } from '@/utils/avatarUtils';
 
 interface PhotoPreviewGridProps {
   existingImages?: string[];
@@ -31,7 +32,10 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
   gap = PHOTO_GRID_GAP,
 }) => {
   const gridGap = { rowGap: gap, columnGap: gap };
-  const allImages = [...(existingImages || []), ...(newPreviews || [])];
+  const allImages = [...(existingImages || []), ...(newPreviews || [])].map((url, index) => {
+    const isPreview = index >= (existingImages?.length ?? 0);
+    return isPreview ? url : normalizeImageUrl(url, 'car-images');
+  });
   const count = allImages.length;
 
   if (count === 0) return null;

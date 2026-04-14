@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
+import { normalizeImageUrl } from '@/utils/avatarUtils';
 
 const ROOT_STYLE: React.CSSProperties = {
   position: 'fixed',
@@ -139,7 +140,7 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                   <div style={FULLSCREEN_SKELETON_STYLE} aria-hidden="true" />
                 )}
                 <img
-                  src={img}
+                  src={normalizeImageUrl(img, 'car-images')}
                   onLoad={() => handleImageLoad(idx)}
                   style={{
                     ...IMG_STYLE,

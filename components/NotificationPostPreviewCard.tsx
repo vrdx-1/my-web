@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react';
+import { normalizeImageUrl } from '@/utils/avatarUtils';
 
 export interface NotificationPostPreviewItem {
   id: string;
@@ -75,7 +76,7 @@ export const NotificationPostPreviewCard = React.memo<{
       <div style={{ flexShrink: 0 }}>
         {firstPostImage && shouldLoadImage ? (
           <img
-            src={firstPostImage}
+            src={normalizeImageUrl(firstPostImage, 'car-images')}
             alt="Post thumbnail"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : 'auto'}

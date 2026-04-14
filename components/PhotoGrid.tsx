@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { isPhotoGridImageUrlLoaded, markPhotoGridImageUrlLoaded } from '@/utils/photoGridImageCache';
+import { normalizeImageUrl } from '@/utils/avatarUtils';
 
 function computeImageLoadedState(src: string): boolean {
   if (typeof src === 'string' && src.startsWith('data:')) return true;
@@ -131,11 +132,13 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, preloadImages, on
   // โพสที่พึ่งโพส: ใช้ preload (data URL) แทน URL จากเน็ต เพื่อแสดงรูปทันที
   const effectiveImages: string[] = useMemo(
     () =>
-      normalizedImages.map((url, i) =>
-        preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
-          ? preloadImages[i].trim()
-          : url,
-      ),
+      normalizedImages.map((url, i) => {
+        const rawUrl =
+          preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
+            ? preloadImages[i].trim()
+            : url;
+        return normalizeImageUrl(rawUrl, 'car-images');
+      }),
     [normalizedImages, preloadImages],
   );
 
