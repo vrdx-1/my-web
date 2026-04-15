@@ -496,18 +496,18 @@ export function PostCard({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                background: '#f8fafc',
-                padding: '4px 12px',
-                minHeight: '28px',
-                lineHeight: '18px',
-                borderRadius: '10px',
+                gap: '8px',
+                background: '#eef1f4',
+                padding: '6px 14px',
+                minHeight: '36px',
+                lineHeight: '20px',
+                borderRadius: '12px',
                 color: '#1c1e21',
-                border: '1px solid #d1d5db',
+                border: '1px solid #d7dce1',
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: '20px', color: '#4a4d52' }}>ລາຄາ:</span>
-              <span style={{ fontSize: '15px', fontWeight: 800, lineHeight: '20px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
+              <span style={{ fontSize: '14px', fontWeight: 700, lineHeight: '20px', color: '#4a4d52' }}>ລາຄາ:</span>
+              <span style={{ fontSize: '20px', fontWeight: 900, lineHeight: '24px', letterSpacing: '0.15px', color: '#111111' }}>{priceText}</span>
             </span>
           </div>
 

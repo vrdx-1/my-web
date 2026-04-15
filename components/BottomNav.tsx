@@ -12,8 +12,8 @@ import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
-// ความสูงตัวแถบหลัก (ไม่รวม safe-area) ปรับให้ใกล้ native tab bar มากขึ้น
-const BOTTOM_NAV_HEIGHT = 60;
+// ความสูงตัวแถบหลัก (ไม่รวม safe-area) เพิ่มขึ้นอีกเพื่อให้พื้นที่ของแถบล่างใหญ่และโปร่งขึ้น
+const BOTTOM_NAV_HEIGHT = 80;
 const BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT = 0;
 const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA =
   BOTTOM_NAV_HEIGHT + BOTTOM_NAV_PADDING_BOTTOM_EXTRA_DEFAULT;
@@ -36,11 +36,13 @@ function HomeUrlSync({ pathname }: { pathname: string | null }) {
   return null;
 }
 
-// ขนาดองค์ประกอบใน BottomNav (ให้สมดุลกันทุกปุ่ม)
-const NAV_ICON_SIZE = 26;
-const NAV_PROFILE_AVATAR_SIZE = 24;
-const NAV_BUTTON_MIN_HEIGHT = 50;
-const NAV_BUTTON_PADDING_Y = 6; // ใช้เป็น padding top/bottom
+// ขนาดองค์ประกอบใน BottomNav (ขยายขึ้นเล็กน้อยและคงสัดส่วนให้สมดุลกันทุกปุ่ม)
+const NAV_ICON_SIZE = 28;
+const NAV_PROFILE_AVATAR_SIZE = 26;
+const NAV_BUTTON_MIN_HEIGHT = 64;
+const NAV_BUTTON_PADDING_TOP = 4;
+const NAV_BUTTON_PADDING_BOTTOM = 18;
+const NAV_BUTTON_PADDING = `${NAV_BUTTON_PADDING_TOP}px 4px ${NAV_BUTTON_PADDING_BOTTOM}px 4px`;
 // วงกลมขอบโปรไฟล์: เท่ากับขนาดรูป + เผื่อ border 2px ด้านละ 1 ฝั่ง
 const NAV_PROFILE_RING_SIZE = NAV_PROFILE_AVATAR_SIZE + 4;
 const NAV_ICON_SHIFT_UP_PX = -8;
@@ -198,7 +200,7 @@ export function BottomNav() {
                 gap: '0px',
                 background: 'none',
                 border: 'none',
-                padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
+                padding: NAV_BUTTON_PADDING,
                 cursor: 'pointer',
                 color: NAV_ICON_INACTIVE,
                 touchAction: 'manipulation',
@@ -301,7 +303,7 @@ export function BottomNav() {
               gap: '0px',
               background: 'none',
               border: 'none',
-              padding: `${NAV_BUTTON_PADDING_Y}px 4px ${NAV_BUTTON_PADDING_Y}px 4px`,
+              padding: NAV_BUTTON_PADDING,
               cursor: 'pointer',
               color: isActive ? '#1877f2' : NAV_ICON_INACTIVE,
               touchAction: 'manipulation',
