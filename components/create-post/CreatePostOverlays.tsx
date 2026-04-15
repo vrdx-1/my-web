@@ -416,3 +416,73 @@ export const CreatePostVideoAlertModal = React.memo<CreatePostVideoAlertModalPro
 
 CreatePostVideoAlertModal.displayName = 'CreatePostVideoAlertModal';
 
+interface CreatePostValidationAlertModalProps {
+  show: boolean;
+  message: string;
+  onClose: () => void;
+}
+
+export const CreatePostValidationAlertModal = React.memo<CreatePostValidationAlertModalProps>(
+  ({ show, message, onClose }) => {
+    if (!show) return null;
+
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.4)',
+          zIndex: 2500,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}
+      >
+        <div
+          style={{
+            background: '#fff',
+            borderRadius: '12px',
+            padding: '20px',
+            maxWidth: '320px',
+            width: '100%',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p
+            style={{
+              fontSize: '16px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              color: '#111111',
+            }}
+          >
+            {message}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '10px 24px',
+                background: '#1877f2',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                color: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              ຕົກລົງ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+
+CreatePostValidationAlertModal.displayName = 'CreatePostValidationAlertModal';
+

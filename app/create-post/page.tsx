@@ -17,6 +17,7 @@ import {
   CreatePostViewingOverlay,
   CreatePostLeaveConfirmModal,
   CreatePostVideoAlertModal,
+  CreatePostValidationAlertModal,
 } from '@/components/create-post/CreatePostOverlays';
 import { CreatePostCard } from '@/components/create-post/CreatePostCard';
 import { CreatePostProvinceStep } from '@/components/create-post/CreatePostProvinceStep';
@@ -96,6 +97,7 @@ export default function CreatePost() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showVideoAlert, setShowVideoAlert] = useState(false);
+  const [validationAlertMessage, setValidationAlertMessage] = useState('');
   const [isPreparingArrange, setIsPreparingArrange] = useState(false);
 
   const setSharedDraft = useCallback((draft: { files: File[]; layout: string }) => {
@@ -268,6 +270,39 @@ const handleLeaveCancel = () => {
   setShowLeaveConfirm(false);
 };
 
+const isCaptionFilled = caption.trim().length > 0;
+const isPriceFilled = carPrice.trim().length > 0;
+const canProceedToProvinceStep = isCaptionFilled && isPriceFilled;
+
+const handleNextStep = () => {
+  if (!canProceedToProvinceStep) {
+    if (!isCaptionFilled && !isPriceFilled) {
+      setValidationAlertMessage('ກະລຸນາໃສ່ລາຍລະອຽດ ແລະ ລາຄາກ່ອນ');
+      return;
+    }
+
+    if (!isCaptionFilled) {
+      setValidationAlertMessage('ກະລຸນາໃສ່ລາຍລະອຽດກ່ອນ');
+      return;
+    }
+
+    setValidationAlertMessage('ກະລຸນາໃສ່ລາຄາກ່ອນ');
+    return;
+  }
+
+  const latest = captionLatestRef.current ?? caption;
+  captionWhenLeavingStep2Module = latest;
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem('create_post_caption', JSON.stringify(latest));
+    } catch { /* quota */ }
+    try {
+      localStorage.setItem('create_post_caption_ls', JSON.stringify(latest));
+    } catch { /* quota */ }
+  }
+  setStep(3);
+};
+
 const handleGoArrange = async () => {
   if (isPreparingArrange) return;
   if (imageUpload.previews.length === 0) return;
@@ -296,7 +331,7 @@ const handleGoArrange = async () => {
 };
 
 // Lock background scroll when overlay layers are open
-useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert);
+useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validationAlertMessage.length > 0);
 
  // Removed duplicate PhotoPreviewGrid - using from components/PhotoPreviewGrid.tsx
 
@@ -352,23 +387,12 @@ if (isUploading) {
  {step === 3 && 'ລົດຢູ່ແຂວງ'}
  </h3>
  <div style={{ width: '72px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
- {step === 2 && (caption.trim().length > 0 || carPrice.trim().length > 0 || imageUpload.previews.length > 0) && (
+ {step === 2 && (
  <button
    type="button"
-   onClick={() => {
-     const latest = captionLatestRef.current ?? caption;
-     captionWhenLeavingStep2Module = latest;
-     if (typeof window !== 'undefined') {
-       try {
-         sessionStorage.setItem('create_post_caption', JSON.stringify(latest));
-       } catch { /* quota */ }
-       try {
-         localStorage.setItem('create_post_caption_ls', JSON.stringify(latest));
-       } catch { /* quota */ }
-     }
-     setStep(3);
-   }}
-   style={{ width: '100%', minHeight: '40px', background: '#1877f2', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+   onClick={handleNextStep}
+   aria-disabled={!canProceedToProvinceStep}
+   style={{ width: '100%', minHeight: '40px', background: canProceedToProvinceStep ? '#1877f2' : '#cbd5e1', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', cursor: canProceedToProvinceStep ? 'pointer' : 'not-allowed', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: canProceedToProvinceStep ? 1 : 0.9 }}
  >
    ຕໍ່ໄປ
  </button>
@@ -431,6 +455,12 @@ if (isUploading) {
 <CreatePostVideoAlertModal
   show={showVideoAlert}
   onClose={() => setShowVideoAlert(false)}
+/>
+
+<CreatePostValidationAlertModal
+  show={validationAlertMessage.length > 0}
+  message={validationAlertMessage}
+  onClose={() => setValidationAlertMessage('')}
 />
  </div>
  );

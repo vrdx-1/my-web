@@ -298,15 +298,14 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '12px',
                 flexWrap: 'wrap',
-                padding: '6px 10px',
-                borderRadius: '12px',
+                padding: '10px 14px',
+                borderRadius: '16px',
                 background: '#f0f2f5',
                 maxWidth: '100%',
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#111111' }}>ລາຄາ:</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -315,20 +314,21 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                   const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
                   setCarPrice(digitsOnly);
                 }}
-                placeholder="120.000.000"
+                placeholder="ກະລຸນາໃສ່ລາຄາ"
                 style={{
-                  minWidth: '110px',
-                  width: '120px',
+                  minWidth: '200px',
+                  width: 'clamp(200px, 52vw, 280px)',
                   border: 'none',
                   outline: 'none',
                   background: 'transparent',
-                  fontSize: '13px',
+                  fontSize: '22px',
+                  lineHeight: '28px',
                   fontWeight: 700,
                   color: '#111111',
-                  padding: 0,
+                  padding: '4px 0',
                 }}
               />
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                 {currencyOptions.map((option) => {
                   const isActive = carCurrency === option;
                   return (
@@ -339,10 +339,13 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                       style={{
                         border: 'none',
                         borderRadius: '999px',
-                        padding: '4px 8px',
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        padding: '10px 14px',
                         background: isActive ? '#1877f2' : '#ffffff',
                         color: isActive ? '#ffffff' : '#4a4d52',
-                        fontSize: '12px',
+                        fontSize: '18px',
+                        lineHeight: '20px',
                         fontWeight: 700,
                         cursor: 'pointer',
                         boxShadow: isActive ? 'none' : 'inset 0 0 0 1px #d0d7de',

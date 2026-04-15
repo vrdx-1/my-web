@@ -506,8 +506,8 @@ export function PostCard({
                 border: 'none',
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: '18px', color: '#4a4d52' }}>ລາຄາ:</span>
-              <span style={{ fontSize: '18px', fontWeight: 900, lineHeight: '22px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
+                <span style={{ fontSize: '18px', fontWeight: 700, lineHeight: '22px', color: '#4a4d52' }}>ລາຄາ:</span>
+                <span style={{ fontSize: '18px', fontWeight: 900, lineHeight: '22px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
             </span>
           </div>
 
