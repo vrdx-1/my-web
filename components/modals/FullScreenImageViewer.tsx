@@ -71,6 +71,8 @@ interface FullScreenImageViewerProps {
   fullScreenEntranceOffset?: number;
   fullScreenTransitionDuration: number;
   fullScreenShowDetails: boolean;
+  fullScreenZoomScale: number;
+  fullScreenZoomOrigin: string;
   onClose: () => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchMove: (e: React.TouchEvent) => void;
@@ -85,6 +87,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   fullScreenEntranceOffset = 0,
   fullScreenTransitionDuration,
   fullScreenShowDetails,
+  fullScreenZoomScale,
+  fullScreenZoomOrigin,
   onClose,
   onTouchStart,
   onTouchMove,
@@ -148,6 +152,8 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                     zIndex: 1,
                     opacity: isLoaded ? 1 : 0,
                     transition: 'opacity 0.22s ease-out',
+                    transform: idx === currentImgIndex ? `scale(${fullScreenZoomScale})` : 'scale(1)',
+                    transformOrigin: idx === currentImgIndex ? fullScreenZoomOrigin : '50% 50%',
                   }}
                   alt=""
                 />

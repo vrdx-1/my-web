@@ -174,7 +174,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
       (posts.length === 0 &&
-        (effectivePostList.loadingMore || (!firstFeedLoaded && !(tab === 'sold' && hasSearch)))) ||
+        (effectivePostList.loadingMore || (!hasSearch && !firstFeedLoaded))) ||
       (tabRefreshing && effectivePostList.loadingMore));
 
   const {

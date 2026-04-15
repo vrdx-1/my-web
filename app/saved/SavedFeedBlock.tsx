@@ -84,8 +84,8 @@ export function SavedFeedBlock(props: SavedFeedBlockProps) {
 
   const showNoMoreOnly = !hasMore && !loadingMore;
   const bottomSlotStyle: React.CSSProperties = {
-    minHeight: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
-    height: showNoMoreOnly ? 120 : loadingMore ? 88 : 88,
+    minHeight: showNoMoreOnly ? 120 : loadingMore ? undefined : 88,
+    height: showNoMoreOnly ? 120 : loadingMore ? undefined : 88,
     display: 'flex',
     alignItems: 'center',
     justifyContent: showNoMoreOnly ? 'flex-start' : 'center',

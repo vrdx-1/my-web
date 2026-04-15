@@ -136,6 +136,10 @@ html:has(body[data-page="home"]) {
   -webkit-overflow-scrolling: touch;
   /* ป้องกันการดึงหน้าลง (pull-down) เมื่อ scroll อยู่บนสุดของ feed หน้าโฮม */
   overscroll-behavior-y: none;
+  /* ป้องกัน viewport โยกซ้ายขวาระหว่างลาก feed บนมือถือ */
+  overscroll-behavior-x: none;
+  overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 /* ไม่ใส่ content-visibility บน .feed-card — หน้าโฮมใช้ virtual list; cv + contain-intrinsic-size ทำให้กระพริบ/กระตุกตอนเลื่อน */

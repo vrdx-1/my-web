@@ -43,8 +43,8 @@ const GUEST_TOKEN_KEY = 'guest_token';
 
 function generateGuestToken(): string {
   try {
-    if (typeof window !== 'undefined' && 'crypto' in window && 'randomUUID' in window.crypto) {
-      return (window.crypto as any).randomUUID();
+    if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.randomUUID === 'function') {
+      return globalThis.crypto.randomUUID();
     }
   } catch {
     // fallback
@@ -72,5 +72,31 @@ export function getOrCreateGuestToken(): string {
     return token;
   } catch {
     return generateGuestToken();
+  }
+}
+
+export function clearGuestUserData(): void {
+  if (typeof window === 'undefined') return;
+
+  const localKeys = [
+    GUEST_TOKEN_KEY,
+    'device_guest_token',
+    'my_guest_posts',
+  ];
+
+  const sessionKeys = [
+    'create_post_private_shop',
+  ];
+
+  try {
+    localKeys.forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // ignore storage cleanup failure
+  }
+
+  try {
+    sessionKeys.forEach((key) => window.sessionStorage.removeItem(key));
+  } catch {
+    // ignore storage cleanup failure
   }
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { safeParseJSON } from '@/utils/storageUtils'
+import { clearGuestUserData, safeParseJSON } from '@/utils/storageUtils'
 import { LAO_FONT } from '@/utils/constants'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
@@ -169,9 +169,11 @@ export default function Register() {
             { onConflict: 'id' }
           )
         } catch {}
+        clearGuestUserData()
         localStorage.removeItem('pending_registration')
         router.push('/home')
       } else if (hasCompleteProfile) {
+        clearGuestUserData()
         localStorage.removeItem('pending_registration')
         router.push('/home')
       } else {
@@ -293,6 +295,7 @@ export default function Register() {
       }
 
       localStorage.removeItem('pending_registration');
+      clearGuestUserData();
       localStorage.setItem('show_registration_success', 'true');
       router.push('/home');
     } catch (error: any) {

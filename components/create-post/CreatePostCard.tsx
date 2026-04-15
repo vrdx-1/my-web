@@ -298,10 +298,10 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '10px',
                 flexWrap: 'wrap',
-                padding: '10px 14px',
-                borderRadius: '16px',
+                padding: '8px 12px',
+                borderRadius: '14px',
                 background: '#f0f2f5',
                 maxWidth: '100%',
               }}
@@ -316,16 +316,16 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 }}
                 placeholder="ກະລຸນາໃສ່ລາຄາ"
                 style={{
-                  minWidth: '200px',
-                  width: 'clamp(200px, 52vw, 280px)',
+                  minWidth: '160px',
+                  width: 'clamp(160px, 46vw, 240px)',
                   border: 'none',
                   outline: 'none',
                   background: 'transparent',
-                  fontSize: '22px',
-                  lineHeight: '28px',
+                  fontSize: '18px',
+                  lineHeight: '24px',
                   fontWeight: 700,
                   color: '#111111',
-                  padding: '4px 0',
+                  padding: '2px 0',
                 }}
               />
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -339,13 +339,13 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                       style={{
                         border: 'none',
                         borderRadius: '999px',
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        padding: '10px 14px',
+                        minWidth: '38px',
+                        minHeight: '38px',
+                        padding: '8px 12px',
                         background: isActive ? '#1877f2' : '#ffffff',
                         color: isActive ? '#ffffff' : '#4a4d52',
-                        fontSize: '18px',
-                        lineHeight: '20px',
+                        fontSize: '16px',
+                        lineHeight: '18px',
                         fontWeight: 700,
                         cursor: 'pointer',
                         boxShadow: isActive ? 'none' : 'inset 0 0 0 1px #d0d7de',

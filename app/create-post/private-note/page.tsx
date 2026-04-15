@@ -480,7 +480,7 @@ export default function CreatePostPrivateNotePage() {
               padding: '8px 10px',
               borderRadius: '8px',
               border: '1px solid #d0d0d0',
-              fontSize: '14px',
+              fontSize: '16px',
               marginBottom: '10px',
             }}
           />
@@ -496,7 +496,7 @@ export default function CreatePostPrivateNotePage() {
           >
             <span
               style={{
-                fontSize: '14px',
+                fontSize: '16px',
                 marginRight: '1px',
                 fontWeight: 600,
               }}
@@ -522,7 +522,7 @@ export default function CreatePostPrivateNotePage() {
                   display: 'flex',
                   alignItems: 'center',
                   pointerEvents: 'none',
-                  fontSize: '14px',
+                  fontSize: '16px',
                 }}
               >
                 <span style={{ fontWeight: 600, color: '#111111' }}>{shopPhone}</span>
@@ -555,7 +555,7 @@ export default function CreatePostPrivateNotePage() {
                   padding: 0,
                   border: 'none',
                   outline: 'none',
-                  fontSize: '14px',
+                  fontSize: '16px',
                   color: 'transparent',
                   caretColor: '#111111',
                   background: 'transparent',
@@ -867,7 +867,7 @@ export default function CreatePostPrivateNotePage() {
                 padding: '8px 10px',
                 borderRadius: '8px',
                 border: '1px solid #d0d0d0',
-                fontSize: '14px',
+                fontSize: '16px',
                 marginBottom: '10px',
               }}
             />
@@ -885,7 +885,7 @@ export default function CreatePostPrivateNotePage() {
             >
               <span
                 style={{
-                  fontSize: '14px',
+                  fontSize: '16px',
                   marginRight: '1px',
                   fontWeight: 600,
                 }}
@@ -911,7 +911,7 @@ export default function CreatePostPrivateNotePage() {
                     display: 'flex',
                     alignItems: 'center',
                     pointerEvents: 'none',
-                    fontSize: '14px',
+                    fontSize: '16px',
                   }}
                 >
                   <span style={{ fontWeight: 600, color: '#111111' }}>{editingShopPhone}</span>
@@ -944,7 +944,7 @@ export default function CreatePostPrivateNotePage() {
                     padding: 0,
                     border: 'none',
                     outline: 'none',
-                    fontSize: '14px',
+                    fontSize: '16px',
                     color: 'transparent',
                     caretColor: '#111111',
                     background: 'transparent',

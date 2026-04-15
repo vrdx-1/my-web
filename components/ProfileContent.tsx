@@ -7,6 +7,7 @@ import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { supabase } from '@/lib/supabase';
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { LAO_FONT } from '@/utils/constants';
+import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 
@@ -114,6 +115,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               );
               setUsername(defaultName);
               setAvatarUrl('');
+              clearGuestUserData();
               localStorage.removeItem('pending_registration');
               router.push('/home');
               setLoading(false);
@@ -136,6 +138,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               );
               setUsername(defaultName);
               setAvatarUrl('');
+              clearGuestUserData();
               profileCache = { userId: user.id, username: defaultName, avatarUrl: '', phone: '', isVerified: false };
             } catch {}
           }

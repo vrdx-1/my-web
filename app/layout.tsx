@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// เพิ่มการนำเข้า Component สำหรับ Track Visitor
-import VisitorTracker from "@/components/VisitorTracker";
 import BackHandler from "@/components/BackHandler";
 import { BackHandlerProvider } from "@/components/BackHandlerContext";
 import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
@@ -69,8 +67,6 @@ export default function RootLayout({
       >
         <ErrorBoundaryWrapper>
           <SWRProvider>
-            {/* เพิ่มส่วนบันทึกข้อมูลผู้เข้าชม */}
-            <VisitorTracker />
             {/* กดย้อนกลับ (browser/มือถือ) ปิด overlay ตามสเต็ป แล้ว back ตามสเต็ป */}
             <CreatePostProvider>
             <NotificationRefreshProvider>

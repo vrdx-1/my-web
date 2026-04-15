@@ -13,6 +13,7 @@ import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { FULLSCREEN_VIEWER_ROOT_SELECTOR } from '@/utils/fullScreenMode';
 import { markRouteVisited } from '@/utils/visitedRoutesStore';
 import { MainTabPanels } from './MainTabPanels';
 import { HomeTabScrollProvider, useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
@@ -25,6 +26,23 @@ import {
   setHomeMotionProfilerEnabled,
   syncHomeMotionProfilerFromLocationSearch,
 } from '@/lib/homeMotionProfiler';
+
+function hasScrollableAncestor(target: EventTarget | null): boolean {
+  if (typeof window === 'undefined' || !(target instanceof HTMLElement)) return false;
+
+  let node: HTMLElement | null = target;
+  while (node && node !== document.body) {
+    const style = window.getComputedStyle(node);
+    const overflowY = style.overflowY;
+    const canScrollY = overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+    if (canScrollY && node.scrollHeight > node.clientHeight) {
+      return true;
+    }
+    node = node.parentElement;
+  }
+
+  return false;
+}
 
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -119,6 +137,84 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
 
     markHomeMotionEvent('main-tab-layout-mounted', { pathname: resolvedPathname });
+  }, [resolvedPathname]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    const previousPage = body.dataset.page;
+    const previousBodyOverscroll = body.style.overscrollBehaviorY;
+    const previousHtmlOverscroll = html.style.overscrollBehaviorY;
+
+    if (resolvedPathname !== '/home') {
+      if (previousPage === 'home') {
+        delete body.dataset.page;
+      }
+      return;
+    }
+
+    body.dataset.page = 'home';
+    body.style.overscrollBehaviorY = 'none';
+    html.style.overscrollBehaviorY = 'none';
+
+    let touchStartY = 0;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      touchStartY = event.touches[0].clientY;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length >= 2) {
+        const target = event.target;
+        if (!(target instanceof Element) || !target.closest(FULLSCREEN_VIEWER_ROOT_SELECTOR)) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (event.touches.length !== 1) return;
+      if (window.scrollY > 0) return;
+      if (hasScrollableAncestor(event.target)) return;
+
+      const currentY = event.touches[0].clientY;
+      if (currentY <= touchStartY) return;
+
+      event.preventDefault();
+    };
+
+    const handleGestureEvent = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest(FULLSCREEN_VIEWER_ROOT_SELECTOR)) {
+        return;
+      }
+      event.preventDefault();
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('gesturestart', handleGestureEvent, { passive: false });
+    window.addEventListener('gesturechange', handleGestureEvent, { passive: false });
+    window.addEventListener('gestureend', handleGestureEvent, { passive: false });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('gesturestart', handleGestureEvent);
+      window.removeEventListener('gesturechange', handleGestureEvent);
+      window.removeEventListener('gestureend', handleGestureEvent);
+
+      if (previousPage) {
+        body.dataset.page = previousPage;
+      } else {
+        delete body.dataset.page;
+      }
+
+      body.style.overscrollBehaviorY = previousBodyOverscroll;
+      html.style.overscrollBehaviorY = previousHtmlOverscroll;
+    };
   }, [resolvedPathname]);
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */

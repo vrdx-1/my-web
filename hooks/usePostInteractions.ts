@@ -3,10 +3,21 @@ import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { emitSavePostSuccessPopup, emitUnsavePostSuccessPopup } from '@/utils/savePostSuccessPopup';
 
+type SessionLike = {
+  user: {
+    id: string;
+  };
+} | null;
+
+type PostLike = {
+  id: string;
+  saves?: number;
+};
+
 interface UsePostInteractionsProps {
-  session: any;
-  posts: any[];
-  setPosts: React.Dispatch<React.SetStateAction<any[]>>;
+  session: SessionLike;
+  posts: PostLike[];
+  setPosts: React.Dispatch<React.SetStateAction<PostLike[]>>;
   savedPosts: { [key: string]: boolean };
   setSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   setJustSavedPosts?: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
@@ -20,26 +31,26 @@ interface UsePostInteractionsProps {
  */
 export const usePostInteractions = ({
   session,
-  posts,
-  setPosts,
+  posts: _posts,
+  setPosts: _setPosts,
   savedPosts,
   setSavedPosts,
   setJustSavedPosts,
   onExistingSaveRefresh,
   onRemoveSaveSuccess,
 }: UsePostInteractionsProps) => {
+  void _posts;
+  void _setPosts;
+
   const toggleSave = useCallback(async (postId: string) => {
     const isUser = !!session;
     const userId = isUser ? session.user.id : getPrimaryGuestToken();
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
     const isCurrentlySaved = savedPosts[postId];
-    const currentPost = posts.find(p => p.id === postId);
-    const nextSavesCount = isCurrentlySaved ? (currentPost?.saves || 0) : (currentPost?.saves || 0) + 1;
 
     // Optimistic update: save action is idempotent; re-saving keeps the post saved.
     setSavedPosts(prev => ({ ...prev, [postId]: true }));
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: nextSavesCount } : p));
 
     // Animation for just saved
     if (setJustSavedPosts) {
@@ -67,9 +78,6 @@ export const usePostInteractions = ({
       if (!error) {
         onExistingSaveRefresh?.(postId);
         emitSavePostSuccessPopup();
-      } else {
-        // Rollback on error
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: currentPost?.saves || 0 } : p));
       }
     } else {
       // ตรวจสอบว่ามี record อยู่แล้วหรือไม่ก่อน insert
@@ -84,12 +92,10 @@ export const usePostInteractions = ({
       if (!checkError && !existing) {
         const { error } = await supabase.from(table).insert([{ [column]: userId, post_id: postId }]);
         if (!error) {
-          // cars.saves อัปเดตโดย trigger ใน DB
           emitSavePostSuccessPopup();
         } else {
           // Rollback on error
           setSavedPosts(prev => ({ ...prev, [postId]: false }));
-          setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
         }
       } else if (existing) {
         const refreshedAt = new Date().toISOString();
@@ -105,26 +111,21 @@ export const usePostInteractions = ({
           emitSavePostSuccessPopup();
         } else {
           setSavedPosts(prev => ({ ...prev, [postId]: false }));
-          setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: currentPost?.saves || 0 } : p));
         }
       } else if (checkError) {
         // ถ้ามี error ในการตรวจสอบ ให้ rollback
         setSavedPosts(prev => ({ ...prev, [postId]: false }));
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: (p.saves || 1) - 1 } : p));
       }
     }
-  }, [session, posts, savedPosts, setSavedPosts, setPosts, setJustSavedPosts, onExistingSaveRefresh]);
+  }, [session, savedPosts, setSavedPosts, setJustSavedPosts, onExistingSaveRefresh]);
 
   const removeSave = useCallback(async (postId: string) => {
     const isUser = !!session;
     const userId = isUser ? session.user.id : getPrimaryGuestToken();
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
-    const currentPost = posts.find(p => p.id === postId);
-    const previousSaves = currentPost?.saves || 0;
 
     setSavedPosts(prev => ({ ...prev, [postId]: false }));
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: Math.max(0, (p.saves || 0) - 1) } : p));
 
     const { error } = await supabase.from(table).delete().eq(column, userId).eq('post_id', postId);
     if (!error) {
@@ -132,9 +133,8 @@ export const usePostInteractions = ({
       emitUnsavePostSuccessPopup();
     } else {
       setSavedPosts(prev => ({ ...prev, [postId]: true }));
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: previousSaves } : p));
     }
-  }, [session, posts, setSavedPosts, setPosts, onRemoveSaveSuccess]);
+  }, [session, setSavedPosts, onRemoveSaveSuccess]);
 
   return {
     toggleSave,
