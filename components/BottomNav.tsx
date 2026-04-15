@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect, Suspense, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Bell, Plus } from 'lucide-react';
+import { Bell, House, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -37,15 +37,15 @@ function HomeUrlSync({ pathname }: { pathname: string | null }) {
 }
 
 // ขนาดองค์ประกอบใน BottomNav (ขยายขึ้นเล็กน้อยและคงสัดส่วนให้สมดุลกันทุกปุ่ม)
-const NAV_ICON_SIZE = 28;
-const NAV_PROFILE_AVATAR_SIZE = 26;
+const NAV_ICON_SIZE = 30;
+const NAV_PROFILE_AVATAR_SIZE = 28;
 const NAV_BUTTON_MIN_HEIGHT = 64;
 const NAV_BUTTON_PADDING_TOP = 4;
 const NAV_BUTTON_PADDING_BOTTOM = 18;
 const NAV_BUTTON_PADDING = `${NAV_BUTTON_PADDING_TOP}px 4px ${NAV_BUTTON_PADDING_BOTTOM}px 4px`;
 // วงกลมขอบโปรไฟล์: เท่ากับขนาดรูป + เผื่อ border 2px ด้านละ 1 ฝั่ง
 const NAV_PROFILE_RING_SIZE = NAV_PROFILE_AVATAR_SIZE + 4;
-const NAV_ICON_SHIFT_UP_PX = -8;
+const NAV_ICON_SHIFT_UP_PX = -5;
 /** ไอคอนแท็บที่ไม่ active — เข้มขึ้นเล็กน้อยจาก #65676b ขนาดไอคอนไม่เปลี่ยน */
 const NAV_ICON_INACTIVE = '#2f3238';
 
@@ -64,14 +64,12 @@ const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
 
 function HomeNavIcon({ isActive }: { isActive: boolean }) {
   const stroke = isActive ? '#1877f2' : NAV_ICON_INACTIVE;
-  const bodyFill = isActive ? '#1877f2' : 'none';
-  const detailStroke = isActive ? '#ffffff' : stroke;
 
   return (
-    <svg
-      width={NAV_ICON_SIZE}
-      height={NAV_ICON_SIZE}
-      viewBox="0 0 24 24"
+    <House
+      size={NAV_ICON_SIZE}
+      strokeWidth={2.2}
+      color={stroke}
       aria-hidden
       style={{
         position: 'absolute',
@@ -81,41 +79,7 @@ function HomeNavIcon({ isActive }: { isActive: boolean }) {
         pointerEvents: 'none',
         transform: 'translateY(0px)',
       }}
-    >
-      <path
-        d="M4.35 10.55L10.78 5.34C11.49 4.76 12.51 4.76 13.22 5.34L19.65 10.55"
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.7 10.15V17.1C6.7 18.18 7.57 19.05 8.65 19.05H15.35C16.43 19.05 17.3 18.18 17.3 17.1V10.15"
-        fill={bodyFill}
-        stroke={stroke}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10.55 19.05V15.55C10.55 14.75 11.2 14.1 12 14.1C12.8 14.1 13.45 14.75 13.45 15.55V19.05"
-        fill="none"
-        stroke={detailStroke}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {!isActive && (
-        <path
-          d="M9.25 11.9H14.75"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      )}
-    </svg>
+    />
   );
 }
 

@@ -344,7 +344,7 @@ export function PostCard({
                         transform: 'translateY(1px)',
                       }}
                     />
-                    <span style={{ color: '#4a4d52', fontWeight: 500 }}>
+                    <span style={{ color: '#4a4d52', fontWeight: 400 }}>
                       ID: {String(post.short_id).slice(0, 6)}
                     </span>
                   </>
@@ -390,7 +390,7 @@ export function PostCard({
                         transform: 'translateY(1px)',
                       }}
                     />
-                    <span style={{ color: '#4a4d52', fontWeight: 500 }}>
+                    <span style={{ color: '#4a4d52', fontWeight: 400 }}>
                       ID: {String(post.short_id).slice(0, 6)}
                     </span>
                   </>
@@ -496,18 +496,18 @@ export function PostCard({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                background: '#eef1f4',
-                padding: '6px 14px',
-                minHeight: '36px',
-                lineHeight: '20px',
-                borderRadius: '12px',
+                gap: '4px',
+                background: '#f0f2f5',
+                padding: '5px 12px',
+                minHeight: '32px',
+                lineHeight: '18px',
+                borderRadius: '10px',
                 color: '#1c1e21',
-                border: '1px solid #d7dce1',
+                border: 'none',
               }}
             >
-              <span style={{ fontSize: '14px', fontWeight: 700, lineHeight: '20px', color: '#4a4d52' }}>ລາຄາ:</span>
-              <span style={{ fontSize: '20px', fontWeight: 900, lineHeight: '24px', letterSpacing: '0.15px', color: '#111111' }}>{priceText}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: '18px', color: '#4a4d52' }}>ລາຄາ:</span>
+              <span style={{ fontSize: '18px', fontWeight: 900, lineHeight: '22px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
             </span>
           </div>
 
