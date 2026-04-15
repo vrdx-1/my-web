@@ -63,10 +63,15 @@ const BTN_LEAVE = {
 export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { profile: userProfile } = useProfile();
+  const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
   const {
     caption,
     province,
     setProvince,
+    carPrice,
+    setCarPrice,
+    carCurrency,
+    setCarCurrency,
     images,
     layout,
     setLayout,
@@ -100,6 +105,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   }
 
   const lineCount = caption.split('\n').length;
+  const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('de-DE') : '';
 
   return (
     <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate' as const }}>
@@ -168,6 +174,81 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
               gap={PHOTO_GRID_GAP}
             />
+            <div
+              style={{
+                padding: [...images, ...imageUpload.previews].length > 0 ? '8px 12px 0' : '0',
+                display: 'flex',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                  padding: '8px 12px',
+                  borderRadius: '14px',
+                  background: '#f0f2f5',
+                  maxWidth: '100%',
+                }}
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formattedCarPrice}
+                  onChange={(e) => {
+                    clearSaveError();
+                    const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
+                    setCarPrice(digitsOnly);
+                  }}
+                  placeholder="ກະລຸນາໃສ່ລາຄາ"
+                  style={{
+                    minWidth: '160px',
+                    width: 'clamp(160px, 46vw, 240px)',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    fontSize: '18px',
+                    lineHeight: '24px',
+                    fontWeight: 700,
+                    color: '#111111',
+                    padding: '2px 0',
+                  }}
+                />
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  {currencyOptions.map((option) => {
+                    const isActive = carCurrency === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          clearSaveError();
+                          setCarCurrency(option);
+                        }}
+                        style={{
+                          border: 'none',
+                          borderRadius: '999px',
+                          minWidth: '38px',
+                          minHeight: '38px',
+                          padding: '8px 12px',
+                          background: isActive ? '#1877f2' : '#ffffff',
+                          color: isActive ? '#ffffff' : '#4a4d52',
+                          fontSize: '16px',
+                          lineHeight: '18px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          boxShadow: isActive ? 'none' : 'inset 0 0 0 1px #d0d7de',
+                        }}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
             {([...images, ...imageUpload.previews].length >= 6) && (
               <LayoutPreviewSelector
                 selectedLayout={layout}

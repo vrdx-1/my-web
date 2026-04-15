@@ -27,23 +27,6 @@ import {
   syncHomeMotionProfilerFromLocationSearch,
 } from '@/lib/homeMotionProfiler';
 
-function hasScrollableAncestor(target: EventTarget | null): boolean {
-  if (typeof window === 'undefined' || !(target instanceof HTMLElement)) return false;
-
-  let node: HTMLElement | null = target;
-  while (node && node !== document.body) {
-    const style = window.getComputedStyle(node);
-    const overflowY = style.overflowY;
-    const canScrollY = overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
-    if (canScrollY && node.scrollHeight > node.clientHeight) {
-      return true;
-    }
-    node = node.parentElement;
-  }
-
-  return false;
-}
-
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -156,34 +139,15 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
 
     body.dataset.page = 'home';
+    // Home feed scrolls on window/body. Reset any stale scroll locks left by overlays/pages.
+    body.style.overflow = '';
+    html.style.overflow = '';
+    body.style.scrollbarWidth = '';
+    body.style.msOverflowStyle = '';
+    html.style.scrollbarWidth = '';
+    html.style.msOverflowStyle = '';
     body.style.overscrollBehaviorY = 'none';
     html.style.overscrollBehaviorY = 'none';
-
-    let touchStartY = 0;
-
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
-      touchStartY = event.touches[0].clientY;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length >= 2) {
-        const target = event.target;
-        if (!(target instanceof Element) || !target.closest(FULLSCREEN_VIEWER_ROOT_SELECTOR)) {
-          event.preventDefault();
-        }
-        return;
-      }
-
-      if (event.touches.length !== 1) return;
-      if (window.scrollY > 0) return;
-      if (hasScrollableAncestor(event.target)) return;
-
-      const currentY = event.touches[0].clientY;
-      if (currentY <= touchStartY) return;
-
-      event.preventDefault();
-    };
 
     const handleGestureEvent = (event: Event) => {
       const target = event.target;
@@ -193,15 +157,11 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       event.preventDefault();
     };
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('gesturestart', handleGestureEvent, { passive: false });
     window.addEventListener('gesturechange', handleGestureEvent, { passive: false });
     window.addEventListener('gestureend', handleGestureEvent, { passive: false });
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('gesturestart', handleGestureEvent);
       window.removeEventListener('gesturechange', handleGestureEvent);
       window.removeEventListener('gestureend', handleGestureEvent);

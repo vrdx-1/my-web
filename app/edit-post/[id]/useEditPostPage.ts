@@ -13,6 +13,8 @@ export function useEditPostPage(id: string) {
   const router = useRouter();
   const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
+  const [carPrice, setCarPrice] = useState('');
+  const [carCurrency, setCarCurrency] = useState<'₭' | '฿' | '$'>('₭');
   const [images, setImages] = useState<string[]>([]);
   const [layout, setLayout] = useState<string>('default');
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,14 @@ export function useEditPostPage(id: string) {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
-  const initialRef = useRef<{ caption: string; province: string; images: string[]; layout: string } | null>(null);
+  const initialRef = useRef<{
+    caption: string;
+    province: string;
+    carPrice: string;
+    carCurrency: '₭' | '฿' | '$';
+    images: string[];
+    layout: string;
+  } | null>(null);
   const hasChangesRef = useRef(false);
   const allowLeaveRef = useRef(false);
 
@@ -46,14 +55,31 @@ export function useEditPostPage(id: string) {
       }
       const cap = (post.caption || '').split('\n').slice(0, MAX_CAPTION_LINES).join('\n');
       const prov = typeof post.province === 'string' ? post.province.trim() : '';
+      const normalizedPrice = typeof post.price === 'number'
+        ? String(post.price)
+        : typeof post.price === 'string'
+          ? post.price.replace(/\D/g, '')
+          : '';
+      const normalizedCurrency = post.price_currency === '฿' || post.price_currency === '$'
+        ? post.price_currency
+        : '₭';
       const imgs = Array.isArray(post.images) ? post.images : [];
       const rawLayout = post.layout;
       const postLayout = VALID_LAYOUTS.includes(String(rawLayout || '')) ? String(rawLayout) : 'default';
       setCaption(cap);
       setProvince(prov);
+      setCarPrice(normalizedPrice);
+      setCarCurrency(normalizedCurrency);
       setImages(imgs);
       setLayout(postLayout);
-      initialRef.current = { caption: cap, province: prov, images: imgs, layout: postLayout };
+      initialRef.current = {
+        caption: cap,
+        province: prov,
+        carPrice: normalizedPrice,
+        carCurrency: normalizedCurrency,
+        images: imgs,
+        layout: postLayout,
+      };
       setLoading(false);
     };
     run();
@@ -64,13 +90,15 @@ export function useEditPostPage(id: string) {
   const initial = initialRef.current;
   const captionChanged = initial && caption !== initial.caption;
   const provinceChanged = initial && String(province).trim() !== String(initial.province).trim();
+  const priceChanged = initial && carPrice !== initial.carPrice;
+  const currencyChanged = initial && carCurrency !== initial.carCurrency;
   const imagesChanged = initial && JSON.stringify(images) !== JSON.stringify(initial.images);
   const hasNewPreviews = imageUpload.previews.length > 0;
   const layoutChanged = totalImageCount >= 6 && initial && String(layout) !== String(initial.layout);
   const hasChanges = Boolean(
     !loading &&
       initial &&
-      (captionChanged || provinceChanged || imagesChanged || hasNewPreviews || layoutChanged)
+      (captionChanged || provinceChanged || priceChanged || currencyChanged || imagesChanged || hasNewPreviews || layoutChanged)
   );
   hasChangesRef.current = hasChanges;
 
@@ -156,9 +184,20 @@ export function useEditPostPage(id: string) {
           finalImages.push(publicUrl);
         }
       }
-      const updatePayload: { caption: string; province: string; images: string[]; layout?: string } = {
+      const normalizedPrice = carPrice.replace(/\D/g, '');
+      const priceValue = normalizedPrice ? Number(normalizedPrice) : null;
+      const updatePayload: {
+        caption: string;
+        province: string;
+        price: number | null;
+        price_currency: '₭' | '฿' | '$';
+        images: string[];
+        layout?: string;
+      } = {
         caption,
         province,
+        price: priceValue && Number.isFinite(priceValue) ? priceValue : null,
+        price_currency: carCurrency || '₭',
         images: finalImages,
       };
       if (finalImages.length >= 6) {
@@ -181,7 +220,7 @@ export function useEditPostPage(id: string) {
     } finally {
       setUploading(false);
     }
-  }, [id, province, caption, images, layout, uploading, imageUpload.selectedFiles, router]);
+  }, [id, province, caption, carPrice, carCurrency, images, layout, uploading, imageUpload.selectedFiles, router]);
 
   const clearSaveError = useCallback(() => setSaveError(null), []);
 
@@ -236,6 +275,10 @@ export function useEditPostPage(id: string) {
     setCaption,
     province,
     setProvince,
+    carPrice,
+    setCarPrice,
+    carCurrency,
+    setCarCurrency,
     images,
     setImages,
     layout,

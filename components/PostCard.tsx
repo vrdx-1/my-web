@@ -108,7 +108,7 @@ export function PostCard({
   const currencySymbol = post.price_currency === '฿' || post.price_currency === '$'
     ? post.price_currency
     : '₭';
-  const priceText = priceValue && priceValue > 0 ? formatCurrency(priceValue, currencySymbol) : 'ບໍ່ລະບຸ';
+    const priceText = priceValue && priceValue > 0 ? formatCurrency(priceValue, currencySymbol) : 'ບໍ່ລະບຸລາຄາ';
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -496,18 +496,21 @@ export function PostCard({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
-                background: '#f0f2f5',
-                padding: '5px 12px',
-                minHeight: '32px',
-                lineHeight: '18px',
+                justifyContent: 'center',
+                background: '#e4e6eb',
+                padding: '6px 14px',
+                minHeight: '28px',
                 borderRadius: '10px',
                 color: '#1c1e21',
                 border: 'none',
+                boxShadow: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.01em',
+                whiteSpace: 'nowrap',
               }}
             >
-                <span style={{ fontSize: '18px', fontWeight: 700, lineHeight: '22px', color: '#4a4d52' }}>ລາຄາ:</span>
-                <span style={{ fontSize: '18px', fontWeight: 900, lineHeight: '22px', letterSpacing: '0.1px', color: '#111111' }}>{priceText}</span>
+              <span style={{ color: '#1c1e21', fontSize: '13px', lineHeight: '16px', fontWeight: 700 }}>{priceText}</span>
             </span>
           </div>
 

@@ -15,7 +15,7 @@ const APP_NAME = 'Jutpai';
 const APP_ICON = '/icons/icon-192x192.png';
 
 const HINT_IOS_LINES = [
-  '1. ຄິກປຸ່ມແຊຂອງ Safari',
+  '1. ຄິກປຸ່ມແຊຂອງ Safari (Share)',
   '2. ເພີ່ມໄປທີ່ໜ້າຫຼັກ (Add to Home Screen)',
   '3. ເພີ່ມ (Add)',
 ];
