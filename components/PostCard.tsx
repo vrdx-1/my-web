@@ -724,7 +724,7 @@ export function PostCard({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ຄັນນີ້ຂາຍແລ້ວເດີ
+              ຂາຍແລ້ວເດີ
             </h3>
             <button
               type="button"

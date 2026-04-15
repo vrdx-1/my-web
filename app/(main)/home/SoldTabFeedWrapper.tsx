@@ -53,15 +53,39 @@ export function SoldTabFeedWrapper({
 }: SoldTabFeedWrapperProps) {
   /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
+  const effectiveLoadingMore = soldListData.loadingMore || soldLoadMoreShell;
 
   const handleSoldLoadMore = useCallback(() => {
+    if (soldListData.loadingMore || soldLoadMoreShell || !soldListData.hasMore) return;
     setSoldLoadMoreShell(true);
     soldListData.setPage((p) => p + 1);
-  }, [soldListData.setPage]);
+  }, [soldListData.loadingMore, soldLoadMoreShell, soldListData.hasMore, soldListData.setPage]);
 
   useEffect(() => {
     if (soldListData.loadingMore) setSoldLoadMoreShell(false);
   }, [soldListData.loadingMore]);
+
+  useEffect(() => {
+    if (!soldListData.hasMore || !isActive) {
+      setSoldLoadMoreShell(false);
+    }
+  }, [soldListData.hasMore, isActive]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    if (soldListData.page === 0) return;
+    if (soldListData.loadingMore) return;
+    if (soldListData.session === undefined) return;
+    if (!soldListData.hasMore) return;
+    soldListData.fetchPosts(false, soldListData.page);
+  }, [
+    isActive,
+    soldListData.page,
+    soldListData.loadingMore,
+    soldListData.session,
+    soldListData.hasMore,
+    soldListData.fetchPosts,
+  ]);
 
   useEffect(() => {
     if (!soldLoadMoreShell) return;
@@ -71,7 +95,7 @@ export function SoldTabFeedWrapper({
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     enabled: isActive,
-    loadingMore: soldListData.loadingMore,
+    loadingMore: effectiveLoadingMore,
     hasMore: soldListData.hasMore,
     onLoadMore: handleSoldLoadMore,
   });
@@ -130,7 +154,7 @@ export function SoldTabFeedWrapper({
             onRepost: handlers.handleRepost,
             onSetActiveMenu: menu.setActiveMenu,
             onSetMenuAnimating: menu.setIsMenuAnimating,
-            loadingMore: soldListData.loadingMore || soldLoadMoreShell,
+            loadingMore: effectiveLoadingMore,
             hasMore: soldListData.hasMore ?? true,
             onLoadMore: handleSoldLoadMore,
             hideBoost: true,

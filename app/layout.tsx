@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 const APP_NAME = "Jutpai";
-const APP_DESCRIPTION = "Secondhand marketplace";
+const APP_DESCRIPTION = "ຕະຫຼາດລົດມືສອງປະເທດລາວ";
 
 export const viewport: Viewport = {
   themeColor: "#000000",
