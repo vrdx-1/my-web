@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
   }
 
-  let body: { username?: string };
+  let body: { username?: string; phone?: string; avatar_url?: string | null };
   try {
     body = await request.json();
   } catch {
@@ -134,19 +134,23 @@ export async function POST(request: NextRequest) {
   }
 
   const username = typeof body?.username === 'string' ? body.username.trim() : '';
+  const phone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+  const avatarUrl = typeof body?.avatar_url === 'string' ? body.avatar_url.trim() : null;
 
   if (!username) {
     return NextResponse.json({ error: 'Username required' }, { status: 400 });
   }
 
   const finalUsername = username.slice(0, 50);
+  const finalPhone = phone.slice(0, 30);
   const subAccountId = crypto.randomUUID();
   const { error: profileError } = await admin
     .from('profiles')
     .insert({
       id: subAccountId,
       username: finalUsername,
-      avatar_url: null,
+      phone: finalPhone || null,
+      avatar_url: avatarUrl || null,
       role: 'admin',
       is_sub_account: true,
       parent_admin_id: auth.adminId,

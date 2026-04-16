@@ -41,6 +41,8 @@ export function useEditProfilePage() {
       const rawPhone = data.phone || '';
       if (rawPhone.startsWith('85620') && rawPhone.length === 13) {
         setPhone('020' + rawPhone.slice(5));
+      } else if (rawPhone.startsWith('856') && rawPhone.length === 11) {
+        setPhone('020' + rawPhone.slice(3));
       } else {
         setPhone(rawPhone);
       }
@@ -90,7 +92,7 @@ export function useEditProfilePage() {
     if (!uid) return;
     const valueToSave =
       phoneNum.startsWith('020') && phoneNum.length === 11
-        ? '85620' + phoneNum.slice(3)
+        ? '856' + phoneNum.slice(3)
         : phoneNum;
     const { error } = await supabase.from('profiles').update({ phone: valueToSave }).eq('id', uid);
     if (!error) {

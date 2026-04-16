@@ -11,6 +11,7 @@ import { LAO_FONT } from '@/utils/constants';
 import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { Avatar } from '@/components/Avatar';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { mergeHeaders } from '@/utils/activeProfile';
@@ -38,6 +39,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subAccountAvatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -54,14 +56,41 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [showSubAccountDropdown, setShowSubAccountDropdown] = useState(false);
   const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
   const [subAccountUsername, setSubAccountUsername] = useState('');
+  const [subAccountPhone, setSubAccountPhone] = useState('');
+  const [subAccountAvatarFile, setSubAccountAvatarFile] = useState<File | null>(null);
+  const [subAccountAvatarPreview, setSubAccountAvatarPreview] = useState('');
   const [subAccountLoading, setSubAccountLoading] = useState(false);
   const [subAccountSubmitting, setSubAccountSubmitting] = useState(false);
   const [subAccountError, setSubAccountError] = useState('');
   const [subAccountSuccess, setSubAccountSuccess] = useState('');
+  const [showSubAccountCreatedSuccess, setShowSubAccountCreatedSuccess] = useState(false);
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
   const hasExistingSubAccounts = availableProfiles.some((profile) => profile.is_sub_account);
+
+  useEffect(() => {
+    return () => {
+      if (subAccountAvatarPreview) {
+        URL.revokeObjectURL(subAccountAvatarPreview);
+      }
+    };
+  }, [subAccountAvatarPreview]);
+
+  const resetSubAccountForm = useCallback(() => {
+    setSubAccountUsername('');
+    setSubAccountPhone('');
+    setSubAccountAvatarFile(null);
+    if (subAccountAvatarPreview) {
+      URL.revokeObjectURL(subAccountAvatarPreview);
+    }
+    setSubAccountAvatarPreview('');
+    setSubAccountError('');
+    setSubAccountSuccess('');
+    if (subAccountAvatarInputRef.current) {
+      subAccountAvatarInputRef.current.value = '';
+    }
+  }, [subAccountAvatarPreview]);
   const loadSubAccounts = useCallback(async () => {
     if (!canManageSubAccounts) return;
     setSubAccountLoading(true);
@@ -225,7 +254,9 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           const rawPhone = profile.phone || '';
           const displayPhone = rawPhone.startsWith('85620') && rawPhone.length === 13
             ? '020' + rawPhone.slice(5)
-            : rawPhone;
+            : rawPhone.startsWith('856') && rawPhone.length === 11
+              ? '020' + rawPhone.slice(3)
+              : rawPhone;
           const verified = profile.is_verified ?? false;
           const adminRole = profile.role === 'admin';
           const subRole = profile.is_sub_account ?? false;
@@ -275,6 +306,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       loadSubAccounts();
     }
   }, [canManageSubAccounts, loadSubAccounts, showSubAccountDropdown]);
+
+  const closeSubAccountModal = useCallback(() => {
+    setShowSubAccountPanel(false);
+    resetSubAccountForm();
+  }, [resetSubAccountForm]);
 
   // Lock background scroll while edit-name is open
   useEffect(() => {
@@ -448,7 +484,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     const targetProfileId = activeProfileId || session.user.id;
     const valueToSave =
       phoneNum.startsWith('020') && phoneNum.length === 11
-        ? '85620' + phoneNum.slice(3)
+        ? '856' + phoneNum.slice(3)
         : phoneNum;
     const { error } = await supabase
       .from('profiles')
@@ -486,6 +522,28 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         accessToken = refreshed.data.session?.access_token ?? '';
       }
 
+      let avatarPublicUrl: string | null = null;
+      if (subAccountAvatarFile) {
+        const fileExt = subAccountAvatarFile.name.split('.').pop() || 'jpg';
+        const ownerId = activeProfileId || authUserId || session?.user?.id || 'admin';
+        const filePath = `avatars/sub-account-${ownerId}-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('car-images')
+          .upload(filePath, subAccountAvatarFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data } = supabase.storage.from('car-images').getPublicUrl(filePath);
+        avatarPublicUrl = data?.publicUrl || null;
+      }
+
+      const normalizedPhone =
+        subAccountPhone.length === 8
+          ? `856${subAccountPhone}`
+          : subAccountPhone.trim();
+
       const response = await fetch('/api/admin/sub-accounts', {
         method: 'POST',
         credentials: 'include',
@@ -496,22 +554,35 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           },
           activeProfileId,
         ),
-        body: JSON.stringify({ username: subAccountUsername }),
+        body: JSON.stringify({
+          username: subAccountUsername,
+          phone: normalizedPhone,
+          avatar_url: avatarPublicUrl,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to create sub account');
       }
 
-      setSubAccountUsername('');
-      setSubAccountSuccess('สร้าง sub account สำเร็จแล้ว สามารถสลับเข้าใช้งานผ่านบัญชีหลักนี้ได้ทันที');
       await loadSubAccounts();
+      closeSubAccountModal();
+      setShowSubAccountCreatedSuccess(true);
     } catch (error) {
       setSubAccountError(error instanceof Error ? error.message : 'Failed to create sub account');
     } finally {
       setSubAccountSubmitting(false);
     }
-  }, [activeProfileId, canManageSubAccounts, loadSubAccounts, session?.access_token, subAccountSubmitting, subAccountUsername]);
+  }, [activeProfileId, authUserId, canManageSubAccounts, closeSubAccountModal, loadSubAccounts, session?.access_token, session?.user?.id, subAccountAvatarFile, subAccountPhone, subAccountSubmitting, subAccountUsername]);
+
+  const handleSubAccountAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setSubAccountAvatarFile(file);
+    if (subAccountAvatarPreview) {
+      URL.revokeObjectURL(subAccountAvatarPreview);
+    }
+    setSubAccountAvatarPreview(file ? URL.createObjectURL(file) : '');
+  }, [subAccountAvatarPreview]);
 
   const handleClosePhoneModal = () => {
     setIsEditingPhone(false);
@@ -870,8 +941,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 onClick={() => {
                   setShowSubAccountDropdown(false);
                   setShowSubAccountPanel(true);
-                  setSubAccountError('');
-                  setSubAccountSuccess('');
+                  resetSubAccountForm();
                 }}
                 style={{
                   width: '100%',
@@ -949,131 +1019,171 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           <div style={{ marginBottom: '28px' }}>
             {showSubAccountPanel && (
               <div style={{
-                background: '#ffffff',
-                borderRadius: '18px',
-                padding: '18px',
-                boxShadow: '0 10px 30px rgba(17, 24, 39, 0.08)',
-                border: '1px solid #e5e7eb',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                background: 'rgba(17, 24, 39, 0.35)',
+                zIndex: 1200,
               }}>
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '6px' }}>Sub Accounts</div>
-                </div>
+                <div style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  background: '#ffffff',
+                  borderRadius: '20px',
+                  padding: '20px',
+                  boxShadow: '0 24px 60px rgba(17, 24, 39, 0.16)',
+                  border: '1px solid #e5e7eb',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827' }}>Sub Accounts</div>
+                    <button
+                      type="button"
+                      onClick={closeSubAccountModal}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        fontSize: '24px',
+                        lineHeight: 1,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
 
-                <form onSubmit={handleCreateSubAccount} style={{ display: 'grid', gap: '12px', marginBottom: '18px' }}>
-                  <input
-                    type="text"
-                    value={subAccountUsername}
-                    onChange={(event) => setSubAccountUsername(event.target.value)}
-                    placeholder="ชื่อของ sub account"
-                    required
-                    maxLength={50}
-                    style={{
-                      width: '100%',
-                      padding: '13px 15px',
-                      borderRadius: '12px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '15px',
-                      background: '#fff',
-                      outline: 'none',
-                    }}
-                  />
-                  {subAccountError ? <div style={{ color: '#dc2626', fontSize: '14px' }}>{subAccountError}</div> : null}
-                  {subAccountSuccess ? <div style={{ color: '#15803d', fontSize: '14px' }}>{subAccountSuccess}</div> : null}
-                  <button
-                    type="submit"
-                    disabled={subAccountSubmitting}
-                    style={{
-                      width: 'fit-content',
-                      minWidth: '170px',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '12px 18px',
-                      background: subAccountSubmitting ? '#9ca3af' : '#111827',
-                      color: '#fff',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      cursor: subAccountSubmitting ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {subAccountSubmitting ? 'กำลังสร้าง...' : 'สร้าง Sub Account'}
-                  </button>
-                </form>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>บัญชีที่ใช้งานได้</div>
-                  <button
-                    type="button"
-                    onClick={loadSubAccounts}
-                    disabled={subAccountLoading}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '10px',
-                      padding: '8px 12px',
-                      color: '#111827',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      cursor: subAccountLoading ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    Refresh
-                  </button>
-                </div>
-
-                {subAccountLoading ? (
-                  <div style={{ color: '#6b7280', fontSize: '14px' }}>กำลังโหลดรายการบัญชี...</div>
-                ) : availableProfiles.length === 0 ? (
-                  <div style={{ color: '#6b7280', fontSize: '14px' }}>ยังไม่มี sub account สำหรับบัญชีนี้</div>
-                ) : (
-                  <div style={{ display: 'grid', gap: '10px' }}>
-                    {availableProfiles.map((account) => {
-                      const isActiveProfile = (activeProfileId || authUserId) === account.id;
-                      const isMainProfile = authUserId === account.id;
-                      return (
-                      <div
-                        key={account.id}
+                  <form onSubmit={handleCreateSubAccount} style={{ display: 'grid', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={() => subAccountAvatarInputRef.current?.click()}
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '14px 16px',
-                          borderRadius: '14px',
-                          border: '1px solid #e5e7eb',
-                          background: '#f9fafb',
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          padding: 0,
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                          <Avatar avatarUrl={account.avatar_url} size={52} />
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
-                              {account.username || 'Unnamed Admin'} {isMainProfile ? '(บัญชีหลัก)' : '(Sub Account)'}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#6b7280', wordBreak: 'break-all' }}>ID: {account.id}</div>
+                        <div style={{ position: 'relative' }}>
+                          <Avatar avatarUrl={subAccountAvatarPreview || null} size={92} useProfileImage />
+                          <div style={{
+                            position: 'absolute',
+                            right: 0,
+                            bottom: 0,
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: '50%',
+                            background: '#ffffff',
+                            border: '1px solid #d1d5db',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 12px rgba(17, 24, 39, 0.08)',
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                              <circle cx="12" cy="13" r="4" />
+                            </svg>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setActiveProfile(account.id)}
-                          disabled={isActiveProfile}
-                          style={{
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '10px 12px',
-                            background: isActiveProfile ? '#d1fae5' : '#111827',
-                            color: isActiveProfile ? '#065f46' : '#fff',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            cursor: isActiveProfile ? 'default' : 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {isActiveProfile ? 'กำลังใช้งาน' : 'สลับเข้าใช้'}
-                        </button>
+                      </button>
+                      <input
+                        ref={subAccountAvatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={handleSubAccountAvatarChange}
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      value={subAccountUsername}
+                      onChange={(event) => setSubAccountUsername(event.target.value)}
+                      placeholder="ຊື່ຂອງ sub account"
+                      required
+                      maxLength={50}
+                      style={{
+                        width: '100%',
+                        padding: '13px 15px',
+                        borderRadius: '12px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '15px',
+                        background: '#fff',
+                        outline: 'none',
+                      }}
+                    />
+
+                    <div
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '12px',
+                        border: '1px solid #d1d5db',
+                        background: '#fff',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: '13px 14px',
+                          background: '#f9fafb',
+                          borderRight: '1px solid #e5e7eb',
+                          fontSize: '15px',
+                          fontWeight: 600,
+                          color: '#111827',
+                        }}
+                      >
+                        020
                       </div>
-                    )})}
-                  </div>
-                )}
+                      <input
+                        type="tel"
+                        value={subAccountPhone}
+                        onChange={(event) => setSubAccountPhone(event.target.value.replace(/\D/g, '').slice(0, 8))}
+                        placeholder="XXXXXXXX"
+                        inputMode="numeric"
+                        maxLength={8}
+                        style={{
+                          width: '100%',
+                          padding: '13px 15px',
+                          border: 'none',
+                          fontSize: '15px',
+                          background: '#fff',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+
+                    {subAccountError ? <div style={{ color: '#dc2626', fontSize: '14px' }}>{subAccountError}</div> : null}
+                    {subAccountSuccess ? <div style={{ color: '#15803d', fontSize: '14px' }}>{subAccountSuccess}</div> : null}
+
+                    <button
+                      type="submit"
+                      disabled={subAccountSubmitting}
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        borderRadius: '14px',
+                        padding: '14px 18px',
+                        background: subAccountSubmitting ? '#9ca3af' : '#111827',
+                        color: '#fff',
+                        fontSize: '15px',
+                        fontWeight: 700,
+                        cursor: subAccountSubmitting ? 'not-allowed' : 'pointer',
+                        marginTop: '4px',
+                      }}
+                    >
+                      {subAccountSubmitting ? 'กำลังสร้าง...' : 'ສ້າງ Sub account'}
+                    </button>
+                  </form>
+                </div>
               </div>
             )}
           </div>
@@ -1110,6 +1220,13 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               background: 'rgba(0, 0, 0, 0.5)',
               zIndex: 1000,
             }}
+          />
+        )}
+
+        {showSubAccountCreatedSuccess && (
+          <SuccessPopup
+            message="ສ້າງ Sub Account ສຳເລັດ"
+            onClose={() => setShowSubAccountCreatedSuccess(false)}
           />
         )}
 
