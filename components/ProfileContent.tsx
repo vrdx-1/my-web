@@ -39,6 +39,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const subAccountDropdownRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subAccountAvatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
@@ -323,6 +324,33 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     setShowSubAccountDropdown(false);
     setSubAccountSearchQuery('');
   }, []);
+
+  useEffect(() => {
+    if (!showSubAccountDropdown) return;
+
+    const handlePointerOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (subAccountDropdownRef.current?.contains(target)) return;
+      closeSubAccountDropdown();
+    };
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeSubAccountDropdown();
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerOutside);
+    document.addEventListener('touchstart', handlePointerOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerOutside);
+      document.removeEventListener('touchstart', handlePointerOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [closeSubAccountDropdown, showSubAccountDropdown]);
 
   // Lock background scroll while edit-name is open
   useEffect(() => {
@@ -768,7 +796,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         </div>
 
         {/* Username with edit button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', position: 'relative', zIndex: showSubAccountDropdown ? 40 : 'auto' }}>
+        <div
+          ref={subAccountDropdownRef}
+          style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', position: 'relative', zIndex: showSubAccountDropdown ? 40 : 'auto' }}
+        >
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <h2
               style={{
@@ -1203,20 +1234,19 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
+                        gap: '10px',
                         borderRadius: '12px',
                         border: '1px solid #d1d5db',
                         background: '#fff',
-                        overflow: 'hidden',
+                        padding: '13px 15px',
                       }}
                     >
                       <div
                         style={{
-                          padding: '13px 14px',
-                          background: '#f9fafb',
-                          borderRight: '1px solid #e5e7eb',
                           fontSize: '15px',
-                          fontWeight: 600,
-                          color: '#111827',
+                          fontWeight: 400,
+                          color: '#6b7280',
+                          flexShrink: 0,
                         }}
                       >
                         020
@@ -1230,11 +1260,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                         maxLength={8}
                         style={{
                           width: '100%',
-                          padding: '13px 15px',
                           border: 'none',
                           fontSize: '15px',
                           background: '#fff',
                           outline: 'none',
+                          padding: 0,
                         }}
                       />
                     </div>
