@@ -10,6 +10,7 @@ import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtil
 import { LAO_FONT } from '@/utils/constants';
 import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
+import { Avatar } from '@/components/Avatar';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { mergeHeaders } from '@/utils/activeProfile';
@@ -59,6 +60,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
+  const hasExistingSubAccounts = availableProfiles.some((profile) => profile.is_sub_account);
   const loadSubAccounts = useCallback(async () => {
     if (!canManageSubAccounts) return;
     setSubAccountLoading(true);
@@ -733,6 +735,48 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
               </svg>
             </button>
+            {canManageSubAccounts && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubAccountPanel((prev) => !prev);
+                  setSubAccountError('');
+                  setSubAccountSuccess('');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  setShowSubAccountPanel((prev) => !prev);
+                  setSubAccountError('');
+                  setSubAccountSuccess('');
+                }}
+                aria-label={showSubAccountPanel ? 'ปิดการสร้าง sub account' : 'เปิดการสร้าง sub account'}
+                title={hasExistingSubAccounts ? 'แสดงรายการ Sub Account' : 'สร้าง Sub Account'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 5,
+                  minWidth: 32,
+                  minHeight: 32,
+                  touchAction: 'manipulation',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {hasExistingSubAccounts ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2.2" strokeLinecap="round">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -770,34 +814,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
         {canManageSubAccounts && (
           <div style={{ marginBottom: '28px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: showSubAccountPanel ? '16px' : '0' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowSubAccountPanel((prev) => !prev);
-                  setSubAccountError('');
-                  setSubAccountSuccess('');
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  background: '#111827',
-                  border: 'none',
-                  borderRadius: 24,
-                  padding: '10px 18px',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  touchAction: 'manipulation',
-                }}
-              >
-                <span>สร้าง Sub Account</span>
-                <span style={{ fontSize: '18px', lineHeight: 1 }}>{showSubAccountPanel ? '−' : '+'}</span>
-              </button>
-            </div>
-
             {showSubAccountPanel && (
               <div style={{
                 background: '#ffffff',
@@ -895,11 +911,14 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                           background: '#f9fafb',
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
-                            {account.username || 'Unnamed Admin'} {isMainProfile ? '(บัญชีหลัก)' : '(Sub Account)'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                          <Avatar avatarUrl={account.avatar_url} size={52} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+                              {account.username || 'Unnamed Admin'} {isMainProfile ? '(บัญชีหลัก)' : '(Sub Account)'}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#6b7280', wordBreak: 'break-all' }}>ID: {account.id}</div>
                           </div>
-                          <div style={{ fontSize: '12px', color: '#6b7280' }}>ID: {account.id}</div>
                         </div>
                         <button
                           type="button"

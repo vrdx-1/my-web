@@ -1063,8 +1063,9 @@ export const formatTime = (dateString: string): string => {
 /**
  * Check if current user is the owner of the post
  */
-export const isPostOwner = (post: any, session: any): boolean => {
-  if (session && String(post.user_id) === String(session.user.id)) return true;
+export const isPostOwner = (post: any, session: any, activeProfileId?: string | null): boolean => {
+  const effectiveUserId = activeProfileId || session?.user?.id;
+  if (effectiveUserId && String(post.user_id) === String(effectiveUserId)) return true;
   
   if (typeof window === 'undefined') return false;
   const stored = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);

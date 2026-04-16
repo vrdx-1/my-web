@@ -12,6 +12,7 @@ import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { formatCurrency } from '@/utils/currency';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
@@ -77,7 +78,8 @@ export function PostCard({
   imageFetchPriority,
 }: PostCardProps) {
   const router = useRouter();
-  const isOwner = isPostOwner(post, session);
+  const { activeProfileId } = useSessionAndProfile();
+  const isOwner = isPostOwner(post, session, activeProfileId);
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
