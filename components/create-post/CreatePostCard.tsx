@@ -302,7 +302,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 flexWrap: 'wrap',
                 padding: '8px 12px',
                 borderRadius: '14px',
-                background: '#f0f2f5',
+                border: '1px solid #d0d7de',
+                background: '#ffffff',
                 maxWidth: '100%',
               }}
             >

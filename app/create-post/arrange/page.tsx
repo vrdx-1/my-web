@@ -218,7 +218,7 @@ export default function ArrangePostImagesPage() {
                   position: 'relative',
                   aspectRatio: '1',
                   padding: 0,
-                  border: '2px solid #e0e0e0',
+                  border: 'none',
                   borderRadius: '8px',
                   overflow: 'hidden',
                   background: '#f0f0f0',
