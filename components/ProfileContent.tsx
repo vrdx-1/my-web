@@ -11,6 +11,7 @@ import { LAO_FONT } from '@/utils/constants';
 import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { Avatar } from '@/components/Avatar';
+import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -55,6 +56,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [isSubAccount, setIsSubAccount] = useState(false);
   const [showSubAccountDropdown, setShowSubAccountDropdown] = useState(false);
   const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
+  const [subAccountSearchQuery, setSubAccountSearchQuery] = useState('');
   const [subAccountUsername, setSubAccountUsername] = useState('');
   const [subAccountPhone, setSubAccountPhone] = useState('');
   const [subAccountAvatarFile, setSubAccountAvatarFile] = useState<File | null>(null);
@@ -68,6 +70,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
   const canManageSubAccounts = isAdmin;
   const hasExistingSubAccounts = availableProfiles.some((profile) => profile.is_sub_account);
+  const normalizedSubAccountSearchQuery = subAccountSearchQuery.trim().toLowerCase();
+  const filteredSubAccounts = availableProfiles.filter((account) => {
+    if (!normalizedSubAccountSearchQuery) return true;
+    return (account.username || '').toLowerCase().includes(normalizedSubAccountSearchQuery);
+  });
 
   useEffect(() => {
     return () => {
@@ -311,6 +318,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     setShowSubAccountPanel(false);
     resetSubAccountForm();
   }, [resetSubAccountForm]);
+
+  const closeSubAccountDropdown = useCallback(() => {
+    setShowSubAccountDropdown(false);
+    setSubAccountSearchQuery('');
+  }, []);
 
   // Lock background scroll while edit-name is open
   useEffect(() => {
@@ -818,6 +830,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 type="button"
                 onClick={() => {
                   if (hasExistingSubAccounts) {
+                    setSubAccountSearchQuery('');
                     setShowSubAccountDropdown((prev) => !prev);
                     setShowSubAccountPanel(false);
                   } else {
@@ -830,6 +843,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   if (hasExistingSubAccounts) {
+                    setSubAccountSearchQuery('');
                     setShowSubAccountDropdown((prev) => !prev);
                     setShowSubAccountPanel(false);
                   } else {
@@ -894,52 +908,116 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 animation: 'sub-account-dropdown-slide 0.18s ease-out',
               }}
             >
-              {availableProfiles.map((account) => {
-                const isActiveProfile = (activeProfileId || authUserId) === account.id;
-                const isMainProfile = authUserId === account.id;
-                return (
-                  <button
-                    key={account.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveProfile(account.id);
-                      setShowSubAccountDropdown(false);
-                    }}
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderBottom: '1px solid #f3f4f6',
+                  background: '#ffffff',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    padding: '10px 12px',
+                    background: '#f9fafb',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                  <input
+                    type="text"
+                    value={subAccountSearchQuery}
+                    onChange={(event) => setSubAccountSearchQuery(event.target.value)}
+                    placeholder="ຄົ້ນຫາ Sub Account"
                     style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 14px',
+                      flex: 1,
                       border: 'none',
-                      borderBottom: '1px solid #f3f4f6',
-                      background: isActiveProfile ? '#eefbf3' : '#ffffff',
-                      cursor: isActiveProfile ? 'default' : 'pointer',
-                      textAlign: 'left',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '14px',
+                      color: '#111827',
                     }}
-                    disabled={isActiveProfile}
-                  >
-                    <Avatar avatarUrl={account.avatar_url} size={38} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', minWidth: 0 }}>
-                          {account.username || 'Unnamed Admin'} {isMainProfile ? '(ບັນຊີຫລັກ)' : ''}
-                        </div>
-                        {isActiveProfile ? (
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            ກຳລັງໃຊ້ງານ
+                  />
+                  {subAccountSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSubAccountSearchQuery('')}
+                      aria-label="ล้างคำค้นหา"
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        lineHeight: 1,
+                        padding: 0,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                {filteredSubAccounts.length > 0 ? filteredSubAccounts.map((account) => {
+                  const isActiveProfile = (activeProfileId || authUserId) === account.id;
+                  const isMainProfile = authUserId === account.id;
+                  return (
+                    <button
+                      key={account.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveProfile(account.id);
+                        closeSubAccountDropdown();
+                      }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px 14px',
+                        border: 'none',
+                        borderBottom: '1px solid #f3f4f6',
+                        background: isActiveProfile ? '#eefbf3' : '#ffffff',
+                        cursor: isActiveProfile ? 'default' : 'pointer',
+                        textAlign: 'left',
+                      }}
+                      disabled={isActiveProfile}
+                    >
+                      <Avatar avatarUrl={account.avatar_url} size={38} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                          <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', minWidth: 0 }}>
+                            {account.username || 'Unnamed Admin'} {isMainProfile ? '(ບັນຊີຫລັກ)' : ''}
                           </div>
-                        ) : null}
+                          {isActiveProfile ? (
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              ກຳລັງໃຊ້ງານ
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                }) : (
+                  <div style={{ padding: '18px 14px', fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>
+                    ບໍ່ພົບ Sub Account ທີ່ຄົ້ນຫາ
+                  </div>
+                )}
+              </div>
 
               <button
                 type="button"
                 onClick={() => {
-                  setShowSubAccountDropdown(false);
+                  closeSubAccountDropdown();
                   setShowSubAccountPanel(true);
                   resetSubAccountForm();
                 }}
@@ -1178,9 +1256,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                         fontWeight: 700,
                         cursor: subAccountSubmitting ? 'not-allowed' : 'pointer',
                         marginTop: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      {subAccountSubmitting ? 'กำลังสร้าง...' : 'ສ້າງ Sub account'}
+                      {subAccountSubmitting ? <ButtonSpinner /> : 'ສ້າງ Sub account'}
                     </button>
                   </form>
                 </div>
