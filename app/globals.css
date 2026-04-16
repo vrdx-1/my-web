@@ -107,41 +107,6 @@ html:has(body[data-viewing-mode="open"]) {
   background: transparent !important;
 }
 
-/* ซ่อน scrollbar หน้าโฮม – Android/Desktop ใช้ webkit; iOS ไม่รองรับ ::-webkit-scrollbar (scroll อยู่ที่ body) จึงอาจยังเห็นจนกว่าจะใช้ inner scroll container */
-html:has(body[data-page="home"]) {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-body[data-page="home"] {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  scrollbar-color: transparent transparent !important; /* เผื่อ Safari รองรับในอนาคต */
-}
-body[data-page="home"]::-webkit-scrollbar,
-html:has(body[data-page="home"])::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-body[data-page="home"]::-webkit-scrollbar-track,
-body[data-page="home"]::-webkit-scrollbar-thumb {
-  display: none !important;
-  background: transparent !important;
-}
-
-/* เลื่อนฟีดลื่น ไม่กระตุก: momentum บน iOS + ลด paint การ์ดนอกจอ */
-body[data-page="home"],
-html:has(body[data-page="home"]) {
-  -webkit-overflow-scrolling: touch;
-  /* ป้องกันการดึงหน้าลง (pull-down) เมื่อ scroll อยู่บนสุดของ feed หน้าโฮม */
-  overscroll-behavior-y: none;
-  /* ป้องกัน viewport โยกซ้ายขวาระหว่างลาก feed บนมือถือ */
-  overscroll-behavior-x: none;
-  overflow-x: hidden;
-  touch-action: pan-y;
-}
-
 /* ไม่ใส่ content-visibility บน .feed-card — หน้าโฮมใช้ virtual list; cv + contain-intrinsic-size ทำให้กระพริบ/กระตุกตอนเลื่อน */
 
 /* Feed โหลดเสร็จ — fade-in แบบ Facebook */

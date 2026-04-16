@@ -127,27 +127,16 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
     const body = document.body;
     const html = document.documentElement;
-    const previousPage = body.dataset.page;
-    const previousBodyOverscroll = body.style.overscrollBehaviorY;
-    const previousHtmlOverscroll = html.style.overscrollBehaviorY;
+    const previousBodyTouchAction = body.style.touchAction;
 
     if (resolvedPathname !== '/home') {
-      if (previousPage === 'home') {
-        delete body.dataset.page;
-      }
       return;
     }
 
-    body.dataset.page = 'home';
     // Home feed scrolls on window/body. Reset any stale scroll locks left by overlays/pages.
     body.style.overflow = '';
     html.style.overflow = '';
-    body.style.scrollbarWidth = '';
-    body.style.msOverflowStyle = '';
-    html.style.scrollbarWidth = '';
-    html.style.msOverflowStyle = '';
-    body.style.overscrollBehaviorY = 'none';
-    html.style.overscrollBehaviorY = 'none';
+    body.style.touchAction = 'manipulation';
 
     const handleGestureEvent = (event: Event) => {
       const target = event.target;
@@ -165,15 +154,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       window.removeEventListener('gesturestart', handleGestureEvent);
       window.removeEventListener('gesturechange', handleGestureEvent);
       window.removeEventListener('gestureend', handleGestureEvent);
-
-      if (previousPage) {
-        body.dataset.page = previousPage;
-      } else {
-        delete body.dataset.page;
-      }
-
-      body.style.overscrollBehaviorY = previousBodyOverscroll;
-      html.style.overscrollBehaviorY = previousHtmlOverscroll;
+      body.style.touchAction = previousBodyTouchAction;
     };
   }, [resolvedPathname]);
 
