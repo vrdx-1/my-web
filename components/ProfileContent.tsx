@@ -475,7 +475,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       if (error) throw error;
 
       setUsername(editingUsername.trim());
-      setEditingUsername(false);
+      setIsEditingName(false);
       if (targetProfileId) {
         profileCache = {
           profileId: targetProfileId,

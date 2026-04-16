@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 
 const MODAL_BOX = {
@@ -36,8 +37,8 @@ function isPhoneValid(phone: string): boolean {
 
 type EditNameModalProps = {
   isOpen: boolean;
-  editingUsername: string;
-  setEditingUsername: (value: string) => void;
+  editingUsername: string | null | undefined;
+  setEditingUsername: Dispatch<SetStateAction<string>>;
   onClose: () => void;
   onSave: (name: string) => void;
 };
@@ -50,19 +51,20 @@ const EditNameModalComponent = ({
   onSave,
 }: EditNameModalProps) => {
   if (!isOpen) return null;
-  const canSave = editingUsername.trim().length >= 1;
+  const editingUsernameValue = typeof editingUsername === 'string' ? editingUsername : '';
+  const canSave = editingUsernameValue.trim().length >= 1;
 
   return (
     <div onClick={e => e.stopPropagation()} style={{ ...MODAL_BOX, touchAction: 'manipulation' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <input
-          value={editingUsername}
+          value={editingUsernameValue}
           maxLength={36}
           onChange={e => setEditingUsername(e.target.value.slice(0, 36))}
           onPaste={e => {
             e.preventDefault();
             const pastedText = e.clipboardData.getData('text').slice(0, 36);
-            setEditingUsername((editingUsername + pastedText).slice(0, 36));
+            setEditingUsername(currentValue => (currentValue + pastedText).slice(0, 36));
           }}
           autoFocus
           style={{
@@ -84,7 +86,7 @@ const EditNameModalComponent = ({
           <button
             type="button"
             disabled={!canSave}
-            onClick={() => canSave && onSave(editingUsername.trim())}
+            onClick={() => canSave && onSave(editingUsernameValue.trim())}
             style={{
               ...BTN_CANCEL,
               background: canSave ? '#1877f2' : '#e4e6eb',
