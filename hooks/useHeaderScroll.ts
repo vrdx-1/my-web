@@ -94,7 +94,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     window.addEventListener('keydown', markUserScrollIntent);
 
     const handleScroll = () => {
-      latestScrollYRef.current = window.scrollY;
+      latestScrollYRef.current = Math.max(window.scrollY, 0);
       if (scrollFrameRef.current != null) return;
       scrollFrameRef.current = window.requestAnimationFrame(() => {
         scrollFrameRef.current = null;
@@ -233,7 +233,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       });
     };
 
-    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const scrollY = typeof window !== 'undefined' ? Math.max(window.scrollY, 0) : 0;
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
 
