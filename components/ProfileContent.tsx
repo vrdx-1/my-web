@@ -51,6 +51,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [isVerified, setIsVerified] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSubAccount, setIsSubAccount] = useState(false);
+  const [showSubAccountDropdown, setShowSubAccountDropdown] = useState(false);
   const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
   const [subAccountUsername, setSubAccountUsername] = useState('');
   const [subAccountLoading, setSubAccountLoading] = useState(false);
@@ -268,6 +269,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       loadSubAccounts();
     }
   }, [canManageSubAccounts, loadSubAccounts, showSubAccountPanel]);
+
+  useEffect(() => {
+    if (showSubAccountDropdown && canManageSubAccounts) {
+      loadSubAccounts();
+    }
+  }, [canManageSubAccounts, loadSubAccounts, showSubAccountDropdown]);
 
   // Lock background scroll while edit-name is open
   useEffect(() => {
@@ -678,7 +685,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         </div>
 
         {/* Username with edit button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', position: 'relative', zIndex: showSubAccountDropdown ? 40 : 'auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <h2
               style={{
@@ -739,17 +746,29 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setShowSubAccountPanel((prev) => !prev);
+                  if (hasExistingSubAccounts) {
+                    setShowSubAccountDropdown((prev) => !prev);
+                    setShowSubAccountPanel(false);
+                  } else {
+                    setShowSubAccountPanel((prev) => !prev);
+                    setShowSubAccountDropdown(false);
+                  }
                   setSubAccountError('');
                   setSubAccountSuccess('');
                 }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
-                  setShowSubAccountPanel((prev) => !prev);
+                  if (hasExistingSubAccounts) {
+                    setShowSubAccountDropdown((prev) => !prev);
+                    setShowSubAccountPanel(false);
+                  } else {
+                    setShowSubAccountPanel((prev) => !prev);
+                    setShowSubAccountDropdown(false);
+                  }
                   setSubAccountError('');
                   setSubAccountSuccess('');
                 }}
-                aria-label={showSubAccountPanel ? 'ปิดการสร้าง sub account' : 'เปิดการสร้าง sub account'}
+                aria-label={hasExistingSubAccounts ? (showSubAccountDropdown ? 'ปิดรายการบัญชี' : 'เปิดรายการบัญชี') : (showSubAccountPanel ? 'ปิดการสร้าง sub account' : 'เปิดการสร้าง sub account')}
                 title={hasExistingSubAccounts ? 'แสดงรายการ Sub Account' : 'สร้าง Sub Account'}
                 style={{
                   background: 'none',
@@ -766,7 +785,17 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 }}
               >
                 {hasExistingSubAccounts ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1e21" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#1c1e21"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ transform: showSubAccountDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                  >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 ) : (
@@ -778,6 +807,110 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               </button>
             )}
           </div>
+          {canManageSubAccounts && hasExistingSubAccounts && showSubAccountDropdown && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 10px)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'min(360px, calc(100vw - 40px))',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '16px',
+                boxShadow: '0 10px 24px rgba(17, 24, 39, 0.10)',
+                overflow: 'hidden',
+                animation: 'sub-account-dropdown-slide 0.18s ease-out',
+              }}
+            >
+              {availableProfiles.map((account) => {
+                const isActiveProfile = (activeProfileId || authUserId) === account.id;
+                const isMainProfile = authUserId === account.id;
+                return (
+                  <button
+                    key={account.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveProfile(account.id);
+                      setShowSubAccountDropdown(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 14px',
+                      border: 'none',
+                      borderBottom: '1px solid #f3f4f6',
+                      background: isActiveProfile ? '#eefbf3' : '#ffffff',
+                      cursor: isActiveProfile ? 'default' : 'pointer',
+                      textAlign: 'left',
+                    }}
+                    disabled={isActiveProfile}
+                  >
+                    <Avatar avatarUrl={account.avatar_url} size={38} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', minWidth: 0 }}>
+                          {account.username || 'Unnamed Admin'} {isMainProfile ? '(ບັນຊີຫລັກ)' : ''}
+                        </div>
+                        {isActiveProfile ? (
+                          <div style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            ກຳລັງໃຊ້ງານ
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubAccountDropdown(false);
+                  setShowSubAccountPanel(true);
+                  setSubAccountError('');
+                  setSubAccountSuccess('');
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '12px 14px',
+                  border: 'none',
+                  background: '#ffffff',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.2" strokeLinecap="round">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', marginBottom: '2px' }}>ສ້າງ Sub Account ເພີ່ມ</div>
+                </div>
+              </button>
+            </div>
+          )}
+          {canManageSubAccounts && hasExistingSubAccounts && showSubAccountDropdown && (
+            <style>{`
+              @keyframes sub-account-dropdown-slide {
+                0% {
+                  opacity: 0;
+                  transform: translateX(-50%) translateY(-10px);
+                }
+                100% {
+                  opacity: 1;
+                  transform: translateX(-50%) translateY(0);
+                }
+              }
+            `}</style>
+          )}
         </div>
 
         {/* WhatsApp row */}
@@ -824,7 +957,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               }}>
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '6px' }}>Sub Accounts</div>
-                  <div style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.5 }}>สร้างบัญชีย่อยด้วยชื่ออย่างเดียว แล้วสลับเข้าใช้งานจากบัญชีหลักนี้ได้ทันที</div>
                 </div>
 
                 <form onSubmit={handleCreateSubAccount} style={{ display: 'grid', gap: '12px', marginBottom: '18px' }}>
