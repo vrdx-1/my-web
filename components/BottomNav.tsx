@@ -124,7 +124,63 @@ function HomeNavIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
-// ไอคอนการแจ้งเตือน: ใช้แบบใหม่คงที่
+function BellNavIcon({ isActive }: { isActive: boolean }) {
+  if (isActive) {
+    return (
+      <svg
+        width={NAV_ICON_SIZE}
+        height={NAV_ICON_SIZE}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          margin: 'auto',
+          zIndex: 1,
+          opacity: 1,
+          transition: 'opacity 0.15s ease-out',
+          pointerEvents: 'none',
+          transform: 'translateY(0px)',
+        }}
+      >
+        <path
+          d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"
+          fill="#1877f2"
+          stroke="#1877f2"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10.268 21a2 2 0 0 0 3.464 0"
+          stroke="#1877f2"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <Bell
+      size={NAV_ICON_SIZE}
+      strokeWidth={2}
+      color={NAV_ICON_INACTIVE}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        margin: 'auto',
+        zIndex: 1,
+        opacity: 1,
+        transition: 'opacity 0.15s ease-out',
+        pointerEvents: 'none',
+        transform: 'translateY(0px)',
+      }}
+    />
+  );
+}
 
 export function BottomNav() {
   const router = useRouter();
@@ -371,23 +427,7 @@ export function BottomNav() {
               >
                 {path === '/home' && <HomeNavIcon isActive={isActive} />}
                 {path === '/notification' && (
-                  <>
-                    <Bell
-                      size={NAV_ICON_SIZE}
-                      strokeWidth={2}
-                      color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        margin: 'auto',
-                        zIndex: 1,
-                        opacity: 1,
-                        transition: 'opacity 0.15s ease-out',
-                        pointerEvents: 'none',
-                        transform: 'translateY(0px)',
-                      }}
-                    />
-                  </>
+                  <BellNavIcon isActive={isActive} />
                 )}
                 {showBadge && (
                   <span
