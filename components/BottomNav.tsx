@@ -88,12 +88,19 @@ function HomeNavIcon({ isActive }: { isActive: boolean }) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+        <rect
+          x="9"
+          y="12"
+          width="6"
+          height="7.2"
+          rx="0.9"
+          fill="#ffffff"
+        />
         <path
-          d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"
-          stroke="#ffffff"
+          d="M7.6 20.9h8.8"
+          stroke="#1877f2"
           strokeWidth="2"
           strokeLinecap="round"
-          strokeLinejoin="round"
         />
       </svg>
     );
