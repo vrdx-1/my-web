@@ -50,6 +50,10 @@ const privateNoteIcon = (
 );
 
 interface CreatePostCardProps {
+  selectedPrivateShop?: {
+    shop_name: string | null;
+    shop_phone: string | null;
+  } | null;
   userProfile: any;
   session: any;
   caption: string;
@@ -70,6 +74,7 @@ interface CreatePostCardProps {
 
 export const CreatePostCard = React.memo<CreatePostCardProps>(
   ({
+    selectedPrivateShop,
     userProfile,
     session,
     caption,
@@ -90,6 +95,17 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     const router = useRouter();
     const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('de-DE') : '';
     const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
+    const privateNoteSummary = (() => {
+      const noteName = selectedPrivateShop?.shop_name?.trim();
+      if (noteName) return noteName;
+
+      const rawPhone = selectedPrivateShop?.shop_phone?.trim();
+      if (!rawPhone) return '';
+      if (rawPhone.startsWith('85620') && rawPhone.length === 13) {
+        return `020${rawPhone.slice(5)}`;
+      }
+      return rawPhone;
+    })();
 
     return (
       <div>
@@ -420,7 +436,31 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 }}
               >
                 <span style={actionIconStyle}>{privateNoteIcon}</span>
-                <span>ໂນດສ່ວນຕົວ</span>
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    minWidth: 0,
+                    flex: 1,
+                  }}
+                >
+                  <span style={{ color: '#4b5563', flexShrink: 0 }}>ໂນດສ່ວນຕົວ</span>
+                  {privateNoteSummary ? (
+                    <span
+                      style={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: '#1877f2',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {privateNoteSummary}
+                    </span>
+                  ) : null}
+                </span>
               </button>
             </div>
           )}

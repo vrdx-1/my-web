@@ -19,7 +19,7 @@ type DocType = typeof DOCUMENT_TYPES[number]['value']
 
 export default function IdentityVerificationPage() {
   const router = useRouter()
-  const { activeProfileId } = useSessionAndProfile()
+  const { activeProfileId, session, sessionReady, startSessionCheck } = useSessionAndProfile()
   const docInputRef = useRef<HTMLInputElement>(null)
   const selfieInputRef = useRef<HTMLInputElement>(null)
   const documentPreviewRef = useRef<string | null>(null)
@@ -40,14 +40,27 @@ export default function IdentityVerificationPage() {
   const [requiresLogin, setRequiresLogin] = useState(false)
 
   useEffect(() => {
+    startSessionCheck()
+  }, [startSessionCheck])
+
+  useEffect(() => {
     const checkStatus = async () => {
+      if (!sessionReady) return
+
       try {
-        let { data: { session } } = await supabase.auth.getSession()
-        let accessToken = session?.access_token ?? ''
+        let currentSession = session
+        let accessToken = currentSession?.access_token ?? ''
         if (!accessToken) {
           const refreshed = await supabase.auth.refreshSession()
           accessToken = refreshed.data.session?.access_token ?? ''
-          session = refreshed.data.session ?? session
+          currentSession = refreshed.data.session ?? currentSession
+        }
+
+        if (!currentSession?.user?.id) {
+          setRequiresLogin(true)
+          setError('ກະລຸນາລ໋ອກອິນກ່ອນສົ່ງຄຳຂໍຢືນຢັນຕົວຕົນ')
+          setCheckingStatus(false)
+          return
         }
 
         const res = await fetch('/api/verification/status', {
@@ -59,15 +72,15 @@ export default function IdentityVerificationPage() {
         })
         if (!res.ok) {
           if (res.status === 401) {
-            const hasSession = !!session?.user?.id
-            setRequiresLogin(!hasSession)
-            if (!hasSession) {
-              setError('ກະລຸນາລ໋ອກອິນກ່ອນສົ່ງຄຳຂໍຢືນຢັນຕົວຕົນ')
-            }
+            setRequiresLogin(true)
+            setError('ຫມົດເວລາການລ໋ອກອິນ ກະລຸນາລ໋ອກອິນໃໝ່')
           }
           setCheckingStatus(false)
           return
         }
+
+        setRequiresLogin(false)
+        setError(null)
         const data = await res.json()
         if (data.is_verified) {
           setCurrentStatus('approved')
@@ -84,7 +97,7 @@ export default function IdentityVerificationPage() {
       }
     }
     checkStatus()
-  }, [activeProfileId])
+  }, [activeProfileId, session, sessionReady])
 
   useEffect(() => {
     documentPreviewRef.current = documentPreview

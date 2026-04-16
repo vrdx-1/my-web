@@ -27,25 +27,43 @@ export async function resolveServerActiveProfile(request: Request | NextRequest)
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.id) return null;
+  let userId: string | null = null;
 
-  const requestedProfileId = request.headers.get(ACTIVE_PROFILE_HEADER)?.trim() || user.id;
+  const { data: { user: cookieUser } } = await supabase.auth.getUser();
+  if (cookieUser?.id) {
+    userId = cookieUser.id;
+  }
 
-  if (requestedProfileId === user.id) {
-    return { authUserId: user.id, activeProfileId: user.id };
+  if (!userId) {
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+    if (accessToken) {
+      const { data: { user: headerUser } } = await supabase.auth.getUser(accessToken);
+      if (headerUser?.id) {
+        userId = headerUser.id;
+      }
+    }
+  }
+
+  if (!userId) return null;
+
+  const requestedProfileId = request.headers.get(ACTIVE_PROFILE_HEADER)?.trim() || userId;
+
+  if (requestedProfileId === userId) {
+    return { authUserId: userId, activeProfileId: userId };
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
     .eq('id', requestedProfileId)
-    .eq('parent_admin_id', user.id)
+    .eq('parent_admin_id', userId)
     .maybeSingle();
 
   if (!profile?.id) {
-    return { authUserId: user.id, activeProfileId: user.id };
+    return { authUserId: userId, activeProfileId: userId };
   }
 
-  return { authUserId: user.id, activeProfileId: profile.id };
+  return { authUserId: userId, activeProfileId: profile.id };
 }

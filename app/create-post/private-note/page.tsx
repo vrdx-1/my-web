@@ -13,6 +13,9 @@ interface PrivateShop {
   shop_phone: string | null;
 }
 
+const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY = 'create_post_private_shop';
+const CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT = 'create-post-private-shop-updated';
+
 const menuItemContentStyle = {
   display: 'flex',
   alignItems: 'center',
@@ -85,6 +88,42 @@ export default function CreatePostPrivateNotePage() {
   const getHiddenStorageKey = (uid: string) => `create_post_hidden_private_shops_${uid}`;
   const getLastUsedStorageKey = (uid: string) => `create_post_last_used_private_shop_${uid}`;
 
+  const readStoredPrivateShop = () => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const raw = window.sessionStorage.getItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw) as Partial<PrivateShop>;
+      return typeof parsed.id === 'string' ? parsed : null;
+    } catch {
+      window.sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+      return null;
+    }
+  };
+
+  const writeStoredPrivateShop = (shop: PrivateShop) => {
+    if (typeof window === 'undefined') return;
+
+    window.sessionStorage.setItem(
+      CREATE_POST_PRIVATE_SHOP_STORAGE_KEY,
+      JSON.stringify({
+        id: shop.id,
+        shop_name: shop.shop_name,
+        shop_phone: shop.shop_phone,
+      }),
+    );
+    window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
+  };
+
+  const clearStoredPrivateShop = () => {
+    if (typeof window === 'undefined') return;
+
+    window.sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+    window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
+  };
+
   const getPhoneTail = (phone: string | null | undefined) => {
     const rawPhone = phone ?? '';
     if (rawPhone.startsWith('85620')) return rawPhone.slice(5, 13);
@@ -126,6 +165,7 @@ export default function CreatePostPrivateNotePage() {
 
       if (!error && data) {
         const visibleShops = (data as PrivateShop[]).filter((shop) => !hiddenIds.includes(shop.id));
+        const storedShop = readStoredPrivateShop();
         if (typeof window !== 'undefined') {
           const lastUsedId = window.localStorage.getItem(getLastUsedStorageKey(uid));
           if (lastUsedId) {
@@ -135,11 +175,26 @@ export default function CreatePostPrivateNotePage() {
               const [item] = next.splice(idx, 1);
               next.unshift(item);
               setShops(next);
+              if (storedShop?.id && next.some((shop) => shop.id === storedShop.id)) {
+                setSelectedId(storedShop.id);
+              } else if (storedShop?.id) {
+                clearStoredPrivateShop();
+              }
             } else {
               setShops(visibleShops);
+              if (storedShop?.id && visibleShops.some((shop) => shop.id === storedShop.id)) {
+                setSelectedId(storedShop.id);
+              } else if (storedShop?.id) {
+                clearStoredPrivateShop();
+              }
             }
           } else {
             setShops(visibleShops);
+            if (storedShop?.id && visibleShops.some((shop) => shop.id === storedShop.id)) {
+              setSelectedId(storedShop.id);
+            } else if (storedShop?.id) {
+              clearStoredPrivateShop();
+            }
           }
         } else {
           setShops(visibleShops);
@@ -188,14 +243,7 @@ export default function CreatePostPrivateNotePage() {
     if (!hasNote && !hasPhone && selectedId) {
       const selectedShop = shops.find((shop) => shop.id === selectedId);
       if (selectedShop && typeof window !== 'undefined') {
-        window.sessionStorage.setItem(
-          'create_post_private_shop',
-          JSON.stringify({
-            id: selectedShop.id,
-            shop_name: selectedShop.shop_name,
-            shop_phone: selectedShop.shop_phone,
-          }),
-        );
+        writeStoredPrivateShop(selectedShop);
       }
       router.back();
       return;
@@ -210,14 +258,7 @@ export default function CreatePostPrivateNotePage() {
     const created = await handleSaveShop();
     if (!created) return;
     if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(
-        'create_post_private_shop',
-        JSON.stringify({
-          id: created.id,
-          shop_name: created.shop_name,
-          shop_phone: created.shop_phone,
-        }),
-      );
+      writeStoredPrivateShop(created);
     }
     router.back();
   };
@@ -227,7 +268,10 @@ export default function CreatePostPrivateNotePage() {
     setDeleteConfirmId(null);
     if (!id) return;
     setShops((prev) => prev.filter((s) => s.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    if (selectedId === id) {
+      setSelectedId(null);
+      clearStoredPrivateShop();
+    }
     if (activeMenuShopId === id) setActiveMenuShopId(null);
     if (editingShopId === id) setEditingShopId(null);
 
@@ -305,8 +349,7 @@ export default function CreatePostPrivateNotePage() {
     setShops((prev) => prev.map((shop) => (shop.id === editingShopId ? updated : shop)));
 
     if (selectedId === editingShopId) {
-      setShopName(updated.shop_name ?? '');
-      setShopPhone(getPhoneTail(updated.shop_phone));
+      writeStoredPrivateShop(updated);
     }
 
     setEditingShopId(null);
@@ -473,7 +516,10 @@ export default function CreatePostPrivateNotePage() {
           <input
             type="text"
             value={shopName}
-            onChange={(e) => setShopName(e.target.value)}
+            onChange={(e) => {
+              setSelectedId(null);
+              setShopName(e.target.value);
+            }}
             placeholder="ມີພຽງແຕ່ທ່ານເທົ່ານັ້ນທີ່ເຫັນໂນດນີ້"
             style={{
               width: '100%',
@@ -535,14 +581,17 @@ export default function CreatePostPrivateNotePage() {
                 onChange={(e) => {
                   const raw = e.target.value;
                   const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+                  setSelectedId(null);
                   setShopPhone(digitsOnly);
                 }}
                 onKeyDown={(e) => {
                   const key = e.key;
                   if (key === 'Backspace' && shopPhone.length > 0) {
+                    setSelectedId(null);
                     setShopPhone(shopPhone.slice(0, -1));
                     e.preventDefault();
                   } else if (key.length === 1 && /[0-9]/.test(key) && shopPhone.length < 8) {
+                    setSelectedId(null);
                     setShopPhone(shopPhone + key);
                     e.preventDefault();
                   }
@@ -590,19 +639,14 @@ export default function CreatePostPrivateNotePage() {
                       type="button"
                       onClick={() => {
                         setSelectedId(shop.id);
+                        setShopName('');
+                        setShopPhone('');
                         setSaveError(null);
                         if (typeof window !== 'undefined') {
                           if (userId) {
                             window.localStorage.setItem(getLastUsedStorageKey(userId), shop.id);
                           }
-                          window.sessionStorage.setItem(
-                            'create_post_private_shop',
-                            JSON.stringify({
-                              id: shop.id,
-                              shop_name: shop.shop_name,
-                              shop_phone: shop.shop_phone,
-                            }),
-                          );
+                          writeStoredPrivateShop(shop);
                         }
                       }}
                       style={{

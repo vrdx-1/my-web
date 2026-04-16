@@ -795,6 +795,19 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           </label>
         </div>
 
+        {canManageSubAccounts && hasExistingSubAccounts && showSubAccountDropdown && (
+          <div
+            onClick={closeSubAccountDropdown}
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(17, 24, 39, 0.18)',
+              zIndex: 30,
+            }}
+          />
+        )}
+
         {/* Username with edit button */}
         <div
           ref={subAccountDropdownRef}
@@ -932,7 +945,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 transform: 'translateX(-50%)',
                 width: 'min(360px, calc(100vw - 40px))',
                 background: '#ffffff',
-                border: '1px solid #e5e7eb',
+                border: 'none',
                 borderRadius: '16px',
                 boxShadow: '0 10px 24px rgba(17, 24, 39, 0.10)',
                 overflow: 'hidden',
@@ -1027,7 +1040,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                           <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', minWidth: 0 }}>
-                            {account.username || 'Unnamed Admin'} {isMainProfile ? '(ບັນຊີຫລັກ)' : ''}
+                            {account.username || 'Unnamed Admin'}{' '}
+                            {isMainProfile ? <span style={{ color: '#1877f2' }}>ບັນຊີຫລັກ</span> : ''}
                           </div>
                           {isActiveProfile ? (
                             <div style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -1280,7 +1294,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                         border: 'none',
                         borderRadius: '14px',
                         padding: '14px 18px',
-                        background: subAccountSubmitting ? '#9ca3af' : '#111827',
+                        background: subAccountSubmitting ? '#93c5fd' : '#1877f2',
                         color: '#fff',
                         fontSize: '15px',
                         fontWeight: 700,

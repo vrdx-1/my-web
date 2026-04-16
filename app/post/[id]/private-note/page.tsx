@@ -5,21 +5,43 @@ import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
-interface PrivateNoteData {
-  shop_name: string;
-  shop_phone: string;
+interface PrivateShop {
+  id: string;
+  shop_name: string | null;
+  shop_phone: string | null;
+}
+
+function getStoredActiveProfileId(authUserId: string): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return window.localStorage.getItem(`active_profile_${authUserId}`);
+  } catch {
+    return null;
+  }
 }
 
 export default function PostPrivateNotePage() {
   const router = useRouter();
   const params = useParams();
   const postId = (params?.id as string) || '';
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [note, setNote] = useState<PrivateNoteData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [currentPrivateShopId, setCurrentPrivateShopId] = useState<string | null>(null);
+  const [shops, setShops] = useState<PrivateShop[]>([]);
+  const [shopName, setShopName] = useState('');
+  const [shopPhone, setShopPhone] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
 
+  const getHiddenStorageKey = (uid: string) => `create_post_hidden_private_shops_${uid}`;
+  const getLastUsedStorageKey = (uid: string) => `create_post_last_used_private_shop_${uid}`;
+
   useEffect(() => {
-    async function load() {
+    async function init() {
       if (!postId) {
         setLoading(false);
         return;
@@ -32,48 +54,155 @@ export default function PostPrivateNotePage() {
         setLoading(false);
         return;
       }
+      setAuthUserId(uid);
 
-      const { data: car, error: carErr } = await supabase
+      const effectiveProfileId = getStoredActiveProfileId(uid) || uid;
+      setOwnerProfileId(effectiveProfileId);
+
+      const { data: car, error: carError } = await supabase
         .from('cars')
         .select('user_id, private_shop_id')
         .eq('id', postId)
         .maybeSingle();
 
-      if (carErr || !car || car.user_id !== uid) {
+      if (carError || !car || String(car.user_id) !== String(effectiveProfileId)) {
         setNotAllowed(true);
         setLoading(false);
         return;
       }
 
-      if (!car.private_shop_id) {
-        setNote(null);
-        setLoading(false);
-        return;
+      const attachedShopId = typeof car.private_shop_id === 'string' ? car.private_shop_id : null;
+      setCurrentPrivateShopId(attachedShopId);
+      setSelectedId(attachedShopId);
+
+      let hiddenIds: string[] = [];
+      if (typeof window !== 'undefined') {
+        const raw = window.localStorage.getItem(getHiddenStorageKey(uid));
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              hiddenIds = parsed.filter((item): item is string => typeof item === 'string');
+            }
+          } catch {
+            hiddenIds = [];
+          }
+        }
       }
 
-      const { data: shop, error: shopErr } = await supabase
+      const { data, error } = await supabase
         .from('user_private_shops')
-        .select('shop_name, shop_phone')
-        .eq('id', car.private_shop_id)
+        .select('id, shop_name, shop_phone')
         .eq('user_id', uid)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      if (shopErr || !shop) {
-        setNote(null);
-      } else {
-        setNote({
-          shop_name: shop.shop_name,
-          shop_phone: shop.shop_phone,
-        });
+      if (!error && data) {
+        const visibleShops = (data as PrivateShop[]).filter(
+          (shop) => !hiddenIds.includes(shop.id) || shop.id === attachedShopId,
+        );
+
+        if (typeof window !== 'undefined') {
+          const lastUsedId = window.localStorage.getItem(getLastUsedStorageKey(uid));
+          if (lastUsedId) {
+            const idx = visibleShops.findIndex((shop) => shop.id === lastUsedId);
+            if (idx > 0) {
+              const next = [...visibleShops];
+              const [item] = next.splice(idx, 1);
+              next.unshift(item);
+              setShops(next);
+            } else {
+              setShops(visibleShops);
+            }
+          } else {
+            setShops(visibleShops);
+          }
+        } else {
+          setShops(visibleShops);
+        }
       }
 
       setLoading(false);
     }
 
-    void load();
+    void init();
   }, [postId]);
 
-  const goBack = () => {
+  const attachPrivateShopToPost = async (privateShopId: string | null) => {
+    if (!postId || !ownerProfileId) return false;
+
+    const { error } = await supabase
+      .from('cars')
+      .update({ private_shop_id: privateShopId })
+      .eq('id', postId)
+      .eq('user_id', ownerProfileId);
+
+    if (error) {
+      setSaveError(error.message || 'ບັນທຶກບໍ່ສຳເລັດ');
+      return false;
+    }
+
+    setCurrentPrivateShopId(privateShopId);
+    return true;
+  };
+
+  const handleSaveShop = async (): Promise<PrivateShop | null> => {
+    if (!authUserId) return null;
+    const hasNote = Boolean(shopName.trim());
+    const hasPhone = Boolean(shopPhone.trim());
+    if (!hasNote && !hasPhone) return null;
+
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('user_private_shops')
+      .insert({
+        user_id: authUserId,
+        shop_name: hasNote ? shopName.trim() : null,
+        shop_phone: hasPhone ? `85620${shopPhone.trim()}` : null,
+      })
+      .select('id, shop_name, shop_phone')
+      .maybeSingle();
+
+    setSaving(false);
+    if (error || !data) {
+      setSaveError(error?.message || 'ບັນທຶກບໍ່ສຳເລັດ');
+      return null;
+    }
+
+    const created = data as PrivateShop;
+    setShops((prev) => [created, ...prev.filter((shop) => shop.id !== created.id)]);
+    return created;
+  };
+
+  const handleApplyAndBack = async () => {
+    setSaveError(null);
+    const hasNote = Boolean(shopName.trim());
+    const hasPhone = Boolean(shopPhone.trim());
+
+    if (!hasNote && !hasPhone && selectedId) {
+      if (typeof window !== 'undefined' && authUserId) {
+        window.localStorage.setItem(getLastUsedStorageKey(authUserId), selectedId);
+      }
+      const success = await attachPrivateShopToPost(selectedId);
+      if (!success) return;
+      router.back();
+      return;
+    }
+
+    if (!hasNote && !hasPhone) {
+      router.back();
+      return;
+    }
+
+    const created = await handleSaveShop();
+    if (!created) return;
+
+    if (typeof window !== 'undefined' && authUserId) {
+      window.localStorage.setItem(getLastUsedStorageKey(authUserId), created.id);
+    }
+
+    const success = await attachPrivateShopToPost(created.id);
+    if (!success) return;
+      
     router.back();
   };
 
@@ -91,7 +220,7 @@ export default function PostPrivateNotePage() {
     );
   }
 
-  if (notAllowed) {
+  if (notAllowed || !authUserId) {
     return (
       <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
         <div
@@ -103,7 +232,7 @@ export default function PostPrivateNotePage() {
         >
           <button
             type="button"
-            onClick={goBack}
+            onClick={() => router.back()}
             style={{
               background: 'none',
               border: 'none',
@@ -145,6 +274,8 @@ export default function PostPrivateNotePage() {
     );
   }
 
+  const canShowCompleteButton = Boolean(shopName.trim()) || Boolean(shopPhone.trim()) || Boolean(selectedId);
+
   return (
     <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
       <div
@@ -152,11 +283,15 @@ export default function PostPrivateNotePage() {
           padding: '10px 15px',
           display: 'flex',
           alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          background: '#fff',
+          zIndex: 10,
         }}
       >
         <button
           type="button"
-          onClick={goBack}
+          onClick={() => router.back()}
           style={{
             background: 'none',
             border: 'none',
@@ -189,65 +324,213 @@ export default function PostPrivateNotePage() {
         >
           ໂນດສ່ວນຕົວ
         </h3>
-        <div style={{ width: '40px' }} />
+        {canShowCompleteButton ? (
+          <button
+            type="button"
+            onClick={handleApplyAndBack}
+            style={{
+              padding: '6px 12px',
+              background: '#1877f2',
+              border: 'none',
+              borderRadius: '20px',
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1,
+            }}
+            disabled={saving}
+          >
+            {saving ? 'ກຳລັງບັນທຶກ...' : 'ສຳເລັດ'}
+          </button>
+        ) : (
+          <div style={{ width: '40px' }} />
+        )}
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          padding: '16px',
-          fontSize: '15px',
-          color: '#111',
-          display: 'flex',
-          flexDirection: 'column',
-          ...(note
-            ? {}
-            : {
-                alignItems: 'center',
-                justifyContent: 'center',
-              }),
-        }}
-      >
-        {note ? (
-          <>
-            <div style={{ marginBottom: note.shop_phone ? '12px' : 0 }}>{note.shop_name}</div>
-            {note.shop_phone ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span>
-                {note.shop_phone.startsWith('85620') && note.shop_phone.length === 13
-                  ? `020${note.shop_phone.slice(5)}`
-                  : note.shop_phone}
-              </span>
-                <a
-                  href={`https://wa.me/${note.shop_phone.replace(/\D/g, '').replace(/^0/, '856')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '8px',
-                    margin: '-8px',
-                    color: '#25D366',
-                    textDecoration: 'none',
-                    minWidth: 44,
-                    minHeight: 44,
-                  }}
-                  title="ເປີດ WhatsApp"
-                  aria-label="ເປີດ WhatsApp"
-                >
-                  <svg viewBox="0 0 24 24" width={28} height={28} fill="currentColor" aria-hidden>
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                </a>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div style={{ fontSize: '14px', color: '#4a4d52' }}>
-            ບໍ່ມີໂນດສ່ວນຕົວສຳລັບໂພສນີ້
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 15px 90px' }}>
+        {saveError ? (
+          <div
+            style={{
+              marginBottom: '12px',
+              padding: '10px 12px',
+              background: '#fff2f0',
+              border: '1px solid #ffccc7',
+              borderRadius: '8px',
+              fontSize: '14px',
+              color: '#cf1322',
+            }}
+          >
+            {saveError}
           </div>
-        )}
+        ) : null}
+
+        {currentPrivateShopId && shops.some((shop) => shop.id === currentPrivateShopId) ? (
+          <div
+            style={{
+              marginBottom: '12px',
+              padding: '10px 12px',
+              borderRadius: '10px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              fontSize: '13px',
+              color: '#475569',
+            }}
+          >
+            ໂນດທີ່ກຳລັງໃຊ້ກັບໂພສນີ້ຖືກເລືອກໄວ້ແລ້ວ
+          </div>
+        ) : null}
+
+        <div style={{ marginBottom: '20px' }}>
+          <input
+            type="text"
+            value={shopName}
+            onChange={(e) => {
+              setSelectedId(null);
+              setShopName(e.target.value);
+            }}
+            placeholder="ມີພຽງແຕ່ທ່ານເທົ່ານັ້ນທີ່ເຫັນໂນດນີ້"
+            style={{
+              width: '100%',
+              padding: '8px 10px',
+              borderRadius: '8px',
+              border: '1px solid #d0d0d0',
+              fontSize: '16px',
+              marginBottom: '10px',
+            }}
+          />
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '8px 10px',
+              borderRadius: '8px',
+              border: '1px solid #d0d0d0',
+              background: '#fff',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '16px',
+                marginRight: '1px',
+                fontWeight: 600,
+              }}
+            >
+              020
+            </span>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  pointerEvents: 'none',
+                  fontSize: '16px',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#111111' }}>{shopPhone}</span>
+                <span style={{ color: '#b0b0b0' }}>{'x'.repeat(8 - shopPhone.length)}</span>
+              </div>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={shopPhone + 'x'.repeat(8 - shopPhone.length)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+                  setSelectedId(null);
+                  setShopPhone(digitsOnly);
+                }}
+                onKeyDown={(e) => {
+                  const key = e.key;
+                  if (key === 'Backspace' && shopPhone.length > 0) {
+                    setSelectedId(null);
+                    setShopPhone(shopPhone.slice(0, -1));
+                    e.preventDefault();
+                  } else if (key.length === 1 && /[0-9]/.test(key) && shopPhone.length < 8) {
+                    setSelectedId(null);
+                    setShopPhone(shopPhone + key);
+                    e.preventDefault();
+                  }
+                }}
+                maxLength={8}
+                style={{
+                  position: 'relative',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: 0,
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '16px',
+                  color: 'transparent',
+                  caretColor: '#111111',
+                  background: 'transparent',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {shops.length > 0 ? (
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+              ໂນດທີ່ເຄີຍໃຊ້
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {shops.map((shop) => {
+                const isSelected = shop.id === selectedId;
+                return (
+                  <button
+                    key={shop.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(shop.id);
+                      setShopName('');
+                      setShopPhone('');
+                      setSaveError(null);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: '2px',
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '10px',
+                      border: isSelected ? '2px solid #1877f2' : '1px solid #e0e0e0',
+                      background: isSelected ? '#eef3ff' : '#fff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: '14px', color: '#111111' }}>
+                      {shop.shop_name ?? '—'}
+                    </span>
+                    {shop.shop_phone ? (
+                      <span style={{ fontSize: '13px', color: '#4a4d52' }}>
+                        {shop.shop_phone.startsWith('85620') && shop.shop_phone.length === 13
+                          ? `020${shop.shop_phone.slice(5)}`
+                          : shop.shop_phone}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

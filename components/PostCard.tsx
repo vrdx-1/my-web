@@ -499,20 +499,20 @@ export function PostCard({
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#e4e6eb',
-                padding: '6px 14px',
-                minHeight: '28px',
-                borderRadius: '10px',
+                background: 'transparent',
+                padding: '8px 16px',
+                minHeight: '34px',
+                borderRadius: '12px',
                 color: '#1c1e21',
-                border: 'none',
+                border: '1px solid #d1d5db',
                 boxShadow: 'none',
-                fontSize: '12px',
+                fontSize: '14px',
                 fontWeight: 600,
                 letterSpacing: '0.01em',
                 whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ color: '#1c1e21', fontSize: '13px', lineHeight: '16px', fontWeight: 700 }}>{priceText}</span>
+              <span style={{ color: '#1c1e21', fontSize: '15px', lineHeight: '20px', fontWeight: 700 }}>{priceText}</span>
             </span>
           </div>
 

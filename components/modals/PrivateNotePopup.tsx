@@ -1,8 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+
+function getStoredActiveProfileId(authUserId: string): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return window.localStorage.getItem(`active_profile_${authUserId}`);
+  } catch {
+    return null;
+  }
+}
 
 interface PrivateNoteData {
   shop_name: string;
@@ -18,17 +29,20 @@ interface PrivateNotePopupProps {
 
 export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
   ({ show, postId, session, onClose }) => {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [note, setNote] = useState<PrivateNoteData | null>(null);
 
     useEffect(() => {
       if (!show || !postId) return;
-      const uid = session?.user?.id ?? null;
-      if (!uid) {
+      const authUserId = session?.user?.id ?? null;
+      if (!authUserId) {
         setNote(null);
         setLoading(false);
         return;
       }
+
+      const effectiveProfileId = getStoredActiveProfileId(authUserId) || authUserId;
 
       let cancelled = false;
       setLoading(true);
@@ -40,7 +54,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .eq('id', postId)
           .maybeSingle();
 
-        if (cancelled || carErr || !car || car.user_id !== uid) {
+        if (cancelled || carErr || !car || String(car.user_id) !== String(effectiveProfileId)) {
           if (!cancelled) {
             setNote(null);
             setLoading(false);
@@ -60,7 +74,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .from('user_private_shops')
           .select('shop_name, shop_phone')
           .eq('id', car.private_shop_id)
-          .eq('user_id', uid)
+          .eq('user_id', authUserId)
           .maybeSingle();
 
         if (cancelled) return;
@@ -170,8 +184,38 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
               ) : null}
             </div>
           ) : (
-            <div style={{ fontSize: '14px', color: '#4a4d52', textAlign: 'center' }}>
-              ບໍ່ມີໂນດສ່ວນຕົວສຳລັບໂພສນີ້
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <div style={{ fontSize: '14px', color: '#4a4d52', textAlign: 'center' }}>
+                ບໍ່ມີໂນດສ່ວນຕົວສຳລັບໂພສນີ້
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push(`/post/${postId}/private-note`);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  background: '#f3f8ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#1877f2',
+                  cursor: 'pointer',
+                }}
+              >
+                ເພີ່ມໂນດສ່ວນຕົວ
+              </button>
             </div>
           )}
 
