@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { fetchNotificationFeed } from '@/utils/notificationFeed';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { NOTIFICATION_PAGE_SIZE, FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD, NOTIFICATION_LIST_CACHE_MAX_AGE_MS } from '@/utils/constants';
 import type { NotificationFeedItem } from '@/utils/notificationFeed';
 import type { CachedBoosts } from '@/utils/notificationFeed';
@@ -84,6 +85,7 @@ export interface UseNotificationPageOptions {
 export function useNotificationPage(options: UseNotificationPageOptions = {}) {
   const { isActive = true } = options;
   const router = useRouter();
+  const { session, activeProfileId } = useSessionAndProfile();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,34 +165,48 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
   useEffect(() => {
     if (!clearedMapReady) return;
     let cancelled = false;
+    const effectiveUserId = activeProfileId || session?.user?.id || null;
     const cached = loadListCache();
     if (cached && cached.list.length > 0) {
       setNotifications(cached.list);
       setLoading(false);
     }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled) return;
-      if (session) {
-        const isBackground = !!(cached && cached.list.length > 0);
-        fetchFirstPage(session.user.id, isBackground).then(() => {
-          if (!cancelled && typeof window !== 'undefined') {
-            try {
-              window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
-            } catch {
-              // ignore
-            }
+    if (effectiveUserId) {
+      const isBackground = !!(cached && cached.list.length > 0);
+      fetchFirstPage(effectiveUserId, isBackground).then(() => {
+        if (!cancelled && typeof window !== 'undefined') {
+          try {
+            window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
+          } catch {
+            // ignore
           }
-        });
-      } else {
-        if (isMountedRef.current) setLoading(false);
-      }
-    }).catch(() => {
-      if (!cancelled && isMountedRef.current) setLoading(false);
-    });
+        }
+      });
+    } else {
+      supabase.auth.getSession().then(({ data: { session: fetchedSession } }) => {
+        if (cancelled) return;
+        if (fetchedSession?.user?.id) {
+          const isBackground = !!(cached && cached.list.length > 0);
+          fetchFirstPage(fetchedSession.user.id, isBackground).then(() => {
+            if (!cancelled && typeof window !== 'undefined') {
+              try {
+                window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
+              } catch {
+                // ignore
+              }
+            }
+          });
+        } else if (isMountedRef.current) {
+          setLoading(false);
+        }
+      }).catch(() => {
+        if (!cancelled && isMountedRef.current) setLoading(false);
+      });
+    }
     return () => {
       cancelled = true;
     };
-  }, [clearedMapReady, fetchFirstPage]);
+  }, [activeProfileId, clearedMapReady, fetchFirstPage, session?.user?.id]);
 
   const loadMore = useCallback(async () => {
     debugLog('loadMore called', { loadingMore, hasMore });
@@ -198,7 +214,7 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
       debugLog('skip: loadingMore=', loadingMore, 'hasMore=', hasMore);
       return;
     }
-    const userId = userIdRef.current ?? (await supabase.auth.getSession()).data.session?.user?.id;
+    const userId = userIdRef.current ?? activeProfileId ?? session?.user?.id ?? (await supabase.auth.getSession()).data.session?.user?.id;
     if (!userId) {
       debugLog('skip: no userId');
       return;
@@ -237,7 +253,7 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
     } finally {
       if (isMountedRef.current) setLoadingMore(false);
     }
-  }, [loadingMore, hasMore]);
+  }, [activeProfileId, hasMore, loadingMore, session?.user?.id]);
 
   // Preloading ระดับสากล — โหลดหน้าถัดไปล่วงหน้า 800px ก่อนถึงล่าง (เหมือน feed)
   const { lastElementRef } = useInfiniteScroll({

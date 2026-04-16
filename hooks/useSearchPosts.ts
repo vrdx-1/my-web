@@ -15,6 +15,7 @@ interface UseSearchPostsOptions {
   query: string;
   province?: string;
   session?: any;
+  activeProfileId?: string | null;
   sessionReady?: boolean;
   /** ถ้ามี = ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำในหน้าโฮม) */
   sharedLikedSaved?: SearchLikedSavedShared | null;
@@ -35,7 +36,7 @@ interface UseSearchPostsReturn {
 }
 
 export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsReturn {
-  const { query, province, session, sessionReady = true, sharedLikedSaved, enabled = true } = options;
+  const { query, province, session, activeProfileId, sessionReady = true, sharedLikedSaved, enabled = true } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const q = (query || '').trim();
   const shouldLoad = enabled && q.length > 0;
@@ -68,7 +69,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     if (!sessionReady || currentSession === undefined) return;
     let idOrToken: string | null = null;
     if (currentSession?.user?.id) {
-      const uid = currentSession.user.id;
+      const uid = activeProfileId || currentSession.user.id;
       if (typeof uid === 'string' && uid !== 'null' && /^[0-9a-f-]{36}$/i.test(uid)) {
         idOrToken = uid;
       }
@@ -103,7 +104,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       }
     });
     return () => { likesSavesCancelled = true; };
-  }, [sessionReady, currentSession, sharedLikedSaved]);
+  }, [activeProfileId, sessionReady, currentSession, sharedLikedSaved]);
 
   const fetchSearch = useCallback(async () => {
     const q = (query || '').trim();

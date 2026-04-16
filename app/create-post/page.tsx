@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { useProfile } from '@/hooks/useProfile';
 import { useImageUpload } from '@/hooks/useImageUpload';
 
 import { REGISTER_PATH } from '@/utils/authRoutes';
@@ -12,6 +12,7 @@ import { useCreatePostDraft } from '@/hooks/useCreatePostDraft';
 import { useCreatePostUpload } from '@/hooks/useCreatePostUpload';
 import { useOverlayScrollLock } from '@/hooks/useOverlayScrollLock';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import {
   CreatePostUploadingOverlay,
   CreatePostViewingOverlay,
@@ -92,20 +93,18 @@ export default function CreatePost() {
     compressMaxWidth: 720,
     compressQuality: 0.5,
   });
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showVideoAlert, setShowVideoAlert] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState('');
   const [isPreparingArrange, setIsPreparingArrange] = useState(false);
+  const { userProfile, activeProfileId } = useSessionAndProfile();
 
   const setSharedDraft = useCallback((draft: { files: File[]; layout: string }) => {
     createPostContext?.setDraft(draft);
   }, [createPostContext]);
-
-  // Use shared profile hook
-  const { profile: userProfile } = useProfile();
 
   useCreatePostDraft({
     caption,
@@ -339,6 +338,7 @@ useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validati
 
 const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   session,
+  activeProfileId,
   caption,
   province,
   carPrice,
@@ -418,7 +418,7 @@ if (isUploading) {
             setCarPrice={setCarPrice}
             carCurrency={carCurrency}
             setCarCurrency={setCarCurrency}
-            textareaRef={textareaRef as any}
+            textareaRef={textareaRef}
             previews={imageUpload.previews.slice(0, 15)}
             onImageClick={() => setIsViewing(true)}
             onRemoveImage={removeImage}

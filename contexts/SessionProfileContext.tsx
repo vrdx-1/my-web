@@ -1,12 +1,30 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+const ACTIVE_PROFILE_STORAGE_KEY_PREFIX = 'active_profile_';
+
+export interface SessionProfileRecord {
+  id: string;
+  username?: string | null;
+  avatar_url?: string | null;
+  phone?: string | null;
+  role?: string | null;
+  is_sub_account?: boolean | null;
+  parent_admin_id?: string | null;
+}
+
 export interface SessionProfileValue {
-  session: any;
+  session: Session | null;
   sessionReady: boolean;
-  userProfile: { id?: string; username?: string | null; avatar_url?: string | null; phone?: string | null } | null;
+  userProfile: SessionProfileRecord | null;
+  activeProfileId: string | null;
+  authUserId: string | null;
+  availableProfiles: SessionProfileRecord[];
+  setActiveProfile: (profileId: string | null) => void;
+  refetchProfiles: () => Promise<void>;
   /** เรียกเมื่อโหลดโพสต์ชุดแรกเสร็จแล้ว */
   startSessionCheck: () => void;
 }
@@ -18,12 +36,37 @@ const SessionProfileContext = createContext<SessionProfileValue | null>(null);
  * ทำให้รูปโปรไฟล์ใน Bottom Nav แสดงได้แน่นอนเมื่อ login
  */
 export function SessionProfileProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [userProfile, setUserProfile] = useState<SessionProfileValue['userProfile']>(null);
+  const [availableProfiles, setAvailableProfiles] = useState<SessionProfileRecord[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
   const sessionCheckStartedRef = useRef(false);
   const deferredProfileFetchTimerRef = useRef<number | null>(null);
+
+  const getStoredActiveProfileId = useCallback((userId: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY_PREFIX + userId);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const persistActiveProfileId = useCallback((userId: string, profileId: string | null) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const key = ACTIVE_PROFILE_STORAGE_KEY_PREFIX + userId;
+      if (profileId) {
+        window.localStorage.setItem(key, profileId);
+      } else {
+        window.localStorage.removeItem(key);
+      }
+    } catch {
+      // ignore storage failures
+    }
+  }, []);
 
   const isTransientFetchError = useCallback((error: unknown) => {
     const message = String((error as { message?: string } | null)?.message ?? '').toLowerCase();
@@ -43,20 +86,31 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  const fetchProfileIfMatch = useCallback(async (userId: string, retryCount = 0) => {
+  const applyProfiles = useCallback((userId: string, profiles: SessionProfileRecord[]) => {
+    setAvailableProfiles(profiles);
+    const storedActiveId = getStoredActiveProfileId(userId);
+    const fallbackProfile = profiles.find((profile) => profile.id === userId) ?? profiles[0] ?? null;
+    const resolvedActive = profiles.find((profile) => profile.id === storedActiveId) ?? fallbackProfile;
+    const nextActiveId = resolvedActive?.id ?? null;
+
+    setActiveProfileId(nextActiveId);
+    setUserProfile(resolvedActive ?? null);
+    persistActiveProfileId(userId, nextActiveId);
+  }, [getStoredActiveProfileId, persistActiveProfileId]);
+
+  const fetchProfileIfMatch = useCallback(async function fetchProfileIfMatchInternal(userId: string, retryCount = 0) {
     currentUserIdRef.current = userId;
 
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, phone')
-        .eq('id', userId)
-        .maybeSingle();
+        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id')
+        .or(`id.eq.${userId},parent_admin_id.eq.${userId}`);
 
       if (error) {
         if (isTransientFetchError(error) && retryCount < 2 && typeof window !== 'undefined') {
           window.setTimeout(() => {
-            void fetchProfileIfMatch(userId, retryCount + 1);
+            void fetchProfileIfMatchInternal(userId, retryCount + 1);
           }, 800 * (retryCount + 1));
           return;
         }
@@ -65,19 +119,23 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
           console.error('[SessionProfileContext] profile fetch error:', error.message, error.code);
         }
         setUserProfile(null);
+        setAvailableProfiles([]);
+        setActiveProfileId(null);
         return;
       }
 
       const currentId = currentUserIdRef.current;
-      if (data && currentId != null && String(currentId) === String(data.id)) {
-        setUserProfile(data);
+      if (Array.isArray(data) && currentId != null && String(currentId) === String(userId)) {
+        applyProfiles(userId, data);
       } else {
         setUserProfile(null);
+        setAvailableProfiles([]);
+        setActiveProfileId(null);
       }
     } catch (error) {
       if (isTransientFetchError(error) && retryCount < 2 && typeof window !== 'undefined') {
         window.setTimeout(() => {
-          void fetchProfileIfMatch(userId, retryCount + 1);
+          void fetchProfileIfMatchInternal(userId, retryCount + 1);
         }, 800 * (retryCount + 1));
         return;
       }
@@ -86,8 +144,31 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
         console.error('[SessionProfileContext] unexpected profile fetch error:', error);
       }
       setUserProfile(null);
+      setAvailableProfiles([]);
+      setActiveProfileId(null);
     }
-  }, [isTransientFetchError]);
+  }, [applyProfiles, isTransientFetchError]);
+
+  const refetchProfiles = useCallback(async () => {
+    const userId = currentUserIdRef.current;
+    if (!userId) return;
+    await fetchProfileIfMatch(userId);
+  }, [fetchProfileIfMatch]);
+
+  const setActiveProfile = useCallback((profileId: string | null) => {
+    const userId = currentUserIdRef.current;
+    if (!userId) return;
+
+    const fallbackProfile = availableProfiles.find((profile) => profile.id === userId) ?? availableProfiles[0] ?? null;
+    const resolvedProfile = profileId
+      ? availableProfiles.find((profile) => profile.id === profileId) ?? fallbackProfile
+      : fallbackProfile;
+
+    const nextActiveId = resolvedProfile?.id ?? null;
+    setActiveProfileId(nextActiveId);
+    setUserProfile(resolvedProfile ?? null);
+    persistActiveProfileId(userId, nextActiveId);
+  }, [availableProfiles, persistActiveProfileId]);
 
   const startSessionCheck = useCallback(() => {
     if (sessionCheckStartedRef.current) return;
@@ -114,6 +195,8 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
         clearDeferredProfileFetch();
         currentUserIdRef.current = null;
         setUserProfile(null);
+        setAvailableProfiles([]);
+        setActiveProfileId(null);
       }
     });
   }, [clearDeferredProfileFetch, fetchProfileIfMatch]);
@@ -133,6 +216,8 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
         clearDeferredProfileFetch();
         currentUserIdRef.current = null;
         setUserProfile(null);
+        setAvailableProfiles([]);
+        setActiveProfileId(null);
       }
     });
     return () => {
@@ -147,7 +232,17 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     return () => clearTimeout(t);
   }, [startSessionCheck]);
 
-  const value: SessionProfileValue = { session, sessionReady, userProfile, startSessionCheck };
+  const value: SessionProfileValue = {
+    session,
+    sessionReady,
+    userProfile,
+    activeProfileId,
+    authUserId: currentUserIdRef.current,
+    availableProfiles,
+    setActiveProfile,
+    refetchProfiles,
+    startSessionCheck,
+  };
 
   return (
     <SessionProfileContext.Provider value={value}>

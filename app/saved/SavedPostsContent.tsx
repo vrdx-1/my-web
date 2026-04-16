@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
 // Shared Components
 import { FeedSkeleton } from '@/components/FeedSkeleton';
@@ -24,6 +23,7 @@ import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -57,22 +57,22 @@ export function SavedPostsContent() {
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const [sessionState, setSessionState] = useState<any>(undefined);
+  const { session, sessionReady, activeProfileId } = useSessionAndProfile();
   const hasFetchedRecommendRef = useRef(false);
   const hasFetchedSoldRef = useRef(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSessionState(session));
-  }, []);
-
   const recommendListData = usePostListData({
     type: 'saved',
-    session: sessionState,
+    session,
+    sessionReady,
+    activeProfileId,
     tab: 'recommend',
   });
   const soldListData = usePostListData({
     type: 'saved',
-    session: sessionState,
+    session,
+    sessionReady,
+    activeProfileId,
     tab: 'sold',
   });
 
@@ -91,6 +91,7 @@ export function SavedPostsContent() {
 
   const { toggleSave, removeSave } = usePostInteractions({
     session: postListData.session,
+    activeProfileId,
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     savedPosts: postListData.savedPosts,
@@ -110,24 +111,24 @@ export function SavedPostsContent() {
   });
 
   useEffect(() => {
-    if (sessionState === undefined || recommendListData.session === undefined) return;
+    if (!sessionReady || recommendListData.session === undefined) return;
     if (!hasFetchedRecommendRef.current && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
       hasFetchedRecommendRef.current = true;
       recommendListData.setPage(0);
       recommendListData.setHasMore(true);
       recommendListData.fetchPosts(true);
     }
-  }, [sessionState, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore]);
+  }, [sessionReady, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore]);
 
   useEffect(() => {
-    if (tab !== 'sold' || sessionState === undefined || soldListData.session === undefined) return;
+    if (tab !== 'sold' || !sessionReady || soldListData.session === undefined) return;
     if (!hasFetchedSoldRef.current && soldListData.posts.length === 0 && !soldListData.loadingMore) {
       hasFetchedSoldRef.current = true;
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true);
     }
-  }, [tab, sessionState, soldListData.session, soldListData.posts.length, soldListData.loadingMore]);
+  }, [tab, sessionReady, soldListData.session, soldListData.posts.length, soldListData.loadingMore]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
@@ -207,7 +208,7 @@ export function SavedPostsContent() {
   const showFeedSkeleton =
     !mounted ||
     !feedReady ||
-    sessionState === undefined ||
+    !sessionReady ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
   const isHeaderVisible = headerScroll.isHeaderVisible;

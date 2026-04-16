@@ -5,9 +5,11 @@ import { supabase } from '@/lib/supabase';
 // Shared Hooks
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 export function useEditProfilePage() {
   const router = useRouter();
+  const { session, sessionReady, activeProfileId } = useSessionAndProfile();
 
   // Profile States
   const [username, setUsername] = useState('');
@@ -48,21 +50,17 @@ export function useEditProfilePage() {
 
 
   useEffect(() => {
-    let cancelled = false;
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (cancelled) return;
-      if (currentSession) {
-        const uid = currentSession.user.id;
-        userIdRef.current = uid;
-        setUserId(uid);
-        fetchProfile(uid);
-      } else {
-        setProfileLoading(false);
-        router.push(REGISTER_PATH);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [router, fetchProfile]);
+    if (!sessionReady) return;
+    if (session?.user?.id) {
+      const uid = activeProfileId || session.user.id;
+      userIdRef.current = uid;
+      setUserId(uid);
+      fetchProfile(uid);
+      return;
+    }
+    setProfileLoading(false);
+    router.push(REGISTER_PATH);
+  }, [activeProfileId, session, sessionReady, router, fetchProfile]);
 
   const uploadAvatar = useCallback(async (event: any) => {
     const uid = userId ?? userIdRef.current;

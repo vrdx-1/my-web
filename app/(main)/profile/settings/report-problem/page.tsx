@@ -8,15 +8,15 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { compressImage } from '@/utils/imageCompression'
+import { mergeHeaders } from '@/utils/activeProfile'
 
-const BUCKET_NAME = 'report-images'
 const MAX_IMAGES = 5
 const MAX_LINES = 15
 const LINE_HEIGHT_PX = 22
 
 export default function ReportProblemPage() {
   const router = useRouter()
-  const { session } = useSessionAndProfile()
+  const { session, activeProfileId } = useSessionAndProfile()
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
@@ -62,50 +62,47 @@ export default function ReportProblemPage() {
     }
 
     setLoading(true)
-    const uploadedPaths: string[] = []
     try {
       const files = imageUpload.selectedFiles.slice(0, MAX_IMAGES)
-      const imageUrls: string[] = []
+      const formData = new FormData()
+      formData.append('message', trimmed)
 
       if (files.length > 0) {
         const compressed = await Promise.all(
           files.map((f) => compressImage(f, 720, 0.5))
         )
-        const userId = session.user.id
-        for (let i = 0; i < compressed.length; i++) {
-          const file = compressed[i]
-          const ext = file.type === 'image/jpeg' ? 'jpg' : 'webp'
-          const fileName = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
-          const path = `${userId}/${fileName}`
-          const { error: upErr } = await supabase.storage
-            .from(BUCKET_NAME)
-            .upload(path, file)
-          if (upErr) {
-            for (const p of uploadedPaths) {
-              await supabase.storage.from(BUCKET_NAME).remove([p]).catch(() => {})
-            }
-            throw upErr
-          }
-          uploadedPaths.push(path)
-          const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path)
-          imageUrls.push(publicUrl)
+        for (const file of compressed) {
+          formData.append('images', file)
         }
       }
 
-      const { error: insertErr } = await supabase.from('user_problem_reports').insert({
-        user_id: session.user.id,
-        message: trimmed,
-        image_urls: imageUrls.length > 0 ? imageUrls : null,
-        status: 'pending',
-      })
+      let accessToken = session.access_token ?? ''
+      if (!accessToken) {
+        const refreshed = await supabase.auth.refreshSession()
+        accessToken = refreshed.data.session?.access_token ?? ''
+      }
 
-      if (insertErr) throw insertErr
+      const response = await fetch('/api/profile/problem-report', {
+        method: 'POST',
+        credentials: 'include',
+        headers: mergeHeaders(
+          accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          activeProfileId,
+        ),
+        body: formData,
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(typeof data.error === 'string' ? data.error : 'ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່')
+      }
+
       setSubmitMessage({ text: 'ສົ່ງລາຍງານບັນຫາສຳເລັດ', type: 'success' })
       setMessage('')
       imageUpload.clearImages()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSubmitMessage({
-        text: err?.message || 'ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່',
+        text: err instanceof Error ? err.message : 'ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່',
         type: 'error',
       })
     } finally {

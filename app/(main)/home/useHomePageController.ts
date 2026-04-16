@@ -47,12 +47,13 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   } = useReportModalState();
 
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
-  const { session, sessionReady, startSessionCheck } = useSessionAndProfile();
+  const { session, sessionReady, activeProfileId, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
 
   const tabData = useHomeTabData({
     session,
     sessionReady,
+    activeProfileId,
     startSessionCheck,
     setFirstFeedLoaded,
   });
@@ -77,6 +78,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     type: 'sold',
     session,
     sessionReady,
+    activeProfileId,
     status: 'sold',
     sharedLikedSaved,
     province: selectedProvince,
@@ -163,6 +165,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
 
   const { toggleSave } = usePostInteractions({
     session: effectivePostList.session,
+    activeProfileId,
     posts,
     setPosts: effectivePostList.setPosts,
     savedPosts: effectivePostList.savedPosts,

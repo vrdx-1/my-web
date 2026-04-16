@@ -59,10 +59,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!pathname) return;
     const current = updateCounts[pathname] ?? 0;
     if (current >= 0) {
-      setLastSeenCounts((prev) => ({
-        ...prev,
-        [pathname]: Math.max(prev[pathname] ?? 0, current),
-      }));
+      const timeoutId = window.setTimeout(() => {
+        setLastSeenCounts((prev) => ({
+          ...prev,
+          [pathname]: Math.max(prev[pathname] ?? 0, current),
+        }));
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     }
   }, [pathname, updateCounts]);
 

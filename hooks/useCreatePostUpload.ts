@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { safeParseJSON } from '@/utils/storageUtils';
@@ -8,13 +9,19 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 
+interface ImageUploadLike {
+  selectedFiles: File[];
+  loading: boolean;
+}
+
 interface UseCreatePostUploadParams {
-  session: any;
+  session: Session | null;
+  activeProfileId?: string | null;
   caption: string;
   province: string;
   carPrice: string;
   carCurrency: '₭' | '฿' | '$';
-  imageUpload: any;
+  imageUpload: ImageUploadLike;
   layout?: string;
   /** เรียกหลังลบ draft จาก storage เมื่อโพสต์สำเร็จ (เช่น ล้าง caption backup ระดับโมดูล) */
   onDraftCleared?: () => void;
@@ -22,6 +29,7 @@ interface UseCreatePostUploadParams {
 
 export function useCreatePostUpload({
   session,
+  activeProfileId,
   caption,
   province,
   carPrice,
@@ -121,8 +129,8 @@ export function useCreatePostUpload({
       const priceValue = normalizedPrice ? Number(normalizedPrice) : null;
 
       // ลอง insert โดยใส่ layout / price field ก่อน
-      const insertData: any = {
-        user_id: session ? session.user.id : guestToken,
+      const insertData: Record<string, unknown> = {
+        user_id: session ? (activeProfileId || session.user.id) : guestToken,
         is_guest: isGuest,
         guest_token: guestToken,
         caption: caption,
@@ -243,8 +251,8 @@ export function useCreatePostUpload({
       onDraftCleared?.();
 
       router.push('/');
-    } catch (err: any) {
-      console.error(err.message);
+    } catch (err: unknown) {
+      console.error(err instanceof Error ? err.message : err);
       setIsUploading(false);
     }
   };

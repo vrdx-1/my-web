@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeLikedSaved } from '@/hooks/useHomeLikedSaved';
@@ -8,15 +9,15 @@ import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useHomeSearchResultSources, HOME_SOLD_STUB, type HomePostListSource } from '@/hooks/useHomeSearchResultSources';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
-import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 
 export type HomeTab = 'recommend' | 'sold';
 
 export type PostListSource = HomePostListSource;
 
 export interface UseHomeTabDataOptions {
-  session: any;
+  session: Session | null;
   sessionReady: boolean;
+  activeProfileId?: string | null;
   startSessionCheck: () => void;
   setFirstFeedLoaded: (v: boolean) => void;
 }
@@ -29,7 +30,7 @@ export interface UseHomeTabDataReturn {
   recommendSource: PostListSource;
   soldSource: PostListSource;
   isSoldTabNoSearch: boolean;
-  posts: any[];
+  posts: unknown[];
   postList: PostListSource;
   searchQuery: string;
   tab: HomeTab;
@@ -41,7 +42,7 @@ export interface UseHomeTabDataReturn {
 }
 
 export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataReturn {
-  const { session, sessionReady, startSessionCheck, setFirstFeedLoaded } = options;
+  const { session, sessionReady, activeProfileId, startSessionCheck, setFirstFeedLoaded } = options;
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +54,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
   const homeProvince = useHomeProvince();
   const selectedProvince = homeProvince?.selectedProvince ?? '';
 
-  const sharedLikedSaved = useHomeLikedSaved(session, sessionReady);
+  const sharedLikedSaved = useHomeLikedSaved(session, sessionReady, activeProfileId);
 
   useEffect(() => {
     const hasSearch = searchQuery.trim().length > 0;
@@ -80,6 +81,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     query: searchQuery,
     province: selectedProvince,
     session,
+    activeProfileId,
     sessionReady,
     sharedLikedSaved,
     enabled: searchQuery.trim().length > 0,

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import type { Session } from '@supabase/supabase-js';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { supabase } from '@/lib/supabase';
 import { getDisplayAvatarUrl, isProviderDefaultAvatar } from '@/utils/avatarUtils';
@@ -10,9 +11,19 @@ import { LAO_FONT } from '@/utils/constants';
 import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 /** แคชโปรไฟล์ล่าสุด — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
-let profileCache: { userId: string; username: string; avatarUrl: string; phone: string; isVerified: boolean } | null = null;
+let profileCache: {
+  profileId: string;
+  username: string;
+  avatarUrl: string;
+  phone: string;
+  isVerified: boolean;
+  isAdmin: boolean;
+  isSubAccount: boolean;
+} | null = null;
 
 interface ProfileContentProps {
   /** ไม่ส่ง = ไม่แสดงปุ่ม back (เช่น หน้า App profile) */
@@ -29,14 +40,57 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [phone, setPhone] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingUsername, setEditingUsername] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editingPhone, setEditingPhone] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false)
+  const [, setSavingProfile] = useState(false)
   const [isVerified, setIsVerified] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSubAccount, setIsSubAccount] = useState(false);
+  const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
+  const [subAccountUsername, setSubAccountUsername] = useState('');
+  const [subAccountLoading, setSubAccountLoading] = useState(false);
+  const [subAccountSubmitting, setSubAccountSubmitting] = useState(false);
+  const [subAccountError, setSubAccountError] = useState('');
+  const [subAccountSuccess, setSubAccountSuccess] = useState('');
+  const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
+
+  const canManageSubAccounts = isAdmin;
+  const loadSubAccounts = useCallback(async () => {
+    if (!canManageSubAccounts) return;
+    setSubAccountLoading(true);
+    setSubAccountError('');
+    try {
+      let accessToken = session?.access_token ?? '';
+      if (!accessToken) {
+        const refreshed = await supabase.auth.refreshSession();
+        accessToken = refreshed.data.session?.access_token ?? '';
+      }
+
+      const response = await fetch('/api/admin/sub-accounts', {
+        method: 'GET',
+        credentials: 'include',
+        headers: mergeHeaders(
+          accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          activeProfileId,
+        ),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to load sub accounts');
+      }
+
+      await refetchProfiles();
+    } catch (error) {
+      setSubAccountError(error instanceof Error ? error.message : 'Failed to load sub accounts');
+    } finally {
+      setSubAccountLoading(false);
+    }
+  }, [activeProfileId, canManageSubAccounts, refetchProfiles, session?.access_token]);
 
   const mainTabScroll = useMainTabScroll();
   useLayoutEffect(() => {
@@ -70,12 +124,14 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
 
       if (currentSession) {
-        const userId = currentSession.user?.id;
-        if (userId && profileCache?.userId === userId) {
+        const targetProfileId = activeProfileId || currentSession.user?.id;
+        if (targetProfileId && profileCache?.profileId === targetProfileId) {
           setUsername(profileCache.username);
           setAvatarUrl(profileCache.avatarUrl);
           setPhone(profileCache.phone ?? '');
           setIsVerified(profileCache.isVerified ?? false);
+          setIsAdmin(profileCache.isAdmin ?? false);
+          setIsSubAccount(profileCache.isSubAccount ?? false);
           setLoading(false);
         }
         setSession(currentSession);
@@ -85,8 +141,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, avatar_url, phone, is_verified')
-          .eq('id', user.id)
+          .select('username, avatar_url, phone, is_verified, role, is_sub_account')
+          .eq('id', targetProfileId)
           .maybeSingle();
 
         if (isNewEmailUser) {
@@ -115,6 +171,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               );
               setUsername(defaultName);
               setAvatarUrl('');
+              setIsAdmin(false);
+              setIsSubAccount(false);
               clearGuestUserData();
               localStorage.removeItem('pending_registration');
               router.push('/home');
@@ -139,7 +197,15 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               setUsername(defaultName);
               setAvatarUrl('');
               clearGuestUserData();
-              profileCache = { userId: user.id, username: defaultName, avatarUrl: '', phone: '', isVerified: false };
+              profileCache = {
+                profileId: user.id,
+                username: defaultName,
+                avatarUrl: '',
+                phone: '',
+                isVerified: false,
+                isAdmin: false,
+                isSubAccount: false,
+              };
             } catch {}
           }
         }
@@ -149,7 +215,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           const rawAvatar = profile.avatar_url || '';
           let url = '';
           if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
-            await supabase.from('profiles').update({ avatar_url: null }).eq('id', currentSession.user.id);
+            await supabase.from('profiles').update({ avatar_url: null }).eq('id', targetProfileId);
           } else {
             url = getDisplayAvatarUrl(rawAvatar);
           }
@@ -158,19 +224,31 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             ? '020' + rawPhone.slice(5)
             : rawPhone;
           const verified = profile.is_verified ?? false;
+          const adminRole = profile.role === 'admin';
+          const subRole = profile.is_sub_account ?? false;
           setUsername(name);
           setAvatarUrl(url);
           setPhone(displayPhone);
           setIsVerified(verified);
-          if (currentSession.user?.id) {
-            profileCache = { userId: currentSession.user.id, username: name, avatarUrl: url, phone: displayPhone, isVerified: verified };
+          setIsAdmin(adminRole);
+          setIsSubAccount(subRole);
+          if (targetProfileId) {
+            profileCache = {
+              profileId: targetProfileId,
+              username: name,
+              avatarUrl: url,
+              phone: displayPhone,
+              isVerified: verified,
+              isAdmin: adminRole,
+              isSubAccount: subRole,
+            };
           }
         }
       }
       setLoading(false);
     };
     fetchProfile();
-  }, [router]);
+  }, [activeProfileId, router]);
 
   useEffect(() => {
     if (!loading && !session && pathname === '/profile') {
@@ -182,6 +260,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       }
     }
   }, [loading, session, router, onNotLoggedIn, pathname]);
+
+  useEffect(() => {
+    if (showSubAccountPanel && canManageSubAccounts) {
+      loadSubAccounts();
+    }
+  }, [canManageSubAccounts, loadSubAccounts, showSubAccountPanel]);
 
   // Lock background scroll while edit-name is open
   useEffect(() => {
@@ -245,10 +329,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     }
   }, [isEditingName, isEditingPhone]);
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !session) return;
@@ -256,7 +336,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     try {
       setSavingProfile(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const targetProfileId = activeProfileId || session.user.id;
+      const fileName = `${targetProfileId}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -271,13 +352,21 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', session.user.id);
+        .eq('id', targetProfileId);
 
       if (updateError) throw updateError;
 
       setAvatarUrl(publicUrl);
-      if (session.user?.id) {
-        profileCache = { userId: session.user.id, username, avatarUrl: publicUrl, phone, isVerified };
+      if (targetProfileId) {
+        profileCache = {
+          profileId: targetProfileId,
+          username,
+          avatarUrl: publicUrl,
+          phone,
+          isVerified,
+          isAdmin,
+          isSubAccount,
+        };
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -288,21 +377,30 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   };
 
   const saveProfile = async () => {
-    if (!session || !tempUsername.trim()) return;
+    if (!session || !editingUsername.trim()) return;
+    const targetProfileId = activeProfileId || session.user.id;
 
     try {
       setSavingProfile(true);
       const { error } = await supabase
         .from('profiles')
-        .update({ username: tempUsername.trim() })
-        .eq('id', session.user.id);
+        .update({ username: editingUsername.trim() })
+        .eq('id', targetProfileId);
 
       if (error) throw error;
 
-      setUsername(tempUsername.trim());
+      setUsername(editingUsername.trim());
       setEditingUsername(false);
-      if (session.user?.id) {
-        profileCache = { userId: session.user.id, username: tempUsername.trim(), avatarUrl, phone, isVerified };
+      if (targetProfileId) {
+        profileCache = {
+          profileId: targetProfileId,
+          username: editingUsername.trim(),
+          avatarUrl,
+          phone,
+          isVerified,
+          isAdmin,
+          isSubAccount,
+        };
       }
     } catch (error) {
       console.error('Error updating username:', error);
@@ -338,6 +436,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
   const handleSavePhone = async (phoneNum: string) => {
     if (!session) return;
+    const targetProfileId = activeProfileId || session.user.id;
     const valueToSave =
       phoneNum.startsWith('020') && phoneNum.length === 11
         ? '85620' + phoneNum.slice(3)
@@ -345,15 +444,65 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     const { error } = await supabase
       .from('profiles')
       .update({ phone: valueToSave })
-      .eq('id', session.user.id);
+      .eq('id', targetProfileId);
     if (!error) {
       setPhone(phoneNum);
       setIsEditingPhone(false);
-      if (session.user?.id) {
-        profileCache = { userId: session.user.id, username, avatarUrl, phone: phoneNum, isVerified };
+      if (targetProfileId) {
+        profileCache = {
+          profileId: targetProfileId,
+          username,
+          avatarUrl,
+          phone: phoneNum,
+          isVerified,
+          isAdmin,
+          isSubAccount,
+        };
       }
     }
   };
+
+  const handleCreateSubAccount = useCallback(async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (subAccountSubmitting || !canManageSubAccounts) return;
+
+    setSubAccountSubmitting(true);
+    setSubAccountError('');
+    setSubAccountSuccess('');
+
+    try {
+      let accessToken = session?.access_token ?? '';
+      if (!accessToken) {
+        const refreshed = await supabase.auth.refreshSession();
+        accessToken = refreshed.data.session?.access_token ?? '';
+      }
+
+      const response = await fetch('/api/admin/sub-accounts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: mergeHeaders(
+          {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          activeProfileId,
+        ),
+        body: JSON.stringify({ username: subAccountUsername }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to create sub account');
+      }
+
+      setSubAccountUsername('');
+      setSubAccountSuccess('สร้าง sub account สำเร็จแล้ว สามารถสลับเข้าใช้งานผ่านบัญชีหลักนี้ได้ทันที');
+      await loadSubAccounts();
+    } catch (error) {
+      setSubAccountError(error instanceof Error ? error.message : 'Failed to create sub account');
+    } finally {
+      setSubAccountSubmitting(false);
+    }
+  }, [activeProfileId, canManageSubAccounts, loadSubAccounts, session?.access_token, subAccountSubmitting, subAccountUsername]);
 
   const handleClosePhoneModal = () => {
     setIsEditingPhone(false);
@@ -481,6 +630,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             }}
           >
             {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
             ) : (
               <div
@@ -617,6 +767,166 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             );
           })()}
         </div>
+
+        {canManageSubAccounts && (
+          <div style={{ marginBottom: '28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: showSubAccountPanel ? '16px' : '0' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubAccountPanel((prev) => !prev);
+                  setSubAccountError('');
+                  setSubAccountSuccess('');
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  background: '#111827',
+                  border: 'none',
+                  borderRadius: 24,
+                  padding: '10px 18px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                }}
+              >
+                <span>สร้าง Sub Account</span>
+                <span style={{ fontSize: '18px', lineHeight: 1 }}>{showSubAccountPanel ? '−' : '+'}</span>
+              </button>
+            </div>
+
+            {showSubAccountPanel && (
+              <div style={{
+                background: '#ffffff',
+                borderRadius: '18px',
+                padding: '18px',
+                boxShadow: '0 10px 30px rgba(17, 24, 39, 0.08)',
+                border: '1px solid #e5e7eb',
+              }}>
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '6px' }}>Sub Accounts</div>
+                  <div style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.5 }}>สร้างบัญชีย่อยด้วยชื่ออย่างเดียว แล้วสลับเข้าใช้งานจากบัญชีหลักนี้ได้ทันที</div>
+                </div>
+
+                <form onSubmit={handleCreateSubAccount} style={{ display: 'grid', gap: '12px', marginBottom: '18px' }}>
+                  <input
+                    type="text"
+                    value={subAccountUsername}
+                    onChange={(event) => setSubAccountUsername(event.target.value)}
+                    placeholder="ชื่อของ sub account"
+                    required
+                    maxLength={50}
+                    style={{
+                      width: '100%',
+                      padding: '13px 15px',
+                      borderRadius: '12px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '15px',
+                      background: '#fff',
+                      outline: 'none',
+                    }}
+                  />
+                  {subAccountError ? <div style={{ color: '#dc2626', fontSize: '14px' }}>{subAccountError}</div> : null}
+                  {subAccountSuccess ? <div style={{ color: '#15803d', fontSize: '14px' }}>{subAccountSuccess}</div> : null}
+                  <button
+                    type="submit"
+                    disabled={subAccountSubmitting}
+                    style={{
+                      width: 'fit-content',
+                      minWidth: '170px',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px 18px',
+                      background: subAccountSubmitting ? '#9ca3af' : '#111827',
+                      color: '#fff',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      cursor: subAccountSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {subAccountSubmitting ? 'กำลังสร้าง...' : 'สร้าง Sub Account'}
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>บัญชีที่ใช้งานได้</div>
+                  <button
+                    type="button"
+                    onClick={loadSubAccounts}
+                    disabled={subAccountLoading}
+                    style={{
+                      background: '#fff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '10px',
+                      padding: '8px 12px',
+                      color: '#111827',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: subAccountLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {subAccountLoading ? (
+                  <div style={{ color: '#6b7280', fontSize: '14px' }}>กำลังโหลดรายการบัญชี...</div>
+                ) : availableProfiles.length === 0 ? (
+                  <div style={{ color: '#6b7280', fontSize: '14px' }}>ยังไม่มี sub account สำหรับบัญชีนี้</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '10px' }}>
+                    {availableProfiles.map((account) => {
+                      const isActiveProfile = (activeProfileId || authUserId) === account.id;
+                      const isMainProfile = authUserId === account.id;
+                      return (
+                      <div
+                        key={account.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '14px 16px',
+                          borderRadius: '14px',
+                          border: '1px solid #e5e7eb',
+                          background: '#f9fafb',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+                            {account.username || 'Unnamed Admin'} {isMainProfile ? '(บัญชีหลัก)' : '(Sub Account)'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#6b7280' }}>ID: {account.id}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveProfile(account.id)}
+                          disabled={isActiveProfile}
+                          style={{
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 12px',
+                            background: isActiveProfile ? '#d1fae5' : '#111827',
+                            color: isActiveProfile ? '#065f46' : '#fff',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: isActiveProfile ? 'default' : 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {isActiveProfile ? 'กำลังใช้งาน' : 'สลับเข้าใช้'}
+                        </button>
+                      </div>
+                    )})}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Edit Name Modal */}
         <EditNameModal

@@ -11,6 +11,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useBackHandler } from '@/components/BackHandlerContext';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 export function useNotificationDetail(id: string | undefined) {
   const [post, setPost] = useState<any>(null);
@@ -31,6 +32,7 @@ export function useNotificationDetail(id: string | undefined) {
   }, []);
 
   const menu = useMenu();
+  const { activeProfileId } = useSessionAndProfile();
   const viewingPostHook = useViewingPost();
   const fullScreenViewer = useFullScreenViewer();
   const headerScroll = useHeaderScroll();
@@ -100,14 +102,14 @@ export function useNotificationDetail(id: string | undefined) {
       if (cancelled) return;
       setSession(s);
       if (s) {
-        fetchSavedStatus(s.user.id, true);
+        fetchSavedStatus(activeProfileId || s.user.id, true);
       } else {
         const token = getPrimaryGuestToken();
         fetchSavedStatus(token, false);
       }
     });
     return () => { cancelled = true; };
-  }, [fetchSavedStatus]);
+  }, [activeProfileId, fetchSavedStatus]);
 
   const fetchPostDetail = useCallback(async () => {
     if (!id) return;
@@ -145,6 +147,7 @@ export function useNotificationDetail(id: string | undefined) {
 
   const { toggleSave } = usePostInteractions({
     session,
+    activeProfileId,
     posts,
     setPosts: setPostsFromSingle,
     savedPosts,

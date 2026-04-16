@@ -34,9 +34,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     typeof window !== 'undefined' ? window.location.pathname : ''
   );
   const resolvedPathname = pathname ?? initialPathname;
-  const { session, userProfile } = useSessionAndProfile();
+  const { session, userProfile, activeProfileId } = useSessionAndProfile();
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
-    userId: session?.user?.id,
+    userId: activeProfileId || session?.user?.id,
   });
   const { hiddenFileInputRef, handleFileChange, handleCreatePostClick } = useFileUpload();
   const mainTab = useMainTabContext();

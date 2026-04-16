@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 /**
  * API Route for fetching posts by type (saved, liked, sold, my-posts)
@@ -39,7 +40,8 @@ export async function GET(
 
     // Get current session
     const { data: { session } } = await supabase.auth.getSession();
-    const currentUserId = session?.user?.id;
+    const resolvedProfile = await resolveServerActiveProfile(request);
+    const currentUserId = resolvedProfile?.activeProfileId ?? session?.user?.id ?? null;
 
     let postIds: string[] = [];
 

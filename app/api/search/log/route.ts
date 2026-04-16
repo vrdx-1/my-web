@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
+import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 /**
  * POST /api/search/log
@@ -20,43 +20,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+    }
+    const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              });
-            } catch {
-              // Can be ignored if middleware is refreshing sessions
-            }
-          },
-        },
-      }
+      serviceRoleKey,
+      { auth: { persistSession: false } }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const resolvedProfile = await resolveServerActiveProfile(request);
 
     const row: { search_term: string; search_type: string; user_id?: string; guest_token?: string | null; display_text?: string } = {
       search_term,
       search_type,
       display_text: search_term,
     };
-    if (user?.id) {
-      row.user_id = user.id;
+    if (resolvedProfile?.activeProfileId) {
+      row.user_id = resolvedProfile.activeProfileId;
     } else if (guest_token) {
       row.guest_token = guest_token;
     }
 
-    const { error } = await supabase.from('search_logs').insert(row);
+    const { error } = await admin.from('search_logs').insert(row);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

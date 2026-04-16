@@ -7,12 +7,15 @@ import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/u
 import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 type SuggestionItem = { display: string; searchKey: string };
 
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { activeProfileId } = useSessionAndProfile();
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<string[]>([]);
@@ -47,7 +50,7 @@ function SearchPageContent() {
         fetch('/api/search/log', {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mergeHeaders({ 'Content-Type': 'application/json' }, activeProfileId),
           body: JSON.stringify({
             search_term: t,
             search_type: searchType,

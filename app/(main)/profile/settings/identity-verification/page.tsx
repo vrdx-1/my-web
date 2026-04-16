@@ -6,6 +6,8 @@ import { ButtonSpinner } from '@/components/LoadingSpinner'
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon'
 import { supabase } from '@/lib/supabase'
 import { compressImage } from '@/utils/imageCompression'
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile'
+import { mergeHeaders } from '@/utils/activeProfile'
 
 const DOCUMENT_TYPES = [
   { value: 'id_card', label: 'ບັດປະຈຳຕົວ' },
@@ -17,6 +19,7 @@ type DocType = typeof DOCUMENT_TYPES[number]['value']
 
 export default function IdentityVerificationPage() {
   const router = useRouter()
+  const { activeProfileId } = useSessionAndProfile()
   const docInputRef = useRef<HTMLInputElement>(null)
   const selfieInputRef = useRef<HTMLInputElement>(null)
   const documentPreviewRef = useRef<string | null>(null)
@@ -49,7 +52,10 @@ export default function IdentityVerificationPage() {
 
         const res = await fetch('/api/verification/status', {
           credentials: 'include',
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          headers: mergeHeaders(
+            accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+            activeProfileId,
+          ),
         })
         if (!res.ok) {
           if (res.status === 401) {
@@ -78,7 +84,7 @@ export default function IdentityVerificationPage() {
       }
     }
     checkStatus()
-  }, [])
+  }, [activeProfileId])
 
   useEffect(() => {
     documentPreviewRef.current = documentPreview
@@ -169,7 +175,10 @@ export default function IdentityVerificationPage() {
       const res = await fetch('/api/verification/submit', {
         method: 'POST',
         credentials: 'include',
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        headers: mergeHeaders(
+          accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          activeProfileId,
+        ),
         body: formData,
       })
       const data = await res.json()

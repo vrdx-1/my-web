@@ -16,6 +16,7 @@ type PostLike = {
 
 interface UsePostInteractionsProps {
   session: SessionLike;
+  activeProfileId?: string | null;
   posts: PostLike[];
   setPosts: React.Dispatch<React.SetStateAction<PostLike[]>>;
   savedPosts: { [key: string]: boolean };
@@ -31,6 +32,7 @@ interface UsePostInteractionsProps {
  */
 export const usePostInteractions = ({
   session,
+  activeProfileId,
   posts: _posts,
   setPosts: _setPosts,
   savedPosts,
@@ -44,7 +46,7 @@ export const usePostInteractions = ({
 
   const toggleSave = useCallback(async (postId: string) => {
     const isUser = !!session;
-    const userId = isUser ? session.user.id : getPrimaryGuestToken();
+    const userId = isUser ? (activeProfileId || session.user.id) : getPrimaryGuestToken();
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
     const isCurrentlySaved = savedPosts[postId];
@@ -117,11 +119,11 @@ export const usePostInteractions = ({
         setSavedPosts(prev => ({ ...prev, [postId]: false }));
       }
     }
-  }, [session, savedPosts, setSavedPosts, setJustSavedPosts, onExistingSaveRefresh]);
+  }, [activeProfileId, session, savedPosts, setSavedPosts, setJustSavedPosts, onExistingSaveRefresh]);
 
   const removeSave = useCallback(async (postId: string) => {
     const isUser = !!session;
-    const userId = isUser ? session.user.id : getPrimaryGuestToken();
+    const userId = isUser ? (activeProfileId || session.user.id) : getPrimaryGuestToken();
     const table = isUser ? 'post_saves' : 'post_saves_guest';
     const column = isUser ? 'user_id' : 'guest_token';
 
@@ -134,7 +136,7 @@ export const usePostInteractions = ({
     } else {
       setSavedPosts(prev => ({ ...prev, [postId]: true }));
     }
-  }, [session, setSavedPosts, onRemoveSaveSuccess]);
+  }, [activeProfileId, session, setSavedPosts, onRemoveSaveSuccess]);
 
   return {
     toggleSave,

@@ -12,6 +12,11 @@ export function useSessionAndProfile() {
     session: ctx?.session ?? null,
     sessionReady: ctx?.sessionReady ?? false,
     userProfile: ctx?.userProfile ?? null,
+    activeProfileId: ctx?.activeProfileId ?? null,
+    authUserId: ctx?.authUserId ?? null,
+    availableProfiles: ctx?.availableProfiles ?? [],
+    setActiveProfile: ctx?.setActiveProfile ?? (() => {}),
+    refetchProfiles: ctx?.refetchProfiles ?? (async () => {}),
     startSessionCheck: ctx?.startSessionCheck ?? (() => {}),
   };
 }

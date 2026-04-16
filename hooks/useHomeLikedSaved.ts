@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 
@@ -12,7 +13,7 @@ export interface HomeLikedSaved {
 }
 
 /** โหลด liked/saved ครั้งเดียวสำหรับหน้าโฮม — แชร์ให้ useHomeFeed, useSearchPosts, usePostListData(sold) ใช้ร่วมกัน ลด request ซ้ำ 3 ชุด */
-export function useHomeLikedSaved(session: any, sessionReady: boolean): HomeLikedSaved {
+export function useHomeLikedSaved(session: Session | null, sessionReady: boolean, activeProfileId?: string | null): HomeLikedSaved {
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
 
@@ -22,7 +23,7 @@ export function useHomeLikedSaved(session: any, sessionReady: boolean): HomeLike
     if (currentSession === undefined) return;
     let idOrToken: string | null = null;
     if (currentSession?.user?.id) {
-      const uid = currentSession.user.id;
+      const uid = activeProfileId || currentSession.user.id;
       if (typeof uid === 'string' && uid !== 'null' && /^[0-9a-f-]{36}$/i.test(uid)) {
         idOrToken = uid;
       }
@@ -31,7 +32,7 @@ export function useHomeLikedSaved(session: any, sessionReady: boolean): HomeLike
       try {
         const token = getPrimaryGuestToken();
         if (token && typeof token === 'string' && token !== 'null') idOrToken = token;
-      } catch (_) {}
+      } catch {}
     }
     if (!idOrToken) return;
     const isUser = !!currentSession?.user?.id;
@@ -71,7 +72,7 @@ export function useHomeLikedSaved(session: any, sessionReady: boolean): HomeLike
       cancelled = true;
       window.clearTimeout(timerId);
     };
-  }, [sessionReady, session]);
+  }, [activeProfileId, sessionReady, session]);
 
   return { likedPosts, savedPosts, setLikedPosts, setSavedPosts };
 }

@@ -53,6 +53,24 @@ export async function middleware(request: NextRequest) {
     if (!user && request.nextUrl.pathname !== '/admin/login') {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const isAdmin = profile?.role === 'admin'
+
+      if (!isAdmin && request.nextUrl.pathname !== '/admin/login') {
+        return NextResponse.redirect(new URL(HOME_PATH, request.url))
+      }
+
+      if (isAdmin && request.nextUrl.pathname === '/admin/login') {
+        return NextResponse.redirect(new URL('/admin/search-history', request.url))
+      }
+    }
   }
 
   return response
