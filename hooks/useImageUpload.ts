@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { compressImage } from '@/utils/imageCompression';
 
 interface UseImageUploadProps {
@@ -39,12 +39,22 @@ export function useImageUpload({
   const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedFilesRef = useRef<File[]>([]);
+  const previewsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    selectedFilesRef.current = selectedFiles;
+  }, [selectedFiles]);
+
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files || e.target.files.length === 0) return;
 
-      const remainingSlots = maxFiles - selectedFiles.length;
+      const remainingSlots = maxFiles - selectedFilesRef.current.length;
       if (remainingSlots <= 0) return;
 
       let incomingFiles = Array.from(e.target.files);
@@ -61,11 +71,21 @@ export function useImageUpload({
           )
         );
 
-        const newFiles = [...selectedFiles, ...compressedFiles];
-        const newPreviews = [
-          ...previews,
-          ...compressedFiles.map((file) => URL.createObjectURL(file)),
-        ];
+        const latestFiles = selectedFilesRef.current;
+        const latestPreviews = previewsRef.current;
+        const latestRemainingSlots = maxFiles - latestFiles.length;
+
+        if (latestRemainingSlots <= 0) {
+          return;
+        }
+
+        const acceptedFiles = compressedFiles.slice(0, latestRemainingSlots);
+        const acceptedPreviews = acceptedFiles.map((file) => URL.createObjectURL(file));
+        const newFiles = [...latestFiles, ...acceptedFiles];
+        const newPreviews = [...latestPreviews, ...acceptedPreviews];
+
+        selectedFilesRef.current = newFiles;
+        previewsRef.current = newPreviews;
 
         setSelectedFiles(newFiles);
         setPreviews(newPreviews);
@@ -82,13 +102,13 @@ export function useImageUpload({
         setLoading(false);
       }
     },
-    [selectedFiles, previews, maxFiles, onFilesChange, onPreviewsChange, compressMaxWidth, compressQuality]
+    [maxFiles, onFilesChange, onPreviewsChange, compressMaxWidth, compressQuality]
   );
 
   const removeImage = useCallback(
     (index: number) => {
-      const updatedFiles = [...selectedFiles];
-      const updatedPreviews = [...previews];
+      const updatedFiles = [...selectedFilesRef.current];
+      const updatedPreviews = [...previewsRef.current];
 
       if (updatedFiles.length > 0 && index < updatedFiles.length) {
         // Revoke object URL to free memory
@@ -97,6 +117,9 @@ export function useImageUpload({
         updatedFiles.splice(index, 1);
         updatedPreviews.splice(index, 1);
 
+        selectedFilesRef.current = updatedFiles;
+        previewsRef.current = updatedPreviews;
+
         setSelectedFiles(updatedFiles);
         setPreviews(updatedPreviews);
 
@@ -104,17 +127,19 @@ export function useImageUpload({
         if (onPreviewsChange) onPreviewsChange(updatedPreviews);
       }
     },
-    [selectedFiles, previews, onFilesChange, onPreviewsChange]
+    [onFilesChange, onPreviewsChange]
   );
 
   const clearImages = useCallback(() => {
     // Revoke all object URLs
-    previews.forEach((url) => URL.revokeObjectURL(url));
+    previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    selectedFilesRef.current = [];
+    previewsRef.current = [];
     setSelectedFiles([]);
     setPreviews([]);
     if (onFilesChange) onFilesChange([]);
     if (onPreviewsChange) onPreviewsChange([]);
-  }, [previews, onFilesChange, onPreviewsChange]);
+  }, [onFilesChange, onPreviewsChange]);
 
   return {
     selectedFiles,

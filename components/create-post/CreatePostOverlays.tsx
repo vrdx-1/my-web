@@ -170,7 +170,7 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
           </div>
           {previews.map((img, idx) => (
             <div
-              key={idx}
+              key={`${idx}:${img}`}
               style={{ width: '100%', marginBottom: '12px', position: 'relative' }}
             >
               <img

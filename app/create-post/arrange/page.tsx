@@ -211,7 +211,7 @@ export default function ArrangePostImagesPage() {
             const showBadge = position > 0;
             return (
               <button
-                key={index}
+                key={`${index}:${src}`}
                 type="button"
                 onClick={() => handleTapImage(index)}
                 style={{

@@ -42,6 +42,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
 
   const isNew = (i: number) => i >= (existingImages?.length ?? 0);
   const adj = (i: number) => (isNew(i) ? i - (existingImages?.length ?? 0) : i);
+  const imageKey = (url: string, index: number) => `${index}:${url}`;
 
   const handleRemove = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,7 +113,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       >
         {[0, 1].map((i) => (
           <div
-            key={i}
+            key={imageKey(allImages[i], i)}
             style={{
               position: 'relative',
               width: '100%',
@@ -164,7 +165,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
         <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
           {[1, 2].map((i) => (
             <div
-              key={i}
+              key={imageKey(allImages[i], i)}
               style={{
                 position: 'relative',
                 width: '100%',
@@ -206,7 +207,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       >
         {allImages.map((img, i) => (
           <div
-            key={i}
+            key={imageKey(img, i)}
             style={{
               position: 'relative',
               aspectRatio: '1',
@@ -243,7 +244,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       >
         {allImages.slice(0, 2).map((img, i) => (
           <div
-            key={i}
+            key={imageKey(img, i)}
             style={{
               position: 'relative',
               aspectRatio: '1',
@@ -273,7 +274,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             const idx = i + 2;
             return (
               <div
-                key={idx}
+                key={imageKey(img, idx)}
                 style={{
                   position: 'relative',
                   aspectRatio: '1',
@@ -315,7 +316,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
         >
           {allImages.slice(0, 4).map((img, i) => (
             <div
-              key={i}
+              key={imageKey(img, i)}
               style={{
                 position: 'relative',
                 aspectRatio: '1',
@@ -372,7 +373,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
         >
           {allImages.slice(0, 2).map((img, i) => (
             <div
-              key={i}
+              key={imageKey(img, i)}
               style={{
                 position: 'relative',
                 aspectRatio: '1',
@@ -402,7 +403,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               const idx = i + 2;
               return (
                 <div
-                  key={idx}
+                  key={imageKey(img, idx)}
                   style={{
                     position: 'relative',
                     aspectRatio: '1',
@@ -471,7 +472,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
           >
             {allImages.slice(0, 2).map((img, i) => (
               <div
-                key={i}
+                key={imageKey(img, i)}
                 style={{
                   position: 'relative',
                   aspectRatio: '1',
@@ -503,7 +504,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               const idx = i + 2;
               return (
                 <div
-                  key={idx}
+                  key={imageKey(img, idx)}
                   style={{
                     position: 'relative',
                     minHeight: 0,
@@ -579,7 +580,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
           <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
             {[1, 2].map((i) => (
               <div
-                key={i}
+                key={imageKey(allImages[i], i)}
                 style={{
                   position: 'relative',
                   width: '100%',
@@ -665,7 +666,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               const idx = i + 1;
               return (
                 <div
-                  key={idx}
+                  key={imageKey(img, idx)}
                   style={{
                     position: 'relative',
                     aspectRatio: '1',
@@ -743,7 +744,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               const idx = i + 1;
               return (
                 <div
-                  key={idx}
+                  key={imageKey(img, idx)}
                   style={{
                     position: 'relative',
                     aspectRatio: '1',
@@ -806,7 +807,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
         >
           {allImages.slice(0, 2).map((img, i) => (
             <div
-              key={i}
+              key={imageKey(img, i)}
               style={{
                 position: 'relative',
                 gridColumn: 1,
@@ -830,7 +831,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             const idx = i + 2;
             return (
               <div
-                key={idx}
+                key={imageKey(img, idx)}
                 style={{
                   position: 'relative',
                   gridColumn: 2,
@@ -910,7 +911,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             const idx = i + 1;
             return (
               <div
-                key={idx}
+                key={imageKey(img, idx)}
                 style={{
                   position: 'relative',
                   minHeight: 0,
@@ -968,7 +969,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
       >
         {allImages.slice(0, 4).map((img, i) => (
           <div
-            key={i}
+            key={imageKey(img, i)}
             style={{
               position: 'relative',
               aspectRatio: '1',
