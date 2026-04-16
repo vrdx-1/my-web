@@ -63,13 +63,47 @@ const CREATE_POST_DEBOUNCE_MS = 400;
 const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
 
 function HomeNavIcon({ isActive }: { isActive: boolean }) {
-  const stroke = isActive ? '#1877f2' : NAV_ICON_INACTIVE;
+  if (isActive) {
+    return (
+      <svg
+        width={NAV_ICON_SIZE}
+        height={NAV_ICON_SIZE}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          margin: 'auto',
+          zIndex: 1,
+          pointerEvents: 'none',
+          transform: 'translateY(0px)',
+        }}
+      >
+        <path
+          d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+          fill="#1877f2"
+          stroke="#1877f2"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"
+          stroke="#ffffff"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
   return (
     <House
       size={NAV_ICON_SIZE}
       strokeWidth={2.2}
-      color={stroke}
+      color={NAV_ICON_INACTIVE}
       aria-hidden
       style={{
         position: 'absolute',
