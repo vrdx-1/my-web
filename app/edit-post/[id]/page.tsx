@@ -105,7 +105,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   }
 
   const lineCount = caption.split('\n').length;
-  const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('de-DE') : '';
+  const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('en-US') : '';
 
   return (
     <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate' as const }}>

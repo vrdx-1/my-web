@@ -28,8 +28,6 @@ export function HomeHeaderSearchAndFilter() {
   const pickerRef = useRef<HTMLDivElement>(null);
   // Anchor สำหรับจัดตำแหน่งป๊อปอัป (เดิมใช้ปุ่มฟิลเตอร์วงกลม แต่รอบนี้ย้ายไปไว้ที่ "ข้อความแขวงสีแดง")
   const filterButtonRef = useRef<HTMLSpanElement>(null);
-  /** กันไม่ให้การกดที่เปิดป๊อปถูกนับเป็นคลิกนอก (ต้องกดครั้งเดียวแล้วเปิดได้เสถียร) */
-  const justOpenedRef = useRef(false);
 
   /** แสดงคำค้นและแขวงเสมอ (ไม่ใช้ mounted เพื่อไม่ให้ guest เห็นแถบค้นว่างชั่วคราว) */
   const queryToShow = searchQuery;
@@ -49,7 +47,6 @@ export function HomeHeaderSearchAndFilter() {
     if (showProvincePicker) return;
     const rect = filterButtonRef.current?.getBoundingClientRect() ?? null;
     setFilterButtonRect(rect);
-    justOpenedRef.current = true;
     // แสดงป๊อปทันทีโดยไม่รอ — ใช้ requestAnimationFrame แยกให้เบราว์เซอร์วาดป๊อปก่อนงานอื่น
     requestAnimationFrame(() => {
       setShowProvincePicker(true);
@@ -58,9 +55,6 @@ export function HomeHeaderSearchAndFilter() {
       });
     });
     setIsAnimating(true);
-    setTimeout(() => {
-      justOpenedRef.current = false;
-    }, 250);
   }, [showProvincePicker]);
 
   const closePicker = useCallback(() => {
@@ -75,35 +69,6 @@ export function HomeHeaderSearchAndFilter() {
     setSelectedProvince?.(province);
     closePicker();
   }, [closePicker, setSelectedProvince]);
-
-  // ปิดป๊อปอัพเมื่อเลื่อนหน้าจอ — แบบเดียวกับปุ่มไข่ปลา (useMenu)
-  useEffect(() => {
-    if (!showProvincePicker) return;
-    const handleScroll = () => closePicker();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [showProvincePicker, closePicker]);
-
-  // ปิดป๊อปอัพเมื่อคลิกนอก — แบบเดียวกับปุ่มไข่ปลา (useMenu: ไม่ล็อก body, ใช้ mousedown/touchstart)
-  useEffect(() => {
-    if (!showProvincePicker) return;
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (justOpenedRef.current) return;
-      const target = (e.target ?? (e as TouchEvent).touches?.[0]?.target) as HTMLElement;
-      if (!target?.closest?.('[data-home-province-picker]') && !target?.closest?.('[data-home-filter-btn]')) {
-        closePicker();
-      }
-    };
-    const timerId = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside as EventListener);
-      document.addEventListener('touchstart', handleClickOutside as EventListener);
-    }, 120);
-    return () => {
-      clearTimeout(timerId);
-      document.removeEventListener('mousedown', handleClickOutside as EventListener);
-      document.removeEventListener('touchstart', handleClickOutside as EventListener);
-    };
-  }, [showProvincePicker, closePicker]);
 
   return (
     <>

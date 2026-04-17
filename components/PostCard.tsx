@@ -10,7 +10,6 @@ import { PostCardMenu } from './PostCardMenu';
 import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
-import { formatCurrency } from '@/utils/currency';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
@@ -110,7 +109,9 @@ export function PostCard({
   const currencySymbol = post.price_currency === '฿' || post.price_currency === '$'
     ? post.price_currency
     : '₭';
-    const priceText = priceValue && priceValue > 0 ? formatCurrency(priceValue, currencySymbol) : 'ບໍ່ລະບຸລາຄາ';
+  const priceText = priceValue && priceValue > 0
+    ? `${priceValue.toLocaleString('en-US')} ${currencySymbol}`
+    : 'ບໍ່ລະບຸລາຄາ';
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -512,7 +513,7 @@ export function PostCard({
                 whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ color: '#1c1e21', fontSize: '15px', lineHeight: '20px', fontWeight: 700 }}>{priceText}</span>
+              <span style={{ color: '#1c1e21', fontSize: '16px', lineHeight: '21px', fontWeight: 700 }}>{priceText}</span>
             </span>
           </div>
 

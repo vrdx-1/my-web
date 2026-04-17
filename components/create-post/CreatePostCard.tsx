@@ -93,7 +93,7 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     isPreparingArrange,
   }) => {
     const router = useRouter();
-    const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('de-DE') : '';
+    const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('en-US') : '';
     const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
     const privateNoteSummary = (() => {
       const noteName = selectedPrivateShop?.shop_name?.trim();
