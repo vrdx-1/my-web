@@ -1063,9 +1063,66 @@ export const formatTime = (dateString: string): string => {
 /**
  * Check if current user is the owner of the post
  */
-export const isPostOwner = (post: any, session: any, activeProfileId?: string | null): boolean => {
-  const effectiveUserId = activeProfileId || session?.user?.id;
-  if (effectiveUserId && String(post.user_id) === String(effectiveUserId)) return true;
+export interface OwnershipProfileRecord {
+  id: string;
+  parent_admin_id?: string | null;
+}
+
+export const getOwnedProfileIds = ({
+  activeProfileId,
+  authUserId,
+  availableProfiles = [],
+}: {
+  activeProfileId?: string | null;
+  authUserId?: string | null;
+  availableProfiles?: OwnershipProfileRecord[];
+}): string[] => {
+  const effectiveProfileId = activeProfileId || authUserId;
+  if (!effectiveProfileId) return [];
+
+  const normalizedEffectiveProfileId = String(effectiveProfileId);
+  const normalizedAuthUserId = authUserId ? String(authUserId) : null;
+
+  if (!normalizedAuthUserId || normalizedEffectiveProfileId !== normalizedAuthUserId) {
+    return [normalizedEffectiveProfileId];
+  }
+
+  const ownedProfileIds = new Set<string>([normalizedAuthUserId]);
+  availableProfiles.forEach((profile) => {
+    if (!profile?.id) return;
+    const profileId = String(profile.id);
+    const parentAdminId = profile.parent_admin_id ? String(profile.parent_admin_id) : null;
+    if (profileId === normalizedAuthUserId || parentAdminId === normalizedAuthUserId) {
+      ownedProfileIds.add(profileId);
+    }
+  });
+
+  return [...ownedProfileIds];
+};
+
+export const isOwnedByProfileScope = (
+  postUserId: string | null | undefined,
+  options: {
+    activeProfileId?: string | null;
+    authUserId?: string | null;
+    availableProfiles?: OwnershipProfileRecord[];
+  }
+): boolean => {
+  if (!postUserId) return false;
+  const ownedProfileIds = getOwnedProfileIds(options);
+  return ownedProfileIds.some((profileId) => String(profileId) === String(postUserId));
+};
+
+export const isPostOwner = (
+  post: any,
+  session: any,
+  activeProfileId?: string | null,
+  authUserId?: string | null,
+  availableProfiles: OwnershipProfileRecord[] = []
+): boolean => {
+  if (isOwnedByProfileScope(post?.user_id, { activeProfileId, authUserId: authUserId || session?.user?.id, availableProfiles })) {
+    return true;
+  }
   
   if (typeof window === 'undefined') return false;
   const stored = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);

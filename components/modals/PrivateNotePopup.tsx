@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import { isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 
 function getStoredActiveProfileId(authUserId: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -54,7 +55,25 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .eq('id', postId)
           .maybeSingle();
 
-        if (cancelled || carErr || !car || String(car.user_id) !== String(effectiveProfileId)) {
+        let ownershipProfiles: OwnershipProfileRecord[] = [];
+        if (!carErr && car && String(effectiveProfileId) === String(authUserId)) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, parent_admin_id')
+            .or(`id.eq.${authUserId},parent_admin_id.eq.${authUserId}`);
+          ownershipProfiles = profiles ?? [];
+        }
+
+        if (
+          cancelled ||
+          carErr ||
+          !car ||
+          !isOwnedByProfileScope(car.user_id, {
+            activeProfileId: effectiveProfileId,
+            authUserId,
+            availableProfiles: ownershipProfiles,
+          })
+        ) {
           if (!cancelled) {
             setNote(null);
             setLoading(false);

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 /**
@@ -42,6 +42,15 @@ export async function GET(
     const { data: { session } } = await supabase.auth.getSession();
     const resolvedProfile = await resolveServerActiveProfile(request);
     const currentUserId = resolvedProfile?.activeProfileId ?? session?.user?.id ?? null;
+    let availableProfiles: OwnershipProfileRecord[] = [];
+
+    if (resolvedProfile?.authUserId && resolvedProfile.authUserId === resolvedProfile.activeProfileId) {
+      const { data: ownedProfiles } = await supabase
+        .from('profiles')
+        .select('id, parent_admin_id')
+        .or(`id.eq.${resolvedProfile.authUserId},parent_admin_id.eq.${resolvedProfile.authUserId}`);
+      availableProfiles = ownedProfiles ?? [];
+    }
 
     let postIds: string[] = [];
 
@@ -341,7 +350,11 @@ export async function GET(
     if (type === 'saved' || type === 'liked') {
       filteredPosts = filteredPosts.filter(post => {
         const isNotHidden = !post.is_hidden;
-        const isOwner = currentUserId && post.user_id === currentUserId;
+        const isOwner = isOwnedByProfileScope(post.user_id, {
+          activeProfileId: currentUserId,
+          authUserId: resolvedProfile?.authUserId ?? session?.user?.id ?? null,
+          availableProfiles,
+        });
         const matchesTab = tab ? post.status === tab : true;
         return matchesTab && (isNotHidden || isOwner);
       });

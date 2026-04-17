@@ -78,8 +78,8 @@ export function PostCard({
   imageFetchPriority,
 }: PostCardProps) {
   const router = useRouter();
-  const { activeProfileId } = useSessionAndProfile();
-  const isOwner = isPostOwner(post, session, activeProfileId);
+  const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
+  const isOwner = isPostOwner(post, session, activeProfileId, authUserId, availableProfiles);
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);

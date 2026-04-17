@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LIST_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_PAGE_SIZE } from '@/utils/constants';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
@@ -33,6 +33,8 @@ interface UsePostListDataOptions {
   userIdOrToken?: string;
   session?: any;
   activeProfileId?: string | null;
+  authUserId?: string | null;
+  availableProfiles?: OwnershipProfileRecord[];
   /** เมื่อ true = รู้แล้วว่าใครล็อกอิน แล้วค่อยโหลด (ใช้ session จาก context) */
   sessionReady?: boolean;
   tab?: string;
@@ -67,7 +69,20 @@ export interface UsePostListDataReturn {
 }
 
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
-  const { type, userIdOrToken, session, activeProfileId, sessionReady = true, tab, status, loadAll = false, sharedLikedSaved, province } = options;
+  const {
+    type,
+    userIdOrToken,
+    session,
+    activeProfileId,
+    authUserId,
+    availableProfiles = [],
+    sessionReady = true,
+    tab,
+    status,
+    loadAll = false,
+    sharedLikedSaved,
+    province,
+  } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -614,7 +629,11 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           const filteredPosts = orderedPostsData.filter(postData => {
             if (type === 'saved' || type === 'liked') {
               const isNotHidden = !postData.is_hidden;
-              const isOwner = currentUserId && postData.user_id === currentUserId;
+              const isOwner = isOwnedByProfileScope(postData.user_id, {
+                activeProfileId: currentUserId,
+                authUserId: authUserId || session?.user?.id || null,
+                availableProfiles,
+              });
               const matchesTab = tab ? postData.status === tab : true;
               return matchesTab && (isNotHidden || isOwner);
             }

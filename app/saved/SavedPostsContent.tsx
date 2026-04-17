@@ -57,7 +57,7 @@ export function SavedPostsContent() {
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const { session, sessionReady, activeProfileId } = useSessionAndProfile();
+  const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const hasFetchedRecommendRef = useRef(false);
   const hasFetchedSoldRef = useRef(false);
 
@@ -66,6 +66,8 @@ export function SavedPostsContent() {
     session,
     sessionReady,
     activeProfileId,
+    authUserId,
+    availableProfiles,
     tab: 'recommend',
   });
   const soldListData = usePostListData({
@@ -73,6 +75,8 @@ export function SavedPostsContent() {
     session,
     sessionReady,
     activeProfileId,
+    authUserId,
+    availableProfiles,
     tab: 'sold',
   });
 
