@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { HOME_FEED_PAGE_SIZE } from '@/utils/constants';
+import { HOME_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { preloadPostsVisibleImages } from '@/utils/imagePreload';
@@ -108,11 +108,16 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const postsLengthRef = useRef(0);
   postsLengthRef.current = posts.length;
   /** โพสสุดท้ายของลิสต์ — ใช้เป็น cursor ตอนโหลดเพิ่ม (cursor-based = โหลดเร็วเท่ากันทุกหน้า) */
-  const lastPostRef = useRef<{ is_boosted: boolean; created_at: string } | null>(null);
+  const lastPostRef = useRef<{ id: string; is_boosted: boolean; created_at: string } | null>(null);
   if (posts.length > 0) {
     const last = posts[posts.length - 1];
-    if (last && typeof last.is_boosted === 'boolean' && typeof last.created_at === 'string') {
-      lastPostRef.current = { is_boosted: last.is_boosted, created_at: last.created_at };
+    if (
+      last &&
+      typeof last.id === 'string' &&
+      typeof last.is_boosted === 'boolean' &&
+      typeof last.created_at === 'string'
+    ) {
+      lastPostRef.current = { id: last.id, is_boosted: last.is_boosted, created_at: last.created_at };
     }
   }
 
@@ -180,7 +185,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
     // โหลดเพิ่มใช้ offset จากจำนวนโพสต์จริง (ไม่ใช้ page) เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ
     const rangeStart = currentPage === 0 ? 0 : postsLengthRef.current;
-    const pageSize = HOME_FEED_PAGE_SIZE;
+    const pageSize = isInitial ? INITIAL_FEED_PAGE_SIZE : HOME_FEED_PAGE_SIZE;
     const rangeEnd = rangeStart + pageSize - 1;
 
     try {
@@ -189,6 +194,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         startIndex?: number;
         endIndex?: number;
         province?: string;
+        cursorId?: string;
         cursorBoosted?: boolean;
         cursorCreatedAt?: string;
         pageSize?: number;
@@ -198,6 +204,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
       const cursor = !isInitial ? lastPostRef.current : null;
       if (cursor) {
+        body.cursorId = cursor.id;
         body.cursorBoosted = cursor.is_boosted;
         body.cursorCreatedAt = cursor.created_at;
         body.pageSize = pageSize;

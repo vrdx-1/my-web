@@ -30,6 +30,7 @@ function runFeedQuery(
   return query
     .order('is_boosted', { ascending: false })
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(startIndex, endIndex);
 }
 
@@ -39,6 +40,7 @@ function runFeedQuery(
  */
 function runFeedQueryWithCursor(
   supabase: ReturnType<typeof createServerClient>,
+  cursorId: string,
   cursorBoosted: boolean,
   cursorCreatedAt: string,
   limit: number,
@@ -52,17 +54,20 @@ function runFeedQueryWithCursor(
   if (province && province.trim() !== '') {
     query = query.eq('province', province.trim());
   }
-  // เรียง is_boosted DESC, created_at DESC — หน้าถัดไป = ค่า "น้อยกว่า" cursor
+  // เรียง is_boosted DESC, created_at DESC, id DESC — ใช้ id เป็น tie-breaker กันโพสต์เวลาเดียวกันหลุดหาย
   if (cursorBoosted) {
     query = query.or(
-      `is_boosted.eq.false,and(is_boosted.eq.true,created_at.lt.${cursorCreatedAt})`
+      `is_boosted.eq.false,and(is_boosted.eq.true,or(created_at.lt.${cursorCreatedAt},and(created_at.eq.${cursorCreatedAt},id.lt.${cursorId})))`
     );
   } else {
-    query = query.eq('is_boosted', false).lt('created_at', cursorCreatedAt);
+    query = query
+      .eq('is_boosted', false)
+      .or(`created_at.lt.${cursorCreatedAt},and(created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`);
   }
   return query
     .order('is_boosted', { ascending: false })
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit);
 }
 
@@ -109,6 +114,7 @@ async function computeFeed(
 
 async function computeFeedWithCursor(
   supabase: ReturnType<typeof createServerClient>,
+  cursorId: string,
   cursorBoosted: boolean,
   cursorCreatedAt: string,
   pageSize: number,
@@ -116,6 +122,7 @@ async function computeFeedWithCursor(
 ): Promise<FeedResult> {
   const { data, error } = await runFeedQueryWithCursor(
     supabase,
+    cursorId,
     cursorBoosted,
     cursorCreatedAt,
     pageSize + 1, // ขอเกิน 1 เพื่อเช็ค hasMore
@@ -146,7 +153,7 @@ async function computeFeedWithCursor(
 }
 
 /**
- * POST /api/posts/feed — body: { startIndex, endIndex, province? } หรือ { cursorBoosted, cursorCreatedAt, pageSize?, province? }
+ * POST /api/posts/feed — body: { startIndex, endIndex, province? } หรือ { cursorId, cursorBoosted, cursorCreatedAt, pageSize?, province? }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -167,11 +174,12 @@ export async function POST(request: NextRequest) {
     );
 
     // Cursor-based: โหลดหน้าถัดไปเร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน (ไม่ใช้ OFFSET)
+    const cursorId = typeof body.cursorId === 'string' ? body.cursorId : undefined;
     const cursorBoosted = body.cursorBoosted;
     const cursorCreatedAt = typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
-    if (cursorCreatedAt && typeof cursorBoosted === 'boolean') {
+    if (cursorId && cursorCreatedAt && typeof cursorBoosted === 'boolean') {
       const pageSize = Math.min(Math.max(1, parseInt(String(body.pageSize ?? FEED_PAGE_SIZE), 10)), 50);
-      const result = await computeFeedWithCursor(supabase, cursorBoosted, cursorCreatedAt, pageSize, province);
+      const result = await computeFeedWithCursor(supabase, cursorId, cursorBoosted, cursorCreatedAt, pageSize, province);
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });

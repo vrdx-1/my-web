@@ -4,10 +4,10 @@ import { use } from 'react';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
-import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
 import { ProvinceDropdown } from '@/components/ProvinceDropdown';
 import { LayoutPreviewSelector } from '@/components/create-post/LayoutPreviewSelector';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS, PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { useEditPostPage } from './useEditPostPage';
@@ -62,7 +62,7 @@ const BTN_LEAVE = {
 
 export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { profile: userProfile } = useProfile();
+  const { userProfile } = useSessionAndProfile();
   const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
   const {
     caption,
@@ -168,15 +168,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
         {(images.length > 0 || imageUpload.previews.length > 0) && (
           <>
-            <PhotoGrid
-              images={[...images, ...imageUpload.previews]}
-              onPostClick={() => setIsViewing(true)}
-              layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
-              gap={PHOTO_GRID_GAP}
-            />
             <div
               style={{
-                padding: [...images, ...imageUpload.previews].length > 0 ? '8px 12px 0' : '0',
+                padding: [...images, ...imageUpload.previews].length > 0 ? '0 12px 8px' : '0',
                 display: 'flex',
                 justifyContent: 'flex-start',
               }}
@@ -250,6 +244,12 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
             </div>
+            <PhotoGrid
+              images={[...images, ...imageUpload.previews]}
+              onPostClick={() => setIsViewing(true)}
+              layout={([...images, ...imageUpload.previews].length >= 6 ? layout : 'default')}
+              gap={PHOTO_GRID_GAP}
+            />
             {([...images, ...imageUpload.previews].length >= 6) && (
               <LayoutPreviewSelector
                 selectedLayout={layout}

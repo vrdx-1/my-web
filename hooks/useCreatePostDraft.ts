@@ -113,9 +113,7 @@ export function useCreatePostDraft({
         if (lsStep) setStep(lsStep);
       }
 
-      if (sharedDraftFiles.length > 0) {
-        setLayout(sharedDraftLayout || 'default');
-      } else if (savedLayout) {
+      if (savedLayout) {
         setLayout(savedLayout);
       } else {
         const lsLayout = safeParseJSON<string>('create_post_layout_ls', 'default');
@@ -125,17 +123,8 @@ export function useCreatePostDraft({
       // ดึงข้อมูลจากหน้าโฮม
       const pendingImages = safeParseSessionJSON<string[]>('pending_images', []);
 
-      // โหลดรูปภาพจาก sessionStorage (ถ้ามี)
-      if (sharedDraftFiles.length > 0) {
-        const files = sharedDraftFiles.slice(0, 30);
-        const previewUrls = files.map((file) => URL.createObjectURL(file));
-        imageUpload.setPreviews(previewUrls);
-        imageUpload.setSelectedFiles(files);
-        setStep(2);
-        return;
-      }
-
-      // ถ้ามี pending_images จากหน้าโฮม ให้ใช้ก่อน
+      // ถ้ามี pending_images จากหน้าโฮม/หน้าอื่น แปลว่าผู้ใช้เพิ่งเลือกรูปใหม่
+      // ต้องให้มาก่อน shared draft เก่าเสมอ ไม่งั้น PhotoGrid อาจโชว์รูปเก่าแทนรูปที่เพิ่งเลือก
       if (pendingImages.length > 0) {
         try {
           // จำกัดสูงสุด 30 รูปจากหน้าโฮม (ถ้ามาเกิน เอาแค่ 30 รูปแรก)
@@ -172,7 +161,9 @@ export function useCreatePostDraft({
             // IMPORTANT: อย่า append ซ้ำ (React StrictMode ใน dev อาจเรียก useEffect ซ้ำ)
             // ให้ set ทับเพื่อป้องกันรูปถูกอัปโหลด/บันทึกซ้ำจนเห็นเป็น ×2 หลังโพสต์
             imageUpload.setSelectedFiles(validFiles);
-            setSharedDraft?.({ files: validFiles, layout: sharedDraftLayout || savedLayout || 'default' });
+            const nextLayout = savedLayout || sharedDraftLayout || 'default';
+            setLayout(nextLayout);
+            setSharedDraft?.({ files: validFiles, layout: nextLayout });
 
             setStep(2);
           }
@@ -183,6 +174,15 @@ export function useCreatePostDraft({
         } catch (e) {
           console.error('Error processing pending images', e);
         }
+      }
+      else if (sharedDraftFiles.length > 0) {
+        const files = sharedDraftFiles.slice(0, 30);
+        const previewUrls = files.map((file) => URL.createObjectURL(file));
+        imageUpload.setPreviews(previewUrls);
+        imageUpload.setSelectedFiles(files);
+        setLayout(sharedDraftLayout || savedLayout || 'default');
+        setStep(2);
+        return;
       }
       else {
         try {

@@ -777,7 +777,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
               }}
             >
               <div style={{ fontSize: '16px', fontWeight: 700, color: '#14532d', lineHeight: 1.35 }}>
-                ສະລັບບັນຊີສຳເລັດ
+                ສະຫຼັບບັນຊີສຳເລັດ
               </div>
               <div
                 style={{

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { useImageUpload } from '@/hooks/useImageUpload';
 
 import { REGISTER_PATH } from '@/utils/authRoutes';
@@ -31,6 +32,10 @@ let captionWhenLeavingStep2Module = '';
 
 const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY = 'create_post_private_shop';
 const CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT = 'create-post-private-shop-updated';
+
+function getLastUsedPrivateShopStorageKey(userId: string): string {
+  return `create_post_last_used_private_shop_${userId}`;
+}
 
 interface CreatePostPrivateShop {
   id: string;
@@ -129,7 +134,6 @@ export default function CreatePost() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showVideoAlert, setShowVideoAlert] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState('');
-  const [isPreparingArrange, setIsPreparingArrange] = useState(false);
   const [selectedPrivateShop, setSelectedPrivateShop] = useState<CreatePostPrivateShop | null>(
     readCreatePostPrivateShop,
   );
@@ -185,6 +189,58 @@ export default function CreatePost() {
       window.removeEventListener('focus', syncSelectedPrivateShop);
     };
   }, []);
+
+  useEffect(() => {
+    const authUserId = session?.user?.id;
+    if (!authUserId) return;
+    if (selectedPrivateShop?.id) return;
+    if (typeof window === 'undefined') return;
+
+    const lastUsedId = window.localStorage.getItem(getLastUsedPrivateShopStorageKey(authUserId));
+    if (!lastUsedId) return;
+
+    let cancelled = false;
+
+    const hydrateLastUsedPrivateShop = async () => {
+      const { data, error } = await supabase
+        .from('user_private_shops')
+        .select('id, shop_name, shop_phone')
+        .eq('user_id', authUserId)
+        .eq('id', lastUsedId)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error || !data) {
+        window.localStorage.removeItem(getLastUsedPrivateShopStorageKey(authUserId));
+        return;
+      }
+
+      const restoredShop: CreatePostPrivateShop = {
+        id: data.id,
+        shop_name: typeof data.shop_name === 'string' ? data.shop_name : null,
+        shop_phone: typeof data.shop_phone === 'string' ? data.shop_phone : null,
+      };
+
+      try {
+        window.sessionStorage.setItem(
+          CREATE_POST_PRIVATE_SHOP_STORAGE_KEY,
+          JSON.stringify(restoredShop),
+        );
+      } catch {
+        return;
+      }
+
+      setSelectedPrivateShop(restoredShop);
+      window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
+    };
+
+    void hydrateLastUsedPrivateShop();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id, selectedPrivateShop?.id]);
 
   // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน หลังรอให้ checkUser() ใน useCreatePostDraft โหลด session ก่อน (ถ้า redirect ทันทีจะทำให้ User ที่ล็อกอินแล้วโดนเด้งไปโฮม/ลงทะเบียนตอนเลือกรูป)
   const guestRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -355,33 +411,6 @@ const handleNextStep = () => {
   setStep(3);
 };
 
-const handleGoArrange = async () => {
-  if (isPreparingArrange) return;
-  if (imageUpload.previews.length === 0) return;
-
-  setIsPreparingArrange(true);
-  try {
-    const filesToArrange = imageUpload.selectedFiles.length > 0
-      ? imageUpload.selectedFiles.slice(0, 30)
-      : (createPostContext?.draft.files || []).slice(0, 30);
-
-    if (filesToArrange.length === 0) {
-      return;
-    }
-
-    createPostContext?.setDraft({
-      files: filesToArrange,
-      layout,
-    });
-
-    router.push('/create-post/arrange');
-  } catch (error) {
-    console.error('Error preparing images for arrange page:', error);
-  } finally {
-    setIsPreparingArrange(false);
-  }
-};
-
 // Lock background scroll when overlay layers are open
 useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validationAlertMessage.length > 0);
 
@@ -477,8 +506,6 @@ if (isUploading) {
             onRemoveImage={removeImage}
             layout={layout}
             onLayoutChange={setLayout}
-            onGoArrange={handleGoArrange}
-            isPreparingArrange={isPreparingArrange}
             selectedPrivateShop={selectedPrivateShop}
           />
         </div>

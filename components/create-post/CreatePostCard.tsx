@@ -32,14 +32,6 @@ const ActionLineIcon = ({ children }: { children: React.ReactNode }) => (
   </svg>
 );
 
-const arrangeIcon = (
-  <ActionLineIcon>
-    <rect x="3" y="4" width="18" height="16" rx="2.4" />
-    <circle cx="8" cy="9" r="1.2" fill="currentColor" stroke="none" />
-    <path d="M5.5 16.5l3.5-3.6 2.6 2.4 3.1-3.3 3.8 4.5" />
-  </ActionLineIcon>
-);
-
 const privateNoteIcon = (
   <ActionLineIcon>
     <rect x="4" y="3" width="16" height="18" rx="2" />
@@ -68,8 +60,6 @@ interface CreatePostCardProps {
   onRemoveImage: (index: number) => void;
   layout: string;
   onLayoutChange: (layout: string) => void;
-  onGoArrange: () => void;
-  isPreparingArrange: boolean;
 }
 
 export const CreatePostCard = React.memo<CreatePostCardProps>(
@@ -89,8 +79,6 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     onRemoveImage,
     layout,
     onLayoutChange,
-    onGoArrange,
-    isPreparingArrange,
   }) => {
     const router = useRouter();
     const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('en-US') : '';
@@ -291,21 +279,9 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
           </div>
         </div>
         <div style={{ padding: previews.length > 0 ? '0' : '0 15px 16px' }}>
-          {previews.length > 0 && (
-            <PhotoPreviewGrid
-              existingImages={[]}
-              newPreviews={previews}
-              onImageClick={onImageClick}
-              onRemoveImage={onRemoveImage}
-              showRemoveButton={false}
-              layout={previews.length >= 6 ? layout : 'default'}
-              gap={PHOTO_GRID_GAP}
-            />
-          )}
-
           <div
             style={{
-              padding: previews.length > 0 ? '8px 12px 0' : '0',
+              padding: previews.length > 0 ? '0 12px 8px' : '0',
               display: 'flex',
               justifyContent: 'flex-start',
             }}
@@ -376,47 +352,38 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
             </div>
           </div>
 
-          {previews.length >= 6 && (
-            <LayoutPreviewSelector
-              selectedLayout={layout}
-              onLayoutChange={onLayoutChange}
-              previews={previews}
+          {previews.length > 0 && (
+            <PhotoPreviewGrid
+              existingImages={[]}
+              newPreviews={previews}
+              onImageClick={onImageClick}
+              onRemoveImage={onRemoveImage}
+              showRemoveButton={false}
+              layout={previews.length >= 6 ? layout : 'default'}
+              gap={PHOTO_GRID_GAP}
             />
           )}
+
+          {previews.length >= 6 && (
+            <div style={{ marginBottom: '-12px' }}>
+              <LayoutPreviewSelector
+                selectedLayout={layout}
+                onLayoutChange={onLayoutChange}
+                previews={previews}
+              />
+            </div>
+          )}
+
           {previews.length > 0 && (
             <div
               style={{
-                padding: '12px 15px 16px',
-                paddingTop: previews.length >= 6 ? '12px' : '8px',
+                padding: '0 15px 16px',
+                paddingTop: '0',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0',
               }}
             >
-              {previews.length >= 6 && (
-                <button
-                  type="button"
-                  onClick={onGoArrange}
-                  disabled={isPreparingArrange}
-                  style={{
-                    width: '100%',
-                    padding: '14px 0',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: isPreparingArrange ? '#8a8d91' : '#4b5563',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: isPreparingArrange ? 'not-allowed' : 'pointer',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                  }}
-                >
-                  <span style={actionIconStyle}>{arrangeIcon}</span>
-                  <span>{isPreparingArrange ? 'ກຳລັງກຽມຮູບ...' : 'ເລືອກຮູບ ແລະ ຈັດລຽງໃໝ່'}</span>
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => router.push('/create-post/private-note')}

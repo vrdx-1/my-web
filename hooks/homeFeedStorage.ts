@@ -1,6 +1,6 @@
 'use client';
 
-import { FEED_CACHE_MAX_AGE_MS, HOME_FEED_PAGE_SIZE } from '@/utils/constants';
+import { FEED_CACHE_MAX_AGE_MS, INITIAL_FEED_PAGE_SIZE } from '@/utils/constants';
 
 export const HOME_FEED_CACHE_KEY = 'home_feed_cache';
 const JUST_POSTED_POST_KEY = 'just_posted_post';
@@ -82,14 +82,14 @@ export function getInitialPostsFromStorage(province?: string): HomeFeedPost[] {
     const cachedFeed = readCachedFeed(province);
 
     if (!justPostedPost) {
-      return cachedFeed ? cachedFeed.posts.slice(0, HOME_FEED_PAGE_SIZE) : [];
+      return cachedFeed ? cachedFeed.posts.slice(0, INITIAL_FEED_PAGE_SIZE) : [];
     }
 
     if (!cachedFeed) {
       return [justPostedPost];
     }
 
-    return mergeJustPostedPost(cachedFeed.posts.slice(0, HOME_FEED_PAGE_SIZE), justPostedPost);
+    return mergeJustPostedPost(cachedFeed.posts.slice(0, INITIAL_FEED_PAGE_SIZE), justPostedPost);
   } catch {
     return [];
   }
@@ -108,7 +108,7 @@ export function prepareInitialHomeFeedState(province?: string) {
     };
   }
 
-  const cachedPosts = cachedFeed.posts.slice(0, HOME_FEED_PAGE_SIZE);
+  const cachedPosts = cachedFeed.posts.slice(0, INITIAL_FEED_PAGE_SIZE);
   return {
     fromCache: true,
     initialPosts: justPostedPost ? mergeJustPostedPost(cachedPosts, justPostedPost) : cachedPosts,

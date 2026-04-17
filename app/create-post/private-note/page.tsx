@@ -88,6 +88,12 @@ export default function CreatePostPrivateNotePage() {
   const getHiddenStorageKey = (uid: string) => `create_post_hidden_private_shops_${uid}`;
   const getLastUsedStorageKey = (uid: string) => `create_post_last_used_private_shop_${uid}`;
 
+  const persistLastUsedPrivateShop = (uid: string, shop: PrivateShop) => {
+    if (typeof window === 'undefined') return;
+
+    window.localStorage.setItem(getLastUsedStorageKey(uid), shop.id);
+  };
+
   const readStoredPrivateShop = () => {
     if (typeof window === 'undefined') return null;
 
@@ -243,6 +249,9 @@ export default function CreatePostPrivateNotePage() {
     if (!hasNote && !hasPhone && selectedId) {
       const selectedShop = shops.find((shop) => shop.id === selectedId);
       if (selectedShop && typeof window !== 'undefined') {
+        if (userId) {
+          persistLastUsedPrivateShop(userId, selectedShop);
+        }
         writeStoredPrivateShop(selectedShop);
       }
       router.back();
@@ -258,6 +267,9 @@ export default function CreatePostPrivateNotePage() {
     const created = await handleSaveShop();
     if (!created) return;
     if (typeof window !== 'undefined') {
+      if (userId) {
+        persistLastUsedPrivateShop(userId, created);
+      }
       writeStoredPrivateShop(created);
     }
     router.back();
