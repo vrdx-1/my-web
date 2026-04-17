@@ -11,6 +11,7 @@ import { LAO_FONT } from '@/utils/constants';
 import { clearGuestUserData } from '@/utils/storageUtils';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { Avatar } from '@/components/Avatar';
+import { BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX } from '@/components/BottomNav';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
@@ -36,6 +37,8 @@ interface ProfileContentProps {
 }
 
 export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
+  const SUB_ACCOUNT_DROPDOWN_BOTTOM_GAP_PX = 12;
+  const SUB_ACCOUNT_DROPDOWN_TOP_GAP_PX = 10;
   const router = useRouter();
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -67,6 +70,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [subAccountError, setSubAccountError] = useState('');
   const [subAccountSuccess, setSubAccountSuccess] = useState('');
   const [showSubAccountCreatedSuccess, setShowSubAccountCreatedSuccess] = useState(false);
+  const [subAccountDropdownTopOffset, setSubAccountDropdownTopOffset] = useState(0);
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
@@ -76,6 +80,9 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     if (!normalizedSubAccountSearchQuery) return true;
     return (account.username || '').toLowerCase().includes(normalizedSubAccountSearchQuery);
   });
+  const subAccountDropdownMaxHeight = subAccountDropdownTopOffset > 0
+    ? `calc(100dvh - ${subAccountDropdownTopOffset}px - ${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px - env(safe-area-inset-bottom, 0px) - ${SUB_ACCOUNT_DROPDOWN_BOTTOM_GAP_PX}px)`
+    : undefined;
 
   useEffect(() => {
     return () => {
@@ -315,6 +322,25 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     }
   }, [canManageSubAccounts, loadSubAccounts, showSubAccountDropdown]);
 
+  useLayoutEffect(() => {
+    if (!showSubAccountDropdown) return;
+
+    const updateDropdownTopOffset = () => {
+      const rect = subAccountDropdownRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setSubAccountDropdownTopOffset(Math.max(0, Math.round(rect.bottom + SUB_ACCOUNT_DROPDOWN_TOP_GAP_PX)));
+    };
+
+    updateDropdownTopOffset();
+    window.addEventListener('resize', updateDropdownTopOffset);
+    window.visualViewport?.addEventListener('resize', updateDropdownTopOffset);
+
+    return () => {
+      window.removeEventListener('resize', updateDropdownTopOffset);
+      window.visualViewport?.removeEventListener('resize', updateDropdownTopOffset);
+    };
+  }, [showSubAccountDropdown]);
+
   const closeSubAccountModal = useCallback(() => {
     setShowSubAccountPanel(false);
     resetSubAccountForm();
@@ -323,6 +349,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const closeSubAccountDropdown = useCallback(() => {
     setShowSubAccountDropdown(false);
     setSubAccountSearchQuery('');
+    setSubAccountDropdownTopOffset(0);
   }, []);
 
   useEffect(() => {
@@ -944,11 +971,14 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: 'min(360px, calc(100vw - 40px))',
+                maxHeight: subAccountDropdownMaxHeight,
                 background: '#ffffff',
                 border: 'none',
                 borderRadius: '16px',
                 boxShadow: '0 10px 24px rgba(17, 24, 39, 0.10)',
                 overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
                 animation: 'sub-account-dropdown-slide 0.18s ease-out',
               }}
             >
@@ -1010,7 +1040,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 </div>
               </div>
 
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 {filteredSubAccounts.length > 0 ? filteredSubAccounts.map((account) => {
                   const isActiveProfile = (activeProfileId || authUserId) === account.id;
                   const isMainProfile = authUserId === account.id;
