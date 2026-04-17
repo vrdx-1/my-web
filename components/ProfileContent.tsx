@@ -71,6 +71,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [subAccountSuccess, setSubAccountSuccess] = useState('');
   const [showSubAccountCreatedSuccess, setShowSubAccountCreatedSuccess] = useState(false);
   const [subAccountDropdownTopOffset, setSubAccountDropdownTopOffset] = useState(0);
+  const [accountSwitchToastToken, setAccountSwitchToastToken] = useState(0);
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
@@ -91,6 +92,14 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       }
     };
   }, [subAccountAvatarPreview]);
+
+  useEffect(() => {
+    if (!accountSwitchToastToken) return;
+    const timeoutId = window.setTimeout(() => {
+      setAccountSwitchToastToken(0);
+    }, 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [accountSwitchToastToken]);
 
   const resetSubAccountForm = useCallback(() => {
     setSubAccountUsername('');
@@ -656,6 +665,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     setEditingPhone('');
   };
 
+  const handleSwitchAccount = useCallback((profileId: string) => {
+    setActiveProfile(profileId);
+    closeSubAccountDropdown();
+    setAccountSwitchToastToken(Date.now());
+  }, [closeSubAccountDropdown, setActiveProfile]);
+
   if (loading) {
     const isAppProfile = onBack == null;
     const shimmerStyle = {
@@ -732,6 +747,87 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         fontFamily: LAO_FONT,
       }}
     >
+      {accountSwitchToastToken ? (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 'calc(env(safe-area-inset-top, 0px) + 14px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'min(calc(100vw - 64px), 280px)',
+              zIndex: 5000,
+              pointerEvents: 'none',
+              animation: 'profile-account-switch-toast 3s ease forwards',
+            }}
+          >
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.96)',
+                border: '1px solid rgba(187, 247, 208, 0.9)',
+                borderRadius: '18px',
+                boxShadow: '0 16px 40px rgba(17, 24, 39, 0.14)',
+                padding: '14px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '14px',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+              }}
+            >
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#14532d', lineHeight: 1.35 }}>
+                ສະລັບບັນຊີສຳເລັດ
+              </div>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '999px',
+                  background: '#dcfce7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#16a34a"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <style>{`
+            @keyframes profile-account-switch-toast {
+              0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-22px) scale(0.96);
+              }
+              12% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+              }
+              82% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+              }
+              100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px) scale(0.98);
+              }
+            }
+          `}</style>
+        </>
+      ) : null}
       <div
         ref={scrollContainerRef}
         style={{
@@ -1048,10 +1144,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                     <button
                       key={account.id}
                       type="button"
-                      onClick={() => {
-                        setActiveProfile(account.id);
-                        closeSubAccountDropdown();
-                      }}
+                      onClick={() => handleSwitchAccount(account.id)}
                       style={{
                         width: '100%',
                         display: 'flex',
