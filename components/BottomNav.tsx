@@ -182,7 +182,7 @@ function BellNavIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
-export function BottomNav() {
+export const BottomNav = React.memo(function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
   const lastNavRef = useRef<{ path: string; at: number } | null>(null);
@@ -465,7 +465,9 @@ export function BottomNav() {
       </Suspense>
     </nav>
   );
-}
+});
+
+BottomNav.displayName = 'BottomNav';
 
 export const BOTTOM_NAV_HEIGHT_PX = BOTTOM_NAV_HEIGHT;
 export const BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX = BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA;

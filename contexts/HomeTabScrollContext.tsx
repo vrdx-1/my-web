@@ -7,6 +7,7 @@ type SaveBeforeSwitch = () => void;
 interface HomeTabScrollContextValue {
   /** ref ที่ HomePageContent ใส่ฟังก์ชันบันทึก scroll ของแท็บปัจจุบัน — เรียกก่อน triggerTabChange (แบบเดียวกับ saveCurrentScroll ก่อน router.push) */
   saveBeforeSwitchRef: React.MutableRefObject<SaveBeforeSwitch | null>;
+  registerSaveBeforeSwitch: (handler: SaveBeforeSwitch | null) => void;
   /** เรียกก่อนสลับแท็บพร้อมขาย/ขายแล้ว */
   saveCurrentHomeTabScroll: () => void;
 }
@@ -16,12 +17,17 @@ const HomeTabScrollContext = createContext<HomeTabScrollContextValue | null>(nul
 export function HomeTabScrollProvider({ children }: { children: React.ReactNode }) {
   const saveBeforeSwitchRef = useRef<SaveBeforeSwitch | null>(null);
 
+  const registerSaveBeforeSwitch = useCallback((handler: SaveBeforeSwitch | null) => {
+    saveBeforeSwitchRef.current = handler;
+  }, []);
+
   const saveCurrentHomeTabScroll = useCallback(() => {
     saveBeforeSwitchRef.current?.();
   }, []);
 
   const value: HomeTabScrollContextValue = {
     saveBeforeSwitchRef,
+    registerSaveBeforeSwitch,
     saveCurrentHomeTabScroll,
   };
 

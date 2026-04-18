@@ -19,6 +19,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
   const headerVisibility = useHeaderVisibilityContext();
+  const registerSaveBeforeSwitch = homeTabScroll?.registerSaveBeforeSwitch;
+  const setHeaderVisible = headerVisibility?.setHeaderVisible;
 
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);
@@ -31,8 +33,54 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
   const soldPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const setHeaderVisibleRef = useRef(headerVisibility?.setHeaderVisible);
-  setHeaderVisibleRef.current = headerVisibility?.setHeaderVisible;
+  const restoreWindowScroll = (
+    targetY: number,
+    options?: {
+      maxAttempts?: number;
+      onSettled?: (finalY: number) => void;
+    },
+  ) => {
+    if (typeof window === 'undefined' || !Number.isFinite(targetY)) {
+      options?.onSettled?.(0);
+      return () => {};
+    }
+
+    let cancelled = false;
+    const rafIds: number[] = [];
+    let attempts = 0;
+    const maxAttempts = Math.max(1, options?.maxAttempts ?? 3);
+
+    const finish = () => {
+      if (cancelled) return;
+      options?.onSettled?.(window.scrollY);
+    };
+
+    const run = () => {
+      if (cancelled) return;
+      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      attempts += 1;
+
+      if (Math.abs(window.scrollY - targetY) <= 4 || attempts >= maxAttempts) {
+        const settleId = requestAnimationFrame(finish);
+        rafIds.push(settleId);
+        return;
+      }
+
+      const retryId = requestAnimationFrame(run);
+      rafIds.push(retryId);
+    };
+
+    const startId = requestAnimationFrame(() => {
+      const verifyId = requestAnimationFrame(run);
+      rafIds.push(verifyId);
+    });
+    rafIds.push(startId);
+
+    return () => {
+      cancelled = true;
+      rafIds.forEach((id) => cancelAnimationFrame(id));
+    };
+  };
 
   useLayoutEffect(() => {
     const prev = prevPathnameRef.current;
@@ -48,16 +96,16 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   }, [pathname]);
 
   useEffect(() => {
-    if (!homeTabScroll?.saveBeforeSwitchRef) return;
-    homeTabScroll.saveBeforeSwitchRef.current = () => {
+    if (!registerSaveBeforeSwitch) return;
+    registerSaveBeforeSwitch(() => {
       const y = typeof window !== 'undefined' ? window.scrollY : 0;
       if (isSoldTabNoSearch) soldScrollRef.current = y;
       else recommendScrollRef.current = y;
-    };
+    });
     return () => {
-      homeTabScroll.saveBeforeSwitchRef.current = null;
+      registerSaveBeforeSwitch(null);
     };
-  }, [homeTabScroll, isSoldTabNoSearch]);
+  }, [isSoldTabNoSearch, registerSaveBeforeSwitch]);
 
   useLayoutEffect(() => {
     const showSold = isSoldTabNoSearch;
@@ -69,11 +117,10 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     suppressHideUntilRef.current = now + 400;
     const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
-    const activePanelRef = showSold ? soldPanelRef : recommendPanelRef;
 
     const showHeaderAfterRestore = () => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => setHeaderVisibleRef.current?.(true));
+        requestAnimationFrame(() => setHeaderVisible?.(true));
       });
     };
 
@@ -82,24 +129,13 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       return;
     }
 
-    const targetY = toRestore;
-    let attempts = 0;
-    const maxAttempts = 25;
-    const tryScroll = () => {
-      const el = activePanelRef.current;
-      if (el) void el.offsetHeight;
-      window.scrollTo(0, targetY);
-      attempts += 1;
-      const current = window.scrollY;
-      const diff = Math.abs(current - targetY);
-      if (diff > 2 && attempts < maxAttempts) {
-        requestAnimationFrame(tryScroll);
-      } else {
+    return restoreWindowScroll(toRestore, {
+      maxAttempts: 4,
+      onSettled: () => {
         showHeaderAfterRestore();
-      }
-    };
-    requestAnimationFrame(() => requestAnimationFrame(tryScroll));
-  }, [isSoldTabNoSearch]);
+      },
+    });
+  }, [isSoldTabNoSearch, setHeaderVisible]);
 
   useLayoutEffect(() => {
     if (pathname !== '/home') {
@@ -132,40 +168,27 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     let cancelled = false;
     const useMask = targetY > 48;
-    const activePanelRef = isSoldTabNoSearch ? soldPanelRef : recommendPanelRef;
 
     const unmask = () => {
       const w = feedRestoreWrapRef.current;
       if (useMask && w) w.style.visibility = '';
     };
 
-    let attempts = 0;
-    const maxAttempts = 40;
-    const tryScroll = () => {
-      if (cancelled) return;
-      const el = activePanelRef.current;
-      if (el) void el.offsetHeight;
-      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
-      attempts += 1;
-      const current = window.scrollY;
-      const diff = Math.abs(current - targetY);
-      if (diff > 3 && attempts < maxAttempts) {
-        requestAnimationFrame(tryScroll);
-      } else {
+    const cancelRestore = restoreWindowScroll(targetY, {
+      maxAttempts: 5,
+      onSettled: (finalY) => {
+        if (cancelled) return;
         unmask();
         pendingHomeRouteScrollRestoreRef.current = false;
-        if (diff <= 4) {
+        if (Math.abs(finalY - targetY) <= 4) {
           mainTabScroll?.saveCurrentScroll('/home');
         }
-      }
-    };
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(tryScroll);
+      },
     });
 
     return () => {
       cancelled = true;
+      cancelRestore();
       unmask();
     };
   }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch]);

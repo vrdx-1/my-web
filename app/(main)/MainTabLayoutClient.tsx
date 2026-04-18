@@ -160,7 +160,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
     const body = document.body;
     const html = document.documentElement;
-    const previousBodyTouchAction = body.style.touchAction;
 
     if (resolvedPathname !== '/home') {
       return;
@@ -169,7 +168,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     // Home feed scrolls on window/body. Reset any stale scroll locks left by overlays/pages.
     body.style.overflow = '';
     html.style.overflow = '';
-    body.style.touchAction = 'manipulation';
 
     const handleGestureEvent = (event: Event) => {
       const target = event.target;
@@ -187,7 +185,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       window.removeEventListener('gesturestart', handleGestureEvent);
       window.removeEventListener('gesturechange', handleGestureEvent);
       window.removeEventListener('gestureend', handleGestureEvent);
-      body.style.touchAction = previousBodyTouchAction;
     };
   }, [resolvedPathname]);
 

@@ -17,11 +17,16 @@ function HomeHeaderBase(props: HomeHeaderProps) {
 }
 
 function areHomeHeaderPropsEqual(prev: HomeHeaderProps, next: HomeHeaderProps) {
+  const sameSlideMode = prev.slideWithContainer === next.slideWithContainer;
+  const sameVisibility = sameSlideMode && prev.slideWithContainer
+    ? true
+    : prev.isHeaderVisible === next.isHeaderVisible;
+
   const bothSearchOnly = !!prev.showOnlySearch && !!next.showOnlySearch;
   if (bothSearchOnly) {
     return (
       prev.showOnlySearch === next.showOnlySearch &&
-      prev.isHeaderVisible === next.isHeaderVisible &&
+      sameVisibility &&
       prev.slideWithContainer === next.slideWithContainer &&
       prev.onTabRefresh === next.onTabRefresh
     );
@@ -29,7 +34,7 @@ function areHomeHeaderPropsEqual(prev: HomeHeaderProps, next: HomeHeaderProps) {
 
   return (
     prev.showOnlySearch === next.showOnlySearch &&
-    prev.isHeaderVisible === next.isHeaderVisible &&
+    sameVisibility &&
     prev.slideWithContainer === next.slideWithContainer &&
     prev.onCreatePostClick === next.onCreatePostClick &&
     prev.onNotificationClick === next.onNotificationClick &&
