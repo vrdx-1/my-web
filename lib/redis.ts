@@ -34,6 +34,7 @@ export type FeedCachePayload = {
   postIds: string[];
   hasMore: boolean;
   posts: unknown[];
+  feedSeed?: string;
 };
 
 const FEED_CACHE_PREFIX = 'feed:';

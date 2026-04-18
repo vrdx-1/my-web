@@ -81,6 +81,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const cancelledRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onInitialLoadDoneRef = useRef(onInitialLoadDone);
+  const feedSeedRef = useRef<string | null>(null);
 
   useEffect(() => {
     onInitialLoadDoneRef.current = onInitialLoadDone;
@@ -198,8 +199,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         cursorBoosted?: boolean;
         cursorCreatedAt?: string;
         pageSize?: number;
+        feedSeed?: string;
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
+      if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
 
       // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
       const cursor = !isInitial ? lastPostRef.current : null;
@@ -222,6 +225,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
       const data = await res.json().catch(() => ({}));
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
+      if (typeof data.feedSeed === 'string' && data.feedSeed) {
+        feedSeedRef.current = data.feedSeed;
+      }
       const postIds: string[] = Array.isArray(data.postIds) ? data.postIds : [];
       // ถ้า API บอก hasMore มาแล้ว ให้เชื่อตามนั้น
       // ไม่ควรถือว่า "หน้าไม่เต็มแต่ยังมีข้อมูล" = มีหน้าถัดไป เพราะจะทำให้ท้ายฟีดวนโหลด skeleton ไม่หยุด
@@ -355,6 +361,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
+    feedSeedRef.current = null;
     const { fromCache, initialPosts, hasMore: initialHasMore, justPostedPost } =
       prepareInitialHomeFeedState(province);
 
