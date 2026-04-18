@@ -6,30 +6,22 @@
 -- 1) สร้างตาราง (ถ้ายังไม่มี)
 CREATE TABLE IF NOT EXISTS public.search_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   search_term TEXT NOT NULL,
   display_text TEXT,
   search_type TEXT NOT NULL CHECK (search_type IN ('manual', 'suggestion', 'history')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- เพิ่มคอลัมน์ guest_token สำหรับเก็บรหัสแขก (Guest Token)
-ALTER TABLE public.search_logs
-  ADD COLUMN IF NOT EXISTS guest_token TEXT;
-
--- Index สำหรับดึงตาม user_id / guest_token และเรียงตามเวลา
-CREATE INDEX IF NOT EXISTS idx_search_logs_user_id ON public.search_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_search_logs_guest_token ON public.search_logs(guest_token);
+-- Index สำหรับเรียงตามเวลาและสรุปสถิติ
 CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON public.search_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_search_logs_search_term ON public.search_logs(search_term);
 CREATE INDEX IF NOT EXISTS idx_search_logs_search_type ON public.search_logs(search_type);
-CREATE INDEX IF NOT EXISTS idx_search_logs_guest_token_user ON public.search_logs(guest_token, user_id);
 
 -- Index สำหรับนับจำนวนครั้งที่ค้นหา (สำหรับสถิติ)
 CREATE INDEX IF NOT EXISTS idx_search_logs_term_count ON public.search_logs(search_term, created_at DESC);
 
 -- Comment
-COMMENT ON TABLE public.search_logs IS 'ประวัติการค้นหาทั้งหมดของ User (manual, suggestion, history=กดจากประวัติการค้นหา) สำหรับ Admin ดูสถิติ';
+COMMENT ON TABLE public.search_logs IS 'ประวัติการค้นหาแบบ anonymous (manual, suggestion, history=กดจากประวัติการค้นหา) สำหรับ Admin ดูสถิติ';
 
 -- อัปเดต constraint สำหรับ DB ที่มีอยู่แล้ว ให้รับค่า 'history'
 ALTER TABLE public.search_logs DROP CONSTRAINT IF EXISTS search_logs_search_type_check;
@@ -56,17 +48,7 @@ CREATE POLICY "Authenticated can read all search logs"
   TO authenticated
   USING (true);
 
--- 5) Policy: ผู้ใช้ที่ล็อกอินสามารถ "รับช่วง" ประวัติของ Guest ของตัวเองได้
---    (อัปเดตจาก guest_token → user_id หลังจากเข้าสู่ระบบสำเร็จ)
-DROP POLICY IF EXISTS "Authenticated can adopt guest logs" ON public.search_logs;
-CREATE POLICY "Authenticated can adopt guest logs"
-  ON public.search_logs
-  FOR UPDATE
-  TO authenticated
-  USING (user_id IS NULL OR user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-
--- 6) Policy: Admin ต้องดูทั้งหมดได้ (จะใช้ผ่าน API route ที่ใช้ service_role key หรือ admin client)
+-- 5) Policy: Admin ต้องดูทั้งหมดได้ (จะใช้ผ่าน API route ที่ใช้ service_role key หรือ admin client)
 --    สำหรับหน้า admin จะใช้ API route ที่ bypass RLS
 
 -- ============================================================

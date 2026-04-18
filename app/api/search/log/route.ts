@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 /**
  * POST /api/search/log
- * บันทึกการค้นหาลง search_logs (ทั้ง User และ Guest)
- * Body: { search_term: string, search_type: 'manual' | 'suggestion' | 'history', guest_token?: string }
+ * บันทึกการค้นหาลง search_logs แบบ anonymous
+ * Body: { search_term: string, search_type: 'manual' | 'suggestion' | 'history' }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +13,6 @@ export async function POST(request: NextRequest) {
     const search_type = body.search_type === 'manual' || body.search_type === 'suggestion' || body.search_type === 'history'
       ? body.search_type
       : 'manual';
-    const guest_token = typeof body.guest_token === 'string' ? body.guest_token.trim() || null : null;
 
     if (search_term.length === 0) {
       return NextResponse.json({ ok: true });
@@ -30,18 +28,11 @@ export async function POST(request: NextRequest) {
       { auth: { persistSession: false } }
     );
 
-    const resolvedProfile = await resolveServerActiveProfile(request);
-
-    const row: { search_term: string; search_type: string; user_id?: string; guest_token?: string | null; display_text?: string } = {
+    const row: { search_term: string; search_type: string; display_text?: string } = {
       search_term,
       search_type,
       display_text: search_term,
     };
-    if (resolvedProfile?.activeProfileId) {
-      row.user_id = resolvedProfile.activeProfileId;
-    } else if (guest_token) {
-      row.guest_token = guest_token;
-    }
 
     const { error } = await admin.from('search_logs').insert(row);
 
