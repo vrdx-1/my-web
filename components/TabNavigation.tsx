@@ -12,6 +12,8 @@ interface TabNavigationProps {
   loadingTab?: string | null;
   /** ซ่อนเส้น indicator (ใช้เฉพาะช่วง skeleton เพื่อไม่ให้เห็นเส้นสี) */
   hideIndicator?: boolean;
+  /** ล็อก layout/animation ช่วง startup หรือ refresh */
+  lockLayout?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   className = '',
   loadingTab = null,
   hideIndicator = false,
+  lockLayout = false,
 }) => {
   const isHomeNav = className.includes('home-tab-navigation');
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -109,14 +112,17 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   useLayoutEffect(() => {
     updateIndicator();
     // ปิด transition ตอน mount/วัดตำแหน่งครั้งแรก เพื่อไม่ให้เส้นกระโดดจากซ้ายทุกครั้ง
-    if (!transitionEnabledRef.current) {
+    if (!lockLayout && !transitionEnabledRef.current) {
       transitionEnabledRef.current = true;
       requestAnimationFrame(() => setEnableTransition(true));
     }
-  }, [activeTab, updateIndicator]);
+    if (lockLayout) {
+      setEnableTransition(false);
+    }
+  }, [activeTab, lockLayout, updateIndicator]);
 
   useLayoutEffect(() => {
-    if (isHomeNav) {
+    if (isHomeNav || lockLayout) {
       scheduleUpdateIndicator();
       return () => {
         if (rafUpdateRef.current != null) {
@@ -158,7 +164,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     };
     // tabs เป็น array literal จาก parent ทุกครั้ง — ใช้แค่ length กับค่าที่มีผลต่อการวัด
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHomeNav, tabs.length, scheduleUpdateIndicator]);
+  }, [isHomeNav, lockLayout, tabs.length, scheduleUpdateIndicator]);
 
   useLayoutEffect(() => {
     const onResize = () => scheduleUpdateIndicator();
@@ -205,7 +211,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           fontSize: isHomeNav ? '15px' : '14px',
           lineHeight: isHomeNav ? 1.05 : 0.95,
           color: isActive ? '#111111' : '#8b929b',
-          fontWeight: isActive ? 700 : 600,
+          fontWeight: lockLayout ? 600 : isActive ? 700 : 600,
         } as const;
         return (
           <button
@@ -292,6 +298,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       {/* เส้นบ่งชี้แท็บที่เลือก — สไลด์เหมือนหน้า Home */}
       <div
         aria-hidden
+        data-home-tab-indicator={isHomeNav ? '1' : undefined}
         style={{
           position: 'absolute',
           bottom: indicatorPx.bottom,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import {
   endHomeMotionTimer,
   recordHomeMotionDuration,
@@ -72,7 +72,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   }, [onVisibilityChange]);
 
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!disableScrollHide) return;
     lastAppliedVisibleRef.current = true;
     recordHomeMotionDuration('motion-apply', 'header-show', 0, {

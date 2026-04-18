@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { readMainTabScrollStorage, useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
@@ -27,6 +27,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const prevPathnameRef = useRef<string | null>(null);
   const pendingHomeRouteScrollRestoreRef = useRef(false);
   const suppressHideUntilRef = useRef<number | null>(null);
+  const [isChromeStartupLocked, setIsChromeStartupLocked] = useState(pathname === '/home');
+  const chromeLockFrameRef = useRef<number | null>(null);
 
   const feedRestoreWrapRef = useRef<HTMLDivElement | null>(null);
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
@@ -81,18 +83,54 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     };
   };
 
+  const scheduleChromeStartupLock = useCallback((locked: boolean) => {
+    if (chromeLockFrameRef.current != null) {
+      cancelAnimationFrame(chromeLockFrameRef.current);
+    }
+
+    chromeLockFrameRef.current = requestAnimationFrame(() => {
+      chromeLockFrameRef.current = null;
+      setIsChromeStartupLocked((prev) => (prev === locked ? prev : locked));
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (chromeLockFrameRef.current != null) {
+        cancelAnimationFrame(chromeLockFrameRef.current);
+        chromeLockFrameRef.current = null;
+      }
+    };
+  }, []);
+
   useLayoutEffect(() => {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
     if (pathname === '/home' && prev !== '/home' && prev != null) {
       pendingHomeRouteScrollRestoreRef.current = true;
+      scheduleChromeStartupLock(true);
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       suppressHideUntilRef.current = now + 500;
     }
     if (pathname !== '/home') {
       pendingHomeRouteScrollRestoreRef.current = false;
+      scheduleChromeStartupLock(false);
     }
-  }, [pathname]);
+  }, [pathname, scheduleChromeStartupLock]);
+
+  useEffect(() => {
+    if (pathname !== '/home') {
+      scheduleChromeStartupLock(false);
+      return;
+    }
+
+    if (!clientMounted || !firstFeedLoaded || showFeedSkeleton || pendingHomeRouteScrollRestoreRef.current) {
+      scheduleChromeStartupLock(true);
+      return;
+    }
+
+    scheduleChromeStartupLock(false);
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, scheduleChromeStartupLock]);
 
   useEffect(() => {
     if (!registerSaveBeforeSwitch) return;
@@ -115,6 +153,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     suppressHideUntilRef.current = now + 400;
+    scheduleChromeStartupLock(true);
     const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
 
     const showHeaderAfterRestore = () => {
@@ -132,9 +171,10 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       maxAttempts: 4,
       onSettled: () => {
         showHeaderAfterRestore();
+        scheduleChromeStartupLock(false);
       },
     });
-  }, [isSoldTabNoSearch, setHeaderVisible]);
+  }, [isSoldTabNoSearch, scheduleChromeStartupLock, setHeaderVisible]);
 
   useLayoutEffect(() => {
     if (pathname !== '/home') {
@@ -162,11 +202,13 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     const targetY = readMainTabScrollStorage('/home');
     if (typeof targetY !== 'number' || !Number.isFinite(targetY)) {
       pendingHomeRouteScrollRestoreRef.current = false;
+      scheduleChromeStartupLock(false);
       return;
     }
 
     let cancelled = false;
     const useMask = targetY > 48;
+    scheduleChromeStartupLock(true);
 
     const unmask = () => {
       const w = feedRestoreWrapRef.current;
@@ -179,6 +221,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
         if (cancelled) return;
         unmask();
         pendingHomeRouteScrollRestoreRef.current = false;
+        scheduleChromeStartupLock(false);
         if (Math.abs(finalY - targetY) <= 4) {
           mainTabScroll?.saveCurrentScroll('/home');
         }
@@ -190,12 +233,13 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       cancelRestore();
       unmask();
     };
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch]);
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch, scheduleChromeStartupLock]);
 
   return {
     feedRestoreWrapRef,
     recommendPanelRef,
     soldPanelRef,
     suppressHideUntilRef,
+    isChromeStartupLocked,
   };
 }

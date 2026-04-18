@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -35,6 +35,7 @@ function HomeHeaderChromeContainer({
   unreadCount,
   loadingTab,
   activeTab,
+  lockChromeLayout,
   onCreatePostClick,
   onNotificationClick,
   onTabRefresh,
@@ -47,6 +48,7 @@ function HomeHeaderChromeContainer({
   unreadCount: number;
   loadingTab: 'recommend' | 'sold' | null;
   activeTab: 'recommend' | 'sold';
+  lockChromeLayout: boolean;
   onCreatePostClick: () => void;
   onNotificationClick: () => void;
   onTabRefresh: () => void;
@@ -64,6 +66,7 @@ function HomeHeaderChromeContainer({
       isHeaderVisible={isHeaderVisible}
       loadingTab={loadingTab}
       activeTab={activeTab}
+      lockChromeLayout={lockChromeLayout}
       onCreatePostClick={onCreatePostClick}
       onNotificationClick={onNotificationClick}
       onTabRefresh={onTabRefresh}
@@ -242,7 +245,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
   /** สลับกลับมาหน้าโฮมเท่านั้น → แสดง navigation bar ครั้งเดียว (ไม่รันทุกครั้งที่ headerVisibility เปลี่ยน ไม่งั้นเลื่อนฟีดแล้ว nav จะไม่หาย) */
   const prevPathnameRef = useRef<string | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = resolvedPathname;
     if (resolvedPathname === '/home' && prev !== '/home') {
@@ -317,6 +320,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: ต้อง mount header/tab bar ตั้งแต่เฟรมแรกหลัง refresh เพื่อให้ motion system พร้อมทันที */
   const showHomeHeader = resolvedPathname === '/home';
+  const lockHomeChromeLayout =
+    showHomeHeader && (!firstFeedLoaded || !!mainTab?.tabRefreshing || !!mainTab?.navigatingToTab);
 
   /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
   useEffect(() => {
@@ -354,6 +359,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
           unreadCount={unreadCount}
           loadingTab={loadingTab}
           activeTab={mainTab?.homeTab ?? 'recommend'}
+          lockChromeLayout={lockHomeChromeLayout}
           onCreatePostClick={() => handleCreatePostClick(session)}
           onNotificationClick={handleNotificationClick}
           onTabRefresh={handleLogoRefresh}

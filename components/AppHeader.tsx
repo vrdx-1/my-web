@@ -34,6 +34,8 @@ interface AppHeaderProps {
   homeCenterContent?: React.ReactNode;
   /** หน้า Home: ให้ parent เป็นคนสไลด์ (Header + แท็บ) — root ไม่ใช้ fixed/transform */
   slideWithContainer?: boolean;
+  /** หน้า Home: ล็อก layout ระหว่าง startup/refresh เพื่อลด jitter บน Android */
+  lockHomeLayout?: boolean;
 }
 
 /**
@@ -54,7 +56,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   showOnlySearch = false,
   homeCenterContent,
   slideWithContainer = false,
+  lockHomeLayout = false,
 }) => {
+  void lockHomeLayout;
   const router = useRouter();
   const pathname = usePathname();
 

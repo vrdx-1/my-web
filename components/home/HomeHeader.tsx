@@ -9,8 +9,8 @@ export type HomeHeaderProps = React.ComponentProps<typeof AppHeader>;
 
 function HomeHeaderBase(props: HomeHeaderProps) {
   const homeCenterContent = useMemo(
-    () => (props.showOnlySearch ? <HomeHeaderSearchAndFilter /> : undefined),
-    [props.showOnlySearch]
+    () => (props.showOnlySearch ? <HomeHeaderSearchAndFilter lockLayout={props.lockHomeLayout} /> : undefined),
+    [props.lockHomeLayout, props.showOnlySearch]
   );
 
   return <AppHeader {...APP_HEADER_PRESET} {...props} homeCenterContent={homeCenterContent} />;

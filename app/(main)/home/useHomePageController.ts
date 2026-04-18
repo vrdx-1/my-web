@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMenu } from '@/hooks/useMenu';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { useViewingPost } from '@/hooks/useViewingPost';
@@ -185,6 +185,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     recommendPanelRef,
     soldPanelRef,
     suppressHideUntilRef,
+    isChromeStartupLocked,
   } = useHomeScrollCoordinator({
     pathname,
     clientMounted,
@@ -194,9 +195,27 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   });
 
   const headerScroll = useHeaderScroll({
+    disableScrollHide: isChromeStartupLocked,
     onVisibilityChange: (visible) => setHeaderVisible?.(visible),
     suppressHideUntilRef,
   });
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const { body } = document;
+
+    if (pathname === '/home' && isChromeStartupLocked) {
+      body.setAttribute('data-home-chrome-locked', '1');
+      return () => {
+        body.removeAttribute('data-home-chrome-locked');
+      };
+    }
+
+    body.removeAttribute('data-home-chrome-locked');
+    return () => {
+      body.removeAttribute('data-home-chrome-locked');
+    };
+  }, [pathname, isChromeStartupLocked]);
 
   const effectiveSession = isSoldTabNoSearch ? session : effectivePostList.session;
   const handlers = usePostFeedHandlers({
