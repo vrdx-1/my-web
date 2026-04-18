@@ -41,21 +41,23 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onRepost,
 }) => {
   const router = useRouter();
+  const menuInstanceId = React.useId();
   const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
+  const isSoldPost = post.status === 'sold';
   const postCreatedAt = new Date(post.created_at).getTime();
-  const canRepost = Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;
+  const canRepost = !isSoldPost && Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
 
   const handleMenuClick = () => {
-    if (activeMenuState === post.id) {
+    if (activeMenuState === menuInstanceId) {
       onSetMenuAnimating(true);
       setTimeout(() => {
         onSetActiveMenu(null);
         onSetMenuAnimating(false);
       }, 300);
     } else {
-      onSetActiveMenu(post.id);
+      onSetActiveMenu(menuInstanceId);
       onSetMenuAnimating(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -76,7 +78,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   return (
     <div style={{ position: 'relative' }}>
       <button 
-        ref={(el) => { menuButtonRefs.current[post.id] = el; }} 
+        ref={(el) => { menuButtonRefs.current[menuInstanceId] = el; }} 
         data-menu-button 
         onClick={handleMenuClick}
         style={{ 
@@ -98,8 +100,8 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
       </button>
       
       {/* Menu Dropdown */}
-      {activeMenuState === post.id && (() => {
-        const buttonEl = menuButtonRefs.current[post.id];
+      {activeMenuState === menuInstanceId && (() => {
+        const buttonEl = menuButtonRefs.current[menuInstanceId];
         const rect = buttonEl?.getBoundingClientRect();
         const menuTop = rect ? rect.bottom + 4 : 0;
         const menuRight = rect ? window.innerWidth - rect.right : 0;
@@ -108,7 +110,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           <MenuDropdown
             postId={post.id}
             isOwner={isOwner}
-            isOpen={activeMenuState === post.id}
+            isOpen={activeMenuState === menuInstanceId}
             isAnimating={isMenuAnimating}
             menuTop={menuTop}
             menuRight={menuRight}
@@ -162,7 +164,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
         );
       })()}
 
-      {typeof document !== 'undefined' && showRepostConfirm && createPortal(
+      {typeof document !== 'undefined' && !isSoldPost && showRepostConfirm && createPortal(
         <div
           style={{
             position: 'fixed',

@@ -131,6 +131,7 @@ export function usePostFeedHandlers({
   const handleRepost = useCallback(
     async (postId: string) => {
       const postToRestore = posts.find((p) => String(p.id) === String(postId));
+      if (!postToRestore || postToRestore.status === 'sold') return;
       await repostPost(postId, setPosts, postToRestore);
       setShowRepostSuccess(true);
     },

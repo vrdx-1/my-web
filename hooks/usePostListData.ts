@@ -820,57 +820,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
       }
 
-      // Fetch liked status for saved posts (only on initial load)
-      // ใช้ logic เดียวกับ saved page - ตรวจสอบให้แน่ใจว่า idOrToken ไม่เป็น "null"
-      if (type === 'saved' && isInitial) {
-        const idOrToken = getIdOrToken();
-        // ตรวจสอบอย่างเข้มงวด - ต้องไม่เป็น null, undefined, empty string, หรือ string "null"
-        if (idOrToken && 
-            idOrToken !== 'null' && 
-            idOrToken !== 'undefined' && 
-            idOrToken !== '' &&
-            typeof idOrToken === 'string' &&
-            idOrToken.length > 0 &&
-            !idOrToken.includes('null')) { // ตรวจสอบเพิ่มเติมว่าไม่มี "null" ใน string
-          const isUser = !!currentUserId;
-          const table = isUser ? 'post_likes' : 'post_likes_guest';
-          const column = isUser ? 'user_id' : 'guest_token';
-          
-          // ตรวจสอบอีกครั้งก่อน query - ป้องกันการส่ง "null" ไปยัง database
-          if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
-            console.error('usePostListData: Attempted to fetch liked status with invalid idOrToken', { idOrToken, type: 'saved', table, column });
-            return;
-          }
-          
-          try {
-            const { data: likedData, error: likedError } = await supabase
-              .from(table)
-              .select('post_id')
-              .eq(column, idOrToken);
-            
-            if (likedError) {
-              console.error('Error fetching liked status for saved posts:', likedError, { 
-                idOrToken, 
-                table, 
-                column, 
-                isUser, 
-                currentUserId,
-                errorCode: likedError.code,
-                errorMessage: likedError.message,
-                errorDetails: likedError.details,
-                errorHint: likedError.hint
-              });
-            } else if (likedData) {
-              const likedMap: { [key: string]: boolean } = {};
-              likedData.forEach(item => likedMap[item.post_id] = true);
-              setLikedPosts(likedMap);
-            }
-          } catch (err) {
-            console.error('Exception fetching liked status:', err, { idOrToken, table, column, currentUserId });
-          }
-        }
-      }
-
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {

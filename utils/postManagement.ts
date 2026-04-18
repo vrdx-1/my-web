@@ -145,6 +145,10 @@ export async function repostPost(
   /** ใช้ rollback ถ้าอัปเดต DB ไม่สำเร็จ */
   postToRestore?: any,
 ): Promise<void> {
+  if (postToRestore?.status === 'sold') {
+    return;
+  }
+
   const nowIso = new Date().toISOString();
 
   setPosts((prev) => {
