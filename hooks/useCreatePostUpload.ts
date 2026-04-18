@@ -9,6 +9,16 @@ import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 
+const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
+
+function getCreatePostPrivateShopStorageKey(profileId: string): string {
+  return `${CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX}_${profileId}`;
+}
+
+interface CreatePostPrivateShopSelection {
+  id: string;
+}
+
 interface ImageUploadLike {
   selectedFiles: File[];
   loading: boolean;
@@ -17,6 +27,7 @@ interface ImageUploadLike {
 interface UseCreatePostUploadParams {
   session: Session | null;
   activeProfileId?: string | null;
+  selectedPrivateShop?: CreatePostPrivateShopSelection | null;
   caption: string;
   province: string;
   carPrice: string;
@@ -30,6 +41,7 @@ interface UseCreatePostUploadParams {
 export function useCreatePostUpload({
   session,
   activeProfileId,
+  selectedPrivateShop,
   caption,
   province,
   carPrice,
@@ -112,8 +124,16 @@ export function useCreatePostUpload({
 
       let privateShopId: string | null = null;
       if (typeof window !== 'undefined') {
-        const raw = window.sessionStorage.getItem('create_post_private_shop');
-        if (raw) {
+        privateShopId = selectedPrivateShop?.id ?? null;
+
+        const currentProfileId = activeProfileId || session?.user?.id || null;
+        const scopedRaw = currentProfileId
+          ? window.sessionStorage.getItem(getCreatePostPrivateShopStorageKey(currentProfileId))
+          : null;
+        const legacyRaw = window.sessionStorage.getItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX);
+        const raw = scopedRaw || legacyRaw;
+
+        if (!privateShopId && raw) {
           try {
             const parsed = JSON.parse(raw) as { id?: string };
             if (parsed.id) {
@@ -240,7 +260,12 @@ export function useCreatePostUpload({
         sessionStorage.removeItem('create_post_currency');
         sessionStorage.removeItem('create_post_step');
         sessionStorage.removeItem('create_post_layout');
-        sessionStorage.removeItem('create_post_private_shop');
+        if (activeProfileId || session?.user?.id) {
+          sessionStorage.removeItem(
+            getCreatePostPrivateShopStorageKey(activeProfileId || session!.user.id),
+          );
+        }
+        sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX);
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
         localStorage.removeItem('create_post_price_ls');

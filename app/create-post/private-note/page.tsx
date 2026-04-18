@@ -200,6 +200,9 @@ export default function CreatePostPrivateNotePage() {
               setShops(next);
               if (storedShop?.id && next.some((shop) => shop.id === storedShop.id)) {
                 setSelectedId(storedShop.id);
+              } else if (next[0]?.id === lastUsedId) {
+                setSelectedId(lastUsedId);
+                writeStoredPrivateShop(effectiveProfileId, next[0]);
               } else if (storedShop?.id) {
                 clearStoredPrivateShop(effectiveProfileId);
               }
@@ -207,6 +210,9 @@ export default function CreatePostPrivateNotePage() {
               setShops(visibleShops);
               if (storedShop?.id && visibleShops.some((shop) => shop.id === storedShop.id)) {
                 setSelectedId(storedShop.id);
+              } else if (visibleShops[0]?.id === lastUsedId) {
+                setSelectedId(lastUsedId);
+                writeStoredPrivateShop(effectiveProfileId, visibleShops[0]);
               } else if (storedShop?.id) {
                 clearStoredPrivateShop(effectiveProfileId);
               }

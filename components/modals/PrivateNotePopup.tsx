@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 
 function getStoredActiveProfileId(authUserId: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -31,19 +32,22 @@ interface PrivateNotePopupProps {
 export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
   ({ show, postId, session, onClose }) => {
     const router = useRouter();
+    const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
     const [loading, setLoading] = useState(true);
     const [note, setNote] = useState<PrivateNoteData | null>(null);
+    const [canManageNote, setCanManageNote] = useState(false);
 
     useEffect(() => {
       if (!show || !postId) return;
-      const authUserId = session?.user?.id ?? null;
-      if (!authUserId) {
+      const resolvedAuthUserId = authUserId || session?.user?.id || null;
+      if (!resolvedAuthUserId) {
         setNote(null);
+        setCanManageNote(false);
         setLoading(false);
         return;
       }
 
-      const effectiveProfileId = getStoredActiveProfileId(authUserId) || authUserId;
+      const effectiveProfileId = activeProfileId || getStoredActiveProfileId(resolvedAuthUserId) || resolvedAuthUserId;
 
       let cancelled = false;
       setLoading(true);
@@ -55,30 +59,36 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .eq('id', postId)
           .maybeSingle();
 
-        let ownershipProfiles: OwnershipProfileRecord[] = [];
-        if (!carErr && car && String(effectiveProfileId) === String(authUserId)) {
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, parent_admin_id')
-            .or(`id.eq.${authUserId},parent_admin_id.eq.${authUserId}`);
-          ownershipProfiles = profiles ?? [];
-        }
+        const ownershipProfiles: OwnershipProfileRecord[] =
+          String(effectiveProfileId) === String(resolvedAuthUserId)
+            ? availableProfiles.map((profile) => ({
+                id: profile.id,
+                parent_admin_id: profile.parent_admin_id,
+              }))
+            : [];
+
+        const canAccessNote = !carErr && !!car && isOwnedByProfileScope(car.user_id, {
+          activeProfileId: effectiveProfileId,
+          authUserId: resolvedAuthUserId,
+          availableProfiles: ownershipProfiles,
+        });
 
         if (
           cancelled ||
           carErr ||
           !car ||
-          !isOwnedByProfileScope(car.user_id, {
-            activeProfileId: effectiveProfileId,
-            authUserId,
-            availableProfiles: ownershipProfiles,
-          })
+          !canAccessNote
         ) {
           if (!cancelled) {
             setNote(null);
+            setCanManageNote(false);
             setLoading(false);
           }
           return;
+        }
+
+        if (!cancelled) {
+          setCanManageNote(true);
         }
 
         if (!car.private_shop_id) {
@@ -93,7 +103,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .from('user_private_shops')
           .select('shop_name, shop_phone')
           .eq('id', car.private_shop_id)
-          .eq('user_id', effectiveProfileId)
+          .eq('user_id', car.user_id)
           .maybeSingle();
 
         if (cancelled) return;
@@ -111,7 +121,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
       return () => {
         cancelled = true;
       };
-    }, [show, postId, session?.user?.id]);
+    }, [show, postId, session?.user?.id, activeProfileId, authUserId, availableProfiles]);
 
     if (!show) return null;
 
@@ -202,7 +212,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
                 </div>
               ) : null}
             </div>
-          ) : (
+          ) : canManageNote ? (
             <div
               style={{
                 width: '100%',
@@ -235,6 +245,10 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
               >
                 ເພີ່ມໂນດສ່ວນຕົວ
               </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: '14px', color: '#4a4d52', textAlign: 'center' }}>
+              ທ່ານບໍ່ມີສິດເຂົ້າເຖິງໂນດສ່ວນຕົວນີ້
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 
 interface PrivateShop {
   id: string;
@@ -57,7 +58,6 @@ export default function PostPrivateNotePage() {
       setAuthUserId(uid);
 
       const effectiveProfileId = getStoredActiveProfileId(uid) || uid;
-      setOwnerProfileId(effectiveProfileId);
 
       const { data: car, error: carError } = await supabase
         .from('cars')
@@ -65,11 +65,28 @@ export default function PostPrivateNotePage() {
         .eq('id', postId)
         .maybeSingle();
 
-      if (carError || !car || String(car.user_id) !== String(effectiveProfileId)) {
+      let ownershipProfiles: OwnershipProfileRecord[] = [];
+      if (!carError && car && String(effectiveProfileId) === String(uid)) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, parent_admin_id')
+          .or(`id.eq.${uid},parent_admin_id.eq.${uid}`);
+        ownershipProfiles = profiles ?? [];
+      }
+
+      const canAccessNote = !carError && !!car && isOwnedByProfileScope(car.user_id, {
+        activeProfileId: effectiveProfileId,
+        authUserId: uid,
+        availableProfiles: ownershipProfiles,
+      });
+
+      if (carError || !car || !canAccessNote) {
         setNotAllowed(true);
         setLoading(false);
         return;
       }
+
+      setOwnerProfileId(car.user_id);
 
       const attachedShopId = typeof car.private_shop_id === 'string' ? car.private_shop_id : null;
       setCurrentPrivateShopId(attachedShopId);

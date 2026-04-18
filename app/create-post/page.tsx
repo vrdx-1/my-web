@@ -426,6 +426,7 @@ useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validati
 const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   session,
   activeProfileId,
+  selectedPrivateShop,
   caption,
   province,
   carPrice,
