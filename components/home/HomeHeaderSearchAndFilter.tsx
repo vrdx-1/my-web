@@ -11,6 +11,7 @@ import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPo
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 const ICON_SIZE = 20;
 const SEARCH_BAR_GAP = 8;
+const FILTER_LABEL_MAX_WIDTH_PX = 96;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -76,11 +77,14 @@ export function HomeHeaderSearchAndFilter() {
         style={{
           flex: 1,
           minWidth: 0,
+          width: '100%',
+          maxWidth: '100%',
           display: 'flex',
           alignItems: 'center',
           gap: SEARCH_BAR_GAP,
           paddingLeft: 0,
           paddingRight: 0,
+          overflow: 'hidden',
         }}
       >
         {/* แท็บค้นหา — ยาวจากซ้ายเกือบติดโลโก้ ถึงขวาเกือบติดปุ่มฟิลเตอร์, มีไอคอน + "ຄົ້ນຫາ" */}
@@ -120,6 +124,8 @@ export function HomeHeaderSearchAndFilter() {
           style={{
             flex: 1,
             minWidth: 0,
+            width: '100%',
+            maxWidth: '100%',
             height: `${Math.max(CONTROL_SIZE + 2, 42)}px`,
             borderRadius: '999px',
             background: '#ffffff',
@@ -132,6 +138,7 @@ export function HomeHeaderSearchAndFilter() {
             paddingLeft: '13px',
             paddingRight: '11px',
             touchAction: 'manipulation',
+            overflow: 'hidden',
           }}
         >
           <svg
@@ -179,7 +186,8 @@ export function HomeHeaderSearchAndFilter() {
               color: '#4a4d52',
               fontWeight: 500,
               fontFamily: LAO_FONT,
-              maxWidth: '140px',
+              maxWidth: `${FILTER_LABEL_MAX_WIDTH_PX}px`,
+              minWidth: 0,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',

@@ -31,8 +31,9 @@ function BottomNavSurface({
 }) {
   const isHeaderVisible = useHeaderVisibilityState();
   const hideNavWithScroll = hideBottomNavWithScrollOnPath(resolvedPathname);
+  const isHidden = hideNavWithScroll && !isHeaderVisible;
   const navTransform = hideNavWithScroll && !isHeaderVisible
-    ? 'translateY(100%)'
+    ? 'translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 10px))'
     : 'translateY(0)';
 
   return (
@@ -53,6 +54,7 @@ function BottomNavSurface({
         transition: MOTION_TRANSITIONS.HOME_CHROME_TRANSFORM,
         willChange: 'transform',
         backfaceVisibility: 'hidden',
+        pointerEvents: isHidden ? 'none' : 'auto',
       }}
     >
       <BottomNav />

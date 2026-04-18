@@ -310,8 +310,6 @@ textarea::placeholder {
 [data-home-bottom-nav-motion-surface="1"] {
   will-change: transform;
   backface-visibility: hidden;
-  contain: paint;
-  transform: translate3d(0, 0, 0);
 }
 
 /* Block transitions ก่อน React mount เสร็จ

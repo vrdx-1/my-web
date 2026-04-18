@@ -29,8 +29,11 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   const isHomeNav = className.includes('home-tab-navigation');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const LINE_HEIGHT_PX = 3;
   const LINE_GAP_BELOW_TEXT_PX = 1;
+  const HOME_TAB_BUTTON_WIDTH_PX = 112;
+  const HOME_TAB_GROUP_GAP_PX = 8;
   const [indicatorPx, setIndicatorPx] = useState<{ left: number; width: number; bottom: number }>({
     left: 0,
     width: 0,
@@ -43,6 +46,27 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   const updateIndicator = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    if (isHomeNav) {
+      const buttonEl = buttonRefs.current[activeTab];
+      if (!buttonEl) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = buttonEl.getBoundingClientRect();
+      const next = {
+        left: buttonRect.left - containerRect.left + buttonRect.width / 2,
+        width: Math.max(72, buttonRect.width - 28),
+        bottom: 0,
+      };
+
+      setIndicatorPx((prev) => {
+        const sameLeft = Math.abs(prev.left - next.left) < 0.5;
+        const sameWidth = Math.abs(prev.width - next.width) < 0.5;
+        const sameBottom = Math.abs(prev.bottom - next.bottom) < 0.5;
+        return sameLeft && sameWidth && sameBottom ? prev : next;
+      });
+      return;
+    }
 
     const labelEl = labelRefs.current[activeTab];
     if (!labelEl) return;
@@ -140,7 +164,17 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         display: 'flex',
         borderBottom: 'none',
         minHeight: isHomeNav ? '38px' : '32px',
-        ...(isHomeNav ? { justifyContent: 'center', gap: 30, paddingTop: 2, paddingBottom: 2 } : {}),
+        ...(isHomeNav
+          ? {
+              justifyContent: 'center',
+              gap: HOME_TAB_GROUP_GAP_PX,
+              paddingTop: 2,
+              paddingBottom: 2,
+              width: '100%',
+              maxWidth: HOME_TAB_BUTTON_WIDTH_PX * tabs.length + HOME_TAB_GROUP_GAP_PX * Math.max(0, tabs.length - 1),
+              margin: '0 auto',
+            }
+          : {}),
       }}
       className={className}
     >
@@ -167,6 +201,9 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           <button
             key={tab.value}
             type="button"
+            ref={(el) => {
+              buttonRefs.current[tab.value] = el;
+            }}
             role="tab"
             aria-selected={isActive}
             onClick={(e) => {
@@ -175,7 +212,9 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               onTabChange(tab.value);
             }}
             style={{
-              flex: isHomeNav ? '0 0 auto' : 1,
+              flex: isHomeNav ? `0 0 ${HOME_TAB_BUTTON_WIDTH_PX}px` : 1,
+              width: isHomeNav ? `${HOME_TAB_BUTTON_WIDTH_PX}px` : undefined,
+              minWidth: isHomeNav ? `${HOME_TAB_BUTTON_WIDTH_PX}px` : 0,
               minHeight: 32,
               padding: isHomeNav ? homeTabPadding : `0px ${rightPadding}px 0px ${leftPadding}px`,
               color: isActive ? '#111111' : '#7e868f',
@@ -201,6 +240,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
               style={{
                 display: 'inline-block',
                 position: isHomeNav && isLoading ? 'relative' : undefined,
+                minWidth: 0,
               }}
             >
               {isHomeNav && isLoading ? (
