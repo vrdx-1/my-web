@@ -65,6 +65,8 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
             width: '100%',
             maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
             margin: '0 auto',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
             background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
             backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
             transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',

@@ -3,25 +3,17 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { Poppins } from 'next/font/google';
 import { PROFILE_PATH } from '@/utils/authRoutes';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
-import { TabSpinner } from '@/components/LoadingSpinner';
 import { Avatar } from '@/components/Avatar';
-
-const poppinsSemiBold = Poppins({
-  weight: '600',
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 interface AppHeaderProps {
   onCreatePostClick: () => void;
   onNotificationClick: () => void;
   unreadCount?: number;
   userProfile?: { avatar_url?: string | null } | null;
-  session?: any;
+  session?: unknown;
   isHeaderVisible: boolean;
   onTabChange?: () => void;
   /** ขนาด icon ด้านใน header (post/notification/profile) */
@@ -55,12 +47,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   userProfile,
   session,
   isHeaderVisible,
-  onTabChange,
   iconSize = 18,
   controlSize = 36,
   onTabRefresh,
-  onTabSwitchStart,
-  loadingTab = null,
   setProfileOverlayOpen,
   showOnlySearch = false,
   homeCenterContent,
@@ -115,10 +104,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
     onNotificationClick();
   };
 
-  const handleTabClick = (_tab: 'recommend' | 'sold') => {
-    if (pathname === '/home' && onTabRefresh) onTabRefresh();
-  };
-
   const rootStyle = slideWithContainer
     ? {
         width: '100%',
@@ -144,6 +129,10 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           padding: showOnlySearch && homeCenterContent ? '9px 12px 7px' : '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
+          minWidth: 0,
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
           gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
           borderBottom: 'none',
         }}>

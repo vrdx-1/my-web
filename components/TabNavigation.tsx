@@ -113,9 +113,19 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       transitionEnabledRef.current = true;
       requestAnimationFrame(() => setEnableTransition(true));
     }
-  }, [activeTab, loadingTab, updateIndicator]);
+  }, [activeTab, updateIndicator]);
 
   useLayoutEffect(() => {
+    if (isHomeNav) {
+      scheduleUpdateIndicator();
+      return () => {
+        if (rafUpdateRef.current != null) {
+          cancelAnimationFrame(rafUpdateRef.current);
+          rafUpdateRef.current = null;
+        }
+      };
+    }
+
     let cancelled = false;
     const ro =
       typeof ResizeObserver !== 'undefined'
@@ -148,7 +158,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     };
     // tabs เป็น array literal จาก parent ทุกครั้ง — ใช้แค่ length กับค่าที่มีผลต่อการวัด
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabs.length, scheduleUpdateIndicator]);
+  }, [isHomeNav, tabs.length, scheduleUpdateIndicator]);
 
   useLayoutEffect(() => {
     const onResize = () => scheduleUpdateIndicator();
