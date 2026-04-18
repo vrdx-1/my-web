@@ -93,7 +93,7 @@ export const PrivateNotePopup = React.memo<PrivateNotePopupProps>(
           .from('user_private_shops')
           .select('shop_name, shop_phone')
           .eq('id', car.private_shop_id)
-          .eq('user_id', authUserId)
+          .eq('user_id', effectiveProfileId)
           .maybeSingle();
 
         if (cancelled) return;

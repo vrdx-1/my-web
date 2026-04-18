@@ -30,11 +30,15 @@ let createPostCaptionBackup = '';
 /** เก็บ caption ตอนกด "ຕໍ່ໄປ" ระดับโมดูล — ไม่หายเมื่อ component remount */
 let captionWhenLeavingStep2Module = '';
 
-const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY = 'create_post_private_shop';
+const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
 const CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT = 'create-post-private-shop-updated';
 
-function getLastUsedPrivateShopStorageKey(userId: string): string {
-  return `create_post_last_used_private_shop_${userId}`;
+function getLastUsedPrivateShopStorageKey(profileId: string): string {
+  return `create_post_last_used_private_shop_${profileId}`;
+}
+
+function getCreatePostPrivateShopStorageKey(profileId: string): string {
+  return `${CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX}_${profileId}`;
 }
 
 interface CreatePostPrivateShop {
@@ -43,11 +47,11 @@ interface CreatePostPrivateShop {
   shop_phone: string | null;
 }
 
-function readCreatePostPrivateShop(): CreatePostPrivateShop | null {
-  if (typeof window === 'undefined') return null;
+function readCreatePostPrivateShop(profileId: string | null): CreatePostPrivateShop | null {
+  if (typeof window === 'undefined' || !profileId) return null;
 
   try {
-    const raw = window.sessionStorage.getItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+    const raw = window.sessionStorage.getItem(getCreatePostPrivateShopStorageKey(profileId));
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as Partial<CreatePostPrivateShop>;
@@ -59,7 +63,7 @@ function readCreatePostPrivateShop(): CreatePostPrivateShop | null {
       shop_phone: typeof parsed.shop_phone === 'string' ? parsed.shop_phone : null,
     };
   } catch {
-    window.sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+    window.sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(profileId));
     return null;
   }
 }
@@ -134,10 +138,9 @@ export default function CreatePost() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showVideoAlert, setShowVideoAlert] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState('');
-  const [selectedPrivateShop, setSelectedPrivateShop] = useState<CreatePostPrivateShop | null>(
-    readCreatePostPrivateShop,
-  );
   const { userProfile, activeProfileId } = useSessionAndProfile();
+  const currentPrivateShopProfileId = activeProfileId || session?.user?.id || null;
+  const [selectedPrivateShop, setSelectedPrivateShop] = useState<CreatePostPrivateShop | null>(null);
 
   const setSharedDraft = useCallback((draft: { files: File[]; layout: string }) => {
     createPostContext?.setDraft(draft);
@@ -174,7 +177,7 @@ export default function CreatePost() {
 
   useEffect(() => {
     const syncSelectedPrivateShop = () => {
-      setSelectedPrivateShop(readCreatePostPrivateShop());
+      setSelectedPrivateShop(readCreatePostPrivateShop(currentPrivateShopProfileId));
     };
 
     syncSelectedPrivateShop();
@@ -188,15 +191,15 @@ export default function CreatePost() {
       window.removeEventListener('pageshow', syncSelectedPrivateShop);
       window.removeEventListener('focus', syncSelectedPrivateShop);
     };
-  }, []);
+  }, [currentPrivateShopProfileId]);
 
   useEffect(() => {
-    const authUserId = session?.user?.id;
-    if (!authUserId) return;
+    const profileId = activeProfileId || session?.user?.id;
+    if (!profileId) return;
     if (selectedPrivateShop?.id) return;
     if (typeof window === 'undefined') return;
 
-    const lastUsedId = window.localStorage.getItem(getLastUsedPrivateShopStorageKey(authUserId));
+    const lastUsedId = window.localStorage.getItem(getLastUsedPrivateShopStorageKey(profileId));
     if (!lastUsedId) return;
 
     let cancelled = false;
@@ -205,14 +208,14 @@ export default function CreatePost() {
       const { data, error } = await supabase
         .from('user_private_shops')
         .select('id, shop_name, shop_phone')
-        .eq('user_id', authUserId)
+        .eq('user_id', profileId)
         .eq('id', lastUsedId)
         .maybeSingle();
 
       if (cancelled) return;
 
       if (error || !data) {
-        window.localStorage.removeItem(getLastUsedPrivateShopStorageKey(authUserId));
+        window.localStorage.removeItem(getLastUsedPrivateShopStorageKey(profileId));
         return;
       }
 
@@ -224,7 +227,7 @@ export default function CreatePost() {
 
       try {
         window.sessionStorage.setItem(
-          CREATE_POST_PRIVATE_SHOP_STORAGE_KEY,
+          getCreatePostPrivateShopStorageKey(profileId),
           JSON.stringify(restoredShop),
         );
       } catch {
@@ -240,7 +243,7 @@ export default function CreatePost() {
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id, selectedPrivateShop?.id]);
+  }, [activeProfileId, session?.user?.id, selectedPrivateShop?.id]);
 
   // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน หลังรอให้ checkUser() ใน useCreatePostDraft โหลด session ก่อน (ถ้า redirect ทันทีจะทำให้ User ที่ล็อกอินแล้วโดนเด้งไปโฮม/ลงทะเบียนตอนเลือกรูป)
   const guestRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -360,7 +363,9 @@ export default function CreatePost() {
      sessionStorage.removeItem('create_post_currency');
      sessionStorage.removeItem('create_post_step');
      sessionStorage.removeItem('create_post_layout');
-     sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY);
+     if (currentPrivateShopProfileId) {
+       sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(currentPrivateShopProfileId));
+     }
     localStorage.removeItem('create_post_caption_ls');
     localStorage.removeItem('create_post_province_ls');
     localStorage.removeItem('create_post_price_ls');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { Session } from '@supabase/supabase-js';
@@ -77,10 +77,21 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const canManageSubAccounts = isAdmin;
   const hasExistingSubAccounts = availableProfiles.some((profile) => profile.is_sub_account);
   const normalizedSubAccountSearchQuery = subAccountSearchQuery.trim().toLowerCase();
-  const filteredSubAccounts = availableProfiles.filter((account) => {
-    if (!normalizedSubAccountSearchQuery) return true;
-    return (account.username || '').toLowerCase().includes(normalizedSubAccountSearchQuery);
-  });
+  const filteredSubAccounts = useMemo(() => {
+    const matchedAccounts = availableProfiles.filter((account) => {
+      const isMainProfile = authUserId === account.id;
+      if (isMainProfile) return true;
+      if (!normalizedSubAccountSearchQuery) return true;
+      return (account.username || '').toLowerCase().includes(normalizedSubAccountSearchQuery);
+    });
+
+    return [...matchedAccounts].sort((left, right) => {
+      const leftIsMainProfile = authUserId === left.id;
+      const rightIsMainProfile = authUserId === right.id;
+      if (leftIsMainProfile === rightIsMainProfile) return 0;
+      return leftIsMainProfile ? -1 : 1;
+    });
+  }, [availableProfiles, authUserId, normalizedSubAccountSearchQuery]);
   const subAccountDropdownMaxHeight = subAccountDropdownTopOffset > 0
     ? `calc(100dvh - ${subAccountDropdownTopOffset}px - ${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px - env(safe-area-inset-bottom, 0px) - ${SUB_ACCOUNT_DROPDOWN_BOTTOM_GAP_PX}px)`
     : undefined;
@@ -617,7 +628,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
       const normalizedPhone =
         subAccountPhone.length === 8
-          ? `856${subAccountPhone}`
+          ? `85620${subAccountPhone}`
           : subAccountPhone.trim();
 
       const response = await fetch('/api/admin/sub-accounts', {

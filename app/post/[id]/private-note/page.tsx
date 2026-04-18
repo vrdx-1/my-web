@@ -37,8 +37,8 @@ export default function PostPrivateNotePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
 
-  const getHiddenStorageKey = (uid: string) => `create_post_hidden_private_shops_${uid}`;
-  const getLastUsedStorageKey = (uid: string) => `create_post_last_used_private_shop_${uid}`;
+  const getHiddenStorageKey = (profileId: string) => `create_post_hidden_private_shops_${profileId}`;
+  const getLastUsedStorageKey = (profileId: string) => `create_post_last_used_private_shop_${profileId}`;
 
   useEffect(() => {
     async function init() {
@@ -77,7 +77,7 @@ export default function PostPrivateNotePage() {
 
       let hiddenIds: string[] = [];
       if (typeof window !== 'undefined') {
-        const raw = window.localStorage.getItem(getHiddenStorageKey(uid));
+        const raw = window.localStorage.getItem(getHiddenStorageKey(effectiveProfileId));
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
@@ -93,7 +93,7 @@ export default function PostPrivateNotePage() {
       const { data, error } = await supabase
         .from('user_private_shops')
         .select('id, shop_name, shop_phone')
-        .eq('user_id', uid)
+        .eq('user_id', effectiveProfileId)
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -102,7 +102,7 @@ export default function PostPrivateNotePage() {
         );
 
         if (typeof window !== 'undefined') {
-          const lastUsedId = window.localStorage.getItem(getLastUsedStorageKey(uid));
+          const lastUsedId = window.localStorage.getItem(getLastUsedStorageKey(effectiveProfileId));
           if (lastUsedId) {
             const idx = visibleShops.findIndex((shop) => shop.id === lastUsedId);
             if (idx > 0) {
@@ -146,7 +146,7 @@ export default function PostPrivateNotePage() {
   };
 
   const handleSaveShop = async (): Promise<PrivateShop | null> => {
-    if (!authUserId) return null;
+    if (!ownerProfileId) return null;
     const hasNote = Boolean(shopName.trim());
     const hasPhone = Boolean(shopPhone.trim());
     if (!hasNote && !hasPhone) return null;
@@ -155,7 +155,7 @@ export default function PostPrivateNotePage() {
     const { data, error } = await supabase
       .from('user_private_shops')
       .insert({
-        user_id: authUserId,
+        user_id: ownerProfileId,
         shop_name: hasNote ? shopName.trim() : null,
         shop_phone: hasPhone ? `85620${shopPhone.trim()}` : null,
       })
@@ -179,8 +179,8 @@ export default function PostPrivateNotePage() {
     const hasPhone = Boolean(shopPhone.trim());
 
     if (!hasNote && !hasPhone && selectedId) {
-      if (typeof window !== 'undefined' && authUserId) {
-        window.localStorage.setItem(getLastUsedStorageKey(authUserId), selectedId);
+      if (typeof window !== 'undefined' && ownerProfileId) {
+        window.localStorage.setItem(getLastUsedStorageKey(ownerProfileId), selectedId);
       }
       const success = await attachPrivateShopToPost(selectedId);
       if (!success) return;
@@ -196,8 +196,8 @@ export default function PostPrivateNotePage() {
     const created = await handleSaveShop();
     if (!created) return;
 
-    if (typeof window !== 'undefined' && authUserId) {
-      window.localStorage.setItem(getLastUsedStorageKey(authUserId), created.id);
+    if (typeof window !== 'undefined' && ownerProfileId) {
+      window.localStorage.setItem(getLastUsedStorageKey(ownerProfileId), created.id);
     }
 
     const success = await attachPrivateShopToPost(created.id);
@@ -220,7 +220,7 @@ export default function PostPrivateNotePage() {
     );
   }
 
-  if (notAllowed || !authUserId) {
+  if (notAllowed || !authUserId || !ownerProfileId) {
     return (
       <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
         <div
