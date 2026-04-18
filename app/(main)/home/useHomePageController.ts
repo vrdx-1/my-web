@@ -6,7 +6,6 @@ import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { useViewingPost } from '@/hooks/useViewingPost';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -26,6 +25,7 @@ import { useRecommendPostFeedProps } from '@/hooks/useRecommendPostFeedProps';
 import { usePostModalsBackHandler } from '@/hooks/usePostModalsBackHandler';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
+import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import type { SoldTabFeedWrapperProps } from './SoldTabFeedWrapper';
 
 export interface UseHomePageControllerOptions {
@@ -144,7 +144,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     hasSearchResultsCache: hasSearch && searchData.posts.length > 0,
   });
 
-  const headerVisibility = useHeaderVisibilityContext();
+  const setHeaderVisible = useSetHeaderVisibility();
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
@@ -194,7 +194,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   });
 
   const headerScroll = useHeaderScroll({
-    onVisibilityChange: (visible) => headerVisibility?.setHeaderVisible(visible),
+    onVisibilityChange: (visible) => setHeaderVisible?.(visible),
     suppressHideUntilRef,
   });
 

@@ -1,13 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 
-interface HeaderVisibilityContextValue {
-  isHeaderVisible: boolean;
-  setHeaderVisible: (visible: boolean) => void;
-}
-
-const HeaderVisibilityContext = createContext<HeaderVisibilityContextValue | null>(null);
+const HeaderVisibilityStateContext = createContext<boolean>(true);
+const HeaderVisibilitySetterContext = createContext<((visible: boolean) => void) | null>(null);
 
 export function HeaderVisibilityProvider({ children }: { children: React.ReactNode }) {
   const [isHeaderVisible, setHeaderVisibleState] = useState(true);
@@ -33,21 +29,26 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
     };
   }, []);
 
-  const value: HeaderVisibilityContextValue = useMemo(
-    () => ({
-      isHeaderVisible,
-      setHeaderVisible,
-    }),
-    [isHeaderVisible, setHeaderVisible],
-  );
-
   return (
-    <HeaderVisibilityContext.Provider value={value}>
-      {children}
-    </HeaderVisibilityContext.Provider>
+    <HeaderVisibilitySetterContext.Provider value={setHeaderVisible}>
+      <HeaderVisibilityStateContext.Provider value={isHeaderVisible}>
+        {children}
+      </HeaderVisibilityStateContext.Provider>
+    </HeaderVisibilitySetterContext.Provider>
   );
 }
 
 export function useHeaderVisibilityContext() {
-  return useContext(HeaderVisibilityContext);
+  return {
+    isHeaderVisible: useContext(HeaderVisibilityStateContext),
+    setHeaderVisible: useContext(HeaderVisibilitySetterContext),
+  };
+}
+
+export function useHeaderVisibilityState() {
+  return useContext(HeaderVisibilityStateContext);
+}
+
+export function useSetHeaderVisibility() {
+  return useContext(HeaderVisibilitySetterContext);
 }

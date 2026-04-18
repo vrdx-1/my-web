@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { readMainTabScrollStorage, useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
-import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 
 export interface UseHomeScrollCoordinatorOptions {
   pathname: string;
@@ -18,9 +18,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
-  const headerVisibility = useHeaderVisibilityContext();
   const registerSaveBeforeSwitch = homeTabScroll?.registerSaveBeforeSwitch;
-  const setHeaderVisible = headerVisibility?.setHeaderVisible;
+  const setHeaderVisible = useSetHeaderVisibility();
 
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);

@@ -6,7 +6,7 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useMainTabContext } from '@/contexts/MainTabContext';
-import { useHeaderVisibilityContext } from '@/contexts/HeaderVisibilityContext';
+import { useHeaderVisibilityState, useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
@@ -27,6 +27,53 @@ import {
   syncHomeMotionProfilerFromLocationSearch,
 } from '@/lib/homeMotionProfiler';
 
+const MemoizedMainTabPanels = MainTabPanels;
+
+function HomeHeaderChromeContainer({
+  session,
+  userProfile,
+  unreadCount,
+  loadingTab,
+  activeTab,
+  onCreatePostClick,
+  onNotificationClick,
+  onTabRefresh,
+  onTabSwitchStart,
+  onTabChange,
+  setProfileOverlayOpen,
+}: {
+  session: unknown;
+  userProfile: unknown;
+  unreadCount: number;
+  loadingTab: 'recommend' | 'sold' | null;
+  activeTab: 'recommend' | 'sold';
+  onCreatePostClick: () => void;
+  onNotificationClick: () => void;
+  onTabRefresh: () => void;
+  onTabSwitchStart: (tab: 'recommend' | 'sold') => void;
+  onTabChange: (tab: 'recommend' | 'sold') => void;
+  setProfileOverlayOpen: (open: boolean) => void;
+}) {
+  const isHeaderVisible = useHeaderVisibilityState();
+
+  return (
+    <HomeHeaderChrome
+      session={session}
+      userProfile={userProfile}
+      unreadCount={unreadCount}
+      isHeaderVisible={isHeaderVisible}
+      loadingTab={loadingTab}
+      activeTab={activeTab}
+      onCreatePostClick={onCreatePostClick}
+      onNotificationClick={onNotificationClick}
+      onTabRefresh={onTabRefresh}
+      onTabSwitchStart={onTabSwitchStart}
+      onTabChange={onTabChange}
+      setProfileOverlayOpen={setProfileOverlayOpen}
+    />
+  );
+}
+
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -43,7 +90,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
   const homeProvince = useHomeProvince();
-  const headerVisibility = useHeaderVisibilityContext();
+  const setHeaderVisible = useSetHeaderVisibility();
   const homeTabScroll = useHomeTabScroll();
 
   useEffect(() => {
@@ -199,9 +246,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = resolvedPathname;
     if (resolvedPathname === '/home' && prev !== '/home') {
-      headerVisibility?.setHeaderVisible(true);
+      setHeaderVisible?.(true);
     }
-  }, [resolvedPathname, headerVisibility]);
+  }, [resolvedPathname, setHeaderVisible]);
 
   useEffect(() => {
     const handler = () => handleCreatePostClick(session);
@@ -278,8 +325,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
   }, [resolvedPathname, firstFeedLoaded, session?.user?.id, refetchUnreadCount]);
 
-  const isHeaderVisible = showHomeHeader ? (headerVisibility?.isHeaderVisible ?? true) : true;
-
   const handleHomeTabChange = useCallback(
     (tab: 'recommend' | 'sold') => {
       if (resolvedPathname === '/home') {
@@ -303,11 +348,10 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
         aria-hidden
       />
       {showHomeHeader ? (
-        <HomeHeaderChrome
+        <HomeHeaderChromeContainer
           session={session}
           userProfile={userProfile}
           unreadCount={unreadCount}
-          isHeaderVisible={isHeaderVisible}
           loadingTab={loadingTab}
           activeTab={mainTab?.homeTab ?? 'recommend'}
           onCreatePostClick={() => handleCreatePostClick(session)}
@@ -327,7 +371,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       )}
 
       {resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' ? (
-        <MainTabPanels />
+        <MemoizedMainTabPanels />
       ) : (
         children
       )}
