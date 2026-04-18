@@ -41,12 +41,11 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       pendingHomeRouteScrollRestoreRef.current = true;
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       suppressHideUntilRef.current = now + 500;
-      headerVisibility?.setHeaderVisible(true);
     }
     if (pathname !== '/home') {
       pendingHomeRouteScrollRestoreRef.current = false;
     }
-  }, [pathname, headerVisibility]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!homeTabScroll?.saveBeforeSwitchRef) return;

@@ -57,18 +57,21 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
     }).__homePerfEnable = () => setHomeMotionProfilerEnabled(true);
 
     (window as typeof window & {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
     }).__homePerfDisable = () => setHomeMotionProfilerEnabled(false);
 
     (window as typeof window & {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
       __homePerfReset?: () => void;
       __homePerfTraceOnce?: () => void;
     }).__homePerfSummary = () => getHomeMotionProfilerSummary();
@@ -77,6 +80,35 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
+      __homePerfReset?: () => void;
+      __homePerfTraceOnce?: () => void;
+    }).__homePerfVisibility = () => {
+      const entries = getHomeMotionProfilerEntries();
+      const recent = entries
+        .filter((entry) => {
+          if (entry.channel === 'motion-apply') return true;
+          if (entry.channel !== 'scroll-handler') return false;
+          const action = typeof entry.detail?.action === 'string' ? entry.detail.action : '';
+          return action.includes('hide') || action.includes('show') || action.includes('suppressed');
+        })
+        .slice(-40)
+        .map((entry) => ({
+          channel: entry.channel,
+          name: entry.name,
+          durationMs: Number(entry.durationMs.toFixed(2)),
+          detail: entry.detail,
+          at: entry.at,
+        }));
+      if (recent.length > 0) console.table(recent);
+      return recent;
+    };
+
+    (window as typeof window & {
+      __homePerfEnable?: () => void;
+      __homePerfDisable?: () => void;
+      __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
       __homePerfReset?: () => void;
       __homePerfTraceOnce?: () => void;
     }).__homePerfReset = () => clearHomeMotionProfilerEntries();
@@ -85,6 +117,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       __homePerfEnable?: () => void;
       __homePerfDisable?: () => void;
       __homePerfSummary?: () => unknown;
+      __homePerfVisibility?: () => unknown;
       __homePerfReset?: () => void;
       __homePerfTraceOnce?: () => void;
     }).__homePerfTraceOnce = () => {
@@ -254,12 +287,11 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     (tab: 'recommend' | 'sold') => {
       if (resolvedPathname === '/home') {
         homeTabScroll?.saveCurrentHomeTabScroll();
-        headerVisibility?.setHeaderVisible(true);
       }
       homeProvince?.setSelectedProvince('');
       mainTab?.triggerTabChange(tab);
     },
-    [resolvedPathname, homeTabScroll, headerVisibility, homeProvince, mainTab],
+    [resolvedPathname, homeTabScroll, homeProvince, mainTab],
   );
 
   return (

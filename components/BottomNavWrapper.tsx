@@ -35,8 +35,8 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
   const hideNavWithScroll = showNav && hideBottomNavWithScrollOnPath(resolvedPathname);
   const isHeaderVisible = headerVisibility?.isHeaderVisible ?? true;
   const navTransform = hideNavWithScroll && !isHeaderVisible
-    ? 'translate3d(0, 100%, 0)'
-    : 'translate3d(0, 0, 0)';
+    ? 'translateY(100%)'
+    : 'translateY(0)';
 
   return (
     <MainTabScrollProvider>
@@ -62,7 +62,6 @@ export function BottomNavWrapper({ children }: { children: React.ReactNode }) {
             transition: MOTION_TRANSITIONS.HOME_CHROME_TRANSFORM,
             willChange: 'transform',
             backfaceVisibility: 'hidden',
-            contain: 'paint',
           }}
         >
           <BottomNav />
