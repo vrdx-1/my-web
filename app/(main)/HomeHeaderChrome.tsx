@@ -16,6 +16,7 @@ export interface HomeHeaderChromeProps {
   loadingTab: 'recommend' | 'sold' | null;
   activeTab: 'recommend' | 'sold';
   lockChromeLayout: boolean;
+  lockTabLayout: boolean;
   onCreatePostClick: () => void;
   onNotificationClick: () => void;
   onTabRefresh: () => void;
@@ -33,6 +34,7 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
     loadingTab,
     activeTab,
     lockChromeLayout,
+    lockTabLayout,
     onCreatePostClick,
     onNotificationClick,
     onTabRefresh,
@@ -103,8 +105,8 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
               ]}
               activeTab={activeTab}
               onTabChange={(value) => onTabChange(value as 'recommend' | 'sold')}
-              lockLayout={lockChromeLayout}
-              hideIndicator={lockChromeLayout}
+              lockLayout={lockTabLayout}
+              hideIndicator={lockTabLayout}
               loadingTab={loadingTab}
             />
           </div>

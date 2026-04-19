@@ -110,7 +110,11 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   }, [updateIndicator]);
 
   useLayoutEffect(() => {
-    updateIndicator();
+    if (lockLayout || !transitionEnabledRef.current) {
+      updateIndicator();
+    } else {
+      scheduleUpdateIndicator();
+    }
     // ปิด transition ตอน mount/วัดตำแหน่งครั้งแรก เพื่อไม่ให้เส้นกระโดดจากซ้ายทุกครั้ง
     if (!lockLayout && !transitionEnabledRef.current) {
       transitionEnabledRef.current = true;
@@ -119,7 +123,13 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     if (lockLayout) {
       setEnableTransition(false);
     }
-  }, [activeTab, lockLayout, updateIndicator]);
+    return () => {
+      if (rafUpdateRef.current != null) {
+        cancelAnimationFrame(rafUpdateRef.current);
+        rafUpdateRef.current = null;
+      }
+    };
+  }, [activeTab, lockLayout, scheduleUpdateIndicator, updateIndicator]);
 
   useLayoutEffect(() => {
     if (isHomeNav || lockLayout) {

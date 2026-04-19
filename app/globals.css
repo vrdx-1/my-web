@@ -327,8 +327,3 @@ body[data-home-chrome-locked="1"] [data-home-bottom-nav-motion-surface="1"] {
   transition: none !important;
   animation: none !important;
 }
-
-body[data-home-chrome-locked="1"] [data-home-tab-indicator="1"] {
-  opacity: 0 !important;
-  transition: none !important;
-}

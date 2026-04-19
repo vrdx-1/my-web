@@ -36,6 +36,7 @@ function HomeHeaderChromeContainer({
   loadingTab,
   activeTab,
   lockChromeLayout,
+  lockTabLayout,
   onCreatePostClick,
   onNotificationClick,
   onTabRefresh,
@@ -49,6 +50,7 @@ function HomeHeaderChromeContainer({
   loadingTab: 'recommend' | 'sold' | null;
   activeTab: 'recommend' | 'sold';
   lockChromeLayout: boolean;
+  lockTabLayout: boolean;
   onCreatePostClick: () => void;
   onNotificationClick: () => void;
   onTabRefresh: () => void;
@@ -67,6 +69,7 @@ function HomeHeaderChromeContainer({
       loadingTab={loadingTab}
       activeTab={activeTab}
       lockChromeLayout={lockChromeLayout}
+      lockTabLayout={lockTabLayout}
       onCreatePostClick={onCreatePostClick}
       onNotificationClick={onNotificationClick}
       onTabRefresh={onTabRefresh}
@@ -322,6 +325,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const showHomeHeader = resolvedPathname === '/home';
   const lockHomeChromeLayout =
     showHomeHeader && (!firstFeedLoaded || !!mainTab?.tabRefreshing || !!mainTab?.navigatingToTab);
+  const lockHomeTabLayout = showHomeHeader && !firstFeedLoaded;
 
   /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
   useEffect(() => {
@@ -360,6 +364,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
           loadingTab={loadingTab}
           activeTab={mainTab?.homeTab ?? 'recommend'}
           lockChromeLayout={lockHomeChromeLayout}
+          lockTabLayout={lockHomeTabLayout}
           onCreatePostClick={() => handleCreatePostClick(session)}
           onNotificationClick={handleNotificationClick}
           onTabRefresh={handleLogoRefresh}

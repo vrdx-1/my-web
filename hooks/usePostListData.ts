@@ -96,6 +96,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const cancelledRef = useRef(false);
   /** เก็บรายการโพสต์ฝั่งขายแล้วทั้งหมดสำหรับ liked/saved tab sold เพื่อแบ่งหน้าได้ถูกต้อง */
   const soldTabFullListRef = useRef<any[] | null>(null);
+  const soldFeedSeedRef = useRef<string | null>(null);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -498,25 +499,67 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
       } else if (type === 'sold') {
-        let soldQuery = supabase
-          .from('cars')
-          .select('id')
-          .eq('status', status || 'sold')
-          .eq('is_hidden', false)
-          .order('created_at', { ascending: false })
-          .range(rangeStart, rangeEnd);
+        if (isInitial) soldFeedSeedRef.current = null;
+        const requestBody: {
+          startIndex: number;
+          endIndex: number;
+          province?: string;
+          status: 'sold';
+          feedSeed?: string;
+        } = {
+          startIndex: rangeStart,
+          endIndex: rangeEnd,
+          status: 'sold',
+        };
         if (province && province.trim() !== '') {
-          soldQuery = soldQuery.eq('province', province.trim());
+          requestBody.province = province.trim();
         }
-        const { data, error } = await soldQuery;
+        if (soldFeedSeedRef.current) {
+          requestBody.feedSeed = soldFeedSeedRef.current;
+        }
+
+        const response = await fetch('/api/posts/feed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
         if (cancelledRef.current) return;
-        if (error || !data) {
+        const payload = await response.json().catch(() => ({}));
+        if (cancelledRef.current) return;
+        if (!response.ok) {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        postIds = data.map((p: any) => p.id);
-        // ได้น้อยกว่าหนึ่งหน้า = ไม่มีหน้าถัดไป → แสดง "ບໍ່ມີລາຍການເພີ່ມເຕີມ"
-        if (postIds.length < LIST_FEED_PAGE_SIZE && fetchIdRef.current === currentFetchId) setHasMore(false);
+        if (typeof payload.feedSeed === 'string' && payload.feedSeed) {
+          soldFeedSeedRef.current = payload.feedSeed;
+        }
+
+        const orderedPosts = Array.isArray(payload.posts) ? payload.posts : [];
+        const nextHasMore = typeof payload.hasMore === 'boolean'
+          ? payload.hasMore
+          : orderedPosts.length >= listPageSize;
+
+        if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+          setHasMore(nextHasMore);
+        }
+
+        if (isInitial && fetchIdRef.current === currentFetchId && !skipSkeleton) setPosts([]);
+
+        const filteredPosts = orderedPosts.filter((postData: any) => postData.status === 'sold' && !postData.is_hidden);
+
+        if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+          if (isInitial) {
+            setPosts(filteredPosts);
+          } else {
+            setPosts((prev) => {
+              const ids = new Set(prev.map((p: any) => p.id));
+              const toAdd = filteredPosts.filter((p: any) => !ids.has(p.id));
+              return toAdd.length === 0 ? prev : [...prev, ...toAdd];
+            });
+          }
+          setLoadingMore(false);
+        }
+        return;
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
         
@@ -833,8 +876,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
+    if (type === 'sold') soldFeedSeedRef.current = null;
     await fetchPosts(true);
-  }, [fetchPosts]);
+  }, [fetchPosts, type]);
 
   // โหลดหน้าถัดไปอัตโนมัติจนหมด (เฉพาะ sold) — liked/saved ใช้ infinite scroll ให้ผู้ใช้เลื่อนโหลดเอง
   useEffect(() => {

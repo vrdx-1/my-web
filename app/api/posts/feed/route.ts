@@ -7,6 +7,7 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import {
   FEED_TOP_CACHE_SIZE,
   feedCacheKey,
+  type FeedCacheStatus,
   getFeedFromCache,
   getFeedTop100FromCache,
   setFeedCache,
@@ -23,6 +24,10 @@ type FeedOrderRow = {
 };
 
 type FeedResult = { postIds: string[]; hasMore: boolean; posts: any[]; feedSeed?: string };
+
+function resolveFeedStatus(value: unknown): FeedCacheStatus {
+  return value === 'sold' ? 'sold' : 'recommend';
+}
 
 function createFeedSeed(): string {
   return randomUUID();
@@ -99,7 +104,8 @@ function buildRandomizedFeedOrder(rows: FeedOrderRow[], feedSeed: string): strin
 
 async function fetchAllFeedOrderRows(
   supabase: ReturnType<typeof createServerClient>,
-  province?: string
+  province?: string,
+  status: FeedCacheStatus = 'recommend'
 ) {
   const rows: FeedOrderRow[] = [];
   const pageSize = 1000;
@@ -109,7 +115,7 @@ async function fetchAllFeedOrderRows(
     let query = supabase
       .from('cars')
       .select('id, is_boosted, user_id, guest_token, is_guest, created_at')
-      .eq('status', 'recommend')
+      .eq('status', status)
       .or('is_hidden.eq.false,is_hidden.is.null');
     if (province && province.trim() !== '') {
       query = query.eq('province', province.trim());
@@ -133,7 +139,8 @@ async function fetchAllFeedOrderRows(
 
 async function hydrateFeedPosts(
   supabase: ReturnType<typeof createServerClient>,
-  postIds: string[]
+  postIds: string[],
+  status: FeedCacheStatus = 'recommend'
 ): Promise<any[]> {
   if (postIds.length === 0) return [];
   const { data: postsData, error: postsErr } = await supabase
@@ -142,7 +149,7 @@ async function hydrateFeedPosts(
     .in('id', postIds);
   if (postsErr || !postsData?.length) return [];
   const order = new Map(postIds.map((id: string, index: number) => [String(id), index]));
-  const filtered = postsData.filter((post: any) => post.status === 'recommend' && !post.is_hidden);
+  const filtered = postsData.filter((post: any) => post.status === status && !post.is_hidden);
   filtered.sort((left: any, right: any) => {
     const leftIndex = order.get(String(left.id)) ?? 1e9;
     const rightIndex = order.get(String(right.id)) ?? 1e9;
@@ -164,13 +171,17 @@ async function computeFeed(
   startIndex: number,
   endIndex: number,
   province?: string,
-  feedSeed?: string
+  feedSeed?: string,
+  status: FeedCacheStatus = 'recommend'
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
-  const orderedIds = buildRandomizedFeedOrder(await fetchAllFeedOrderRows(supabase, province), resolvedSeed);
+  const orderedIds = buildRandomizedFeedOrder(
+    await fetchAllFeedOrderRows(supabase, province, status),
+    resolvedSeed,
+  );
   const postIds = orderedIds.slice(startIndex, endIndex + 1);
   const hasMore = endIndex + 1 < orderedIds.length;
-  const posts = await hydrateFeedPosts(supabase, postIds);
+  const posts = await hydrateFeedPosts(supabase, postIds, status);
   return { postIds, hasMore, posts, feedSeed: resolvedSeed };
 }
 
@@ -179,16 +190,20 @@ async function computeFeedWithCursor(
   cursorId: string,
   pageSize: number,
   province?: string,
-  feedSeed?: string
+  feedSeed?: string,
+  status: FeedCacheStatus = 'recommend'
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
-  const orderedIds = buildRandomizedFeedOrder(await fetchAllFeedOrderRows(supabase, province), resolvedSeed);
+  const orderedIds = buildRandomizedFeedOrder(
+    await fetchAllFeedOrderRows(supabase, province, status),
+    resolvedSeed,
+  );
   const cursorIndex = orderedIds.findIndex((id) => id === cursorId);
   const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
   const allIds = orderedIds.slice(startIndex, startIndex + pageSize + 1);
   const hasMore = allIds.length > pageSize;
   const postIds = hasMore ? allIds.slice(0, pageSize) : allIds;
-  const posts = await hydrateFeedPosts(supabase, postIds);
+  const posts = await hydrateFeedPosts(supabase, postIds, status);
   return { postIds, hasMore, posts, feedSeed: resolvedSeed };
 }
 
@@ -200,6 +215,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const province = typeof body.province === 'string' ? body.province : undefined;
     const requestedFeedSeed = typeof body.feedSeed === 'string' && body.feedSeed ? body.feedSeed : undefined;
+    const status = resolveFeedStatus(body.status);
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -220,7 +236,7 @@ export async function POST(request: NextRequest) {
     const cursorCreatedAt = typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
     if (cursorId && cursorCreatedAt && typeof cursorBoosted === 'boolean') {
       const pageSize = Math.min(Math.max(1, parseInt(String(body.pageSize ?? FEED_PAGE_SIZE), 10)), 50);
-      const result = await computeFeedWithCursor(supabase, cursorId, pageSize, province, requestedFeedSeed);
+      const result = await computeFeedWithCursor(supabase, cursorId, pageSize, province, requestedFeedSeed, status);
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
@@ -232,11 +248,11 @@ export async function POST(request: NextRequest) {
 
     // ช่วง 0–(N-1) ใช้ cache ชุดโพส N รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
     if (!shouldBypassCache && endIndex < FEED_TOP_CACHE_SIZE) {
-      let topCache = await getFeedTop100FromCache(province);
+      let topCache = await getFeedTop100FromCache(province, status);
       const cacheHit = !!topCache;
       if (!topCache) {
-        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed);
-        await setFeedTop100Cache(province, full);
+        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status);
+        await setFeedTop100Cache(province, full, status);
         topCache = full;
       }
       const result = sliceFeedPayload(topCache, startIndex, endIndex);
@@ -246,13 +262,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (shouldBypassCache) {
-      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed);
+      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
     }
 
-    const cacheKey = feedCacheKey(startIndex, endIndex, province);
+    const cacheKey = feedCacheKey(startIndex, endIndex, province, status);
     const cached = await getFeedFromCache(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -260,7 +276,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed);
+    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
     await setFeedCache(cacheKey, result);
 
     return NextResponse.json(result, {
@@ -285,6 +301,7 @@ export async function GET(request: NextRequest) {
     const endIndex = parseInt(searchParams.get('endIndex') || String(FEED_PAGE_SIZE - 1), 10);
     const province = searchParams.get('province') ?? undefined;
     const requestedFeedSeed = searchParams.get('feedSeed') || undefined;
+    const status = resolveFeedStatus(searchParams.get('status'));
     const shouldBypassCache = !!requestedFeedSeed;
 
     const cookieStore = await cookies();
@@ -302,11 +319,11 @@ export async function GET(request: NextRequest) {
 
     // ช่วง 0–(N-1) ใช้ cache ชุดโพส N รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
     if (!shouldBypassCache && endIndex < FEED_TOP_CACHE_SIZE) {
-      let topCache = await getFeedTop100FromCache(province);
+      let topCache = await getFeedTop100FromCache(province, status);
       const cacheHit = !!topCache;
       if (!topCache) {
-        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed);
-        await setFeedTop100Cache(province, full);
+        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status);
+        await setFeedTop100Cache(province, full, status);
         topCache = full;
       }
       const result = sliceFeedPayload(topCache, startIndex, endIndex);
@@ -316,13 +333,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (shouldBypassCache) {
-      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed);
+      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
     }
 
-    const cacheKey = feedCacheKey(startIndex, endIndex, province);
+    const cacheKey = feedCacheKey(startIndex, endIndex, province, status);
     const cached = await getFeedFromCache(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -330,7 +347,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed);
+    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
     await setFeedCache(cacheKey, result);
 
     return NextResponse.json(result, {
