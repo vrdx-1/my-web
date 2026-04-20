@@ -98,6 +98,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const homeProvince = useHomeProvince();
   const setHeaderVisible = useSetHeaderVisibility();
   const homeTabScroll = useHomeTabScroll();
+  const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -214,7 +215,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     const body = document.body;
     const html = document.documentElement;
 
-    if (resolvedPathname !== '/home') {
+    if (resolvedPathname !== '/home' || isProfileOverlayOpen) {
       return;
     }
 
@@ -239,7 +240,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       window.removeEventListener('gesturechange', handleGestureEvent);
       window.removeEventListener('gestureend', handleGestureEvent);
     };
-  }, [resolvedPathname]);
+  }, [resolvedPathname, isProfileOverlayOpen]);
 
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
@@ -262,7 +263,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     return () => createPostContext?.register(null);
   }, [session, createPostContext, handleCreatePostClick]);
 
-  const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
   const setProfileOverlayOpen = mainTab?.setProfileOverlayOpen ?? (() => {});
 
   const handleNotificationClick = useCallback(() => {
