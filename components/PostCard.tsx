@@ -269,6 +269,7 @@ export function PostCard({
   const cardStyle: React.CSSProperties = {
     borderBottom: '1px solid #c8ccd4',
     position: 'relative',
+    overflowX: 'clip',
     overflowAnchor: 'none',
   };
 
@@ -492,9 +493,11 @@ export function PostCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            minWidth: 0,
+            overflow: 'hidden',
           }}
         >
-          <div style={{ minWidth: '32px', flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
+          <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
             <span
               style={{
                 display: 'inline-flex',
@@ -511,14 +514,29 @@ export function PostCard({
                 fontWeight: 600,
                 letterSpacing: '0.01em',
                 whiteSpace: 'nowrap',
+                minWidth: 0,
+                maxWidth: '100%',
+                overflow: 'hidden',
               }}
             >
-              <span style={{ color: '#1c1e21', fontSize: '16px', lineHeight: '21px', fontWeight: 700 }}>{priceText}</span>
+              <span
+                style={{
+                  color: '#1c1e21',
+                  fontSize: '16px',
+                  lineHeight: '21px',
+                  fontWeight: 700,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {priceText}
+              </span>
             </span>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', minWidth: '32px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', minWidth: '32px', justifyContent: 'flex-end', flexShrink: 0, marginLeft: '12px' }}>
             {isOwner ? (
               <button 
                 onClick={(e) => {

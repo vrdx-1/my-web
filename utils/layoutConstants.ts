@@ -34,6 +34,7 @@ export const LAYOUT_CONSTANTS = {
   
   // Main container styles (used in saved, liked, edit-profile, sold, create-post, etc.)
   MAIN_CONTAINER: {
+    width: '100%',
     maxWidth: '600px',
     margin: '0 auto',
     background: '#ffffff',
@@ -41,10 +42,13 @@ export const LAYOUT_CONSTANTS = {
     minHeight: '100vh',
     fontFamily: LAO_FONT,
     position: 'relative' as const,
+    boxSizing: 'border-box' as const,
+    overflowX: 'clip' as const,
   },
   
   // Main container with flex column (used in create-post, edit-post)
   MAIN_CONTAINER_FLEX: {
+    width: '100%',
     maxWidth: '600px',
     margin: '0 auto',
     minHeight: '100vh',
@@ -53,6 +57,8 @@ export const LAYOUT_CONSTANTS = {
     display: 'flex',
     flexDirection: 'column' as const,
     fontFamily: LAO_FONT,
+    boxSizing: 'border-box' as const,
+    overflowX: 'clip' as const,
   },
   
   // Admin container styles (used in admin/reporting, admin/review, admin/visitor)
