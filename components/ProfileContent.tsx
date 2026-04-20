@@ -1125,7 +1125,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontSize: '14px',
+                      fontSize: '16px',
+                      lineHeight: '24px',
                       color: '#111827',
                     }}
                   />

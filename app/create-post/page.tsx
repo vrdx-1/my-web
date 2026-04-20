@@ -446,7 +446,7 @@ if (isUploading) {
 }
 
  return (
-<div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
+<div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate' }}>
 
 {/* Hidden file input สำหรับ auto-open แกลเลอรี่ */}
 <input
@@ -491,35 +491,47 @@ if (isUploading) {
  </div>
  </div>
 
-      <div style={{ flex: 1, paddingBottom: '100px', minHeight: 0, overflowY: 'auto' }}>
-        {/* แบบเดียวกับ navigation bar: เก็บทั้งสอง step ไว้ใน DOM แค่ซ่อน/แสดง — caption ไม่หายเมื่อกดย้อนกลับ */}
+      <div style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 0, overflow: 'hidden' }}>
         <div
-          aria-hidden={step !== 2}
-          style={{ display: step === 2 ? 'block' : 'none', minHeight: 0 }}
+          style={{
+            height: '100%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            paddingBottom: '120px',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain',
+            touchAction: 'pan-y',
+          }}
         >
-          <CreatePostCard
-            userProfile={userProfile}
-            session={session}
-            caption={caption}
-            setCaption={setCaption}
-            carPrice={carPrice}
-            setCarPrice={setCarPrice}
-            carCurrency={carCurrency}
-            setCarCurrency={setCarCurrency}
-            textareaRef={textareaRef}
-            previews={imageUpload.previews.slice(0, 15)}
-            onImageClick={() => setIsViewing(true)}
-            onRemoveImage={removeImage}
-            layout={layout}
-            onLayoutChange={setLayout}
-            selectedPrivateShop={selectedPrivateShop}
-          />
-        </div>
-        <div
-          aria-hidden={step !== 3}
-          style={{ display: step === 3 ? 'block' : 'none', minHeight: 0 }}
-        >
-          <CreatePostProvinceStep province={province} onProvinceChange={setProvince} />
+          {/* แบบเดียวกับ navigation bar: เก็บทั้งสอง step ไว้ใน DOM แค่ซ่อน/แสดง — caption ไม่หายเมื่อกดย้อนกลับ */}
+          <div
+            aria-hidden={step !== 2}
+            style={{ display: step === 2 ? 'block' : 'none', minHeight: 0 }}
+          >
+            <CreatePostCard
+              userProfile={userProfile}
+              session={session}
+              caption={caption}
+              setCaption={setCaption}
+              carPrice={carPrice}
+              setCarPrice={setCarPrice}
+              carCurrency={carCurrency}
+              setCarCurrency={setCarCurrency}
+              textareaRef={textareaRef}
+              previews={imageUpload.previews.slice(0, 15)}
+              onImageClick={() => setIsViewing(true)}
+              onRemoveImage={removeImage}
+              layout={layout}
+              onLayoutChange={setLayout}
+              selectedPrivateShop={selectedPrivateShop}
+            />
+          </div>
+          <div
+            aria-hidden={step !== 3}
+            style={{ display: step === 3 ? 'block' : 'none', minHeight: 0 }}
+          >
+            <CreatePostProvinceStep province={province} onProvinceChange={setProvince} />
+          </div>
         </div>
       </div>
 

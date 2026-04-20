@@ -81,6 +81,8 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
   ({ previews, onClose, onRemoveImage, onAddImages, fileInputRef }) => {
     if (previews.length === 0) return null;
 
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/i.test(navigator.userAgent);
+
     return (
       <div
         style={{
@@ -94,6 +96,9 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
           zIndex: 2000,
           display: 'flex',
           justifyContent: 'center',
+          overflow: 'hidden',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
         }}
       >
         <div
@@ -105,6 +110,11 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
             backgroundColor: '#ffffff',
             position: 'relative',
             overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain',
+            touchAction: 'pan-y',
+            paddingBottom: isIOS ? 'env(safe-area-inset-bottom, 0px)' : 0,
           }}
         >
           <div
@@ -204,7 +214,7 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
           {/* ปุ่มเพิ่มรูป (อยู่กึ่งกลาง ล่างสุดใน Viewing Mode) */}
           <div
             style={{
-              padding: '5px',
+              padding: '12px 5px 0',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -244,7 +254,7 @@ export const CreatePostViewingOverlay = React.memo<CreatePostViewingOverlayProps
               />
             </label>
           </div>
-          <div style={{ height: '10px' }} />
+          <div style={{ height: '52px' }} />
         </div>
       </div>
     );
