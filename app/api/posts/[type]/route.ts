@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
-import { getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
+import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 /**
@@ -273,12 +273,29 @@ export async function GET(
         return NextResponse.json({ posts: [], hasMore: false });
       }
       
-      console.log('API: Querying my-posts', { idOrToken, startIndex, endIndex, tab });
-      
-      const { data: idsData, error: idsError } = await supabase
+      const ownedProfileIds = currentUserId
+        ? getOwnedProfileIds({
+            activeProfileId: currentUserId,
+            authUserId: resolvedProfile?.authUserId ?? session?.user?.id ?? null,
+            availableProfiles,
+          })
+        : [];
+
+      console.log('API: Querying my-posts', { idOrToken, ownedProfileIds, startIndex, endIndex, tab });
+
+      let idsQuery = supabase
         .from('cars')
-        .select('id')
-        .eq('user_id', idOrToken)
+        .select('id');
+
+      if (ownedProfileIds.length > 0) {
+        idsQuery = ownedProfileIds.length === 1
+          ? idsQuery.eq('user_id', ownedProfileIds[0])
+          : idsQuery.in('user_id', ownedProfileIds);
+      } else {
+        idsQuery = idsQuery.eq('user_id', idOrToken);
+      }
+
+      const { data: idsData, error: idsError } = await idsQuery
         .eq('status', tab || 'recommend')
         .order('created_at', { ascending: false })
         .range(startIndex, endIndex);
@@ -286,6 +303,7 @@ export async function GET(
       if (idsError) {
         console.error('API: Error fetching my-posts:', idsError, { 
           idOrToken,
+          ownedProfileIds,
           errorCode: idsError.code,
           errorMessage: idsError.message,
           errorDetails: idsError.details,

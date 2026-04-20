@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LIST_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_PAGE_SIZE } from '@/utils/constants';
-import { getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
+import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
@@ -562,23 +562,34 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         return;
       } else if (type === 'my-posts') {
         const idOrToken = getIdOrToken();
+        const resolvedAuthUserId = authUserId || currentSession?.user?.id || null;
+        const ownedProfileIds = currentUserId
+          ? getOwnedProfileIds({
+              activeProfileId: currentUserId,
+              authUserId: resolvedAuthUserId,
+              availableProfiles,
+            })
+          : [];
         
         // ถ้าไม่มี idOrToken หรือเป็น invalid value ให้หยุดการโหลด
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '') {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(idOrToken)) {
-          if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
-          return;
-        }
-        
+
         let idsQuery = supabase
           .from('cars')
-          .select('id')
-          .eq('user_id', idOrToken)
+          .select('id');
+
+        if (ownedProfileIds.length > 0) {
+          idsQuery = ownedProfileIds.length === 1
+            ? idsQuery.eq('user_id', ownedProfileIds[0])
+            : idsQuery.in('user_id', ownedProfileIds);
+        } else {
+          idsQuery = idsQuery.eq('user_id', idOrToken);
+        }
+
+        idsQuery = idsQuery
           .eq('status', tab || 'recommend')
           .order('created_at', { ascending: false });
 
@@ -594,7 +605,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           const errHint = idsError?.hint ?? null;
           console.error(
             `Error fetching my-posts: ${errMsg}`,
-            { code: errCode, details: errDetails, hint: errHint, idOrToken, tab, rangeStart, rangeEnd, type }
+            { code: errCode, details: errDetails, hint: errHint, idOrToken, ownedProfileIds, tab, rangeStart, rangeEnd, type }
           );
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
@@ -871,7 +882,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setLoadingMore(false);
       }
     }
-  }, [type, userIdOrToken, currentSession, activeProfileId, tab, status, page, loadingMore, loadAll, province]);
+  }, [type, userIdOrToken, currentSession, activeProfileId, authUserId, availableProfiles, tab, status, page, loadingMore, loadAll, province]);
 
   const refreshData = useCallback(async () => {
     setPage(0);
