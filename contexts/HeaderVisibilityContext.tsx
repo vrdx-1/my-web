@@ -1,19 +1,32 @@
 'use client';
 
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useContext, useEffect, useSyncExternalStore } from 'react';
 
-const HeaderVisibilityStateContext = createContext<boolean>(true);
-const HeaderVisibilitySetterContext = createContext<((visible: boolean) => void) | null>(null);
+type HeaderVisibilityListener = () => void;
+
+const headerVisibilityStore = {
+  value: true,
+  listeners: new Set<HeaderVisibilityListener>(),
+};
+
+const subscribeHeaderVisibility = (listener: HeaderVisibilityListener) => {
+  headerVisibilityStore.listeners.add(listener);
+  return () => {
+    headerVisibilityStore.listeners.delete(listener);
+  };
+};
+
+const getHeaderVisibilitySnapshot = () => headerVisibilityStore.value;
+
+const setHeaderVisibilityStore = (visible: boolean) => {
+  if (headerVisibilityStore.value === visible) return;
+  headerVisibilityStore.value = visible;
+  headerVisibilityStore.listeners.forEach((listener) => listener());
+};
+
+const HeaderVisibilitySetterContext = React.createContext<((visible: boolean) => void) | null>(null);
 
 export function HeaderVisibilityProvider({ children }: { children: React.ReactNode }) {
-  const [isHeaderVisible, setHeaderVisibleState] = useState(true);
-  const isHeaderVisibleRef = useRef(true);
-  const setHeaderVisible = useCallback((visible: boolean) => {
-    if (isHeaderVisibleRef.current === visible) return;
-    isHeaderVisibleRef.current = visible;
-    setHeaderVisibleState(visible);
-  }, []);
-
   // เปิด transitions หลัง initial paint (double-rAF)
   useEffect(() => {
     const id1: number = requestAnimationFrame(() => {
@@ -30,23 +43,25 @@ export function HeaderVisibilityProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <HeaderVisibilitySetterContext.Provider value={setHeaderVisible}>
-      <HeaderVisibilityStateContext.Provider value={isHeaderVisible}>
+    <HeaderVisibilitySetterContext.Provider value={setHeaderVisibilityStore}>
         {children}
-      </HeaderVisibilityStateContext.Provider>
     </HeaderVisibilitySetterContext.Provider>
   );
 }
 
 export function useHeaderVisibilityContext() {
   return {
-    isHeaderVisible: useContext(HeaderVisibilityStateContext),
+    isHeaderVisible: useHeaderVisibilityState(),
     setHeaderVisible: useContext(HeaderVisibilitySetterContext),
   };
 }
 
 export function useHeaderVisibilityState() {
-  return useContext(HeaderVisibilityStateContext);
+  return useSyncExternalStore(
+    subscribeHeaderVisibility,
+    getHeaderVisibilitySnapshot,
+    getHeaderVisibilitySnapshot,
+  );
 }
 
 export function useSetHeaderVisibility() {
