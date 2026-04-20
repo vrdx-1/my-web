@@ -15,7 +15,7 @@ import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
 export type SoldTabFeedWrapperProps = {
-  /** ข้อมูล feed แท็บขายแล้วจากหน้าหลัก — เก็บไว้ไม่หายเมื่อสลับแท็บ */
+  /** ข้อมูล feed แท็บขายแล้วจากหน้าหลัก — เก็บไว้ไม่หาย  เมื่อสลับแท็บ */
   soldListData: UsePostListDataReturn;
   menu: ReturnType<typeof useMenu>;
   viewingPostHook: ReturnType<typeof useViewingPost>;
