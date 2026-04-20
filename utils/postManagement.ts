@@ -3,6 +3,18 @@
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from './postUtils';
 import { invalidateFeedCacheClient } from './invalidateFeedCacheClient';
+import { mergeHeaders } from './activeProfile';
+
+const ACTIVE_PROFILE_STORAGE_KEY_PREFIX = 'active_profile_';
+
+function getStoredActiveProfileId(authUserId: string | null | undefined): string | null {
+  if (!authUserId || typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(`${ACTIVE_PROFILE_STORAGE_KEY_PREFIX}${authUserId}`);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Toggle post status between 'recommend' and 'sold'
@@ -46,10 +58,42 @@ export async function deletePost(
   postId: string,
   setPosts: (updater: (prev: any[]) => any[]) => void
 ): Promise<void> {
-  const { error } = await supabase.from('cars').delete().eq('id', postId);
-  if (!error) {
-    setPosts(prev => prev.filter(p => p.id !== postId));
+  const sessionResult = await supabase.auth.getSession();
+  let session = sessionResult.data.session;
+  let accessToken = session?.access_token ?? '';
+
+  if (!accessToken) {
+    const refreshed = await supabase.auth.refreshSession();
+    session = refreshed.data.session ?? session;
+    accessToken = session?.access_token ?? '';
   }
+
+  const authUserId = session?.user?.id ?? null;
+  const activeProfileId = getStoredActiveProfileId(authUserId) || authUserId;
+  const guestToken = !authUserId ? getPrimaryGuestToken() : null;
+
+  const response = await fetch('/api/posts/delete', {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: mergeHeaders(
+      {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      activeProfileId,
+    ),
+    body: JSON.stringify({
+      postId,
+      guestToken,
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.error || 'Delete post failed');
+  }
+
+  setPosts(prev => prev.filter(p => p.id !== postId));
 }
 
 /**

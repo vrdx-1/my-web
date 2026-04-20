@@ -4,10 +4,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 const MAX_CAPTION_LINES = 15;
 const ALLOWED_KEYS_AT_MAX = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
 const VALID_LAYOUTS = ['default', 'car-gallery', 'five-images', 'three-images'];
+const ACTIVE_PROFILE_STORAGE_KEY_PREFIX = 'active_profile_';
+
+function getStoredActiveProfileId(authUserId: string | null | undefined): string | null {
+  if (!authUserId || typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(`${ACTIVE_PROFILE_STORAGE_KEY_PREFIX}${authUserId}`);
+  } catch {
+    return null;
+  }
+}
 
 export function useEditPostPage(id: string) {
   const router = useRouter();
@@ -208,6 +220,46 @@ export function useEditPostPage(id: string) {
         for (const p of uploadedPaths) await supabase.storage.from('car-images').remove([p]).catch(() => {});
         throw error;
       }
+
+      const removedImages = (initialRef.current?.images || []).filter((img) => !finalImages.includes(img));
+      if (removedImages.length > 0) {
+        const sessionResult = await supabase.auth.getSession();
+        let currentSession = sessionResult.data.session;
+        let accessToken = currentSession?.access_token ?? '';
+
+        if (!accessToken) {
+          const refreshed = await supabase.auth.refreshSession();
+          currentSession = refreshed.data.session ?? currentSession;
+          accessToken = currentSession?.access_token ?? '';
+        }
+
+        const authUserId = currentSession?.user?.id ?? null;
+        const activeProfileId = getStoredActiveProfileId(authUserId) || authUserId;
+        const guestToken = !authUserId ? getPrimaryGuestToken() : null;
+
+        const cleanupResponse = await fetch('/api/posts/images/cleanup', {
+          method: 'POST',
+          credentials: 'include',
+          headers: mergeHeaders(
+            {
+              'Content-Type': 'application/json',
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+            activeProfileId,
+          ),
+          body: JSON.stringify({
+            postId: id,
+            removedImages,
+            guestToken,
+          }),
+        });
+
+        if (!cleanupResponse.ok) {
+          const payload = await cleanupResponse.json().catch(() => null);
+          throw new Error(payload?.error || 'Image cleanup failed');
+        }
+      }
+
       if (goBackAfterSave) {
         allowLeaveRef.current = true;
         router.back();
@@ -215,8 +267,8 @@ export function useEditPostPage(id: string) {
         router.push('/');
       }
       router.refresh();
-    } catch {
-      // Error already surfaced by throw / UI
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'ไม่สามารถบันทึกการแก้ไขโพสต์ได้');
     } finally {
       setUploading(false);
     }

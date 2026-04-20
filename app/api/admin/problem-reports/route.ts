@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { getStorageObjectPaths } from '@/utils/storageObjectPath';
+
+const BUCKET_NAME = 'report-images';
 
 /**
  * GET: ดึงรายการรายงานปัญหาทั้งหมด (เฉพาะ Admin)
@@ -140,6 +143,32 @@ export async function DELETE(request: NextRequest) {
     serviceRoleKey,
     { auth: { persistSession: false } }
   );
+  const { data: report, error: reportError } = await admin
+    .from('user_problem_reports')
+    .select('id, image_urls')
+    .eq('id', id)
+    .maybeSingle();
+  if (reportError) {
+    return NextResponse.json({ error: reportError.message }, { status: 500 });
+  }
+  if (!report) {
+    return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+  }
+
+  const imagePaths = getStorageObjectPaths(
+    Array.isArray(report.image_urls)
+      ? report.image_urls.filter((value): value is string => typeof value === 'string')
+      : [],
+    BUCKET_NAME,
+  );
+
+  if (imagePaths.length > 0) {
+    const { error: storageError } = await admin.storage.from(BUCKET_NAME).remove(imagePaths);
+    if (storageError) {
+      return NextResponse.json({ error: storageError.message }, { status: 500 });
+    }
+  }
+
   const { error: deleteError } = await admin
     .from('user_problem_reports')
     .delete()
