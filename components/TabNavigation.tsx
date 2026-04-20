@@ -51,14 +51,20 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
     if (!container) return;
 
     if (isHomeNav) {
-      const buttonEl = buttonRefs.current[activeTab];
-      if (!buttonEl) return;
+      const activeIndex = tabs.findIndex((tab) => tab.value === activeTab);
+      if (activeIndex < 0) return;
 
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = buttonEl.getBoundingClientRect();
+      const containerWidth = container.clientWidth;
+      const totalGroupWidth =
+        HOME_TAB_BUTTON_WIDTH_PX * tabs.length +
+        HOME_TAB_GROUP_GAP_PX * Math.max(0, tabs.length - 1);
+      const groupStart = Math.max(0, (containerWidth - totalGroupWidth) / 2);
       const next = {
-        left: buttonRect.left - containerRect.left + buttonRect.width / 2,
-        width: Math.max(72, buttonRect.width - 28),
+        left:
+          groupStart +
+          activeIndex * (HOME_TAB_BUTTON_WIDTH_PX + HOME_TAB_GROUP_GAP_PX) +
+          HOME_TAB_BUTTON_WIDTH_PX / 2,
+        width: Math.max(72, HOME_TAB_BUTTON_WIDTH_PX - 28),
         bottom: 0,
       };
 
@@ -99,7 +105,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       const sameBottom = Math.abs(prev.bottom - next.bottom) < 0.5;
       return sameLeft && sameWidth && sameBottom ? prev : next;
     });
-  }, [activeTab, isHomeNav]);
+  }, [HOME_TAB_BUTTON_WIDTH_PX, HOME_TAB_GROUP_GAP_PX, activeTab, isHomeNav, tabs]);
 
   const scheduleUpdateIndicator = useCallback(() => {
     if (rafUpdateRef.current != null) return;

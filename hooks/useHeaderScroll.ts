@@ -13,6 +13,7 @@ const CAPTION_TOGGLE_SUPPRESS_MS = 360;
 const HIDE_ACCUMULATED_DELTA_PX = 20;
 const SHOW_ACCUMULATED_DELTA_PX = 12;
 const VISIBILITY_TOGGLE_COOLDOWN_MS = 220;
+const VIEWPORT_RESIZE_SUPPRESS_MS = 260;
 
 interface UseHeaderScrollOptions {
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
@@ -42,6 +43,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const latestScrollYRef = useRef(0);
   const scrollFrameRef = useRef<number | null>(null);
   const captionToggleSuppressUntilRef = useRef<number>(0);
+  const viewportResizeSuppressUntilRef = useRef<number>(0);
   const accumulatedScrollDeltaRef = useRef(0);
   const lastDeltaDirectionRef = useRef<1 | -1 | 0>(0);
   const lastVisibilityToggleAtRef = useRef(0);
@@ -90,7 +92,20 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       captionToggleSuppressUntilRef.current = now + CAPTION_TOGGLE_SUPPRESS_MS;
     };
 
+    const suppressForViewportResize = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      viewportResizeSuppressUntilRef.current = now + VIEWPORT_RESIZE_SUPPRESS_MS;
+      accumulatedScrollDeltaRef.current = 0;
+      lastDeltaDirectionRef.current = 0;
+      const scrollY = typeof window !== 'undefined' ? Math.max(window.scrollY, 0) : 0;
+      lastScrollYRef.current = scrollY;
+      latestScrollYRef.current = scrollY;
+    };
+
     window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+    window.addEventListener('resize', suppressForViewportResize, { passive: true });
+    window.addEventListener('orientationchange', suppressForViewportResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
 
     const handleScroll = () => {
       latestScrollYRef.current = Math.max(window.scrollY, 0);
@@ -118,6 +133,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         if (captionToggleActive || now < captionToggleSuppressUntilRef.current) {
           endHomeMotionTimer(timer, {
             action: 'suppressed-caption-toggle',
+            currentScrollY,
+            scrollDelta,
+          });
+          return;
+        }
+
+        if (now < viewportResizeSuppressUntilRef.current) {
+          endHomeMotionTimer(timer, {
+            action: 'suppressed-viewport-resize',
             currentScrollY,
             scrollDelta,
           });
@@ -245,6 +269,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         scrollFrameRef.current = null;
       }
       window.removeEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+      window.removeEventListener('resize', suppressForViewportResize);
+      window.removeEventListener('orientationchange', suppressForViewportResize);
+      window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [applyVisible, disableScrollHide, hideOnScrollUp, suppressHideUntilRef]);

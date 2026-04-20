@@ -35,6 +35,7 @@ function BottomNavSurface({
   const navTransform = hideNavWithScroll && !isHeaderVisible
     ? 'translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 10px))'
     : 'translateY(0)';
+  const navHeight = `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`;
 
   return (
     <div
@@ -46,11 +47,13 @@ function BottomNavSurface({
         bottom: 0,
         left: 0,
         right: 0,
-        minHeight: BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX,
+        height: navHeight,
+        minHeight: navHeight,
         zIndex: resolvedPathname === '/profile' ? 1001 : 400,
         transform: navTransform,
         opacity: 1,
         visibility: 'visible',
+        overflow: 'hidden',
         transition: MOTION_TRANSITIONS.HOME_CHROME_TRANSFORM,
         willChange: 'transform',
         backfaceVisibility: 'hidden',

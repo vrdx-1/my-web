@@ -75,7 +75,8 @@ export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?:
     <>
       <div
         style={{
-          flex: 1,
+          flex: '1 1 0%',
+          flexBasis: 0,
           minWidth: 0,
           width: '100%',
           maxWidth: '100%',
@@ -122,7 +123,8 @@ export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?:
           }}
           aria-label="Search"
           style={{
-            flex: 1,
+            flex: '1 1 0%',
+            flexBasis: 0,
             minWidth: 0,
             width: '100%',
             maxWidth: '100%',
@@ -158,7 +160,8 @@ export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?:
           </svg>
           <span
             style={{
-              flex: 1,
+              flex: '1 1 0%',
+              flexBasis: 0,
               minWidth: 0,
               overflow: 'hidden',
               display: 'flex',
@@ -187,7 +190,7 @@ export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?:
               color: '#4a4d52',
               fontWeight: 500,
               fontFamily: LAO_FONT,
-              maxWidth: `${FILTER_LABEL_MAX_WIDTH_PX}px`,
+              maxWidth: `min(${FILTER_LABEL_MAX_WIDTH_PX}px, 28vw)`,
               minWidth: 0,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
