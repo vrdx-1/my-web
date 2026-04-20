@@ -166,6 +166,11 @@ export async function POST(request: NextRequest) {
     subAccount: {
       id: subAccountId,
       username: finalUsername,
+      phone: finalPhone || null,
+      avatar_url: avatarUrl || null,
+      role: 'admin',
+      is_sub_account: true,
+      parent_admin_id: auth.adminId,
     },
   }, { status: 201 });
 }

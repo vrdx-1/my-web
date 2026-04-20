@@ -24,6 +24,7 @@ export interface SessionProfileValue {
   authUserId: string | null;
   availableProfiles: SessionProfileRecord[];
   setActiveProfile: (profileId: string | null) => void;
+  activateProfileRecord: (profile: SessionProfileRecord) => void;
   refetchProfiles: () => Promise<void>;
   /** เรียกเมื่อโหลดโพสต์ชุดแรกเสร็จแล้ว */
   startSessionCheck: () => void;
@@ -170,6 +171,25 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     persistActiveProfileId(userId, nextActiveId);
   }, [availableProfiles, persistActiveProfileId]);
 
+  const activateProfileRecord = useCallback((profile: SessionProfileRecord) => {
+    const userId = currentUserIdRef.current;
+    if (!userId || !profile?.id) return;
+
+    const existingProfile = availableProfiles.find((item) => item.id === profile.id) ?? null;
+    const nextProfile: SessionProfileRecord = {
+      ...existingProfile,
+      ...profile,
+    };
+    const nextProfiles = existingProfile
+      ? availableProfiles.map((item) => (item.id === profile.id ? nextProfile : item))
+      : [...availableProfiles, nextProfile];
+
+    setAvailableProfiles(nextProfiles);
+    setActiveProfileId(nextProfile.id);
+    setUserProfile(nextProfile);
+    persistActiveProfileId(userId, nextProfile.id);
+  }, [availableProfiles, persistActiveProfileId]);
+
   const startSessionCheck = useCallback(() => {
     if (sessionCheckStartedRef.current) return;
     sessionCheckStartedRef.current = true;
@@ -240,6 +260,7 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     authUserId: currentUserIdRef.current,
     availableProfiles,
     setActiveProfile,
+    activateProfileRecord,
     refetchProfiles,
     startSessionCheck,
   };

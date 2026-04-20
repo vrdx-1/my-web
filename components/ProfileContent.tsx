@@ -72,7 +72,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [showSubAccountCreatedSuccess, setShowSubAccountCreatedSuccess] = useState(false);
   const [subAccountDropdownTopOffset, setSubAccountDropdownTopOffset] = useState(0);
   const [accountSwitchToastToken, setAccountSwitchToastToken] = useState(0);
-  const { activeProfileId, authUserId, availableProfiles, setActiveProfile, refetchProfiles } = useSessionAndProfile();
+  const { activeProfileId, authUserId, availableProfiles, setActiveProfile, activateProfileRecord, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
   const hasExistingSubAccounts = availableProfiles.some((profile) => profile.is_sub_account);
@@ -652,6 +652,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to create sub account');
       }
 
+      if (payload?.subAccount?.id) {
+        activateProfileRecord(payload.subAccount);
+      }
+
       await loadSubAccounts();
       closeSubAccountModal();
       setShowSubAccountCreatedSuccess(true);
@@ -660,7 +664,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     } finally {
       setSubAccountSubmitting(false);
     }
-  }, [activeProfileId, authUserId, canManageSubAccounts, closeSubAccountModal, loadSubAccounts, session?.access_token, session?.user?.id, subAccountAvatarFile, subAccountPhone, subAccountSubmitting, subAccountUsername]);
+  }, [activeProfileId, activateProfileRecord, authUserId, canManageSubAccounts, closeSubAccountModal, loadSubAccounts, session?.access_token, session?.user?.id, subAccountAvatarFile, subAccountPhone, subAccountSubmitting, subAccountUsername]);
 
   const handleSubAccountAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -1298,7 +1302,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                   border: '1px solid #e5e7eb',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827' }}>Sub Accounts</div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#111827' }}>Sub Account</div>
                     <button
                       type="button"
                       onClick={closeSubAccountModal}
@@ -1306,7 +1310,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                         border: 'none',
                         background: 'transparent',
                         color: '#6b7280',
-                        fontSize: '24px',
+                          fontSize: '28px',
                         lineHeight: 1,
                         cursor: 'pointer',
                       }}

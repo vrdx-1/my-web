@@ -16,6 +16,7 @@ export function useSessionAndProfile() {
     authUserId: ctx?.authUserId ?? null,
     availableProfiles: ctx?.availableProfiles ?? [],
     setActiveProfile: ctx?.setActiveProfile ?? (() => {}),
+    activateProfileRecord: ctx?.activateProfileRecord ?? (() => {}),
     refetchProfiles: ctx?.refetchProfiles ?? (async () => {}),
     startSessionCheck: ctx?.startSessionCheck ?? (() => {}),
   };
