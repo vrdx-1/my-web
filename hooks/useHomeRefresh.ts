@@ -99,7 +99,8 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
     if (lastHandledRefreshRequestIdRef.current === request.requestId) return;
     lastHandledRefreshRequestIdRef.current = request.requestId;
     doRefresh(request.options);
-  }, [mainTab?.tabRefreshRequest, doRefresh]);
+    mainTab?.clearTabRefreshRequest();
+  }, [mainTab, mainTab?.tabRefreshRequest, doRefresh]);
 
   return doRefresh;
 }

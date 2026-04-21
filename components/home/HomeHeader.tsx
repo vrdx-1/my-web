@@ -9,8 +9,8 @@ export type HomeHeaderProps = React.ComponentProps<typeof AppHeader>;
 
 function HomeHeaderBase(props: HomeHeaderProps) {
   const homeCenterContent = useMemo(
-    () => (props.showOnlySearch ? <HomeHeaderSearchAndFilter lockLayout={props.lockHomeLayout} /> : undefined),
-    [props.lockHomeLayout, props.showOnlySearch]
+    () => (props.showOnlySearch ? <HomeHeaderSearchAndFilter /> : undefined),
+    [props.showOnlySearch]
   );
 
   return <AppHeader {...APP_HEADER_PRESET} {...props} homeCenterContent={homeCenterContent} />;
@@ -28,7 +28,8 @@ function areHomeHeaderPropsEqual(prev: HomeHeaderProps, next: HomeHeaderProps) {
       prev.showOnlySearch === next.showOnlySearch &&
       sameVisibility &&
       prev.slideWithContainer === next.slideWithContainer &&
-      prev.onTabRefresh === next.onTabRefresh
+      prev.onTabRefresh === next.onTabRefresh &&
+      prev.lockHomeLayout === next.lockHomeLayout
     );
   }
 
@@ -46,6 +47,7 @@ function areHomeHeaderPropsEqual(prev: HomeHeaderProps, next: HomeHeaderProps) {
     prev.onTabRefresh === next.onTabRefresh &&
     prev.onTabSwitchStart === next.onTabSwitchStart &&
     prev.loadingTab === next.loadingTab &&
+    prev.lockHomeLayout === next.lockHomeLayout &&
     prev.setProfileOverlayOpen === next.setProfileOverlayOpen
   );
 }

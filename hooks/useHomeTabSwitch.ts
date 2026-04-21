@@ -96,7 +96,8 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
     if (lastHandledTabChangeRequestIdRef.current === request.requestId) return;
     lastHandledTabChangeRequestIdRef.current = request.requestId;
     setTabAndRefresh(request.tab);
-  }, [mainTab?.tabChangeRequest, setTabAndRefresh]);
+    mainTab?.clearTabChangeRequest();
+  }, [mainTab, mainTab?.tabChangeRequest, setTabAndRefresh]);
 
   return setTabAndRefresh;
 }

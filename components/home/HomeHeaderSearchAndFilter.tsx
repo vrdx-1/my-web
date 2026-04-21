@@ -15,7 +15,7 @@ const FILTER_LABEL_MAX_WIDTH_PX = 96;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
-export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?: boolean }) {
+export function HomeHeaderSearchAndFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') ?? '';
@@ -139,8 +139,9 @@ export function HomeHeaderSearchAndFilter({ lockLayout = false }: { lockLayout?:
             gap: '4px',
             paddingLeft: '13px',
             paddingRight: '11px',
-            touchAction: lockLayout ? 'auto' : 'manipulation',
-            pointerEvents: lockLayout ? 'none' : 'auto',
+            // allow opening search/province immediately even while feed refresh runs in background
+            touchAction: 'manipulation',
+            pointerEvents: 'auto',
             overflow: 'hidden',
           }}
         >

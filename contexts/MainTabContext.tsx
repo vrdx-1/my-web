@@ -22,6 +22,8 @@ interface MainTabContextValue {
   setHomeTab: (v: MainTab) => void;
   triggerTabChange: (tab: MainTab) => void;
   triggerTabRefresh: (options?: TabRefreshOptions) => void;
+  clearTabChangeRequest: () => void;
+  clearTabRefreshRequest: () => void;
   tabChangeRequest: TabChangeRequest | null;
   tabRefreshRequest: TabRefreshRequest | null;
   tabRefreshing: boolean;
@@ -76,12 +78,22 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const clearTabChangeRequest = useCallback(() => {
+    setTabChangeRequest(null);
+  }, []);
+
+  const clearTabRefreshRequest = useCallback(() => {
+    setTabRefreshRequest(null);
+  }, []);
+
   const value = useMemo<MainTabContextValue>(
     () => ({
       homeTab,
       setHomeTab,
       triggerTabChange,
       triggerTabRefresh,
+      clearTabChangeRequest,
+      clearTabRefreshRequest,
       tabChangeRequest,
       tabRefreshRequest,
       tabRefreshing,
@@ -96,6 +108,8 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
       setHomeTab,
       triggerTabChange,
       triggerTabRefresh,
+      clearTabChangeRequest,
+      clearTabRefreshRequest,
       tabChangeRequest,
       tabRefreshRequest,
       tabRefreshing,
