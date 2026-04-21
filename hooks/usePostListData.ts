@@ -10,8 +10,28 @@ import { sequentialAppendItems } from '@/utils/preloadSequential';
 /** แคช feed ต่อ type+user (+ tab สำหรับ saved/liked/my-posts เพื่อแยก list พร้อมขาย/ขายแล้ว) */
 const FEED_LIST_CACHE_MAX = 6;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
-function getFeedListCacheKey(type: string, session: any, activeProfileId?: string | null, tab?: string): string {
-  const uid = activeProfileId || session?.user?.id;
+function getFeedListCacheKey(
+  type: string,
+  session: any,
+  activeProfileId?: string | null,
+  tab?: string,
+  authUserId?: string | null,
+  availableProfiles: OwnershipProfileRecord[] = []
+): string {
+  const resolvedAuthUserId = authUserId || session?.user?.id || null;
+  const uid = type === 'my-posts'
+    ? (() => {
+        const ownedProfileIds = getOwnedProfileIds({
+          activeProfileId,
+          authUserId: resolvedAuthUserId,
+          availableProfiles,
+        });
+        if (ownedProfileIds.length > 0) {
+          return ownedProfileIds.slice().sort().join(',');
+        }
+        return activeProfileId || resolvedAuthUserId || null;
+      })()
+    : activeProfileId || resolvedAuthUserId;
   const base = `${type}:${uid ? uid : 'guest'}`;
   if (tab && (type === 'saved' || type === 'liked' || type === 'my-posts')) {
     return `${base}:${tab}`;
@@ -94,6 +114,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const fetchIdRef = useRef(0);
   const hydratedFromCacheRef = useRef(false);
   const cancelledRef = useRef(false);
+  const previousCacheKeyRef = useRef<string | null>(null);
   /** เก็บรายการโพสต์ฝั่งขายแล้วทั้งหมดสำหรับ liked/saved tab sold เพื่อแบ่งหน้าได้ถูกต้อง */
   const soldTabFullListRef = useRef<any[] | null>(null);
   const soldFeedSeedRef = useRef<string | null>(null);
@@ -110,28 +131,43 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   }, [session, sessionReady]);
 
   const cacheableTypes: PostListType[] = ['liked', 'saved', 'my-posts'];
-  useEffect(() => {
-    if (!cacheableTypes.includes(type) || currentSession === undefined) return;
-    const key = getFeedListCacheKey(type, currentSession, activeProfileId, tab);
-    const cached = feedListCache[key];
-    if (cached && cached.posts.length >= 0) {
-      setPosts(cached.posts);
-      setHasMore(cached.hasMore);
-      setLoadingMore(false);
-      hydratedFromCacheRef.current = true;
-    }
-  }, [type, currentSession, activeProfileId, tab]);
+  const cacheKey = cacheableTypes.includes(type) && currentSession !== undefined
+    ? getFeedListCacheKey(type, currentSession, activeProfileId, tab, authUserId, availableProfiles)
+    : null;
 
   useEffect(() => {
-    if (!cacheableTypes.includes(type) || currentSession === undefined || loadingMore || posts.length === 0) return;
-    const key = getFeedListCacheKey(type, currentSession, activeProfileId, tab);
+    if (!cacheKey) return;
+    if (previousCacheKeyRef.current === cacheKey) return;
+
+    previousCacheKeyRef.current = cacheKey;
+    hydratedFromCacheRef.current = false;
+    soldTabFullListRef.current = null;
+
+    const cached = feedListCache[cacheKey];
+    if (cached) {
+      setPosts(cached.posts);
+      setHasMore(cached.hasMore);
+      setPage(0);
+      setLoadingMore(false);
+      hydratedFromCacheRef.current = true;
+      return;
+    }
+
+    setPosts([]);
+    setPage(0);
+    setHasMore(true);
+    setLoadingMore(false);
+  }, [cacheKey]);
+
+  useEffect(() => {
+    if (!cacheKey || loadingMore || posts.length === 0) return;
     const keys = Object.keys(feedListCache);
     if (keys.length >= FEED_LIST_CACHE_MAX) {
-      const toDelete = keys.filter((k) => k !== key).slice(0, keys.length - FEED_LIST_CACHE_MAX + 1);
+      const toDelete = keys.filter((k) => k !== cacheKey).slice(0, keys.length - FEED_LIST_CACHE_MAX + 1);
       toDelete.forEach((k) => delete feedListCache[k]);
     }
-    feedListCache[key] = { posts: [...posts], hasMore };
-  }, [type, currentSession, activeProfileId, tab, loadingMore, posts, hasMore]);
+    feedListCache[cacheKey] = { posts: [...posts], hasMore };
+  }, [cacheKey, loadingMore, posts, hasMore]);
 
   // โหลด like/save สำหรับหน้า sold ทันทีที่ session พร้อม (ให้เหมือนหน้าโฮม) — ข้ามถ้ามี sharedLikedSaved
   useEffect(() => {

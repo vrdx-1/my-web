@@ -24,6 +24,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { getOwnedProfileIds } from '@/utils/postUtils';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -41,23 +42,25 @@ export function MyPostsContent() {
   const [feedReady, setFeedReady] = useState(false);
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  useEffect(() => {
-    if (!mounted) return;
-    const id = requestAnimationFrame(() => setFeedReady(true));
-    return () => cancelAnimationFrame(id);
-  }, [mounted]);
+  const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
+  const [hasFetchedSold, setHasFetchedSold] = useState(false);
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
-  const hasFetchedRecommendRef = useRef(false);
-  const hasFetchedSoldRef = useRef(false);
+  const ownershipScopeKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const id = requestAnimationFrame(() => setFeedReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [mounted]);
 
   const recommendListData = usePostListData({
     type: 'my-posts',
@@ -78,8 +81,20 @@ export function MyPostsContent() {
     tab: 'sold',
   });
 
-  const postListData = tab === 'recommend' ? recommendListData : soldListData;
+  const ownershipScopeKey = (() => {
+    const resolvedAuthUserId = authUserId || session?.user?.id || null;
+    const ownedProfileIds = getOwnedProfileIds({
+      activeProfileId,
+      authUserId: resolvedAuthUserId,
+      availableProfiles,
+    });
+    if (ownedProfileIds.length > 0) {
+      return ownedProfileIds.slice().sort().join(',');
+    }
+    return activeProfileId || resolvedAuthUserId || 'guest';
+  })();
 
+  const postListData = tab === 'recommend' ? recommendListData : soldListData;
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
@@ -88,7 +103,7 @@ export function MyPostsContent() {
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
     hasMore: postListData.hasMore,
-    onLoadMore: () => postListData.setPage(prevPage => prevPage + 1),
+    onLoadMore: () => postListData.setPage((prevPage) => prevPage + 1),
   });
 
   const { toggleSave } = usePostInteractions({
@@ -103,23 +118,55 @@ export function MyPostsContent() {
 
   useEffect(() => {
     if (!sessionReady || recommendListData.session === undefined) return;
-    if (!hasFetchedRecommendRef.current && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
-      hasFetchedRecommendRef.current = true;
+    if (!hasFetchedRecommend && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
+      setHasFetchedRecommend(true);
       recommendListData.setPage(0);
       recommendListData.setHasMore(true);
       recommendListData.fetchPosts(true);
     }
-  }, [sessionReady, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore]);
+  }, [sessionReady, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore, hasFetchedRecommend]);
+
+  useEffect(() => {
+    if (!sessionReady || recommendListData.session === undefined) return;
+    if (ownershipScopeKeyRef.current === null) {
+      ownershipScopeKeyRef.current = ownershipScopeKey;
+      return;
+    }
+    if (ownershipScopeKeyRef.current === ownershipScopeKey) return;
+
+    ownershipScopeKeyRef.current = ownershipScopeKey;
+    setHasFetchedRecommend(false);
+    setHasFetchedSold(false);
+    setTabRefreshing(true);
+
+    recommendListData.setPosts([]);
+    recommendListData.setPage(0);
+    recommendListData.setHasMore(true);
+
+    soldListData.setPosts([]);
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+  }, [
+    ownershipScopeKey,
+    sessionReady,
+    recommendListData.session,
+    recommendListData.setPosts,
+    recommendListData.setPage,
+    recommendListData.setHasMore,
+    soldListData.setPosts,
+    soldListData.setPage,
+    soldListData.setHasMore,
+  ]);
 
   useEffect(() => {
     if (tab !== 'sold' || !sessionReady || soldListData.session === undefined) return;
-    if (!hasFetchedSoldRef.current && soldListData.posts.length === 0 && !soldListData.loadingMore) {
-      hasFetchedSoldRef.current = true;
+    if (!hasFetchedSold && soldListData.posts.length === 0 && !soldListData.loadingMore) {
+      setHasFetchedSold(true);
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true);
     }
-  }, [tab, sessionReady, soldListData.session, soldListData.posts.length, soldListData.loadingMore]);
+  }, [tab, sessionReady, soldListData.session, soldListData.posts.length, soldListData.loadingMore, hasFetchedSold]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
@@ -130,6 +177,7 @@ export function MyPostsContent() {
       recommendListData.fetchPosts(false, recommendListData.page);
     }
   }, [recommendListData.page, recommendListData.session]);
+
   useEffect(() => {
     if (soldListData.page > 0 && !soldListData.loadingMore && soldListData.session !== undefined) {
       soldListData.fetchPosts(false, soldListData.page);
@@ -209,7 +257,7 @@ export function MyPostsContent() {
     !feedReady ||
     !sessionReady ||
     isFeedSkeleton ||
-    (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
+    (tab === 'recommend' ? !hasFetchedRecommend : !hasFetchedSold);
   const isHeaderVisible = headerScroll.isHeaderVisible;
 
   return (
@@ -244,7 +292,8 @@ export function MyPostsContent() {
               list.setPage(0);
               list.setHasMore(true);
               list.fetchPosts(true);
-              if (v === 'sold') hasFetchedSoldRef.current = true;
+              if (v === 'recommend') setHasFetchedRecommend(true);
+              if (v === 'sold') setHasFetchedSold(true);
             } else {
               setTab(v);
               const targetList = v === 'recommend' ? recommendListData : soldListData;
