@@ -24,10 +24,10 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 /** Feed อยู่ใน chunk แยก โหลดฝั่ง client เท่านั้น เพื่อหลีกเลี่ยง React "Expected static flag was missing" */
 const SavedFeedBlock = dynamic(
@@ -85,7 +85,27 @@ export function SavedPostsContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const headerScroll = useHeaderScroll({ hideOnScrollUp: false });
+  const setHeaderVisible = useSetHeaderVisibility();
+  const headerScroll = useHeaderScroll({ disableScrollHide: true, hideOnScrollUp: false });
+
+  const lockHeaderVisible = (visible: boolean) => {
+    void visible;
+    headerScroll.setIsHeaderVisible(true);
+    setHeaderVisible?.(true);
+  };
+
+  const lockedHeaderScroll = {
+    ...headerScroll,
+    isHeaderVisible: true,
+    setIsHeaderVisible: lockHeaderVisible,
+  };
+
+  useEffect(() => {
+    setHeaderVisible?.(true);
+    return () => {
+      setHeaderVisible?.(true);
+    };
+  }, [setHeaderVisible]);
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
@@ -154,7 +174,7 @@ export function SavedPostsContent() {
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     viewingPostHook,
-    headerScroll,
+    headerScroll: lockedHeaderScroll,
     menu,
     reportingPost,
     setReportingPost,
@@ -179,7 +199,7 @@ export function SavedPostsContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+    setIsHeaderVisible: lockHeaderVisible,
   });
 
   const { addBackStep } = useBackHandler();
@@ -215,23 +235,27 @@ export function SavedPostsContent() {
     !sessionReady ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
-  const isHeaderVisible = headerScroll.isHeaderVisible;
+  const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
+  const headerSpacerStyle = {
+    height: LAYOUT_CONSTANTS.HEADER_HEIGHT,
+    pointerEvents: 'none' as const,
+  };
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
       <div
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: '50%',
+          width: '100%',
+          maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
+          boxSizing: 'border-box',
           zIndex: 100,
           background: '#ffffff',
           backgroundColor: '#ffffff',
-          transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
-          marginBottom: isHeaderVisible ? 0 : `-${LAYOUT_CONSTANTS.HEADER_HEIGHT}`,
-          transition:
-            `${MOTION_TRANSITIONS.APP_HEADER}, margin-bottom 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
-          willChange: 'transform, margin-bottom',
+          transform: isHeaderVisible ? 'translateX(-50%)' : 'translate(-50%, -100%)',
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
@@ -260,6 +284,8 @@ export function SavedPostsContent() {
           loadingTab={tabRefreshing ? tab : null}
         />
       </div>
+
+      <div style={headerSpacerStyle} aria-hidden />
 
       {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
@@ -301,7 +327,7 @@ export function SavedPostsContent() {
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
-          viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+          viewingPostHook.closeViewingMode(lockHeaderVisible);
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

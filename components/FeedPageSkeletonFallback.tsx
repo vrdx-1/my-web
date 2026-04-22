@@ -31,8 +31,13 @@ export function FeedPageSkeletonFallback({
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: '50%',
+          width: '100%',
+          maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
+          boxSizing: 'border-box',
+          transform: 'translateX(-50%)',
           zIndex: 100,
           background: '#ffffff',
           backgroundColor: '#ffffff',
@@ -49,6 +54,7 @@ export function FeedPageSkeletonFallback({
           onTabChange={() => {}}
         />
       </div>
+      <div style={{ height: LAYOUT_CONSTANTS.HEADER_HEIGHT }} aria-hidden />
       <FeedSkeleton count={feedSkeletonCount} />
     </main>
   );

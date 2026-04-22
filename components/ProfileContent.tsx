@@ -688,6 +688,9 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
   if (loading) {
     const isAppProfile = onBack == null;
+    const profileViewportHeight = isAppProfile
+      ? `calc(100dvh - ${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px - env(safe-area-inset-bottom, 0px))`
+      : '100dvh';
     const shimmerStyle = {
       background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
       backgroundSize: '200% 100%',
@@ -696,9 +699,17 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     return (
       <div
         className="profile-content-skeleton"
-        style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', height: '100vh', overflow: 'hidden', fontFamily: LAO_FONT }}
+        style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', height: profileViewportHeight, overflow: 'hidden', fontFamily: LAO_FONT }}
         aria-hidden
       >
+        {isAppProfile ? (
+          <style>{`
+            html, body {
+              overflow: hidden !important;
+              overscroll-behavior: none !important;
+            }
+          `}</style>
+        ) : null}
         <style>{`
           @keyframes profile-skeleton-shimmer {
             0% { background-position: 200% 0; }
@@ -750,6 +761,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     return null;
   }
 
+  const isAppProfile = onBack == null;
+  const profileViewportHeight = isAppProfile
+    ? `calc(100dvh - ${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px - env(safe-area-inset-bottom, 0px))`
+    : '100dvh';
+
   return (
     <main
       style={{
@@ -757,11 +773,19 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         margin: '0 auto',
         background: '#ffffff',
         backgroundColor: '#ffffff',
-        height: '100vh',
+        height: profileViewportHeight,
         overflow: 'hidden',
         fontFamily: LAO_FONT,
       }}
     >
+      {isAppProfile ? (
+        <style>{`
+          html, body {
+            overflow: hidden !important;
+            overscroll-behavior: none !important;
+          }
+        `}</style>
+      ) : null}
       {accountSwitchToastToken ? (
         <>
           <div
@@ -847,9 +871,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         ref={scrollContainerRef}
         style={{
           height: '100%',
-          overflowY: 'auto',
+          overflowY: 'hidden',
           overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
+          WebkitOverflowScrolling: 'auto',
+          overscrollBehavior: 'none',
         }}
       >
       {onBack != null && (

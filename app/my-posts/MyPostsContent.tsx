@@ -24,11 +24,11 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { getOwnedProfileIds } from '@/utils/postUtils';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 /** ใช้ MyPostsFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 const MyPostsFeedBlock = dynamic(
@@ -98,7 +98,27 @@ export function MyPostsContent() {
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
-  const headerScroll = useHeaderScroll({ hideOnScrollUp: false });
+  const setHeaderVisible = useSetHeaderVisibility();
+  const headerScroll = useHeaderScroll({ disableScrollHide: true, hideOnScrollUp: false });
+
+  const lockHeaderVisible = (visible: boolean) => {
+    void visible;
+    headerScroll.setIsHeaderVisible(true);
+    setHeaderVisible?.(true);
+  };
+
+  const lockedHeaderScroll = {
+    ...headerScroll,
+    isHeaderVisible: true,
+    setIsHeaderVisible: lockHeaderVisible,
+  };
+
+  useEffect(() => {
+    setHeaderVisible?.(true);
+    return () => {
+      setHeaderVisible?.(true);
+    };
+  }, [setHeaderVisible]);
 
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     loadingMore: postListData.loadingMore,
@@ -189,7 +209,7 @@ export function MyPostsContent() {
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     viewingPostHook,
-    headerScroll,
+    headerScroll: lockedHeaderScroll,
     menu,
     reportingPost,
     setReportingPost,
@@ -214,7 +234,7 @@ export function MyPostsContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+    setIsHeaderVisible: lockHeaderVisible,
   });
 
   const { addBackStep } = useBackHandler();
@@ -258,22 +278,26 @@ export function MyPostsContent() {
     !sessionReady ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasFetchedRecommend : !hasFetchedSold);
-  const isHeaderVisible = headerScroll.isHeaderVisible;
+  const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
+  const headerSpacerStyle = {
+    height: LAYOUT_CONSTANTS.HEADER_HEIGHT,
+    pointerEvents: 'none' as const,
+  };
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: '50%',
+          width: '100%',
+          maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER_WIDTH,
+          boxSizing: 'border-box',
           zIndex: 100,
           background: '#ffffff',
           backgroundColor: '#ffffff',
-          transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
-          marginBottom: isHeaderVisible ? 0 : `-${LAYOUT_CONSTANTS.HEADER_HEIGHT}`,
-          transition:
-            `${MOTION_TRANSITIONS.APP_HEADER}, margin-bottom 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
-          willChange: 'transform, margin-bottom',
+          transform: isHeaderVisible ? 'translateX(-50%)' : 'translate(-50%, -100%)',
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
@@ -303,6 +327,8 @@ export function MyPostsContent() {
           loadingTab={tabRefreshing ? tab : null}
         />
       </div>
+
+      <div style={headerSpacerStyle} aria-hidden />
 
       {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
