@@ -169,6 +169,24 @@ export function SavedPostsContent() {
     }
   }, [soldListData.page, soldListData.session]);
 
+  // ถ้าหน้าแรกของ saves ถูกกรองจนว่าง (เช่นโพสต์ที่บันทึกไว้เป็น sold/hidden) ให้ไล่โหลดหน้าถัดไปอัตโนมัติจนกว่าจะเจอรายการหรือหมด
+  useEffect(() => {
+    const hasFetchedCurrentTab = tab === 'recommend' ? hasFetchedRecommendRef.current : hasFetchedSoldRef.current;
+    if (!sessionReady || postListData.session === undefined) return;
+    if (!hasFetchedCurrentTab) return;
+    if (postListData.loadingMore || !postListData.hasMore) return;
+    if (postListData.posts.length > 0) return;
+    postListData.setPage((prev) => prev + 1);
+  }, [
+    tab,
+    sessionReady,
+    postListData.session,
+    postListData.loadingMore,
+    postListData.hasMore,
+    postListData.posts.length,
+    postListData.setPage,
+  ]);
+
   const handlers = usePostFeedHandlers({
     session: postListData.session,
     posts: postListData.posts,
@@ -233,8 +251,7 @@ export function SavedPostsContent() {
     !mounted ||
     !feedReady ||
     !sessionReady ||
-    isFeedSkeleton ||
-    (tab === 'recommend' ? !hasFetchedRecommendRef.current : !hasFetchedSoldRef.current);
+    isFeedSkeleton;
   const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
   const headerSpacerStyle = {
     height: LAYOUT_CONSTANTS.HEADER_HEIGHT,

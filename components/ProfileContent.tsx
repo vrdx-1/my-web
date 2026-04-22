@@ -58,6 +58,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [isVerified, setIsVerified] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSubAccount, setIsSubAccount] = useState(false);
+  const [subAccountPostCount, setSubAccountPostCount] = useState<number | null>(null);
+  const [subAccountPostCountLoading, setSubAccountPostCountLoading] = useState(false);
   const [showSubAccountDropdown, setShowSubAccountDropdown] = useState(false);
   const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
   const [subAccountSearchQuery, setSubAccountSearchQuery] = useState('');
@@ -370,6 +372,36 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       }
     }
   }, [loading, session, router, onNotLoggedIn, pathname]);
+
+  useEffect(() => {
+    const targetProfileId = activeProfileId || session?.user?.id || null;
+
+    if (!targetProfileId || !session || !isSubAccount) {
+      setSubAccountPostCount(null);
+      setSubAccountPostCountLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSubAccountPostCountLoading(true);
+
+    const fetchSubAccountPostCount = async () => {
+      const { count } = await supabase
+        .from('cars')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', targetProfileId);
+
+      if (cancelled) return;
+      setSubAccountPostCount(typeof count === 'number' ? count : 0);
+      setSubAccountPostCountLoading(false);
+    };
+
+    void fetchSubAccountPostCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProfileId, isSubAccount, session]);
 
   useEffect(() => {
     if (showSubAccountPanel && canManageSubAccounts) {
@@ -1326,6 +1358,16 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             );
           })()}
         </div>
+
+        {isSubAccount && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-18px', marginBottom: '24px' }}>
+            <div style={{ fontSize: '13px', color: '#4b5563', fontWeight: 600 }}>
+              {subAccountPostCountLoading
+                ? 'ຈຳນວນໂພສທັງໝົດ: ...'
+                : `ຈຳນວນໂພສທັງໝົດ: ${subAccountPostCount ?? 0}`}
+            </div>
+          </div>
+        )}
 
         {canManageSubAccounts && (
           <div style={{ marginBottom: '28px' }}>

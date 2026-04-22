@@ -252,6 +252,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     }
 
     let soldWillClearLoadingInOnDone = false;
+    let fetchedRowsCount: number | null = null;
     try {
       let postIds: string[] = [];
 
@@ -471,6 +472,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
+        fetchedRowsCount = Array.isArray(savesData) ? savesData.length : 0;
         postIds = savesData
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
@@ -531,6 +533,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
         
+        fetchedRowsCount = Array.isArray(likesData) ? likesData.length : 0;
         postIds = likesData
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
@@ -613,32 +616,31 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
 
-        let idsQuery = supabase
+        let myPostsQuery = supabase
           .from('cars')
-          .select('id');
+          .select(POST_WITH_PROFILE_SELECT);
 
         if (ownedProfileIds.length > 0) {
-          idsQuery = ownedProfileIds.length === 1
-            ? idsQuery.eq('user_id', ownedProfileIds[0])
-            : idsQuery.in('user_id', ownedProfileIds);
+          myPostsQuery = ownedProfileIds.length === 1
+            ? myPostsQuery.eq('user_id', ownedProfileIds[0])
+            : myPostsQuery.in('user_id', ownedProfileIds);
         } else {
-          idsQuery = idsQuery.eq('user_id', idOrToken);
+          myPostsQuery = myPostsQuery.eq('user_id', idOrToken);
         }
 
-        idsQuery = idsQuery
+        myPostsQuery = myPostsQuery
           .eq('status', tab || 'recommend')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(rangeStart, rangeEnd);
 
-        // my-posts โหลดทีละน้อยแบบโฮม (ไม่ใช้ loadAll)
-        idsQuery = idsQuery.range(rangeStart, rangeEnd);
-
-        const { data: idsData, error: idsError } = await idsQuery;
+        const { data: myPostsData, error: myPostsError } = await myPostsQuery;
         if (cancelledRef.current) return;
-        if (idsError) {
-          const errMsg = idsError?.message ?? idsError?.code ?? 'Unknown error';
-          const errCode = idsError?.code ?? null;
-          const errDetails = idsError?.details ?? null;
-          const errHint = idsError?.hint ?? null;
+        if (myPostsError) {
+          const errMsg = myPostsError?.message ?? myPostsError?.code ?? 'Unknown error';
+          const errCode = myPostsError?.code ?? null;
+          const errDetails = myPostsError?.details ?? null;
+          const errHint = myPostsError?.hint ?? null;
           console.error(
             `Error fetching my-posts: ${errMsg}`,
             { code: errCode, details: errDetails, hint: errHint, idOrToken, ownedProfileIds, tab, rangeStart, rangeEnd, type }
@@ -646,13 +648,78 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        
-        if (!idsData) {
+
+        if (!myPostsData) {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
         }
-        
-        postIds = idsData.map(p => p.id);
+
+        const filteredMyPosts = myPostsData;
+        const reachedEnd = filteredMyPosts.length < listPageSize;
+
+        if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+          if (isInitial) {
+            setPosts(filteredMyPosts);
+          } else {
+            setPosts((prev) => {
+              const ids = new Set(prev.map((p: any) => p.id));
+              const toAdd = filteredMyPosts.filter((p: any) => !ids.has(p.id));
+              return toAdd.length === 0 ? prev : [...prev, ...toAdd];
+            });
+          }
+          setHasMore(!reachedEnd);
+          setLoadingMore(false);
+        }
+
+        // Fetch liked/saved status for my-posts (only on initial load)
+        if (isInitial && filteredMyPosts.length > 0) {
+          const interactionIdOrToken = getIdOrToken();
+          if (interactionIdOrToken &&
+              interactionIdOrToken !== 'null' &&
+              interactionIdOrToken !== 'undefined' &&
+              interactionIdOrToken !== '' &&
+              typeof interactionIdOrToken === 'string' &&
+              interactionIdOrToken.length > 0 &&
+              !interactionIdOrToken.includes('null')) {
+            const isUser = !!currentUserId;
+
+            try {
+              const likesTable = isUser ? 'post_likes' : 'post_likes_guest';
+              const likesColumn = isUser ? 'user_id' : 'guest_token';
+              const { data: likedData, error: likedError } = await supabase
+                .from(likesTable)
+                .select('post_id')
+                .eq(likesColumn, interactionIdOrToken);
+
+              if (!likedError && likedData) {
+                const likedMap: { [key: string]: boolean } = {};
+                likedData.forEach(item => likedMap[item.post_id] = true);
+                setLikedPosts(prev => ({ ...prev, ...likedMap }));
+              }
+            } catch (err) {
+              console.error('Exception fetching liked status for my-posts:', err);
+            }
+
+            try {
+              const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
+              const savesColumn = isUser ? 'user_id' : 'guest_token';
+              const { data: savedData, error: savedError } = await supabase
+                .from(savesTable)
+                .select('post_id')
+                .eq(savesColumn, interactionIdOrToken);
+
+              if (!savedError && savedData) {
+                const savedMap: { [key: string]: boolean } = {};
+                savedData.forEach(item => savedMap[item.post_id] = true);
+                setSavedPosts(prev => ({ ...prev, ...savedMap }));
+              }
+            } catch (err) {
+              console.error('Exception fetching saved status for my-posts:', err);
+            }
+          }
+        }
+
+        return;
       } else {
         // ถ้า type ไม่ตรงกับเงื่อนไขใดๆ ให้หยุดการโหลด
         if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
@@ -704,7 +771,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         if (postsData) {
           // เรียงตามลำดับ postIds: liked/saved = กดล่าสุดก่อน, sold+search = ตาม cache order
           const orderedPostsData =
-            type === 'saved' || type === 'liked'
+            type === 'saved' || type === 'liked' || type === 'my-posts'
               ? (() => {
                   const order = new Map<string, number>(validPostIds.map((id, idx) => [String(id), idx]));
                   return [...postsData].sort((a: any, b: any) => {
@@ -754,7 +821,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               // sold จัดการ hasMore ไปแล้วด้านบน (ทั้งกรณี search และไม่ search)
             } else {
               // liked / saved / my-posts: ใช้ listPageSize ของชุดนี้
-              const reachedEndOfIds = postIds.length < listPageSize;
+              const sourceRowsCount = fetchedRowsCount ?? postIds.length;
+              const reachedEndOfIds = sourceRowsCount < listPageSize;
               setHasMore(!reachedEndOfIds);
             }
           }

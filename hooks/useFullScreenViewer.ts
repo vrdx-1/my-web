@@ -85,14 +85,16 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     return Math.hypot(deltaX, deltaY);
   }, []);
 
-  const updateZoomOriginFromTouches = useCallback((touches: React.TouchList) => {
+  const updateZoomOriginFromTouches = useCallback((touches: React.TouchList, containerRect?: DOMRect) => {
     if (touches.length < 2 || typeof window === 'undefined') return;
     const midpointX = (touches[0].clientX + touches[1].clientX) / 2;
     const midpointY = (touches[0].clientY + touches[1].clientY) / 2;
-    const viewportWidth = window.innerWidth || 1;
-    const viewportHeight = window.innerHeight || 1;
-    const originX = Math.min(Math.max((midpointX / viewportWidth) * 100, 0), 100);
-    const originY = Math.min(Math.max((midpointY / viewportHeight) * 100, 0), 100);
+    const baseWidth = containerRect?.width || window.innerWidth || 1;
+    const baseHeight = containerRect?.height || window.innerHeight || 1;
+    const offsetLeft = containerRect?.left || 0;
+    const offsetTop = containerRect?.top || 0;
+    const originX = Math.min(Math.max(((midpointX - offsetLeft) / baseWidth) * 100, 0), 100);
+    const originY = Math.min(Math.max(((midpointY - offsetTop) / baseHeight) * 100, 0), 100);
     setFullScreenZoomOrigin(`${originX}% ${originY}%`);
   }, []);
 
@@ -132,15 +134,17 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
 
   const fullScreenOnTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length >= 2) {
+      e.preventDefault();
       pinchGestureActiveRef.current = true;
       pinchStartDistanceRef.current = getTouchDistance(e.touches);
       pinchStartScaleRef.current = fullScreenZoomScale;
+      const containerRect = (e.currentTarget as HTMLElement)?.getBoundingClientRect?.();
+      updateZoomOriginFromTouches(e.touches, containerRect);
       setTouchStart(null);
       setFullScreenIsDragging(false);
       setFullScreenDragOffset(0);
       dragOffsetRef.current = 0;
       setFullScreenTransitionDuration(0);
-      updateZoomOriginFromTouches(e.touches);
       return;
     }
     if (fullScreenZoomScale > 1) return;
@@ -161,7 +165,6 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       if (!startDistance) return;
       e.preventDefault();
       pinchGestureActiveRef.current = true;
-      updateZoomOriginFromTouches(e.touches);
       const distance = getTouchDistance(e.touches);
       const nextScale = clampZoomScale(pinchStartScaleRef.current * (distance / startDistance));
       setFullScreenZoomScale(nextScale);
@@ -177,7 +180,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     dragOffsetRef.current = deltaX;
     setFullScreenDragOffset(deltaX);
     setFullScreenVerticalDragOffset(0);
-  }, [clampZoomScale, fullScreenImages?.length, fullScreenZoomScale, getTouchDistance, updateZoomOriginFromTouches]);
+  }, [clampZoomScale, fullScreenImages?.length, fullScreenZoomScale, getTouchDistance]);
 
   const fullScreenOnTouchEnd = useCallback((e: React.TouchEvent) => {
     const t = e.target as HTMLElement;
