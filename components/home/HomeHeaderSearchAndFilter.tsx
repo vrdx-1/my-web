@@ -188,7 +188,7 @@ export function HomeHeaderSearchAndFilter() {
             style={{
               flexShrink: 0,
               fontSize: '15px',
-              color: '#4a4d52',
+              color: '#111111',
               fontWeight: 500,
               fontFamily: LAO_FONT,
               maxWidth: `min(${FILTER_LABEL_MAX_WIDTH_PX}px, 28vw)`,
@@ -219,7 +219,13 @@ export function HomeHeaderSearchAndFilter() {
               }
             }}
           >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
             </span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>

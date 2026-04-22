@@ -176,6 +176,47 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
   }, [pathname]);
 
+  /** หน้าโปรไฟล์หลัก (แท็บ profile) ต้องล็อก document scroll; พอสลับไปหน้าอื่นต้องปลดทันที */
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const isAppProfile = onBack == null;
+    if (!isAppProfile) return;
+
+    if (pathname !== '/profile') {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+      document.documentElement.style.overscrollBehavior = '';
+      return;
+    }
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    document.documentElement.style.overscrollBehavior = 'none';
+
+    const allowSubAccountListScroll = (target: EventTarget | null) => {
+      return target instanceof Element && !!target.closest('[data-sub-account-scroll]');
+    };
+
+    const preventPageScroll = (event: TouchEvent | WheelEvent) => {
+      if (allowSubAccountListScroll(event.target)) return;
+      event.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventPageScroll, { passive: false });
+    document.addEventListener('wheel', preventPageScroll, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventPageScroll);
+      document.removeEventListener('wheel', preventPageScroll);
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+      document.documentElement.style.overscrollBehavior = '';
+    };
+  }, [onBack, pathname]);
+
   useLayoutEffect(() => {
     if (pathname !== '/profile' || !session) return;
     const el = scrollContainerRef.current;
@@ -702,14 +743,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', backgroundColor: '#ffffff', height: profileViewportHeight, overflow: 'hidden', fontFamily: LAO_FONT }}
         aria-hidden
       >
-        {isAppProfile ? (
-          <style>{`
-            html, body {
-              overflow: hidden !important;
-              overscroll-behavior: none !important;
-            }
-          `}</style>
-        ) : null}
         <style>{`
           @keyframes profile-skeleton-shimmer {
             0% { background-position: 200% 0; }
@@ -778,14 +811,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         fontFamily: LAO_FONT,
       }}
     >
-      {isAppProfile ? (
-        <style>{`
-          html, body {
-            overflow: hidden !important;
-            overscroll-behavior: none !important;
-          }
-        `}</style>
-      ) : null}
       {accountSwitchToastToken ? (
         <>
           <div
@@ -1177,7 +1202,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 </div>
               </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <div data-sub-account-scroll="1" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 {filteredSubAccounts.length > 0 ? filteredSubAccounts.map((account) => {
                   const isActiveProfile = (activeProfileId || authUserId) === account.id;
                   const isMainProfile = authUserId === account.id;
