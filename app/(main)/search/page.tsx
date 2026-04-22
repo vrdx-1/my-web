@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
@@ -32,9 +32,11 @@ function SearchPageContent() {
     setHistoryItems(getSearchHistory());
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 100);
-    return () => clearTimeout(t);
+  useLayoutEffect(() => {
+    const focusInput = () => inputRef.current?.focus({ preventScroll: true });
+    focusInput();
+    const rafId = requestAnimationFrame(focusInput);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   const commitSearch = useCallback(
@@ -172,6 +174,7 @@ function SearchPageContent() {
           </span>
           <input
             ref={inputRef}
+            autoFocus
             type="text"
             inputMode="search"
             placeholder="ຄົ້ນຫາ"

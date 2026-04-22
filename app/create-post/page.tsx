@@ -379,6 +379,18 @@ export default function CreatePost() {
    router.push('/');
  };
 
+ const handleClearPrivateShop = useCallback(() => {
+   if (!currentPrivateShopProfileId || typeof window === 'undefined') {
+     setSelectedPrivateShop(null);
+     return;
+   }
+
+   sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(currentPrivateShopProfileId));
+   localStorage.removeItem(getLastUsedPrivateShopStorageKey(currentPrivateShopProfileId));
+   setSelectedPrivateShop(null);
+   window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
+ }, [currentPrivateShopProfileId]);
+
 const handleLeaveCancel = () => {
   setShowLeaveConfirm(false);
 };
@@ -446,7 +458,7 @@ if (isUploading) {
 }
 
  return (
-<div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate' }}>
+<div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, isolation: 'isolate', height: '100dvh', overflow: 'hidden' }}>
 
 {/* Hidden file input สำหรับ auto-open แกลเลอรี่ */}
 <input
@@ -524,6 +536,7 @@ if (isUploading) {
               layout={layout}
               onLayoutChange={setLayout}
               selectedPrivateShop={selectedPrivateShop}
+              onClearPrivateShop={handleClearPrivateShop}
             />
           </div>
           <div

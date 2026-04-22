@@ -407,7 +407,7 @@ export default function CreatePostPrivateNotePage() {
 
   if (!authUserId || !ownerProfileId) {
     return (
-      <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
+      <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, height: '100dvh', overflow: 'hidden' }}>
         <div
           style={{
             padding: '10px 15px',
@@ -462,7 +462,7 @@ export default function CreatePostPrivateNotePage() {
   const canShowCompleteButton = Boolean(shopName.trim()) || Boolean(shopPhone.trim()) || Boolean(selectedId);
 
   return (
-    <div style={LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX}>
+    <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, height: '100dvh', overflow: 'hidden' }}>
       <div
         style={{
           padding: '10px 15px',

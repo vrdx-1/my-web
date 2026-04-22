@@ -46,6 +46,7 @@ interface CreatePostCardProps {
     shop_name: string | null;
     shop_phone: string | null;
   } | null;
+  onClearPrivateShop?: () => void;
   userProfile: any;
   session: any;
   caption: string;
@@ -65,6 +66,7 @@ interface CreatePostCardProps {
 export const CreatePostCard = React.memo<CreatePostCardProps>(
   ({
     selectedPrivateShop,
+    onClearPrivateShop,
     userProfile,
     session,
     caption,
@@ -384,9 +386,16 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 gap: '0',
               }}
             >
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => router.push('/create-post/private-note')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push('/create-post/private-note');
+                  }
+                }}
                 style={{
                   width: '100%',
                   padding: '14px 0',
@@ -414,21 +423,53 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
                 >
                   <span style={{ color: '#4b5563', flexShrink: 0 }}>ໂນດສ່ວນຕົວ</span>
                   {privateNoteSummary ? (
-                    <span
-                      style={{
-                        minWidth: 0,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        color: '#1877f2',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {privateNoteSummary}
-                    </span>
+                    <>
+                      <span
+                        style={{
+                          minWidth: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          color: '#1877f2',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {privateNoteSummary}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onClearPrivateShop?.();
+                        }}
+                        aria-label="ลบโน๊ดส่วนตัว"
+                        title="ลบโน๊ดส่วนตัว"
+                        style={{
+                          border: '1px solid #fecaca',
+                          background: '#fff1f2',
+                          color: '#e11d48',
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '999px',
+                          fontSize: '16px',
+                          fontWeight: 800,
+                          lineHeight: '20px',
+                          cursor: 'pointer',
+                          padding: 0,
+                          marginLeft: '4px',
+                          flexShrink: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </>
                   ) : null}
                 </span>
-              </button>
+              </div>
             </div>
           )}
         </div>
