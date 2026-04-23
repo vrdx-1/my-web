@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 
@@ -95,10 +95,16 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   onTouchEnd,
   onClick,
 }) => {
-  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
+  void fullScreenShowDetails;
+
+  const [loadedImageSrcs, setLoadedImageSrcs] = useState<Set<string>>(() => new Set());
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const panBaseRef = useRef({ x: 0, y: 0 });
+  const panLastPointRef = useRef<{ x: number; y: number; at: number } | null>(null);
+  const panVelocityRef = useRef({ x: 0, y: 0 });
+  const inertiaRafRef = useRef<number | null>(null);
+  const inertiaLastAtRef = useRef(0);
 
   const clampPanOffset = useCallback((x: number, y: number, scale: number) => {
     if (scale <= 1) return { x: 0, y: 0 };
@@ -112,37 +118,112 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
     };
   }, []);
 
-  const imagesResetKey = useMemo(() => {
-    const first = images?.[0] ?? '';
-    const length = images?.length ?? 0;
-    return `${length}:${first}`;
-  }, [images]);
+  const stopPanInertia = useCallback(() => {
+    if (inertiaRafRef.current != null && typeof window !== 'undefined') {
+      window.cancelAnimationFrame(inertiaRafRef.current);
+      inertiaRafRef.current = null;
+    }
+  }, []);
+
+  const startPanInertia = useCallback((scale: number) => {
+    if (typeof window === 'undefined') return;
+    stopPanInertia();
+    inertiaLastAtRef.current = performance.now();
+
+    const tick = () => {
+      const now = performance.now();
+      const dt = Math.max(1, now - inertiaLastAtRef.current);
+      inertiaLastAtRef.current = now;
+
+      let shouldStop = false;
+
+      setPanOffset((prev) => {
+        const factor = dt / 16.67;
+        const nextX = prev.x + panVelocityRef.current.x * factor;
+        const nextY = prev.y + panVelocityRef.current.y * factor;
+        const clamped = clampPanOffset(nextX, nextY, scale);
+
+        if (Math.abs(clamped.x - nextX) > 0.1) panVelocityRef.current.x = 0;
+        if (Math.abs(clamped.y - nextY) > 0.1) panVelocityRef.current.y = 0;
+
+        panVelocityRef.current.x *= Math.pow(0.92, factor);
+        panVelocityRef.current.y *= Math.pow(0.92, factor);
+
+        if (Math.abs(panVelocityRef.current.x) < 0.08 && Math.abs(panVelocityRef.current.y) < 0.08) {
+          shouldStop = true;
+          return clamped;
+        }
+
+        return clamped;
+      });
+
+      if (shouldStop) {
+        stopPanInertia();
+        return;
+      }
+
+      inertiaRafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    inertiaRafRef.current = window.requestAnimationFrame(tick);
+  }, [clampPanOffset, stopPanInertia]);
 
   const activePanOffset = useMemo(() => {
     if (fullScreenZoomScale <= 1.001) return { x: 0, y: 0 };
     return clampPanOffset(panOffset.x, panOffset.y, fullScreenZoomScale);
   }, [clampPanOffset, fullScreenZoomScale, panOffset.x, panOffset.y]);
 
-  const handleImageLoad = useCallback((idx: number) => {
-    setLoadedIndices((prev) => new Set(prev).add(idx));
+  useEffect(() => () => stopPanInertia(), [stopPanInertia]);
+
+  const handleImageLoad = useCallback((src: string) => {
+    setLoadedImageSrcs((prev) => {
+      if (prev.has(src)) return prev;
+      const next = new Set(prev);
+      next.add(src);
+      return next;
+    });
   }, []);
 
   const handleRootTouchStart = useCallback((e: React.TouchEvent) => {
+    stopPanInertia();
+
     if (fullScreenZoomScale > 1 && e.touches.length === 1) {
       const t = e.touches[0];
       panStartRef.current = { x: t.clientX, y: t.clientY };
       panBaseRef.current = activePanOffset;
+      panLastPointRef.current = { x: t.clientX, y: t.clientY, at: performance.now() };
+      panVelocityRef.current = { x: 0, y: 0 };
+    } else if (e.touches.length >= 2) {
+      // Entering pinch: clear stale pan base so next zoom starts from a predictable center.
+      panStartRef.current = null;
+      panLastPointRef.current = null;
+      panVelocityRef.current = { x: 0, y: 0 };
+      setPanOffset({ x: 0, y: 0 });
     } else {
       panStartRef.current = null;
+      panLastPointRef.current = null;
+      panVelocityRef.current = { x: 0, y: 0 };
     }
     onTouchStart(e);
-  }, [activePanOffset, fullScreenZoomScale, onTouchStart]);
+  }, [activePanOffset, fullScreenZoomScale, onTouchStart, stopPanInertia]);
 
   const handleRootTouchMove = useCallback((e: React.TouchEvent) => {
     if (fullScreenZoomScale > 1 && panStartRef.current && e.touches.length === 1) {
       const t = e.touches[0];
       const deltaX = t.clientX - panStartRef.current.x;
       const deltaY = t.clientY - panStartRef.current.y;
+
+      const now = performance.now();
+      const prev = panLastPointRef.current;
+      if (prev) {
+        const dt = Math.max(1, now - prev.at);
+        panVelocityRef.current = {
+          x: ((t.clientX - prev.x) / dt) * 16.67,
+          y: ((t.clientY - prev.y) / dt) * 16.67,
+        };
+      }
+      panLastPointRef.current = { x: t.clientX, y: t.clientY, at: now };
+
       const next = clampPanOffset(
         panBaseRef.current.x + deltaX,
         panBaseRef.current.y + deltaY,
@@ -155,9 +236,17 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   }, [clampPanOffset, fullScreenZoomScale, onTouchMove]);
 
   const handleRootTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (fullScreenZoomScale > 1 && e.touches.length === 0) {
+      const speed = Math.hypot(panVelocityRef.current.x, panVelocityRef.current.y);
+      if (speed > 0.9) {
+        startPanInertia(fullScreenZoomScale);
+      }
+    }
+
     panStartRef.current = null;
+    panLastPointRef.current = null;
     onTouchEnd(e);
-  }, [onTouchEnd]);
+  }, [fullScreenZoomScale, onTouchEnd, startPanInertia]);
 
   if (!images) return null;
 
@@ -172,7 +261,6 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
 
   return (
     <div
-      key={imagesResetKey}
       {...{ [FULLSCREEN_VIEWER_ROOT_ATTR]: FULLSCREEN_VIEWER_ROOT_VALUE }}
       style={ROOT_STYLE}
       onTouchStart={handleRootTouchStart}
@@ -192,15 +280,16 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={trackStyle}>
           {images.map((img, idx) => {
-            const isLoaded = loadedIndices.has(idx);
+            const normalizedSrc = normalizeImageUrl(img, 'car-images');
+            const isLoaded = loadedImageSrcs.has(normalizedSrc);
             return (
               <div key={idx} style={IMG_SLIDE_STYLE}>
                 {!isLoaded && (
                   <div style={FULLSCREEN_SKELETON_STYLE} aria-hidden="true" />
                 )}
                 <img
-                  src={normalizeImageUrl(img, 'car-images')}
-                  onLoad={() => handleImageLoad(idx)}
+                  src={normalizedSrc}
+                  onLoad={() => handleImageLoad(normalizedSrc)}
                   style={{
                     ...IMG_STYLE,
                     position: 'relative',

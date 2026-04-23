@@ -68,11 +68,16 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, []);
 
   const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const touchStartAtRef = useRef(0);
   const dragOffsetRef = useRef(0);
   const currentIndexRef = useRef(0);
   const pinchStartDistanceRef = useRef<number | null>(null);
   const pinchStartScaleRef = useRef(1);
   const pinchGestureActiveRef = useRef(false);
+  const lastTapAtRef = useRef(0);
+  const lastTapPosRef = useRef({ x: 0, y: 0 });
+  const lastDoubleTapAtRef = useRef(0);
 
   const clampZoomScale = useCallback((scale: number) => {
     return Math.min(Math.max(scale, 1), 4);
@@ -128,7 +133,11 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      setTouchStart(e.touches[0].clientX);
+      const t = e.touches[0];
+      setTouchStart(t.clientX);
+      touchStartXRef.current = t.clientX;
+      touchStartYRef.current = t.clientY;
+      touchStartAtRef.current = Date.now();
     }
   }, []);
 
@@ -147,7 +156,10 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       setFullScreenTransitionDuration(0);
       return;
     }
-    if (fullScreenZoomScale > 1) return;
+    if (fullScreenZoomScale > 1) {
+      if (e.touches.length === 1) onTouchStart(e);
+      return;
+    }
     if (e.touches.length === 1) {
       onTouchStart(e);
       touchStartXRef.current = e.touches[0].clientX;
@@ -210,6 +222,34 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     }
 
     if (touchStart === null || fullScreenZoomScale > 1) {
+      if (touchStart !== null && e.changedTouches.length === 1) {
+        const tap = e.changedTouches[0];
+        const elapsed = Date.now() - touchStartAtRef.current;
+        const movedX = tap.clientX - touchStartXRef.current;
+        const movedY = tap.clientY - touchStartYRef.current;
+        const movedDistance = Math.hypot(movedX, movedY);
+        const isTap = elapsed < 260 && movedDistance < 12;
+
+        if (isTap && fullScreenZoomScale > 1) {
+          const now = Date.now();
+          const deltaTap = now - lastTapAtRef.current;
+          const distFromLastTap = Math.hypot(
+            tap.clientX - lastTapPosRef.current.x,
+            tap.clientY - lastTapPosRef.current.y,
+          );
+
+          if (deltaTap < 320 && distFromLastTap < 40) {
+            setFullScreenTransitionDuration(180);
+            setFullScreenZoomScale(1);
+            setFullScreenZoomOrigin('50% 50%');
+            lastDoubleTapAtRef.current = now;
+            lastTapAtRef.current = 0;
+          } else {
+            lastTapAtRef.current = now;
+            lastTapPosRef.current = { x: tap.clientX, y: tap.clientY };
+          }
+        }
+      }
       setTouchStart(null);
       return;
     }
@@ -235,10 +275,47 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
     setFullScreenZoomScale(1);
     setFullScreenIsDragging(false);
     if (nextIndex !== idx) setCurrentImgIndex(nextIndex);
+
+    if (e.changedTouches.length === 1) {
+      const tap = e.changedTouches[0];
+      const elapsed = Date.now() - touchStartAtRef.current;
+      const movedDistance = Math.hypot(
+        tap.clientX - touchStartXRef.current,
+        tap.clientY - touchStartYRef.current,
+      );
+      const isTap = elapsed < 260 && Math.abs(dragOffset) < 8 && movedDistance < 12;
+
+      if (isTap) {
+        const now = Date.now();
+        const deltaTap = now - lastTapAtRef.current;
+        const distFromLastTap = Math.hypot(
+          tap.clientX - lastTapPosRef.current.x,
+          tap.clientY - lastTapPosRef.current.y,
+        );
+
+        if (deltaTap < 320 && distFromLastTap < 40) {
+          const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1;
+          const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1;
+          const originX = Math.min(Math.max((tap.clientX / viewportWidth) * 100, 0), 100);
+          const originY = Math.min(Math.max((tap.clientY / viewportHeight) * 100, 0), 100);
+
+          setFullScreenTransitionDuration(180);
+          setFullScreenZoomOrigin(`${originX}% ${originY}%`);
+          setFullScreenZoomScale(2);
+          lastDoubleTapAtRef.current = now;
+          lastTapAtRef.current = 0;
+        } else {
+          lastTapAtRef.current = now;
+          lastTapPosRef.current = { x: tap.clientX, y: tap.clientY };
+        }
+      }
+    }
+
     setTouchStart(null);
   }, [touchStart, fullScreenImages, activePhotoMenu, fullScreenZoomScale]);
 
   const fullScreenOnClick = useCallback((e: React.MouseEvent) => {
+    if (Date.now() - lastDoubleTapAtRef.current < 350) return;
     const t = e.target as HTMLElement;
     if (t.closest('button') || t.closest('[data-menu-container]') || t.closest('[data-menu-button]')) return;
     if (fullScreenZoomScale > 1) return;
