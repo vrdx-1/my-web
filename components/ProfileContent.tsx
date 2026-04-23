@@ -671,6 +671,19 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     event.preventDefault();
     if (subAccountSubmitting || !canManageSubAccounts) return;
 
+    const preservedContainerScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+    const preservedWindowScrollX = typeof window !== 'undefined' ? window.scrollX : 0;
+    const preservedWindowScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+
+    const restoreScrollPosition = () => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = preservedContainerScrollTop;
+      }
+      if (typeof window !== 'undefined') {
+        window.scrollTo(preservedWindowScrollX, preservedWindowScrollY);
+      }
+    };
+
     setSubAccountSubmitting(true);
     setSubAccountError('');
     setSubAccountSuccess('');
@@ -732,6 +745,20 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       await loadSubAccounts();
       closeSubAccountModal();
       setShowSubAccountCreatedSuccess(true);
+
+      // iPhone Safari may jump to top after modal state changes; force-restore scroll position.
+      restoreScrollPosition();
+      if (typeof window !== 'undefined') {
+        requestAnimationFrame(() => {
+          restoreScrollPosition();
+          requestAnimationFrame(() => {
+            restoreScrollPosition();
+          });
+        });
+        window.setTimeout(() => {
+          restoreScrollPosition();
+        }, 120);
+      }
     } catch (error) {
       setSubAccountError(error instanceof Error ? error.message : 'Failed to create sub account');
     } finally {
