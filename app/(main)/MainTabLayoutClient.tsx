@@ -242,6 +242,30 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     };
   }, [resolvedPathname, isProfileOverlayOpen]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined' || typeof navigator === 'undefined') return;
+
+    const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+    if (!isIOS) return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    const shouldHideScrollbar = resolvedPathname === '/home' && !isProfileOverlayOpen;
+
+    if (shouldHideScrollbar) {
+      body.setAttribute('data-home-ios-scrollbar-hidden', '1');
+      html.setAttribute('data-home-ios-scrollbar-hidden', '1');
+    } else {
+      body.removeAttribute('data-home-ios-scrollbar-hidden');
+      html.removeAttribute('data-home-ios-scrollbar-hidden');
+    }
+
+    return () => {
+      body.removeAttribute('data-home-ios-scrollbar-hidden');
+      html.removeAttribute('data-home-ios-scrollbar-hidden');
+    };
+  }, [resolvedPathname, isProfileOverlayOpen]);
+
   /** จำ path ที่โหลดแล้ว — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
   useEffect(() => {
     if (resolvedPathname) markRouteVisited(resolvedPathname);

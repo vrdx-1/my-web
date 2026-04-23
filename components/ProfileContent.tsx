@@ -1359,16 +1359,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           })()}
         </div>
 
-        {isSubAccount && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-18px', marginBottom: '24px' }}>
-            <div style={{ fontSize: '13px', color: '#4b5563', fontWeight: 600 }}>
-              {subAccountPostCountLoading
-                ? 'ຈຳນວນໂພສທັງໝົດ: ...'
-                : `ຈຳນວນໂພສທັງໝົດ: ${subAccountPostCount ?? 0}`}
-            </div>
-          </div>
-        )}
-
         {canManageSubAccounts && (
           <div style={{ marginBottom: '28px' }}>
             {showSubAccountPanel && (
@@ -1599,7 +1589,12 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                   <rect x="3" y="4" width="18" height="16" rx="2" />
                   <path d="M7 8h10M7 12h10M7 16h6" />
                 </svg>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: '#4b5563' }}>ໂພສຂອງຂ້ອຍ</span>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: '#4b5563' }}>
+                  ໂພສຂອງຂ້ອຍ
+                  {isSubAccount
+                    ? `  (${subAccountPostCountLoading ? '...' : (subAccountPostCount ?? 0)} ໂພສ)`
+                    : ''}
+                </span>
               </div>
             </div>
           </Link>

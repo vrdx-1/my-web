@@ -101,6 +101,20 @@ html:has(body[data-viewing-mode="open"]) {
   overflow-x: hidden !important;
 }
 
+/* หน้าโฮมบน iPhone: ซ่อน scroll indicator แบบ viewing mode ด้วยการ clip ขอบขวา */
+html[data-home-ios-scrollbar-hidden="1"] {
+  overflow: hidden !important;
+}
+body[data-home-ios-scrollbar-hidden="1"] {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100dvh;
+  width: calc(100% + 30px);
+  padding-right: 30px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ซ่อน scrollbar ใน viewing mode container (ตัวที่ scroll จริง) */
 #viewing-mode-container {
   scrollbar-width: none !important;

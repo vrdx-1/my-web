@@ -11,7 +11,6 @@ import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPo
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 const ICON_SIZE = 20;
 const SEARCH_BAR_GAP = 8;
-const FILTER_LABEL_MAX_WIDTH_PX = 96;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -191,10 +190,7 @@ export function HomeHeaderSearchAndFilter() {
               color: '#111111',
               fontWeight: 500,
               fontFamily: LAO_FONT,
-              maxWidth: `min(${FILTER_LABEL_MAX_WIDTH_PX}px, 28vw)`,
               minWidth: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               cursor: 'pointer',
               display: 'inline-flex',
@@ -221,8 +217,6 @@ export function HomeHeaderSearchAndFilter() {
           >
             <span
               style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
               }}
             >

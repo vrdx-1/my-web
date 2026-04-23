@@ -598,7 +598,11 @@ export function PostCard({
                   const raw = post.profiles?.phone || '';
                   const digits = raw.replace(/\D/g, '');
                   if (digits.length < 8) return null;
-                  const waUrl = `https://wa.me/${digits}`;
+                  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                  const postUrl = origin ? `${origin}/post/${post.id}` : '';
+                  const waUrl = postUrl
+                    ? `https://wa.me/${digits}?text=${encodeURIComponent(postUrl)}`
+                    : `https://wa.me/${digits}`;
                   return (
                 <a 
                   href={waUrl} 
