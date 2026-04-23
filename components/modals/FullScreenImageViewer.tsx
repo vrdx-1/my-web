@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { FULLSCREEN_VIEWER_ROOT_ATTR, FULLSCREEN_VIEWER_ROOT_VALUE } from '@/utils/fullScreenMode';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 
@@ -96,14 +96,68 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
   onClick,
 }) => {
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set());
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const panStartRef = useRef<{ x: number; y: number } | null>(null);
+  const panBaseRef = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
-    setLoadedIndices(new Set());
-  }, [images?.length, images?.[0]]);
+  const clampPanOffset = useCallback((x: number, y: number, scale: number) => {
+    if (scale <= 1) return { x: 0, y: 0 };
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 844;
+    const maxX = Math.max(0, ((viewportWidth * scale) - viewportWidth) / 2);
+    const maxY = Math.max(0, ((viewportHeight * scale) - viewportHeight) / 2);
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)),
+      y: Math.min(maxY, Math.max(-maxY, y)),
+    };
+  }, []);
+
+  const imagesResetKey = useMemo(() => {
+    const first = images?.[0] ?? '';
+    const length = images?.length ?? 0;
+    return `${length}:${first}`;
+  }, [images]);
+
+  const activePanOffset = useMemo(() => {
+    if (fullScreenZoomScale <= 1.001) return { x: 0, y: 0 };
+    return clampPanOffset(panOffset.x, panOffset.y, fullScreenZoomScale);
+  }, [clampPanOffset, fullScreenZoomScale, panOffset.x, panOffset.y]);
 
   const handleImageLoad = useCallback((idx: number) => {
     setLoadedIndices((prev) => new Set(prev).add(idx));
   }, []);
+
+  const handleRootTouchStart = useCallback((e: React.TouchEvent) => {
+    if (fullScreenZoomScale > 1 && e.touches.length === 1) {
+      const t = e.touches[0];
+      panStartRef.current = { x: t.clientX, y: t.clientY };
+      panBaseRef.current = activePanOffset;
+    } else {
+      panStartRef.current = null;
+    }
+    onTouchStart(e);
+  }, [activePanOffset, fullScreenZoomScale, onTouchStart]);
+
+  const handleRootTouchMove = useCallback((e: React.TouchEvent) => {
+    if (fullScreenZoomScale > 1 && panStartRef.current && e.touches.length === 1) {
+      const t = e.touches[0];
+      const deltaX = t.clientX - panStartRef.current.x;
+      const deltaY = t.clientY - panStartRef.current.y;
+      const next = clampPanOffset(
+        panBaseRef.current.x + deltaX,
+        panBaseRef.current.y + deltaY,
+        fullScreenZoomScale,
+      );
+      setPanOffset(next);
+      e.preventDefault();
+    }
+    onTouchMove(e);
+  }, [clampPanOffset, fullScreenZoomScale, onTouchMove]);
+
+  const handleRootTouchEnd = useCallback((e: React.TouchEvent) => {
+    panStartRef.current = null;
+    onTouchEnd(e);
+  }, [onTouchEnd]);
 
   if (!images) return null;
 
@@ -118,11 +172,12 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
 
   return (
     <div
+      key={imagesResetKey}
       {...{ [FULLSCREEN_VIEWER_ROOT_ATTR]: FULLSCREEN_VIEWER_ROOT_VALUE }}
       style={ROOT_STYLE}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
+      onTouchStart={handleRootTouchStart}
+      onTouchMove={handleRootTouchMove}
+      onTouchEnd={handleRootTouchEnd}
       onClick={onClick}
     >
       <div style={{ ...HEADER_STYLE, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1, opacity: 1, transition: 'none', pointerEvents: 'auto' }}>
@@ -152,7 +207,9 @@ export const FullScreenImageViewer = React.memo<FullScreenImageViewerProps>(({
                     zIndex: 1,
                     opacity: isLoaded ? 1 : 0,
                     transition: 'opacity 0.22s ease-out',
-                    transform: idx === currentImgIndex ? `scale(${fullScreenZoomScale})` : 'scale(1)',
+                    transform: idx === currentImgIndex
+                      ? `translate3d(${activePanOffset.x}px, ${activePanOffset.y}px, 0) scale(${fullScreenZoomScale})`
+                      : 'scale(1)',
                     transformOrigin: idx === currentImgIndex ? fullScreenZoomOrigin : '50% 50%',
                   }}
                   alt=""
