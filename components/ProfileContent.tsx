@@ -45,6 +45,8 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const subAccountDropdownRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subAccountAvatarInputRef = useRef<HTMLInputElement>(null);
+  const prevPathnameRef = useRef<string | null>(null);
+  const isInitialProfileLoadRef = useRef(true);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -58,8 +60,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [isVerified, setIsVerified] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSubAccount, setIsSubAccount] = useState(false);
-  const [subAccountPostCount, setSubAccountPostCount] = useState<number | null>(null);
-  const [subAccountPostCountLoading, setSubAccountPostCountLoading] = useState(false);
   const [showSubAccountDropdown, setShowSubAccountDropdown] = useState(false);
   const [showSubAccountPanel, setShowSubAccountPanel] = useState(false);
   const [subAccountSearchQuery, setSubAccountSearchQuery] = useState('');
@@ -220,7 +220,21 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   }, [onBack, pathname]);
 
   useLayoutEffect(() => {
-    if (pathname !== '/profile' || !session) return;
+    if (pathname !== '/profile' || !session) {
+      isInitialProfileLoadRef.current = true;
+      return;
+    }
+    
+    // Reset scroll only on initial entry to /profile, not when session updates
+    const wasRecentlyOffProfile = prevPathnameRef.current !== '/profile';
+    prevPathnameRef.current = pathname;
+    
+    if (!wasRecentlyOffProfile || !isInitialProfileLoadRef.current) {
+      return;
+    }
+    
+    isInitialProfileLoadRef.current = false;
+    
     const el = scrollContainerRef.current;
     if (el) el.scrollTop = 0;
     const id = requestAnimationFrame(() => {
@@ -372,36 +386,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       }
     }
   }, [loading, session, router, onNotLoggedIn, pathname]);
-
-  useEffect(() => {
-    const targetProfileId = activeProfileId || session?.user?.id || null;
-
-    if (!targetProfileId || !session || !isSubAccount) {
-      setSubAccountPostCount(null);
-      setSubAccountPostCountLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setSubAccountPostCountLoading(true);
-
-    const fetchSubAccountPostCount = async () => {
-      const { count } = await supabase
-        .from('cars')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', targetProfileId);
-
-      if (cancelled) return;
-      setSubAccountPostCount(typeof count === 'number' ? count : 0);
-      setSubAccountPostCountLoading(false);
-    };
-
-    void fetchSubAccountPostCount();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProfileId, isSubAccount, session]);
 
   useEffect(() => {
     if (showSubAccountPanel && canManageSubAccounts) {
@@ -1618,9 +1602,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 </svg>
                 <span style={{ fontSize: '16px', fontWeight: '600', color: '#4b5563' }}>
                   ໂພສຂອງຂ້ອຍ
-                  {isSubAccount
-                    ? `  (${subAccountPostCountLoading ? '...' : (subAccountPostCount ?? 0)} ໂພສ)`
-                    : ''}
                 </span>
               </div>
             </div>

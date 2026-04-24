@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 // Shared Components
 import { FeedSkeleton } from '@/components/FeedSkeleton';
@@ -48,6 +49,8 @@ export function MyPostsContent() {
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [subAccountPostCount, setSubAccountPostCount] = useState<number | null>(null);
+  const [subAccountPostCountLoading, setSubAccountPostCountLoading] = useState(false);
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const ownershipScopeKeyRef = useRef<string | null>(null);
@@ -61,6 +64,36 @@ export function MyPostsContent() {
     const id = requestAnimationFrame(() => setFeedReady(true));
     return () => cancelAnimationFrame(id);
   }, [mounted]);
+
+  useEffect(() => {
+    const targetProfileId = activeProfileId || session?.user?.id || null;
+
+    if (!targetProfileId || !session) {
+      setSubAccountPostCount(null);
+      setSubAccountPostCountLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSubAccountPostCountLoading(true);
+
+    const fetchSubAccountPostCount = async () => {
+      const { count } = await supabase
+        .from('cars')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', targetProfileId);
+
+      if (cancelled) return;
+      setSubAccountPostCount(typeof count === 'number' ? count : 0);
+      setSubAccountPostCountLoading(false);
+    };
+
+    void fetchSubAccountPostCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProfileId, session]);
 
   const recommendListData = usePostListData({
     type: 'my-posts',
@@ -301,7 +334,12 @@ export function MyPostsContent() {
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
-        <PageHeader title="ໂພສຂອງຂ້ອຍ" centerTitle onBack={handleBack} showDivider={false} />
+        <PageHeader 
+          title={`ໂພສຂອງຂ້ອຍ  (${subAccountPostCountLoading ? '...' : (subAccountPostCount ?? 0)} ໂພສ)`} 
+          centerTitle 
+          onBack={handleBack} 
+          showDivider={false} 
+        />
         <TabNavigation
           className="home-tab-navigation"
           tabs={[
