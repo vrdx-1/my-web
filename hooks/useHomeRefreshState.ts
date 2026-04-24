@@ -5,11 +5,13 @@ import { useMainTabContext } from '@/contexts/MainTabContext';
 import type { HomeTab } from './useHomeTabData';
 
 interface SoldListDataLike {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   posts: any[];
   loadingMore: boolean;
   setPage: (v: number | ((p: number) => number)) => void;
   setHasMore: (v: boolean) => void;
   fetchPosts: (isInitial?: boolean) => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 export interface UseHomeRefreshStateOptions {
@@ -38,6 +40,7 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
     setPage: (v: number | ((p: number) => number)) => void;
     setHasMore: (v: boolean) => void;
     fetchPosts: (isInitial?: boolean) => Promise<void>;
+    refreshData: () => Promise<void>;
   } | null>(null);
 
   useEffect(() => {
@@ -45,11 +48,12 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
       setPage: soldListData.setPage,
       setHasMore: soldListData.setHasMore,
       fetchPosts: soldListData.fetchPosts,
+      refreshData: soldListData.refreshData,
     };
     return () => {
       soldTabRefreshRef.current = null;
     };
-  }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts]);
+  }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts, soldListData.refreshData]);
 
   useEffect(() => {
     const previousTab = prevTabRef.current;
@@ -79,11 +83,7 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   }, [
     tab,
     selectedProvince,
-    soldListData.posts.length,
-    soldListData.loadingMore,
-    soldListData.setPage,
-    soldListData.setHasMore,
-    soldListData.fetchPosts,
+    soldListData,
   ]);
 
   useEffect(() => {

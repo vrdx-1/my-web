@@ -16,6 +16,7 @@ export interface UseHomeTabSwitchOptions {
     setPage: (v: number | ((p: number) => number)) => void;
     setHasMore: (v: boolean) => void;
     fetchPosts: (isInitial?: boolean) => Promise<void>;
+    refreshData: () => Promise<void>;
   } | null>;
   setTabRefreshing: (v: boolean) => void;
   /** มีรายการขายแล้วโหลดไว้แล้ว — สลับมาแสดงทันที ไม่โหลดใหม่ */
@@ -51,14 +52,10 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
           if (searchQuery.trim()) {
             searchData.fetchSearch();
           } else {
-            recommendFeed.setPage(0);
-            recommendFeed.setHasMore(true);
-            recommendFeed.fetchPosts(true);
+            recommendFeed.refreshData();
           }
         } else {
-          soldTabRefreshRef.current?.setPage(0);
-          soldTabRefreshRef.current?.setHasMore(true);
-          soldTabRefreshRef.current?.fetchPosts(true);
+          soldTabRefreshRef.current?.refreshData?.();
         }
       } else {
         mainTab?.setNavigatingToTab(newTab);

@@ -173,6 +173,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
+    // Reset seed when doing initial refresh so feed randomizes
+    if (isInitial && !backgroundRefresh) feedSeedRef.current = null;
     const fetchTimer = startHomeMotionTimer('feed-fetch', isInitial ? 'initial-feed-fetch' : 'load-more-feed-fetch');
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
@@ -351,6 +353,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
+    feedSeedRef.current = null;
     try {
       clearHomeFeedStorage({ clearCache: true });
     } catch {

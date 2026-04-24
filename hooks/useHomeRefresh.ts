@@ -28,6 +28,7 @@ export interface UseHomeRefreshOptions {
     setPage: (v: number | ((p: number) => number)) => void;
     setHasMore: (v: boolean) => void;
     fetchPosts: (isInitial?: boolean) => Promise<void>;
+    refreshData: () => Promise<void>;
   } | null>;
   setTabRefreshing: (v: boolean) => void;
 }
@@ -69,17 +70,13 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
       const effectiveTab = refreshOptions?.fromHomeButton ? 'recommend' : tab;
       if (effectiveTab === 'recommend') {
         if (useNormalFeed) {
-          recommendFeed.setPage(0);
-          recommendFeed.setHasMore(true);
-          recommendFeed.fetchPosts(true);
+          recommendFeed.refreshData();
         } else {
           searchData.fetchSearch();
         }
       } else {
         if (useNormalFeed) {
-          soldTabRefreshRef.current?.setPage(0);
-          soldTabRefreshRef.current?.setHasMore(true);
-          soldTabRefreshRef.current?.fetchPosts(true);
+          soldTabRefreshRef.current?.refreshData?.();
         } else {
           searchData.fetchSearch();
         }
