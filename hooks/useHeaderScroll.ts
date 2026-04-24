@@ -15,6 +15,17 @@ const SHOW_ACCUMULATED_DELTA_PX = 12;
 const VISIBILITY_TOGGLE_COOLDOWN_MS = 220;
 const VIEWPORT_RESIZE_SUPPRESS_MS = 260;
 
+function getScrollTop(): number {
+  if (typeof window === 'undefined') return 0;
+
+  return Math.max(
+    window.scrollY || 0,
+    window.pageYOffset || 0,
+    document.documentElement?.scrollTop || 0,
+    document.body?.scrollTop || 0,
+  );
+}
+
 interface UseHeaderScrollOptions {
   /** ถ้า true จะไม่ซ่อน/แสดง header ตามการ scroll */
   disableScrollHide?: boolean;
@@ -97,7 +108,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       viewportResizeSuppressUntilRef.current = now + VIEWPORT_RESIZE_SUPPRESS_MS;
       accumulatedScrollDeltaRef.current = 0;
       lastDeltaDirectionRef.current = 0;
-      const scrollY = typeof window !== 'undefined' ? Math.max(window.scrollY, 0) : 0;
+      const scrollY = Math.max(getScrollTop(), 0);
       lastScrollYRef.current = scrollY;
       latestScrollYRef.current = scrollY;
     };
@@ -108,7 +119,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
 
     const handleScroll = () => {
-      latestScrollYRef.current = Math.max(window.scrollY, 0);
+      latestScrollYRef.current = Math.max(getScrollTop(), 0);
       if (scrollFrameRef.current != null) return;
       scrollFrameRef.current = window.requestAnimationFrame(() => {
         scrollFrameRef.current = null;
@@ -258,11 +269,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       });
     };
 
-    const scrollY = typeof window !== 'undefined' ? Math.max(window.scrollY, 0) : 0;
+    const scrollY = Math.max(getScrollTop(), 0);
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    document.body?.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       if (scrollFrameRef.current != null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
@@ -273,6 +286,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       window.removeEventListener('orientationchange', suppressForViewportResize);
       window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
+      document.body?.removeEventListener('scroll', handleScroll);
     };
   }, [applyVisible, disableScrollHide, hideOnScrollUp, suppressHideUntilRef]);
 

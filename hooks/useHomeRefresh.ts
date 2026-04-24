@@ -7,6 +7,13 @@ import type { HomeTab } from './useHomeTabData';
 import type { UseHomeFeedReturn } from './useHomeFeed';
 import type { UseSearchPostsReturn } from './useSearchPosts';
 
+function resetHomeRefreshScrollTop() {
+  if (typeof window === 'undefined') return;
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 export interface UseHomeRefreshOptions {
   tab: HomeTab;
   mainTab: ReturnType<typeof useMainTabContext> | null;
@@ -43,7 +50,7 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
 
   const doRefresh = useCallback(
     (refreshOptions?: { fromHomeButton?: boolean }) => {
-      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+      resetHomeRefreshScrollTop();
       homeProvince?.setSelectedProvince('');
       let useNormalFeed = !searchQuery.trim();
       if (refreshOptions?.fromHomeButton) {
