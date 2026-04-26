@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -42,6 +42,8 @@ export function MyPostsContent() {
   const [mounted, setMounted] = useState(false);
   const [feedReady, setFeedReady] = useState(false);
   const [tab, setTab] = useState('recommend');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
   const [hasFetchedSold, setHasFetchedSold] = useState(false);
@@ -54,6 +56,23 @@ export function MyPostsContent() {
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const ownershipScopeKeyRef = useRef<string | null>(null);
+  const fixedHeaderRef = useRef<HTMLDivElement | null>(null);
+  const [fixedHeaderHeight, setFixedHeaderHeight] = useState(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+
+  const activeProfileRecord = useMemo(() => {
+    const resolvedProfileId = activeProfileId || authUserId;
+    if (!resolvedProfileId) return null;
+    return availableProfiles.find((profile) => String(profile?.id) === String(resolvedProfileId)) ?? null;
+  }, [activeProfileId, authUserId, availableProfiles]);
+
+  const showSearchControls = Boolean(activeProfileRecord?.is_sub_account && activeProfileRecord?.parent_admin_id);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     setMounted(true);
@@ -64,6 +83,37 @@ export function MyPostsContent() {
     const id = requestAnimationFrame(() => setFeedReady(true));
     return () => cancelAnimationFrame(id);
   }, [mounted]);
+
+  useEffect(() => {
+    const element = fixedHeaderRef.current;
+    if (!element) {
+      setFixedHeaderHeight(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+      return;
+    }
+
+    const updateHeaderHeight = () => {
+      const nextHeight = element.offsetHeight;
+      if (!nextHeight) return;
+      setFixedHeaderHeight((prev) => (Math.abs(prev - nextHeight) < 1 ? prev : nextHeight));
+    };
+
+    updateHeaderHeight();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => updateHeaderHeight())
+      : null;
+
+    if (resizeObserver) {
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', updateHeaderHeight, { passive: true });
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, [showSearchControls]);
 
   useEffect(() => {
     const targetProfileId = activeProfileId || session?.user?.id || null;
@@ -103,6 +153,7 @@ export function MyPostsContent() {
     authUserId,
     availableProfiles,
     tab: 'recommend',
+    searchQuery,
   });
   const soldListData = usePostListData({
     type: 'my-posts',
@@ -112,6 +163,7 @@ export function MyPostsContent() {
     authUserId,
     availableProfiles,
     tab: 'sold',
+    searchQuery,
   });
 
   const ownershipScopeKey = (() => {
@@ -126,6 +178,7 @@ export function MyPostsContent() {
     }
     return activeProfileId || resolvedAuthUserId || 'guest';
   })();
+  const searchScopeKey = searchQuery;
 
   const postListData = tab === 'recommend' ? recommendListData : soldListData;
   const menu = useMenu();
@@ -201,6 +254,32 @@ export function MyPostsContent() {
     soldListData.setHasMore(true);
   }, [
     ownershipScopeKey,
+    sessionReady,
+    recommendListData.session,
+    recommendListData.setPosts,
+    recommendListData.setPage,
+    recommendListData.setHasMore,
+    soldListData.setPosts,
+    soldListData.setPage,
+    soldListData.setHasMore,
+  ]);
+
+  useEffect(() => {
+    if (!sessionReady || recommendListData.session === undefined) return;
+
+    setHasFetchedRecommend(false);
+    setHasFetchedSold(false);
+    setTabRefreshing(true);
+
+    recommendListData.setPosts([]);
+    recommendListData.setPage(0);
+    recommendListData.setHasMore(true);
+
+    soldListData.setPosts([]);
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+  }, [
+    searchScopeKey,
     sessionReady,
     recommendListData.session,
     recommendListData.setPosts,
@@ -313,13 +392,14 @@ export function MyPostsContent() {
     (tab === 'recommend' ? !hasFetchedRecommend : !hasFetchedSold);
   const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
   const headerSpacerStyle = {
-    height: LAYOUT_CONSTANTS.HEADER_HEIGHT,
+    height: fixedHeaderHeight,
     pointerEvents: 'none' as const,
   };
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div
+        ref={fixedHeaderRef}
         style={{
           position: 'fixed',
           top: 0,
@@ -364,6 +444,64 @@ export function MyPostsContent() {
           }}
           loadingTab={tabRefreshing ? tab : null}
         />
+        {showSearchControls ? (
+          <div
+            style={{
+              padding: '6px 12px 10px',
+              borderBottom: '1px solid #eef2f7',
+              background: '#ffffff',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                border: '1px solid #d1d5db',
+                borderRadius: 12,
+                padding: '8px 10px',
+                background: '#f9fafb',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="ຄົ້ນຫາໂພສຂອງຂ້ອຍ"
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: 14,
+                  color: '#111827',
+                }}
+              />
+              {searchInput ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchInput('')}
+                  aria-label="ລ້າງຄຳຄົ້ນ"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#6b7280',
+                    cursor: 'pointer',
+                    fontSize: 18,
+                    lineHeight: 1,
+                    padding: 0,
+                  }}
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div style={headerSpacerStyle} aria-hidden />

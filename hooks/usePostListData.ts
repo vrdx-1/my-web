@@ -16,7 +16,10 @@ function getFeedListCacheKey(
   activeProfileId?: string | null,
   tab?: string,
   authUserId?: string | null,
-  availableProfiles: OwnershipProfileRecord[] = []
+  availableProfiles: OwnershipProfileRecord[] = [],
+  searchQuery?: string,
+  onlySubAccounts?: boolean,
+  subAccountProfileIds: string[] = []
 ): string {
   const resolvedAuthUserId = authUserId || session?.user?.id || null;
   const uid = type === 'my-posts'
@@ -33,7 +36,14 @@ function getFeedListCacheKey(
       })()
     : activeProfileId || resolvedAuthUserId;
   const base = `${type}:${uid ? uid : 'guest'}`;
-  if (tab && (type === 'saved' || type === 'liked' || type === 'my-posts')) {
+  if (type === 'my-posts') {
+    const normalizedSearchQuery = String(searchQuery ?? '').trim().toLowerCase();
+    const subScopeKey = onlySubAccounts
+      ? subAccountProfileIds.slice().map(String).sort().join(',') || 'sub-empty'
+      : 'all';
+    return `${base}:${tab || 'recommend'}:q=${normalizedSearchQuery}:scope=${subScopeKey}`;
+  }
+  if (tab && (type === 'saved' || type === 'liked')) {
     return `${base}:${tab}`;
   }
   return base;
@@ -64,6 +74,12 @@ interface UsePostListDataOptions {
   sharedLikedSaved?: PostListLikedSavedShared | null;
   /** สำหรับ type 'sold' ในหน้าโฮม: กรองตามจังหวัด (ທຸກແຂວງ ถ้าว่าง) */
   province?: string;
+  /** สำหรับ type 'my-posts': คำค้น caption/รหัสโพสต์ */
+  searchQuery?: string;
+  /** สำหรับ type 'my-posts': จำกัดเฉพาะโพสต์ของ sub account ของ admin */
+  onlySubAccounts?: boolean;
+  /** รายการ sub account ที่อยู่ใต้ admin เดียวกัน */
+  subAccountProfileIds?: string[];
 }
 
 export interface UsePostListDataReturn {
@@ -102,6 +118,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     loadAll = false,
     sharedLikedSaved,
     province,
+    searchQuery,
+    onlySubAccounts = false,
+    subAccountProfileIds = [],
   } = options;
   
   const [posts, setPosts] = useState<any[]>([]);
@@ -132,7 +151,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
 
   const cacheableTypes: PostListType[] = ['liked', 'saved', 'my-posts'];
   const cacheKey = cacheableTypes.includes(type) && currentSession !== undefined
-    ? getFeedListCacheKey(type, currentSession, activeProfileId, tab, authUserId, availableProfiles)
+    ? getFeedListCacheKey(type, currentSession, activeProfileId, tab, authUserId, availableProfiles, searchQuery, onlySubAccounts, subAccountProfileIds)
     : null;
 
   useEffect(() => {
@@ -620,12 +639,38 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .from('cars')
           .select(POST_WITH_PROFILE_SELECT);
 
-        if (ownedProfileIds.length > 0) {
+        if (onlySubAccounts) {
+          const normalizedSubAccountIds = subAccountProfileIds
+            .map((id) => String(id ?? '').trim())
+            .filter((id) => id.length > 0);
+
+          if (normalizedSubAccountIds.length === 0) {
+            if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
+              if (isInitial) setPosts([]);
+              setHasMore(false);
+              setLoadingMore(false);
+            }
+            return;
+          }
+
+          myPostsQuery = normalizedSubAccountIds.length === 1
+            ? myPostsQuery.eq('user_id', normalizedSubAccountIds[0])
+            : myPostsQuery.in('user_id', normalizedSubAccountIds);
+        } else if (ownedProfileIds.length > 0) {
           myPostsQuery = ownedProfileIds.length === 1
             ? myPostsQuery.eq('user_id', ownedProfileIds[0])
             : myPostsQuery.in('user_id', ownedProfileIds);
         } else {
           myPostsQuery = myPostsQuery.eq('user_id', idOrToken);
+        }
+
+        const normalizedSearchQuery = String(searchQuery ?? '').trim();
+        if (normalizedSearchQuery) {
+          if (/^[0-9]{6}$/.test(normalizedSearchQuery)) {
+            myPostsQuery = myPostsQuery.or(`caption.ilike.%${normalizedSearchQuery}%,short_id.eq.${normalizedSearchQuery}`);
+          } else {
+            myPostsQuery = myPostsQuery.ilike('caption', `%${normalizedSearchQuery}%`);
+          }
         }
 
         myPostsQuery = myPostsQuery
@@ -643,7 +688,19 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           const errHint = myPostsError?.hint ?? null;
           console.error(
             `Error fetching my-posts: ${errMsg}`,
-            { code: errCode, details: errDetails, hint: errHint, idOrToken, ownedProfileIds, tab, rangeStart, rangeEnd, type }
+            {
+              code: errCode,
+              details: errDetails,
+              hint: errHint,
+              idOrToken,
+              ownedProfileIds,
+              tab,
+              rangeStart,
+              rangeEnd,
+              type,
+              searchQuery: normalizedSearchQuery,
+              onlySubAccounts,
+            }
           );
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
           return;
@@ -986,7 +1043,23 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         setLoadingMore(false);
       }
     }
-  }, [type, userIdOrToken, currentSession, activeProfileId, authUserId, availableProfiles, tab, status, page, loadingMore, loadAll, province]);
+  }, [
+    type,
+    userIdOrToken,
+    currentSession,
+    activeProfileId,
+    authUserId,
+    availableProfiles,
+    tab,
+    status,
+    page,
+    loadingMore,
+    loadAll,
+    province,
+    searchQuery,
+    onlySubAccounts,
+    subAccountProfileIds,
+  ]);
 
   const refreshData = useCallback(async () => {
     setPage(0);
