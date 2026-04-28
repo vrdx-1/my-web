@@ -10,6 +10,7 @@ import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 
 const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
+const CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY = 'create_post_redirect_after_submit';
 
 function getCreatePostPrivateShopStorageKey(profileId: string): string {
   return `${CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX}_${profileId}`;
@@ -275,7 +276,16 @@ export function useCreatePostUpload({
       }
       onDraftCleared?.();
 
-      router.push('/');
+      let redirectPath = '/';
+      if (typeof window !== 'undefined') {
+        const storedRedirectPath = window.sessionStorage.getItem(CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY);
+        if (storedRedirectPath === '/my-posts') {
+          redirectPath = '/my-posts';
+        }
+        window.sessionStorage.removeItem(CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY);
+      }
+
+      router.push(redirectPath);
     } catch (err: unknown) {
       console.error(err instanceof Error ? err.message : err);
       setIsUploading(false);

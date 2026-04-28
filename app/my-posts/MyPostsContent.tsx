@@ -23,6 +23,7 @@ import { useViewingPost } from '@/hooks/useViewingPost';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
@@ -66,6 +67,18 @@ export function MyPostsContent() {
   }, [activeProfileId, authUserId, availableProfiles]);
 
   const showSearchControls = Boolean(activeProfileRecord?.is_sub_account && activeProfileRecord?.parent_admin_id);
+  const showMyPostsCreateButton = useMemo(() => {
+    if (!activeProfileRecord?.is_sub_account || !activeProfileRecord?.parent_admin_id) return false;
+    const parentAdminProfile = availableProfiles.find(
+      (profile) => String(profile?.id) === String(activeProfileRecord.parent_admin_id),
+    );
+    return parentAdminProfile?.role === 'admin';
+  }, [activeProfileRecord, availableProfiles]);
+  const {
+    hiddenFileInputRef: myPostsHiddenFileInputRef,
+    handleFileChange: handleMyPostsFileChange,
+    handleCreatePostClick: handleMyPostsCreatePostClick,
+  } = useFileUpload({ redirectAfterSubmitPath: '/my-posts' });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -398,6 +411,15 @@ export function MyPostsContent() {
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+      <input
+        type="file"
+        ref={myPostsHiddenFileInputRef}
+        multiple
+        accept="image/*"
+        onChange={handleMyPostsFileChange}
+        style={{ display: 'none' }}
+        aria-hidden
+      />
       <div
         ref={fixedHeaderRef}
         style={{
@@ -457,46 +479,80 @@ export function MyPostsContent() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                border: '1px solid #d1d5db',
-                borderRadius: 12,
-                padding: '8px 10px',
-                background: '#f9fafb',
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="ຄົ້ນຫາໂພສຂອງຂ້ອຍ"
+              <div
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  border: '1px solid #d1d5db',
+                  borderRadius: 12,
+                  padding: '8px 10px',
+                  background: '#f9fafb',
                   flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                  fontSize: 14,
-                  color: '#111827',
+                  minWidth: 0,
                 }}
-              />
-              {searchInput ? (
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="ຄົ້ນຫາໂພສຂອງຂ້ອຍ"
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    fontSize: 14,
+                    color: '#111827',
+                  }}
+                />
+                {searchInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchInput('')}
+                    aria-label="ລ້າງຄຳຄົ້ນ"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6b7280',
+                      cursor: 'pointer',
+                      fontSize: 18,
+                      lineHeight: 1,
+                      padding: 0,
+                    }}
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+              {showMyPostsCreateButton ? (
                 <button
                   type="button"
-                  onClick={() => setSearchInput('')}
-                  aria-label="ລ້າງຄຳຄົ້ນ"
+                  onClick={() => handleMyPostsCreatePostClick(session)}
+                  aria-label="ສ້າງໂພສ"
                   style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
                     border: 'none',
-                    background: 'transparent',
-                    color: '#6b7280',
+                    background: '#1877f2',
+                    color: '#ffffff',
                     cursor: 'pointer',
-                    fontSize: 18,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 24,
                     lineHeight: 1,
-                    padding: 0,
+                    flexShrink: 0,
                   }}
                 >
-                  ×
+                  +
                 </button>
               ) : null}
             </div>
