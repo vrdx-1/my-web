@@ -27,9 +27,6 @@ import { CreatePostProvinceStep } from '@/components/create-post/CreatePostProvi
 /** เก็บ caption ล่าสุดระดับโมดูล — กัน caption หายเมื่อหน้า remount */
 let createPostCaptionBackup = '';
 
-/** เก็บ caption ตอนกด "ຕໍ່ໄປ" ระดับโมดูล — ไม่หายเมื่อ component remount */
-let captionWhenLeavingStep2Module = '';
-
 const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
 const CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT = 'create-post-private-shop-updated';
 
@@ -68,48 +65,6 @@ function readCreatePostPrivateShop(profileId: string | null): CreatePostPrivateS
   }
 }
 
-function getLongestStoredCaption(): string {
-  if (typeof window === 'undefined') return '';
-  try {
-    const rawS = sessionStorage.getItem('create_post_caption');
-    const rawL = localStorage.getItem('create_post_caption_ls');
-    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as string; } catch { return ''; } })() : '';
-    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as string; } catch { return ''; } })() : '';
-    return [createPostCaptionBackup, captionWhenLeavingStep2Module, fromS, fromL].reduce(
-      (a, b) => (a.length >= b.length ? a : b),
-      ''
-    );
-  } catch {
-    return '';
-  }
-}
-
-function getStoredPrice(): string {
-  if (typeof window === 'undefined') return '';
-  try {
-    const rawS = sessionStorage.getItem('create_post_price');
-    const rawL = localStorage.getItem('create_post_price_ls');
-    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as string; } catch { return ''; } })() : '';
-    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as string; } catch { return ''; } })() : '';
-    return fromS || fromL || '';
-  } catch {
-    return '';
-  }
-}
-
-function getStoredCurrency(): '₭' | '฿' | '$' {
-  if (typeof window === 'undefined') return '₭';
-  try {
-    const rawS = sessionStorage.getItem('create_post_currency');
-    const rawL = localStorage.getItem('create_post_currency_ls');
-    const fromS = rawS ? (() => { try { return JSON.parse(rawS) as '₭' | '฿' | '$'; } catch { return '₭'; } })() : '₭';
-    const fromL = rawL ? (() => { try { return JSON.parse(rawL) as '₭' | '฿' | '$'; } catch { return '₭'; } })() : '₭';
-    return fromS || fromL || '₭';
-  } catch {
-    return '₭';
-  }
-}
-
 export default function CreatePost() {
   const router = useRouter();
   const createPostContext = useCreatePostContext();
@@ -120,10 +75,10 @@ export default function CreatePost() {
   const captionLatestRef = useRef<string>('');
 
   const [step, setStep] = useState(2);
-  const [caption, setCaption] = useState(getLongestStoredCaption);
+  const [caption, setCaption] = useState('');
   const [province, setProvince] = useState('');
-  const [carPrice, setCarPrice] = useState(getStoredPrice);
-  const [carCurrency, setCarCurrency] = useState<'₭' | '฿' | '$'>(getStoredCurrency);
+  const [carPrice, setCarPrice] = useState('');
+  const [carCurrency, setCarCurrency] = useState<'₭' | '฿' | '$'>('₭');
   const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
   // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
@@ -305,7 +260,6 @@ export default function CreatePost() {
      if (hasNonImage) {
        setShowVideoAlert(true);
        e.target.value = '';
-       if (imageUpload.fileInputRef.current) imageUpload.fileInputRef.current.value = '';
        return;
      }
    }
@@ -354,7 +308,6 @@ export default function CreatePost() {
 
  const handleDiscardAndBack = () => {
    createPostCaptionBackup = '';
-   captionWhenLeavingStep2Module = '';
    void clearPersistedCreatePostDraft();
    if (typeof window !== 'undefined') {
      sessionStorage.removeItem('create_post_caption');
@@ -416,7 +369,6 @@ const handleNextStep = () => {
   }
 
   const latest = captionLatestRef.current ?? caption;
-  captionWhenLeavingStep2Module = latest;
   if (typeof window !== 'undefined') {
     try {
       sessionStorage.setItem('create_post_caption', JSON.stringify(latest));
@@ -447,7 +399,6 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   layout,
   onDraftCleared: () => {
     createPostCaptionBackup = '';
-    captionWhenLeavingStep2Module = '';
     void clearPersistedCreatePostDraft();
     createPostContext?.clearDraft();
   },

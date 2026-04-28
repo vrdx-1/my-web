@@ -397,12 +397,14 @@ export function MyPostsContent() {
   }, [viewingPostHook.viewingPost]);
 
   const isFeedSkeleton = postListData.posts.length === 0 && postListData.loadingMore;
+  const hasReadyRecommendFeed = hasFetchedRecommend || recommendListData.posts.length > 0;
+  const hasReadySoldFeed = hasFetchedSold || soldListData.posts.length > 0;
   const showFeedSkeleton =
     !mounted ||
     !feedReady ||
     !sessionReady ||
     isFeedSkeleton ||
-    (tab === 'recommend' ? !hasFetchedRecommend : !hasFetchedSold);
+    (tab === 'recommend' ? !hasReadyRecommendFeed : !hasReadySoldFeed);
   const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
   const headerSpacerStyle = {
     height: fixedHeaderHeight,
