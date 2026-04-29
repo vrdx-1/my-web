@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
@@ -13,6 +13,13 @@ const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 const APP_NAME = 'Jutpai';
 const APP_ICON = '/icons/icon-192x192.png';
+
+declare global {
+  interface Window {
+    __jutpaiPwaDismissed?: boolean;
+    __jutpaiPwaPromptVisible?: boolean;
+  }
+}
 
 const HINT_IOS_LINES = [
   '1. ຄິກປຸ່ມແຊຂອງ Safari (Share)',
@@ -29,6 +36,35 @@ export function PWAInstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isDismissedInSession = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    if (window.__jutpaiPwaDismissed) return true;
+    try {
+      const dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
+      if (dismissed) window.__jutpaiPwaDismissed = true;
+      return dismissed;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const persistDismissInSession = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    window.__jutpaiPwaDismissed = true;
+    window.__jutpaiPwaPromptVisible = false;
+    try {
+      sessionStorage.setItem(DISMISS_KEY, '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.__jutpaiPwaPromptVisible = visible;
+  }, [visible]);
 
   useEffect(() => {
     if (isAdmin) return;
@@ -36,7 +72,7 @@ export function PWAInstallPrompt() {
     const standalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
-    const dismissed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DISMISS_KEY);
+    const dismissed = isDismissedInSession();
     if (standalone || dismissed) return;
 
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -45,43 +81,56 @@ export function PWAInstallPrompt() {
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
+      if (isDismissedInSession()) return;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setVisible(true);
+      if (!window.__jutpaiPwaPromptVisible) {
+        setVisible(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
     if (!standalone && !dismissed) {
-      const timer = setTimeout(() => setVisible(true), 1500);
+      timerRef.current = setTimeout(() => {
+        if (!isDismissedInSession() && !window.__jutpaiPwaPromptVisible) {
+          setVisible(true);
+        }
+      }, 1500);
       return () => {
         window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-        clearTimeout(timer);
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
       };
     }
 
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-  }, [isAdmin]);
+  }, [isAdmin, isDismissedInSession]);
 
   const handleInstall = useCallback(async () => {
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setVisible(false);
+      if (outcome === 'accepted' || outcome === 'dismissed') {
+        setVisible(false);
+        persistDismissInSession();
+      }
       setDeferredPrompt(null);
       return;
     }
     setShowHint((h) => !h);
-  }, [deferredPrompt]);
+  }, [deferredPrompt, persistDismissInSession]);
 
   const handleDismiss = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     setShowHint(false);
     setVisible(false);
-    try {
-      sessionStorage.setItem(DISMISS_KEY, '1');
-    } catch {
-      // ignore
-    }
-  }, []);
+    persistDismissInSession();
+  }, [persistDismissInSession]);
 
   if (isAdmin || !visible) return null;
 
