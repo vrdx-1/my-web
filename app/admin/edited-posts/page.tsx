@@ -80,7 +80,7 @@ export default function AdminEditedPostsPage() {
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>
       <div style={{ width: '100%' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>
-          Review (Edited) - ໂພສທີ່ແກ້ໄຂພາຍໃນ 24 ຊົ່ວໂມງ ({edits.length})
+          Review (Edited) - ໂພສທີ່ແກ້ໄຂພາຍໃນ 24 ຊົ່ວໂມງເດີ ({edits.length})
         </h2>
         {edits.length === 0 && (
           <EmptyState message="ບໍ່ມີໂພສທີ່ແກ້ໄຂໃນ 24 ຊົ່ວໂມງນີ້" variant="card" />
