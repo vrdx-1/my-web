@@ -287,7 +287,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             const displayName = meta.full_name || meta.name || meta.display_name || '';
             const emailStr = user.email || '';
             const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
-            const defaultName = (displayName || emailFallback || 'Guest User').trim();
+            const isGoogleProvider = user.app_metadata?.provider === 'google';
+            const defaultName = (
+              isGoogleProvider ? (emailFallback || displayName || 'Guest User') : (displayName || emailFallback || 'Guest User')
+            ).trim();
             try {
               await supabase.from('profiles').upsert(
                 { id: user.id, username: defaultName, avatar_url: null },
