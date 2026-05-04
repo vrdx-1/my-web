@@ -61,6 +61,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   void lockHomeLayout;
   const router = useRouter();
   const pathname = usePathname();
+  const isHomeSearchHeader = showOnlySearch && !!homeCenterContent;
+  const homeLogoSize = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 4;
+  const logoSize = isHomeSearchHeader ? homeLogoSize : LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 
   const onProfileClick = pathname === '/home' && setProfileOverlayOpen
     ? () => setProfileOverlayOpen(true)
@@ -130,14 +133,14 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   return (
     <div className={!slideWithContainer ? 'header-visibility-surface' : undefined} style={rootStyle}>
       <div style={{ 
-          padding: showOnlySearch && homeCenterContent ? '9px 12px 7px' : '9px 15px', 
+          padding: isHomeSearchHeader ? '10px 12px 8px' : '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
           minWidth: 0,
           width: '100%',
           boxSizing: 'border-box',
           overflow: 'hidden',
-          gap: showOnlySearch && homeCenterContent ? '10px' : '8px', 
+          gap: isHomeSearchHeader ? '12px' : '8px', 
           borderBottom: 'none',
         }}>
         {/* Logo (brand name removed per request); หน้าโฮม: กดโลโก้ = full refresh (ล้างค้นหา + ທຸກແຂວງ) */}
@@ -145,7 +148,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex',
           alignItems: 'center',
           flexShrink: 0,
-          marginRight: showOnlySearch && homeCenterContent ? '2px' : '8px',
+          marginRight: isHomeSearchHeader ? '4px' : '8px',
         }}>
           {pathname === '/home' && onTabRefresh ? (
             <button
@@ -167,8 +170,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               <Image
                 src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg"
                 alt="Jutpai Logo"
-                width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
-                height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+                width={logoSize}
+                height={logoSize}
                 unoptimized
                 style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
               />
@@ -177,8 +180,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
             <Image
               src="https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/avatars/WhatsApp%20Image%202026-01-09%20at%2016.10.33%20(1).jpeg"
               alt="Jutpai Logo"
-              width={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
-              height={LAYOUT_CONSTANTS.HEADER_LOGO_SIZE}
+              width={logoSize}
+              height={logoSize}
               unoptimized
               style={{ flexShrink: 0, borderRadius: '50%', objectFit: 'cover' }}
             />

@@ -8,8 +8,8 @@ import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPortal';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
-const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
-const ICON_SIZE = 20;
+const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 4;
+const ICON_SIZE = 21;
 const SEARCH_BAR_GAP = 8;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
@@ -39,6 +39,23 @@ export function HomeHeaderSearchAndFilter() {
   }, [searchQuery, setSelectedProvince]);
 
   const handleSearchClick = useCallback(() => {
+    // iOS Safari จะแสดงแป้นพิมพ์เฉพาะเมื่อ focus() อยู่ใน user gesture event เท่านั้น
+    // เมื่อ router.push นำทางไปหน้าใหม่ กว่า useLayoutEffect จะ focus() input จริงก็พ้น gesture ไปแล้ว
+    // แก้โดย: สร้าง temp input แล้ว focus() ทันทีใน handler นี้ (ยังอยู่ใน gesture context)
+    // → iOS เปิดแป้นพิมพ์ขึ้นมา, พอหน้า search mount และ focus input จริง แป้นพิมพ์ยังอยู่
+    if (typeof window !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      const tempInput = document.createElement('input');
+      tempInput.setAttribute('type', 'text');
+      tempInput.setAttribute('inputmode', 'search');
+      tempInput.style.cssText =
+        'position:fixed;top:-200px;left:-200px;opacity:0;width:1px;height:1px;font-size:16px;';
+      document.body.appendChild(tempInput);
+      tempInput.focus();
+      // ลบออกหลังหน้าใหม่ mount และ focus input จริงแล้ว (~800ms เพียงพอ)
+      setTimeout(() => {
+        if (document.body.contains(tempInput)) document.body.removeChild(tempInput);
+      }, 800);
+    }
     const q = searchQuery?.trim() ?? '';
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search', { scroll: false });
   }, [router, searchQuery]);
@@ -127,7 +144,7 @@ export function HomeHeaderSearchAndFilter() {
             minWidth: 0,
             width: '100%',
             maxWidth: '100%',
-            height: `${Math.max(CONTROL_SIZE + 2, 42)}px`,
+            height: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
             borderRadius: '999px',
             background: '#ffffff',
             color: '#1f2937',
@@ -135,9 +152,9 @@ export function HomeHeaderSearchAndFilter() {
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            paddingLeft: '13px',
-            paddingRight: '11px',
+            gap: '6px',
+            paddingLeft: '15px',
+            paddingRight: '13px',
             // allow opening search/province immediately even while feed refresh runs in background
             touchAction: 'manipulation',
             pointerEvents: 'auto',
@@ -175,7 +192,7 @@ export function HomeHeaderSearchAndFilter() {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                fontSize: '15px',
+                fontSize: '16px',
                 color: queryToShow.trim() ? '#101828' : '#7b818d',
                 fontFamily: LAO_FONT,
               }}
@@ -186,7 +203,7 @@ export function HomeHeaderSearchAndFilter() {
           <span
             style={{
               flexShrink: 0,
-              fontSize: '15px',
+              fontSize: '16px',
               color: '#111111',
               fontWeight: 500,
               fontFamily: LAO_FONT,

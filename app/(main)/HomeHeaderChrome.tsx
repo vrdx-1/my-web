@@ -6,7 +6,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
-const HOME_FIXED_BLOCK_HEIGHT = 102;
+const HOME_FIXED_BLOCK_HEIGHT = 108;
 
 export interface HomeHeaderChromeProps {
   session: unknown;

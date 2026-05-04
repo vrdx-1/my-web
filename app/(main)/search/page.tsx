@@ -34,7 +34,9 @@ function SearchPageContent() {
 
   useLayoutEffect(() => {
     const focusInput = () => inputRef.current?.focus({ preventScroll: true });
+    // focus ทันที (synchronous) เพื่อรับช่วง keyboard จาก temp input ที่ถูก focus ใน gesture context บน iOS
     focusInput();
+    // rAF สำรองสำหรับกรณี input ยังไม่พร้อมใน layout pass แรก
     const rafId = requestAnimationFrame(focusInput);
     return () => cancelAnimationFrame(rafId);
   }, []);
