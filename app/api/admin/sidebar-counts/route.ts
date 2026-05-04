@@ -74,6 +74,7 @@ export async function GET() {
       postBoostsPending,
       revenueLogs,
       verificationPending,
+      hiddenPosts,
     ] = await Promise.all([
       admin.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       admin.from('user_problem_reports').select('*', { count: 'exact', head: true }),
@@ -82,6 +83,7 @@ export async function GET() {
       admin.from('post_boosts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       admin.from('revenue_logs').select('*', { count: 'exact', head: true }),
       admin.from('verification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      admin.from('cars').select('*', { count: 'exact', head: true }).eq('is_hidden', true),
     ]);
 
     counts['/admin/reporting'] = reportsPending.count ?? 0;
@@ -91,6 +93,7 @@ export async function GET() {
     counts['/admin/boosting'] = postBoostsPending.count ?? 0;
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
     counts['/admin/verification'] = verificationPending.count ?? 0;
+    counts['/admin/hidden-posts'] = hiddenPosts.count ?? 0;
   } catch (e) {
     console.error('sidebar-counts error:', e);
     return NextResponse.json({ error: 'Failed to fetch counts' }, { status: 500 });
