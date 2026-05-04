@@ -21,6 +21,7 @@ const FullScreenImageViewer = lazyNamed(
 export default function AdminReviewPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'visible' | 'hidden'>('visible');
 
   // --- States สำหรับการแสดงผล (แกะมาจาก reporting/page.tsx) ---
   const [viewingPost, setViewingPost] = useState<any | null>(null);
@@ -56,15 +57,22 @@ export default function AdminReviewPage() {
         
         const { data: postsData, error: postsError } = await supabase
           .from('cars')
-          .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
+          .select('id, caption, province, images, status, is_hidden, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, role, is_sub_account, parent_admin_id)')
           .in('id', postIds)
           .order('created_at', { ascending: false });
 
         if (!postsError && postsData) {
+          const filteredPosts = postsData.filter((post) => {
+            const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+            const isAdmin = profile?.role === 'admin';
+            const isSubAccount = profile?.is_sub_account === true;
+            return !isAdmin && !isSubAccount;
+          });
+
           // เพิ่ม posts เข้า state
           setPosts(prev => {
             const existingIds = new Set(prev.map(p => p.id));
-            const newPosts = postsData.filter(p => !existingIds.has(p.id));
+            const newPosts = filteredPosts.filter(p => !existingIds.has(p.id));
             return [...prev, ...newPosts];
           });
         }
@@ -140,6 +148,10 @@ export default function AdminReviewPage() {
     );
   };
 
+  const visiblePosts = posts.filter((post) => post.is_hidden !== true);
+  const hiddenPosts = posts.filter((post) => post.is_hidden === true);
+  const displayedPosts = activeTab === 'visible' ? visiblePosts : hiddenPosts;
+
   if (loading) return (
 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
 <PageSpinner />
@@ -150,10 +162,47 @@ export default function AdminReviewPage() {
     <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>
       
       <div style={{ width: '100%' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#111111' }}>Review Posts (24h) - {posts.length}</h2>
-        {posts.length === 0 && <EmptyState message="ບໍ່ມີໂພສໃໝ່ໃນ 24 ຊົ່ວໂມງນີ້" variant="card" />}
-        
-        {posts.map((post, index) => {
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '14px', color: '#111111' }}>Review Posts (24h) - {displayedPosts.length}</h2>
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setActiveTab('visible')}
+            style={{
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: activeTab === 'visible' ? '#111111' : '#e5e7eb',
+              color: activeTab === 'visible' ? '#ffffff' : '#111111'
+            }}
+          >
+            hidden (โพสที่ไม่ทันช่อน) {visiblePosts.length}
+          </button>
+          <button
+            onClick={() => setActiveTab('hidden')}
+            style={{
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: activeTab === 'hidden' ? '#111111' : '#e5e7eb',
+              color: activeTab === 'hidden' ? '#ffffff' : '#111111'
+            }}
+          >
+            hide (โพสที่ช่อนแล้ว) {hiddenPosts.length}
+          </button>
+        </div>
+
+        {displayedPosts.length === 0 && (
+          <EmptyState
+            message={activeTab === 'visible' ? 'ບໍ່ມີໂພສທີ່ຍັງບໍ່ທັນຊ່ອນໃນ 24 ຊົ່ວໂມງນີ້' : 'ບໍ່ມີໂພສທີ່ຖືກຊ່ອນແລ້ວໃນ 24 ຊົ່ວໂມງນີ້'}
+            variant="card"
+          />
+        )}
+
+        {displayedPosts.map((post, index) => {
           const isHidden = post.is_hidden === true;
           
           return (
