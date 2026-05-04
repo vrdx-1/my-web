@@ -9,6 +9,7 @@ import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useHomeSearchResultSources, HOME_SOLD_STUB, type HomePostListSource } from '@/hooks/useHomeSearchResultSources';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 export type HomeTab = 'recommend' | 'sold';
 
@@ -72,6 +73,17 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     onInitialLoadDone: () => {
       startSessionCheck();
       setFirstFeedLoaded(true);
+      // ยิงหลังฟีดพร้อมแล้วเท่านั้น เพื่อลดผลกระทบกับความเร็วหน้าโฮม
+      const payload = session?.user?.id ? {} : { guestToken: getPrimaryGuestToken() };
+      void fetch('/api/analytics/daily-visitor', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {
+        // ignore analytics failures
+      });
     },
     sharedLikedSaved,
     isActive: pathname === '/home',

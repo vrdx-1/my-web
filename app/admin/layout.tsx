@@ -94,6 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Post Report', path: '/admin/reporting' },
     { name: 'Problem Report', path: '/admin/problem-reports' },
     { name: 'Verification', path: '/admin/verification' },
+    { name: 'Visitor', path: '/admin/visitor' },
     { name: 'Review', path: '/admin/review' },
     { name: 'Review (Edited)', path: '/admin/edited-posts' },
     { name: 'Boosting', path: '/admin/boosting' },
