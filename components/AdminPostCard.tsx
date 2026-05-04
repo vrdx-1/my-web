@@ -56,6 +56,7 @@ export const AdminPostCard = React.memo<AdminPostCardProps>(({
             {formatTime(post.created_at)} · {post.province}
           </div>
         </div>
+        {adminActions ? <div style={{ marginLeft: 'auto' }}>{adminActions}</div> : null}
       </div>
 
       {/* Caption */}

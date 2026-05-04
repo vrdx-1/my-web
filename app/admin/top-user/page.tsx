@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -141,6 +142,12 @@ export default function AdminTopUserPage() {
     width: '50%',
   };
 
+  const listLinkStyle = {
+    textDecoration: 'none',
+    color: 'inherit',
+    display: 'block',
+  };
+
   const avatarStyle = {
     width: '36px',
     height: '36px',
@@ -158,18 +165,20 @@ export default function AdminTopUserPage() {
           const profile = profiles[row.user_id];
           const displayName = profile?.username ?? row.user_id.slice(0, 8) + '…';
           return (
-            <div key={row.user_id} style={listItemStyle}>
-              <span style={{ fontWeight: 'bold', minWidth: '28px', color: '#65676b' }}>
-                {index + 1}.
-              </span>
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" style={avatarStyle} />
-              ) : (
-                <div style={avatarStyle} />
-              )}
-              <span style={{ flex: 1, color: '#1a1a1a' }}>{displayName}</span>
-              <span style={{ fontWeight: '600', color: '#1877f2' }}>{row.count}</span>
-            </div>
+            <Link key={row.user_id} href={`/admin/top-user/${encodeURIComponent(row.user_id)}`} style={listLinkStyle}>
+              <div style={{ ...listItemStyle, cursor: 'pointer' }}>
+                <span style={{ fontWeight: 'bold', minWidth: '28px', color: '#65676b' }}>
+                  {index + 1}.
+                </span>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" style={avatarStyle} />
+                ) : (
+                  <div style={avatarStyle} />
+                )}
+                <span style={{ flex: 1, color: '#1a1a1a' }}>{displayName}</span>
+                <span style={{ fontWeight: '600', color: '#1877f2' }}>{row.count}</span>
+              </div>
+            </Link>
           );
         })
       )}
