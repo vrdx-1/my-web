@@ -92,7 +92,7 @@ export function useEditProfilePage() {
     if (!uid) return;
     const valueToSave =
       phoneNum.startsWith('020') && phoneNum.length === 11
-        ? '856' + phoneNum.slice(3)
+        ? '85620' + phoneNum.slice(3)
         : phoneNum;
     const { error } = await supabase.from('profiles').update({ phone: valueToSave }).eq('id', uid);
     if (!error) {
