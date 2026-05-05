@@ -73,6 +73,7 @@ export async function GET() {
       carEdits24h,
       postBoostsPending,
       revenueLogs,
+      downloadClickLogs,
       verificationPending,
       hiddenPosts,
     ] = await Promise.all([
@@ -82,6 +83,7 @@ export async function GET() {
       admin.from('car_edits').select('*', { count: 'exact', head: true }).gte('edited_at', twentyFourHoursAgo),
       admin.from('post_boosts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       admin.from('revenue_logs').select('*', { count: 'exact', head: true }),
+      admin.from('download_click_logs').select('*', { count: 'exact', head: true }),
       admin.from('verification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       admin.from('cars').select('*', { count: 'exact', head: true }).eq('is_hidden', true),
     ]);
@@ -92,6 +94,7 @@ export async function GET() {
     counts['/admin/edited-posts'] = carEdits24h.count ?? 0;
     counts['/admin/boosting'] = postBoostsPending.count ?? 0;
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
+    counts['/admin/download-clicks'] = downloadClickLogs.count ?? 0;
     counts['/admin/verification'] = verificationPending.count ?? 0;
     counts['/admin/hidden-posts'] = hiddenPosts.count ?? 0;
   } catch (e) {

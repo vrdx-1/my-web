@@ -58,6 +58,24 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   const [showDownloadBottomSheet, setShowDownloadBottomSheet] = useState(false);
   const [isDownloadBottomSheetAnimating, setIsDownloadBottomSheetAnimating] = useState(false);
 
+  const trackDownloadClick = useCallback(() => {
+    const body = JSON.stringify({ source: 'full_screen_viewer' });
+
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics/download-click', blob);
+      return;
+    }
+
+    void fetch('/api/analytics/download-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  }, []);
+
   // Full screen mode: เปิดดูสลับหน้าให้ทันที ไม่มี animation
   const setFullScreenImages = useCallback((images: string[] | null) => {
     setFullScreenImagesBase(images);
@@ -108,6 +126,8 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
   }, [currentImgIndex]);
 
   const downloadImage = useCallback(async (url: string) => {
+    trackDownloadClick();
+
     try {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
@@ -129,7 +149,7 @@ export function useFullScreenViewer(): UseFullScreenViewerReturn {
       }
     } catch {
     }
-  }, []);
+  }, [trackDownloadClick]);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
