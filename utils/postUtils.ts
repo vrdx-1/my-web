@@ -783,6 +783,14 @@ export function getSearchPriorityTerms(query: string): string[] {
   return Array.from(out).filter((t) => t.length > 0);
 }
 
+export function getSearchCategoryIds(query: string): string[] {
+  const qNorm = normalizeCarSearch(query);
+  if (!qNorm) return [];
+  const categoryIds = CATEGORY_INDEX.aliasToCategoryIds.get(qNorm);
+  if (!categoryIds || categoryIds.size === 0) return [];
+  return Array.from(categoryIds).map(String);
+}
+
 /**
  * ตรวจว่า caption มีคำหลัก (priority term) อยู่หรือไม่ — ใช้จัดเรียงความเกี่ยวข้อง
  */

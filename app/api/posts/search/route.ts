@@ -3,11 +3,19 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { expandWithoutBrandAliases, getSearchPriorityTerms, captionContainsPriorityTerm } from '@/utils/postUtils';
+import {
+  expandWithoutBrandAliases,
+  getSearchPriorityTerms,
+  captionContainsPriorityTerm,
+  captionMatchesAnyAlias,
+  getSearchCategoryIds,
+} from '@/utils/postUtils';
 
 const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
 const RPC_TERMS_PER_CALL = 500;
+/** สแกนโพสต์เพิ่มเฉพาะตอนค้นหา category เพื่อให้ match ด้วย dictionary/typo tolerance ได้ */
+const CATEGORY_SEARCH_SCAN_LIMIT = 5000;
 
 /** รูปแบบรหัสโพส 6 ตัว: ตัวเลขล้วน */
 const SHORT_ID_REGEX = /^[0-9]{6}$/;
@@ -45,6 +53,7 @@ export async function GET(request: NextRequest) {
       .map((t) => String(t ?? '').trim())
       .filter(Boolean);
     const searchTerms = terms;
+    const matchedCategoryIds = getSearchCategoryIds(query);
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -58,12 +67,58 @@ export async function GET(request: NextRequest) {
         },
       }
     );
+    const carsClient = getCarsReadClient(supabase);
+
+    if (matchedCategoryIds.length > 0) {
+      let categoryQuery = carsClient
+        .from('cars')
+        .select(POST_WITH_PROFILE_SELECT)
+        .in('status', ['recommend', 'sold'])
+        .eq('is_hidden', false);
+
+      if (province && province.trim() !== '') {
+        categoryQuery = categoryQuery.eq('province', province.trim());
+      }
+
+      const { data: categoryRows, error: categoryError } = await categoryQuery
+        .order('is_boosted', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(CATEGORY_SEARCH_SCAN_LIMIT);
+
+      if (categoryError) {
+        return NextResponse.json({ error: categoryError.message }, { status: 500 });
+      }
+
+      let posts = (categoryRows || []).filter(
+        (post: any) =>
+          (post.status === 'recommend' || post.status === 'sold') &&
+          !post.is_hidden &&
+          captionMatchesAnyAlias(post.caption, searchTerms),
+      );
+
+      const priorityTerms = getSearchPriorityTerms(query);
+      if (priorityTerms.length > 0) {
+        posts = [...posts].sort((a, b) => {
+          const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
+          const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
+          if (bHas !== aHas) return bHas - aHas;
+          const aBoost = a.is_boosted === true ? 1 : 0;
+          const bBoost = b.is_boosted === true ? 1 : 0;
+          if (bBoost !== aBoost) return bBoost - aBoost;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      }
+
+      return NextResponse.json(
+        { posts: posts.slice(0, SEARCH_LIMIT) },
+        { headers: { 'Cache-Control': 'private, max-age=0' } }
+      );
+    }
 
     if (searchTerms.length > 1) {
       type RpcRow = { id: string; is_boosted: boolean | null; created_at: string };
       const allOrdered: RpcRow[] = [];
       const seenIds = new Set<string>();
-      const carsClient = getCarsReadClient(supabase);
 
       if (searchTerms.length <= RPC_TERMS_PER_CALL) {
         const { data: rpcRows, error: rpcError } = await supabase.rpc('search_cars_by_caption_terms', {
@@ -175,7 +230,6 @@ export async function GET(request: NextRequest) {
     }
 
     const singleQuery = searchTerms[0] ?? query;
-    const carsClient = getCarsReadClient(supabase);
     const matchShortId = SHORT_ID_REGEX.test(singleQuery);
     let dbQuery = carsClient
       .from('cars')
