@@ -4,6 +4,13 @@
   "brandNameTh": "เมอร์เซเดส-เบนซ์",
   "brandNameLo": "ເມີເຊດີ ເບັ້ນ",
   "brandSearchNames": ["benz", "benz", "ເບັ້ນ"],
+  "strictBrandOnlySearchAliases": [
+    "Mercedes benz",
+    "benz",
+    "ເບັ້ນ",
+    "ເມີເຊດີ ເບັ້ນ",
+    "เมอร์เชเดส เบนช์"
+  ],
   "models": [
     {
       "modelId": "a-class",
