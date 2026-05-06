@@ -9,6 +9,7 @@ import {
   captionContainsPriorityTerm,
   captionMatchesAnyAlias,
   getSearchCategoryIds,
+  getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
 
 const SEARCH_LIMIT = 1000;
@@ -52,7 +53,12 @@ export async function GET(request: NextRequest) {
     const terms = expandWithoutBrandAliases(query)
       .map((t) => String(t ?? '').trim())
       .filter(Boolean);
-    const searchTerms = terms;
+    // ถ้าค้นหาแบรนด์แบบ strict (เช่น Nissan/ນີດສັນ/นิสสัน) ให้ใช้เฉพาะ alias แบรนด์นั้น
+    // ไม่ขยายไปรุ่น เพื่อให้แสดงเฉพาะโพสที่มีชื่อแบรนด์จริง ๆ ใน caption
+    const strictBrandTerms = getStrictBrandSearchTerms(query);
+    const searchTerms = strictBrandTerms
+      ? strictBrandTerms.map((t) => String(t ?? '').trim()).filter(Boolean)
+      : terms;
     const matchedCategoryIds = getSearchCategoryIds(query);
 
     const cookieStore = await cookies();

@@ -450,14 +450,11 @@ export function expandCarSearchAliases(query: string): string[] {
       // If searching by BRAND: also expand to all MODELS under that brand,
       // so a caption that contains only the model (no brand) still matches.
       if (info.kind === 'brand') {
-        const shouldRestrict = shouldRestrictBrandSearchToBrandAliasOnly(info.brandId, qNorm);
-        if (!shouldRestrict) {
-          const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
-          if (modelKeys) {
-            for (const mk of modelKeys) {
-              const mAliases = CAR_INDEX.entityAliases.get(mk);
-              if (mAliases) out.push(...mAliases);
-            }
+        const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
+        if (modelKeys) {
+          for (const mk of modelKeys) {
+            const mAliases = CAR_INDEX.entityAliases.get(mk);
+            if (mAliases) out.push(...mAliases);
           }
         }
       }
@@ -551,20 +548,30 @@ function normalizeForFallback(text: string): string {
   return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-function shouldRestrictBrandSearchToBrandAliasOnly(brandId: string, queryNorm: string): boolean {
-  if (!brandId || !queryNorm) return false;
-  const brand = (carsData.brands ?? []).find((b) => String(b.brandId) === String(brandId));
-  if (!brand) return false;
+/**
+ * ถ้าคำค้นตรงกับ strictBrandOnlySearchAliases ของแบรนด์ใด
+ * ให้คืนเฉพาะคำ alias ของแบรนด์นั้น (ไม่ขยายไปรุ่น)
+ * ใช้ใน route เพื่อ bypass expandWithoutBrandAliases ทั้งหมด
+ */
+export function getStrictBrandSearchTerms(query: string): string[] | null {
+  const qNorm = normalizeCarSearch(query);
+  if (!qNorm) return null;
 
-  const strictAliases = Array.isArray((brand as any).strictBrandOnlySearchAliases)
-    ? ((brand as any).strictBrandOnlySearchAliases as any[])
-    : [];
-  if (strictAliases.length === 0) return false;
+  for (const brand of carsData.brands ?? []) {
+    const strictAliases = Array.isArray((brand as any).strictBrandOnlySearchAliases)
+      ? ((brand as any).strictBrandOnlySearchAliases as any[])
+      : [];
+    if (strictAliases.length === 0) continue;
 
-  for (const alias of strictAliases) {
-    if (normalizeCarSearch(String(alias ?? '')) === queryNorm) return true;
+    const hasMatch = strictAliases.some(
+      (a) => normalizeCarSearch(String(a ?? '')) === qNorm,
+    );
+    if (!hasMatch) continue;
+
+    return uniqStringsCarSearch(strictAliases.map((a) => String(a ?? '').trim()));
   }
-  return false;
+
+  return null;
 }
 
 const BRAND_NAMES_SET = (() => {
