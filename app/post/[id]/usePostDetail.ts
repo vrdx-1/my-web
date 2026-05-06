@@ -40,7 +40,8 @@ export function usePostDetail(id: string | undefined) {
     setPost((prev: any) => {
       const list = prev ? [prev] : [];
       const next = typeof updater === 'function' ? updater(list) : updater;
-      return next[0] ?? prev;
+      const nextList = Array.isArray(next) ? next : [];
+      return nextList[0] ?? null;
     });
   }, []);
 
