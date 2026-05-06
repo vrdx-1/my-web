@@ -3,6 +3,11 @@
   "brandName": "Toyota",
   "brandNameTh": "โตโยต้า",
   "brandNameLo": "ໂຕໂຍຕ້າ",
+  "strictBrandOnlySearchAliases": [
+    "Toyota",
+    "ໂຕໂຍຕ້າ",
+    "โตโยต้า"
+  ],
   "models": [
     {
       "modelId": "vios",
