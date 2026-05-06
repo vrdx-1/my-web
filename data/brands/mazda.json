@@ -3,6 +3,11 @@
   "brandName": "Mazda",
   "brandNameTh": "มาสด้า",
   "brandNameLo": "ມາດສະດາ",
+  "strictBrandOnlySearchAliases": [
+    "Mazda",
+    "มาสด้า",
+    "ມາດສະດາ"
+  ],
   "models": [
     {
       "modelId": "121",
