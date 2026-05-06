@@ -3,6 +3,14 @@
   "brandName": "Mitsubishi",
   "brandNameTh": "มิตซูบิชิ",
   "brandNameLo": "ມິດຊູບິຊິ",
+  "strictBrandOnlySearchAliases": [
+    "Mitsubishi",
+    "ມິດຊູບິຊິ",
+    "ມິຊູບິຊິ",
+    "ມີດຊູບິຊິ",
+    "ມິຊຸມິຊິ",
+    "มิตชูบิชิ"
+  ],
   "models": [
     {
       "modelId": "airdrek",
