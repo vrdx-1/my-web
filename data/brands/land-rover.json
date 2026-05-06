@@ -3,6 +3,11 @@
   "brandName": "Land Rover",
   "brandNameTh": "แลนด์โรเวอร์",
   "brandNameLo": "ແລນໂຣເວີ",
+  "strictBrandOnlySearchAliases": [
+    "Land Rover",
+    "ແລນໂຣເວີ",
+    "แลนด์โรเวอร์"
+  ],
   "models": [
     {
       "modelId": "101-forward-control",
