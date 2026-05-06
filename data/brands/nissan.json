@@ -83,10 +83,10 @@
       ]
     },
     {
-      "modelId": "ad",
-      "modelName": "AD",
-      "modelNameTh": "AD",
-      "modelNameLo": "AD",
+      "modelId": "nissan ad",
+      "modelName": "nissan AD",
+      "modelNameTh": "nissan AD",
+      "modelNameLo": "nissan AD",
       "searchNames": [
         "ad"
       ],
@@ -1208,13 +1208,13 @@
       ]
     },
     {
-      "modelId": "z",
-      "modelName": "Z",
-      "modelNameTh": "Z",
-      "modelNameLo": "Z",
+      "modelId": "nissan z",
+      "modelName": "nissan Z",
+      "modelNameTh": "nissan Z",
+      "modelNameLo": "nissan Z",
       "searchNames": [
-        "z",
-        "fairlady z"
+        "nissan z",
+        "fairlady nissanz"
       ],
       "categoryIds": [
         "sport"

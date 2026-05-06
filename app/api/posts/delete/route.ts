@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 import { getStorageObjectPaths } from '@/utils/storageObjectPath';
 import { isOwnedByServerProfileScope } from '@/utils/serverOwnedProfiles';
+import { ACTIVE_PROFILE_HEADER } from '@/utils/activeProfile';
 
 const POSTS_BUCKET = 'car-images';
 
@@ -42,7 +43,28 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'postId required' }, { status: 400 });
   }
 
-  const resolvedProfile = await resolveServerActiveProfile(request);
+  // Auth: use admin client for reliable JWT verification (more reliable than SSR cookie client)
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const activeProfileHeaderValue = request.headers.get(ACTIVE_PROFILE_HEADER)?.trim() ?? null;
+
+  let resolvedAuthUserId: string | null = null;
+  let resolvedActiveProfileId: string | null = null;
+
+  if (bearerToken) {
+    const { data: { user } } = await admin.auth.getUser(bearerToken);
+    if (user?.id) {
+      resolvedAuthUserId = user.id;
+      resolvedActiveProfileId = activeProfileHeaderValue || user.id;
+    }
+  }
+
+  // Fallback to SSR cookie-based auth
+  if (!resolvedAuthUserId) {
+    const resolvedProfile = await resolveServerActiveProfile(request);
+    resolvedAuthUserId = resolvedProfile?.authUserId ?? null;
+    resolvedActiveProfileId = resolvedProfile?.activeProfileId ?? null;
+  }
 
   const { data: post, error: postError } = await admin
     .from('cars')
@@ -58,8 +80,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   const isOwnedByProfile = await isOwnedByServerProfileScope(admin, post.user_id, {
-    activeProfileId: resolvedProfile?.activeProfileId ?? null,
-    authUserId: resolvedProfile?.authUserId ?? null,
+    activeProfileId: resolvedActiveProfileId,
+    authUserId: resolvedAuthUserId,
   });
   const isOwnedByGuest = !!guestToken && !!post.guest_token && String(post.guest_token) === guestToken;
 

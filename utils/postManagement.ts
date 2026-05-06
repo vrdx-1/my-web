@@ -70,7 +70,7 @@ export async function deletePost(
 
   const authUserId = session?.user?.id ?? null;
   const activeProfileId = getStoredActiveProfileId(authUserId) || authUserId;
-  const guestToken = !authUserId ? getPrimaryGuestToken() : null;
+  const guestToken = !authUserId ? getPrimaryGuestToken(postId) : null;
 
   const response = await fetch('/api/posts/delete', {
     method: 'DELETE',

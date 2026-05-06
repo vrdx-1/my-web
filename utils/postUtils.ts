@@ -1140,9 +1140,13 @@ export const isPostOwner = (
 /**
  * Get primary guest token from localStorage
  */
-export const getPrimaryGuestToken = (): string => {
+export const getPrimaryGuestToken = (postId?: string): string => {
   if (typeof window === 'undefined') return '';
   const stored = safeParseJSON<Array<{ post_id: string; token: string }>>('my_guest_posts', []);
+  if (postId) {
+    const item = stored.find((item: any) => String(item.post_id) === String(postId));
+    if (item?.token) return item.token;
+  }
   if (stored.length > 0 && stored[0]?.token) return stored[0].token;
   
   let deviceToken = localStorage.getItem('device_guest_token');
