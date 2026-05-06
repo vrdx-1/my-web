@@ -3,6 +3,11 @@
   "brandName": "Isuzu",
   "brandNameTh": "อีซูซุ",
   "brandNameLo": "ອີຊູຊຸ",
+  "strictBrandOnlySearchAliases": [
+    "Isuzu",
+    "ອີຊູຊຸ",
+    "อีชูชุ"
+  ],
   "models": [
     {
       "modelId": "117-coupe",
