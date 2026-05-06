@@ -3,6 +3,11 @@
   "brandName": "MG",
   "brandNameTh": "เอ็มจี",
   "brandNameLo": "ເອັມຈີ",
+  "strictBrandOnlySearchAliases": [
+    "MG",
+    "ເອັມຈີ",
+    "เอ็มจี"
+  ],
   "models": [
     {
       "modelId": "1100",
