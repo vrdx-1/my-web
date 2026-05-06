@@ -12,6 +12,7 @@ import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
@@ -146,6 +147,37 @@ export function PostCard({
   }, [post.id, normalizedCaption, clearCaptionToggleStabilizers]);
 
   React.useEffect(() => clearCaptionToggleStabilizers, [clearCaptionToggleStabilizers]);
+
+  const trackWhatsAppClick = React.useCallback((targetProfileId: string, postId: string) => {
+    const payload: Record<string, string> = {
+      source: 'post_card_bottom',
+      targetProfileId,
+      postId,
+    };
+
+    if (!session?.user?.id) {
+      const guestToken = getPrimaryGuestToken();
+      if (guestToken) {
+        payload.guestToken = guestToken;
+      }
+    }
+
+    const body = JSON.stringify(payload);
+
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics/whatsapp-click', blob);
+      return;
+    }
+
+    void fetch('/api/analytics/whatsapp-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  }, [session?.user?.id]);
 
   const updateCollapsedCaption = React.useCallback(() => {
     const captionEl = captionRef.current;
@@ -598,6 +630,8 @@ export function PostCard({
                   const raw = post.profiles?.phone || '';
                   const digits = raw.replace(/\D/g, '');
                   if (digits.length < 8) return null;
+                  const targetProfileId = typeof post.user_id === 'string' ? post.user_id : '';
+                  if (!targetProfileId) return null;
                   const origin = typeof window !== 'undefined' ? window.location.origin : '';
                   const postUrl = origin ? `${origin}/post/${post.id}` : '';
                   const waUrl = postUrl
@@ -608,7 +642,10 @@ export function PostCard({
                   href={waUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    trackWhatsAppClick(targetProfileId, String(post.id));
+                  }}
                   aria-label="ຕິດຕໍ່ WhatsApp"
                   style={{
                     display: 'inline-flex',

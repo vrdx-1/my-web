@@ -67,24 +67,80 @@ export async function POST(request: Request) {
   }
 
   if (session?.user?.id) {
-    const { data: profile, error: profileError } = await supabase
+    const userId = session.user.id;
+    const fallbackUsername =
+      String(
+        session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.user_metadata?.display_name ||
+          session.user.email ||
+          'User'
+      )
+        .trim()
+        .slice(0, 120) || 'User';
+
+    const { data: profile, error: profileError } = await admin
       .from('profiles')
       .select('id, role')
-      .eq('id', session.user.id)
-      .single();
+      .eq('id', userId)
+      .maybeSingle();
 
-    if (profileError || !profile?.id) {
-      return NextResponse.json({ ok: true, skipped: 'no-profile' });
+    let profileId = profile?.id ?? null;
+    let profileRole = profile?.role ?? null;
+
+    // บัญชีที่ล็อกอินแล้วแต่ profile หลุดหาย ให้สร้างคืนก่อนนับรายวัน
+    if (!profileId) {
+      const { error: ensureProfileError } = await admin.from('profiles').upsert(
+        {
+          id: userId,
+          username: fallbackUsername,
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+      if (ensureProfileError) {
+        return NextResponse.json(
+          {
+            error: ensureProfileError.message,
+            code: ensureProfileError.code,
+            hint: 'failed-to-ensure-profile',
+            cause: profileError?.message || null,
+          },
+          { status: 500 }
+        );
+      }
+
+      const { data: ensuredProfile, error: ensuredProfileError } = await admin
+        .from('profiles')
+        .select('id, role')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (ensuredProfileError || !ensuredProfile?.id) {
+        return NextResponse.json(
+          {
+            error: ensuredProfileError?.message || 'Profile missing after ensure',
+            code: ensuredProfileError?.code || null,
+            hint: 'profile-not-found-after-ensure',
+          },
+          { status: 500 }
+        );
+      }
+
+      profileId = ensuredProfile.id;
+      profileRole = ensuredProfile.role ?? null;
     }
 
-    if (profile.role === 'admin') {
+    if (profileRole === 'admin') {
       return NextResponse.json({ ok: true, skipped: 'admin' });
     }
 
     const { error } = await admin.from('daily_user_visitors').upsert(
       {
         visit_date: today,
-        user_id: profile.id,
+        user_id: profileId,
       },
       {
         onConflict: 'visit_date,user_id',

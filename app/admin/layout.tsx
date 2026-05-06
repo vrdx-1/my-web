@@ -101,6 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Boosting', path: '/admin/boosting' },
     { name: 'Revenue', path: '/admin/revenue' },
     { name: 'Download Clicks', path: '/admin/download-clicks' },
+    { name: 'WhatsApp Clicks', path: '/admin/whatsapp-clicks' },
     { name: 'All Post', path: '/admin/post' },
     { name: 'Hidden Post', path: '/admin/hidden-posts' },
     { name: 'Top User', path: '/admin/top-user' },

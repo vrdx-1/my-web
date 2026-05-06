@@ -163,12 +163,16 @@ export default function Register() {
         const emailStr = user.email ?? email.trim()
         const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '')
         const defaultName = (displayName || emailFallback || 'Guest User').trim()
-        try {
-          await supabase.from('profiles').upsert(
-            { id: user.id, username: defaultName, avatar_url: null },
-            { onConflict: 'id' }
-          )
-        } catch {}
+        const { error: ensureProfileError } = await supabase.from('profiles').upsert(
+          { id: user.id, username: defaultName, avatar_url: null },
+          { onConflict: 'id' }
+        )
+        if (ensureProfileError) {
+          setOtpError('ສ້າງໂປຣຟາຍບໍ່ສຳເລັດ')
+          setOtpValue('')
+          setRegisterLoading(false)
+          return
+        }
         clearGuestUserData()
         localStorage.removeItem('pending_registration')
         router.push('/home')
