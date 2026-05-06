@@ -1,9 +1,12 @@
 {
   "brandId": "kia",
   "brandName": "Kia",
-  "brandNameLo": "ເກຍ",
-  "brandSearchNames": ["ເກຍ"],
-
+  "brandNameTh": "เกีย",
+  "brandSearchNames": ["เกีย"],
+  "strictBrandOnlySearchAliases": [
+    "Kia",
+    "เกีย"
+  ],
   "models": [
     {
       "modelId": "carnival",
