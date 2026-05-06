@@ -5,6 +5,12 @@
   "brandNameLo": "ນິດສັນ",
   "brandSearchNames": [
     "Nissan",
+    "ນິດສັນ",
+    "ນີດສັນ",
+    "นิสสัน"
+  ],
+  "strictBrandOnlySearchAliases": [
+    "Nissan",
     "ນີດສັນ",
     "นิสสัน"
   ],

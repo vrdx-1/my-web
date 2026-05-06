@@ -450,11 +450,14 @@ export function expandCarSearchAliases(query: string): string[] {
       // If searching by BRAND: also expand to all MODELS under that brand,
       // so a caption that contains only the model (no brand) still matches.
       if (info.kind === 'brand') {
-        const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
-        if (modelKeys) {
-          for (const mk of modelKeys) {
-            const mAliases = CAR_INDEX.entityAliases.get(mk);
-            if (mAliases) out.push(...mAliases);
+        const shouldRestrict = shouldRestrictBrandSearchToBrandAliasOnly(info.brandId, qNorm);
+        if (!shouldRestrict) {
+          const modelKeys = CAR_INDEX.brandToModelKeys.get(entity);
+          if (modelKeys) {
+            for (const mk of modelKeys) {
+              const mAliases = CAR_INDEX.entityAliases.get(mk);
+              if (mAliases) out.push(...mAliases);
+            }
           }
         }
       }
@@ -546,6 +549,22 @@ export function expandCarSearchAliases(query: string): string[] {
 
 function normalizeForFallback(text: string): string {
   return String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function shouldRestrictBrandSearchToBrandAliasOnly(brandId: string, queryNorm: string): boolean {
+  if (!brandId || !queryNorm) return false;
+  const brand = (carsData.brands ?? []).find((b) => String(b.brandId) === String(brandId));
+  if (!brand) return false;
+
+  const strictAliases = Array.isArray((brand as any).strictBrandOnlySearchAliases)
+    ? ((brand as any).strictBrandOnlySearchAliases as any[])
+    : [];
+  if (strictAliases.length === 0) return false;
+
+  for (const alias of strictAliases) {
+    if (normalizeCarSearch(String(alias ?? '')) === queryNorm) return true;
+  }
+  return false;
 }
 
 const BRAND_NAMES_SET = (() => {
