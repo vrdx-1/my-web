@@ -3,6 +3,11 @@
   "brandName": "Nissan",
   "brandNameTh": "นิสสัน",
   "brandNameLo": "ນິດສັນ",
+  "brandSearchNames": [
+    "Nissan",
+    "ນີດສັນ",
+    "นิสสัน"
+  ],
   "models": [
     {
       "modelId": "180sx",
