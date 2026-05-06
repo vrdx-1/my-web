@@ -75,10 +75,15 @@ export function usePostFeedHandlers({
   const handleConfirmDelete = useCallback(
     async () => {
       if (!postToDelete) return;
-      await deletePost(postToDelete, setPosts);
-      setShowDeleteConfirm(false);
-      setPostToDelete(null);
-      setShowDeleteSuccess(true);
+      try {
+        await deletePost(postToDelete, setPosts);
+        setShowDeleteConfirm(false);
+        setPostToDelete(null);
+        setShowDeleteSuccess(true);
+      } catch (error: any) {
+        const message = String(error?.message || '').trim();
+        window.alert(message || 'ລົບໂພສບໍ່ສຳເລັດ');
+      }
     },
     [postToDelete, setPosts]
   );
