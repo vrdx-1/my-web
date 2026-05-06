@@ -3,6 +3,13 @@
   "brandName": "BMW",
   "brandNameTh": "บีเอ็มดับเบิลยู",
   "brandNameLo": "ບີເອັມດັບເບິລຢູ",
+  "strictBrandOnlySearchAliases": [
+    "BMW",
+    "ບີເອັມ",
+    "ບີເອັມດັບເບີລຢູ",
+    "บีเอ็มดับเบิลยู",
+    "ບີເອັມດັບເບິລຢູ"
+  ],
   "models": [
     {
       "modelId": "1-series",
