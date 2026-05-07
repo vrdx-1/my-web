@@ -3,6 +3,11 @@
   "brandName": "BYD",
   "brandNameTh": "บีวายดี",
   "brandNameLo": "ບີວາຍດີ",
+  "strictBrandOnlySearchAliases": [
+    "BYD",
+    "บีวายดี",
+    "ບີວາຍດີ"
+  ],
   "models": [
     {
       "modelId": "atto-1",

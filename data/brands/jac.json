@@ -3,6 +3,11 @@
   "brandName": "JAC",
   "brandNameTh": "เจเอซี",
   "brandNameLo": "ເຈເອຊີ",
+  "strictBrandOnlySearchAliases": [
+    "JAC",
+    "เจเอซี",
+    "ເຈເອຊີ"
+  ],
   "models": [
     {
       "modelId": "a13",

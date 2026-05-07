@@ -3,6 +3,11 @@
   "brandName": "Chery",
   "brandNameTh": "เชอรี่",
   "brandNameLo": "ເຊີຣີ້",
+  "strictBrandOnlySearchAliases": [
+    "Chery",
+    "เชอรี่",
+    "ເຊີຣີ້"
+  ],
   "models": [
     {
       "modelId": "a1",

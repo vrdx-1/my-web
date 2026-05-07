@@ -3,6 +3,11 @@
   "brandName": "Suzuki",
   "brandNameTh": "ซูซูกิ",
   "brandNameLo": "ຊູຊູກິ",
+  "strictBrandOnlySearchAliases": [
+    "Suzuki",
+    "ซูซูกิ",
+    "ຊູຊູກິ"
+  ],
   "models": [
     {
       "modelId": "aerio",

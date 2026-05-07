@@ -3,6 +3,12 @@
   "brandName": "Volvo",
   "brandNameTh": "วอลโว่",
   "brandNameLo": "ວອນໂວ",
+  "strictBrandOnlySearchAliases": [
+    "Volvo",
+    "วอลโว่",
+    "ວອນໂວ",
+    "ວອນໂວ້"
+  ],
   "models": [
     {
       "modelId": "c40",
