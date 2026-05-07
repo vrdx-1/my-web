@@ -3,6 +3,11 @@
   "brandName": "Hyundai",
   "brandNameTh": "ฮุนได",
   "brandNameLo": "ຮຸນໄດ",
+  "strictBrandOnlySearchAliases": [
+    "Hyundai",
+    "ຮຸນໄດ",
+    "ฮุนได"
+  ],
   "models": [
     {
       "modelId": "accent",
