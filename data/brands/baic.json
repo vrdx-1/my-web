@@ -3,6 +3,11 @@
   "brandName": "BAIC",
   "brandNameTh": "ไบค์",
   "brandNameLo": "ໄບ້",
+  "strictBrandOnlySearchAliases": [
+    "BAIC",
+    "ไบค์",
+    "ໄບ້"
+  ],
   "models": [
     {
       "modelId": "a1",

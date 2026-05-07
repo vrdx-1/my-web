@@ -3,6 +3,11 @@
   "brandName": "Porsche",
   "brandNameTh": "พอร์เช่",
   "brandNameLo": "ປໍເຊ",
+  "strictBrandOnlySearchAliases": [
+    "Porsche",
+    "พอร์เช่",
+    "ປໍເຊ"
+  ],
   "models": [
     {
       "modelId": "356",

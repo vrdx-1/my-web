@@ -3,6 +3,11 @@
   "brandName": "Zeekr",
   "brandNameTh": "ซีคเกอร์",
   "brandNameLo": "ຊີເກີ",
+  "strictBrandOnlySearchAliases": [
+    "Zeekr",
+    "ซีคเกอร์",
+    "ຊີເກີ"
+  ],
   "models": [
     {
       "modelId": "zeekr-001",

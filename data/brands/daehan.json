@@ -3,6 +3,11 @@
   "brandName": "Daehan",
   "brandNameTh": "แดฮัน",
   "brandNameLo": "ແດຮັນ",
+  "strictBrandOnlySearchAliases": [
+    "Daehan",
+    "แดฮัน",
+    "ແດຮັນ"
+  ],
   "models": [
     {
       "modelId": "super-1",

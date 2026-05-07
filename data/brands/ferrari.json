@@ -3,6 +3,11 @@
   "brandName": "Ferrari",
   "brandNameTh": "เฟอร์รารี่",
   "brandNameLo": "ເຟີຣາຣີ້",
+  "strictBrandOnlySearchAliases": [
+    "Ferrari",
+    "เฟอร์รารี่",
+    "ເຟີຣາຣີ້"
+  ],
   "models": [
     {
       "modelId": "12cilindri",

@@ -3,6 +3,11 @@
   "brandName": "Dongfeng",
   "brandNameTh": "ดงเฟง",
   "brandNameLo": "ຕົງເຟິງ",
+  "strictBrandOnlySearchAliases": [
+    "Dongfeng",
+    "ดงเฟง",
+    "ຕົງເຟິງ"
+  ],
   "models": [
     {
       "modelId": "a30",

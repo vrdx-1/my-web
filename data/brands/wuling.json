@@ -3,6 +3,11 @@
   "brandName": "Wuling",
   "brandNameTh": "หวู่หลิง",
   "brandNameLo": "ວູລິງ",
+  "strictBrandOnlySearchAliases": [
+    "Wuling",
+    "หวู่หลิง",
+    "ວູລິງ"
+  ],
   "models": [
     {
       "modelId": "air-ev",

@@ -3,6 +3,11 @@
   "brandName": "Lamborghini",
   "brandNameTh": "ลัมโบร์กินี",
   "brandNameLo": "ແລັມໂບກີນີ",
+  "strictBrandOnlySearchAliases": [
+    "Lamborghini",
+    "ลัมโบร์กินี",
+    "ແລັມໂບກີນີ"
+  ],
   "models": [
     {
       "id": "350-gt",

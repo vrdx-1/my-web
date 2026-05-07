@@ -3,6 +3,11 @@
   "brandName": "Chevrolet",
   "brandNameTh": "เชฟโรเลต",
   "brandNameLo": "ເຊຟໂຣເລດ",
+  "strictBrandOnlySearchAliases": [
+    "Chevrolet",
+    "เชฟโรเลต",
+    "ເຊຟໂຣເລດ"
+  ],
   "models": [
     {
       "modelId": "agile",

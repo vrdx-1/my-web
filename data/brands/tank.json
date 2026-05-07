@@ -3,5 +3,10 @@
   "brandName": "Tank",
   "brandNameTh": "แทงค์",
   "brandNameLo": "ແທັງ",
+  "strictBrandOnlySearchAliases": [
+    "Tank",
+    "แทงค์",
+    "ແທັງ"
+  ],
   "models": []
 }

@@ -3,6 +3,11 @@
   "brandName": "Foton",
   "brandNameTh": "โฟตอน",
   "brandNameLo": "ໂຟຕອນ",
+  "strictBrandOnlySearchAliases": [
+    "Foton",
+    "โฟตอน",
+    "ໂຟຕອນ"
+  ],
   "models": [
     {
       "modelId": "auman",

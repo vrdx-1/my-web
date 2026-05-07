@@ -3,6 +3,11 @@
   "brandName": "Leapmotor",
   "brandNameTh": "ลีปมอเตอร์",
   "brandNameLo": "ລີບມໍເຕີ",
+  "strictBrandOnlySearchAliases": [
+    "Leapmotor",
+    "ลีปมอเตอร์",
+    "ລີບມໍເຕີ"
+  ],
   "models": [
     {
       "modelId": "a05",

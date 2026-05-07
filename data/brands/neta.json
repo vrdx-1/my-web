@@ -3,6 +3,11 @@
   "brandName": "Neta",
   "brandNameTh": "เนต้า",
   "brandNameLo": "ເນຕ້າ",
+  "strictBrandOnlySearchAliases": [
+    "Neta",
+    "เนต้า",
+    "ເນຕ້າ"
+  ],
   "models": [
     {
       "modelId": "neta-aya",

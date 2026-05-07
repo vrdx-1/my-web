@@ -3,6 +3,11 @@
   "brandName": "Jeep",
   "brandNameTh": "จี๊ป",
   "brandNameLo": "ຈິບ",
+  "strictBrandOnlySearchAliases": [
+    "Jeep",
+    "จี๊ป",
+    "ຈິບ"
+  ],
   "models": [
     {
       "id": "avenger",

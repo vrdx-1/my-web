@@ -3,6 +3,11 @@
   "brandName": "Ora",
   "brandNameTh": "โอร่า",
   "brandNameLo": "ໂອຣ່າ",
+  "strictBrandOnlySearchAliases": [
+    "Ora",
+    "โอร่า",
+    "ໂອຣ່າ"
+  ],
   "models": [
     {
       "modelId": "ora-03",

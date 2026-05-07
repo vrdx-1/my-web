@@ -3,6 +3,11 @@
   "brandName": "Aion",
   "brandNameTh": "ไอออน",
   "brandNameLo": "ໄອອອນ",
+  "strictBrandOnlySearchAliases": [
+    "Aion",
+    "ไอออน",
+    "ໄອອອນ"
+  ],
   "models": [
     {
       "modelId": "aion-es",

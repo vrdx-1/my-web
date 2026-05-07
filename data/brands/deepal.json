@@ -3,6 +3,11 @@
   "brandName": "Deepal",
   "brandNameTh": "ดีพอล",
   "brandNameLo": "ດີພໍ",
+  "strictBrandOnlySearchAliases": [
+    "Deepal",
+    "ดีพอล",
+    "ດີພໍ"
+  ],
   "models": [
     {
       "modelId": "deepal-e07",

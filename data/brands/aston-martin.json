@@ -3,6 +3,11 @@
   "brandName": "Aston Martin",
   "brandNameTh": "แอสตัน มาร์ติน",
   "brandNameLo": "ແອດສະຕັນ ມາຕິນ",
+  "strictBrandOnlySearchAliases": [
+    "Aston Martin",
+    "แอสตัน มาร์ติน",
+    "ແອດສະຕັນ ມາຕິນ"
+  ],
   "models": [
     {
       "modelId": "1-5-litre",

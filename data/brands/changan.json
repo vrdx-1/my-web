@@ -3,6 +3,11 @@
   "brandName": "Changan",
   "brandNameTh": "ฉางอัน",
   "brandNameLo": "ສາງອັນ",
+  "strictBrandOnlySearchAliases": [
+    "Changan",
+    "ฉางอัน",
+    "ສາງອັນ"
+  ],
   "models": [
     {
       "modelId": "alsvin",

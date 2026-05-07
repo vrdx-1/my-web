@@ -3,6 +3,11 @@
   "brandName": "Jaguar",
   "brandNameTh": "จากัวร์",
   "brandNameLo": "ຈາຣກົວ",
+  "strictBrandOnlySearchAliases": [
+    "Jaguar",
+    "จากัวร์",
+    "ຈາຣກົວ"
+  ],
   "models": [
     {
       "modelId": "2-4-mark-i",

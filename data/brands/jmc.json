@@ -3,6 +3,11 @@
   "brandName": "JMC",
   "brandNameTh": "เจเอ็มซี",
   "brandNameLo": "ເຈເອັມຊີ",
+  "strictBrandOnlySearchAliases": [
+    "JMC",
+    "เจเอ็มซี",
+    "ເຈເອັມຊີ"
+  ],
   "models": [
     {
       "id": "baodian",

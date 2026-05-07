@@ -3,6 +3,11 @@
   "brandName": "Lexus",
   "brandNameTh": "เลกซัส",
   "brandNameLo": "ເລັກຊັດ",
+  "strictBrandOnlySearchAliases": [
+    "Lexus",
+    "เลกซัส",
+    "ເລັກຊັດ"
+  ],
   "models": [
     {
       "modelId": "ct",

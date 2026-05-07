@@ -3,6 +3,11 @@
   "brandName": "Avatr",
   "brandNameTh": "อวาทาร์",
   "brandNameLo": "ອະວາທາ",
+  "strictBrandOnlySearchAliases": [
+    "Avatr",
+    "อวาทาร์",
+    "ອະວາທາ"
+  ],
   "models": [
     {
       "modelId": "avatr-06",

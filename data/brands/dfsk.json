@@ -3,6 +3,11 @@
   "brandName": "DFSK",
   "brandNameTh": "ดีเอฟเอสเค",
   "brandNameLo": "ດີເອຟເອສເຄ",
+  "strictBrandOnlySearchAliases": [
+    "DFSK",
+    "ดีเอฟเอสเค",
+    "ດີເອຟເອສເຄ"
+  ],
   "models": [
     {
       "modelId": "330",

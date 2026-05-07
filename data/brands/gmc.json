@@ -3,6 +3,11 @@
   "brandName": "GMC",
   "brandNameTh": "จีเอ็มซี",
   "brandNameLo": "ເຈເອັມຊີ",
+  "strictBrandOnlySearchAliases": [
+    "GMC",
+    "จีเอ็มซี",
+    "ເຈເອັມຊີ"
+  ],
   "models": [
     {
       "id": "100",

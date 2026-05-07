@@ -3,6 +3,11 @@
   "brandName": "Hino",
   "brandNameTh": "ฮีโน่",
   "brandNameLo": "ຮີໂນ້",
+  "strictBrandOnlySearchAliases": [
+    "Hino",
+    "ฮีโน่",
+    "ຮີໂນ້"
+  ],
   "models": [
     {
       "modelId": "300-innovator",

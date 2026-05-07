@@ -3,6 +3,11 @@
   "brandName": "Bentley",
   "brandNameTh": "เบนท์ลีย์",
   "brandNameLo": "ເບັນລີ",
+  "strictBrandOnlySearchAliases": [
+    "Bentley",
+    "เบนท์ลีย์",
+    "ເບັນລີ"
+  ],
   "models": [
     {
       "id": "3-litre",

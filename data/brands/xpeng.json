@@ -3,6 +3,11 @@
   "brandName": "Xpeng",
   "brandNameTh": "เสี่ยวเผิง",
   "brandNameLo": "ສຽວເພິງ",
+  "strictBrandOnlySearchAliases": [
+    "Xpeng",
+    "เสี่ยวเผิง",
+    "ສຽວເພິງ"
+  ],
   "models": [
     {
       "modelId": "g3",

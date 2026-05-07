@@ -3,6 +3,11 @@
   "brandName": "Haval",
   "brandNameTh": "ฮาวาล",
   "brandNameLo": "ຮາວານ",
+  "strictBrandOnlySearchAliases": [
+    "Haval",
+    "ฮาวาล",
+    "ຮາວານ"
+  ],
   "models": [
     {
       "modelId": "chitu",

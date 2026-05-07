@@ -3,6 +3,11 @@
   "brandName": "iCar",
   "brandNameTh": "ไอคาร์",
   "brandNameLo": "ໄອຄາ",
+  "strictBrandOnlySearchAliases": [
+    "iCar",
+    "ไอคาร์",
+    "ໄອຄາ"
+  ],
   "models": [
     {
       "modelId": "icar-03",

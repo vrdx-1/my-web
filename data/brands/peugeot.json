@@ -3,6 +3,11 @@
   "brandName": "Peugeot",
   "brandNameTh": "เปอโยต์",
   "brandNameLo": "ເປີໂຢ",
+  "strictBrandOnlySearchAliases": [
+    "Peugeot",
+    "เปอโยต์",
+    "ເປີໂຢ"
+  ],
   "models": [
     {
       "id": "104",

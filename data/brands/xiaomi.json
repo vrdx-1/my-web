@@ -3,6 +3,11 @@
   "brandName": "Xiaomi",
   "brandNameTh": "เสียวหมี่",
   "brandNameLo": "ສຽວມີ້",
+  "strictBrandOnlySearchAliases": [
+    "Xiaomi",
+    "เสียวหมี่",
+    "ສຽວມີ້"
+  ],
   "models": [
     {
       "modelId": "su7",

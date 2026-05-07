@@ -3,6 +3,11 @@
   "brandName": "McLaren",
   "brandNameTh": "แมคลาเรน",
   "brandNameLo": "ແມັກລາເຣນ",
+  "strictBrandOnlySearchAliases": [
+    "McLaren",
+    "แมคลาเรน",
+    "ແມັກລາເຣນ"
+  ],
   "models": [
     {
       "modelId": "12c",

@@ -3,6 +3,11 @@
   "brandName": "Cadillac",
   "brandNameTh": "แคดิลแลค",
   "brandNameLo": "ຄາດິແລັກ",
+  "strictBrandOnlySearchAliases": [
+    "Cadillac",
+    "แคดิลแลค",
+    "ຄາດິແລັກ"
+  ],
   "models": [
     {
       "modelId": "allante",

@@ -3,6 +3,11 @@
   "brandName": "Tesla",
   "brandNameTh": "เทสลา",
   "brandNameLo": "ເທສລາ",
+  "strictBrandOnlySearchAliases": [
+    "Tesla",
+    "เทสลา",
+    "ເທສລາ"
+  ],
   "models": [
     {
       "modelId": "roadster-1st-gen",

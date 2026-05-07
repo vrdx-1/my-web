@@ -3,6 +3,11 @@
   "brandName": "Audi",
   "brandNameTh": "ออดี้",
   "brandNameLo": "ອໍດີ້",
+  "strictBrandOnlySearchAliases": [
+    "Audi",
+    "ออดี้",
+    "ອໍດີ້"
+  ],
   "models": [
     {
       "modelId": "80",

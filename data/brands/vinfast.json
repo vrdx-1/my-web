@@ -3,6 +3,11 @@
   "brandName": "Vinfast",
   "brandNameTh": "วินฟาสต์",
   "brandNameLo": "ວິນຟາດ",
+  "strictBrandOnlySearchAliases": [
+    "Vinfast",
+    "วินฟาสต์",
+    "ວິນຟາດ"
+  ],
   "models": [
     {
       "modelId": "fadil",

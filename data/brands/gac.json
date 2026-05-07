@@ -3,6 +3,11 @@
   "brandName": "GAC",
   "brandNameTh": "จีเอซี",
   "brandNameLo": "ຈີເອຊີ",
+  "strictBrandOnlySearchAliases": [
+    "GAC",
+    "จีเอซี",
+    "ຈີເອຊີ"
+  ],
   "models": [
     {
       "modelId": "aion-es",

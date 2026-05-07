@@ -3,6 +3,11 @@
   "brandName": "Rolls-Royce",
   "brandNameTh": "โรลส์-รอยซ์",
   "brandNameLo": "ໂຣຣອຍ",
+  "strictBrandOnlySearchAliases": [
+    "Rolls-Royce",
+    "โรลส์-รอยซ์",
+    "ໂຣຣອຍ"
+  ],
   "models": [
     {
       "modelId": "10-hp",

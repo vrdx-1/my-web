@@ -3,6 +3,11 @@
   "brandName": "Hummer",
   "brandNameTh": "ฮัมเมอร์",
   "brandNameLo": "ຮຳເມີ",
+  "strictBrandOnlySearchAliases": [
+    "Hummer",
+    "ฮัมเมอร์",
+    "ຮຳເມີ"
+  ],
   "models": [
     {
       "modelId": "humvee",

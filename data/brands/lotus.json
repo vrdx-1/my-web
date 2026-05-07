@@ -3,6 +3,11 @@
   "brandName": "Lotus",
   "brandNameTh": "โลตัส",
   "brandNameLo": "ໂລຕັດ",
+  "strictBrandOnlySearchAliases": [
+    "Lotus",
+    "โลตัส",
+    "ໂລຕັດ"
+  ],
   "models": [
     {
       "modelId": "2-eleven",

@@ -3,6 +3,11 @@
   "brandName": "Maserati",
   "brandNameTh": "มาเซราติ",
   "brandNameLo": "ມາເຊຣາຕີ",
+  "strictBrandOnlySearchAliases": [
+    "Maserati",
+    "มาเซราติ",
+    "ມາເຊຣາຕີ"
+  ],
   "models": [
     {
       "modelId": "222",
