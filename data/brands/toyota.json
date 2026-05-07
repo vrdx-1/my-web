@@ -104,10 +104,10 @@
       ]
     },
     {
-      "modelId": "land-cruiser-prado",
-      "modelName": "Land Cruiser Prado",
-      "modelNameTh": "แลนด์ครูเซอร์ พราโด้",
-      "modelNameLo": "ແລນກູເຊີ ປຣາໂດ້",
+      "modelId": "prado",
+      "modelName": "Prado",
+      "modelNameTh": "พราโด้",
+      "modelNameLo": "ປຣາໂດ້",
       "searchNames": [
         "prado",
         "ປຣາໂດ້",
