@@ -907,6 +907,56 @@ const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
   { display: 'ລົດສູນລາວ', searchKey: 'ສູນລາວ' },
 ];
 
+/**
+ * Returns the canonical display name for the model the query resolves to, or null if the query
+ * is not a meaningful model identifier.
+ *
+ * Rules:
+ *   1. The query must be an exact alias in the car dictionary (complete token match, not a prefix).
+ *   2. At least one matched entity must have a canonical model name whose normalized form
+ *      STARTS WITH the normalized query — this filters out cases where "vi" accidentally
+ *      resolves to Phantom VI / Mark VI whose names do not start with "vi".
+ *
+ * Examples:
+ *   "vigo"  → "Vigo"   (Hilux Vigo canonical name starts with "vigo") ✓
+ *   "revo"  → "Revo"   ✓
+ *   "vi"    → null     (Phantom VI / Mark VI don't start with "vi") ✗
+ *   "re"    → null     (not in alias index at all) ✗
+ */
+export function getCanonicalModelDisplayName(query: string): string | null {
+  const qNorm = normalizeCarSearch(query);
+  if (!qNorm) return null;
+
+  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
+  if (!entities || entities.size === 0) return null;
+
+  const lang = detectSearchLanguage(query);
+
+  for (const entity of entities) {
+    const info = CAR_INDEX.entityInfo.get(entity);
+    if (!info || info.kind !== 'model') continue;
+
+    const displayName = buildModelDisplay(
+      info.searchNames ?? [],
+      info.modelName,
+      info.modelNameLo,
+      info.modelNameTh,
+      lang,
+    );
+
+    if (!displayName) continue;
+
+    // The canonical name (normalized) must START WITH the user's query (normalized).
+    // This ensures "vi" doesn't match "Phantom VI" (normalized "phantom vi"),
+    // while "vigo" correctly matches "Vigo" (normalized "vigo").
+    if (normalizeCarSearch(displayName).startsWith(qNorm)) {
+      return displayName;
+    }
+  }
+
+  return null;
+}
+
 export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {
   const qNorm = normalizeCarSearch(prefix);
   if (!qNorm) return [];

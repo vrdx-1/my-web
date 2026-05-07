@@ -7,7 +7,7 @@ import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/u
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
-type SuggestionItem = { display: string; searchKey: string };
+type SuggestionItem = { display: string; searchKey: string; type?: 'year' | 'dictionary' };
 
 function SearchPageContent() {
   const router = useRouter();
@@ -15,6 +15,8 @@ function SearchPageContent() {
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<string[]>([]);
+  const [yearSuggestions, setYearSuggestions] = useState<string[]>([]);
+  const [loadingYearSuggestions, setLoadingYearSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   /** ซิงก์คำค้นกับ URL (แก้กรณี guest หรือ client nav ที่ state เริ่มต้นไม่ตรงกับ ?q=) */
@@ -22,11 +24,60 @@ function SearchPageContent() {
     setQuery((prev) => (prev !== qFromUrl ? qFromUrl : prev));
   }, [qFromUrl]);
 
+  // Fetch year suggestions from API
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length === 0) {
+      setYearSuggestions([]);
+      return;
+    }
+
+    setLoadingYearSuggestions(true);
+    const timer = setTimeout(() => {
+      fetch(`/api/posts/search/suggestions?q=${encodeURIComponent(q)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setYearSuggestions(data.suggestions || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch year suggestions:', err);
+          setYearSuggestions([]);
+        })
+        .finally(() => {
+          setLoadingYearSuggestions(false);
+        });
+    }, 300); // Debounce
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const suggestions = useMemo(() => {
     const q = query.trim();
     if (q.length === 0) return [];
-    return getCarDictionarySuggestions(q, Number.MAX_SAFE_INTEGER);
-  }, [query]);
+    const dictionarySuggestions = getCarDictionarySuggestions(q, Number.MAX_SAFE_INTEGER);
+    
+    const combined: SuggestionItem[] = [];
+
+    // Add year suggestions first
+    for (const yearSug of yearSuggestions) {
+      combined.push({
+        display: yearSug,
+        searchKey: yearSug,
+        type: 'year',
+      });
+    }
+
+    // Add dictionary suggestions
+    for (const dictSug of dictionarySuggestions) {
+      combined.push({
+        display: dictSug.display,
+        searchKey: dictSug.searchKey,
+        type: 'dictionary',
+      });
+    }
+
+    return combined;
+  }, [query, yearSuggestions]);
 
   useEffect(() => {
     setHistoryItems(getSearchHistory());
@@ -71,7 +122,7 @@ function SearchPageContent() {
   );
 
   const handleSuggestionClick = useCallback(
-    (item: { display: string; searchKey: string }) => {
+    (item: SuggestionItem) => {
       // ใช้ display เพื่อให้ข้อความที่แสดงด้านบนตรงกับภาษาที่ผู้ใช้กด (เช่น ລົດເກັງ ไม่กลายเป็น sedan) logic การค้นหายังเหมือนเดิม
       commitSearch(item.display, 'suggestion');
     },

@@ -11,6 +11,7 @@ import {
   getSearchCategoryIds,
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
+import { extractYearsFromQuery, rankPostsByYear, removeYearsFromQuery } from '@/utils/yearSearchUtils';
 
 const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
@@ -43,6 +44,10 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') ?? '';
     const province = searchParams.get('province') ?? undefined;
     const query = (typeof q === 'string' ? q : '').trim();
+    const queryYears = extractYearsFromQuery(query);
+    const queryForMatching = queryYears.length > 0
+      ? (removeYearsFromQuery(query).trim() || query)
+      : query;
     if (query.length === 0) {
       return NextResponse.json(
         { posts: [] },
@@ -50,16 +55,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const terms = expandWithoutBrandAliases(query)
+    const terms = expandWithoutBrandAliases(queryForMatching)
       .map((t) => String(t ?? '').trim())
       .filter(Boolean);
     // ถ้าค้นหาแบรนด์แบบ strict (เช่น Nissan/ນີດສັນ/นิสสัน) ให้ใช้เฉพาะ alias แบรนด์นั้น
     // ไม่ขยายไปรุ่น เพื่อให้แสดงเฉพาะโพสที่มีชื่อแบรนด์จริง ๆ ใน caption
-    const strictBrandTerms = getStrictBrandSearchTerms(query);
+    const strictBrandTerms = getStrictBrandSearchTerms(queryForMatching);
     const searchTerms = strictBrandTerms
       ? strictBrandTerms.map((t) => String(t ?? '').trim()).filter(Boolean)
       : terms;
-    const matchedCategoryIds = getSearchCategoryIds(query);
+    const matchedCategoryIds = getSearchCategoryIds(queryForMatching);
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -102,7 +107,7 @@ export async function GET(request: NextRequest) {
           captionMatchesAnyAlias(post.caption, searchTerms),
       );
 
-      const priorityTerms = getSearchPriorityTerms(query);
+      const priorityTerms = getSearchPriorityTerms(queryForMatching);
       if (priorityTerms.length > 0) {
         posts = [...posts].sort((a, b) => {
           const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
@@ -113,6 +118,11 @@ export async function GET(request: NextRequest) {
           if (bBoost !== aBoost) return bBoost - aBoost;
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
+      }
+
+      // Rank by year if query contains year
+      if (queryYears.length > 0) {
+        posts = rankPostsByYear(posts, queryYears);
       }
 
       return NextResponse.json(
@@ -207,7 +217,7 @@ export async function GET(request: NextRequest) {
         if (p && (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden) byId.set(p.id, p);
       }
 
-      const posts: any[] = [];
+      let posts: any[] = [];
       for (const id of topIds) {
         const post = byId.get(id);
         if (!post) continue;
@@ -215,8 +225,11 @@ export async function GET(request: NextRequest) {
         posts.push(post);
       }
 
+      // Extract years from query for ranking
+      const queryYears = extractYearsFromQuery(query);
+
       // จัดเรียงตามความเกี่ยวข้อง: โพสที่มีคำหลัก (เช่น MG, ເອັມຈີ) ใน caption แสดงก่อน โพสที่ไม่ตรงไปล่าง
-      const priorityTerms = getSearchPriorityTerms(query);
+      const priorityTerms = getSearchPriorityTerms(queryForMatching);
       if (priorityTerms.length > 0) {
         posts.sort((a, b) => {
           const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
@@ -229,13 +242,18 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      // Rank by year if query contains year
+      if (queryYears.length > 0) {
+        posts = rankPostsByYear(posts, queryYears);
+      }
+
       return NextResponse.json(
         { posts },
         { headers: { 'Cache-Control': 'private, max-age=0' } }
       );
     }
 
-    const singleQuery = searchTerms[0] ?? query;
+    const singleQuery = searchTerms[0] ?? queryForMatching;
     const matchShortId = SHORT_ID_REGEX.test(singleQuery);
     let dbQuery = carsClient
       .from('cars')
@@ -263,7 +281,7 @@ export async function GET(request: NextRequest) {
 
     let posts = (data || []).filter((p: any) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden);
 
-    const priorityTerms = getSearchPriorityTerms(query);
+    const priorityTerms = getSearchPriorityTerms(queryForMatching);
     if (priorityTerms.length > 0) {
       posts = [...posts].sort((a, b) => {
         const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
@@ -274,6 +292,11 @@ export async function GET(request: NextRequest) {
         if (bBoost !== aBoost) return bBoost - aBoost;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
+    }
+
+    // Rank by year if query contains year
+    if (queryYears.length > 0) {
+      posts = rankPostsByYear(posts, queryYears);
     }
 
     return NextResponse.json(
