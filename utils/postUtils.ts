@@ -908,31 +908,36 @@ const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
 ];
 
 /**
- * Returns the canonical display name for the model the query resolves to, or null if the query
- * is not a meaningful model identifier.
+ * Returns canonical model display name for year-suggestion use.
  *
- * Rules:
- *   1. The query must be an exact alias in the car dictionary (complete token match, not a prefix).
- *   2. At least one matched entity must have a canonical model name whose normalized form
- *      STARTS WITH the normalized query — this filters out cases where "vi" accidentally
- *      resolves to Phantom VI / Mark VI whose names do not start with "vi".
+ * Behavior:
+ *   1) Exact model alias still works as before.
+ *   2) Incomplete query is also allowed only when it can be resolved to ONE clear model.
+ *      If ambiguous (many models), return null so year suggestions stay hidden.
  *
- * Examples:
- *   "vigo"  → "Vigo"   (Hilux Vigo canonical name starts with "vigo") ✓
- *   "revo"  → "Revo"   ✓
- *   "vi"    → null     (Phantom VI / Mark VI don't start with "vi") ✗
- *   "re"    → null     (not in alias index at all) ✗
+ * This supports UX like: "ລີໂ" -> "ລີໂວ້ 2025" when there's no competing model suggestion.
  */
 export function getCanonicalModelDisplayName(query: string): string | null {
   const qNorm = normalizeCarSearch(query);
   if (!qNorm) return null;
-
-  const entities = CAR_INDEX.aliasToEntities.get(qNorm);
-  if (!entities || entities.size === 0) return null;
-
   const lang = detectSearchLanguage(query);
 
-  for (const entity of entities) {
+  const bestByModel = new Map<EntityKey, number>();
+  for (const [aliasNorm, entities] of CAR_INDEX.aliasToEntities.entries()) {
+    const score = scoreAliasForQuery(aliasNorm, qNorm);
+    if (score === null) continue;
+    for (const entity of entities) {
+      const info = CAR_INDEX.entityInfo.get(entity);
+      if (!info || info.kind !== 'model') continue;
+      const prev = bestByModel.get(entity);
+      if (prev === undefined || score > prev) bestByModel.set(entity, score);
+    }
+  }
+
+  if (bestByModel.size === 0) return null;
+
+  const candidates: Array<{ display: string; norm: string; score: number }> = [];
+  for (const [entity, score] of bestByModel.entries()) {
     const info = CAR_INDEX.entityInfo.get(entity);
     if (!info || info.kind !== 'model') continue;
 
@@ -943,18 +948,32 @@ export function getCanonicalModelDisplayName(query: string): string | null {
       info.modelNameTh,
       lang,
     );
-
     if (!displayName) continue;
 
-    // The canonical name (normalized) must START WITH the user's query (normalized).
-    // This ensures "vi" doesn't match "Phantom VI" (normalized "phantom vi"),
-    // while "vigo" correctly matches "Vigo" (normalized "vigo").
-    if (normalizeCarSearch(displayName).startsWith(qNorm)) {
-      return displayName;
-    }
+    const displayNorm = normalizeCarSearch(displayName);
+    // Keep only models whose canonical name starts with current query.
+    if (!displayNorm.startsWith(qNorm)) continue;
+
+    candidates.push({ display: displayName, norm: displayNorm, score });
   }
 
-  return null;
+  if (candidates.length === 0) return null;
+
+  candidates.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.norm.length - b.norm.length;
+  });
+
+  const topScore = candidates[0].score;
+  const topCandidates = candidates.filter((c) => c.score === topScore);
+  const uniqueTop = Array.from(new Set(topCandidates.map((c) => c.norm)));
+
+  // Show year suggestions only when top interpretation is unambiguous.
+  if (uniqueTop.length !== 1) return null;
+
+  const winnerNorm = uniqueTop[0];
+  const winner = topCandidates.find((c) => c.norm === winnerNorm);
+  return winner?.display ?? null;
 }
 
 export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {

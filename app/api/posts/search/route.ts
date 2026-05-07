@@ -11,7 +11,7 @@ import {
   getSearchCategoryIds,
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
-import { extractYearsFromQuery, rankPostsByYear, removeYearsFromQuery } from '@/utils/yearSearchUtils';
+import { extractYearsFromQuery, rankPostsByYear, removeYearsFromQuery, removePartialYearSuffix } from '@/utils/yearSearchUtils';
 
 const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
@@ -45,9 +45,10 @@ export async function GET(request: NextRequest) {
     const province = searchParams.get('province') ?? undefined;
     const query = (typeof q === 'string' ? q : '').trim();
     const queryYears = extractYearsFromQuery(query);
+    // Strip full years ("Revo2010" → "Revo") then strip leftover partial suffix ("revo20" → "revo")
     const queryForMatching = queryYears.length > 0
-      ? (removeYearsFromQuery(query).trim() || query)
-      : query;
+      ? (removePartialYearSuffix(removeYearsFromQuery(query)).trim() || query)
+      : removePartialYearSuffix(query).trim() || query;
     if (query.length === 0) {
       return NextResponse.json(
         { posts: [] },

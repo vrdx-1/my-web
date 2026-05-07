@@ -3,7 +3,12 @@
  * Handles extraction, suggestions, and ranking by year
  */
 
+// Full year: 4-digit year (19xx/20xx) not surrounded by other digits — used for caption scanning
 const YEAR_REGEX = /\b(19|20)\d{2}\b/g;
+// Full year in user query: also handles "Revo2010" (no word boundary between letter and digit)
+const QUERY_YEAR_REGEX = /(?<!\d)(19|20)\d{2}(?!\d)/g;
+// Partial year suffix: "19", "20", "201", "202" etc. at end of string (not a full 4-digit year)
+const PARTIAL_YEAR_SUFFIX_RE = /(?<!\d)((?:19|20)\d{0,1})$/;
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_CAR_YEAR = 1980;
 const MAX_CAR_YEAR = CURRENT_YEAR + 2; // Allow 2 years ahead for future models
@@ -14,7 +19,8 @@ const MAX_CAR_YEAR = CURRENT_YEAR + 2; // Allow 2 years ahead for future models
  * @returns Array of valid car years found
  */
 export function extractYearsFromQuery(query: string): number[] {
-  const matches = query.match(YEAR_REGEX);
+  // Use query-specific regex that handles concatenated years like "Revo2010"
+  const matches = query.match(QUERY_YEAR_REGEX);
   if (!matches) return [];
 
   const years = matches
@@ -32,7 +38,8 @@ export function extractYearsFromQuery(query: string): number[] {
  */
 export function removeYearsFromQuery(query: string): string {
   return query
-    .replace(YEAR_REGEX, '')
+    // Use query-specific regex to also strip concatenated years like "Revo2010"
+    .replace(QUERY_YEAR_REGEX, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -44,6 +51,32 @@ export function removeYearsFromQuery(query: string): string {
  * @param posts - Array of posts to scan for available years
  * @returns Sorted array of available years
  */
+/**
+ * Detect a partial year prefix at the end of a query string.
+ * Used for suggestion filtering when user types "revo20" → partial prefix "20"
+ * Returns null if no partial year or if it's already a full 4-digit year.
+ * Examples: "revo20" → "20", "revo201" → "201", "revo2015" → null (full year)
+ */
+export function extractPartialYearPrefix(query: string): string | null {
+  // If the query already contains a full year, no partial prefix
+  if (QUERY_YEAR_REGEX.test(query)) {
+    QUERY_YEAR_REGEX.lastIndex = 0; // reset stateful regex
+    return null;
+  }
+  QUERY_YEAR_REGEX.lastIndex = 0;
+  const match = query.match(PARTIAL_YEAR_SUFFIX_RE);
+  if (!match) return null;
+  return match[1];
+}
+
+/**
+ * Remove a partial year suffix from the end of a query string.
+ * "revo20" → "revo", "revo 201" → "revo"
+ */
+export function removePartialYearSuffix(query: string): string {
+  return query.replace(PARTIAL_YEAR_SUFFIX_RE, '').replace(/\s+/g, ' ').trim();
+}
+
 export function generateYearSuggestions(
   modelSearchTerms: string[],
   posts: Array<any>
@@ -125,5 +158,7 @@ export function formatYearSuggestion(modelName: string, year: number): string {
  * @returns Model name without year
  */
 export function getModelNameFromQuery(query: string): string {
-  return removeYearsFromQuery(query).trim();
+  // First strip full years, then strip any remaining partial year suffix
+  const withoutFull = removeYearsFromQuery(query);
+  return removePartialYearSuffix(withoutFull).trim();
 }

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
-import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery } from '@/utils/yearSearchUtils';
+import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
 
 const SUGGESTION_LIMIT = 300;
 const MAX_SUGGESTIONS = 15; // ลดจำนวน suggestions ให้พอดี
@@ -75,9 +75,13 @@ export async function GET(request: NextRequest) {
     const matchedPosts = (posts || []).filter((post: any) => captionMatchesAnyAlias(post.caption, terms));
     const availableYears = generateYearSuggestions(terms, matchedPosts);
 
+    // Filter by full year match OR partial year prefix (e.g. "revo20" → show years starting with "20")
+    const partialPrefix = extractPartialYearPrefix(query);
     const yearsForSuggestions = queryYears.length > 0
       ? availableYears.filter((year) => queryYears.includes(year))
-      : availableYears;
+      : partialPrefix
+        ? availableYears.filter((year) => String(year).startsWith(partialPrefix))
+        : availableYears;
 
     // Use canonical name (e.g. "Revo") so suggestions show "Revo 2015" not "revo 2015"
     const suggestions = yearsForSuggestions
