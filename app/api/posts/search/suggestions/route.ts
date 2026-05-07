@@ -30,10 +30,26 @@ export async function GET(request: NextRequest) {
     const baseQuery = getModelNameFromQuery(query);
     const queryYears = extractYearsFromQuery(query);
 
+    let modelQueryForSuggestions = baseQuery;
+
+    // Fallback for smooth typing when users append digits directly after model name,
+    // e.g. "revo2" / "revo 2". We keep the model part for matching and treat trailing
+    // digits as year-prefix filter so suggestions do not disappear and reappear.
+    const trailingDigitsMatch = baseQuery.match(/^(.*?)(\d{1,4})$/);
+    const trailingModelPart = trailingDigitsMatch?.[1]?.trim() ?? '';
+    const trailingDigitsPrefix = trailingDigitsMatch?.[2] ?? null;
+
     // Only show year suggestions when the query resolves to a canonical model name that
     // starts with the typed query — prevents "vi" from showing "vi 2015" (which resolves
     // to Phantom VI / Mark VI, not a meaningful suggestion for the user).
-    const canonicalName = getCanonicalModelDisplayName(baseQuery);
+    let canonicalName = getCanonicalModelDisplayName(modelQueryForSuggestions);
+    if (!canonicalName && trailingModelPart && trailingDigitsPrefix) {
+      const fallbackCanonical = getCanonicalModelDisplayName(trailingModelPart);
+      if (fallbackCanonical) {
+        canonicalName = fallbackCanonical;
+        modelQueryForSuggestions = trailingModelPart;
+      }
+    }
     if (!canonicalName) {
       return NextResponse.json(
         { suggestions: [] },
@@ -41,8 +57,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Expand search terms using the base query (model name without year)
-    const terms = expandWithoutBrandAliases(baseQuery)
+    // Expand search terms using the resolved model query
+    const terms = expandWithoutBrandAliases(modelQueryForSuggestions)
       .map((t) => String(t ?? '').trim())
       .filter(Boolean);
 
@@ -76,7 +92,7 @@ export async function GET(request: NextRequest) {
     const availableYears = generateYearSuggestions(terms, matchedPosts);
 
     // Filter by full year match OR partial year prefix (e.g. "revo20" → show years starting with "20")
-    const partialPrefix = extractPartialYearPrefix(query);
+    const partialPrefix = extractPartialYearPrefix(query) ?? trailingDigitsPrefix;
     const yearsForSuggestions = queryYears.length > 0
       ? availableYears.filter((year) => queryYears.includes(year))
       : partialPrefix
