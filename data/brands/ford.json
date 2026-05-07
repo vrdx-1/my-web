@@ -3,6 +3,11 @@
   "brandName": "Ford",
   "brandNameTh": "ฟอร์ด",
   "brandNameLo": "ຟອດ",
+  "strictBrandOnlySearchAliases": [
+    "Ford",
+    "ຟອດ",
+    "ฟอร์ด"
+  ],
   "models": [
     {
       "modelId": "ranger",
