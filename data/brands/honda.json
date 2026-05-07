@@ -3,6 +3,11 @@
   "brandName": "Honda",
   "brandNameTh": "ฮอนด้า",
   "brandNameLo": "ຮອນດ້າ",
+  "strictBrandOnlySearchAliases": [
+    "Honda",
+    "ຮອນດ້າ",
+    "ฮอนด้า"
+  ],
   "models": [
     {
       "modelId": "accord",
