@@ -3,6 +3,11 @@
   "brandName": "Geely",
   "brandNameTh": "จีลี่",
   "brandNameLo": "ຈີລີ້",
+  "strictBrandOnlySearchAliases": [
+    "Geely",
+    "ຈີລີ້",
+    "จีลี่"
+  ],
   "models": [
     {
       "modelId": "azkarra",
