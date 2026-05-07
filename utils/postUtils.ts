@@ -716,6 +716,7 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   const validAliases = new Set<string>();
   validAliases.add(query);
+  const hasSingleExactModelMatch = matchingEntities.size === 1;
 
   function addAliasAndTokens(alias: string, isAllowed: (a: string) => boolean) {
     const a = String(alias ?? '').trim();
@@ -740,9 +741,13 @@ export function expandWithoutBrandAliases(query: string): string[] {
       for (const alias of modelAliases) {
         const a = String(alias ?? '').trim();
         if (!a) continue;
-        const isAllowed = (t: string) =>
-          normalizeCarSearch(t) === queryNorm ||
-          (!otherModelAliases.has(t) && !otherModelAliases.has(normalizeCarSearch(t)));
+        const isAllowed = (t: string) => {
+          if (normalizeCarSearch(t) === queryNorm) return true;
+          // If query points to a single exact model, keep that model's aliases intact
+          // even when some aliases overlap with sibling entries (e.g. Cerato/K3).
+          if (hasSingleExactModelMatch) return true;
+          return !otherModelAliases.has(t) && !otherModelAliases.has(normalizeCarSearch(t));
+        };
         addAliasAndTokens(a, isAllowed);
       }
     }
