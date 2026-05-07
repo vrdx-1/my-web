@@ -3,6 +3,11 @@
   "brandName": "Volkswagen",
   "brandNameTh": "โฟล์คสวาเกน",
   "brandNameLo": "ໂຟກສະວາເກັນ",
+  "strictBrandOnlySearchAliases": [
+    "Volkswagen",
+    "โฟล์คสวาเกน",
+    "ໂຟກສະວາເກັນ"
+  ],
   "models": [
     {
       "modelId": "181-thing",
