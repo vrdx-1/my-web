@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
     
     // ถ้าผู้ใช้ login แล้ว ให้ตรวจสอบ role และ is_sub_account
     if (user?.id && !userError) {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('role, is_sub_account')
+        .select('role, is_sub_account, parent_admin_id')
         .eq('id', user.id)
         .single();
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       }
 
       // ถ้าเป็น sub account ของ admin ให้ข้ามการบันทึก
-      if (profile?.is_sub_account === true) {
+      if (profile?.is_sub_account === true && profile?.parent_admin_id) {
         console.log(`[Search Log] Skipped: Sub account user ${user.id} searched for "${search_term}"`);
         return NextResponse.json({ ok: true });
       }
@@ -90,11 +90,10 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    console.log(`[Search Log] Recorded: "${search_term}" (${search_type})`);
     return NextResponse.json({ ok: true });
   } catch (e) {
+    console.error('[Search Log Error]', e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
-    
-  console.log(`[Search Log] Recorded: "${search_term}" (${search_type})`);
-  console.error('[Search Log Error]', e);
