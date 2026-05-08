@@ -46,18 +46,25 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     // ถ้าผู้ใช้ login แล้ว ให้ตรวจสอบ role และ is_sub_account
-    if (user?.id) {
-      const { data: profile } = await supabase
+    if (user?.id && !userError) {
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, is_sub_account')
         .eq('id', user.id)
         .single();
 
-      // ถ้าเป็น admin หรือ sub account ของ admin ให้ข้ามการบันทึก
-      if (profile?.role === 'admin' || profile?.is_sub_account === true) {
+      // ถ้าเป็น admin ให้ข้ามการบันทึก
+      if (profile?.role === 'admin') {
+        console.log(`[Search Log] Skipped: Admin user ${user.id} searched for "${search_term}"`);
+        return NextResponse.json({ ok: true });
+      }
+
+      // ถ้าเป็น sub account ของ admin ให้ข้ามการบันทึก
+      if (profile?.is_sub_account === true) {
+        console.log(`[Search Log] Skipped: Sub account user ${user.id} searched for "${search_term}"`);
         return NextResponse.json({ ok: true });
       }
     }
@@ -88,3 +95,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+    
+  console.log(`[Search Log] Recorded: "${search_term}" (${search_type})`);
+  console.error('[Search Log Error]', e);
