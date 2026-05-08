@@ -105,17 +105,21 @@ export async function GET(request: NextRequest) {
   const startDateIso = `${year}-01-01`;
   const endDateIso = `${year}-12-31`;
 
+  // Fetch all visitor records for the year
+  // Use a large range to handle more than 1000 records
   const [usersRes, guestsRes] = await Promise.all([
     admin
       .from('daily_user_visitors')
       .select('visit_date')
       .gte('visit_date', startDateIso)
-      .lte('visit_date', endDateIso),
+      .lte('visit_date', endDateIso)
+      .range(0, 9999), // Fetch up to 10,000 records
     admin
       .from('daily_guest_visitors')
       .select('visit_date')
       .gte('visit_date', startDateIso)
-      .lte('visit_date', endDateIso),
+      .lte('visit_date', endDateIso)
+      .range(0, 9999), // Fetch up to 10,000 records
   ]);
 
   if (usersRes.error) {
@@ -125,6 +129,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: guestsRes.error.message }, { status: 500 });
   }
 
+  // Aggregate counts by date
   const usersGrouped = new Map<string, number>();
   for (const row of usersRes.data || []) {
     const date = String(row.visit_date);
