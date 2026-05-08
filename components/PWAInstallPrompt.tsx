@@ -38,6 +38,24 @@ export function PWAInstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const trackInstallClick = useCallback(() => {
+    const body = JSON.stringify({ source: 'pwa_install_prompt' });
+
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics/download-click', blob);
+      return;
+    }
+
+    void fetch('/api/analytics/download-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  }, []);
+
   const isDismissedInSession = useCallback(() => {
     if (typeof window === 'undefined') return false;
     if (window.__jutpaiPwaDismissed) return true;
@@ -109,6 +127,8 @@ export function PWAInstallPrompt() {
   }, [isAdmin, isDismissedInSession]);
 
   const handleInstall = useCallback(async () => {
+    trackInstallClick();
+
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -120,7 +140,7 @@ export function PWAInstallPrompt() {
       return;
     }
     setShowHint((h) => !h);
-  }, [deferredPrompt, persistDismissInSession]);
+  }, [deferredPrompt, persistDismissInSession, trackInstallClick]);
 
   const handleDismiss = useCallback(() => {
     if (timerRef.current) {
