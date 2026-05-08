@@ -46,14 +46,14 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
     
     // ถ้าผู้ใช้ login แล้ว ให้ตรวจสอบ role และ is_sub_account
-    if (session?.user?.id) {
+    if (user?.id) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, is_sub_account')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
 
       // ถ้าเป็น admin หรือ sub account ของ admin ให้ข้ามการบันทึก
