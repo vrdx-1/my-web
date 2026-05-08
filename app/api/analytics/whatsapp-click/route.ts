@@ -105,11 +105,11 @@ export async function POST(request: Request) {
   const guestToken = !userId ? guestTokenRaw.trim().slice(0, 200) || null : null;
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
-  // Get short_id from posts table if post_id exists
+  // Get short_id from cars table if post_id exists
   let shortId: string | null = null;
   if (postId) {
     const { data: postData } = await admin
-      .from('posts')
+      .from('cars')
       .select('short_id')
       .eq('id', postId)
       .maybeSingle();
