@@ -32,7 +32,7 @@ type WhatsAppLogRow = {
   target_profile_id: string;
   user_id: string | null;
   guest_token: string | null;
-  post_id: string | null;
+  short_id: string | null;
 };
 
 async function ensureAdmin() {
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await admin
     .from('whatsapp_click_logs')
-    .select('id, created_at, target_profile_id, user_id, guest_token, post_id')
+    .select('id, created_at, target_profile_id, user_id, guest_token, short_id')
     .gte('created_at', startIso)
     .lt('created_at', nextIso)
     .order('created_at', { ascending: true });
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     userClicks: number;
     guestClicks: number;
     uniquePeopleSet: Set<string>;
-    postMap: Map<string | null, number>;
+    shortIdMap: Map<string, number>;
   }>();
 
   for (const row of selectedDateLogs) {
@@ -212,16 +212,16 @@ export async function GET(request: NextRequest) {
         userClicks: 0,
         guestClicks: 0,
         uniquePeopleSet: new Set<string>(),
-        postMap: new Map(),
+        shortIdMap: new Map(),
       });
     }
 
     const current = accountMap.get(key)!;
     current.totalClicks += 1;
 
-    // Track posts
-    const postId = row.post_id ?? null;
-    current.postMap.set(postId, (current.postMap.get(postId) ?? 0) + 1);
+    // Track posts by short_id
+    const shortId = row.short_id || 'unknown';
+    current.shortIdMap.set(shortId, (current.shortIdMap.get(shortId) ?? 0) + 1);
 
     if (row.user_id) {
       current.userClicks += 1;
@@ -237,28 +237,6 @@ export async function GET(request: NextRequest) {
   }
 
   const targetProfileIds = Array.from(accountMap.keys());
-  
-  // Get all post IDs to fetch short_ids
-  const postIds = Array.from(
-    new Set(
-      Array.from(accountMap.values())
-        .flatMap((stats) => Array.from(stats.postMap.keys()))
-        .filter((id) => id !== null)
-    )
-  ) as string[];
-
-  const { data: postRows } = postIds.length
-    ? await admin
-        .from('posts')
-        .select('id, short_id')
-        .in('id', postIds)
-    : { data: [] as any[] };
-
-  const postShortIdMap = new Map<string, string>();
-  for (const row of postRows || []) {
-    postShortIdMap.set(row.id, row.short_id || 'unknown');
-  }
-
   const { data: profileRows } = targetProfileIds.length
     ? await admin
         .from('profiles')
@@ -299,11 +277,10 @@ export async function GET(request: NextRequest) {
       const profile = profileMap.get(profileId);
       const parentAdminId = profile?.parent_admin_id ?? null;
 
-      // Convert postMap to sorted array
-      const posts: PostClickInfo[] = Array.from(stats.postMap.entries())
-        .filter(([postId]) => postId !== null)
-        .map(([postId, clickCount]) => ({
-          shortId: postShortIdMap.get(postId!) || 'unknown',
+      // Convert shortIdMap to sorted array
+      const posts: PostClickInfo[] = Array.from(stats.shortIdMap.entries())
+        .map(([shortId, clickCount]) => ({
+          shortId,
           clickCount,
         }))
         .sort((a, b) => b.clickCount - a.clickCount);

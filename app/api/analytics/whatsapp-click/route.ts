@@ -75,11 +75,24 @@ export async function POST(request: Request) {
   const guestToken = !userId ? guestTokenRaw.trim().slice(0, 200) || null : null;
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
+  // Get short_id from posts table if post_id exists
+  let shortId: string | null = null;
+  if (postId) {
+    const { data: postData } = await admin
+      .from('posts')
+      .select('short_id')
+      .eq('id', postId)
+      .maybeSingle();
+    
+    shortId = postData?.short_id || null;
+  }
+
   const { error } = await admin.from('whatsapp_click_logs').insert({
     user_id: userId,
     guest_token: guestToken,
     target_profile_id: targetProfileId,
     post_id: postId,
+    short_id: shortId,
     source,
     user_agent: userAgent,
   });
