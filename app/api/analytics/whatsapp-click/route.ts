@@ -18,6 +18,15 @@ function getServiceRoleClient() {
  * - ไม่นับ role = admin
  */
 export async function POST(request: Request) {
+  const origin = request.headers.get('origin') || '';
+  const referer = request.headers.get('referer') || '';
+  const host = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
+  const localSignal = `${origin} ${referer} ${host}`.toLowerCase();
+
+  if (localSignal.includes('localhost') || localSignal.includes('127.0.0.1')) {
+    return NextResponse.json({ ok: true, skipped: 'localhost' });
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,9 +50,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
   }
 
+  let userId: string | null = null;
+
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user: cookieUser },
+  } = await supabase.auth.getUser();
+  if (cookieUser?.id) {
+    userId = cookieUser.id;
+  }
+
+  if (!userId) {
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+    if (accessToken) {
+      const {
+        data: { user: headerUser },
+      } = await supabase.auth.getUser(accessToken);
+      if (headerUser?.id) {
+        userId = headerUser.id;
+      }
+    }
+  }
 
   const payload = await request.json().catch(() => ({}));
   const sourceRaw = typeof payload?.source === 'string' ? payload.source : 'unknown';
@@ -57,17 +85,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: 'missing-target-profile' });
   }
 
-  let userId: string | null = session?.user?.id ?? null;
-
   if (userId) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_sub_account, parent_admin_id')
       .eq('id', userId)
       .maybeSingle();
 
     if (profile?.role === 'admin') {
       return NextResponse.json({ ok: true, skipped: 'admin' });
+    }
+
+    if (profile?.is_sub_account === true && profile?.parent_admin_id) {
+      return NextResponse.json({ ok: true, skipped: 'admin-sub-account' });
     }
   }
 

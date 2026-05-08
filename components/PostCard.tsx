@@ -13,6 +13,7 @@ import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
@@ -155,6 +156,8 @@ export function PostCard({
       postId,
     };
 
+    const accessToken = session?.access_token ?? '';
+
     if (!session?.user?.id) {
       const guestToken = getPrimaryGuestToken();
       if (guestToken) {
@@ -164,7 +167,7 @@ export function PostCard({
 
     const body = JSON.stringify(payload);
 
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+    if (!accessToken && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
       const blob = new Blob([body], { type: 'application/json' });
       navigator.sendBeacon('/api/analytics/whatsapp-click', blob);
       return;
@@ -172,12 +175,18 @@ export function PostCard({
 
     void fetch('/api/analytics/whatsapp-click', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: mergeHeaders(
+        {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        activeProfileId,
+      ),
       credentials: 'include',
       body,
       keepalive: true,
     }).catch(() => {});
-  }, [session?.user?.id]);
+  }, [activeProfileId, session?.access_token, session?.user?.id]);
 
   const updateCollapsedCaption = React.useCallback(() => {
     const captionEl = captionRef.current;
