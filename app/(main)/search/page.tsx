@@ -6,12 +6,15 @@ import { getCarDictionarySuggestions } from '@/utils/postUtils';
 import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 type SuggestionItem = { display: string; searchKey: string; type?: 'year' | 'dictionary' };
 
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { session, activeProfileId } = useSessionAndProfile();
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<string[]>([]);
@@ -98,9 +101,17 @@ function SearchPageContent() {
       if (t) {
         addSearchHistory(t);
         setHistoryItems(getSearchHistory());
+        const accessToken = session?.access_token ?? '';
         fetch('/api/search/log', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: mergeHeaders(
+            {
+              'Content-Type': 'application/json',
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+            activeProfileId,
+          ),
           body: JSON.stringify({
             search_term: t,
             search_type: searchType,
@@ -109,7 +120,7 @@ function SearchPageContent() {
       }
       router.push(t ? `/home?q=${encodeURIComponent(t)}` : '/home', { scroll: false });
     },
-    [router],
+    [activeProfileId, router, session],
   );
 
   const handleKeyDown = useCallback(

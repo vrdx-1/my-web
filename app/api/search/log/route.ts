@@ -46,25 +46,48 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    let userId: string | null = null;
+
+    const {
+      data: { user: cookieUser },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (cookieUser?.id && !userError) {
+      userId = cookieUser.id;
+    }
+
+    if (!userId) {
+      const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+      const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+      if (accessToken) {
+        const {
+          data: { user: headerUser },
+        } = await supabase.auth.getUser(accessToken);
+        if (headerUser?.id) {
+          userId = headerUser.id;
+        }
+      }
+    }
     
     // ถ้าผู้ใช้ login แล้ว ให้ตรวจสอบ role และ is_sub_account
-    if (user?.id && !userError) {
+    if (userId) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, is_sub_account, parent_admin_id')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       // ถ้าเป็น admin ให้ข้ามการบันทึก
       if (profile?.role === 'admin') {
-        console.log(`[Search Log] Skipped: Admin user ${user.id} searched for "${search_term}"`);
+        console.log(`[Search Log] Skipped: Admin user ${userId} searched for "${search_term}"`);
         return NextResponse.json({ ok: true });
       }
 
       // ถ้าเป็น sub account ของ admin ให้ข้ามการบันทึก
       if (profile?.is_sub_account === true && profile?.parent_admin_id) {
-        console.log(`[Search Log] Skipped: Sub account user ${user.id} searched for "${search_term}"`);
+        console.log(`[Search Log] Skipped: Sub account user ${userId} searched for "${search_term}"`);
         return NextResponse.json({ ok: true });
       }
     }
