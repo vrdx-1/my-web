@@ -19,6 +19,10 @@ type AccountRow = {
   uniquePeople: number;
   userClicks: number;
   guestClicks: number;
+  posts: Array<{
+    shortId: string;
+    clickCount: number;
+  }>;
 };
 
 type Summary = {
@@ -232,6 +236,7 @@ export default function AdminWhatsAppClicksPage() {
                     <tr style={{ background: '#f8fafc' }}>
                       <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Account</th>
                       <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                      <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Posts</th>
                       <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Total Clicks</th>
                       <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Unique People</th>
                       <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>User</th>
@@ -244,10 +249,16 @@ export default function AdminWhatsAppClicksPage() {
                         ? `Sub account${row.parentAdminUsername ? ` (${row.parentAdminUsername})` : ''}`
                         : 'Main account';
 
+                      // Format posts display
+                      const postsDisplay = row.posts.length > 0 
+                        ? row.posts.map(p => `${p.shortId}(${p.clickCount})`).join(', ')
+                        : '-';
+
                       return (
                         <tr key={row.targetProfileId} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '10px 12px', fontSize: '13px', color: '#0f172a', fontWeight: 600 }}>{row.username}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', color: '#475569' }}>{accountType}</td>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: '#475569', fontFamily: 'monospace' }}>{postsDisplay}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{row.totalClicks.toLocaleString()}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', fontWeight: 700, color: '#1d4ed8' }}>{row.uniquePeople.toLocaleString()}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', color: '#14532d' }}>{row.userClicks.toLocaleString()}</td>
