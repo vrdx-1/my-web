@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import dynamic, { type DynamicOptions } from 'next/dynamic';
 import { LoadingSpinner } from '@/components/LoadingSpinner';

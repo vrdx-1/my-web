@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated artifacts (do not lint)
+    "public/workbox-*.js",
+    "public/sw.js",
+    "android/app/src/main/assets/public/**",
   ]),
 ]);
 

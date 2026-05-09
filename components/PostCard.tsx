@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';

@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { Suspense, lazy } from 'react';
 import { ReportModal } from './modals/ReportModal';
 

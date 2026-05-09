@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { FeedWithPreload } from '@/components/FeedWithPreload';

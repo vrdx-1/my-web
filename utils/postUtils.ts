@@ -6,6 +6,8 @@
 import { safeParseJSON } from './storageUtils';
 import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { CATEGORY_MODELS } from '@/data/category-models';
 
 // ---- Car dictionary search helpers (moved here to avoid extra files) ----

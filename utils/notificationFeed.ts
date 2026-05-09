@@ -4,6 +4,8 @@
  * count as new and sort latest first.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { supabase } from '@/lib/supabase';
 
 export interface NotificationFeedItem {

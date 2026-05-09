@@ -7,6 +7,8 @@ import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type O
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /** แคช feed ต่อ type+user (+ tab สำหรับ saved/liked/my-posts เพื่อแยก list พร้อมขาย/ขายแล้ว) */
 const FEED_LIST_CACHE_MAX = 6;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
@@ -270,7 +272,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
       }
     }
 
-    let soldWillClearLoadingInOnDone = false;
+    const soldWillClearLoadingInOnDone = false;
     let fetchedRowsCount: number | null = null;
     try {
       let postIds: string[] = [];

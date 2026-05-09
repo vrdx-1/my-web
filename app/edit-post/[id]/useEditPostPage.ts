@@ -181,7 +181,7 @@ export function useEditPostPage(id: string) {
     setUploading(true);
     const uploadedPaths: string[] = [];
     try {
-      let finalImages = [...images];
+      const finalImages = [...images];
       for (const file of imageUpload.selectedFiles) {
         const ext = file.name.split('.').pop() || 'webp';
         const path = `updates/${Date.now()}-${Math.random()}.${ext}`;

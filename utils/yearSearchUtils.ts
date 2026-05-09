@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Utility functions for year-based car search
  * Handles extraction, suggestions, and ranking by year

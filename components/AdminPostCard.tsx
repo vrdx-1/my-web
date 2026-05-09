@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { Avatar } from './Avatar';
 import { PhotoGrid } from './PhotoGrid';

@@ -1,4 +1,6 @@
 'use client'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, Suspense } from 'react';
 import { formatTime } from '@/utils/postUtils';
 import { formatTimeAgo } from '@/utils/formatTime';

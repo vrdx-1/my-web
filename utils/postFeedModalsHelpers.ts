@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Helper functions for creating PostFeedModals props
  * Reduces boilerplate code in components

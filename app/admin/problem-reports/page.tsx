@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useEffect } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants'

@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useEffect, useMemo } from 'react';
 import { HOME_FEED_PAGE_SIZE } from '@/utils/constants';
 

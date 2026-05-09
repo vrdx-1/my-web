@@ -177,7 +177,7 @@ export default function IdentityVerificationPage() {
     formData.append('selfie_photo', compressedSelfie)
 
     try {
-      let { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession()
       let accessToken = session?.access_token ?? ''
 
       if (!accessToken) {
