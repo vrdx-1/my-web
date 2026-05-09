@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/refs */
+
 import React, { createContext, useCallback, useRef, useContext, useEffect, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 

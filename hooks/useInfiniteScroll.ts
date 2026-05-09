@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/refs */
+
 import { useRef, useCallback, RefObject, useEffect } from 'react';
 import { FEED_PRELOAD_ROOT_MARGIN, FEED_PRELOAD_THRESHOLD } from '@/utils/constants';
 

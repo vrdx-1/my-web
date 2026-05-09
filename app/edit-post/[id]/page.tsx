@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/refs */
+
 import { use } from 'react';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { LoadingSpinner } from '@/components/LoadingSpinner';

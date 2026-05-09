@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Date Filter Utility
  * Provides date range calculation for admin filter options

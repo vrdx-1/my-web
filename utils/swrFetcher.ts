@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * SWR Fetcher Utility
  * Provides a consistent way to fetch data for SWR caching

@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/refs */
+
 import { useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';

@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
+
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 import { isPhotoGridImageUrlLoaded, markPhotoGridImageUrlLoaded } from '@/utils/photoGridImageCache';

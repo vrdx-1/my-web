@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import React, { memo, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';

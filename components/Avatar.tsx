@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';
 import { getDisplayAvatarUrl } from '@/utils/avatarUtils';

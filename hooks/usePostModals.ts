@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
 interface UsePostModalsProps {

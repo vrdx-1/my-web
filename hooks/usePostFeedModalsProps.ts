@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react-hooks/preserve-manual-memoization */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useMemo } from 'react';

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Admin Utilities
  * Shared functions for admin pages

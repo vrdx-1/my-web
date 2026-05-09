@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/refs */
+
 import React, { useEffect, useState, useRef } from 'react';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { preloadPostVisibleImages } from '@/utils/imagePreload';

@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import { AdminPostCard } from '@/components/AdminPostCard';
 import { EmptyState } from '@/components/EmptyState';

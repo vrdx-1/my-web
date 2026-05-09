@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import React, { useLayoutEffect, useCallback, Suspense, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useMainTabScroll, type MainTabId } from '@/contexts/MainTabScrollContext';

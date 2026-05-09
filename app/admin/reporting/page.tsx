@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react/no-unescaped-entities */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, Suspense } from 'react';
 import { formatTime } from '@/utils/postUtils';

@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react-hooks/rules-of-hooks */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 

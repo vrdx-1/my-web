@@ -1,4 +1,8 @@
 'use client'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';

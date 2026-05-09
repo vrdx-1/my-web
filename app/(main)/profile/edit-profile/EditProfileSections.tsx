@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { memo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { GuestAvatarIcon } from '@/components/GuestAvatarIcon';

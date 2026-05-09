@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/refs */
+
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';

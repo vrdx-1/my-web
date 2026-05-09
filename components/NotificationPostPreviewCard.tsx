@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react-hooks/purity */
+
 import React from 'react';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 

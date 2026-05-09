@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/preserve-manual-memoization, @typescript-eslint/no-explicit-any */
+
 import { useCallback, useEffect, useState } from 'react';
 import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';

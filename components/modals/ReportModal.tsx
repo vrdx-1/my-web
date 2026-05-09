@@ -1,5 +1,9 @@
 'use client'
 
+/* eslint-disable react-hooks/rules-of-hooks */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect } from 'react';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 

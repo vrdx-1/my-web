@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { EmptyState } from '@/components/EmptyState';

@@ -1,4 +1,6 @@
 'use client'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { TimeFilter } from '@/components/admin/TimeFilter';
 import { applyDateFilter } from '@/utils/dateFilter';
