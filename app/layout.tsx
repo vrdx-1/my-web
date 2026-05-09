@@ -7,6 +7,7 @@ import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { DailyVisitorTracker } from "@/components/DailyVisitorTracker";
 import { BottomNavWrapper } from "@/components/BottomNavWrapper";
 import { SavePostSuccessPopupHost } from "@/components/modals/SavePostSuccessPopupHost";
 import { HeaderVisibilityProvider } from "@/contexts/HeaderVisibilityContext";
@@ -79,6 +80,7 @@ export default function RootLayout({
               <SavePostSuccessPopupHost />
               <HeaderVisibilityProvider>
                 <SessionProfileProvider>
+                  <DailyVisitorTracker />
                   <BottomNavWrapper>{children}</BottomNavWrapper>
                 </SessionProfileProvider>
               </HeaderVisibilityProvider>

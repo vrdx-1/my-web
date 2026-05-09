@@ -23,14 +23,17 @@ async function ensureAdmin() {
       },
     }
   );
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.id) {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user?.id) {
     return { ok: false, status: 401 as const };
   }
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   if (profile?.role !== 'admin') {
     return { ok: false, status: 403 as const };

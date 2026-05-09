@@ -26,12 +26,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error || !user?.id) {
         setIsAdminLoggedIn(false);
         return;
       }
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
       setIsAdminLoggedIn(profile?.role === 'admin');
     };
     check();

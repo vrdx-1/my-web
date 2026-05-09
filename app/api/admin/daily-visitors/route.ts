@@ -58,6 +58,50 @@ type DailyVisitorRow = {
   unique_total: number;
 };
 
+const VISITOR_PAGE_SIZE = 1000;
+type AdminClient = NonNullable<ReturnType<typeof getAdminClient>>;
+
+async function fetchGroupedVisitorsByDate(
+  admin: AdminClient,
+  tableName: 'daily_user_visitors' | 'daily_guest_visitors',
+  keyColumn: 'user_id' | 'guest_token',
+  startDateIso: string,
+  endDateIso: string
+) {
+  const grouped = new Map<string, number>();
+  let from = 0;
+
+  for (;;) {
+    const to = from + VISITOR_PAGE_SIZE - 1;
+    const { data, error } = await admin
+      .from(tableName)
+      .select(`visit_date, ${keyColumn}`)
+      .gte('visit_date', startDateIso)
+      .lte('visit_date', endDateIso)
+      .order('visit_date', { ascending: true })
+      .order(keyColumn, { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      return { grouped: null, error };
+    }
+
+    const rows = (data || []) as Array<{ visit_date: string }>;
+    for (const row of rows) {
+      const date = String(row.visit_date);
+      grouped.set(date, (grouped.get(date) ?? 0) + 1);
+    }
+
+    if (rows.length < VISITOR_PAGE_SIZE) {
+      break;
+    }
+
+    from += VISITOR_PAGE_SIZE;
+  }
+
+  return { grouped, error: null };
+}
+
 function getBangkokDateString(date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Bangkok',
@@ -106,21 +150,9 @@ export async function GET(request: NextRequest) {
   const startDateIso = `${year}-01-01`;
   const endDateIso = `${year}-12-31`;
 
-  // Fetch all visitor records for the year
-  // Use a large range to handle more than 1000 records
   const [usersRes, guestsRes] = await Promise.all([
-    admin
-      .from('daily_user_visitors')
-      .select('visit_date')
-      .gte('visit_date', startDateIso)
-      .lte('visit_date', endDateIso)
-      .range(0, 9999), // Fetch up to 10,000 records
-    admin
-      .from('daily_guest_visitors')
-      .select('visit_date')
-      .gte('visit_date', startDateIso)
-      .lte('visit_date', endDateIso)
-      .range(0, 9999), // Fetch up to 10,000 records
+    fetchGroupedVisitorsByDate(admin, 'daily_user_visitors', 'user_id', startDateIso, endDateIso),
+    fetchGroupedVisitorsByDate(admin, 'daily_guest_visitors', 'guest_token', startDateIso, endDateIso),
   ]);
 
   if (usersRes.error) {
@@ -130,18 +162,8 @@ export async function GET(request: NextRequest) {
     return internalServerError('admin/daily-visitors guests query failed', guestsRes.error);
   }
 
-  // Aggregate counts by date
-  const usersGrouped = new Map<string, number>();
-  for (const row of usersRes.data || []) {
-    const date = String(row.visit_date);
-    usersGrouped.set(date, (usersGrouped.get(date) ?? 0) + 1);
-  }
-
-  const guestsGrouped = new Map<string, number>();
-  for (const row of guestsRes.data || []) {
-    const date = String(row.visit_date);
-    guestsGrouped.set(date, (guestsGrouped.get(date) ?? 0) + 1);
-  }
+  const usersGrouped = usersRes.grouped ?? new Map<string, number>();
+  const guestsGrouped = guestsRes.grouped ?? new Map<string, number>();
 
   // Build full-year rows
   const rows: DailyVisitorRow[] = [];

@@ -9,7 +9,6 @@ import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useHomeSearchResultSources, HOME_SOLD_STUB, type HomePostListSource } from '@/hooks/useHomeSearchResultSources';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
-import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 export type HomeTab = 'recommend' | 'sold';
 
@@ -66,28 +65,6 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     if (!hasSearch) hadSearchRef.current = false;
   }, [searchQuery, mainTab]);
 
-  // ✅ หากเซสชั่นพร้อมแล้วและเป็นผู้ใช้จริง ให้บันทึกการเข้าชมครั้งนี้เป็น user (ตรวจสอบสถานะเซสชั่นที่เปลี่ยนแปลง)
-  const sessionCheckRef = useRef<Map<string, boolean>>(new Map());
-
-  useEffect(() => {
-    if (!sessionReady) return;
-    if (!session?.user?.id) return;
-    const key = `tracked-${session.user.id}`;
-    if (sessionCheckRef.current.has(key)) return;
-    sessionCheckRef.current.set(key, true);
-
-    // บันทึกการเข้าชมเป็น user เมื่อเซสชั่นพร้อมแล้ว
-    void fetch('/api/analytics/daily-visitor', {
-      method: 'POST',
-      credentials: 'include',
-      keepalive: true,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    }).catch(() => {
-      // ignore analytics failures
-    });
-  }, [sessionReady, session?.user?.id]);
-
   const recommendFeed = useHomeFeed({
     session,
     sessionReady,
@@ -95,18 +72,6 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     onInitialLoadDone: () => {
       startSessionCheck();
       setFirstFeedLoaded(true);
-      // ยิงหลังฟีดพร้อมแล้วเท่านั้น เพื่อลดผลกระทบกับความเร็วหน้าโฮม
-      // ✅ ตรวจสอบ sessionReady ให้แน่ใจว่า session พร้อมก่อนส่ง — ถ้า sessionReady=false ให้ส่งเป็น guest ไปก่อน
-      const payload = sessionReady && session?.user?.id ? {} : { guestToken: getPrimaryGuestToken() };
-      void fetch('/api/analytics/daily-visitor', {
-        method: 'POST',
-        credentials: 'include',
-        keepalive: true,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).catch(() => {
-        // ignore analytics failures
-      });
     },
     sharedLikedSaved,
     isActive: pathname === '/home',
