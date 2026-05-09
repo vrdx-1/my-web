@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { safeParseJSON, safeParseSessionJSON } from '@/utils/storageUtils';
 import {
@@ -8,6 +9,10 @@ import {
   loadCreatePostDraft,
   saveCreatePostDraft,
 } from '@/utils/createPostDraftPersistence';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { useCreatePostContext } from '@/contexts/CreatePostContext';
+
+type UseImageUploadReturn = ReturnType<typeof useImageUpload>;
 
 interface UseCreatePostDraftParams {
   caption: string;
@@ -20,10 +25,10 @@ interface UseCreatePostDraftParams {
   setCarCurrency: (value: '₭' | '฿' | '$') => void;
   step: number;
   setStep: (value: number) => void;
-  imageUpload: any;
+  imageUpload: UseImageUploadReturn;
   isInitialized: boolean;
   setIsInitialized: (value: boolean) => void;
-  setSession: (session: any) => void;
+  setSession: (session: Session | null) => void;
   layout: string;
   setLayout: (value: string) => void;
   /** คืนค่า caption ที่เก็บไว้ระดับโมดูล — กัน caption หายเมื่อหน้า remount */
@@ -55,6 +60,9 @@ export function useCreatePostDraft({
   sharedDraftLayout = 'default',
   setSharedDraft,
 }: UseCreatePostDraftParams) {
+  // Import context to check for pending files from file picker
+  const createPostContext = useCreatePostContext();
+
   // Initial load: session + caption/province/step + images
   useEffect(() => {
     const initializeDraft = async () => {
@@ -120,59 +128,25 @@ export function useCreatePostDraft({
         if (lsLayout) setLayout(lsLayout);
       }
 
-      // ดึงข้อมูลจากหน้าโฮม
-      const pendingImages = safeParseSessionJSON<string[]>('pending_images', []);
+      // ดึง pending files จาก context (File objects ที่เก็บจาก file picker)
+      const pendingFilesFromContext = createPostContext?.pendingFiles || [];
 
-      // ถ้ามี pending_images จากหน้าโฮม/หน้าอื่น แปลว่าผู้ใช้เพิ่งเลือกรูปใหม่
-      // ต้องให้มาก่อน shared draft เก่าเสมอ ไม่งั้น PhotoGrid อาจโชว์รูปเก่าแทนรูปที่เพิ่งเลือก
-      if (pendingImages.length > 0) {
+      // ถ้ามี pending files จากการเลือกรูปใหม่ ให้ใช้ก่อน
+      if (pendingFilesFromContext.length > 0) {
         try {
-          // จำกัดสูงสุด 30 รูปจากหน้าโฮม (ถ้ามาเกิน เอาแค่ 30 รูปแรก)
-          const limitedPendingImages = pendingImages.slice(0, 30);
+          const files = pendingFilesFromContext.slice(0, 30);
+          const previewUrls = files.map((file) => URL.createObjectURL(file));
+          imageUpload.setPreviews(previewUrls);
+          imageUpload.setSelectedFiles(files);
+          const nextLayout = savedLayout || sharedDraftLayout || 'default';
+          setLayout(nextLayout);
+          setSharedDraft?.({ files, layout: nextLayout });
 
-          // แปลง Blob URL กลับเป็น File Object
-          const filePromises = limitedPendingImages.map(async (url: string, index: number) => {
-            try {
-              if (!url.startsWith('blob:')) {
-                return null;
-              }
-              const response = await fetch(url);
-              if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
-              }
-              const blob = await response.blob();
-              return new File([blob], `image-${Date.now()}-${index}.webp`, {
-                type: 'image/webp',
-              });
-            } catch (error) {
-              console.error(`Error loading image at index ${index}:`, error);
-              return null;
-            }
-          });
-
-          const files = await Promise.all(filePromises);
-          // รองรับสูงสุด 30 รูปจาก pending_images
-          const validFiles = files.filter((file): file is File => file !== null).slice(0, 30);
-
-          if (validFiles.length > 0) {
-            // สร้าง Blob URL สำหรับ preview
-            const previewUrls = validFiles.map((file) => URL.createObjectURL(file));
-            imageUpload.setPreviews(previewUrls);
-            // IMPORTANT: อย่า append ซ้ำ (React StrictMode ใน dev อาจเรียก useEffect ซ้ำ)
-            // ให้ set ทับเพื่อป้องกันรูปถูกอัปโหลด/บันทึกซ้ำจนเห็นเป็น ×2 หลังโพสต์
-            imageUpload.setSelectedFiles(validFiles);
-            const nextLayout = savedLayout || sharedDraftLayout || 'default';
-            setLayout(nextLayout);
-            setSharedDraft?.({ files: validFiles, layout: nextLayout });
-
-            setStep(2);
-          }
-
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('pending_images');
-          }
+          // Clear pending files after loading
+          createPostContext?.clearPendingFiles();
+          setStep(2);
         } catch (e) {
-          console.error('Error processing pending images', e);
+          console.error('Error processing pending files', e);
         }
       }
       else if (sharedDraftFiles.length > 0) {
@@ -187,11 +161,9 @@ export function useCreatePostDraft({
       else {
         try {
           const persistedDraft = await loadCreatePostDraft();
-
           if (persistedDraft && persistedDraft.files.length > 0) {
             const files = persistedDraft.files.slice(0, 30);
             const previewUrls = files.map((file) => URL.createObjectURL(file));
-
             imageUpload.setPreviews(previewUrls);
             imageUpload.setSelectedFiles(files);
             const draftLayout = persistedDraft.layout || savedLayout || sharedDraftLayout || 'default';
@@ -208,7 +180,7 @@ export function useCreatePostDraft({
     initializeDraft().finally(() => {
       setIsInitialized(true);
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // บันทึก caption ลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
   // ใช้ try/catch เพื่อกัน QuotaExceeded เมื่อ storage เต็ม (เช่น มีรูป base64 เยอะ) — caption ต้องไม่หาย

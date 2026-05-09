@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/search-stats rpc failed', error);
   }
   return NextResponse.json({ stats: data || [] });
 }

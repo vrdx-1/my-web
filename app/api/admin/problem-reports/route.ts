@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { getStorageObjectPaths } from '@/utils/storageObjectPath';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 const BUCKET_NAME = 'report-images';
 
@@ -63,7 +65,7 @@ export async function GET() {
     .select('id, user_id, message, image_urls, status, created_at, updated_at')
     .order('created_at', { ascending: false });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/problem-reports list failed', error);
   }
   if (!reports || reports.length === 0) {
     return NextResponse.json({ reports: [] });
@@ -82,6 +84,15 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:problem-reports:patch',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -114,12 +125,21 @@ export async function PATCH(request: NextRequest) {
     .update({ status })
     .eq('id', id);
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return internalServerError('admin/problem-reports update failed', updateError);
   }
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:problem-reports:delete',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -149,7 +169,7 @@ export async function DELETE(request: NextRequest) {
     .eq('id', id)
     .maybeSingle();
   if (reportError) {
-    return NextResponse.json({ error: reportError.message }, { status: 500 });
+    return internalServerError('admin/problem-reports fetch report failed', reportError);
   }
   if (!report) {
     return NextResponse.json({ error: 'Report not found' }, { status: 404 });
@@ -165,7 +185,7 @@ export async function DELETE(request: NextRequest) {
   if (imagePaths.length > 0) {
     const { error: storageError } = await admin.storage.from(BUCKET_NAME).remove(imagePaths);
     if (storageError) {
-      return NextResponse.json({ error: storageError.message }, { status: 500 });
+      return internalServerError('admin/problem-reports storage remove failed', storageError);
     }
   }
 
@@ -174,7 +194,7 @@ export async function DELETE(request: NextRequest) {
     .delete()
     .eq('id', id);
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return internalServerError('admin/problem-reports delete failed', deleteError);
   }
   return NextResponse.json({ ok: true });
 }

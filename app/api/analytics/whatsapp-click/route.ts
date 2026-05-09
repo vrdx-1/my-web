@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 function getServiceRoleClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -18,6 +20,18 @@ function getServiceRoleClient() {
  * - ไม่นับ role = admin
  */
 export async function POST(request: Request) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'analytics:whatsapp-click',
+    identifier: ip,
+    limit: 120,
+    windowSeconds: 60,
+  });
+
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const origin = request.headers.get('origin') || '';
   const referer = request.headers.get('referer') || '';
   const host = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
@@ -128,7 +142,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('analytics/whatsapp-click insert failed', error);
   }
 
   return NextResponse.json({ ok: true });

@@ -1,8 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { tooManyRequests } from '@/lib/apiSecurity';
 
 export async function GET(req: Request) {
+  const ip = getRequestIp(req);
+  const rateLimit = await checkRateLimit({
+    namespace: 'verification:status',
+    identifier: ip,
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceRoleKey) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });

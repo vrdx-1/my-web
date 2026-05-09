@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCarDictionarySuggestions } from '@/utils/postUtils';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 /**
  * GET /api/search/suggestions?q=...&limit=...
@@ -7,6 +9,18 @@ import { getCarDictionarySuggestions } from '@/utils/postUtils';
  */
 export async function GET(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'search:suggestions',
+      identifier: ip,
+      limit: 120,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get('q') ?? '';
     const limit = Math.min(30, Math.max(5, parseInt(searchParams.get('limit') ?? '15', 10) || 15));
@@ -20,10 +34,6 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'private, max-age=60' } }
     );
   } catch (err: unknown) {
-    console.error('API /api/search/suggestions GET:', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal server error' },
-      { status: 500 }
-    );
+    return internalServerError('search/suggestions GET failed', err);
   }
 }

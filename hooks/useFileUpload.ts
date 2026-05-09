@@ -3,6 +3,7 @@
 import { useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { useCreatePostContext } from '@/contexts/CreatePostContext';
 
 const CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY = 'create_post_redirect_after_submit';
 
@@ -11,13 +12,14 @@ interface UseFileUploadOptions {
 }
 
 interface UseFileUploadReturn {
-  hiddenFileInputRef: React.RefObject<HTMLInputElement>;
+  hiddenFileInputRef: React.RefObject<HTMLInputElement | null>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleCreatePostClick: (session: unknown) => void;
 }
 
 export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUploadReturn {
   const router = useRouter();
+  const createPostContext = useCreatePostContext();
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
   const { redirectAfterSubmitPath } = options;
 
@@ -26,7 +28,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
       // Allow only images (block videos/other files)
       const filesArray = Array.from(e.target.files).filter((file) => file.type?.startsWith('image/'));
       if (filesArray.length === 0) return;
-      const previewUrls = filesArray.map(file => URL.createObjectURL(file));
+      
       if (typeof window !== 'undefined') {
         if (redirectAfterSubmitPath) {
           sessionStorage.setItem(CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY, redirectAfterSubmitPath);
@@ -34,10 +36,13 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
           sessionStorage.removeItem(CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY);
         }
       }
-      sessionStorage.setItem('pending_images', JSON.stringify(previewUrls));
+      
+      // Store File objects in context instead of blob URLs (which expire quickly)
+      createPostContext?.setPendingFiles(filesArray);
+      
       router.push('/create-post');
     }
-  }, [redirectAfterSubmitPath, router]);
+  }, [redirectAfterSubmitPath, router, createPostContext]);
 
   const handleCreatePostClick = useCallback((
     session: unknown

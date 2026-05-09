@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 /**
  * GET: ดึงรายการรายงานโพสต์ (reports) ทั้งหมด - เฉพาะ Admin
@@ -69,7 +71,7 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (reportsError) {
-    return NextResponse.json({ error: reportsError.message }, { status: 500 });
+    return internalServerError('admin/reports list reports failed', reportsError);
   }
   if (!reportsData || reportsData.length === 0) {
     return NextResponse.json({ reports: [] });
@@ -82,7 +84,7 @@ export async function GET() {
     .in('id', carIds);
 
   if (carsError) {
-    return NextResponse.json({ error: carsError.message }, { status: 500 });
+    return internalServerError('admin/reports list cars failed', carsError);
   }
   const carsMap = new Map((carsData ?? []).map((c) => [c.id, c]));
 
@@ -109,6 +111,15 @@ export async function GET() {
 }
 
 export async function DELETE(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:reports:delete',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -124,12 +135,21 @@ export async function DELETE(request: NextRequest) {
   }
   const { error } = await admin.from('reports').delete().eq('id', id);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/reports delete failed', error);
   }
   return NextResponse.json({ ok: true });
 }
 
 export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:reports:patch',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -155,11 +175,11 @@ export async function PATCH(request: NextRequest) {
     .update({ is_hidden: true })
     .eq('id', carId);
   if (carError) {
-    return NextResponse.json({ error: carError.message }, { status: 500 });
+    return internalServerError('admin/reports hide car failed', carError);
   }
   const { error: delError } = await admin.from('reports').delete().eq('id', reportId);
   if (delError) {
-    return NextResponse.json({ error: delError.message }, { status: 500 });
+    return internalServerError('admin/reports delete report failed', delError);
   }
   return NextResponse.json({ ok: true });
 }

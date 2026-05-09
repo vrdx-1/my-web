@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -67,7 +69,7 @@ export async function GET(request: NextRequest) {
     .limit(200);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/hidden-posts list failed', error);
   }
 
   return NextResponse.json({ posts: data ?? [] });
@@ -77,6 +79,15 @@ export async function GET(request: NextRequest) {
  * PATCH: Hide / Unhide โพสต์
  */
 export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:hidden-posts:patch',
+    identifier: ip,
+    limit: 40,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -105,7 +116,7 @@ export async function PATCH(request: NextRequest) {
     .eq('id', carId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/hidden-posts update failed', error);
   }
 
   return NextResponse.json({ ok: true });

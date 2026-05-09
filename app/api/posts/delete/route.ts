@@ -4,6 +4,8 @@ import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 import { getStorageObjectPaths } from '@/utils/storageObjectPath';
 import { isOwnedByServerProfileScope } from '@/utils/serverOwnedProfiles';
 import { ACTIVE_PROFILE_HEADER } from '@/utils/activeProfile';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 const POSTS_BUCKET = 'car-images';
 
@@ -24,6 +26,17 @@ type DeletePostBody = {
 };
 
 export async function DELETE(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'posts:delete',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const admin = getAdminClient();
   if (!admin) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
@@ -73,7 +86,7 @@ export async function DELETE(request: NextRequest) {
     .maybeSingle();
 
   if (postError) {
-    return NextResponse.json({ error: postError.message }, { status: 500 });
+    return internalServerError('posts/delete load post failed', postError);
   }
   if (!post) {
     return NextResponse.json({ error: 'Post not found' }, { status: 404 });
@@ -97,13 +110,13 @@ export async function DELETE(request: NextRequest) {
   if (imagePaths.length > 0) {
     const { error: storageError } = await admin.storage.from(POSTS_BUCKET).remove(imagePaths);
     if (storageError) {
-      return NextResponse.json({ error: storageError.message }, { status: 500 });
+      return internalServerError('posts/delete storage remove failed', storageError);
     }
   }
 
   const { error: deleteError } = await admin.from('cars').delete().eq('id', postId);
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return internalServerError('posts/delete db delete failed', deleteError);
   }
 
   return NextResponse.json({ ok: true });

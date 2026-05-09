@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -42,6 +44,15 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getRequestIp(req);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:verification:patch',
+    identifier: ip,
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
 
@@ -91,7 +102,7 @@ export async function PATCH(
     })
     .eq('id', id);
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) return internalServerError('admin/verification update failed', updateErr);
 
   // If approved, set is_verified = true on the profile
   if (action === 'approve') {

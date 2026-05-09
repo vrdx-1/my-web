@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SUGGESTION_LIMIT = 300;
 const MAX_SUGGESTIONS = 15; // ลดจำนวน suggestions ให้พอดี
@@ -15,6 +17,18 @@ const MAX_SUGGESTIONS = 15; // ลดจำนวน suggestions ให้พอ
  */
 export async function GET(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:search-suggestions',
+      identifier: ip,
+      limit: 90,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get('q') ?? '';
     const query = (typeof q === 'string' ? q : '').trim();
@@ -85,10 +99,15 @@ export async function GET(request: NextRequest) {
       .limit(SUGGESTION_LIMIT);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalServerError('posts/search/suggestions list cars failed', error);
     }
 
-    const matchedPosts = (posts || []).filter((post: any) => captionMatchesAnyAlias(post.caption, terms));
+    const matchedPosts = (posts || []).filter((post) => {
+      const caption = typeof (post as { caption?: unknown })?.caption === 'string'
+        ? (post as { caption: string }).caption
+        : '';
+      return captionMatchesAnyAlias(caption, terms);
+    });
     const availableYears = generateYearSuggestions(terms, matchedPosts);
 
     // Filter by full year match OR partial year prefix (e.g. "revo20" → show years starting with "20")
@@ -109,10 +128,6 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'private, max-age=300' } }
     );
   } catch (error) {
-    console.error('Error in search suggestions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch suggestions' },
-      { status: 500 }
-    );
+    return internalServerError('posts/search/suggestions unexpected error', error);
   }
 }

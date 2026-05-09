@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 /**
  * POST /api/search/log
@@ -12,7 +14,7 @@ import { cookies } from 'next/headers';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const search_term = typeof body.search_term === 'string' ? body.search_term.trim() : '';
+    const search_term = typeof body.search_term === 'string' ? body.search_term.trim().slice(0, 200) : '';
     const search_type = body.search_type === 'manual' || body.search_type === 'suggestion' || body.search_type === 'history'
       ? body.search_type
       : 'manual';
@@ -25,6 +27,18 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || request.headers.get('referer') || '';
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return NextResponse.json({ ok: true });
+    }
+
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'search:log',
+      identifier: ip,
+      limit: 60,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
     }
 
     // ตรวจสอบว่าผู้ใช้เป็น admin หรือ sub account ของ admin หรือไม่
@@ -111,12 +125,11 @@ export async function POST(request: NextRequest) {
     const { error } = await admin.from('search_logs').insert(row);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalServerError('search/log insert failed', error);
     }
     console.log(`[Search Log] Recorded: "${search_term}" (${search_type})`);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('[Search Log Error]', e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return internalServerError('search/log unexpected error', e);
   }
 }

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 function getServiceRoleClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -16,6 +18,18 @@ function getServiceRoleClient() {
  * นับจำนวนครั้งที่ผู้ใช้กดปุ่มดาวน์โหลดรูป
  */
 export async function POST(request: Request) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'analytics:download-click',
+    identifier: ip,
+    limit: 120,
+    windowSeconds: 60,
+  });
+
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +62,7 @@ export async function POST(request: Request) {
   const source = sourceRaw.trim().slice(0, 80) || 'unknown';
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
-  let userId: string | null = session?.user?.id ?? null;
+  const userId: string | null = session?.user?.id ?? null;
 
   // ไม่รวมการกดของแอดมินในสถิติ
   if (userId) {
@@ -70,7 +84,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('analytics/download-click insert failed', error);
   }
 
   return NextResponse.json({ ok: true });

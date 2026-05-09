@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { processImageSmart } from '@/lib/smartImageProcessing';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { UploadValidationError, validateAndReadImageFile } from '@/lib/uploadValidation';
 
 export const runtime = 'nodejs';
 
 const ALLOWED_TYPES = ['id_card', 'driver_license', 'passport'] as const;
-// Accept up to 30MB raw — Sharp will compress it before storing
-const MAX_RAW_FILE_SIZE = 30 * 1024 * 1024;
+const MAX_RAW_FILE_SIZE = 15 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,6 +27,27 @@ export async function POST(req: NextRequest) {
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const ip = getRequestIp(req);
+  const ipRateLimit = await checkRateLimit({
+    namespace: 'verification:submit:ip',
+    identifier: ip,
+    limit: 10,
+    windowSeconds: 10 * 60,
+  });
+  if (!ipRateLimit.success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+  }
+
+  const userRateLimit = await checkRateLimit({
+    namespace: 'verification:submit:user',
+    identifier: userId,
+    limit: 3,
+    windowSeconds: 10 * 60,
+  });
+  if (!userRateLimit.success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
 
   // Check if user already has a pending or approved request
@@ -61,29 +83,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Both document and selfie photos are required' }, { status: 400 });
   }
 
-  // Reject only truly oversized raw files before processing
-  for (const [label, file] of [['document', documentFile], ['selfie', selfieFile]] as [string, File][]) {
-    if (file.size > MAX_RAW_FILE_SIZE) {
-      return NextResponse.json({ error: `ຮູບ ${label} ມີຂະໜາດໃຫຍ່ເກີນໄປ (ສູງສຸດ 30MB)` }, { status: 400 });
-    }
-  }
-
   // Process images through Sharp (converts HEIC/HEIF → WebP, compresses, auto-rotates)
   // This is the same pipeline used by create-post, so any format iPhone sends will work.
   let docResult: Awaited<ReturnType<typeof processImageSmart>>;
   let selfieResult: Awaited<ReturnType<typeof processImageSmart>>;
   try {
-    const [docRaw, selfieRaw] = await Promise.all([
-      documentFile.arrayBuffer(),
-      selfieFile.arrayBuffer(),
+    const [docBuffer, selfieBuffer] = await Promise.all([
+      validateAndReadImageFile(documentFile, {
+        maxBytes: MAX_RAW_FILE_SIZE,
+        fieldLabel: 'document',
+      }),
+      validateAndReadImageFile(selfieFile, {
+        maxBytes: MAX_RAW_FILE_SIZE,
+        fieldLabel: 'selfie',
+      }),
     ]);
     [docResult, selfieResult] = await Promise.all([
-      processImageSmart(Buffer.from(docRaw)),
-      processImageSmart(Buffer.from(selfieRaw)),
+      processImageSmart(docBuffer),
+      processImageSmart(selfieBuffer),
     ]);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'image processing error';
-    return NextResponse.json({ error: `ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນຮູບ: ${msg}` }, { status: 400 });
+    if (e instanceof UploadValidationError) {
+      return NextResponse.json({ error: e.message }, { status: e.status });
+    }
+    console.error('verification image processing failed', e);
+    return NextResponse.json({ error: 'Image processing failed' }, { status: 400 });
   }
 
   const ts = Date.now();

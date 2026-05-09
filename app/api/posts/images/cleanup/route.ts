@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 import { getStorageObjectPaths } from '@/utils/storageObjectPath';
 import { isOwnedByServerProfileScope } from '@/utils/serverOwnedProfiles';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 const POSTS_BUCKET = 'car-images';
 
@@ -24,6 +26,17 @@ type CleanupBody = {
 };
 
 export async function POST(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'posts:images-cleanup',
+    identifier: ip,
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const admin = getAdminClient();
   if (!admin) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
@@ -58,16 +71,20 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (postError) {
-    return NextResponse.json({ error: postError.message }, { status: 500 });
+    return internalServerError('posts/images/cleanup load post failed', postError);
   }
   if (!post) {
     return NextResponse.json({ error: 'Post not found' }, { status: 404 });
   }
 
-  const isOwnedByProfile = await isOwnedByServerProfileScope(admin, post.user_id, {
+  const isOwnedByProfile = await isOwnedByServerProfileScope(
+    admin as unknown as Parameters<typeof isOwnedByServerProfileScope>[0],
+    post.user_id,
+    {
     activeProfileId: resolvedProfile?.activeProfileId ?? null,
     authUserId: resolvedProfile?.authUserId ?? null,
-  });
+    },
+  );
   const isOwnedByGuest = !!guestToken && !!post.guest_token && String(post.guest_token) === guestToken;
 
   if (!isOwnedByProfile && !isOwnedByGuest) {
@@ -81,7 +98,7 @@ export async function POST(request: NextRequest) {
 
   const { error: storageError } = await admin.storage.from(POSTS_BUCKET).remove(imagePaths);
   if (storageError) {
-    return NextResponse.json({ error: storageError.message }, { status: 500 });
+    return internalServerError('posts/images/cleanup storage remove failed', storageError);
   }
 
   return NextResponse.json({ ok: true, removed: imagePaths.length });

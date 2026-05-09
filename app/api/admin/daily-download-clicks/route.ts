@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 type DailyDownloadClickRow = {
   click_date: string;
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/daily-download-clicks query failed', error);
   }
 
   const grouped = new Map<string, number>();

@@ -13,6 +13,8 @@ import {
   setFeedCache,
   setFeedTop100Cache,
 } from '@/lib/redis';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 type FeedOrderRow = {
   id: string;
@@ -23,7 +25,13 @@ type FeedOrderRow = {
   created_at: string | null;
 };
 
-type FeedResult = { postIds: string[]; hasMore: boolean; posts: any[]; feedSeed?: string };
+type FeedPostRow = {
+  id: string;
+  status: string;
+  is_hidden: boolean | null;
+};
+
+type FeedResult = { postIds: string[]; hasMore: boolean; posts: FeedPostRow[]; feedSeed?: string };
 
 function resolveFeedStatus(value: unknown): FeedCacheStatus {
   return value === 'sold' ? 'sold' : 'recommend';
@@ -127,7 +135,7 @@ async function fetchAllFeedOrderRows(
       .order('id', { ascending: false })
       .range(startIndex, endIndex);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error('Feed query failed');
     const chunk = (data || []) as FeedOrderRow[];
     rows.push(...chunk);
     if (chunk.length < pageSize) break;
@@ -141,7 +149,7 @@ async function hydrateFeedPosts(
   supabase: ReturnType<typeof createServerClient>,
   postIds: string[],
   status: FeedCacheStatus = 'recommend'
-): Promise<any[]> {
+): Promise<FeedPostRow[]> {
   if (postIds.length === 0) return [];
   const { data: postsData, error: postsErr } = await supabase
     .from('cars')
@@ -149,8 +157,11 @@ async function hydrateFeedPosts(
     .in('id', postIds);
   if (postsErr || !postsData?.length) return [];
   const order = new Map(postIds.map((id: string, index: number) => [String(id), index]));
-  const filtered = postsData.filter((post: any) => post.status === status && !post.is_hidden);
-  filtered.sort((left: any, right: any) => {
+  const filtered = postsData.filter((post) => {
+    const row = post as FeedPostRow;
+    return row.status === status && !row.is_hidden;
+  }) as FeedPostRow[];
+  filtered.sort((left, right) => {
     const leftIndex = order.get(String(left.id)) ?? 1e9;
     const rightIndex = order.get(String(right.id)) ?? 1e9;
     return leftIndex - rightIndex;
@@ -212,6 +223,18 @@ async function computeFeedWithCursor(
  */
 export async function POST(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:feed:post',
+      identifier: ip,
+      limit: 120,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const body = await request.json().catch(() => ({}));
     const province = typeof body.province === 'string' ? body.province : undefined;
     const requestedFeedSeed = typeof body.feedSeed === 'string' && body.feedSeed ? body.feedSeed : undefined;
@@ -282,12 +305,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
     });
-  } catch (err: any) {
-    console.error('API /api/posts/feed POST:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err) {
+    return internalServerError('posts/feed POST failed', err);
   }
 }
 
@@ -296,6 +315,18 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:feed:get',
+      identifier: ip,
+      limit: 120,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
     const endIndex = parseInt(searchParams.get('endIndex') || String(FEED_PAGE_SIZE - 1), 10);
@@ -353,11 +384,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
     });
-  } catch (err: any) {
-    console.error('API /api/posts/feed GET:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err) {
+    return internalServerError('posts/feed GET failed', err);
   }
 }

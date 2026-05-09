@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
+import { PREFETCH_COUNT } from '@/utils/constants';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 /**
  * API Route for fetching posts with caching support
@@ -10,6 +12,18 @@ import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
  */
 export async function GET(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:list',
+      identifier: ip,
+      limit: 120,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
     const endIndex = parseInt(searchParams.get('endIndex') || '9');
@@ -38,10 +52,7 @@ export async function GET(request: NextRequest) {
       .range(startIndex, endIndex);
 
     if (idsError) {
-      return NextResponse.json(
-        { error: idsError.message },
-        { status: 500 }
-      );
+      return internalServerError('posts list ids failed', idsError);
     }
 
     if (!idsData || idsData.length === 0) {
@@ -59,10 +70,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (postsError) {
-      return NextResponse.json(
-        { error: postsError.message },
-        { status: 500 }
-      );
+      return internalServerError('posts list rows failed', postsError);
     }
 
     const hasMore = postIds.length === PREFETCH_COUNT;
@@ -75,11 +83,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },
     });
-  } catch (error: any) {
-    console.error('API Error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return internalServerError('posts list unexpected error', error);
   }
 }

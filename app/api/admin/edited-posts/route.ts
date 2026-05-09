@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -68,7 +70,7 @@ export async function GET() {
     .order('edited_at', { ascending: false });
 
   if (editsError) {
-    return NextResponse.json({ error: editsError.message }, { status: 500 });
+    return internalServerError('admin/edited-posts list edits failed', editsError);
   }
   if (!editsData || editsData.length === 0) {
     return NextResponse.json({ edits: [] });
@@ -81,7 +83,7 @@ export async function GET() {
     .in('id', carIds);
 
   if (carsError) {
-    return NextResponse.json({ error: carsError.message }, { status: 500 });
+    return internalServerError('admin/edited-posts list cars failed', carsError);
   }
   const carsMap = new Map((carsData ?? []).map((c) => [c.id, c]));
 
@@ -99,6 +101,15 @@ export async function GET() {
  * PATCH: Hide / Unhide โพส (บันทึกลงตาราง cars เหมือน reporting/reviews)
  */
 export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:edited-posts:patch',
+    identifier: ip,
+    limit: 40,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
@@ -126,7 +137,7 @@ export async function PATCH(request: NextRequest) {
     .eq('id', carId);
 
   if (carError) {
-    return NextResponse.json({ error: carError.message }, { status: 500 });
+    return internalServerError('admin/edited-posts update failed', carError);
   }
   return NextResponse.json({ ok: true });
 }

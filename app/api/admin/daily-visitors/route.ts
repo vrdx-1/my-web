@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -123,10 +124,10 @@ export async function GET(request: NextRequest) {
   ]);
 
   if (usersRes.error) {
-    return NextResponse.json({ error: usersRes.error.message }, { status: 500 });
+    return internalServerError('admin/daily-visitors users query failed', usersRes.error);
   }
   if (guestsRes.error) {
-    return NextResponse.json({ error: guestsRes.error.message }, { status: 500 });
+    return internalServerError('admin/daily-visitors guests query failed', guestsRes.error);
   }
 
   // Aggregate counts by date

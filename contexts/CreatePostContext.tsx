@@ -15,6 +15,10 @@ interface CreatePostContextValue {
   draft: CreatePostDraft;
   setDraft: (draft: CreatePostDraft) => void;
   clearDraft: () => void;
+  // Pending files from file picker (before processing)
+  pendingFiles: File[];
+  setPendingFiles: (files: File[]) => void;
+  clearPendingFiles: () => void;
 }
 
 const CreatePostContext = createContext<CreatePostContextValue | null>(null);
@@ -25,6 +29,7 @@ export function CreatePostProvider({ children }: { children: React.ReactNode }) 
     files: [],
     layout: 'default',
   });
+  const [pendingFiles, setPendingFilesState] = useState<File[]>([]);
 
   const register = useCallback((handler: CreatePostHandler | null) => {
     handlerRef.current = handler;
@@ -63,9 +68,18 @@ export function CreatePostProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  const setPendingFiles = useCallback((files: File[]) => {
+    const limited = files.slice(0, 30);
+    setPendingFilesState(limited);
+  }, []);
+
+  const clearPendingFiles = useCallback(() => {
+    setPendingFilesState([]);
+  }, []);
+
   const value = useMemo(
-    () => ({ register, trigger, draft, setDraft, clearDraft }),
-    [register, trigger, draft, setDraft, clearDraft],
+    () => ({ register, trigger, draft, setDraft, clearDraft, pendingFiles, setPendingFiles, clearPendingFiles }),
+    [register, trigger, draft, setDraft, clearDraft, pendingFiles, setPendingFiles, clearPendingFiles],
   );
 
   return (

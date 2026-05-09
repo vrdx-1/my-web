@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 type DailyRegistrationRow = {
   register_date: string;
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
   while (true) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalServerError('admin/daily-registrations list users failed', error);
     }
 
     const users = data?.users ?? [];

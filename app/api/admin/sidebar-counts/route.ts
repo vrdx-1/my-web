@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { tooManyRequests } from '@/lib/apiSecurity';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -51,7 +53,18 @@ export type SidebarCounts = Record<string, number>;
 /**
  * GET: คืนจำนวนสำหรับแจ้งเตือนแต่ละแท็บใน admin sidebar
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sidebar-counts',
+    identifier: ip,
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });

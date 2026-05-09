@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
-import { PAGE_SIZE, PREFETCH_COUNT } from '@/utils/constants';
+import { PREFETCH_COUNT } from '@/utils/constants';
 import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 /**
  * API Route for fetching posts by type (saved, liked, sold, my-posts)
@@ -15,6 +17,18 @@ export async function GET(
   { params }: { params: Promise<{ type: string }> }
 ) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:type-list',
+      identifier: ip,
+      limit: 120,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const { type } = await params;
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
@@ -358,7 +372,7 @@ export async function GET(
         errorHint: postsError.hint
       });
       return NextResponse.json(
-        { error: postsError.message },
+        { error: 'Internal server error' },
         { status: 500 }
       );
     }
@@ -388,11 +402,7 @@ export async function GET(
         'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
       },
     });
-  } catch (error: any) {
-    console.error('API Error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return internalServerError('posts/type unexpected error', error);
   }
 }

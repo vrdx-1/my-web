@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
     .eq('status', statusFilter)
     .order('created_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalServerError('admin/verification list failed', error);
 
   return NextResponse.json({ requests: data ?? [] });
 }

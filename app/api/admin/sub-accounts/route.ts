@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
 type EnsureAdminOptions = {
   allowSubAccounts?: boolean;
@@ -102,7 +104,7 @@ export async function GET() {
     .order('updated_at', { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/sub-accounts list failed', error);
   }
 
   const subAccounts = (data ?? []).map((row) => ({
@@ -116,6 +118,15 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sub-accounts:create',
+    identifier: ip,
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
   const auth = await ensureAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -158,7 +169,7 @@ export async function POST(request: NextRequest) {
     });
 
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+    return internalServerError('admin/sub-accounts create failed', profileError);
   }
 
   return NextResponse.json({

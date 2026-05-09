@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 function getServiceRoleClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -38,6 +40,18 @@ function getBangkokDateString(date = new Date()): string {
  * - ไม่นับ role = admin
  */
 export async function POST(request: Request) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'analytics:daily-visitor',
+    identifier: ip,
+    limit: 60,
+    windowSeconds: 60,
+  });
+
+  if (!rateLimit.success) {
+    return tooManyRequests(rateLimit.reset);
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -101,15 +115,10 @@ export async function POST(request: Request) {
       );
 
       if (ensureProfileError) {
-        return NextResponse.json(
-          {
-            error: ensureProfileError.message,
-            code: ensureProfileError.code,
-            hint: 'failed-to-ensure-profile',
-            cause: profileError?.message || null,
-          },
-          { status: 500 }
-        );
+        return internalServerError('analytics/daily-visitor ensure profile failed', {
+          ensureProfileError,
+          profileError,
+        });
       }
 
       const { data: ensuredProfile, error: ensuredProfileError } = await admin
@@ -119,14 +128,10 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (ensuredProfileError || !ensuredProfile?.id) {
-        return NextResponse.json(
-          {
-            error: ensuredProfileError?.message || 'Profile missing after ensure',
-            code: ensuredProfileError?.code || null,
-            hint: 'profile-not-found-after-ensure',
-          },
-          { status: 500 }
-        );
+        return internalServerError('analytics/daily-visitor profile missing after ensure', {
+          ensuredProfileError,
+          ensuredProfile,
+        });
       }
 
       profileId = ensuredProfile.id;
@@ -149,7 +154,7 @@ export async function POST(request: Request) {
     );
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalServerError('analytics/daily-visitor user upsert failed', error);
     }
 
     return NextResponse.json({ ok: true, tracked: 'user' });
@@ -175,7 +180,7 @@ export async function POST(request: Request) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('analytics/daily-visitor guest upsert failed', error);
   }
 
   return NextResponse.json({ ok: true, tracked: 'guest' });

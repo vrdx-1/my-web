@@ -12,6 +12,8 @@ import {
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
 import { extractYearsFromQuery, rankPostsByYear, removeYearsFromQuery, removePartialYearSuffix } from '@/utils/yearSearchUtils';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SEARCH_LIMIT = 1000;
 /** จำนวนคำค้นต่อ 1 ครั้งเรียก RPC — แบ่ง batch เพื่อไม่ให้ request ล้ม */
@@ -21,6 +23,16 @@ const CATEGORY_SEARCH_SCAN_LIMIT = 5000;
 
 /** รูปแบบรหัสโพส 6 ตัว: ตัวเลขล้วน */
 const SHORT_ID_REGEX = /^[0-9]{6}$/;
+
+type SearchPostRow = {
+  id: string;
+  caption: string;
+  status: 'recommend' | 'sold' | string;
+  is_hidden: boolean | null;
+  province?: string | null;
+  is_boosted?: boolean | null;
+  created_at: string;
+};
 
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
 function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
@@ -40,6 +52,18 @@ function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rateLimit = await checkRateLimit({
+      namespace: 'posts:search',
+      identifier: ip,
+      limit: 60,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.success) {
+      return tooManyRequests(rateLimit.reset);
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get('q') ?? '';
     const province = searchParams.get('province') ?? undefined;
@@ -98,15 +122,15 @@ export async function GET(request: NextRequest) {
         .limit(CATEGORY_SEARCH_SCAN_LIMIT);
 
       if (categoryError) {
-        return NextResponse.json({ error: categoryError.message }, { status: 500 });
+        return internalServerError('posts/search category query failed', categoryError);
       }
 
       let posts = (categoryRows || []).filter(
-        (post: any) =>
+        (post) =>
           (post.status === 'recommend' || post.status === 'sold') &&
           !post.is_hidden &&
           captionMatchesAnyAlias(post.caption, searchTerms),
-      );
+      ) as SearchPostRow[];
 
       const priorityTerms = getSearchPriorityTerms(queryForMatching);
       if (priorityTerms.length > 0) {
@@ -144,7 +168,7 @@ export async function GET(request: NextRequest) {
           p_limit: SEARCH_LIMIT,
         });
         if (rpcError) {
-          return NextResponse.json({ error: rpcError.message }, { status: 500 });
+          return internalServerError('posts/search rpc failed', rpcError);
         }
         for (const r of (rpcRows || []) as RpcRow[]) {
           if (!seenIds.has(r.id)) {
@@ -161,7 +185,7 @@ export async function GET(request: NextRequest) {
             p_limit: SEARCH_LIMIT,
           });
           if (rpcError) {
-            return NextResponse.json({ error: rpcError.message }, { status: 500 });
+            return internalServerError('posts/search rpc chunk failed', rpcError);
           }
           for (const r of (rpcRows || []) as RpcRow[]) {
             if (!seenIds.has(r.id)) {
@@ -210,15 +234,15 @@ export async function GET(request: NextRequest) {
         .in('id', topIds);
 
       if (fetchError) {
-        return NextResponse.json({ error: fetchError.message }, { status: 500 });
+        return internalServerError('posts/search fetch rows failed', fetchError);
       }
 
-      const byId = new Map<string, any>();
+      const byId = new Map<string, SearchPostRow>();
       for (const p of rows || []) {
         if (p && (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden) byId.set(p.id, p);
       }
 
-      let posts: any[] = [];
+      let posts: SearchPostRow[] = [];
       for (const id of topIds) {
         const post = byId.get(id);
         if (!post) continue;
@@ -277,10 +301,12 @@ export async function GET(request: NextRequest) {
       .limit(SEARCH_LIMIT);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalServerError('posts/search single query failed', error);
     }
 
-    let posts = (data || []).filter((p: any) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden);
+    let posts = (data || []).filter(
+      (p) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden,
+    ) as SearchPostRow[];
 
     const priorityTerms = getSearchPriorityTerms(queryForMatching);
     if (priorityTerms.length > 0) {
@@ -304,11 +330,7 @@ export async function GET(request: NextRequest) {
       { posts },
       { headers: { 'Cache-Control': 'private, max-age=0' } }
     );
-  } catch (err: any) {
-    console.error('API /api/posts/search GET:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err) {
+    return internalServerError('posts/search unexpected error', err);
   }
 }

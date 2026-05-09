@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { internalServerError } from '@/lib/apiSecurity';
 
 type DailyRow = {
   click_date: string;
@@ -33,6 +34,18 @@ type WhatsAppLogRow = {
   user_id: string | null;
   guest_token: string | null;
   short_id: string | null;
+};
+
+type ProfileLookupRow = {
+  id: string;
+  username: string | null;
+  is_sub_account?: boolean | null;
+  parent_admin_id?: string | null;
+};
+
+type ParentLookupRow = {
+  id: string;
+  username: string | null;
 };
 
 async function ensureAdmin() {
@@ -169,7 +182,7 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalServerError('admin/whatsapp-clicks query failed', error);
   }
 
   const monthLogs = (data || []) as WhatsAppLogRow[];
@@ -242,7 +255,7 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .select('id, username, is_sub_account, parent_admin_id')
         .in('id', targetProfileIds)
-    : { data: [] as any[] };
+    : { data: [] as ProfileLookupRow[] };
 
   const profileMap = new Map<string, { username: string | null; is_sub_account: boolean | null; parent_admin_id: string | null }>();
   for (const row of profileRows || []) {
@@ -262,7 +275,7 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .select('id, username')
         .in('id', parentIds)
-    : { data: [] as any[] };
+    : { data: [] as ParentLookupRow[] };
 
   const parentNameMap = new Map<string, string>();
   for (const row of parentRows || []) {
