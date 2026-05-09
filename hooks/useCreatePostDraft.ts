@@ -180,7 +180,7 @@ export function useCreatePostDraft({
     initializeDraft().finally(() => {
       setIsInitialized(true);
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // บันทึก caption ลง sessionStorage/localStorage เมื่อมีการเปลี่ยนแปลง (หลังจาก initialization)
   // ใช้ try/catch เพื่อกัน QuotaExceeded เมื่อ storage เต็ม (เช่น มีรูป base64 เยอะ) — caption ต้องไม่หาย

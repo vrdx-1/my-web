@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { TabNavSpinner } from '@/components/LoadingSpinner';
 
@@ -179,7 +181,6 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       }
     };
     // tabs เป็น array literal จาก parent ทุกครั้ง — ใช้แค่ length กับค่าที่มีผลต่อการวัด
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHomeNav, lockLayout, tabs.length, scheduleUpdateIndicator]);
 
   useLayoutEffect(() => {
