@@ -9,7 +9,6 @@ import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHeaderVisibilityState, useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
-import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 import { ProfileOverlay } from '@/components/ProfileOverlay';
 import { REGISTER_PATH } from '@/utils/authRoutes';
@@ -95,7 +94,6 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
-  const homeProvince = useHomeProvince();
   const setHeaderVisible = useSetHeaderVisibility();
   const homeTabScroll = useHomeTabScroll();
   const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
@@ -363,10 +361,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       if (resolvedPathname === '/home') {
         homeTabScroll?.saveCurrentHomeTabScroll();
       }
-      homeProvince?.setSelectedProvince('');
       mainTab?.triggerTabChange(tab);
     },
-    [resolvedPathname, homeTabScroll, homeProvince, mainTab],
+    [resolvedPathname, homeTabScroll, mainTab],
   );
 
   return (

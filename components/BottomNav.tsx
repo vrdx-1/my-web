@@ -9,6 +9,7 @@ import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useNotificationRefreshContext } from '@/contexts/NotificationRefreshContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
+import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { Avatar } from '@/components/Avatar';
 
@@ -193,6 +194,7 @@ export const BottomNav = React.memo(function BottomNav() {
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
   const homeRefreshContext = useHomeRefreshContext();
+  const mainTab = useMainTabContext();
   const mainTabScroll = useMainTabScroll();
 
   const effectivePath = pendingPath ?? pathname ?? '';
@@ -323,6 +325,10 @@ export const BottomNav = React.memo(function BottomNav() {
           // สลับไปอีกแท็บ → บันทึก scroll แล้ว navigate
           if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
             mainTabScroll?.saveCurrentScroll(pathname);
+          }
+          if (path === '/home') {
+            mainTab?.setTabRefreshing(true);
+            mainTab?.triggerTabRefresh();
           }
           setPendingPath(path);
           startTransition(() => {

@@ -106,6 +106,24 @@ export interface UsePostListDataReturn {
   refreshData: () => Promise<void>;
 }
 
+function createClientFeedSeed(): string {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  return `seed_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function isBrowserReloadNavigation(): boolean {
+  if (typeof window === 'undefined' || typeof performance === 'undefined') return false;
+  try {
+    const navEntries = performance.getEntriesByType('navigation');
+    const navEntry = Array.isArray(navEntries) ? (navEntries[0] as PerformanceNavigationTiming | undefined) : undefined;
+    return navEntry?.type === 'reload';
+  } catch {
+    return false;
+  }
+}
+
 export function usePostListData(options: UsePostListDataOptions): UsePostListDataReturn {
   const {
     type,
@@ -139,6 +157,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   /** เก็บรายการโพสต์ฝั่งขายแล้วทั้งหมดสำหรับ liked/saved tab sold เพื่อแบ่งหน้าได้ถูกต้อง */
   const soldTabFullListRef = useRef<any[] | null>(null);
   const soldFeedSeedRef = useRef<string | null>(null);
+  const forceNewSoldSeedOnNextInitialFetchRef = useRef(type === 'sold' && isBrowserReloadNavigation());
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -559,7 +578,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .map(item => item.post_id)
           .filter(id => id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
       } else if (type === 'sold') {
-        if (isInitial) soldFeedSeedRef.current = null;
+        if (isInitial && forceNewSoldSeedOnNextInitialFetchRef.current) {
+          soldFeedSeedRef.current = createClientFeedSeed();
+          forceNewSoldSeedOnNextInitialFetchRef.current = false;
+        } else if (isInitial && !soldFeedSeedRef.current) {
+          soldFeedSeedRef.current = createClientFeedSeed();
+        }
         const requestBody: {
           startIndex: number;
           endIndex: number;
@@ -1066,6 +1090,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
+    if (type === 'sold') {
+      forceNewSoldSeedOnNextInitialFetchRef.current = true;
+    }
     if (type === 'sold') soldFeedSeedRef.current = null;
     await fetchPosts(true);
   }, [fetchPosts, type]);

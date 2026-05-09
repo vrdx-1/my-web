@@ -60,9 +60,30 @@ interface UseHomeFeedReturn {
   refreshData: () => Promise<void>;
 }
 
+function createClientFeedSeed(): string {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  return `seed_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function isBrowserReloadNavigation(): boolean {
+  if (typeof window === 'undefined' || typeof performance === 'undefined') return false;
+  try {
+    const navEntries = performance.getEntriesByType('navigation');
+    const navEntry = Array.isArray(navEntries) ? (navEntries[0] as PerformanceNavigationTiming | undefined) : undefined;
+    return navEntry?.type === 'reload';
+  } catch {
+    return false;
+  }
+}
+
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
-  const [posts, setPosts] = useState<HomeFeedPost[]>(() => getInitialPostsFromStorage(province));
+  const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
+    if (isBrowserReloadNavigation()) return [];
+    return getInitialPostsFromStorage(province);
+  });
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -82,6 +103,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const abortControllerRef = useRef<AbortController | null>(null);
   const onInitialLoadDoneRef = useRef(onInitialLoadDone);
   const feedSeedRef = useRef<string | null>(null);
+  const forceNewSeedOnNextInitialFetchRef = useRef(isBrowserReloadNavigation());
 
   useEffect(() => {
     onInitialLoadDoneRef.current = onInitialLoadDone;
@@ -173,8 +195,14 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
     if (loadingMore && !isInitial) return;
-    // Reset seed when doing initial refresh so feed randomizes
-    if (isInitial && !backgroundRefresh) feedSeedRef.current = null;
+    // Explicit refresh/reload: force a new seed so backend bypasses cached ordering.
+    if (isInitial && forceNewSeedOnNextInitialFetchRef.current) {
+      feedSeedRef.current = createClientFeedSeed();
+      forceNewSeedOnNextInitialFetchRef.current = false;
+    } else if (isInitial && !backgroundRefresh && !feedSeedRef.current) {
+      // First initial fetch after cold mount should still have a stable seed for pagination.
+      feedSeedRef.current = createClientFeedSeed();
+    }
     const fetchTimer = startHomeMotionTimer('feed-fetch', isInitial ? 'initial-feed-fetch' : 'load-more-feed-fetch');
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
@@ -353,6 +381,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
+    forceNewSeedOnNextInitialFetchRef.current = true;
     feedSeedRef.current = null;
     try {
       clearHomeFeedStorage({ clearCache: true });
@@ -365,10 +394,15 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
     feedSeedRef.current = null;
+    const shouldBypassCachedFeed = isBrowserReloadNavigation();
+    if (shouldBypassCachedFeed) {
+      forceNewSeedOnNextInitialFetchRef.current = true;
+    }
     const { fromCache, initialPosts, hasMore: initialHasMore, justPostedPost } =
       prepareInitialHomeFeedState(province);
+    const useCachedFeed = fromCache && !shouldBypassCachedFeed;
 
-    if (fromCache) {
+    if (useCachedFeed) {
       setPosts(initialPosts);
       setLoadingMore(false);
       preloadPostsVisibleImages(initialPosts, 2);
@@ -380,6 +414,13 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         province: province ?? '',
       });
     } else {
+      if (shouldBypassCachedFeed) {
+        try {
+          clearHomeFeedStorage({ clearCache: true });
+        } catch {
+          // ignore
+        }
+      }
       setPosts(initialPosts);
       setLoadingMore(!justPostedPost);
       setHasMore(true);
