@@ -29,14 +29,17 @@ async function ensureAdmin() {
       },
     }
   );
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.id) {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user?.id) {
     return { ok: false, status: 401 as const };
   }
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   if (profile?.role !== 'admin') {
     return { ok: false, status: 403 as const };
@@ -80,7 +83,7 @@ export async function GET() {
   const carIds = reportsData.map((r) => r.car_id).filter(Boolean);
   const { data: carsData, error: carsError } = await admin
     .from('cars')
-    .select('id, caption, province, images, status, created_at, user_id, profiles(username, avatar_url)')
+    .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified)')
     .in('id', carIds);
 
   if (carsError) {

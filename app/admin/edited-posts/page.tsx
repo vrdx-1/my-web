@@ -1,8 +1,8 @@
 'use client'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, Suspense } from 'react';
-import { AdminPostCard } from '@/components/AdminPostCard';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { formatTime } from '@/utils/postUtils';
 import { lazyNamed } from '@/utils/lazyLoad';
@@ -22,6 +22,11 @@ const EDITED_POSTS_API = '/api/admin/edited-posts';
 export default function AdminEditedPostsPage() {
   const [edits, setEdits] = useState<{ id: string; car_id: string; edited_at: string; cars: any }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [savedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const [viewingPost, setViewingPost] = useState<any | null>(null);
   const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
@@ -106,11 +111,25 @@ export default function AdminEditedPostsPage() {
               }}
             >
               <div style={{ flex: '1.2' }}>
-                <AdminPostCard
+                <PostCard
                   post={post}
                   index={index}
+                  isLastElement={false}
+                  showMenuButton={false}
+                  session={null}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  menuButtonRefs={menuButtonRefs}
                   onViewPost={(p) => setViewingPost(p)}
-                  showStats={true}
+                  onSave={() => {}}
+                  onShare={() => {}}
+                  onTogglePostStatus={() => {}}
+                  onDeletePost={() => {}}
+                  onReport={() => {}}
+                  onSetActiveMenu={setActiveMenuState}
+                  onSetMenuAnimating={setIsMenuAnimating}
                 />
               </div>
 

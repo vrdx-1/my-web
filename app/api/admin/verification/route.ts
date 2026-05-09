@@ -22,15 +22,18 @@ async function ensureAdmin() {
       },
     }
   );
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.id) return { ok: false as const, status: 401 as const };
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user?.id) return { ok: false as const, status: 401 as const };
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   if (profile?.role !== 'admin') return { ok: false as const, status: 403 as const };
-  return { ok: true as const, adminId: session.user.id };
+  return { ok: true as const, adminId: user.id };
 }
 
 function getAdminClient() {

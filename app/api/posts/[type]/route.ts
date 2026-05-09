@@ -52,10 +52,13 @@ export async function GET(
       }
     );
 
-    // Get current session
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get authenticated user for identity-sensitive decisions
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     const resolvedProfile = await resolveServerActiveProfile(request);
-    const currentUserId = resolvedProfile?.activeProfileId ?? session?.user?.id ?? null;
+    const currentUserId = resolvedProfile?.activeProfileId ?? (authError ? null : user?.id ?? null);
     let availableProfiles: OwnershipProfileRecord[] = [];
 
     if (resolvedProfile?.authUserId && resolvedProfile.authUserId === resolvedProfile.activeProfileId) {
@@ -290,7 +293,7 @@ export async function GET(
       const ownedProfileIds = currentUserId
         ? getOwnedProfileIds({
             activeProfileId: currentUserId,
-            authUserId: resolvedProfile?.authUserId ?? session?.user?.id ?? null,
+            authUserId: resolvedProfile?.authUserId ?? (authError ? null : user?.id ?? null),
             availableProfiles,
           })
         : [];
@@ -384,7 +387,7 @@ export async function GET(
         const isNotHidden = !post.is_hidden;
         const isOwner = isOwnedByProfileScope(post.user_id, {
           activeProfileId: currentUserId,
-          authUserId: resolvedProfile?.authUserId ?? session?.user?.id ?? null,
+          authUserId: resolvedProfile?.authUserId ?? (authError ? null : user?.id ?? null),
           availableProfiles,
         });
         const matchesTab = tab ? post.status === tab : true;

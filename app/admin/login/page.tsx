@@ -2,13 +2,13 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useCallback, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import { useOtpResendCountdown } from '@/hooks/useOtpResendCountdown';
 import { OtpInputs } from '@/components/auth';
 import { sendOtpToEmail } from '@/utils/authOtp';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { safeParseJSON } from '@/utils/storageUtils';
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 
 type SavedAccount = { email: string; last_used_at: string };
 const SAVED_ADMIN_ACCOUNTS_KEY = 'saved_admin_accounts';
@@ -39,10 +39,7 @@ export default function AdminLogin() {
   }, []);
 
   // สร้าง supabase client สำหรับ Browser
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createAdminSupabaseClient();
 
   const handleSendOtp = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

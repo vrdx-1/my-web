@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants'
 import { formatTimeAgo } from '@/utils/formatTime'
-import { createBrowserClient } from '@supabase/ssr'
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient'
 
 type Report = {
   id: string
@@ -31,10 +31,7 @@ export default function AdminProblemReportsPage() {
     setLoading(true)
     setError(null)
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = createAdminSupabaseClient()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setError('ກະລຸນາເຂົ້າສູ່ລະບົບ')

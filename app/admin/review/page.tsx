@@ -1,8 +1,8 @@
 'use client'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, Suspense } from 'react';
-import { AdminPostCard } from '@/components/AdminPostCard';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import { PostCard } from '@/components/PostCard';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { EmptyState } from '@/components/EmptyState';
 import { formatTime } from '@/utils/postUtils';
@@ -24,6 +24,11 @@ export default function AdminReviewPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'visible' | 'hidden'>('visible');
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [savedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // --- States สำหรับการแสดงผล (แกะมาจาก reporting/page.tsx) ---
   const [viewingPost, setViewingPost] = useState<any | null>(null);
@@ -59,7 +64,7 @@ export default function AdminReviewPage() {
         
         const { data: postsData, error: postsError } = await supabase
           .from('cars')
-          .select('id, caption, province, images, status, is_hidden, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, role, is_sub_account, parent_admin_id)')
+          .select('id, short_id, caption, price, price_currency, province, images, layout, status, is_hidden, is_boosted, likes, shares, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified, role, is_sub_account, parent_admin_id)')
           .in('id', postIds)
           .order('created_at', { ascending: false });
 
@@ -219,11 +224,25 @@ export default function AdminReviewPage() {
               
               {/* ฝั่งซ้าย: โพสต์ฟีด - ใช้ AdminPostCard */}
               <div style={{ flex: '1.2' }}>
-                <AdminPostCard
+                <PostCard
                   post={post}
                   index={index}
+                  isLastElement={false}
+                  showMenuButton={false}
+                  session={null}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  menuButtonRefs={menuButtonRefs}
                   onViewPost={(p) => setViewingPost(p)}
-                  showStats={true}
+                  onSave={() => {}}
+                  onShare={() => {}}
+                  onTogglePostStatus={() => {}}
+                  onDeletePost={() => {}}
+                  onReport={() => {}}
+                  onSetActiveMenu={setActiveMenuState}
+                  onSetMenuAnimating={setIsMenuAnimating}
                 />
               </div>
 

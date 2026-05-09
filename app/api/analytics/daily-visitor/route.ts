@@ -71,8 +71,8 @@ export async function POST(request: Request) {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const today = getBangkokDateString();
   const admin = getServiceRoleClient();
@@ -80,14 +80,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
   }
 
-  if (session?.user?.id) {
-    const userId = session.user.id;
+  if (user?.id) {
+    const userId = user.id;
     const fallbackUsername =
       String(
-        session.user.user_metadata?.full_name ||
-          session.user.user_metadata?.name ||
-          session.user.user_metadata?.display_name ||
-          session.user.email ||
+        user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.user_metadata?.display_name ||
+          user.email ||
           'User'
       )
         .trim()

@@ -3,14 +3,12 @@
 /* eslint-disable react/no-unescaped-entities */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, Suspense } from 'react';
-import { formatTime } from '@/utils/postUtils';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { formatTimeAgo } from '@/utils/formatTime';
-import { PhotoGrid } from '@/components/PhotoGrid';
+import { PostCard } from '@/components/PostCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { EmptyState } from '@/components/EmptyState';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
-import { formatCompactNumber } from '@/utils/currency';
 import { lazyNamed } from '@/utils/lazyLoad';
 
 // Dynamic Imports
@@ -30,6 +28,11 @@ export default function AdminReportingPage() {
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+ const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+ const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+ const [savedPosts] = useState<{ [key: string]: boolean }>({});
+ const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+ const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
  // --- States สำหรับการแสดงผล (ยกมาจาก app/page.tsx) ---
  const [viewingPost, setViewingPost] = useState<any | null>(null);
@@ -132,44 +135,27 @@ export default function AdminReportingPage() {
  return (
  <div key={report.id} style={{ display: 'flex', gap: '15px', marginBottom: '30px', alignItems: 'flex-start' }}>
  
- {/* ฝั่งซ้าย: โพสต์ฟีด (เหมือนหน้าแรก) */}
- <div style={{ flex: '1.2', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
- {/* Header: รูปโปรไฟล์ + เวลา + แขวง */}
- <div style={{ padding: '12px 15px 8px 15px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
- <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e4e6eb', overflow: 'hidden' }}>
- {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
- </div>
- <div style={{ flex: 1, minWidth: 0 }}>
- <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
-<span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
-              {post.profiles?.username || 'User'}
-            </span>
- </div>
- <div style={{ fontSize: '12px', color: '#4a4d52', lineHeight: '16px' }}>
- {formatTime(post.created_at)} · {post.province}
- </div>
- </div>
- </div>
-
- {/* Caption */}
- <div style={{ padding: '0 15px 10px 15px', fontSize: '15px', lineHeight: '1.4', whiteSpace: 'pre-wrap', color: '#111111' }}>{post.caption}</div>
- 
- {/* Media */}
- <PhotoGrid images={post.images || []} onPostClick={() => setViewingPost(post)} />
-
- {/* Stats Bar */}
- <div style={{ borderTop: '1px solid #f0f2f5', padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4a4d52' }}>
- <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
- <span style={{ fontSize: '14px', fontWeight: '600', color: '#111111' }}>{formatCompactNumber(post.likes || 0)}</span>
- </div>
- <div style={{ display: 'flex', alignItems: 'center', color: '#4a4d52' }}>
- <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a4d52" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14L21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
- <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '4px', color: '#111111' }}>{formatCompactNumber(post.shares || 0)}</span>
- </div>
- </div>
- </div>
+ <div style={{ flex: '1.2' }}>
+ <PostCard
+ post={post}
+ index={0}
+ isLastElement={false}
+ showMenuButton={false}
+ session={null}
+ savedPosts={savedPosts}
+ justSavedPosts={justSavedPosts}
+ activeMenuState={activeMenuState}
+ isMenuAnimating={isMenuAnimating}
+ menuButtonRefs={menuButtonRefs}
+ onViewPost={(p) => setViewingPost(p)}
+ onSave={() => {}}
+ onShare={() => {}}
+ onTogglePostStatus={() => {}}
+ onDeletePost={() => {}}
+ onReport={() => {}}
+ onSetActiveMenu={setActiveMenuState}
+ onSetMenuAnimating={setIsMenuAnimating}
+ />
  </div>
 
  {/* ฝั่งขวา: รายละเอียด Admin (ของใครของมัน ขนานข้างโพสต์) */}

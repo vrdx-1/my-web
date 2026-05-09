@@ -54,15 +54,15 @@ export async function POST(request: Request) {
   }
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const payload = await request.json().catch(() => ({}));
   const sourceRaw = typeof payload?.source === 'string' ? payload.source : 'unknown';
   const source = sourceRaw.trim().slice(0, 80) || 'unknown';
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
-  const userId: string | null = session?.user?.id ?? null;
+  const userId: string | null = user?.id ?? null;
 
   // ไม่รวมการกดของแอดมินในสถิติ
   if (userId) {

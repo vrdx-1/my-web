@@ -1,10 +1,11 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr'; // แก้เป็นตัวนี้
+import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = useMemo(() => createAdminSupabaseClient(), []);
   const pathname = usePathname();
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [updateCounts, setUpdateCounts] = useState<Record<string, number>>({});
@@ -21,10 +22,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // ตรวจสอบว่าแอดมิน login แล้วหรือไม่ — ถ้ายังไม่ login ไม่แสดง sidebar
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
     const check = async () => {
       const {
         data: { user },
@@ -38,10 +35,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAdminLoggedIn(profile?.role === 'admin');
     };
     check();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
+    const POLL_INTERVAL_MS = 10000;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
     const fetchCounts = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
         const res = await fetch('/api/admin/sidebar-counts', { credentials: 'include' });
         if (res.ok) {
@@ -52,9 +53,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         // ignore
       }
     };
+
     fetchCounts();
-    const interval = setInterval(fetchCounts, 1 * 1000);
-    return () => clearInterval(interval);
+    interval = setInterval(fetchCounts, POLL_INTERVAL_MS);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchCounts();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   // เมื่อแอดมินเข้าดูหน้านั้น → บันทึกจำนวนปัจจุบันเป็น "ดูแล้ว" (วงกลมแดงหายไป)
@@ -81,12 +92,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       // ignore
     }
   }, [lastSeenCounts]);
-
-  // สร้าง supabase client
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

@@ -2,8 +2,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useMemo, useState, Suspense } from 'react';
-import { AdminPostCard } from '@/components/AdminPostCard';
+import { useEffect, useMemo, useState, Suspense, useRef } from 'react';
+import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { TabNavigation } from '@/components/TabNavigation';
 import { lazyNamed } from '@/utils/lazyLoad';
@@ -26,7 +26,11 @@ export default function AdminHiddenPostsPage() {
   const [activeTab, setActiveTab] = useState<PostStatus>('recommend');
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [menuPostId, setMenuPostId] = useState<string | null>(null);
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [savedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const [viewingPost, setViewingPost] = useState<any | null>(null);
   const [fullScreenImages, setFullScreenImages] = useState<string[] | null>(null);
@@ -51,7 +55,6 @@ export default function AdminHiddenPostsPage() {
       setPosts([]);
     } finally {
       setLoading(false);
-      setMenuPostId(null);
     }
   };
 
@@ -71,7 +74,6 @@ export default function AdminHiddenPostsPage() {
 
     if (res.ok) {
       setPosts((prev) => prev.filter((p) => p.id !== carId));
-      setMenuPostId(null);
     }
   };
 
@@ -86,7 +88,6 @@ export default function AdminHiddenPostsPage() {
   return (
     <main
       style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}
-      onClick={() => setMenuPostId(null)}
     >
       <div style={{ width: '100%' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '12px', color: '#111111' }}>
@@ -110,72 +111,50 @@ export default function AdminHiddenPostsPage() {
         )}
 
         {posts.map((post, index) => {
-          const isMenuOpen = menuPostId === post.id;
-
           return (
-            <div key={post.id} style={{ position: 'relative', marginBottom: '20px' }}>
-              <AdminPostCard
-                post={post}
-                index={index}
-                onViewPost={(p) => setViewingPost(p)}
-                showStats={true}
-                adminActions={(
-                  <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => setMenuPostId((prev) => (prev === post.id ? null : post.id))}
-                      aria-label="open admin post menu"
-                      style={{
-                        width: '34px',
-                        height: '34px',
-                        borderRadius: '999px',
-                        border: 'none',
-                        background: '#f0f2f5',
-                        color: '#1f2937',
-                        fontSize: '18px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        lineHeight: 1,
-                      }}
-                    >
-                      ...
-                    </button>
+            <div key={post.id} style={{ display: 'flex', gap: '15px', marginBottom: '30px', alignItems: 'flex-start' }}>
+              <div style={{ flex: '1.2' }}>
+                <PostCard
+                  post={post}
+                  index={index}
+                  isLastElement={false}
+                  showMenuButton={false}
+                  session={null}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  menuButtonRefs={menuButtonRefs}
+                  onViewPost={(p) => setViewingPost(p)}
+                  onSave={() => {}}
+                  onShare={() => {}}
+                  onTogglePostStatus={() => {}}
+                  onDeletePost={() => {}}
+                  onReport={() => {}}
+                  onSetActiveMenu={setActiveMenuState}
+                  onSetMenuAnimating={setIsMenuAnimating}
+                />
+              </div>
 
-                    {isMenuOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '40px',
-                          right: 0,
-                          background: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '10px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
-                          minWidth: '150px',
-                          zIndex: 12,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <button
-                          onClick={() => handleUnhidePost(post.id)}
-                          style={{
-                            width: '100%',
-                            border: 'none',
-                            background: '#fff',
-                            textAlign: 'left',
-                            padding: '11px 12px',
-                            color: '#111111',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          ຍົກເລີກການຊ່ອນ (Unhide)
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              />
+              <div style={{ flex: '0.8', background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    onClick={() => handleUnhidePost(post.id)}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: '#4b4f56',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}
+                  >
+                    Unhide
+                  </button>
+                </div>
+              </div>
             </div>
           );
         })}

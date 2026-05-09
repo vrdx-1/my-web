@@ -45,6 +45,7 @@ interface PostCardProps {
   registerVisibilityRef?: (el: HTMLElement | null, index: number) => void;
   hideBoost?: boolean;
   leftOfAvatar?: React.ReactNode;
+  showMenuButton?: boolean;
   /** โพสแรกในฟีด — รูปโหลดแบบ eager สำหรับ LCP */
   priority?: boolean;
   /** ลำดับโหลดรูปของการ์ด (โพสบนสุดก่อน แล้วไล่ลงล่าง): high / low — ส่งจาก feed ตาม index */
@@ -77,6 +78,7 @@ export function PostCard({
   registerVisibilityRef,
   hideBoost = false,
   leftOfAvatar,
+  showMenuButton = true,
   priority = false,
   imageFetchPriority,
 }: PostCardProps) {
@@ -448,28 +450,30 @@ export function PostCard({
         </div>
         
         {/* Menu Button */}
-        <div style={{ marginTop: '-2px' }}>
-          <PostCardMenu
-            post={post}
-            isOwner={isOwner}
-            hideBoost={hideBoost}
-            activeMenuState={activeMenuState}
-            isMenuAnimating={isMenuAnimating}
-            menuButtonRefs={menuButtonRefs}
-            onSave={onMenuSave || onSave}
-            saveLabel={menuSaveLabel}
-            onShare={onShare}
-            onDeletePost={onDeletePost}
-            onReport={onReport}
-            onRepost={onRepost}
-            onSetActiveMenu={onSetActiveMenu}
-            onSetMenuAnimating={onSetMenuAnimating}
-            onOpenPrivateNote={() => {
-              onSetActiveMenu(null);
-              setShowPrivateNotePopup(true);
-            }}
-          />
-        </div>
+        {showMenuButton && (
+          <div style={{ marginTop: '-2px' }}>
+            <PostCardMenu
+              post={post}
+              isOwner={isOwner}
+              hideBoost={hideBoost}
+              activeMenuState={activeMenuState}
+              isMenuAnimating={isMenuAnimating}
+              menuButtonRefs={menuButtonRefs}
+              onSave={onMenuSave || onSave}
+              saveLabel={menuSaveLabel}
+              onShare={onShare}
+              onDeletePost={onDeletePost}
+              onReport={onReport}
+              onRepost={onRepost}
+              onSetActiveMenu={onSetActiveMenu}
+              onSetMenuAnimating={onSetMenuAnimating}
+              onOpenPrivateNote={() => {
+                onSetActiveMenu(null);
+                setShowPrivateNotePopup(true);
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Caption */}

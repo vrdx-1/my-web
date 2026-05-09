@@ -2,10 +2,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
-import { AdminPostCard } from "@/components/AdminPostCard";
+import { PostCard } from "@/components/PostCard";
 import { formatTime } from "@/utils/postUtils";
 import { formatTimeAgo } from "@/utils/formatTime";
 import { PhotoGrid } from "@/components/PhotoGrid";
@@ -26,6 +26,11 @@ export default function AdminBoostingPage() {
   const [activeTab, setActiveTab] = useState<"waiting" | "boosting" | "sold">("waiting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [savedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // --- States สำหรับ Viewing Mode ---
   const [viewingPost, setViewingPost] = useState<any | null>(null);
@@ -59,7 +64,7 @@ export default function AdminBoostingPage() {
       }
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
         .in('id', soldPostIds);
       if (carsError || !allCarsData?.length) {
         setLoading(false);
@@ -106,7 +111,7 @@ export default function AdminBoostingPage() {
       // โหลด posts ทั้งหมด
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, caption, province, images, status, created_at, user_id, profiles!cars_user_id_fkey(username, avatar_url)')
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
         .in('id', postIds);
 
       if (!boostsErr && !carsError && allBoostsData && allCarsData) {
@@ -236,13 +241,27 @@ export default function AdminBoostingPage() {
           return (
             <div key={item.id} className="flex flex-col lg:flex-row gap-6 items-stretch justify-center max-w-[1000px] mx-auto">
               
-              {/* ฝั่งซ้าย: โพสต์ฟีด - ใช้ AdminPostCard */}
+              {/* ฝั่งซ้าย: โพสต์ฟีด - ใช้ PostCard ร่วมกับหน้าโฮม */}
               <div className="flex-1">
-                <AdminPostCard
+                <PostCard
                   post={post}
                   index={0}
+                  isLastElement={false}
+                  showMenuButton={false}
+                  session={null}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  menuButtonRefs={menuButtonRefs}
                   onViewPost={(p) => setViewingPost(p)}
-                  showStats={true}
+                  onSave={() => {}}
+                  onShare={() => {}}
+                  onTogglePostStatus={() => {}}
+                  onDeletePost={() => {}}
+                  onReport={() => {}}
+                  onSetActiveMenu={setActiveMenuState}
+                  onSetMenuAnimating={setIsMenuAnimating}
                 />
               </div>
 

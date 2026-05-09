@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
-import { AdminPostCard } from '@/components/AdminPostCard';
+import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { PageSpinner } from '@/components/LoadingSpinner';
 import { TabNavigation } from '@/components/TabNavigation';
@@ -12,13 +12,19 @@ import { TabNavigation } from '@/components/TabNavigation';
 type UserProfile = {
   username: string | null;
   avatar_url: string | null;
+  phone?: string | null;
+  is_verified?: boolean | null;
 };
 
 type UserPost = {
   id: string;
+  short_id?: string | null;
   caption: string | null;
+  price?: number | string | null;
+  price_currency?: string | null;
   province: string | null;
   images: string[] | null;
+  layout?: string | null;
   status: string | null;
   created_at: string;
   user_id: string;
@@ -44,7 +50,11 @@ export default function AdminTopUserPostsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [menuOpenPostId, setMenuOpenPostId] = useState<string | null>(null);
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [savedPosts] = useState<{ [key: string]: boolean }>({});
+  const [justSavedPosts] = useState<{ [key: string]: boolean }>({});
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const supabase = useMemo(() => createAdminSupabaseClient(), []);
 
@@ -87,7 +97,7 @@ export default function AdminTopUserPostsPage() {
       try {
         let query = supabase
           .from('cars')
-          .select('id, caption, province, images, status, created_at, user_id, likes, shares, is_hidden, profiles!cars_user_id_fkey(username, avatar_url)', { count: 'exact' })
+          .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)', { count: 'exact' })
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
@@ -148,8 +158,6 @@ export default function AdminTopUserPostsPage() {
     } catch (err) {
       console.error('Toggle hide post error:', err);
       alert('Unable to update hide status. Please try again.');
-    } finally {
-      setMenuOpenPostId(null);
     }
   };
 
@@ -283,74 +291,51 @@ export default function AdminTopUserPostsPage() {
       ) : (
         <div>
           {posts.map((post, index) => (
-            <AdminPostCard
-              key={post.id}
-              post={post}
-              index={index}
-              showStats={true}
-              adminActions={
-                <div style={{ position: 'relative' }}>
+            <div key={post.id} style={{ display: 'flex', gap: '15px', marginBottom: '30px', alignItems: 'flex-start', opacity: post.is_hidden ? 0.5 : 1, filter: post.is_hidden ? 'grayscale(1)' : 'none' }}>
+              <div style={{ flex: '1.2' }}>
+                <PostCard
+                  post={post}
+                  index={index}
+                  isLastElement={false}
+                  showMenuButton={false}
+                  session={null}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  menuButtonRefs={menuButtonRefs}
+                  onViewPost={() => {}}
+                  onSave={() => {}}
+                  onShare={() => {}}
+                  onTogglePostStatus={() => {}}
+                  onDeletePost={() => {}}
+                  onReport={() => {}}
+                  onSetActiveMenu={setActiveMenuState}
+                  onSetMenuAnimating={setIsMenuAnimating}
+                />
+              </div>
+
+              <div style={{ flex: '0.8', background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: post.is_hidden ? '1px solid #ddd' : '1px solid #ffebeb' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpenPostId((prev) => (prev === post.id ? null : post.id));
-                    }}
+                    onClick={() => toggleHidePost(post, !post.is_hidden)}
                     style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
+                      padding: '12px',
+                      borderRadius: '8px',
                       border: 'none',
-                      background: '#f0f2f5',
-                      color: '#1f2937',
+                      background: post.is_hidden ? '#4b4f56' : '#d33',
+                      color: '#fff',
+                      fontWeight: 'bold',
                       cursor: 'pointer',
-                      fontSize: '18px',
-                      lineHeight: 1,
+                      fontSize: '14px',
                     }}
-                    aria-label="Post actions"
                   >
-                    ⋯
+                    {post.is_hidden ? 'Unhide' : 'Hide'}
                   </button>
-                  {menuOpenPostId === post.id ? (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '36px',
-                        right: 0,
-                        minWidth: '120px',
-                        background: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-                        overflow: 'hidden',
-                        zIndex: 20,
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleHidePost(post, !post.is_hidden);
-                        }}
-                        style={{
-                          width: '100%',
-                          border: 'none',
-                          background: '#fff',
-                          textAlign: 'left',
-                          padding: '10px 12px',
-                          color: '#111111',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {post.is_hidden ? 'Unhide' : 'Hide'}
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
-              }
-            />
+              </div>
+            </div>
           ))}
         </div>
       )}
