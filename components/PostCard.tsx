@@ -585,34 +585,62 @@ export function PostCard({
           {/* Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', minWidth: '32px', justifyContent: 'flex-end', flexShrink: 0, marginLeft: '12px' }}>
             {isOwner ? (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isSoldPost) {
-                    setShowSoldInfo(true);
-                    return;
-                  }
-                  if (!isSoldPost) {
-                    setShowMarkSoldConfirm(true);
-                    return;
-                  }
-                  onTogglePostStatus(post.id, post.status);
-                }} 
-                style={{ 
-                  background: '#e0245e', 
-                  padding: '4px 12px', 
-                  minHeight: '28px',
-                  lineHeight: '18px',
-                  borderRadius: '10px', 
-                  border: 'none', 
-                  color: '#fff', 
-                  fontWeight: 'bold', 
-                  fontSize: '12px', 
-                  cursor: 'pointer',
-                }}
-              >
-                {isSoldPost ? 'ຂາຍແລ້ວ' : 'ແຈ້ງວ່າຂາຍແລ້ວ'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                {!hideBoost && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/boost_post?id=${post.id}`);
+                    }}
+                    style={{
+                      background: '#fff7e6',
+                      padding: '4px 12px',
+                      minHeight: '28px',
+                      lineHeight: '18px',
+                      borderRadius: '10px',
+                      border: '1px solid #f0c36c',
+                      color: '#8a5a00',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Promote
+                  </button>
+                )}
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSoldPost) {
+                      setShowSoldInfo(true);
+                      return;
+                    }
+                    if (!isSoldPost) {
+                      setShowMarkSoldConfirm(true);
+                      return;
+                    }
+                    onTogglePostStatus(post.id, post.status);
+                  }} 
+                  style={{ 
+                    background: '#e0245e', 
+                    padding: '4px 12px', 
+                    minHeight: '28px',
+                    lineHeight: '18px',
+                    borderRadius: '10px', 
+                    border: 'none', 
+                    color: '#fff', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px', 
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isSoldPost ? 'ຂາຍແລ້ວ' : 'ແຈ້ງວ່າຂາຍແລ້ວ'}
+                </button>
+              </div>
             ) : (
               isSoldPost ? (
                 <button
