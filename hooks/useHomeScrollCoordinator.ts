@@ -13,6 +13,25 @@ export interface UseHomeScrollCoordinatorOptions {
   isSoldTabNoSearch: boolean;
 }
 
+function getPageScrollY(): number {
+  if (typeof window === 'undefined') return 0;
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  const bodyTop = document.body?.scrollTop ?? 0;
+  const docTop = document.documentElement?.scrollTop ?? 0;
+  const scrollingTop = scrolling?.scrollTop ?? 0;
+  const winTop = window.scrollY ?? window.pageYOffset ?? 0;
+  return Math.max(winTop, scrollingTop, bodyTop, docTop);
+}
+
+function setPageScrollY(y: number): void {
+  if (typeof window === 'undefined') return;
+  window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  if (scrolling) scrolling.scrollTop = y;
+  if (document.body) document.body.scrollTop = y;
+  if (document.documentElement) document.documentElement.scrollTop = y;
+}
+
 export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOptions) {
   const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabNoSearch } = options;
 
@@ -53,15 +72,15 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     const finish = () => {
       if (cancelled) return;
-      options?.onSettled?.(window.scrollY);
+      options?.onSettled?.(getPageScrollY());
     };
 
     const run = () => {
       if (cancelled) return;
-      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      setPageScrollY(targetY);
       attempts += 1;
 
-      if (Math.abs(window.scrollY - targetY) <= 4 || attempts >= maxAttempts) {
+      if (Math.abs(getPageScrollY() - targetY) <= 4 || attempts >= maxAttempts) {
         const settleId = requestAnimationFrame(finish);
         rafIds.push(settleId);
         return;
@@ -135,7 +154,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   useEffect(() => {
     if (!registerSaveBeforeSwitch) return;
     registerSaveBeforeSwitch(() => {
-      const y = typeof window !== 'undefined' ? window.scrollY : 0;
+      const y = typeof window !== 'undefined' ? getPageScrollY() : 0;
       if (isSoldTabNoSearch) soldScrollRef.current = y;
       else recommendScrollRef.current = y;
     });
@@ -227,8 +246,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
           // ยังไม่ถึงจุด — iOS อาจ reset หลัง paint, retry ด้วย setTimeout
           iOSFallbackTimer = setTimeout(() => {
             if (cancelled) return;
-            if (Math.abs(window.scrollY - targetY) > 4) {
-              window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+            if (Math.abs(getPageScrollY() - targetY) > 4) {
+              setPageScrollY(targetY);
             }
             unmask();
             pendingHomeRouteScrollRestoreRef.current = false;

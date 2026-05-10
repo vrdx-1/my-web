@@ -23,6 +23,25 @@ interface UseViewingPostReturn {
   handleViewingModeTouchEnd: (e: React.TouchEvent, setIsHeaderVisible: (visible: boolean) => void) => void;
 }
 
+function getPageScrollY(): number {
+  if (typeof window === 'undefined') return 0;
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  const bodyTop = document.body?.scrollTop ?? 0;
+  const docTop = document.documentElement?.scrollTop ?? 0;
+  const scrollingTop = scrolling?.scrollTop ?? 0;
+  const winTop = window.scrollY ?? window.pageYOffset ?? 0;
+  return Math.max(winTop, scrollingTop, bodyTop, docTop);
+}
+
+function setPageScrollY(y: number): void {
+  if (typeof window === 'undefined') return;
+  window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  if (scrolling) scrolling.scrollTop = y;
+  if (document.body) document.body.scrollTop = y;
+  if (document.documentElement) document.documentElement.scrollTop = y;
+}
+
 export function useViewingPost(): UseViewingPostReturn {
   const [viewingPost, setViewingPost] = useState<any | null>(null);
   const [isViewingModeOpen, setIsViewingModeOpen] = useState(false);
@@ -37,7 +56,7 @@ export function useViewingPost(): UseViewingPostReturn {
     _setPosts: (updater: (prev: any[]) => any[]) => void,
     setIsHeaderVisible: (visible: boolean) => void
   ): Promise<void> => {
-    const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const scrollY = typeof window !== 'undefined' ? getPageScrollY() : 0;
     if (scrollY > HEADER_TOP_ZONE_PX) setIsHeaderVisible(false);
     setSavedScrollPosition(scrollY);
     setInitialImageIndex(imageIndex);
@@ -53,7 +72,7 @@ export function useViewingPost(): UseViewingPostReturn {
 
     // คืน scroll ก่อน reset state เพื่อให้ iOS ไม่มีโอกาส reset ไปที่ 0
     if (typeof window !== 'undefined' && targetY > 0) {
-      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      setPageScrollY(targetY);
     }
 
     setIsViewingModeOpen(false);
@@ -66,8 +85,8 @@ export function useViewingPost(): UseViewingPostReturn {
       let attempts = 0;
       const retry = () => {
         attempts += 1;
-        if (Math.abs(window.scrollY - targetY) > 4) {
-          window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+        if (Math.abs(getPageScrollY() - targetY) > 4) {
+          setPageScrollY(targetY);
         }
         if (attempts < 3) requestAnimationFrame(retry);
         else if (setIsHeaderVisible && wasAtTop) {

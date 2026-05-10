@@ -33,6 +33,16 @@ interface MainTabScrollContextValue {
 
 const MainTabScrollContext = createContext<MainTabScrollContextValue | null>(null);
 
+function getPageScrollY(): number {
+  if (typeof window === 'undefined') return 0;
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  const bodyTop = document.body?.scrollTop ?? 0;
+  const docTop = document.documentElement?.scrollTop ?? 0;
+  const scrollingTop = scrolling?.scrollTop ?? 0;
+  const winTop = window.scrollY ?? window.pageYOffset ?? 0;
+  return Math.max(winTop, scrollingTop, bodyTop, docTop);
+}
+
 function getStoredScroll(tabId: MainTabId): number | undefined {
   if (typeof window === 'undefined') return undefined;
   try {
@@ -121,7 +131,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     const onScroll = () => {
       const p = pathnameRef.current;
       if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
-      lastWindowScrollByTabRef.current[p as MainTabId] = window.scrollY;
+      lastWindowScrollByTabRef.current[p as MainTabId] = getPageScrollY();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -138,7 +148,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     if (current === prev) return;
     const left = prev as MainTabId;
     const rememberedY = lastWindowScrollByTabRef.current[left];
-    const liveY = typeof window !== 'undefined' ? window.scrollY : undefined;
+    const liveY = typeof window !== 'undefined' ? getPageScrollY() : undefined;
     const y =
       typeof liveY === 'number' && Number.isFinite(liveY)
         ? (liveY <= 4 && typeof rememberedY === 'number' && rememberedY > liveY + 24 ? rememberedY : liveY)
@@ -156,7 +166,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
       if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
       const tabId = p as MainTabId;
       const rememberedY = lastWindowScrollByTabRef.current[tabId];
-      const liveY = typeof window !== 'undefined' ? window.scrollY : undefined;
+      const liveY = typeof window !== 'undefined' ? getPageScrollY() : undefined;
       const y =
         typeof liveY === 'number' && Number.isFinite(liveY)
           ? (liveY <= 4 && typeof rememberedY === 'number' && rememberedY > liveY + 24 ? rememberedY : liveY)
@@ -203,7 +213,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   useLayoutEffect(() => {
     if (!activeTabId) return;
     try {
-      lastWindowScrollByTabRef.current[activeTabId] = window.scrollY;
+      lastWindowScrollByTabRef.current[activeTabId] = getPageScrollY();
     } catch {
       // ignore
     }

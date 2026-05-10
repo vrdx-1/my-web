@@ -12,6 +12,25 @@ import { HomePageContent } from './home/HomePageContent';
 
 const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile'];
 
+function getPageScrollY(): number {
+  if (typeof window === 'undefined') return 0;
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  const bodyTop = document.body?.scrollTop ?? 0;
+  const docTop = document.documentElement?.scrollTop ?? 0;
+  const scrollingTop = scrolling?.scrollTop ?? 0;
+  const winTop = window.scrollY ?? window.pageYOffset ?? 0;
+  return Math.max(winTop, scrollingTop, bodyTop, docTop);
+}
+
+function setPageScrollY(y: number): void {
+  if (typeof window === 'undefined') return;
+  window.scrollTo(0, y);
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  if (scrolling) scrolling.scrollTop = y;
+  if (document.body) document.body.scrollTop = y;
+  if (document.documentElement) document.documentElement.scrollTop = y;
+}
+
 const feedFallback = (
   <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
     <FeedSkeleton count={3} />
@@ -49,8 +68,8 @@ function ProfilePanel() {
  * การคืน scroll หลังไปหน้าอื่นแล้วกลับมาโฮมทำใน HomePageContent หลังฟีด + virtualizer พร้อม (ไม่ restore ที่นี่) */
 function PanelScrollRegister({ tabId, children }: { tabId: MainTabId; children: React.ReactNode }) {
   const scrollCtx = useMainTabScroll();
-  const getScroll = useCallback(() => (typeof window !== 'undefined' ? window.scrollY : 0), []);
-  const setScroll = useCallback((y: number) => window.scrollTo(0, y), []);
+  const getScroll = useCallback(() => getPageScrollY(), []);
+  const setScroll = useCallback((y: number) => setPageScrollY(y), []);
 
   useLayoutEffect(() => {
     if (!scrollCtx) return;

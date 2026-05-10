@@ -24,9 +24,15 @@ interface UsePostModalsProps {
 
 /** คืน scroll แบบซิงค์ — เรียกซ้ำหลังบังคับ layout หนึ่งครั้งเพื่อให้ฟีด virtual คำนวณความสูงแล้ว clamp ถูก (ไม่ใช้ rAF หลายรอบ = ลดกระพริบ) */
 function applyWindowScrollY(targetY: number) {
-  const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const scrolling = document.scrollingElement as HTMLElement | null;
+  const docHeight = document.documentElement?.scrollHeight ?? 0;
+  const bodyHeight = document.body?.scrollHeight ?? 0;
+  const scrollingHeight = scrolling?.scrollHeight ?? 0;
+  const maxScrollableHeight = Math.max(docHeight, bodyHeight, scrollingHeight);
+  const maxY = Math.max(0, maxScrollableHeight - window.innerHeight);
   const y = Math.min(Math.max(0, targetY), maxY);
   window.scrollTo({ top: y, behavior: 'auto' });
+  if (scrolling) scrolling.scrollTop = y;
   document.documentElement.scrollTop = y;
   document.body.scrollTop = y;
 }
