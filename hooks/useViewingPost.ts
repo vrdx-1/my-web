@@ -48,16 +48,36 @@ export function useViewingPost(): UseViewingPostReturn {
   }, []);
 
   const closeViewingMode = useCallback((setIsHeaderVisible?: (visible: boolean) => void) => {
-    const wasAtTop = savedScrollPosition <= HEADER_TOP_ZONE_PX;
+    const targetY = savedScrollPosition;
+    const wasAtTop = targetY <= HEADER_TOP_ZONE_PX;
+
+    // คืน scroll ก่อน reset state เพื่อให้ iOS ไม่มีโอกาส reset ไปที่ 0
+    if (typeof window !== 'undefined' && targetY > 0) {
+      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+    }
+
     setIsViewingModeOpen(false);
     setViewingModeDragOffset(0);
     setViewingModeTouchStart(null);
     setViewingPost(null);
-    if (setIsHeaderVisible && wasAtTop) {
+
+    // iOS Safari อาจ override scroll หลัง paint — retry 3 ครั้งผ่าน RAF
+    if (typeof window !== 'undefined' && targetY > 0) {
+      let attempts = 0;
+      const retry = () => {
+        attempts += 1;
+        if (Math.abs(window.scrollY - targetY) > 4) {
+          window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+        }
+        if (attempts < 3) requestAnimationFrame(retry);
+        else if (setIsHeaderVisible && wasAtTop) {
+          requestAnimationFrame(() => setIsHeaderVisible(true));
+        }
+      };
+      requestAnimationFrame(retry);
+    } else if (setIsHeaderVisible && wasAtTop) {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsHeaderVisible(true);
-        });
+        requestAnimationFrame(() => setIsHeaderVisible(true));
       });
     }
   }, [savedScrollPosition]);

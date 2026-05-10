@@ -215,22 +215,39 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       if (useMask && w) w.style.visibility = '';
     };
 
+    // iOS Safari fallback: หลัง RAF chain เสร็จแล้ว Safari อาจยัง reset scroll — ตรวจซ้ำหลัง 350ms
+    let iOSFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
     const cancelRestore = restoreWindowScroll(targetY, {
-      maxAttempts: 5,
+      maxAttempts: 6,
       onSettled: (finalY) => {
         if (cancelled) return;
+
+        if (Math.abs(finalY - targetY) > 4) {
+          // ยังไม่ถึงจุด — iOS อาจ reset หลัง paint, retry ด้วย setTimeout
+          iOSFallbackTimer = setTimeout(() => {
+            if (cancelled) return;
+            if (Math.abs(window.scrollY - targetY) > 4) {
+              window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+            }
+            unmask();
+            pendingHomeRouteScrollRestoreRef.current = false;
+            scheduleChromeStartupLock(false);
+          }, 350);
+          return;
+        }
+
         unmask();
         pendingHomeRouteScrollRestoreRef.current = false;
         scheduleChromeStartupLock(false);
-        if (Math.abs(finalY - targetY) <= 4) {
-          mainTabScroll?.saveCurrentScroll('/home');
-        }
+        mainTabScroll?.saveCurrentScroll('/home');
       },
     });
 
     return () => {
       cancelled = true;
       cancelRestore();
+      if (iOSFallbackTimer != null) clearTimeout(iOSFallbackTimer);
       unmask();
     };
   }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch, scheduleChromeStartupLock]);

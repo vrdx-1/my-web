@@ -66,6 +66,11 @@ export default function BackHandler() {
 
     if (typeof window === 'undefined') return;
 
+    // บอก browser ว่าเราจัดการ scroll restoration เอง — ป้องกัน iOS Safari override scroll ของเรา
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
     if (pathname === ROOT_PATH) {
       history.pushState({ backHandler: 'buffer' }, '', window.location.pathname + window.location.search + window.location.hash);
     }
