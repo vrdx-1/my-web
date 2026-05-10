@@ -326,10 +326,6 @@ export const BottomNav = React.memo(function BottomNav() {
           if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
             mainTabScroll?.saveCurrentScroll(pathname);
           }
-          if (path === '/home') {
-            mainTab?.setTabRefreshing(true);
-            mainTab?.triggerTabRefresh();
-          }
           setPendingPath(path);
           startTransition(() => {
             // กลับมาโฮม: ใช้ URL ที่บันทึกไว้ (รวม ?q=) เพื่อไม่ล้างคำค้นและจดจำ scroll ได้
