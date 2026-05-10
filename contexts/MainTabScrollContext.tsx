@@ -137,12 +137,46 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     if (prev !== '/home' && prev !== '/notification' && prev !== '/profile') return;
     if (current === prev) return;
     const left = prev as MainTabId;
-    const y = lastWindowScrollByTabRef.current[left];
+    const rememberedY = lastWindowScrollByTabRef.current[left];
+    const liveY = typeof window !== 'undefined' ? window.scrollY : undefined;
+    const y =
+      typeof liveY === 'number' && Number.isFinite(liveY)
+        ? (liveY <= 4 && typeof rememberedY === 'number' && rememberedY > liveY + 24 ? rememberedY : liveY)
+        : rememberedY;
     if (typeof y === 'number' && Number.isFinite(y)) {
       savedScrollRef.current[left] = y;
       setStoredScroll(left, y);
     }
   }, [pathname]);
+
+  /** iOS/Safari: ตอน app ถูกซ่อนหรือเปลี่ยนหน้า ให้บันทึกตำแหน่งล่าสุดอีกชั้น (กันหลุดจากจังหวะ reset scroll) */
+  useEffect(() => {
+    const persistActiveTabScroll = () => {
+      const p = pathnameRef.current;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
+      const tabId = p as MainTabId;
+      const rememberedY = lastWindowScrollByTabRef.current[tabId];
+      const liveY = typeof window !== 'undefined' ? window.scrollY : undefined;
+      const y =
+        typeof liveY === 'number' && Number.isFinite(liveY)
+          ? (liveY <= 4 && typeof rememberedY === 'number' && rememberedY > liveY + 24 ? rememberedY : liveY)
+          : rememberedY;
+      if (typeof y !== 'number' || !Number.isFinite(y)) return;
+      savedScrollRef.current[tabId] = y;
+      setStoredScroll(tabId, y);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') persistActiveTabScroll();
+    };
+
+    window.addEventListener('pagehide', persistActiveTabScroll);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', persistActiveTabScroll);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
 
   /** เมื่อ pathname เปลี่ยน: คืนค่า scroll ก่อน paint — ให้เห็นจุดเดิมทันที (ใช้ sessionStorage เป็น fallback เผื่อ context ถูก remount ตอน deploy) */
   useLayoutEffect(() => {

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPortal';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
@@ -19,6 +20,7 @@ export function HomeHeaderSearchAndFilter() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') ?? '';
   const homeProvince = useHomeProvince();
+  const mainTabScroll = useMainTabScroll();
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const setSelectedProvince = homeProvince?.setSelectedProvince;
 
@@ -39,6 +41,7 @@ export function HomeHeaderSearchAndFilter() {
   }, [searchQuery, setSelectedProvince]);
 
   const handleSearchClick = useCallback(() => {
+    mainTabScroll?.saveCurrentScroll('/home');
     // iOS Safari จะแสดงแป้นพิมพ์เฉพาะเมื่อ focus() อยู่ใน user gesture event เท่านั้น
     // เมื่อ router.push นำทางไปหน้าใหม่ กว่า useLayoutEffect จะ focus() input จริงก็พ้น gesture ไปแล้ว
     // แก้โดย: สร้าง temp input แล้ว focus() ทันทีใน handler นี้ (ยังอยู่ใน gesture context)
@@ -58,7 +61,7 @@ export function HomeHeaderSearchAndFilter() {
     }
     const q = searchQuery?.trim() ?? '';
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search', { scroll: false });
-  }, [router, searchQuery]);
+  }, [mainTabScroll, router, searchQuery]);
 
   const handleFilterClick = useCallback(() => {
     if (showProvincePicker) return;
