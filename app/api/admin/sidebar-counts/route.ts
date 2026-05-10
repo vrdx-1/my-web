@@ -53,6 +53,9 @@ function getAdminClient() {
 
 export type SidebarCounts = Record<string, number>;
 
+const SIDEBAR_COUNTS_CACHE_TTL_MS = 10_000;
+let sidebarCountsCache: { data: SidebarCounts; expiresAt: number } | null = null;
+
 /**
  * GET: คืนจำนวนสำหรับแจ้งเตือนแต่ละแท็บใน admin sidebar
  */
@@ -72,6 +75,16 @@ export async function GET(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
   }
+
+  const now = Date.now();
+  if (sidebarCountsCache && sidebarCountsCache.expiresAt > now) {
+    return NextResponse.json(sidebarCountsCache.data, {
+      headers: {
+        'Cache-Control': 'private, max-age=5',
+      },
+    });
+  }
+
   const admin = getAdminClient();
   if (!admin) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
@@ -121,5 +134,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to fetch counts' }, { status: 500 });
   }
 
-  return NextResponse.json(counts);
+  sidebarCountsCache = {
+    data: counts,
+    expiresAt: now + SIDEBAR_COUNTS_CACHE_TTL_MS,
+  };
+
+  return NextResponse.json(counts, {
+    headers: {
+      'Cache-Control': 'private, max-age=5',
+    },
+  });
 }

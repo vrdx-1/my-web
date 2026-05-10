@@ -10,8 +10,10 @@ type DailyRow = {
 };
 
 type PostClickInfo = {
+  postId: string | null;
   shortId: string;
   clickCount: number;
+  post: Record<string, unknown> | null;
 };
 
 type AccountRow = {
@@ -33,8 +35,57 @@ type WhatsAppLogRow = {
   target_profile_id: string;
   user_id: string | null;
   guest_token: string | null;
+  post_id: string | null;
   short_id: string | null;
 };
+
+type CarLookupRow = {
+  id: string;
+  short_id: string | null;
+  caption: string | null;
+  price: number | string | null;
+  price_currency: string | null;
+  province: string | null;
+  images: string[] | null;
+  layout: string | null;
+  status: string | null;
+  created_at: string;
+  user_id: string;
+  likes: number | null;
+  shares: number | null;
+  is_hidden: boolean | null;
+  is_boosted: boolean | null;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+    phone: string | null;
+    is_verified: boolean | null;
+  }[] | null;
+};
+
+type NormalizedCarLookupRow = Omit<CarLookupRow, 'profiles'> & {
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+    phone: string | null;
+    is_verified: boolean | null;
+  } | null;
+};
+
+function normalizeCarRow(car: CarLookupRow): NormalizedCarLookupRow {
+  const profile = Array.isArray(car.profiles) && car.profiles.length > 0 ? car.profiles[0] : null;
+  return {
+    ...car,
+    profiles: profile
+      ? {
+          username: profile.username ?? null,
+          avatar_url: profile.avatar_url ?? null,
+          phone: profile.phone ?? null,
+          is_verified: profile.is_verified ?? null,
+        }
+      : null,
+  };
+}
 
 type ProfileLookupRow = {
   id: string;
@@ -177,7 +228,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await admin
     .from('whatsapp_click_logs')
-    .select('id, created_at, target_profile_id, user_id, guest_token, short_id')
+    .select('id, created_at, target_profile_id, user_id, guest_token, post_id, short_id')
     .gte('created_at', startIso)
     .lt('created_at', nextIso)
     .order('created_at', { ascending: true });
@@ -215,7 +266,7 @@ export async function GET(request: NextRequest) {
     userClicks: number;
     guestClicks: number;
     uniquePeopleSet: Set<string>;
-    shortIdMap: Map<string, number>;
+    postMap: Map<string, { postId: string | null; shortId: string; clickCount: number }>;
   }>();
 
   for (const row of selectedDateLogs) {
@@ -226,16 +277,33 @@ export async function GET(request: NextRequest) {
         userClicks: 0,
         guestClicks: 0,
         uniquePeopleSet: new Set<string>(),
-        shortIdMap: new Map(),
+        postMap: new Map(),
       });
     }
 
     const current = accountMap.get(key)!;
     current.totalClicks += 1;
 
-    // Track posts by short_id
-    const shortId = row.short_id || 'unknown';
-    current.shortIdMap.set(shortId, (current.shortIdMap.get(shortId) ?? 0) + 1);
+    // Track post clicks by post_id first, fallback to short_id.
+    const shortId = row.short_id?.trim() || 'unknown';
+    const postId = row.post_id?.trim() || null;
+    const postKey = postId ? `id:${postId}` : `short:${shortId}`;
+    const existingPost = current.postMap.get(postKey);
+    if (existingPost) {
+      existingPost.clickCount += 1;
+      if (!existingPost.shortId || existingPost.shortId === 'unknown') {
+        existingPost.shortId = shortId;
+      }
+      if (!existingPost.postId && postId) {
+        existingPost.postId = postId;
+      }
+    } else {
+      current.postMap.set(postKey, {
+        postId,
+        shortId,
+        clickCount: 1,
+      });
+    }
 
     if (row.user_id) {
       current.userClicks += 1;
@@ -283,6 +351,47 @@ export async function GET(request: NextRequest) {
     parentNameMap.set(row.id, row.username || 'Unknown');
   }
 
+  const clickedPostIds = new Set<string>();
+  const clickedShortIds = new Set<string>();
+  for (const stats of accountMap.values()) {
+    for (const postInfo of stats.postMap.values()) {
+      if (postInfo.postId) clickedPostIds.add(postInfo.postId);
+      if (postInfo.shortId && postInfo.shortId !== 'unknown') clickedShortIds.add(postInfo.shortId);
+    }
+  }
+
+  const carsById = new Map<string, NormalizedCarLookupRow>();
+  const carsByShortId = new Map<string, NormalizedCarLookupRow>();
+
+  if (clickedPostIds.size > 0) {
+    const { data: carRowsById } = await admin
+      .from('cars')
+      .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
+      .in('id', Array.from(clickedPostIds));
+
+    for (const car of ((carRowsById || []) as unknown as CarLookupRow[])) {
+      const normalizedCar = normalizeCarRow(car);
+      carsById.set(normalizedCar.id, normalizedCar);
+      if (normalizedCar.short_id) carsByShortId.set(normalizedCar.short_id, normalizedCar);
+    }
+  }
+
+  if (clickedShortIds.size > 0) {
+    const missingShortIds = Array.from(clickedShortIds).filter((shortId) => !carsByShortId.has(shortId));
+    if (missingShortIds.length > 0) {
+      const { data: carRowsByShortId } = await admin
+        .from('cars')
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
+        .in('short_id', missingShortIds);
+
+      for (const car of ((carRowsByShortId || []) as unknown as CarLookupRow[])) {
+        const normalizedCar = normalizeCarRow(car);
+        carsById.set(normalizedCar.id, normalizedCar);
+        if (normalizedCar.short_id) carsByShortId.set(normalizedCar.short_id, normalizedCar);
+      }
+    }
+  }
+
   const accountRows: AccountRow[] = targetProfileIds
     .map((profileId) => {
       const stats = accountMap.get(profileId);
@@ -291,12 +400,23 @@ export async function GET(request: NextRequest) {
       const profile = profileMap.get(profileId);
       const parentAdminId = profile?.parent_admin_id ?? null;
 
-      // Convert shortIdMap to sorted array
-      const posts: PostClickInfo[] = Array.from(stats.shortIdMap.entries())
-        .map(([shortId, clickCount]) => ({
-          shortId,
-          clickCount,
-        }))
+      const posts: PostClickInfo[] = Array.from(stats.postMap.values())
+        .map((postStats) => {
+          const matchedPost = postStats.postId
+            ? (carsById.get(postStats.postId) || null)
+            : null;
+          const fallbackPost = !matchedPost && postStats.shortId !== 'unknown'
+            ? (carsByShortId.get(postStats.shortId) || null)
+            : null;
+          const post = matchedPost || fallbackPost;
+
+          return {
+            postId: post?.id || postStats.postId,
+            shortId: post?.short_id || postStats.shortId,
+            clickCount: postStats.clickCount,
+            post,
+          };
+        })
         .sort((a, b) => b.clickCount - a.clickCount);
 
       return {

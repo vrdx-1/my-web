@@ -1,7 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PostCard } from '@/components/PostCard';
+import { PostFeedModals } from '@/components/PostFeedModals';
+import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
+import { usePostModals } from '@/hooks/usePostModals';
+import { useViewingPost } from '@/hooks/useViewingPost';
 import { LAO_FONT } from '@/utils/constants';
 
 type DailyRow = {
@@ -20,8 +25,10 @@ type AccountRow = {
   userClicks: number;
   guestClicks: number;
   posts: Array<{
+    postId: string | null;
     shortId: string;
     clickCount: number;
+    post: Record<string, unknown> | null;
   }>;
 };
 
@@ -32,6 +39,13 @@ type Summary = {
   selectedDateUniquePeople: number;
   daysWithData: number;
   accountsWithClicks: number;
+};
+
+type ClickedPostWithData = {
+  postId: string | null;
+  shortId: string;
+  clickCount: number;
+  post: Record<string, unknown>;
 };
 
 function getTodayBangkokDate(): string {
@@ -60,9 +74,15 @@ function formatDisplayDate(dateStr: string): string {
 
 export default function AdminWhatsAppClicksPage() {
   const today = useMemo(() => getTodayBangkokDate(), []);
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const viewingPostHook = useViewingPost();
+  const fullScreenViewer = useFullScreenViewer();
   const [selectedDate, setSelectedDate] = useState(today);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [selectedAccountRow, setSelectedAccountRow] = useState<AccountRow | null>(null);
   const [dailyRows, setDailyRows] = useState<DailyRow[]>([]);
   const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
   const [summary, setSummary] = useState<Summary>({
@@ -74,12 +94,67 @@ export default function AdminWhatsAppClicksPage() {
     accountsWithClicks: 0,
   });
 
+  usePostModals({
+    viewingPost: viewingPostHook.viewingPost,
+    isViewingModeOpen: viewingPostHook.isViewingModeOpen,
+    setIsViewingModeOpen: viewingPostHook.setIsViewingModeOpen,
+    setViewingModeDragOffset: viewingPostHook.setViewingModeDragOffset,
+    initialImageIndex: viewingPostHook.initialImageIndex,
+    savedScrollPosition: viewingPostHook.savedScrollPosition,
+    fullScreenImages: fullScreenViewer.fullScreenImages,
+    setFullScreenDragOffset: fullScreenViewer.setFullScreenDragOffset,
+    setFullScreenVerticalDragOffset: fullScreenViewer.setFullScreenVerticalDragOffset,
+    setFullScreenZoomScale: fullScreenViewer.setFullScreenZoomScale,
+    setFullScreenZoomOrigin: fullScreenViewer.setFullScreenZoomOrigin,
+    setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
+    setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
+    setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
+    setIsHeaderVisible: () => {},
+  });
+
+  const openAccountPostsModal = useCallback((row: AccountRow) => {
+    setSelectedAccountRow(row);
+  }, []);
+
+  const closeAccountPostsModal = useCallback(() => {
+    setSelectedAccountRow(null);
+  }, []);
+
+  const clickedPostsWithData = useMemo(() => {
+    if (!selectedAccountRow) return [];
+    return selectedAccountRow.posts.filter(
+      (item): item is ClickedPostWithData => Boolean(item.post)
+    );
+  }, [selectedAccountRow]);
+
+  const clickedPostsWithoutData = useMemo(() => {
+    if (!selectedAccountRow) return [];
+    return selectedAccountRow.posts.filter((item) => !item.post);
+  }, [selectedAccountRow]);
+
+  const emptySavedPosts = useMemo(() => ({} as { [key: string]: boolean }), []);
+
+  useEffect(() => {
+    if (!selectedAccountRow) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSelectedAccountRow(null);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedAccountRow]);
+
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
       setLoading(true);
       setError(null);
+      setSelectedAccountRow(null);
 
       try {
         const res = await fetch(`/api/admin/whatsapp-clicks?date=${encodeURIComponent(selectedDate)}`, {
@@ -249,16 +324,51 @@ export default function AdminWhatsAppClicksPage() {
                         ? `Sub account${row.parentAdminUsername ? ` (${row.parentAdminUsername})` : ''}`
                         : 'Main account';
 
-                      // Format posts display
-                      const postsDisplay = row.posts.length > 0 
-                        ? row.posts.map(p => `${p.shortId}(${p.clickCount})`).join(', ')
-                        : '-';
-
                       return (
-                        <tr key={row.targetProfileId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <tr
+                          key={row.targetProfileId}
+                          style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
+                          onClick={() => openAccountPostsModal(row)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              openAccountPostsModal(row);
+                            }
+                          }}
+                          tabIndex={0}
+                        >
                           <td style={{ padding: '10px 12px', fontSize: '13px', color: '#0f172a', fontWeight: 600 }}>{row.username}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', color: '#475569' }}>{accountType}</td>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: '#475569', fontFamily: 'monospace' }}>{postsDisplay}</td>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: '#475569', fontFamily: 'monospace' }}>
+                            {row.posts.length === 0 ? (
+                              '-'
+                            ) : (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {row.posts.map((postItem, index) => (
+                                  <button
+                                    key={`${row.targetProfileId}-${postItem.postId || postItem.shortId}-${index}`}
+                                    type="button"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      openAccountPostsModal(row);
+                                    }}
+                                    style={{
+                                      border: '1px solid #dbeafe',
+                                      background: '#eff6ff',
+                                      color: '#1e3a8a',
+                                      borderRadius: '999px',
+                                      padding: '2px 8px',
+                                      cursor: 'pointer',
+                                      fontSize: '12px',
+                                      lineHeight: 1.4,
+                                    }}
+                                  >
+                                    {`${postItem.shortId}(${postItem.clickCount})`}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{row.totalClicks.toLocaleString()}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', fontWeight: 700, color: '#1d4ed8' }}>{row.uniquePeople.toLocaleString()}</td>
                           <td style={{ padding: '10px 12px', fontSize: '13px', textAlign: 'right', color: '#14532d' }}>{row.userClicks.toLocaleString()}</td>
@@ -273,6 +383,191 @@ export default function AdminWhatsAppClicksPage() {
           </section>
         </div>
       )}
+
+      {selectedAccountRow ? (
+        <div
+          onClick={closeAccountPostsModal}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.55)',
+            zIndex: 1500,
+            padding: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '740px',
+              maxHeight: '92vh',
+              background: '#fff',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{selectedAccountRow.username}</div>
+                <div style={{ fontSize: '13px', color: '#475569' }}>Posts clicked on {formatDisplayDate(selectedDate)}</div>
+              </div>
+              <button
+                type="button"
+                onClick={closeAccountPostsModal}
+                style={{
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: '#0f172a',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '999px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  lineHeight: 1,
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ overflowY: 'auto', padding: '10px 0', background: '#fff' }}>
+              {clickedPostsWithData.length === 0 ? (
+                <div style={{ padding: '20px 16px', fontSize: '14px', color: '#64748b' }}>
+                  No post details found for this account on selected day.
+                </div>
+              ) : (
+                clickedPostsWithData.map((postItem, index) => (
+                  <div key={`${postItem.postId || postItem.shortId}-${index}`} style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: '14px', left: '12px', zIndex: 5, background: '#e0f2fe', color: '#0c4a6e', border: '1px solid #bae6fd', borderRadius: '999px', padding: '2px 10px', fontSize: '12px', fontWeight: 700 }}>
+                      Clicks: {postItem.clickCount}
+                    </div>
+                    <div style={{ paddingTop: '28px' }}>
+                      <PostCard
+                        post={postItem.post}
+                        index={index}
+                        isLastElement={index === clickedPostsWithData.length - 1}
+                        session={null}
+                        savedPosts={emptySavedPosts}
+                        justSavedPosts={emptySavedPosts}
+                        activeMenuState={activeMenuState}
+                        isMenuAnimating={isMenuAnimating}
+                        menuButtonRefs={menuButtonRefs}
+                        onViewPost={(post, imageIndex: number) => {
+                          void viewingPostHook.handleViewPost(post, imageIndex, () => {}, () => {});
+                        }}
+                        onSave={() => {}}
+                        onShare={() => {}}
+                        onTogglePostStatus={() => {}}
+                        onDeletePost={() => {}}
+                        onReport={() => {}}
+                        onSetActiveMenu={setActiveMenuState}
+                        onSetMenuAnimating={setIsMenuAnimating}
+                        showMenuButton={false}
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {clickedPostsWithoutData.length > 0 ? (
+                <div style={{ margin: '10px 16px 16px', padding: '10px 12px', border: '1px solid #fee2e2', background: '#fff1f2', color: '#9f1239', borderRadius: '10px', fontSize: '13px' }}>
+                  Some clicked posts could not be loaded: {clickedPostsWithoutData.map((item) => item.shortId).join(', ')}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <PostFeedModals
+        viewingPost={viewingPostHook.viewingPost}
+        session={null}
+        isViewingModeOpen={viewingPostHook.isViewingModeOpen}
+        viewingModeDragOffset={viewingPostHook.viewingModeDragOffset}
+        savedScrollPosition={viewingPostHook.savedScrollPosition}
+        initialImageIndex={viewingPostHook.initialImageIndex}
+        onViewingPostClose={() => viewingPostHook.closeViewingMode(() => {})}
+        onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
+        onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}
+        onViewingPostTouchEnd={(event: React.TouchEvent) => viewingPostHook.handleViewingModeTouchEnd(event, () => {})}
+        onViewingPostImageClick={(images: string[], index: number) => {
+          fullScreenViewer.setFullScreenImages(images);
+          fullScreenViewer.setCurrentImgIndex(index);
+        }}
+        fullScreenImages={fullScreenViewer.fullScreenImages}
+        currentImgIndex={fullScreenViewer.currentImgIndex}
+        fullScreenDragOffset={fullScreenViewer.fullScreenDragOffset}
+        fullScreenEntranceOffset={fullScreenViewer.fullScreenEntranceOffset}
+        fullScreenVerticalDragOffset={fullScreenViewer.fullScreenVerticalDragOffset}
+        fullScreenIsDragging={fullScreenViewer.fullScreenIsDragging}
+        fullScreenTransitionDuration={fullScreenViewer.fullScreenTransitionDuration}
+        fullScreenShowDetails={fullScreenViewer.fullScreenShowDetails}
+        fullScreenZoomScale={fullScreenViewer.fullScreenZoomScale}
+        fullScreenZoomOrigin={fullScreenViewer.fullScreenZoomOrigin}
+        activePhotoMenu={fullScreenViewer.activePhotoMenu}
+        isPhotoMenuAnimating={fullScreenViewer.isPhotoMenuAnimating}
+        showDownloadBottomSheet={fullScreenViewer.showDownloadBottomSheet}
+        isDownloadBottomSheetAnimating={fullScreenViewer.isDownloadBottomSheetAnimating}
+        showImageForDownload={fullScreenViewer.showImageForDownload}
+        onFullScreenClose={() => {
+          fullScreenViewer.setFullScreenImages(null);
+          if (fullScreenViewer.activePhotoMenu !== null) {
+            fullScreenViewer.setIsPhotoMenuAnimating(true);
+            setTimeout(() => {
+              fullScreenViewer.setActivePhotoMenu(null);
+              fullScreenViewer.setIsPhotoMenuAnimating(false);
+            }, 300);
+          }
+        }}
+        onFullScreenTouchStart={fullScreenViewer.fullScreenOnTouchStart}
+        onFullScreenTouchMove={fullScreenViewer.fullScreenOnTouchMove}
+        onFullScreenTouchEnd={fullScreenViewer.fullScreenOnTouchEnd}
+        onFullScreenClick={fullScreenViewer.fullScreenOnClick}
+        onFullScreenDownload={fullScreenViewer.downloadImage}
+        onFullScreenImageIndexChange={fullScreenViewer.setCurrentImgIndex}
+        onFullScreenPhotoMenuToggle={(index: number) => {
+          if (fullScreenViewer.activePhotoMenu === index) {
+            fullScreenViewer.setIsPhotoMenuAnimating(true);
+            setTimeout(() => {
+              fullScreenViewer.setActivePhotoMenu(null);
+              fullScreenViewer.setIsPhotoMenuAnimating(false);
+            }, 300);
+          } else {
+            fullScreenViewer.setActivePhotoMenu(index);
+            fullScreenViewer.setIsPhotoMenuAnimating(true);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                fullScreenViewer.setIsPhotoMenuAnimating(false);
+              });
+            });
+          }
+        }}
+        onFullScreenDownloadBottomSheetClose={() => {
+          fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
+          setTimeout(() => {
+            fullScreenViewer.setShowDownloadBottomSheet(false);
+            fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
+          }, 300);
+        }}
+        onFullScreenDownloadBottomSheetDownload={() => {
+          fullScreenViewer.setIsDownloadBottomSheetAnimating(true);
+          setTimeout(() => {
+            fullScreenViewer.setShowDownloadBottomSheet(false);
+            fullScreenViewer.setIsDownloadBottomSheetAnimating(false);
+            if (fullScreenViewer.fullScreenImages) {
+              fullScreenViewer.downloadImage(fullScreenViewer.fullScreenImages[fullScreenViewer.currentImgIndex]);
+            }
+          }, 300);
+        }}
+        onFullScreenImageForDownloadClose={() => fullScreenViewer.setShowImageForDownload(null)}
+      />
     </main>
   );
 }

@@ -1,6 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-let adminBrowserClient: ReturnType<typeof createBrowserClient> | null = null;
+type BrowserClient = ReturnType<typeof createBrowserClient>;
+
+const ADMIN_SUPABASE_CLIENT_KEY = '__jutpai_admin_supabase_client__';
+
+function getGlobalStore(): Record<string, unknown> | null {
+  if (typeof globalThis === 'undefined') return null;
+  return globalThis as unknown as Record<string, unknown>;
+}
 
 /**
  * Admin Supabase Client
@@ -8,12 +15,18 @@ let adminBrowserClient: ReturnType<typeof createBrowserClient> | null = null;
  * Used across all admin pages to ensure consistency
  */
 export function createAdminSupabaseClient() {
-  if (adminBrowserClient) return adminBrowserClient;
+  const store = getGlobalStore();
+  const existing = store?.[ADMIN_SUPABASE_CLIENT_KEY] as BrowserClient | undefined;
+  if (existing) return existing;
 
-  adminBrowserClient = createBrowserClient(
+  const client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  return adminBrowserClient;
+  if (store) {
+    store[ADMIN_SUPABASE_CLIENT_KEY] = client;
+  }
+
+  return client;
 }

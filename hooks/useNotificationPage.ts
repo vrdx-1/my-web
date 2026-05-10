@@ -185,11 +185,11 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
         }
       });
     } else {
-      supabase.auth.getSession().then(({ data: { session: fetchedSession } }) => {
+      supabase.auth.getUser().then(({ data: { user: fetchedUser } }) => {
         if (cancelled) return;
-        if (fetchedSession?.user?.id) {
+        if (fetchedUser?.id) {
           const isBackground = !!(cached && cached.list.length > 0);
-          fetchFirstPage(fetchedSession.user.id, isBackground).then(() => {
+          fetchFirstPage(fetchedUser.id, isBackground).then(() => {
             if (!cancelled && typeof window !== 'undefined') {
               try {
                 window.localStorage.setItem(HOME_OPENED_KEY, new Date().toISOString());
@@ -216,7 +216,8 @@ export function useNotificationPage(options: UseNotificationPageOptions = {}) {
       debugLog('skip: loadingMore=', loadingMore, 'hasMore=', hasMore);
       return;
     }
-    const userId = userIdRef.current ?? activeProfileId ?? session?.user?.id ?? (await supabase.auth.getSession()).data.session?.user?.id;
+    const fallbackUserId = (await supabase.auth.getUser()).data.user?.id;
+    const userId = userIdRef.current ?? activeProfileId ?? session?.user?.id ?? fallbackUserId;
     if (!userId) {
       debugLog('skip: no userId');
       return;

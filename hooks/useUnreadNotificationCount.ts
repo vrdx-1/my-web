@@ -71,19 +71,30 @@ async function fetchUnreadCountShared(userId: string): Promise<number> {
 export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCountOptions) {
   const [unreadCount, setUnreadCount] = useState<number>(() => getCachedUnreadCount(userId));
   const pathname = usePathname();
-  const prevPathnameRef = useRef<string | null>(null);
+  const stateRef = useRef<{ prevPathname: string | null; mounted: boolean }>({
+    prevPathname: null,
+    mounted: true,
+  });
+
+  useEffect(() => {
+    stateRef.current.mounted = true;
+    return () => {
+      stateRef.current.mounted = false;
+    };
+  }, []);
 
   const fetchUnreadCount = useCallback(async () => {
     if (!userId) {
-      setUnreadCount(0);
+      if (stateRef.current.mounted) setUnreadCount(0);
       return;
     }
     try {
       const count = await fetchUnreadCountShared(userId);
+      if (!stateRef.current.mounted) return;
       setUnreadCount(count);
       setCachedUnreadCount(userId, count);
     } catch {
-      setUnreadCount((prev) => prev);
+      if (stateRef.current.mounted) setUnreadCount((prev) => prev);
     }
   }, [userId]);
 
@@ -127,10 +138,10 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
 
   // เข้าหรือออกจากหน้าแจ้งเตือน → ลบตัวเลขแจ้งเตือนทันที; ออกจากหน้าแล้วค่อยอัปเดต cache เมื่อเครื่องว่าง (ไม่บล็อกการสลับหน้า)
   useEffect(() => {
-    const prev = prevPathnameRef.current;
+    const prev = stateRef.current.prevPathname;
     const prevIsNotification =
       prev === '/notification' || (prev?.startsWith && prev.startsWith('/notification/'));
-    prevPathnameRef.current = pathname ?? null;
+    stateRef.current.prevPathname = pathname ?? null;
     if (isOnNotificationPage) {
       setUnreadCount(0);
       setCachedUnreadCount(userId, 0);
@@ -141,10 +152,11 @@ export function useUnreadNotificationCount({ userId }: UseUnreadNotificationCoun
         if (userId) fetchUnreadCount();
       };
       if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(deferRefetch, { timeout: 3000 });
-      } else {
-        window.setTimeout(deferRefetch, 500);
+        const idleId = requestIdleCallback(deferRefetch, { timeout: 3000 });
+        return () => cancelIdleCallback(idleId);
       }
+      const timeoutId = window.setTimeout(deferRefetch, 500);
+      return () => clearTimeout(timeoutId);
     }
   }, [pathname, userId, fetchUnreadCount, isOnNotificationPage]);
 
