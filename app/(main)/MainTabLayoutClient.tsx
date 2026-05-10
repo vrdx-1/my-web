@@ -87,6 +87,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     typeof window !== 'undefined' ? window.location.pathname : ''
   );
   const resolvedPathname = pathname ?? initialPathname;
+  const isMainTabRoute =
+    resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile';
   const { session, userProfile, activeProfileId } = useSessionAndProfile();
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
     userId: activeProfileId || session?.user?.id,
@@ -412,11 +414,8 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' ? (
-        <MemoizedMainTabPanels />
-      ) : (
-        children
-      )}
+      <MemoizedMainTabPanels />
+      {!isMainTabRoute ? children : null}
     </>
   );
 }
