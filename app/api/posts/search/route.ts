@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { randomUUID } from 'crypto';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import {
   expandWithoutBrandAliases,
@@ -11,7 +12,7 @@ import {
   getSearchCategoryIds,
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
-import { extractYearsFromQuery, rankPostsByYear, removeYearsFromQuery, removePartialYearSuffix } from '@/utils/yearSearchUtils';
+import { extractYearsFromQuery, removeYearsFromQuery, removePartialYearSuffix } from '@/utils/yearSearchUtils';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -45,6 +46,40 @@ function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
   );
 }
 
+function hashString(input: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function sortBySeed<T extends { id: string }>(items: T[], seed: string): T[] {
+  return [...items].sort((left, right) => {
+    const diff = hashString(`${seed}:post:${left.id}`) - hashString(`${seed}:post:${right.id}`);
+    if (diff !== 0) return diff;
+    return String(left.id).localeCompare(String(right.id));
+  });
+}
+
+function orderSearchPosts(posts: SearchPostRow[], queryYears: number[], seed: string): SearchPostRow[] {
+  if (queryYears.length === 0) return sortBySeed(posts, seed);
+
+  const queryYearSet = new Set(queryYears);
+  const exactYearMatches: SearchPostRow[] = [];
+  const nonMatchingYears: SearchPostRow[] = [];
+
+  for (const post of posts) {
+    const postYears = extractYearsFromQuery(post.caption);
+    const hasExactMatch = postYears.some((year) => queryYearSet.has(year));
+    if (hasExactMatch) exactYearMatches.push(post);
+    else nonMatchingYears.push(post);
+  }
+
+  return [...exactYearMatches, ...sortBySeed(nonMatchingYears, seed)];
+}
+
 /**
  * GET /api/posts/search?q=...&province=...
  * ค้นหาโพสต์จาก caption: ขยายคำค้นเป็นกลุ่ม (ไทย/ลาว/อังกฤษ) แล้วแสดงโพสที่ caption มีคำใดคำหนึ่งในกลุ่ม
@@ -68,6 +103,7 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') ?? '';
     const province = searchParams.get('province') ?? undefined;
     const query = (typeof q === 'string' ? q : '').trim();
+    const searchSeed = randomUUID();
     const queryYears = extractYearsFromQuery(query);
     // Strip full years ("Revo2010" → "Revo") then strip leftover partial suffix ("revo20" → "revo")
     const queryForMatching = queryYears.length > 0
@@ -133,7 +169,7 @@ export async function GET(request: NextRequest) {
       ) as SearchPostRow[];
 
       const priorityTerms = getSearchPriorityTerms(queryForMatching);
-      if (priorityTerms.length > 0) {
+      if (queryYears.length > 0 && priorityTerms.length > 0) {
         posts = [...posts].sort((a, b) => {
           const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
           const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
@@ -145,10 +181,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Rank by year if query contains year
-      if (queryYears.length > 0) {
-        posts = rankPostsByYear(posts, queryYears);
-      }
+      posts = orderSearchPosts(posts, queryYears, searchSeed);
 
       return NextResponse.json(
         { posts: posts.slice(0, SEARCH_LIMIT) },
@@ -213,14 +246,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      allOrdered.sort((a, b) => {
-        const aBoost = a.is_boosted === true ? 1 : 0;
-        const bBoost = b.is_boosted === true ? 1 : 0;
-        if (bBoost !== aBoost) return bBoost - aBoost;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-
-      const topIds = allOrdered.slice(0, SEARCH_LIMIT).map((r) => r.id);
+      const topIds = sortBySeed(allOrdered, searchSeed).slice(0, SEARCH_LIMIT).map((r) => r.id);
       if (topIds.length === 0) {
         return NextResponse.json(
           { posts: [] },
@@ -253,9 +279,9 @@ export async function GET(request: NextRequest) {
       // Extract years from query for ranking
       const queryYears = extractYearsFromQuery(query);
 
-      // จัดเรียงตามความเกี่ยวข้อง: โพสที่มีคำหลัก (เช่น MG, ເອັມຈີ) ใน caption แสดงก่อน โพสที่ไม่ตรงไปล่าง
+      // จัดเรียงตามความเกี่ยวข้องเฉพาะตอนค้นหาปี เพื่อให้ปีที่ตรงยังอยู่ด้านบนเหมือนเดิม
       const priorityTerms = getSearchPriorityTerms(queryForMatching);
-      if (priorityTerms.length > 0) {
+      if (queryYears.length > 0 && priorityTerms.length > 0) {
         posts.sort((a, b) => {
           const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
           const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
@@ -267,10 +293,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Rank by year if query contains year
-      if (queryYears.length > 0) {
-        posts = rankPostsByYear(posts, queryYears);
-      }
+      posts = orderSearchPosts(posts, queryYears, searchSeed);
 
       return NextResponse.json(
         { posts },
@@ -309,7 +332,7 @@ export async function GET(request: NextRequest) {
     ) as SearchPostRow[];
 
     const priorityTerms = getSearchPriorityTerms(queryForMatching);
-    if (priorityTerms.length > 0) {
+    if (queryYears.length > 0 && priorityTerms.length > 0) {
       posts = [...posts].sort((a, b) => {
         const aHas = captionContainsPriorityTerm(a.caption, priorityTerms) ? 1 : 0;
         const bHas = captionContainsPriorityTerm(b.caption, priorityTerms) ? 1 : 0;
@@ -321,10 +344,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Rank by year if query contains year
-    if (queryYears.length > 0) {
-      posts = rankPostsByYear(posts, queryYears);
-    }
+    posts = orderSearchPosts(posts, queryYears, searchSeed);
 
     return NextResponse.json(
       { posts },
