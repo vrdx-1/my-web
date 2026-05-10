@@ -270,70 +270,19 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
           .maybeSingle();
 
         if (isNewEmailUser) {
-          const hasRealUsername =
-            !!profile &&
-            !!profile.username &&
-            profile.username.trim() !== '' &&
-            profile.username !== 'Guest User';
+          const rawAvatar = profile?.avatar_url || '';
+          if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
+            await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
+          }
+
           const isOAuthProvider =
             user.app_metadata?.provider === 'google' || user.app_metadata?.provider === 'facebook';
-
-          if (isOAuthProvider && !hasRealUsername) {
-            const rawAvatar = profile?.avatar_url || '';
-            if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
-              await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
-            }
-            const meta = user.user_metadata || {};
-            const displayName = meta.full_name || meta.name || meta.display_name || '';
-            const emailStr = user.email || '';
-            const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
-            const isGoogleProvider = user.app_metadata?.provider === 'google';
-            const defaultName = (
-              isGoogleProvider ? (emailFallback || displayName || 'Guest User') : (displayName || emailFallback || 'Guest User')
-            ).trim();
-            try {
-              await supabase.from('profiles').upsert(
-                { id: user.id, username: defaultName, avatar_url: null },
-                { onConflict: 'id' }
-              );
-              setUsername(defaultName);
-              setAvatarUrl('');
-              setIsAdmin(false);
-              setIsSubAccount(false);
-              clearGuestUserData();
-              localStorage.removeItem('pending_registration');
-              router.push('/home');
-              setLoading(false);
-              return;
-            } catch {}
-          } else if (!isOAuthProvider) {
-            const rawAvatar = profile?.avatar_url || '';
-            if (rawAvatar && isProviderDefaultAvatar(rawAvatar)) {
-              await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
-            }
-            const meta = user.user_metadata || {};
-            const displayName = meta.full_name || meta.name || meta.display_name || '';
-            const emailStr = user.email || '';
-            const emailFallback = emailStr.replace(/@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, '');
-            const defaultName = (displayName || emailFallback || 'Guest User').trim();
-            try {
-              await supabase.from('profiles').upsert(
-                { id: user.id, username: defaultName, avatar_url: null },
-                { onConflict: 'id' }
-              );
-              setUsername(defaultName);
-              setAvatarUrl('');
-              clearGuestUserData();
-              profileCache = {
-                profileId: user.id,
-                username: defaultName,
-                avatarUrl: '',
-                phone: '',
-                isVerified: false,
-                isAdmin: false,
-                isSubAccount: false,
-              };
-            } catch {}
+          if (isOAuthProvider) {
+            clearGuestUserData();
+            localStorage.removeItem('pending_registration');
+            router.push('/home');
+            setLoading(false);
+            return;
           }
         }
 
