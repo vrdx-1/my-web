@@ -11,6 +11,41 @@ import { REGISTER_PATH } from '@/utils/authRoutes';
 const SLIDE_DURATION_MS = 300;
 const TRANSITION = 'transform 0.3s ease-out';
 
+function restoreWindowScrollY(targetY: number) {
+  if (typeof window === 'undefined' || !Number.isFinite(targetY)) return () => {};
+
+  const maxAttempts = 5;
+  const rafIds: number[] = [];
+  let attempts = 0;
+  let cancelled = false;
+
+  const apply = () => {
+    const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const y = Math.min(Math.max(0, targetY), maxY);
+    window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = y;
+    document.body.scrollTop = y;
+  };
+
+  const run = () => {
+    if (cancelled) return;
+    apply();
+    attempts += 1;
+    if (Math.abs(window.scrollY - targetY) <= 4 || attempts >= maxAttempts) return;
+    const id = requestAnimationFrame(run);
+    rafIds.push(id);
+  };
+
+  apply();
+  const id = requestAnimationFrame(run);
+  rafIds.push(id);
+
+  return () => {
+    cancelled = true;
+    rafIds.forEach((rafId) => cancelAnimationFrame(rafId));
+  };
+}
+
 interface ProfileOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +57,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
   const [phase, setPhase] = useState<'entering' | 'entered' | 'exiting'>('entering');
   const [transitionActive, setTransitionActive] = useState(false);
   const isExitingRef = useRef(false);
+  const openedAtScrollYRef = useRef(0);
 
   const requestClose = useCallback(() => {
     if (isExitingRef.current) return;
@@ -62,6 +98,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
 
   useEffect(() => {
     if (!isOpen) return;
+    openedAtScrollYRef.current = typeof window !== 'undefined' ? window.scrollY : 0;
     document.body.style.overflow = 'hidden';
     document.body.style.scrollbarWidth = 'none';
     document.body.style.msOverflowStyle = 'none';
@@ -69,6 +106,7 @@ export function ProfileOverlay({ isOpen, onClose }: ProfileOverlayProps) {
       document.body.style.overflow = '';
       document.body.style.scrollbarWidth = '';
       document.body.style.msOverflowStyle = '';
+      restoreWindowScrollY(openedAtScrollYRef.current);
     };
   }, [isOpen]);
 

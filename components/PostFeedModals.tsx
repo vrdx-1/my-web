@@ -2,16 +2,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { ReportModal } from './modals/ReportModal';
-
-// Dynamic Imports for heavy modals (lazy loaded)
-const ViewingPostModal = lazy(() =>
-  import('@/components/modals/ViewingPostModal').then((m) => ({ default: m.ViewingPostModal }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
-const FullScreenImageViewer = lazy(() =>
-  import('@/components/modals/FullScreenImageViewer').then((m) => ({ default: m.FullScreenImageViewer }))
-) as React.LazyExoticComponent<React.ComponentType<any>>;
+import { ViewingPostModal } from '@/components/modals/ViewingPostModal';
+import { FullScreenImageViewer } from '@/components/modals/FullScreenImageViewer';
 
 interface PostFeedModalsProps {
   // Viewing Post Modal
@@ -117,42 +111,38 @@ export const PostFeedModals = React.memo<PostFeedModalsProps>(({
     <>
       {/* Viewing Post Modal */}
       {viewingPost && (
-        <Suspense fallback={null}>
-          <ViewingPostModal
-            viewingPost={viewingPost}
-            session={session}
-            isViewingModeOpen={isViewingModeOpen}
-            viewingModeDragOffset={viewingModeDragOffset}
-            savedScrollPosition={savedScrollPosition}
-            initialImageIndex={initialImageIndex}
-            onClose={onViewingPostClose}
-            onTouchStart={onViewingPostTouchStart}
-            onTouchMove={onViewingPostTouchMove}
-            onTouchEnd={onViewingPostTouchEnd}
-            onImageClick={onViewingPostImageClick}
-          />
-        </Suspense>
+        <ViewingPostModal
+          viewingPost={viewingPost}
+          session={session}
+          isViewingModeOpen={isViewingModeOpen}
+          viewingModeDragOffset={viewingModeDragOffset}
+          savedScrollPosition={savedScrollPosition}
+          initialImageIndex={initialImageIndex}
+          onClose={onViewingPostClose}
+          onTouchStart={onViewingPostTouchStart}
+          onTouchMove={onViewingPostTouchMove}
+          onTouchEnd={onViewingPostTouchEnd}
+          onImageClick={onViewingPostImageClick}
+        />
       )}
 
       {/* Full Screen Image Viewer */}
       {fullScreenImages && (
-        <Suspense fallback={null}>
-          <FullScreenImageViewer
-            images={fullScreenImages}
-            currentImgIndex={currentImgIndex}
-            fullScreenDragOffset={fullScreenDragOffset}
-            fullScreenEntranceOffset={fullScreenEntranceOffset}
-            fullScreenTransitionDuration={fullScreenTransitionDuration}
-            fullScreenShowDetails={fullScreenShowDetails}
-            fullScreenZoomScale={fullScreenZoomScale}
-            fullScreenZoomOrigin={fullScreenZoomOrigin}
-            onClose={onFullScreenClose}
-            onTouchStart={onFullScreenTouchStart}
-            onTouchMove={onFullScreenTouchMove}
-            onTouchEnd={onFullScreenTouchEnd}
-            onClick={onFullScreenClick}
-          />
-        </Suspense>
+        <FullScreenImageViewer
+          images={fullScreenImages}
+          currentImgIndex={currentImgIndex}
+          fullScreenDragOffset={fullScreenDragOffset}
+          fullScreenEntranceOffset={fullScreenEntranceOffset}
+          fullScreenTransitionDuration={fullScreenTransitionDuration}
+          fullScreenShowDetails={fullScreenShowDetails}
+          fullScreenZoomScale={fullScreenZoomScale}
+          fullScreenZoomOrigin={fullScreenZoomOrigin}
+          onClose={onFullScreenClose}
+          onTouchStart={onFullScreenTouchStart}
+          onTouchMove={onFullScreenTouchMove}
+          onTouchEnd={onFullScreenTouchEnd}
+          onClick={onFullScreenClick}
+        />
       )}
 
       {/* Report Modal */}

@@ -6,6 +6,7 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useMainTabContext } from '@/contexts/MainTabContext';
+import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { useHeaderVisibilityState, useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
 import { useHomeRefreshContext } from '@/contexts/HomeRefreshContext';
@@ -96,6 +97,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const homeRefreshContext = useHomeRefreshContext();
   const setHeaderVisible = useSetHeaderVisibility();
   const homeTabScroll = useHomeTabScroll();
+  const mainTabScroll = useMainTabScroll();
   const isProfileOverlayOpen = mainTab?.isProfileOverlayOpen ?? false;
 
   useEffect(() => {
@@ -285,15 +287,23 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     return () => createPostContext?.register(null);
   }, [session, createPostContext, handleCreatePostClick]);
 
-  const setProfileOverlayOpen = mainTab?.setProfileOverlayOpen ?? (() => {});
+  const setProfileOverlayOpen = useCallback((open: boolean) => {
+    if (open && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile')) {
+      mainTabScroll?.saveCurrentScroll(resolvedPathname);
+    }
+    mainTab?.setProfileOverlayOpen(open);
+  }, [mainTab, mainTabScroll, resolvedPathname]);
 
   const handleNotificationClick = useCallback(() => {
     if (!session) {
-      router.push(REGISTER_PATH);
+      router.push(REGISTER_PATH, { scroll: false });
       return;
     }
-    router.push('/notification');
-  }, [session, router]);
+    if (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile') {
+      mainTabScroll?.saveCurrentScroll(resolvedPathname);
+    }
+    router.push('/notification', { scroll: false });
+  }, [session, router, mainTabScroll, resolvedPathname]);
 
   /** กดไอคอนโฮม (อยู่ที่โฮมแล้ว) = refresh อย่างเดียว ไม่ล้างคำค้น */
   const handleTabRefresh = useCallback(() => {
