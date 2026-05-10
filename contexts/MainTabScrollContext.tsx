@@ -100,6 +100,15 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
       } catch {
         // ignore
       }
+      return;
+    }
+
+    // Fallback: บางจังหวะ (เช่น hydration/สลับเร็ว) entry อาจยังไม่ register
+    // ให้บันทึกจากหน้าโดยตรงเพื่อไม่ทำ scroll state หาย
+    const y = getPageScrollY();
+    if (typeof y === 'number' && Number.isFinite(y)) {
+      savedScrollRef.current[tabId] = y;
+      setStoredScroll(tabId, y);
     }
   }, []);
 

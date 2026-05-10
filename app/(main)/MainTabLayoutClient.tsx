@@ -283,6 +283,45 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
   }, [resolvedPathname, setHeaderVisible]);
 
+  /** สลับแท็บหลัก: ออกจากโฮมให้ save แน่ๆ และกลับเข้าโฮมให้ restore แบบ retry (แนวเดียวกับ viewing mode) */
+  const prevMainTabPathRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevMainTabPathRef.current;
+    prevMainTabPathRef.current = resolvedPathname;
+    if (!prev) return;
+
+    const leftHomeToMainTab =
+      prev === '/home' && (resolvedPathname === '/notification' || resolvedPathname === '/profile');
+    if (leftHomeToMainTab) {
+      mainTabScroll?.saveCurrentScroll('/home');
+      return;
+    }
+
+    const returnedHomeFromMainTab =
+      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile');
+    if (!returnedHomeFromMainTab) return;
+
+    // ยิง restore ทันที + retry 2 เฟรม + timeout เพื่อกันจังหวะ iOS/layout race
+    mainTabScroll?.restoreScrollForTab('/home');
+    const rafIds: number[] = [];
+    const raf1 = requestAnimationFrame(() => {
+      mainTabScroll?.restoreScrollForTab('/home');
+      const raf2 = requestAnimationFrame(() => {
+        mainTabScroll?.restoreScrollForTab('/home');
+      });
+      rafIds.push(raf2);
+    });
+    rafIds.push(raf1);
+    const timer = setTimeout(() => {
+      mainTabScroll?.restoreScrollForTab('/home');
+    }, 260);
+
+    return () => {
+      rafIds.forEach((id) => cancelAnimationFrame(id));
+      clearTimeout(timer);
+    };
+  }, [resolvedPathname, mainTabScroll]);
+
   useEffect(() => {
     const handler = () => handleCreatePostClick(session);
     createPostContext?.register(handler);
