@@ -31,33 +31,6 @@ function applyWindowScrollY(targetY: number) {
   document.body.scrollTop = y;
 }
 
-function restoreWindowScrollYWithRetry(targetY: number) {
-  if (typeof window === 'undefined' || !Number.isFinite(targetY)) return () => {};
-
-  const maxAttempts = 5;
-  const rafIds: number[] = [];
-  let attempts = 0;
-  let cancelled = false;
-
-  const run = () => {
-    if (cancelled) return;
-    applyWindowScrollY(targetY);
-    attempts += 1;
-    if (Math.abs(window.scrollY - targetY) <= 4 || attempts >= maxAttempts) return;
-    const id = requestAnimationFrame(run);
-    rafIds.push(id);
-  };
-
-  applyWindowScrollY(targetY);
-  const startId = requestAnimationFrame(run);
-  rafIds.push(startId);
-
-  return () => {
-    cancelled = true;
-    rafIds.forEach((id) => cancelAnimationFrame(id));
-  };
-}
-
 /**
  * usePostModals Hook
  * Manages side effects for viewing post, fullscreen viewer, and interaction modals
@@ -114,10 +87,9 @@ export function usePostModals({
     document.body.style.msOverflowStyle = '';
     document.body.removeAttribute('data-viewing-mode');
 
-    const cancelRestore = restoreWindowScrollYWithRetry(savedScrollPosition);
-    return () => {
-      cancelRestore();
-    };
+    applyWindowScrollY(savedScrollPosition);
+    if (typeof document !== 'undefined') void document.documentElement.offsetHeight;
+    applyWindowScrollY(savedScrollPosition);
   }, [viewingPost, savedScrollPosition, setIsViewingModeOpen, setViewingModeDragOffset]);
 
   /** เลื่อนรูปในกล่อง viewing หลัง layout (ใช้ rAF แค่ส่วนใน modal) */
