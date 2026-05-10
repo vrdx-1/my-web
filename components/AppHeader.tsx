@@ -133,7 +133,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   return (
     <div className={!slideWithContainer ? 'header-visibility-surface' : undefined} style={rootStyle}>
       <div style={{ 
-          padding: isHomeSearchHeader ? '10px 12px 8px' : '9px 15px', 
+          padding: isHomeSearchHeader ? '16px 12px 8px' : '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
           minWidth: 0,
