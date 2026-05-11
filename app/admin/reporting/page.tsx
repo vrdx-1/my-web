@@ -4,6 +4,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, Suspense, useRef } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { formatTimeAgo } from '@/utils/formatTime';
 import { PostCard } from '@/components/PostCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -24,6 +25,10 @@ const FullScreenImageViewer = lazyNamed(
 const REPORTS_API = '/api/admin/reports';
 
 export default function AdminReportingPage() {
+ const router = useRouter();
+ const pathname = usePathname();
+ const searchParams = useSearchParams();
+ const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
  const [reports, setReports] = useState<any[]>([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
@@ -153,6 +158,10 @@ export default function AdminReportingPage() {
  onTogglePostStatus={() => {}}
  onDeletePost={() => {}}
  onReport={() => {}}
+ onProfileClick={(p) => {
+   if (!p?.user_id) return;
+   router.push(`/admin/top-user/${encodeURIComponent(String(p.user_id))}?from=${encodeURIComponent(fromPath)}`);
+ }}
  onSetActiveMenu={setActiveMenuState}
  onSetMenuAnimating={setIsMenuAnimating}
  />

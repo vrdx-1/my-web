@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, Suspense, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
@@ -22,6 +23,10 @@ const FullScreenImageViewer = lazyNamed(
 );
 
 export default function AdminBoostingPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
   const supabase = supabaseClient;
   const [activeTab, setActiveTab] = useState<"waiting" | "boosting" | "sold">("waiting");
   const [items, setItems] = useState<any[]>([]);
@@ -260,6 +265,10 @@ export default function AdminBoostingPage() {
                   onTogglePostStatus={() => {}}
                   onDeletePost={() => {}}
                   onReport={() => {}}
+                  onProfileClick={(p) => {
+                    if (!p?.user_id) return;
+                    router.push(`/admin/top-user/${encodeURIComponent(String(p.user_id))}?from=${encodeURIComponent(fromPath)}`);
+                  }}
                   onSetActiveMenu={setActiveMenuState}
                   onSetMenuAnimating={setIsMenuAnimating}
                 />

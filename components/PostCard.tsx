@@ -50,6 +50,7 @@ interface PostCardProps {
   priority?: boolean;
   /** ลำดับโหลดรูปของการ์ด (โพสบนสุดก่อน แล้วไล่ลงล่าง): high / low — ส่งจาก feed ตาม index */
   imageFetchPriority?: 'high' | 'low' | 'auto';
+  onProfileClick?: (post: any) => void;
 }
 
 /** ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts */
@@ -81,6 +82,7 @@ export function PostCard({
   showMenuButton = true,
   priority = false,
   imageFetchPriority,
+  onProfileClick,
 }: PostCardProps) {
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
@@ -335,12 +337,33 @@ export function PostCard({
             {leftOfAvatar}
           </div>
         )}
-        <div style={{ position: 'relative' }}>
+        <div
+          style={{ position: 'relative', cursor: onProfileClick ? 'pointer' : 'default' }}
+          onClick={(e) => {
+            if (!onProfileClick) return;
+            e.stopPropagation();
+            onProfileClick(post);
+          }}
+        >
           <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} />
         </div>
         <div style={{ flex: 1, minWidth: 0, marginTop: '2px' }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '3px', color: '#111111' }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
+            <span
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+                color: '#111111',
+                cursor: onProfileClick ? 'pointer' : 'default',
+              }}
+              onClick={(e) => {
+                if (!onProfileClick) return;
+                e.stopPropagation();
+                onProfileClick(post);
+              }}
+            >
               {post.profiles?.username?.toLowerCase() === 'guest user' ? 'User' : (post.profiles?.username || 'User')}
             </span>
             {post.profiles?.is_verified && (

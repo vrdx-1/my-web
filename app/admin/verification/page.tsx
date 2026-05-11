@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 
 type VerificationRequest = {
@@ -27,6 +28,10 @@ function formatDate(dateStr: string) {
 }
 
 export default function AdminVerificationPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
@@ -145,15 +150,22 @@ export default function AdminVerificationPage() {
                   <img
                     src={req.profiles.avatar_url}
                     alt=""
-                    style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
+                    onClick={() => router.push(`/admin/top-user/${encodeURIComponent(req.user_id)}?from=${encodeURIComponent(fromPath)}`)}
+                    style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }}
                   />
                 ) : (
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div
+                    onClick={() => router.push(`/admin/top-user/${encodeURIComponent(req.user_id)}?from=${encodeURIComponent(fromPath)}`)}
+                    style={{ width: 40, height: 40, borderRadius: '50%', background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '700', fontSize: '15px', color: '#111' }}>
+                  <div
+                    onClick={() => router.push(`/admin/top-user/${encodeURIComponent(req.user_id)}?from=${encodeURIComponent(fromPath)}`)}
+                    style={{ fontWeight: '700', fontSize: '15px', color: '#111', cursor: 'pointer' }}
+                  >
                     {req.profiles?.username || req.user_id}
                   </div>
                   <div style={{ fontSize: '13px', color: '#6b7280' }}>

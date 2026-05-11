@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -22,6 +23,9 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 export default function AdminTopUserPage() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
   const [activeTab, setActiveTab] = useState<TabId>('poster');
   const [filter, setFilter] = useState<DateFilterType>('A');
   const [loading, setLoading] = useState(true);
@@ -165,7 +169,7 @@ export default function AdminTopUserPage() {
           const profile = profiles[row.user_id];
           const displayName = profile?.username ?? row.user_id.slice(0, 8) + '…';
           return (
-            <Link key={row.user_id} href={`/admin/top-user/${encodeURIComponent(row.user_id)}`} style={listLinkStyle}>
+            <Link key={row.user_id} href={`/admin/top-user/${encodeURIComponent(row.user_id)}?from=${encodeURIComponent(fromPath)}`} style={listLinkStyle}>
               <div style={{ ...listItemStyle, cursor: 'pointer' }}>
                 <span style={{ fontWeight: 'bold', minWidth: '28px', color: '#65676b' }}>
                   {index + 1}.
