@@ -97,8 +97,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     visible: boolean,
     reason: string,
     detail?: Record<string, unknown>,
+    forceNotify = false,
   ) => {
-    if (lastAppliedVisibleRef.current === visible) return;
+    if (lastAppliedVisibleRef.current === visible && !forceNotify) return;
     lastAppliedVisibleRef.current = visible;
     lastVisibilityToggleAtRef.current =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -148,7 +149,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     };
 
     const handleForceShowHeader = () => {
-      applyVisible(true, 'force-show-event');
+      applyVisible(true, 'force-show-event', undefined, true);
     };
 
     const suppressForViewportResize = () => {
@@ -328,7 +329,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       lastScrollYRef.current = scrollY;
       latestScrollYRef.current = scrollY;
       if (scrollY <= TOP_SHOW_THRESHOLD_PX) {
-        applyVisible(true, 'foreground-top-sync', { currentScrollY: scrollY });
+        applyVisible(true, 'foreground-top-sync', { currentScrollY: scrollY }, true);
       }
     };
 
@@ -341,6 +342,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       syncVisibilityAfterForeground();
     };
 
+    const isIOS =
+      typeof navigator !== 'undefined' && /iPad|iPhone|iPod/i.test(navigator.userAgent);
+
     const scrollY = Math.max(getScrollTop(), 0);
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
@@ -351,8 +355,13 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     window.addEventListener('orientationchange', suppressForViewportResize, { passive: true });
     window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
 
-    // Listen on scroll only; wheel/touchmove duplicates work and creates jank on iOS.
+    // Capture scroll from both viewport and nested scrollers.
     window.addEventListener('scroll', handleScrollLike, { passive: true });
+    document.addEventListener('scroll', handleScrollLike, { passive: true, capture: true });
+    if (isIOS) {
+      // iOS can skip/lag scroll events in some momentum phases; touchmove keeps visibility responsive.
+      window.addEventListener('touchmove', handleScrollLike, { passive: true });
+    }
     window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
@@ -366,6 +375,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       window.removeEventListener('orientationchange', suppressForViewportResize);
       window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('scroll', handleScrollLike);
+      document.removeEventListener('scroll', handleScrollLike, true);
+      if (isIOS) {
+        window.removeEventListener('touchmove', handleScrollLike);
+      }
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -386,7 +399,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       // ไม่ให้เปลี่ยนค่า header เมื่อ disableScrollHide เป็น true
       return;
     }
-    applyVisible(visible, 'external-setter');
+    // Force callback emission to re-sync context store when external state drift happened.
+    applyVisible(visible, 'external-setter', undefined, true);
   }, [applyVisible, disableScrollHide]);
 
   return useMemo(
