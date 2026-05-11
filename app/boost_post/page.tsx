@@ -312,6 +312,16 @@ function BoostPostContent() {
                 <span className="text-base font-bold text-violet-600">{pkg.price}</span>
               </button>
             ))}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowHowTo(true)}
+                className="z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl ring-2 ring-blue-200 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+              >
+                ວິທີສ້າງໂຄສະນາ
+              </button>
+            </div>
           </div>
         )}
 
@@ -331,15 +341,6 @@ function BoostPostContent() {
           />
         )}
       </div>
-
-      {/* แท็บวิธีการ Boost Post */}
-      <button
-        type="button"
-        onClick={() => setShowHowTo(true)}
-        className="fixed bottom-5 right-5 z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl ring-2 ring-blue-200 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-      >
-        ວິທີສ້າງໂຄສະນາ
-      </button>
 
       {/* Modal อธิบายขั้นตอน */}
       <BoostHowToModal show={showHowTo} onClose={() => setShowHowTo(false)} />
