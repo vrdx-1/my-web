@@ -1,17 +1,19 @@
 'use client';
 
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCarDictionarySuggestions } from '@/utils/postUtils';
-import { getSearchHistory, addSearchHistory, removeSearchHistoryItem } from '@/utils/searchHistory';
+import { getCarDictionarySuggestions, getPrimaryGuestToken } from '@/utils/postUtils';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { mergeHeaders } from '@/utils/activeProfile';
 
 type SuggestionItem = { display: string; searchKey: string; type?: 'year' | 'dictionary' };
+type SearchHistoryItem = {
+  search_term: string;
+  display_text: string | null;
+  last_searched_at: string;
+};
 
 function SearchPageContent() {
   const router = useRouter();
@@ -19,7 +21,7 @@ function SearchPageContent() {
   const { session, activeProfileId } = useSessionAndProfile();
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
-  const [historyItems, setHistoryItems] = useState<string[]>([]);
+  const [historyItems, setHistoryItems] = useState<SearchHistoryItem[]>([]);
   const [yearSuggestions, setYearSuggestions] = useState<string[]>([]);
   const [loadingYearSuggestions, setLoadingYearSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,9 +86,27 @@ function SearchPageContent() {
     return combined;
   }, [query, yearSuggestions]);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/search/history?limit=20', {
+        method: 'GET',
+        credentials: 'include',
+        headers: mergeHeaders(undefined, activeProfileId),
+      });
+      const payload = await response.json().catch(() => ({ items: [] }));
+      if (!response.ok) {
+        setHistoryItems([]);
+        return;
+      }
+      setHistoryItems(Array.isArray(payload?.items) ? payload.items : []);
+    } catch {
+      setHistoryItems([]);
+    }
+  }, [activeProfileId]);
+
   useEffect(() => {
-    setHistoryItems(getSearchHistory());
-  }, []);
+    void loadHistory();
+  }, [loadHistory]);
 
   useLayoutEffect(() => {
     const focusInput = () => inputRef.current?.focus({ preventScroll: true });
@@ -101,9 +121,8 @@ function SearchPageContent() {
     (term: string, searchType: 'manual' | 'suggestion' | 'history' = 'manual') => {
       const t = term.trim();
       if (t) {
-        addSearchHistory(t);
-        setHistoryItems(getSearchHistory());
         const accessToken = session?.access_token ?? '';
+        const guestToken = !session?.user ? getPrimaryGuestToken() : '';
         fetch('/api/search/log', {
           method: 'POST',
           credentials: 'include',
@@ -117,12 +136,15 @@ function SearchPageContent() {
           body: JSON.stringify({
             search_term: t,
             search_type: searchType,
+            guest_token: guestToken || undefined,
           }),
-        }).catch(() => {});
+        })
+          .then(() => loadHistory())
+          .catch(() => {});
       }
       router.push(t ? `/home?q=${encodeURIComponent(t)}` : '/home', { scroll: false });
     },
-    [activeProfileId, router, session],
+    [activeProfileId, loadHistory, router, session],
   );
 
   const handleKeyDown = useCallback(
@@ -143,16 +165,34 @@ function SearchPageContent() {
   );
 
   const handleHistoryClick = useCallback(
-    (item: string) => {
-      commitSearch(item, 'history');
+    (item: SearchHistoryItem) => {
+      commitSearch(item.search_term, 'history');
     },
     [commitSearch],
   );
 
-  const handleRemoveHistoryItem = useCallback((item: string) => {
-    removeSearchHistoryItem(item);
-    setHistoryItems(getSearchHistory());
-  }, []);
+  const handleRemoveHistoryItem = useCallback(
+    async (item: SearchHistoryItem) => {
+      try {
+        await fetch('/api/search/history', {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: mergeHeaders(
+            {
+              'Content-Type': 'application/json',
+            },
+            activeProfileId,
+          ),
+          body: JSON.stringify({ search_term: item.search_term }),
+        });
+      } catch {
+        // ignore
+      } finally {
+        setHistoryItems((prev) => prev.filter((entry) => entry.search_term !== item.search_term));
+      }
+    },
+    [activeProfileId],
+  );
 
   const showSuggestions = query.trim().length > 0;
   const showHistory = query.trim().length === 0 && historyItems.length > 0;
@@ -358,7 +398,7 @@ function SearchPageContent() {
             <div style={{ padding: '8px 0' }}>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {historyItems.map((item, i) => (
-                  <li key={`${item}-${i}`} style={{ display: 'flex', alignItems: 'center' }}>
+                  <li key={`${item.search_term}-${i}`} style={{ display: 'flex', alignItems: 'center' }}>
                     <button
                       type="button"
                       onClick={() => handleHistoryClick(item)}
@@ -384,7 +424,9 @@ function SearchPageContent() {
                           <polyline points="12 6 12 12 16 14" />
                         </svg>
                       </span>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.display_text || item.search_term}
+                      </span>
                     </button>
                     <button
                       type="button"

@@ -1,9 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TimeFilter } from '@/components/admin/TimeFilter';
 import { StatCard } from '@/components/admin/StatCard';
 import { getDateRange, type DateFilterType } from '@/utils/dateFilter';
-import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface SearchLog {
@@ -12,6 +11,9 @@ interface SearchLog {
   display_text: string | null;
   search_type: 'manual' | 'suggestion' | 'history';
   created_at: string;
+  person_key: string;
+  person_label: string;
+  person_type: 'guest' | 'user';
 }
 
 interface SearchTermStat {
@@ -24,114 +26,91 @@ interface SearchTermStat {
   last_searched_at: string;
 }
 
+interface PersonSummary {
+  person_key: string;
+  person_label: string;
+  person_type: 'guest' | 'user';
+  total_searches: number;
+  last_searched_at: string;
+}
+
+interface StatsPayload {
+  totalSearches: number;
+  uniqueTerms: number;
+  manualSearches: number;
+  suggestionSearches: number;
+  historySearches: number;
+}
+
 export default function AdminSearchHistoryPage() {
   const [filter, setFilter] = useState<DateFilterType>('A');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<StatsPayload>({
     totalSearches: 0,
     uniqueTerms: 0,
     manualSearches: 0,
     suggestionSearches: 0,
     historySearches: 0,
   });
-  const [allLogs, setAllLogs] = useState<SearchLog[]>([]);
+  const [people, setPeople] = useState<PersonSummary[]>([]);
+  const [selectedPersonKey, setSelectedPersonKey] = useState<string>('');
   const [topSearches, setTopSearches] = useState<SearchTermStat[]>([]);
   const [recentSearches, setRecentSearches] = useState<SearchLog[]>([]);
   const [showTopSearches, setShowTopSearches] = useState(true);
 
-  const supabase = createAdminSupabaseClient();
-
   useEffect(() => {
-    fetchSearchData();
-  }, [filter]);
+    void fetchSearchData();
+  }, [filter, selectedPersonKey]);
 
   const fetchSearchData = async () => {
     setLoading(true);
     try {
       const { startDate, endDate } = getDateRange(filter);
+      const search = new URLSearchParams();
+      if (startDate) search.set('start', startDate);
+      if (endDate) search.set('end', endDate);
+      if (selectedPersonKey) search.set('personKey', selectedPersonKey);
 
-      let query = supabase
-        .from('search_logs')
-        .select('id, search_term, display_text, search_type, created_at')
-        .order('created_at', { ascending: false });
-
-      if (startDate) {
-        query = query.gte('created_at', startDate);
-      }
-      if (endDate) {
-        query = query.lte('created_at', endDate);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const safeLogs: SearchLog[] = (data as SearchLog[] | null) || [];
-
-      setAllLogs(safeLogs);
-
-      const uniqueTerms = new Set(
-        safeLogs
-          .map((log) => (log.search_term || '').toLowerCase())
-          .filter(Boolean)
-      ).size;
-
-      const manualSearches = safeLogs.filter((log) => log.search_type === 'manual').length;
-      const suggestionSearches = safeLogs.filter((log) => log.search_type === 'suggestion').length;
-      const historySearches = safeLogs.filter((log) => log.search_type === 'history').length;
-
-      setStats({
-        totalSearches: safeLogs.length,
-        uniqueTerms,
-        manualSearches,
-        suggestionSearches,
-        historySearches,
+      const response = await fetch(`/api/admin/search-history?${search.toString()}`, {
+        method: 'GET',
+        credentials: 'include',
       });
 
-      // Top search terms
-      const termCounts: Record<string, SearchTermStat> = {};
-      safeLogs.forEach((log) => {
-        const rawTerm = log.search_term || '';
-        const key = rawTerm.toLowerCase();
-        if (!key) return;
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload) {
+        throw new Error('Failed to fetch admin search history');
+      }
 
-        if (!termCounts[key]) {
-          termCounts[key] = {
-            search_term: rawTerm,
-            display_text: log.display_text || rawTerm,
-            search_count: 0,
-            manual_count: 0,
-            suggestion_count: 0,
-            history_count: 0,
-            last_searched_at: log.created_at,
-          };
-        }
-
-        termCounts[key].search_count += 1;
-        if (log.search_type === 'manual') {
-          termCounts[key].manual_count += 1;
-        } else if (log.search_type === 'suggestion') {
-          termCounts[key].suggestion_count += 1;
-        } else {
-          termCounts[key].history_count += 1;
-        }
-        if (new Date(log.created_at) > new Date(termCounts[key].last_searched_at)) {
-          termCounts[key].last_searched_at = log.created_at;
-        }
+      setStats(payload.stats || {
+        totalSearches: 0,
+        uniqueTerms: 0,
+        manualSearches: 0,
+        suggestionSearches: 0,
+        historySearches: 0,
       });
-
-      const sortedTopTerms = Object.values(termCounts)
-        .sort((a, b) => b.search_count - a.search_count)
-        .slice(0, 50);
-      setTopSearches(sortedTopTerms);
-
-      // Recent searches (ล่าสุดไม่เกิน 100 แถว)
-      setRecentSearches(safeLogs.slice(0, 100));
+      setPeople(Array.isArray(payload.people) ? payload.people : []);
+      setTopSearches(Array.isArray(payload.topSearches) ? payload.topSearches : []);
+      setRecentSearches(Array.isArray(payload.recentSearches) ? payload.recentSearches : []);
     } catch (err) {
       console.error('Error fetching search data:', err);
+      setStats({
+        totalSearches: 0,
+        uniqueTerms: 0,
+        manualSearches: 0,
+        suggestionSearches: 0,
+        historySearches: 0,
+      });
+      setTopSearches([]);
+      setRecentSearches([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const selectedPerson = useMemo(
+    () => people.find((person) => person.person_key === selectedPersonKey) || null,
+    [people, selectedPersonKey],
+  );
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
@@ -146,24 +125,76 @@ export default function AdminSearchHistoryPage() {
   };
 
   return (
-    <main style={{ maxWidth: '1400px', margin: '40px auto', padding: '20px' }}>
-      {/* Header & Filter */}
+    <main
+      style={{
+        maxWidth: '1400px',
+        margin: '32px auto',
+        padding: '16px',
+        background:
+          'radial-gradient(circle at top left, rgba(24,119,242,0.08), transparent 40%), radial-gradient(circle at top right, rgba(13,148,136,0.08), transparent 45%)',
+      }}
+    >
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
+          alignItems: 'flex-start',
+          marginBottom: '18px',
+          gap: 12,
+          flexWrap: 'wrap',
         }}
       >
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1a1a1a' }}>
-          ປະຫວັດການຄົ້ນຫາ
-        </h2>
-        <TimeFilter filter={filter} onFilterChange={setFilter} />
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            ປະຫວັດການຄົ້ນຫາ
+          </h2>
+          <p style={{ margin: '6px 0 0', color: '#334155', fontSize: 14 }}>
+            นับเฉพาะ Guest และ User ทั่วไปเท่านั้น (ไม่รวม Admin/Sub account)
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TimeFilter filter={filter} onFilterChange={setFilter} />
+          <select
+            value={selectedPersonKey}
+            onChange={(e) => setSelectedPersonKey(e.target.value)}
+            style={{
+              height: 40,
+              borderRadius: 10,
+              border: '1px solid #cbd5e1',
+              background: '#fff',
+              padding: '0 12px',
+              minWidth: 260,
+              color: '#0f172a',
+              fontWeight: 500,
+            }}
+          >
+            <option value="">ທຸກຄົນ (Guest + User)</option>
+            {people.map((person) => (
+              <option key={person.person_key} value={person.person_key}>
+                {person.person_label} ({person.total_searches.toLocaleString()})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* สถิติรวม */}
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
+      <div
+        style={{
+          marginBottom: 20,
+          padding: '10px 14px',
+          borderRadius: 12,
+          background: '#ffffffd9',
+          border: '1px solid #e2e8f0',
+          color: '#0f172a',
+          fontSize: 14,
+        }}
+      >
+        {selectedPerson
+          ? `กำลังดูรายบุคคล: ${selectedPerson.person_label}`
+          : 'กำลังดูภาพรวมทั้งระบบ'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: '26px' }}>
         <StatCard
           label="ການຄົ້ນຫາທັງໝົດ"
           value={stats.totalSearches.toLocaleString()}
@@ -196,18 +227,17 @@ export default function AdminSearchHistoryPage() {
         />
       </div>
 
-      {/* Toggle ระหว่าง Top Searches และ Recent Searches */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button
           onClick={() => setShowTopSearches(true)}
           style={{
             padding: '10px 20px',
-            background: showTopSearches ? '#1877f2' : '#e4e6eb',
-            color: showTopSearches ? '#fff' : '#4b4f56',
+            background: showTopSearches ? 'linear-gradient(135deg,#1877f2,#10b981)' : '#e2e8f0',
+            color: showTopSearches ? '#fff' : '#334155',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '999px',
             cursor: 'pointer',
-            fontWeight: showTopSearches ? 'bold' : 'normal',
+            fontWeight: showTopSearches ? 700 : 500,
           }}
         >
           ຄຳຄົ້ນຫາທີ່ນິຍົມຫຼາຍທີ່ສຸດ
@@ -216,12 +246,12 @@ export default function AdminSearchHistoryPage() {
           onClick={() => setShowTopSearches(false)}
           style={{
             padding: '10px 20px',
-            background: !showTopSearches ? '#1877f2' : '#e4e6eb',
-            color: !showTopSearches ? '#fff' : '#4b4f56',
+            background: !showTopSearches ? 'linear-gradient(135deg,#1877f2,#10b981)' : '#e2e8f0',
+            color: !showTopSearches ? '#fff' : '#334155',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '999px',
             cursor: 'pointer',
-            fontWeight: !showTopSearches ? 'bold' : 'normal',
+            fontWeight: !showTopSearches ? 700 : 500,
           }}
         >
           ປະຫວັດການຄົ້ນຫາລ່າສຸດ
@@ -233,19 +263,18 @@ export default function AdminSearchHistoryPage() {
           <LoadingSpinner />
         </div>
       ) : showTopSearches ? (
-        <>
-          {/* ตารางคำค้นหาที่ถูกค้นหาบ่อยที่สุด */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            }}
-          >
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div
+          style={{
+            background: '#fff',
+            borderRadius: '14px',
+            overflow: 'hidden',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 12px 28px rgba(15,23,42,0.08)',
+          }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e4e6eb' }}>
+                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   <th
                     style={{
                       padding: '12px',
@@ -337,11 +366,11 @@ export default function AdminSearchHistoryPage() {
                     <tr
                       key={item.search_term}
                       style={{
-                        borderBottom: '1px solid #e4e6eb',
+                        borderBottom: '1px solid #e2e8f0',
                         transition: 'background 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.background = '#f8fafc';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#fff';
@@ -409,15 +438,14 @@ export default function AdminSearchHistoryPage() {
               </tbody>
             </table>
           </div>
-        </>
       ) : (
-        /* ตารางประวัติการค้นหาล่าสุด */
         <div
           style={{
             background: '#fff',
-            borderRadius: '8px',
+            borderRadius: '14px',
             overflow: 'hidden',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 12px 28px rgba(15,23,42,0.08)',
           }}
         >
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -437,6 +465,16 @@ export default function AdminSearchHistoryPage() {
                   }}
                 >
                   ຄຳຄົ້ນຫາ
+                </th>
+                <th
+                  style={{
+                    padding: '12px',
+                    textAlign: 'left',
+                    fontWeight: 'bold',
+                    color: '#4b4f56',
+                  }}
+                >
+                  ຜູ້ຄົ້ນຫາ
                 </th>
                 <th
                   style={{
@@ -464,7 +502,7 @@ export default function AdminSearchHistoryPage() {
               {recentSearches.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     style={{
                       padding: '40px',
                       textAlign: 'center',
@@ -492,6 +530,7 @@ export default function AdminSearchHistoryPage() {
                     >
                       {item.display_text || item.search_term}
                     </td>
+                    <td style={{ padding: '12px', color: '#334155' }}>{item.person_label}</td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
                       <span
                         style={{
