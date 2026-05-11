@@ -607,7 +607,7 @@ export function PostCard({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    Promote
+                    Boost
                   </button>
                 )}
                 <button 

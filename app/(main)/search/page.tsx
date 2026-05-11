@@ -179,7 +179,7 @@ function SearchPageContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <div
         style={{
-          padding: '10px 12px 10px 8px',
+          padding: '16px 12px 10px 8px',
           borderBottom: 'none',
           background: '#fff',
           position: 'sticky',
