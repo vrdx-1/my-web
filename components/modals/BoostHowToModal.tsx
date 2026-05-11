@@ -12,7 +12,7 @@ export const BoostHowToModal = React.memo<BoostHowToModalProps>(({ show, onClose
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center px-4 pt-4 pb-12 sm:pb-4"
       onClick={onClose}
     >
       <div
