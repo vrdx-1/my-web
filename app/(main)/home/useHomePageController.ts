@@ -196,7 +196,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   });
 
   const headerScroll = useHeaderScroll({
-    disableScrollHide: isChromeStartupLocked,
+    disableScrollHide: false,
     sensitivity: isSoldTabActive ? 1.8 : 1,
     minScrollDeltaPx: isSoldTabActive ? 1 : undefined,
     hideAccumulatedDeltaPx: isSoldTabActive ? 2 : undefined,
@@ -206,23 +206,6 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     suppressHideUntilRef,
   });
   const setHeaderVisibleFromScroll = headerScroll.setIsHeaderVisible;
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const { body } = document;
-
-    if (pathname === '/home' && isChromeStartupLocked) {
-      body.setAttribute('data-home-chrome-locked', '1');
-      return () => {
-        body.removeAttribute('data-home-chrome-locked');
-      };
-    }
-
-    body.removeAttribute('data-home-chrome-locked');
-    return () => {
-      body.removeAttribute('data-home-chrome-locked');
-    };
-  }, [pathname, isChromeStartupLocked]);
 
   const effectiveSession = isSoldTabNoSearch ? session : effectivePostList.session;
   const handlers = usePostFeedHandlers({

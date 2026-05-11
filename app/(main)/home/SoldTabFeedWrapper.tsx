@@ -139,7 +139,7 @@ export function SoldTabFeedWrapper({
         <HomeFeedBody
           showSkeleton={showSkeleton}
           skeletonCount={3}
-          gateImageReady={isActive}
+            gateImageReady={isActive && !isRefreshing}
           postFeedProps={{
             posts: soldListData.posts,
             session: soldListData.session,

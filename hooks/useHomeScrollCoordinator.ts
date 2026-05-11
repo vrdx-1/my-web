@@ -182,7 +182,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     if (prev === showSold) return;
 
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    suppressHideUntilRef.current = now + 400;
+    suppressHideUntilRef.current = now + 150;
     scheduleChromeStartupLock(true);
 
     const showHeaderAfterRestore = () => {
@@ -283,6 +283,12 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       unmask();
     };
   }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabActive, scheduleChromeStartupLock]);
+
+  /** ป้องกัน suppressHideUntilRef ค้างตอนฟีดกำลังโหลด — reset timer เมื่อ tabRefreshing เข้ามา เพื่อให้ scroll hide สามารถทำงานได้ */
+  useEffect(() => {
+    if (!tabRefreshing || pathname !== '/home') return;
+    suppressHideUntilRef.current = 0;
+  }, [tabRefreshing, pathname]);
 
   return {
     feedRestoreWrapRef,

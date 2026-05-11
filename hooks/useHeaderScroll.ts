@@ -91,6 +91,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const lastVisibilityToggleAtRef = useRef(0);
   const onVisibilityChangeRef = useRef(onVisibilityChange);
   const lastAppliedVisibleRef = useRef(true);
+  const disableScrollHideRef = useRef(disableScrollHide);
   const applyVisible = useCallback((
     visible: boolean,
     reason: string,
@@ -115,6 +116,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     onVisibilityChangeRef.current = onVisibilityChange;
   }, [onVisibilityChange]);
 
+  useEffect(() => {
+    disableScrollHideRef.current = disableScrollHide;
+  }, [disableScrollHide]);
+
   /** ปิด scroll-hide แล้วซิงก์ header/nav (context) ให้แสดงก่อน paint — กัน context ค้างจากหน้าก่อนหน้า + กระพริบเฟรมแรก */
   useLayoutEffect(() => {
     if (!disableScrollHide) return;
@@ -126,9 +131,16 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     onVisibilityChangeRef.current?.(true);
   }, [disableScrollHide]);
 
+  /** Reset cooldown timer และ accumulated delta เมื่อ disableScrollHide เปลี่ยนจาก true → false (ตอน tabRefreshing เข้ามา) */
   useEffect(() => {
     if (disableScrollHide) return;
+    // Reset ตัวจับเวลาที่ทำให้ scroll hide ถูกปิด พร้อมทั้ง accumulated delta
+    lastVisibilityToggleAtRef.current = 0;
+    accumulatedScrollDeltaRef.current = 0;
+    lastDeltaDirectionRef.current = 0;
+  }, [disableScrollHide]);
 
+  useEffect(() => {
     const handleCaptionToggle = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       captionToggleSuppressUntilRef.current = now + CAPTION_TOGGLE_SUPPRESS_MS;
@@ -144,12 +156,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       latestScrollYRef.current = scrollY;
     };
 
-    window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
-    window.addEventListener('resize', suppressForViewportResize, { passive: true });
-    window.addEventListener('orientationchange', suppressForViewportResize, { passive: true });
-    window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
-
-    const handleScroll = () => {
+    const handleScrollLike = () => {
       latestScrollYRef.current = Math.max(getScrollTop(), 0);
       if (scrollFrameRef.current != null) return;
       scrollFrameRef.current = window.requestAnimationFrame(() => {
@@ -160,6 +167,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         const scrollDelta = currentScrollY - previousScrollY;
         lastScrollYRef.current = currentScrollY;
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+        if (disableScrollHideRef.current) {
+          endHomeMotionTimer(timer, {
+            action: 'scroll-hidden-by-lock',
+            currentScrollY,
+            scrollDelta,
+          });
+          return;
+        }
 
         if (scrollDelta === 0) {
           endHomeMotionTimer(timer, {
@@ -304,8 +320,15 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
 
+    window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+    window.addEventListener('resize', suppressForViewportResize, { passive: true });
+    window.addEventListener('orientationchange', suppressForViewportResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
+
     // Listen on window only; page scroll is propagated here and avoids duplicate work.
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScrollLike, { passive: true });
+    window.addEventListener('wheel', handleScrollLike, { passive: true });
+    window.addEventListener('touchmove', handleScrollLike, { passive: true });
     return () => {
       if (scrollFrameRef.current != null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
@@ -315,7 +338,9 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       window.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('orientationchange', suppressForViewportResize);
       window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScrollLike);
+      window.removeEventListener('wheel', handleScrollLike);
+      window.removeEventListener('touchmove', handleScrollLike);
     };
   }, [
     applyVisible,

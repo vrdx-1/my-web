@@ -347,8 +347,3 @@ body:not([data-motion-ready]) [data-home-bottom-nav-motion-surface="1"] {
   animation: none !important;
 }
 
-body[data-home-chrome-locked="1"] [data-home-header-motion-surface="1"],
-body[data-home-chrome-locked="1"] [data-home-bottom-nav-motion-surface="1"] {
-  transition: none !important;
-  animation: none !important;
-}

@@ -396,8 +396,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: ต้อง mount header/tab bar ตั้งแต่เฟรมแรกหลัง refresh เพื่อให้ motion system พร้อมทันที */
   const showHomeHeader = resolvedPathname === '/home';
-  const lockHomeChromeLayout =
-    showHomeHeader && (!firstFeedLoaded || !!mainTab?.tabRefreshing || !!mainTab?.navigatingToTab);
+  const lockHomeChromeLayout = showHomeHeader && !firstFeedLoaded;
   const lockHomeTabLayout = showHomeHeader && !firstFeedLoaded;
 
   /** เมื่อ header โฮมจะแสดง ให้ดึงตัวเลขแจ้งเตือนเลย เพื่อให้ badge แสดงใน Navigation bar */
