@@ -125,6 +125,11 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   useLayoutEffect(() => {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
+    if (prev === '/home' && pathname !== '/home') {
+      // iPhone/Safari บางจังหวะ reset scroll เร็วมากตอนเปลี่ยน route
+      // บันทึกซ้ำตอน leave จาก /home เพื่อกันค่าหาย/กลายเป็น 0
+      mainTabScroll?.saveCurrentScroll('/home');
+    }
     if (pathname === '/home' && prev !== '/home' && prev != null) {
       pendingHomeRouteScrollRestoreRef.current = true;
       scheduleChromeStartupLock(true);

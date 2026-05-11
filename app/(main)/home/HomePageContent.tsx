@@ -6,7 +6,6 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomePagePanels } from './HomePagePanels';
 import { HomePageModals } from './HomePageModals';
 import { useHomePageController } from './useHomePageController';
-import { useHomePageScrollRegistration } from '@/hooks/useHomePageScrollRegistration';
 
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import {
@@ -50,9 +49,6 @@ export function HomePageContent() {
     tab,
     viewingPostHook,
   } = useHomePageController({ clientMounted });
-
-  // ลงทะเบียน scroll ของหน้าโฮม เพื่อให้จดจำตำแหน่ง เมื่อกลับมาจากหน้าแจ้งเตือนหรือโปรไฟล์
-  useHomePageScrollRegistration();
 
   useEffect(() => {
     if (!clientMounted || typeof window === 'undefined') return;
