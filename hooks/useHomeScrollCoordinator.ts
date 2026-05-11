@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { readMainTabScrollStorage, useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
-import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
+
+const FORCE_SHOW_HEADER_EVENT = 'home:force-header-visible';
 
 export interface UseHomeScrollCoordinatorOptions {
   pathname: string;
@@ -39,7 +40,6 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
   const registerSaveBeforeSwitch = homeTabScroll?.registerSaveBeforeSwitch;
-  const setHeaderVisible = useSetHeaderVisibility();
   const tabRefreshingRef = useRef(tabRefreshing);
 
   const recommendScrollRef = useRef(0);
@@ -187,7 +187,9 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     const showHeaderAfterRestore = () => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => setHeaderVisible?.(true));
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event(FORCE_SHOW_HEADER_EVENT));
+        });
       });
     };
 
@@ -206,7 +208,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       // Tab switch บนหน้าโฮมต้องกลับไปเริ่มจากบนสุดเสมอ ไม่ restore scroll เดิมของแท็บ
       if (!settled) scheduleChromeStartupLock(false);
     };
-  }, [isSoldTabActive, scheduleChromeStartupLock, setHeaderVisible]);
+  }, [isSoldTabActive, scheduleChromeStartupLock]);
 
   useLayoutEffect(() => {
     if (pathname !== '/home') {

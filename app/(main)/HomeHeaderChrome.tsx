@@ -73,10 +73,11 @@ function HomeHeaderChromeBase(props: HomeHeaderChromeProps) {
             boxSizing: 'border-box',
             background: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
             backgroundColor: LAYOUT_CONSTANTS.PROFILE_PAGE_BACKGROUND,
-            transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+            transform: isHeaderVisible ? 'translate3d(0, 0, 0)' : 'translate3d(0, -100%, 0)',
             boxShadow: 'none',
             transition: MOTION_TRANSITIONS.HOME_CHROME,
             willChange: 'transform',
+            contain: 'paint',
             backfaceVisibility: 'hidden',
             pointerEvents: isHeaderVisible ? 'auto' : 'none',
           }}

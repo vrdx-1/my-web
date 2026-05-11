@@ -14,6 +14,7 @@ const HIDE_ACCUMULATED_DELTA_PX = 20;
 const SHOW_ACCUMULATED_DELTA_PX = 12;
 const VISIBILITY_TOGGLE_COOLDOWN_MS = 220;
 const VIEWPORT_RESIZE_SUPPRESS_MS = 260;
+const FORCE_SHOW_HEADER_EVENT = 'home:force-header-visible';
 
 function getScrollTop(): number {
   if (typeof window === 'undefined') return 0;
@@ -144,6 +145,10 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     const handleCaptionToggle = () => {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       captionToggleSuppressUntilRef.current = now + CAPTION_TOGGLE_SUPPRESS_MS;
+    };
+
+    const handleForceShowHeader = () => {
+      applyVisible(true, 'force-show-event');
     };
 
     const suppressForViewportResize = () => {
@@ -316,31 +321,53 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       });
     };
 
+    const syncVisibilityAfterForeground = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      if (now < viewportResizeSuppressUntilRef.current) return;
+      const scrollY = Math.max(getScrollTop(), 0);
+      lastScrollYRef.current = scrollY;
+      latestScrollYRef.current = scrollY;
+      if (scrollY <= TOP_SHOW_THRESHOLD_PX) {
+        applyVisible(true, 'foreground-top-sync', { currentScrollY: scrollY });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      syncVisibilityAfterForeground();
+    };
+
+    const handlePageShow = () => {
+      syncVisibilityAfterForeground();
+    };
+
     const scrollY = Math.max(getScrollTop(), 0);
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
 
     window.addEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+    window.addEventListener(FORCE_SHOW_HEADER_EVENT, handleForceShowHeader as EventListener);
     window.addEventListener('resize', suppressForViewportResize, { passive: true });
     window.addEventListener('orientationchange', suppressForViewportResize, { passive: true });
     window.visualViewport?.addEventListener('resize', suppressForViewportResize, { passive: true });
 
-    // Listen on window only; page scroll is propagated here and avoids duplicate work.
+    // Listen on scroll only; wheel/touchmove duplicates work and creates jank on iOS.
     window.addEventListener('scroll', handleScrollLike, { passive: true });
-    window.addEventListener('wheel', handleScrollLike, { passive: true });
-    window.addEventListener('touchmove', handleScrollLike, { passive: true });
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       if (scrollFrameRef.current != null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
         scrollFrameRef.current = null;
       }
       window.removeEventListener('postcard:caption-toggle', handleCaptionToggle as EventListener);
+      window.removeEventListener(FORCE_SHOW_HEADER_EVENT, handleForceShowHeader as EventListener);
       window.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('orientationchange', suppressForViewportResize);
       window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('scroll', handleScrollLike);
-      window.removeEventListener('wheel', handleScrollLike);
-      window.removeEventListener('touchmove', handleScrollLike);
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [
     applyVisible,

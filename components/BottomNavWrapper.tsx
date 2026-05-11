@@ -33,8 +33,8 @@ function BottomNavSurface({
   const hideNavWithScroll = hideBottomNavWithScrollOnPath(resolvedPathname);
   const isHidden = hideNavWithScroll && !isHeaderVisible;
   const navTransform = hideNavWithScroll && !isHeaderVisible
-    ? 'translateY(calc(100% + env(safe-area-inset-bottom, 0px) + 10px))'
-    : 'translateY(0)';
+    ? 'translate3d(0, calc(100% + env(safe-area-inset-bottom, 0px) + 10px), 0)'
+    : 'translate3d(0, 0, 0)';
   const navHeight = `calc(${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px + env(safe-area-inset-bottom, 0px))`;
 
   return (
@@ -56,6 +56,7 @@ function BottomNavSurface({
         overflow: 'hidden',
         transition: MOTION_TRANSITIONS.HOME_CHROME_TRANSFORM,
         willChange: 'transform',
+        contain: 'paint',
         backfaceVisibility: 'hidden',
         pointerEvents: isHidden ? 'none' : 'auto',
       }}
