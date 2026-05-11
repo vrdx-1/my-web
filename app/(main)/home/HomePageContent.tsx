@@ -31,7 +31,8 @@ export function HomePageContent() {
     fullScreenViewer,
     handlers,
     hasSearch,
-    headerScroll,
+    isSoldTabActive,
+    setHeaderVisibleFromScroll,
     isSoldTabNoSearch,
     isSubmittingReport,
     onPrefetchNextPost,
@@ -102,6 +103,7 @@ export function HomePageContent() {
         feedRestoreWrapRef={feedRestoreWrapRef}
         recommendPanelRef={recommendPanelRef}
         soldPanelRef={soldPanelRef}
+        isSoldTabActive={isSoldTabActive}
         isSoldTabNoSearch={isSoldTabNoSearch}
         showFeedSkeleton={showFeedSkeleton}
         searchWaitingResults={searchWaitingResults}
@@ -116,7 +118,7 @@ export function HomePageContent() {
         effectiveSession={effectiveSession}
         fullScreenViewer={fullScreenViewer}
         handlers={handlers}
-        headerScroll={headerScroll}
+        setHeaderVisible={setHeaderVisibleFromScroll}
         isSoldTabNoSearch={isSoldTabNoSearch}
         isSubmittingReport={isSubmittingReport}
         reportReason={reportReason}

@@ -50,10 +50,6 @@ interface FullScreenViewerLike {
   downloadImage: (imageUrl: string) => void;
 }
 
-interface HeaderScrollLike {
-  setIsHeaderVisible: (visible: boolean) => void;
-}
-
 interface PostFeedHandlersLike {
   handleSubmitReport: () => void;
   showReportSuccess: boolean;
@@ -71,7 +67,7 @@ export interface HomePageModalsProps {
   effectiveSession: unknown;
   fullScreenViewer: FullScreenViewerLike;
   handlers: PostFeedHandlersLike;
-  headerScroll: HeaderScrollLike;
+  setHeaderVisible: (visible: boolean) => void;
   isSoldTabNoSearch: boolean;
   isSubmittingReport: boolean;
   reportReason: string;
@@ -87,7 +83,7 @@ function HomePageModalsBase(props: HomePageModalsProps) {
     effectiveSession,
     fullScreenViewer,
     handlers,
-    headerScroll,
+    setHeaderVisible,
     isSoldTabNoSearch,
     isSubmittingReport,
     reportReason,
@@ -111,7 +107,7 @@ function HomePageModalsBase(props: HomePageModalsProps) {
           savedScrollPosition={viewingPostHook.savedScrollPosition}
           initialImageIndex={viewingPostHook.initialImageIndex}
           onViewingPostClose={() =>
-            viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible)
+            viewingPostHook.closeViewingMode(setHeaderVisible)
           }
           onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
           onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}

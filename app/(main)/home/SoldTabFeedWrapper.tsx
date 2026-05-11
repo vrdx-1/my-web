@@ -9,7 +9,6 @@ import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useMenu } from '@/hooks/useMenu';
 import { useViewingPost } from '@/hooks/useViewingPost';
-import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
 import { HomeFeedBody } from './HomeFeedBody';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
@@ -21,7 +20,7 @@ export type SoldTabFeedWrapperProps = {
   soldListData: UsePostListDataReturn;
   menu: ReturnType<typeof useMenu>;
   viewingPostHook: ReturnType<typeof useViewingPost>;
-  headerScroll: ReturnType<typeof useHeaderScroll>;
+  setHeaderVisible: (visible: boolean) => void;
   fullScreenViewer: ReturnType<typeof useFullScreenViewer>;
   reportingPost: any;
   setReportingPost: (p: any) => void;
@@ -40,7 +39,7 @@ export function SoldTabFeedWrapper({
   soldListData,
   menu,
   viewingPostHook,
-  headerScroll,
+  setHeaderVisible,
   fullScreenViewer,
   reportingPost,
   setReportingPost,
@@ -79,7 +78,7 @@ export function SoldTabFeedWrapper({
     if (soldListData.loadingMore) return;
     if (soldListData.session === undefined) return;
     if (!soldListData.hasMore) return;
-    soldListData.fetchPosts(false, soldListData.page);
+    soldListData.fetchPosts(false);
   }, [
     isActive,
     soldListData.page,
@@ -116,7 +115,7 @@ export function SoldTabFeedWrapper({
     posts: soldListData.posts,
     setPosts: soldListData.setPosts,
     viewingPostHook,
-    headerScroll,
+    setHeaderVisible,
     menu,
     reportingPost,
     setReportingPost,
@@ -138,6 +137,7 @@ export function SoldTabFeedWrapper({
         <HomeFeedBody
           showSkeleton={showSkeleton}
           skeletonCount={3}
+          gateImageReady={isActive}
           postFeedProps={{
             posts: soldListData.posts,
             session: soldListData.session,

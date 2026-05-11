@@ -10,7 +10,8 @@ export interface UseHomeScrollCoordinatorOptions {
   clientMounted: boolean;
   firstFeedLoaded: boolean;
   showFeedSkeleton: boolean;
-  isSoldTabNoSearch: boolean;
+  isSoldTabActive: boolean;
+  tabRefreshing: boolean;
 }
 
 function getPageScrollY(): number {
@@ -33,12 +34,13 @@ function setPageScrollY(y: number): void {
 }
 
 export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOptions) {
-  const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabNoSearch } = options;
+  const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabActive, tabRefreshing } = options;
 
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
   const registerSaveBeforeSwitch = homeTabScroll?.registerSaveBeforeSwitch;
   const setHeaderVisible = useSetHeaderVisibility();
+  const tabRefreshingRef = useRef(tabRefreshing);
 
   const recommendScrollRef = useRef(0);
   const soldScrollRef = useRef(0);
@@ -48,6 +50,10 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const suppressHideUntilRef = useRef<number | null>(null);
   const [isChromeStartupLocked, setIsChromeStartupLocked] = useState(pathname === '/home');
   const chromeLockFrameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    tabRefreshingRef.current = tabRefreshing;
+  }, [tabRefreshing]);
 
   const feedRestoreWrapRef = useRef<HTMLDivElement | null>(null);
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
@@ -160,16 +166,16 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     if (!registerSaveBeforeSwitch) return;
     registerSaveBeforeSwitch(() => {
       const y = typeof window !== 'undefined' ? getPageScrollY() : 0;
-      if (isSoldTabNoSearch) soldScrollRef.current = y;
+      if (isSoldTabActive) soldScrollRef.current = y;
       else recommendScrollRef.current = y;
     });
     return () => {
       registerSaveBeforeSwitch(null);
     };
-  }, [isSoldTabNoSearch, registerSaveBeforeSwitch]);
+  }, [isSoldTabActive, registerSaveBeforeSwitch]);
 
   useLayoutEffect(() => {
-    const showSold = isSoldTabNoSearch;
+    const showSold = isSoldTabActive;
     const prev = prevShowSoldRef.current;
     prevShowSoldRef.current = showSold;
     if (prev === null) return;
@@ -178,7 +184,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     suppressHideUntilRef.current = now + 400;
     scheduleChromeStartupLock(true);
-    const toRestore = showSold ? soldScrollRef.current : recommendScrollRef.current;
+    const toRestore = tabRefreshingRef.current ? 0 : showSold ? soldScrollRef.current : recommendScrollRef.current;
 
     const showHeaderAfterRestore = () => {
       requestAnimationFrame(() => {
@@ -191,14 +197,22 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       return;
     }
 
-    return restoreWindowScroll(toRestore, {
+    let settled = false;
+    const cancelRestore = restoreWindowScroll(toRestore, {
       maxAttempts: 4,
       onSettled: () => {
+        settled = true;
         showHeaderAfterRestore();
         scheduleChromeStartupLock(false);
       },
     });
-  }, [isSoldTabNoSearch, scheduleChromeStartupLock, setHeaderVisible]);
+
+    return () => {
+      cancelRestore();
+      // Restore ถูกยกเลิกกลางทาง (เช่น state อื่นเปลี่ยน) ต้องปลด lock กันค้าง
+      if (!settled) scheduleChromeStartupLock(false);
+    };
+  }, [isSoldTabActive, scheduleChromeStartupLock, setHeaderVisible]);
 
   useLayoutEffect(() => {
     if (pathname !== '/home') {
@@ -274,7 +288,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       if (iOSFallbackTimer != null) clearTimeout(iOSFallbackTimer);
       unmask();
     };
-  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabNoSearch, scheduleChromeStartupLock]);
+  }, [pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, mainTabScroll, isSoldTabActive, scheduleChromeStartupLock]);
 
   return {
     feedRestoreWrapRef,

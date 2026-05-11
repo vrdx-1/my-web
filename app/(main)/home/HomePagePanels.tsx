@@ -8,6 +8,7 @@ export interface HomePagePanelsProps {
   feedRestoreWrapRef: React.RefObject<HTMLDivElement | null>;
   recommendPanelRef: React.RefObject<HTMLDivElement | null>;
   soldPanelRef: React.RefObject<HTMLDivElement | null>;
+  isSoldTabActive: boolean;
   isSoldTabNoSearch: boolean;
   showFeedSkeleton: boolean;
   searchWaitingResults: boolean;
@@ -24,6 +25,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
     feedRestoreWrapRef,
     recommendPanelRef,
     soldPanelRef,
+    isSoldTabActive,
     isSoldTabNoSearch,
     showFeedSkeleton,
     searchWaitingResults,
@@ -58,7 +60,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
         style={{ display: isSoldTabNoSearch ? 'block' : 'none' }}
         aria-hidden={!isSoldTabNoSearch}
       >
-        <SoldTabFeedWrapper isActive={isSoldTabNoSearch} {...soldTabProps} />
+        <SoldTabFeedWrapper isActive={isSoldTabActive} {...soldTabProps} />
       </div>
     </div>
   );

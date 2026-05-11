@@ -90,6 +90,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     soldListData,
     hasSearch,
   });
+  const isSoldTabActive = tab === 'sold';
 
   const { shell: recommendLoadMoreShell, triggerLoadMore: triggerRecommendLoadMore } =
     useRecommendLoadMoreShell({
@@ -109,6 +110,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   });
 
   const posts = effectivePostList.posts;
+  const recommendPanelList = isSoldTabNoSearch ? recommendFeed : effectivePostList;
 
   const { searchWaitingResults } = useHomeSearchState({
     hasSearch,
@@ -139,9 +141,6 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     searchData,
     soldTabRefreshRef,
     setTabRefreshing,
-    hasSoldTabCache: soldListData.posts.length > 0,
-    hasRecommendTabCache: recommendFeed.posts.length > 0,
-    hasSearchResultsCache: hasSearch && searchData.posts.length > 0,
   });
 
   const setHeaderVisible = useSetHeaderVisibility();
@@ -191,14 +190,21 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     clientMounted,
     firstFeedLoaded,
     showFeedSkeleton,
-    isSoldTabNoSearch,
+    isSoldTabActive,
+    tabRefreshing,
   });
 
   const headerScroll = useHeaderScroll({
     disableScrollHide: isChromeStartupLocked,
+    sensitivity: isSoldTabActive ? 1.8 : 1,
+    minScrollDeltaPx: isSoldTabActive ? 1 : undefined,
+    hideAccumulatedDeltaPx: isSoldTabActive ? 2 : undefined,
+    showAccumulatedDeltaPx: isSoldTabActive ? 2 : undefined,
+    visibilityCooldownMs: isSoldTabActive ? 80 : undefined,
     onVisibilityChange: (visible) => setHeaderVisible?.(visible),
     suppressHideUntilRef,
   });
+  const setHeaderVisibleFromScroll = headerScroll.setIsHeaderVisible;
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -223,7 +229,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     posts,
     setPosts: effectivePostList.setPosts,
     viewingPostHook,
-    headerScroll,
+    setHeaderVisible: setHeaderVisibleFromScroll,
     menu,
     reportingPost,
     setReportingPost,
@@ -248,7 +254,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    setIsHeaderVisible: headerScroll.setIsHeaderVisible,
+    setIsHeaderVisible: setHeaderVisibleFromScroll,
   });
 
   const { addBackStep } = useBackHandler();
@@ -261,7 +267,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     setActivePhotoMenu: fullScreenViewer.setActivePhotoMenu,
     viewingPost: viewingPostHook.viewingPost,
     onCloseViewingPost: () =>
-      viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible),
+      viewingPostHook.closeViewingMode(setHeaderVisibleFromScroll),
   });
 
   const onPrefetchNextPost = useCallback(() => {
@@ -279,13 +285,13 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   ]);
 
   const recommendPostFeedProps = useRecommendPostFeedProps({
-    posts,
-    session: effectivePostList.session,
-    savedPosts: effectivePostList.savedPosts,
+    posts: recommendPanelList.posts,
+    session: recommendPanelList.session,
+    savedPosts: recommendPanelList.savedPosts,
     justSavedPosts,
     activeMenuState: menu.activeMenuState,
     isMenuAnimating: menu.isMenuAnimating,
-    lastPostElementRef,
+    lastPostElementRef: isSoldTabNoSearch ? undefined : lastPostElementRef,
     menuButtonRefs: menu.menuButtonRefs,
     onViewPost: handlers.handleViewPost,
     onSave: toggleSave,
@@ -296,8 +302,8 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     onRepost: handlers.handleRepost,
     onSetActiveMenu: menu.setActiveMenu,
     onSetMenuAnimating: menu.setIsMenuAnimating,
-    loadingMore: effectivePostList.loadingMore || recommendLoadMoreShell,
-    hasMore: effectivePostList.hasMore ?? true,
+    loadingMore: isSoldTabNoSearch ? false : effectivePostList.loadingMore || recommendLoadMoreShell,
+    hasMore: isSoldTabNoSearch ? false : effectivePostList.hasMore ?? true,
     onLoadMore: handleRecommendLoadMore,
   });
 
@@ -306,7 +312,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
       soldListData,
       menu,
       viewingPostHook,
-      headerScroll,
+      setHeaderVisible: setHeaderVisibleFromScroll,
       fullScreenViewer,
       reportingPost,
       setReportingPost,
@@ -322,7 +328,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
       soldListData,
       menu,
       viewingPostHook,
-      headerScroll,
+      setHeaderVisibleFromScroll,
       fullScreenViewer,
       reportingPost,
       setReportingPost,
@@ -341,7 +347,8 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     fullScreenViewer,
     handlers,
     hasSearch,
-    headerScroll,
+    setHeaderVisibleFromScroll,
+    isSoldTabActive,
     isSoldTabNoSearch,
     isSubmittingReport,
     onPrefetchNextPost,

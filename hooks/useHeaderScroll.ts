@@ -31,6 +31,16 @@ interface UseHeaderScrollOptions {
   disableScrollHide?: boolean;
   /** ถ้า true จะซ่อน header เมื่อเลื่อนขึ้น และแสดงเมื่อเลื่อนลง */
   hideOnScrollUp?: boolean;
+  /** ความไวของการซ่อน/แสดงจากการ scroll (1 = ปกติ, >1 = ตอบสนองเร็วขึ้น) */
+  sensitivity?: number;
+  /** ระยะเลื่อนต่ำสุดต่อเฟรมที่จะเริ่มคิดซ่อน/แสดง (px) */
+  minScrollDeltaPx?: number;
+  /** ระยะสะสมเพื่อซ่อน (px) */
+  hideAccumulatedDeltaPx?: number;
+  /** ระยะสะสมเพื่อแสดง (px) */
+  showAccumulatedDeltaPx?: number;
+  /** เวลาหน่วงระหว่างการสลับสถานะซ่อน/แสดง (ms) */
+  visibilityCooldownMs?: number;
   onVisibilityChange?: (visible: boolean) => void;
   /** ถ้า ref.current เป็น timestamp และ performance.now() < ref.current จะไม่ซ่อน header (ใช้หลังสลับแท็บโฮมเพื่อกันกระตุก) */
   suppressHideUntilRef?: React.MutableRefObject<number | null>;
@@ -46,9 +56,30 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
   const {
     disableScrollHide = false,
     hideOnScrollUp = false,
+    sensitivity = 1,
+    minScrollDeltaPx: minScrollDeltaPxOverride,
+    hideAccumulatedDeltaPx: hideAccumulatedDeltaPxOverride,
+    showAccumulatedDeltaPx: showAccumulatedDeltaPxOverride,
+    visibilityCooldownMs: visibilityCooldownMsOverride,
     onVisibilityChange,
     suppressHideUntilRef,
   } = options ?? {};
+  const effectiveSensitivity = Math.max(0.8, Math.min(1.8, sensitivity));
+  const minScrollDeltaPx = minScrollDeltaPxOverride != null
+    ? Math.max(1, Math.round(minScrollDeltaPxOverride))
+    : Math.max(2, Math.round(MIN_SCROLL_DELTA_PX / effectiveSensitivity));
+  const hideAccumulatedDeltaPx = hideAccumulatedDeltaPxOverride != null
+    ? Math.max(2, Math.round(hideAccumulatedDeltaPxOverride))
+    : Math.max(8, Math.round(HIDE_ACCUMULATED_DELTA_PX / effectiveSensitivity));
+  const showAccumulatedDeltaPx = showAccumulatedDeltaPxOverride != null
+    ? Math.max(2, Math.round(showAccumulatedDeltaPxOverride))
+    : Math.max(6, Math.round(SHOW_ACCUMULATED_DELTA_PX / effectiveSensitivity));
+  const visibilityCooldownMs = visibilityCooldownMsOverride != null
+    ? Math.max(80, Math.round(visibilityCooldownMsOverride))
+    : Math.max(
+        120,
+        Math.round(VISIBILITY_TOGGLE_COOLDOWN_MS / (1 + (effectiveSensitivity - 1) * 0.8)),
+      );
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const latestScrollYRef = useRef(0);
@@ -174,7 +205,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           return;
         }
 
-        if (Math.abs(scrollDelta) < MIN_SCROLL_DELTA_PX) {
+        if (Math.abs(scrollDelta) < minScrollDeltaPx) {
           endHomeMotionTimer(timer, {
             action: 'ignore-small-delta',
             currentScrollY,
@@ -192,7 +223,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           }
           accumulatedScrollDeltaRef.current += Math.abs(scrollDelta);
 
-          const inCooldown = now - lastVisibilityToggleAtRef.current < VISIBILITY_TOGGLE_COOLDOWN_MS;
+          const inCooldown = now - lastVisibilityToggleAtRef.current < visibilityCooldownMs;
           if (inCooldown) {
             endHomeMotionTimer(timer, {
               action: 'suppressed-hide-cooldown',
@@ -209,7 +240,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
             });
             return;
           }
-          if (accumulatedScrollDeltaRef.current < HIDE_ACCUMULATED_DELTA_PX) {
+          if (accumulatedScrollDeltaRef.current < hideAccumulatedDeltaPx) {
             endHomeMotionTimer(timer, {
               action: 'accumulating-hide-threshold',
               currentScrollY,
@@ -238,7 +269,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
         }
         accumulatedScrollDeltaRef.current += Math.abs(scrollDelta);
 
-        const inCooldown = now - lastVisibilityToggleAtRef.current < VISIBILITY_TOGGLE_COOLDOWN_MS;
+        const inCooldown = now - lastVisibilityToggleAtRef.current < visibilityCooldownMs;
         if (inCooldown) {
           endHomeMotionTimer(timer, {
             action: 'suppressed-show-cooldown',
@@ -247,7 +278,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
           });
           return;
         }
-        if (accumulatedScrollDeltaRef.current < SHOW_ACCUMULATED_DELTA_PX) {
+        if (accumulatedScrollDeltaRef.current < showAccumulatedDeltaPx) {
           endHomeMotionTimer(timer, {
             action: 'accumulating-show-threshold',
             currentScrollY,
@@ -273,9 +304,8 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     lastScrollYRef.current = scrollY;
     latestScrollYRef.current = scrollY;
 
+    // Listen on window only; page scroll is propagated here and avoids duplicate work.
     window.addEventListener('scroll', handleScroll, { passive: true });
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    document.body?.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       if (scrollFrameRef.current != null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
@@ -286,10 +316,17 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
       window.removeEventListener('orientationchange', suppressForViewportResize);
       window.visualViewport?.removeEventListener('resize', suppressForViewportResize);
       window.removeEventListener('scroll', handleScroll);
-      document.removeEventListener('scroll', handleScroll);
-      document.body?.removeEventListener('scroll', handleScroll);
     };
-  }, [applyVisible, disableScrollHide, hideOnScrollUp, suppressHideUntilRef]);
+  }, [
+    applyVisible,
+    disableScrollHide,
+    hideOnScrollUp,
+    suppressHideUntilRef,
+    minScrollDeltaPx,
+    hideAccumulatedDeltaPx,
+    showAccumulatedDeltaPx,
+    visibilityCooldownMs,
+  ]);
 
   // เมื่อ disableScrollHide เป็น true ให้ lock header ไว้เสมอ
   const wrappedSetIsHeaderVisible = useCallback((visible: boolean) => {

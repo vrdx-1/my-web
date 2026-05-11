@@ -8,6 +8,8 @@ interface SoldListDataLike {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   posts: any[];
   loadingMore: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setPosts: React.Dispatch<React.SetStateAction<any[]>>;
   setPage: (v: number | ((p: number) => number)) => void;
   setHasMore: (v: boolean) => void;
   fetchPosts: (isInitial?: boolean) => Promise<void>;
@@ -37,6 +39,8 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   const prevTabRef = useRef<HomeTab>(tab);
   const prevProvinceRef = useRef(selectedProvince);
   const soldTabRefreshRef = useRef<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setPosts: React.Dispatch<React.SetStateAction<any[]>>;
     setPage: (v: number | ((p: number) => number)) => void;
     setHasMore: (v: boolean) => void;
     fetchPosts: (isInitial?: boolean) => Promise<void>;
@@ -45,6 +49,7 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
 
   useEffect(() => {
     soldTabRefreshRef.current = {
+      setPosts: soldListData.setPosts,
       setPage: soldListData.setPage,
       setHasMore: soldListData.setHasMore,
       fetchPosts: soldListData.fetchPosts,
@@ -53,7 +58,7 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
     return () => {
       soldTabRefreshRef.current = null;
     };
-  }, [soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts, soldListData.refreshData]);
+  }, [soldListData.setPosts, soldListData.setPage, soldListData.setHasMore, soldListData.fetchPosts, soldListData.refreshData]);
 
   useEffect(() => {
     const previousTab = prevTabRef.current;

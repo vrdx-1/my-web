@@ -15,6 +15,7 @@ interface UsePostFeedHandlersProps {
   posts: any[];
   setPosts: React.Dispatch<React.SetStateAction<any[]>>;
   viewingPostHook: ReturnType<typeof useViewingPost>;
+  setHeaderVisible?: (visible: boolean) => void;
   headerScroll?: ReturnType<typeof useHeaderScroll>;
   menu?: ReturnType<typeof useMenu>;
   reportingPost?: any | null;
@@ -34,6 +35,7 @@ export function usePostFeedHandlers({
   posts,
   setPosts,
   viewingPostHook,
+  setHeaderVisible,
   headerScroll,
   menu,
   reportingPost,
@@ -47,10 +49,10 @@ export function usePostFeedHandlers({
 
   const handleViewPost = useCallback(
     async (post: any, imageIndex: number = 0) => {
-      const onClose = headerScroll?.setIsHeaderVisible || (() => {});
+      const onClose = setHeaderVisible || headerScroll?.setIsHeaderVisible || (() => {});
       await viewingPostHook.handleViewPost(post, imageIndex, setPosts, onClose);
     },
-    [viewingPostHook, setPosts, headerScroll]
+    [viewingPostHook, setPosts, setHeaderVisible, headerScroll]
   );
 
   const handleTogglePostStatus = useCallback(
