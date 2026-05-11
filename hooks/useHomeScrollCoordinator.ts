@@ -184,7 +184,6 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     suppressHideUntilRef.current = now + 400;
     scheduleChromeStartupLock(true);
-    const toRestore = tabRefreshingRef.current ? 0 : showSold ? soldScrollRef.current : recommendScrollRef.current;
 
     const showHeaderAfterRestore = () => {
       requestAnimationFrame(() => {
@@ -192,13 +191,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       });
     };
 
-    if (typeof window === 'undefined' || !Number.isFinite(toRestore)) {
-      showHeaderAfterRestore();
-      return;
-    }
-
     let settled = false;
-    const cancelRestore = restoreWindowScroll(toRestore, {
+    const cancelRestore = restoreWindowScroll(0, {
       maxAttempts: 4,
       onSettled: () => {
         settled = true;
@@ -209,7 +203,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     return () => {
       cancelRestore();
-      // Restore ถูกยกเลิกกลางทาง (เช่น state อื่นเปลี่ยน) ต้องปลด lock กันค้าง
+      // Tab switch บนหน้าโฮมต้องกลับไปเริ่มจากบนสุดเสมอ ไม่ restore scroll เดิมของแท็บ
       if (!settled) scheduleChromeStartupLock(false);
     };
   }, [isSoldTabActive, scheduleChromeStartupLock, setHeaderVisible]);

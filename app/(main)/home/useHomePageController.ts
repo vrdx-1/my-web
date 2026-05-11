@@ -175,6 +175,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const showFeedSkeleton =
     !isSoldTabNoSearch &&
     (searchWaitingResults ||
+      (tabRefreshing && posts.length === 0) ||
       (posts.length === 0 &&
         (effectivePostList.loadingMore || (!hasSearch && !firstFeedLoaded))) ||
       (tabRefreshing && effectivePostList.loadingMore));
@@ -323,6 +324,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
       justSavedPosts,
       setJustSavedPosts,
       handleSubmitReportRef,
+      isRefreshing: tabRefreshing,
     }),
     [
       soldListData,
@@ -338,6 +340,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
       setIsSubmittingReport,
       justSavedPosts,
       setJustSavedPosts,
+      tabRefreshing,
     ],
   );
 

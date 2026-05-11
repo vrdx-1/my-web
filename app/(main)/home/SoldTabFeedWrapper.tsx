@@ -32,6 +32,7 @@ export type SoldTabFeedWrapperProps = {
   setJustSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   handleSubmitReportRef: React.MutableRefObject<(() => void) | null>;
   isActive: boolean;
+  isRefreshing: boolean;
 };
 
 /** แสดง feed แท็บขายแล้ว — รับข้อมูลจากหน้าหลัก เพื่อให้สลับแท็บแล้วแสดงทันทีโดยไม่โหลดใหม่ */
@@ -51,6 +52,7 @@ export function SoldTabFeedWrapper({
   setJustSavedPosts,
   handleSubmitReportRef,
   isActive,
+  isRefreshing,
 }: SoldTabFeedWrapperProps) {
   /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
@@ -129,7 +131,7 @@ export function SoldTabFeedWrapper({
     handleSubmitReportRef.current = handlers.handleSubmitReport;
   }, [handlers.handleSubmitReport]);
 
-  const showSkeleton = soldListData.posts.length === 0 && soldListData.loadingMore;
+  const showSkeleton = soldListData.posts.length === 0 && (soldListData.loadingMore || isRefreshing);
 
   return (
     <>
