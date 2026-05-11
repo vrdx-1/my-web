@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, Suspense, useRef } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { PostCard } from '@/components/PostCard';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { EmptyState } from '@/components/EmptyState';
@@ -23,9 +23,7 @@ const FullScreenImageViewer = lazyNamed(
 
 export default function AdminReviewPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/review';
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'visible' | 'hidden'>('visible');

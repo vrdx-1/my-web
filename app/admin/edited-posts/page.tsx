@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, Suspense, useRef } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { formatTime } from '@/utils/postUtils';
@@ -22,9 +22,7 @@ const EDITED_POSTS_API = '/api/admin/edited-posts';
 
 export default function AdminEditedPostsPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/edited-posts';
   const [edits, setEdits] = useState<{ id: string; car_id: string; edited_at: string; cars: any }[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMenuState, setActiveMenuState] = useState<string | null>(null);

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useMemo, useState, Suspense, useRef } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { TabNavigation } from '@/components/TabNavigation';
@@ -25,9 +25,7 @@ type PostStatus = 'recommend' | 'sold';
 
 export default function AdminHiddenPostsPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/hidden-posts';
   const [activeTab, setActiveTab] = useState<PostStatus>('recommend');
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

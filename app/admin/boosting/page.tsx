@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, Suspense, useRef } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
@@ -24,9 +24,7 @@ const FullScreenImageViewer = lazyNamed(
 
 export default function AdminBoostingPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/boosting';
   const supabase = supabaseClient;
   const [activeTab, setActiveTab] = useState<"waiting" | "boosting" | "sold">("waiting");
   const [items, setItems] = useState<any[]>([]);

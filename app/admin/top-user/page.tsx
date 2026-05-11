@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -23,9 +22,7 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 export default function AdminTopUserPage() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/top-user';
   const [activeTab, setActiveTab] = useState<TabId>('poster');
   const [filter, setFilter] = useState<DateFilterType>('A');
   const [loading, setLoading] = useState(true);

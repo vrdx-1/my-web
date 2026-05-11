@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 
 type VerificationRequest = {
@@ -29,9 +29,7 @@ function formatDate(dateStr: string) {
 
 export default function AdminVerificationPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fromPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const fromPath = '/admin/verification';
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');

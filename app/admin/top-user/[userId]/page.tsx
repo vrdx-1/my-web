@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { createAdminSupabaseClient } from '@/utils/adminSupabaseClient';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -40,14 +40,8 @@ const PAGE_SIZE = 10;
 
 export default function AdminTopUserPostsPage() {
   const params = useParams<{ userId: string }>();
-  const searchParams = useSearchParams();
   const userId = useMemo(() => decodeURIComponent(params?.userId || ''), [params?.userId]);
-  const backHref = useMemo(() => {
-    const fromRaw = searchParams.get('from');
-    if (!fromRaw) return '/admin/top-user';
-    const fromDecoded = decodeURIComponent(fromRaw);
-    return fromDecoded.startsWith('/admin/') ? fromDecoded : '/admin/top-user';
-  }, [searchParams]);
+  const [backHref, setBackHref] = useState('/admin/top-user');
 
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -90,6 +84,18 @@ export default function AdminTopUserPostsPage() {
 
     fetchUserProfile();
   }, [supabase, userId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const paramsFromUrl = new URLSearchParams(window.location.search);
+    const fromRaw = paramsFromUrl.get('from');
+    if (!fromRaw) {
+      setBackHref('/admin/top-user');
+      return;
+    }
+    const fromDecoded = decodeURIComponent(fromRaw);
+    setBackHref(fromDecoded.startsWith('/admin/') ? fromDecoded : '/admin/top-user');
+  }, []);
 
   useEffect(() => {
     if (!userId) {
