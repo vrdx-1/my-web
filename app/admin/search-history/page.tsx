@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { TimeFilter } from '@/components/admin/TimeFilter';
 import { StatCard } from '@/components/admin/StatCard';
 import { getDateRange, type DateFilterType } from '@/utils/dateFilter';
@@ -43,8 +44,10 @@ interface StatsPayload {
 }
 
 export default function AdminSearchHistoryPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<DateFilterType>('A');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string>('');
   const [stats, setStats] = useState<StatsPayload>({
     totalSearches: 0,
     uniqueTerms: 0,
@@ -62,8 +65,22 @@ export default function AdminSearchHistoryPage() {
     void fetchSearchData();
   }, [filter, selectedPersonKey]);
 
+  const resetData = () => {
+    setStats({
+      totalSearches: 0,
+      uniqueTerms: 0,
+      manualSearches: 0,
+      suggestionSearches: 0,
+      historySearches: 0,
+    });
+    setPeople([]);
+    setTopSearches([]);
+    setRecentSearches([]);
+  };
+
   const fetchSearchData = async () => {
     setLoading(true);
+    setFetchError('');
     try {
       const { startDate, endDate } = getDateRange(filter);
       const search = new URLSearchParams();
@@ -76,9 +93,21 @@ export default function AdminSearchHistoryPage() {
         credentials: 'include',
       });
 
+      if (response.status === 401) {
+        router.replace('/admin/login');
+        return;
+      }
+
+      if (response.status === 403) {
+        router.replace('/home');
+        return;
+      }
+
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload) {
-        throw new Error('Failed to fetch admin search history');
+        resetData();
+        setFetchError('ไม่สามารถโหลดข้อมูล Search History ได้ในขณะนี้');
+        return;
       }
 
       setStats(payload.stats || {
@@ -92,16 +121,9 @@ export default function AdminSearchHistoryPage() {
       setTopSearches(Array.isArray(payload.topSearches) ? payload.topSearches : []);
       setRecentSearches(Array.isArray(payload.recentSearches) ? payload.recentSearches : []);
     } catch (err) {
-      console.error('Error fetching search data:', err);
-      setStats({
-        totalSearches: 0,
-        uniqueTerms: 0,
-        manualSearches: 0,
-        suggestionSearches: 0,
-        historySearches: 0,
-      });
-      setTopSearches([]);
-      setRecentSearches([]);
+      console.error('Error fetching search data:', err instanceof Error ? err.message : err);
+      resetData();
+      setFetchError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่');
     } finally {
       setLoading(false);
     }
@@ -193,6 +215,23 @@ export default function AdminSearchHistoryPage() {
           ? `กำลังดูรายบุคคล: ${selectedPerson.person_label}`
           : 'กำลังดูภาพรวมทั้งระบบ'}
       </div>
+
+      {fetchError && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: '10px 14px',
+            borderRadius: 12,
+            background: '#fff7ed',
+            border: '1px solid #fdba74',
+            color: '#9a3412',
+            fontSize: 14,
+            fontWeight: 600,
+          }}
+        >
+          {fetchError}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: '26px' }}>
         <StatCard

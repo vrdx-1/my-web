@@ -22,6 +22,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // ตรวจสอบว่าแอดมิน login แล้วหรือไม่ — ถ้ายังไม่ login ไม่แสดง sidebar
   useEffect(() => {
+    if (pathname === '/admin/login') {
+      return;
+    }
+
     const check = async () => {
       const {
         data: { user },
@@ -35,9 +39,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAdminLoggedIn(profile?.role === 'admin');
     };
     check();
-  }, [supabase]);
+  }, [pathname, supabase]);
 
   useEffect(() => {
+    if (pathname === '/admin/login') {
+      return;
+    }
+
     const POLL_INTERVAL_MS = 10000;
     let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -66,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (interval) clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, []);
+  }, [pathname]);
 
   // เมื่อแอดมินเข้าดูหน้านั้น → บันทึกจำนวนปัจจุบันเป็น "ดูแล้ว" (วงกลมแดงหายไป)
   useEffect(() => {

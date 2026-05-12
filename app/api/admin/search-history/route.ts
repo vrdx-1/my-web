@@ -18,6 +18,22 @@ type SearchLogRow = {
   actor_role: ActorRole | null;
 };
 
+type NormalizedSearchLogRow = SearchLogRow & {
+  person_key: string;
+  person_label: string;
+  person_type: 'guest' | 'user';
+  profile_role: string | null;
+  profile_is_sub_account: boolean;
+};
+
+type SearchLogBaseRow = {
+  id: string;
+  search_term: string;
+  display_text: string | null;
+  search_type: SearchType;
+  created_at: string;
+};
+
 type ProfileRow = {
   id: string;
   username: string | null;
@@ -91,6 +107,11 @@ function personLabelForUser(profile: ProfileRow | null, userId: string): string 
   return `User ${userId.slice(0, 8)}`;
 }
 
+function isMissingColumnError(error: { code?: string | null; message?: string | null } | null) {
+  const message = (error?.message || '').toLowerCase();
+  return error?.code === '42703' || message.includes('does not exist');
+}
+
 export async function GET(request: NextRequest) {
   const auth = await ensureAdmin();
   if (!auth.ok) {
@@ -116,73 +137,134 @@ export async function GET(request: NextRequest) {
     const limitRaw = parseInt(searchParams.get('limit') || '5000', 10);
     const limit = Number.isFinite(limitRaw) ? Math.min(10000, Math.max(100, limitRaw)) : 5000;
 
-    let query = admin
-      .from('search_logs')
-      .select('id, search_term, display_text, search_type, created_at, user_id, guest_token, actor_role')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    const baseQuery = () => {
+      let query = admin
+        .from('search_logs')
+        .select('id, search_term, display_text, search_type, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-    if (start) {
-      query = query.gte('created_at', new Date(start).toISOString());
-    }
-    if (end) {
-      query = query.lte('created_at', new Date(end).toISOString());
-    }
-
-    const { data: rows, error } = await query;
-    if (error) {
-      return internalServerError('admin/search-history query failed', error);
-    }
-
-    const allRows: SearchLogRow[] = (rows as SearchLogRow[] | null) || [];
-
-    const userIds = Array.from(new Set(allRows.map((row) => row.user_id).filter((id): id is string => !!id)));
-    const profileMap = new Map<string, ProfileRow>();
-
-    if (userIds.length > 0) {
-      const { data: profiles, error: profileError } = await admin
-        .from('profiles')
-        .select('id, username, full_name, role, is_sub_account')
-        .in('id', userIds);
-
-      if (profileError) {
-        return internalServerError('admin/search-history profile query failed', profileError);
+      if (start) {
+        query = query.gte('created_at', new Date(start).toISOString());
+      }
+      if (end) {
+        query = query.lte('created_at', new Date(end).toISOString());
       }
 
-      for (const profile of (profiles as ProfileRow[] | null) || []) {
-        profileMap.set(profile.id, profile);
+      return query;
+    };
+
+    const identityQuery = () => {
+      let query = admin
+        .from('search_logs')
+        .select('id, search_term, display_text, search_type, created_at, user_id, guest_token, actor_role')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (start) {
+        query = query.gte('created_at', new Date(start).toISOString());
       }
+      if (end) {
+        query = query.lte('created_at', new Date(end).toISOString());
+      }
+
+      return query;
+    };
+
+    const { data: identityRows, error: identityError } = await identityQuery();
+    const usingIdentitySchema = !identityError;
+
+    let allRows: NormalizedSearchLogRow[] = [];
+
+    if (usingIdentitySchema) {
+      const rows = (identityRows as SearchLogRow[] | null) || [];
+      const userIds = Array.from(new Set(rows.map((row) => row.user_id).filter((id): id is string => !!id)));
+      const profileMap = new Map<string, ProfileRow>();
+
+      if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await admin
+          .from('profiles')
+          .select('id, username, full_name, role, is_sub_account')
+          .in('id', userIds);
+
+        if (profileError && isMissingColumnError(profileError)) {
+          const { data: basicProfiles, error: basicProfileError } = await admin
+            .from('profiles')
+            .select('id, username, role')
+            .in('id', userIds);
+
+          if (basicProfileError) {
+            return internalServerError('admin/search-history profile query failed', basicProfileError);
+          }
+
+          for (const profile of (basicProfiles as Array<{ id: string; username: string | null; role: string | null }> | null) || []) {
+            profileMap.set(profile.id, {
+              id: profile.id,
+              username: profile.username,
+              full_name: null,
+              role: profile.role,
+              is_sub_account: null,
+            });
+          }
+        } else if (profileError) {
+          return internalServerError('admin/search-history profile query failed', profileError);
+        } else {
+          for (const profile of (profiles as ProfileRow[] | null) || []) {
+            profileMap.set(profile.id, profile);
+          }
+        }
+      }
+
+      allRows = rows
+        .map((row) => {
+          const isGuest = !row.user_id;
+          const profile = row.user_id ? profileMap.get(row.user_id) || null : null;
+          const role = row.actor_role || (isGuest ? 'guest' : 'user');
+
+          const person_key = isGuest
+            ? `guest:${(row.guest_token || '').trim() || 'unknown'}`
+            : `user:${row.user_id}`;
+
+          const person_type: 'guest' | 'user' = isGuest ? 'guest' : 'user';
+          const person_label = isGuest
+            ? personLabelForGuest(row.guest_token)
+            : personLabelForUser(profile, row.user_id || '');
+
+          return {
+            ...row,
+            actor_role: role as ActorRole,
+            person_key,
+            person_type,
+            person_label,
+            profile_role: profile?.role || null,
+            profile_is_sub_account: !!profile?.is_sub_account,
+          };
+        })
+        .filter((row) => row.actor_role === 'guest' || row.actor_role === 'user');
+    } else if (isMissingColumnError(identityError)) {
+      const { data: baseRows, error: baseError } = await baseQuery();
+      if (baseError) {
+        return internalServerError('admin/search-history query failed', baseError);
+      }
+
+      const rows = (baseRows as SearchLogBaseRow[] | null) || [];
+      allRows = rows.map((row) => ({
+        ...row,
+        user_id: null,
+        guest_token: null,
+        actor_role: 'guest',
+        person_key: 'all',
+        person_type: 'guest',
+        person_label: 'All searches',
+        profile_role: null,
+        profile_is_sub_account: false,
+      }));
+    } else {
+      return internalServerError('admin/search-history query failed', identityError);
     }
-
-    const normalizedRows = allRows
-      .map((row) => {
-        const isGuest = !row.user_id;
-        const profile = row.user_id ? profileMap.get(row.user_id) || null : null;
-        const role = row.actor_role || (isGuest ? 'guest' : 'user');
-
-        const person_key = isGuest
-          ? `guest:${(row.guest_token || '').trim() || 'unknown'}`
-          : `user:${row.user_id}`;
-
-        const person_type: 'guest' | 'user' = isGuest ? 'guest' : 'user';
-        const person_label = isGuest
-          ? personLabelForGuest(row.guest_token)
-          : personLabelForUser(profile, row.user_id || '');
-
-        return {
-          ...row,
-          actor_role: role as ActorRole,
-          person_key,
-          person_type,
-          person_label,
-          profile_role: profile?.role || null,
-          profile_is_sub_account: !!profile?.is_sub_account,
-        };
-      })
-      .filter((row) => row.actor_role === 'guest' || row.actor_role === 'user');
 
     const peopleMap = new Map<string, PersonSummary>();
-    for (const row of normalizedRows) {
+    for (const row of allRows) {
       const existing = peopleMap.get(row.person_key);
       if (!existing) {
         peopleMap.set(row.person_key, {
@@ -206,8 +288,8 @@ export async function GET(request: NextRequest) {
     });
 
     const scopedRows = personKey
-      ? normalizedRows.filter((row) => row.person_key === personKey)
-      : normalizedRows;
+      ? allRows.filter((row) => row.person_key === personKey)
+      : allRows;
 
     const uniqueTerms = new Set(
       scopedRows
