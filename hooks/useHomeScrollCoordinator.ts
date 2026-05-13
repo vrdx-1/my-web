@@ -13,6 +13,7 @@ export interface UseHomeScrollCoordinatorOptions {
   showFeedSkeleton: boolean;
   isSoldTabActive: boolean;
   tabRefreshing: boolean;
+  hasSearch: boolean;
 }
 
 function getPageScrollY(): number {
@@ -35,7 +36,7 @@ function setPageScrollY(y: number): void {
 }
 
 export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOptions) {
-  const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabActive, tabRefreshing } = options;
+  const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabActive, tabRefreshing, hasSearch } = options;
 
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
@@ -137,7 +138,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       mainTabScroll?.saveCurrentScroll('/home');
     }
     if (pathname === '/home' && prev !== '/home' && prev != null) {
-      pendingHomeRouteScrollRestoreRef.current = true;
+      pendingHomeRouteScrollRestoreRef.current = !hasSearch;
       scheduleChromeStartupLock(true);
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       suppressHideUntilRef.current = now + 500;
@@ -146,7 +147,37 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       pendingHomeRouteScrollRestoreRef.current = false;
       scheduleChromeStartupLock(false);
     }
-  }, [pathname, scheduleChromeStartupLock]);
+  }, [pathname, hasSearch, scheduleChromeStartupLock, mainTabScroll]);
+
+  useEffect(() => {
+    if (pathname !== '/home') return;
+    if (!hasSearch) return;
+
+    pendingHomeRouteScrollRestoreRef.current = false;
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    suppressHideUntilRef.current = now + 300;
+    scheduleChromeStartupLock(true);
+
+    const showHeaderAfterReset = () => {
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event(FORCE_SHOW_HEADER_EVENT));
+      });
+    };
+
+    const cancelRestore = restoreWindowScroll(0, {
+      maxAttempts: 4,
+      onSettled: () => {
+        showHeaderAfterReset();
+        scheduleChromeStartupLock(false);
+        mainTabScroll?.saveCurrentScroll('/home');
+      },
+    });
+
+    return () => {
+      cancelRestore();
+    };
+  }, [pathname, hasSearch, mainTabScroll, scheduleChromeStartupLock]);
 
   useEffect(() => {
     if (pathname !== '/home') {

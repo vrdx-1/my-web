@@ -193,6 +193,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     showFeedSkeleton,
     isSoldTabActive,
     tabRefreshing,
+    hasSearch,
   });
 
   const headerScroll = useHeaderScroll({
