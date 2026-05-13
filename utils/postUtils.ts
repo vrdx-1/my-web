@@ -291,9 +291,85 @@ function buildCategoryToModelAliases(dict: CarsDictionary) {
   return { categoryToAliases };
 }
 
+type CategoryBrandModelRule = {
+  modelAliasesNorm: string[];
+  brandAliasesNorm: string[];
+};
+
+function buildCategoryBrandModelRules(dict: CarsDictionary) {
+  const categoryToRules = new Map<CategoryId, CategoryBrandModelRule[]>();
+
+  for (const brand of dict.brands ?? []) {
+    const brandAliasesNorm = uniqStringsCarSearch([
+      brand.brandName,
+      brand.brandNameTh as any,
+      brand.brandNameLo as any,
+      ...((brand as any).brandSearchNames ?? []).map(String),
+    ])
+      .map((s) => normalizeCarSearch(s))
+      .filter(Boolean);
+
+    if (brandAliasesNorm.length === 0) continue;
+
+    for (const model of brand.models ?? []) {
+      const categoryIds = (model.categoryIds ?? []) as string[];
+      if (!categoryIds || categoryIds.length === 0) continue;
+
+      const modelAliasesNorm = uniqStringsCarSearch([
+        model.modelName,
+        (model as any).modelNameTh,
+        (model as any).modelNameLo,
+        ...((model.searchNames ?? []) as any[]).map(String),
+      ])
+        .map((s) => normalizeCarSearch(s))
+        .filter(Boolean);
+
+      if (modelAliasesNorm.length === 0) continue;
+
+      for (const cid of categoryIds) {
+        const catId = String(cid);
+        if (!categoryToRules.has(catId)) categoryToRules.set(catId, []);
+        categoryToRules.get(catId)!.push({ modelAliasesNorm, brandAliasesNorm });
+      }
+    }
+  }
+
+  return { categoryToRules };
+}
+
+function buildCategoryAliasesById(dict: CategoriesDictionary) {
+  const aliasesById = new Map<CategoryId, Set<string>>();
+
+  function addAlias(categoryId: string, raw: string) {
+    const v = normalizeCarSearch(String(raw ?? ''));
+    if (!v) return;
+    if (!aliasesById.has(categoryId)) aliasesById.set(categoryId, new Set());
+    aliasesById.get(categoryId)!.add(v);
+  }
+
+  for (const group of (dict as any).categoryGroups ?? []) {
+    for (const cat of group.categories ?? []) {
+      const id = String(cat.id);
+      addAlias(id, id);
+      addAlias(id, cat.name);
+      addAlias(id, cat.nameEn);
+      const nameLoArr = Array.isArray(cat.nameLo) ? cat.nameLo : cat.nameLo ? [cat.nameLo] : [];
+      for (const lo of nameLoArr) addAlias(id, lo);
+    }
+  }
+
+  // ตั้งใจไม่เพิ่ม searchTermAliases ที่นี่
+  // เพราะใช้สำหรับ "แปลคำค้น" (query -> category) เท่านั้น
+  // ไม่ควรใช้เป็นเงื่อนไข match caption ไม่งั้นคำกว้าง ๆ เช่น family จะทำให้ sedan/suv/pickup/van ติดพร้อมกัน
+
+  return { aliasesById };
+}
+
 const CAR_INDEX = buildIndexes(carsData);
 const CATEGORY_INDEX = buildCategoryAliasIndex(categoriesData);
 const CATEGORY_TO_MODEL_ALIASES = buildCategoryToModelAliases(carsData);
+const CATEGORY_BRAND_MODEL_RULES = buildCategoryBrandModelRules(carsData);
+const CATEGORY_ALIASES_BY_ID = buildCategoryAliasesById(categoriesData);
 
 function getCategoryDisplayName(categoryId: string, lang: SearchLanguage): string {
   const groups = (categoriesData as any).categoryGroups ?? [];
@@ -858,6 +934,71 @@ export function captionMatchesAnyAlias(caption: string, queries: string[]): bool
       }
     }
   }
+  return false;
+}
+
+/**
+ * ใช้เฉพาะตอนค้นหา category: ถ้า caption แมตช์รุ่น ต้องมีชื่อแบรนด์อย่างน้อย 1 ภาษาอยู่ด้วย
+ * และยังคงรองรับเคสที่ caption เป็นคำหมวดหมู่ตรง ๆ เช่น pickup/sedan
+ */
+export function captionMatchesCategoryWithBrand(caption: string, categoryIds: string[]): boolean {
+  const c = normalizeCarSearch(caption);
+  if (!c) return false;
+  const tokens = c.split(' ').filter(Boolean);
+
+  const matchesNorm = (aliasNorm: string, allowTypo = true): boolean => {
+    if (!aliasNorm) return false;
+    if (c.includes(aliasNorm)) return true;
+    // ปิด typo tolerance สำหรับ alias ที่มีตัวเลข เพื่อลด false positive
+    // เช่น model "t100" ไปชน caption ที่มี "100%"
+    if (allowTypo && aliasNorm.length >= 3 && !/\d/.test(aliasNorm)) {
+      for (const t of tokens) {
+        const dist = levenshteinWithin(t, aliasNorm, 1);
+        if (dist !== null) return true;
+      }
+    }
+    return false;
+  };
+
+  // อนุญาตให้แมตช์จากคำหมวดหมู่โดยตรง (pickup/sedan/รถเก๋ง/...)
+  for (const cid of categoryIds ?? []) {
+    const aliases = CATEGORY_ALIASES_BY_ID.aliasesById.get(String(cid));
+    if (!aliases) continue;
+    for (const aliasNorm of aliases) {
+      // คำหมวดหมู่ต้องตรงแบบเป๊ะเท่านั้น (ไม่เปิด typo) เพื่อลด false positive
+      if (matchesNorm(aliasNorm, false)) return true;
+    }
+  }
+
+  // ถ้าแมตช์รุ่น ต้องมีแบรนด์ร่วมด้วยใน caption เดียวกัน
+  for (const cid of categoryIds ?? []) {
+    const rules = CATEGORY_BRAND_MODEL_RULES.categoryToRules.get(String(cid));
+    if (!rules || rules.length === 0) continue;
+
+    for (const rule of rules) {
+      let hasModel = false;
+      for (const modelAliasNorm of rule.modelAliasesNorm) {
+        // ชื่อรุ่นใน category ต้อง match แบบตรงเท่านั้น (ไม่เปิด typo)
+        // เพื่อกันเคสข้ามรุ่น เช่น "vigo" ไปชน "wigo"
+        if (matchesNorm(modelAliasNorm, false)) {
+          hasModel = true;
+          break;
+        }
+      }
+      if (!hasModel) continue;
+
+      let hasBrand = false;
+      for (const brandAliasNorm of rule.brandAliasesNorm) {
+        if (matchesNorm(brandAliasNorm)) {
+          hasBrand = true;
+          break;
+        }
+      }
+
+      if (hasBrand) return true;
+    }
+  }
+
   return false;
 }
 

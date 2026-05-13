@@ -10,6 +10,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { DailyVisitorTracker } from "@/components/DailyVisitorTracker";
 import { BottomNavWrapper } from "@/components/BottomNavWrapper";
 import { SavePostSuccessPopupHost } from "@/components/modals/SavePostSuccessPopupHost";
+import { DevServiceWorkerReset } from "@/components/DevServiceWorkerReset";
 import { HeaderVisibilityProvider } from "@/contexts/HeaderVisibilityContext";
 import { SessionProfileProvider } from "@/contexts/SessionProfileContext";
 import { CreatePostProvider } from "@/contexts/CreatePostContext";
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <DevServiceWorkerReset />
         <ErrorBoundaryWrapper>
           <SWRProvider>
             {/* กดย้อนกลับ (browser/มือถือ) ปิด overlay ตามสเต็ป แล้ว back ตามสเต็ป */}

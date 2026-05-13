@@ -9,6 +9,7 @@ import {
   getSearchPriorityTerms,
   captionContainsPriorityTerm,
   captionMatchesAnyAlias,
+  captionMatchesCategoryWithBrand,
   getSearchCategoryIds,
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
@@ -162,10 +163,10 @@ export async function GET(request: NextRequest) {
       }
 
       let posts = (categoryRows || []).filter(
-        (post) =>
+        (post: SearchPostRow) =>
           (post.status === 'recommend' || post.status === 'sold') &&
           !post.is_hidden &&
-          captionMatchesAnyAlias(post.caption, searchTerms),
+          captionMatchesCategoryWithBrand(post.caption, matchedCategoryIds),
       ) as SearchPostRow[];
 
       const priorityTerms = getSearchPriorityTerms(queryForMatching);
@@ -328,7 +329,7 @@ export async function GET(request: NextRequest) {
     }
 
     let posts = (data || []).filter(
-      (p) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden,
+      (p: SearchPostRow) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden,
     ) as SearchPostRow[];
 
     const priorityTerms = getSearchPriorityTerms(queryForMatching);

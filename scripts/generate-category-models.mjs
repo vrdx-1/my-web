@@ -36,19 +36,7 @@ for (const group of categoriesData.categoryGroups ?? []) {
   }
 }
 
-// สร้าง set ของชื่อยี่ห้อ (ไม่ใส่ใน modelNames)
-const brandNamesSet = new Set();
 const brandFiles = readdirSync(brandsDir).filter((f) => f.endsWith('.json'));
-for (const f of brandFiles) {
-  const path = join(brandsDir, f);
-  const brand = JSON.parse(readFileSync(path, 'utf-8'));
-  const en = brand?.brandName?.trim();
-  const th = brand?.brandNameTh?.trim();
-  const lo = brand?.brandNameLo?.trim();
-  if (en) brandNamesSet.add(normalizeForFallback(en));
-  if (th) brandNamesSet.add(normalizeForFallback(th));
-  if (lo) brandNamesSet.add(normalizeForFallback(lo));
-}
 
 // สำหรับแต่ละ category สร้าง set ของชื่อรุ่น
 const categoryToModelNames = new Map();
@@ -59,19 +47,36 @@ for (const cid of categoryIds) {
 for (const f of brandFiles) {
   const path = join(brandsDir, f);
   const brand = JSON.parse(readFileSync(path, 'utf-8'));
+  const brandEn = brand?.brandName?.trim() ?? '';
+  const brandTh = brand?.brandNameTh?.trim() ?? '';
+  const brandLo = brand?.brandNameLo?.trim() ?? '';
+
   for (const model of brand?.models ?? []) {
     const modelCats = model?.categoryIds ?? [];
+    const modelEn = model?.modelName?.trim() ?? '';
+    const modelTh = model?.modelNameTh?.trim() ?? '';
+    const modelLo = model?.modelNameLo?.trim() ?? '';
+
     const terms = [
-      model?.modelName,
-      model?.modelNameTh,
-      model?.modelNameLo,
+      modelEn,
+      modelTh,
+      modelLo,
       ...(model?.searchNames ?? []).map(String),
     ].filter(Boolean).map((s) => String(s).trim()).filter(Boolean);
 
+    // ใส่แบรนด์นำหน้าทุกรูปแบบของรุ่น (model/searchNames) ในทั้ง 3 ภาษาแบรนด์
+    // เช่น revo -> Toyota revo / โตโยต้า revo / ໂຕໂຍຕ້າ revo
+    const brandPrefixedTerms = [];
+    for (const t of terms) {
+      if (brandEn) brandPrefixedTerms.push(`${brandEn} ${t}`);
+      if (brandTh) brandPrefixedTerms.push(`${brandTh} ${t}`);
+      if (brandLo) brandPrefixedTerms.push(`${brandLo} ${t}`);
+    }
+
     for (const cid of categoryIds) {
       if (!modelCats.includes(cid)) continue;
-      for (const t of terms) {
-        if (brandNamesSet.has(normalizeForFallback(t))) continue;
+      // เพิ่มเฉพาะคำที่มีแบรนด์นำหน้า
+      for (const t of brandPrefixedTerms) {
         categoryToModelNames.get(cid).add(t);
       }
     }
