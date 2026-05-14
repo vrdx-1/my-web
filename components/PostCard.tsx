@@ -13,6 +13,8 @@ import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
+import { SuccessPopup } from './modals/SuccessPopup';
+import { ChangePostPriceModal } from './modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { mergeHeaders } from '@/utils/activeProfile';
@@ -91,6 +93,8 @@ export function PostCard({
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
+  const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
+  const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [isCaptionOverflowing, setIsCaptionOverflowing] = React.useState(false);
@@ -132,14 +136,14 @@ export function PostCard({
   }, []);
 
   React.useEffect(() => {
-    const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup;
+    const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup || showChangePriceModal || showChangePriceSuccess;
     if (typeof document === 'undefined' || !anyModalOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [showMarkSoldConfirm, showSoldInfo, showPrivateNotePopup]);
+  }, [showMarkSoldConfirm, showSoldInfo, showPrivateNotePopup, showChangePriceModal, showChangePriceSuccess]);
 
   React.useEffect(() => {
     if (!registerVisibilityRef) return;
@@ -568,41 +572,87 @@ export function PostCard({
           }}
         >
           <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'transparent',
-                padding: '8px 16px',
-                minHeight: '34px',
-                borderRadius: '12px',
-                color: '#1c1e21',
-                border: '1px solid #d1d5db',
-                boxShadow: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                letterSpacing: '0.01em',
-                whiteSpace: 'nowrap',
-                minWidth: 0,
-                maxWidth: '100%',
-                overflow: 'hidden',
-              }}
-            >
-              <span
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowChangePriceModal(true);
+                }}
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'transparent',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  padding: '8px 16px',
+                  minHeight: '34px',
+                  borderRadius: '12px',
                   color: '#1c1e21',
-                  fontSize: '16px',
-                  lineHeight: '21px',
-                  fontWeight: 700,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  border: '1px solid #d1d5db',
+                  boxShadow: 'none',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  letterSpacing: '0.01em',
                   whiteSpace: 'nowrap',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
                 }}
               >
-                {priceText}
+                <span
+                  style={{
+                    color: '#1c1e21',
+                    fontSize: '16px',
+                    lineHeight: '21px',
+                    fontWeight: 700,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {priceText}
+                </span>
+              </button>
+            ) : (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'transparent',
+                  padding: '8px 16px',
+                  minHeight: '34px',
+                  borderRadius: '12px',
+                  color: '#1c1e21',
+                  border: '1px solid #d1d5db',
+                  boxShadow: 'none',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  letterSpacing: '0.01em',
+                  whiteSpace: 'nowrap',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#1c1e21',
+                    fontSize: '16px',
+                    lineHeight: '21px',
+                    fontWeight: 700,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {priceText}
+                </span>
               </span>
-            </span>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -888,6 +938,22 @@ export function PostCard({
           postId={post.id}
           session={session}
           onClose={() => setShowPrivateNotePopup(false)}
+        />
+      )}
+
+      <ChangePostPriceModal
+        isOpen={showChangePriceModal}
+        postId={post.id}
+        price={post.price}
+        currency={post.price_currency}
+        onClose={() => setShowChangePriceModal(false)}
+        onSaved={() => setShowChangePriceSuccess(true)}
+      />
+
+      {showChangePriceSuccess && (
+        <SuccessPopup
+          message="ປ່ຽນລາຄາສຳເລັດ"
+          onClose={() => setShowChangePriceSuccess(false)}
         />
       )}
     </div>

@@ -1097,6 +1097,18 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     await fetchPosts(true);
   }, [fetchPosts, type]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onPostUpdated = () => {
+      void refreshData();
+    };
+
+    window.addEventListener('post:updated', onPostUpdated);
+    return () => {
+      window.removeEventListener('post:updated', onPostUpdated);
+    };
+  }, [refreshData]);
+
   // โหลดหน้าถัดไปอัตโนมัติจนหมด (เฉพาะ sold) — liked/saved ใช้ infinite scroll ให้ผู้ใช้เลื่อนโหลดเอง
   useEffect(() => {
     if (type === 'my-posts' || type === 'liked' || type === 'saved' || loadAll) return;
