@@ -16,6 +16,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { usePostModals } from '@/hooks/usePostModals';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 
 export function usePostDetail(id: string | undefined) {
   const [post, setPost] = useState<any>(null);
@@ -119,7 +120,8 @@ export function usePostDetail(id: string | undefined) {
     setLoading(true);
     const { data } = await supabase.from('cars').select('*, profiles!cars_user_id_fkey(*)').eq('id', id).single();
     if (cancelledRef.current) return;
-    setPost(data ?? null);
+    const [hydratedPost] = data ? await attachEffectiveWhatsAppPhones(supabase, [data]) : [];
+    setPost(hydratedPost ?? null);
     setLoading(false);
   }, [id]);
 

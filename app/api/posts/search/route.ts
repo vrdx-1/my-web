@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import {
   expandWithoutBrandAliases,
   getSearchPriorityTerms,
@@ -162,7 +163,7 @@ export async function GET(request: NextRequest) {
         return internalServerError('posts/search category query failed', categoryError);
       }
 
-      let posts = (categoryRows || []).filter(
+      let posts = (await attachEffectiveWhatsAppPhones(carsClient, (categoryRows || []) as SearchPostRow[])).filter(
         (post: SearchPostRow) =>
           (post.status === 'recommend' || post.status === 'sold') &&
           !post.is_hidden &&
@@ -265,7 +266,8 @@ export async function GET(request: NextRequest) {
       }
 
       const byId = new Map<string, SearchPostRow>();
-      for (const p of rows || []) {
+      const hydratedRows = await attachEffectiveWhatsAppPhones(carsClient, (rows || []) as SearchPostRow[]);
+      for (const p of hydratedRows || []) {
         if (p && (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden) byId.set(p.id, p);
       }
 
@@ -328,7 +330,7 @@ export async function GET(request: NextRequest) {
       return internalServerError('posts/search single query failed', error);
     }
 
-    let posts = (data || []).filter(
+    let posts = (await attachEffectiveWhatsAppPhones(carsClient, (data || []) as SearchPostRow[])).filter(
       (p: SearchPostRow) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden,
     ) as SearchPostRow[];
 

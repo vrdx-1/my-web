@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
@@ -102,7 +103,9 @@ export async function GET(request: NextRequest) {
       return internalServerError('posts/search/suggestions list cars failed', error);
     }
 
-    const matchedPosts = (posts || []).filter((post) => {
+    const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, (posts || []) as Record<string, unknown>[]);
+
+    const matchedPosts = hydratedPosts.filter((post) => {
       const caption = typeof (post as { caption?: unknown })?.caption === 'string'
         ? (post as { caption: string }).caption
         : '';

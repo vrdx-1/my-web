@@ -8,6 +8,7 @@ import { safeParseJSON } from '@/utils/storageUtils';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 
 const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
 const CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY = 'create_post_redirect_after_submit';
@@ -225,8 +226,9 @@ export function useCreatePostUpload({
             .select(POST_WITH_PROFILE_SELECT)
             .eq('id', data[0].id)
             .maybeSingle();
-          if (fullPost && fullPost.status === 'recommend' && !fullPost.is_hidden) {
-            window.localStorage.setItem('just_posted_post', JSON.stringify(fullPost));
+          const [hydratedPost] = fullPost ? await attachEffectiveWhatsAppPhones(supabase, [fullPost]) : [];
+          if (hydratedPost && hydratedPost.status === 'recommend' && !hydratedPost.is_hidden) {
+            window.localStorage.setItem('just_posted_post', JSON.stringify(hydratedPost));
           }
           window.localStorage.setItem('just_posted_post_id', String(data[0].id));
           // เก็บรูปที่เพิ่งอัปโหลดเป็น data URL เพื่อให้หน้าโฮมแสดงรูปทันทีโดยไม่เห็น Skeleton (ใช้เฉพาะโพสที่พึ่งโพส แล้วลบหลังใช้)

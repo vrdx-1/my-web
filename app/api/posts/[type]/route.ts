@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { PREFETCH_COUNT } from '@/utils/constants';
 import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
@@ -380,12 +381,14 @@ export async function GET(
       );
     }
 
+    const hydratedPosts: any[] = await (attachEffectiveWhatsAppPhones as any)(supabase, postsData || []);
+
     // Filter posts for saved/liked types
-    let filteredPosts = postsData || [];
+    let filteredPosts = hydratedPosts;
     if (type === 'saved' || type === 'liked') {
       filteredPosts = filteredPosts.filter(post => {
         const isNotHidden = !post.is_hidden;
-        const isOwner = isOwnedByProfileScope(post.user_id, {
+        const isOwner = isOwnedByProfileScope((post as any).user_id, {
           activeProfileId: currentUserId,
           authUserId: resolvedProfile?.authUserId ?? (authError ? null : user?.id ?? null),
           availableProfiles,

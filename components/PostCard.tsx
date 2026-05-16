@@ -18,6 +18,7 @@ import { ChangePostPriceModal } from './modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { mergeHeaders } from '@/utils/activeProfile';
+import { resolveEffectiveWhatsAppPhone } from '@/utils/whatsapp';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
@@ -743,7 +744,7 @@ export function PostCard({
                 </button>
               ) : (
                 (() => {
-                  const raw = post.profiles?.phone || '';
+                  const raw = resolveEffectiveWhatsAppPhone(post.profiles) || '';
                   const digits = raw.replace(/\D/g, '');
                   if (digits.length < 8) return null;
                   const targetProfileId = typeof post.user_id === 'string' ? post.user_id : '';

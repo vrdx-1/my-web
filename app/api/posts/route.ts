@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { PREFETCH_COUNT } from '@/utils/constants';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -74,9 +75,10 @@ export async function GET(request: NextRequest) {
     }
 
     const hasMore = postIds.length === PREFETCH_COUNT;
+    const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, (postsData || []) as Record<string, unknown>[]);
 
     return NextResponse.json({
-      posts: postsData || [],
+      posts: hydratedPosts,
       hasMore,
     }, {
       headers: {

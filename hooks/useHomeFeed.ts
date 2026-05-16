@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { HOME_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { preloadPostsVisibleImages } from '@/utils/imagePreload';
 import {
   endHomeMotionTimer,
@@ -291,7 +292,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
         if (error) return;
         const order = new Map(postIds.map((id, i) => [String(id), i]));
-        ordered = ((postsData || []) as HomeFeedPost[]).filter(
+        const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, (postsData || []) as HomeFeedPost[]);
+        ordered = hydratedPosts.filter(
           (post) => post.status === 'recommend' && !post.is_hidden,
         );
         ordered.sort((a, b) => {

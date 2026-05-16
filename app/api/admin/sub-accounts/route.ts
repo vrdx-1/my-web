@@ -4,14 +4,26 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+import { normalizeWhatsAppNumberSource } from '@/utils/whatsapp';
 
 type EnsureAdminOptions = {
   allowSubAccounts?: boolean;
 };
 
 type EnsureAdminResult =
-  | { ok: true; adminId: string; isSubAccount: boolean }
+  | {
+      ok: true;
+      actorId: string;
+      adminId: string;
+      isSubAccount: boolean;
+      actorPhone: string | null;
+      actorWhatsappNumberSource: string;
+    }
   | { ok: false; status: 401 | 403; error: string };
+
+function isMissingWhatsappSourceColumnError(error: unknown): boolean {
+  return String((error as { code?: string } | null)?.code || '') === '42703';
+}
 
 function getAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -68,11 +80,28 @@ async function ensureAdmin(options: EnsureAdminOptions = {}): Promise<EnsureAdmi
     return { ok: false, status: 401, error: 'Unauthorized' };
   }
 
-  const { data: profile, error } = await supabase
+  const profileWithSource = await supabase
     .from('profiles')
-    .select('role, is_sub_account')
+    .select('role, is_sub_account, parent_admin_id, phone, whatsapp_number_source')
     .eq('id', userId)
     .single();
+
+  const profileFallback = isMissingWhatsappSourceColumnError(profileWithSource.error)
+    ? await supabase
+        .from('profiles')
+        .select('role, is_sub_account, parent_admin_id, phone')
+        .eq('id', userId)
+        .single()
+    : null;
+
+  const profile = (profileFallback?.data || profileWithSource.data) as {
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+    phone?: string | null;
+    whatsapp_number_source?: string | null;
+  } | null;
+  const error = profileFallback?.error || profileWithSource.error;
 
   if (error || profile?.role !== 'admin') {
     return { ok: false, status: 403, error: 'Forbidden' };
@@ -82,7 +111,16 @@ async function ensureAdmin(options: EnsureAdminOptions = {}): Promise<EnsureAdmi
     return { ok: false, status: 403, error: 'Sub accounts cannot manage other sub accounts' };
   }
 
-  return { ok: true, adminId: userId, isSubAccount: Boolean(profile.is_sub_account) };
+  const adminId = profile.is_sub_account ? profile.parent_admin_id || userId : userId;
+
+  return {
+    ok: true,
+    actorId: userId,
+    adminId,
+    isSubAccount: Boolean(profile.is_sub_account),
+    actorPhone: profile.phone ?? null,
+    actorWhatsappNumberSource: normalizeWhatsAppNumberSource(profile.whatsapp_number_source),
+  };
 }
 
 export async function GET() {
@@ -96,12 +134,65 @@ export async function GET() {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
   }
 
-  const { data, error } = await admin
+  const adminProfileWithSource = await admin
     .from('profiles')
-    .select('id, username, avatar_url, is_sub_account, parent_admin_id, updated_at')
+    .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, whatsapp_number_source, updated_at')
+    .eq('id', auth.adminId)
+    .single();
+
+  const adminProfileFallback = isMissingWhatsappSourceColumnError(adminProfileWithSource.error)
+    ? await admin
+        .from('profiles')
+        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, updated_at')
+        .eq('id', auth.adminId)
+        .single()
+    : null;
+
+  const adminProfile = (adminProfileFallback?.data || adminProfileWithSource.data) as {
+    id: string;
+    username?: string | null;
+    avatar_url?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+    whatsapp_number_source?: string | null;
+    updated_at?: string | null;
+  } | null;
+  const adminProfileError = adminProfileFallback?.error || adminProfileWithSource.error;
+
+  if (adminProfileError || !adminProfile) {
+    return internalServerError('admin/sub-accounts admin profile lookup failed', adminProfileError);
+  }
+
+  const listWithSource = await admin
+    .from('profiles')
+    .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, whatsapp_number_source, updated_at')
     .eq('is_sub_account', true)
     .eq('parent_admin_id', auth.adminId)
     .order('updated_at', { ascending: false });
+
+  const listFallback = isMissingWhatsappSourceColumnError(listWithSource.error)
+    ? await admin
+        .from('profiles')
+        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, updated_at')
+        .eq('is_sub_account', true)
+        .eq('parent_admin_id', auth.adminId)
+        .order('updated_at', { ascending: false })
+    : null;
+
+  const data = (listFallback?.data || listWithSource.data) as Array<{
+    id: string;
+    username?: string | null;
+    avatar_url?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+    whatsapp_number_source?: string | null;
+    updated_at?: string | null;
+  }> | null;
+  const error = listFallback?.error || listWithSource.error;
 
   if (error) {
     return internalServerError('admin/sub-accounts list failed', error);
@@ -110,11 +201,29 @@ export async function GET() {
   const subAccounts = (data ?? []).map((row) => ({
     id: row.id,
     username: row.username ?? null,
+    phone: row.phone ?? null,
     avatar_url: row.avatar_url ?? null,
+    role: row.role ?? 'admin',
+    is_sub_account: Boolean(row.is_sub_account),
+    parent_admin_id: row.parent_admin_id ?? null,
+    whatsapp_number_source: normalizeWhatsAppNumberSource(row.whatsapp_number_source),
     updated_at: row.updated_at ?? null,
   }));
 
-  return NextResponse.json({ subAccounts });
+  return NextResponse.json({
+    adminProfile: {
+      id: adminProfile.id,
+      username: adminProfile.username ?? null,
+      phone: adminProfile.phone ?? null,
+      avatar_url: adminProfile.avatar_url ?? null,
+      role: adminProfile.role ?? 'admin',
+      is_sub_account: Boolean(adminProfile.is_sub_account),
+      parent_admin_id: adminProfile.parent_admin_id ?? null,
+      whatsapp_number_source: normalizeWhatsAppNumberSource(adminProfile.whatsapp_number_source),
+      updated_at: adminProfile.updated_at ?? null,
+    },
+    subAccounts,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -182,6 +291,86 @@ export async function POST(request: NextRequest) {
       role: 'admin',
       is_sub_account: true,
       parent_admin_id: auth.adminId,
+      whatsapp_number_source: 'self',
     },
   }, { status: 201 });
+}
+
+export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sub-accounts:whatsapp-settings',
+    identifier: ip,
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  let body: {
+    profileId?: string;
+    profileIds?: string[];
+    whatsapp_number_source?: string;
+    applyToAll?: boolean;
+  };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
+
+  const whatsappNumberSource = normalizeWhatsAppNumberSource(body?.whatsapp_number_source);
+  const shouldApplyToAll = body?.applyToAll === true;
+  const requestedProfileIds = Array.isArray(body?.profileIds)
+    ? body.profileIds.map((value) => String(value || '').trim()).filter(Boolean)
+    : [];
+  const profileId = typeof body?.profileId === 'string' ? body.profileId.trim() : '';
+
+  const targetIds = shouldApplyToAll
+    ? []
+    : Array.from(new Set([profileId, ...requestedProfileIds].filter(Boolean)));
+
+  if (!shouldApplyToAll && targetIds.length === 0) {
+    return NextResponse.json({ error: 'Profile target required' }, { status: 400 });
+  }
+
+  let updateQuery = admin
+    .from('profiles')
+    .update({ whatsapp_number_source: whatsappNumberSource, updated_at: new Date().toISOString() })
+    .eq('is_sub_account', true)
+    .eq('parent_admin_id', auth.adminId);
+
+  if (!shouldApplyToAll) {
+    updateQuery = targetIds.length === 1
+      ? updateQuery.eq('id', targetIds[0])
+      : updateQuery.in('id', targetIds);
+  }
+
+  const { error } = await updateQuery;
+  if (error) {
+    if (isMissingWhatsappSourceColumnError(error)) {
+      return NextResponse.json(
+        { error: 'Database migration required: run migrations/add_whatsapp_number_source.sql' },
+        { status: 409 }
+      );
+    }
+    return internalServerError('admin/sub-accounts whatsapp settings update failed', error);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    whatsapp_number_source: whatsappNumberSource,
+    applyToAll: shouldApplyToAll,
+    profileIds: shouldApplyToAll ? null : targetIds,
+  });
 }

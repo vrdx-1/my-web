@@ -6,6 +6,7 @@ import { LIST_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_PAGE_SIZE } from '@/u
 import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -415,8 +416,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           }
           return;
         }
+        const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, postsData as any[]);
         const orderMap = new Map<string, number>(allIds.map((id, idx) => [String(id), idx]));
-        const sorted = [...postsData].filter((p: any) => !p.is_hidden || (currentUserId && p.user_id === currentUserId));
+        const sorted = [...hydratedPosts].filter((p: any) => !p.is_hidden || (currentUserId && p.user_id === currentUserId));
         sorted.sort((a: any, b: any) => {
           const ai = orderMap.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
           const bi = orderMap.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
@@ -737,7 +739,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return;
         }
 
-        const filteredMyPosts = myPostsData;
+        const filteredMyPosts = await attachEffectiveWhatsAppPhones(supabase, myPostsData as any[]);
         const reachedEnd = filteredMyPosts.length < listPageSize;
 
         if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
@@ -852,18 +854,19 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         
         if (postsData) {
+          const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, postsData as any[]);
           // เรียงตามลำดับ postIds: liked/saved = กดล่าสุดก่อน, sold+search = ตาม cache order
           const orderedPostsData =
             type === 'saved' || type === 'liked' || type === 'my-posts'
               ? (() => {
                   const order = new Map<string, number>(validPostIds.map((id, idx) => [String(id), idx]));
-                  return [...postsData].sort((a: any, b: any) => {
+                  return [...hydratedPosts].sort((a: any, b: any) => {
                     const ai = order.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
                     const bi = order.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
                     return ai - bi;
                   });
                 })()
-              : postsData;
+              : hydratedPosts;
 
           // Filter logic for saved/liked/sold pages
           const filteredPosts = orderedPostsData.filter(postData => {

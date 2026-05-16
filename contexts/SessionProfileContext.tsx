@@ -14,6 +14,7 @@ export interface SessionProfileRecord {
   role?: string | null;
   is_sub_account?: boolean | null;
   parent_admin_id?: string | null;
+  whatsapp_number_source?: string | null;
 }
 
 export interface SessionProfileValue {
