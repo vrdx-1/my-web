@@ -187,7 +187,18 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     const isAppProfile = onBack == null;
     if (!isAppProfile) return;
 
-    if (pathname !== '/profile') {
+    const isMainProfile = pathname === '/profile';
+    if (!isMainProfile) {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+      document.documentElement.style.overscrollBehavior = '';
+      return;
+    }
+
+    // Nested routes like /profile/whatsapp-settings should also unlock scroll
+    const isNestedRoute = pathname.startsWith('/profile/');
+    if (isNestedRoute) {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
       document.body.style.overscrollBehavior = '';
