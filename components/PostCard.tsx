@@ -684,20 +684,18 @@ export function PostCard({
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      height: '20px',
-                      padding: '0 8px',
-                      borderRadius: '999px',
+                      minHeight: '28px',
+                      padding: '4px 12px',
+                      borderRadius: '10px',
                       backgroundColor: '#ff6b35',
                       color: '#fff',
                       fontSize: '12px',
-                      lineHeight: '1',
-                      fontWeight: 700,
-                      letterSpacing: '0.01em',
+                      lineHeight: '18px',
+                      fontWeight: 'bold',
                       flexShrink: 0,
                       border: 'none',
                       cursor: 'pointer',
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     ເຂົ້າໃໝ່
@@ -1009,7 +1007,7 @@ export function PostCard({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ໂພສນີ້ຍັງບໍ່ຮອດ 24 ຊົ່ວໂມງ
+              ໂພສໃໝ່ພາຍໃນ 24 ຊົ່ວໂມງ
             </h3>
             <button
               type="button"
