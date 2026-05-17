@@ -17,7 +17,7 @@ import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { EditNameModal, EditPhoneModal } from '@/app/(main)/profile/edit-profile/EditProfileSections';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { mergeHeaders } from '@/utils/activeProfile';
-import { formatStoredWhatsAppPhone, normalizeWhatsAppNumberSource, type WhatsAppNumberSource } from '@/utils/whatsapp';
+import { formatStoredWhatsAppPhone, normalizeWhatsAppNumberSource } from '@/utils/whatsapp';
 
 /** แคชโปรไฟล์ล่าสุด — สลับกลับมาไม่แสดง Skeleton (แบบ Facebook) */
 let profileCache: {
@@ -30,18 +30,6 @@ let profileCache: {
   isSubAccount: boolean;
   whatsappNumberSource?: string;
 } | null = null;
-
-type WhatsAppConfigAccount = {
-  id: string;
-  username?: string | null;
-  avatar_url?: string | null;
-  phone?: string | null;
-  role?: string | null;
-  is_sub_account?: boolean | null;
-  parent_admin_id?: string | null;
-  whatsapp_number_source?: string | null;
-  updated_at?: string | null;
-};
 
 interface ProfileContentProps {
   /** ไม่ส่ง = ไม่แสดงปุ่ม back (เช่น หน้า App profile) */
@@ -88,15 +76,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [showSubAccountCreatedSuccess, setShowSubAccountCreatedSuccess] = useState(false);
   const [subAccountDropdownTopOffset, setSubAccountDropdownTopOffset] = useState(0);
   const [accountSwitchToastToken, setAccountSwitchToastToken] = useState(0);
-  const [showWhatsAppSwitchPanel, setShowWhatsAppSwitchPanel] = useState(false);
-  const [whatsAppConfigSearchQuery, setWhatsAppConfigSearchQuery] = useState('');
-  const [whatsAppAdminProfile, setWhatsAppAdminProfile] = useState<WhatsAppConfigAccount | null>(null);
-  const [whatsAppSubAccounts, setWhatsAppSubAccounts] = useState<WhatsAppConfigAccount[]>([]);
-  const [whatsAppConfigLoading, setWhatsAppConfigLoading] = useState(false);
-  const [whatsAppConfigError, setWhatsAppConfigError] = useState('');
-  const normalizedWhatsAppConfigSearchQuery = whatsAppConfigSearchQuery.trim().toLowerCase();
-  const [whatsAppUpdatingKey, setWhatsAppUpdatingKey] = useState('');
-  const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState(true);
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, activateProfileRecord, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
@@ -121,33 +100,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const subAccountDropdownMaxHeight = subAccountDropdownTopOffset > 0
     ? `calc(100dvh - ${subAccountDropdownTopOffset}px - ${BOTTOM_NAV_TOTAL_HEIGHT_EXCLUDING_SAFE_AREA_PX}px - env(safe-area-inset-bottom, 0px) - ${SUB_ACCOUNT_DROPDOWN_BOTTOM_GAP_PX}px)`
     : undefined;
-  const filteredWhatsAppAccounts = useMemo(() => {
-    const adminAccounts = whatsAppAdminProfile ? [whatsAppAdminProfile] : [];
-    const subAccounts = normalizedWhatsAppConfigSearchQuery
-      ? whatsAppSubAccounts.filter((account) => (account.username || '').toLowerCase().includes(normalizedWhatsAppConfigSearchQuery))
-      : whatsAppSubAccounts;
-    return [...adminAccounts, ...subAccounts];
-  }, [normalizedWhatsAppConfigSearchQuery, whatsAppAdminProfile, whatsAppSubAccounts]);
-
-  useMemo(() => {
-    if (whatsAppSubAccounts.length === 0) {
-      setWhatsAppUseAdminForAll(true);
-      return;
-    }
-
-    const allUsingAdmin = whatsAppSubAccounts.every(
-      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'admin'
-    );
-    const allUsingSelf = whatsAppSubAccounts.every(
-      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'self'
-    );
-
-    if (allUsingAdmin) {
-      setWhatsAppUseAdminForAll(true);
-    } else if (allUsingSelf) {
-      setWhatsAppUseAdminForAll(false);
-    }
-  }, [whatsAppSubAccounts]);
 
   useEffect(() => {
     return () => {
@@ -183,8 +135,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     if (!canManageSubAccounts) return;
       setSubAccountLoading(true);
       setSubAccountError('');
-      setWhatsAppConfigLoading(true);
-      setWhatsAppConfigError('');
       try {
         let accessToken = session?.access_token ?? '';
         if (!accessToken) {
@@ -207,18 +157,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         }
 
         const payload = await response.json().catch(() => ({}));
-        setWhatsAppAdminProfile(payload?.adminProfile ?? null);
-        setWhatsAppSubAccounts(Array.isArray(payload?.subAccounts) ? payload.subAccounts : []);
-
         await refetchProfiles();
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to load sub accounts';
-        setSubAccountError(message);
-        setWhatsAppConfigError(message);
-      } finally {
-        setSubAccountLoading(false);
-        setWhatsAppConfigLoading(false);
-      }
+        setSubAccountError(message);      } finally {
+        setSubAccountLoading(false);      }
   }, [activeProfileId, canManageSubAccounts, refetchProfiles, session?.access_token]);
 
   const mainTabScroll = useMainTabScroll();
@@ -411,12 +354,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     }
   }, [canManageSubAccounts, loadSubAccounts, showSubAccountDropdown]);
 
-  useEffect(() => {
-    if (showWhatsAppSwitchPanel && canConfigureWhatsAppSource) {
-      loadSubAccounts();
-    }
-  }, [canConfigureWhatsAppSource, loadSubAccounts, showWhatsAppSwitchPanel]);
-
   useLayoutEffect(() => {
     if (!showSubAccountDropdown) return;
 
@@ -440,13 +377,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     setShowSubAccountPanel(false);
     resetSubAccountForm();
   }, [resetSubAccountForm]);
-
-  const closeWhatsAppSwitchPanel = useCallback(() => {
-    setShowWhatsAppSwitchPanel(false);
-    setWhatsAppConfigSearchQuery('');
-    setWhatsAppConfigError('');
-    setWhatsAppUpdatingKey('');
-  }, []);
 
   const closeSubAccountDropdown = useCallback(() => {
     setShowSubAccountDropdown(false);
@@ -481,25 +411,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     };
   }, [closeSubAccountDropdown, showSubAccountDropdown]);
 
-  useEffect(() => {
-    if (!showWhatsAppSwitchPanel) return;
-
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeWhatsAppSwitchPanel();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [closeWhatsAppSwitchPanel, showWhatsAppSwitchPanel]);
-
   // Lock background scroll while edit-name is open
   useEffect(() => {
     if (typeof document === 'undefined' || typeof window === 'undefined') return;
-    const shouldLock = isEditingName || isEditingPhone || showWhatsAppSwitchPanel;
+    const shouldLock = isEditingName || isEditingPhone;
     
     if (shouldLock) {
       const scrollY = window.scrollY;
@@ -556,7 +471,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         window.scrollTo(scrollX, scrollY);
       }
     }
-  }, [isEditingName, isEditingPhone, showWhatsAppSwitchPanel]);
+  }, [isEditingName, isEditingPhone]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -811,58 +726,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     setAccountSwitchToastToken(Date.now());
   }, [closeSubAccountDropdown, setActiveProfile]);
 
-
-  const handleUpdateWhatsAppSource = useCallback(async (
-    source: WhatsAppNumberSource,
-    options?: { profileId?: string; applyToAll?: boolean }
-  ) => {
-    if (!session || !canConfigureWhatsAppSource) return;
-
-    const profileIds = options?.profileId ? [options.profileId] : undefined;
-    const profileId = options?.profileId;
-    const applyToAll = Boolean(options?.applyToAll);
-    const pendingKey = applyToAll ? 'all' : `${profileId || 'all'}:${source}`;
-
-    setWhatsAppUpdatingKey(pendingKey);
-    setWhatsAppConfigError('');
-
-    try {
-      let accessToken = session.access_token || '';
-      if (!accessToken) {
-        const refreshed = await supabase.auth.refreshSession();
-        accessToken = refreshed.data.session?.access_token ?? '';
-      }
-
-      const response = await fetch('/api/admin/sub-accounts', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: mergeHeaders(
-          {
-            'Content-Type': 'application/json',
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          activeProfileId,
-        ),
-        body: JSON.stringify({
-          profileId,
-          profileIds,
-          applyToAll,
-          whatsapp_number_source: source,
-        }),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to update WhatsApp source');
-      }
-
-      await loadSubAccounts();
-    } catch (error) {
-      setWhatsAppConfigError(error instanceof Error ? error.message : 'Failed to update WhatsApp source');
-    } finally {
-      setWhatsAppUpdatingKey('');
-    }
-  }, [activeProfileId, canConfigureWhatsAppSource, loadSubAccounts, session]);
   if (loading) {
     const isAppProfile = onBack == null;
     const profileViewportHeight = isAppProfile
@@ -1464,15 +1327,11 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                   <button
                     type="button"
                       onClick={() => {
-                        setWhatsAppConfigSearchQuery('');
-                        setShowWhatsAppSwitchPanel(true);
-                        setWhatsAppConfigError('');
+                        router.push('/profile/whatsapp-settings');
                       }}
                       onTouchEnd={(event) => {
                         event.preventDefault();
-                        setWhatsAppConfigSearchQuery('');
-                        setShowWhatsAppSwitchPanel(true);
-                        setWhatsAppConfigError('');
+                        router.push('/profile/whatsapp-settings');
                       }}
                     aria-label="ตั้งค่าเบอร์ WhatsApp"
                     title="ตั้งค่าเบอร์ WhatsApp"
@@ -1503,7 +1362,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                       strokeWidth="2.2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      style={{ transform: showWhatsAppSwitchPanel ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                      style={{ transform: 'rotate(0deg)', transition: 'transform 0.2s ease' }}
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
@@ -1513,212 +1372,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             );
           })()}
         </div>
-
-
-          {showWhatsAppSwitchPanel && (
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 1400,
-                background: 'rgba(17, 24, 39, 0.38)',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-end',
-                padding: '16px',
-              }}
-              onClick={closeWhatsAppSwitchPanel}
-            >
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: '460px',
-                  maxHeight: '82dvh',
-                  background: '#ffffff',
-                  borderRadius: '20px',
-                  boxShadow: '0 24px 60px rgba(17, 24, 39, 0.2)',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #eef2f7' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>ຕັ້ງຄ່າເບີ WhatsApp</div>
-                    <button
-                      type="button"
-                      onClick={closeWhatsAppSwitchPanel}
-                      style={{ border: 'none', background: 'transparent', color: '#6b7280', fontSize: '24px', lineHeight: 1, cursor: 'pointer' }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '12px',
-                      padding: '9px 12px',
-                      background: '#f8fafc',
-                    }}
-                  >
-                    <input
-                      type="text"
-                      value={whatsAppConfigSearchQuery}
-                      onChange={(event) => setWhatsAppConfigSearchQuery(event.target.value)}
-                      placeholder="ຄົ້ນຫາບັນຊີ"
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '15px',
-                        color: '#111827',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ padding: '8px 14px', borderBottom: '1px solid #eef2f7', background: '#fcfcfd' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', flex: 1 }}>
-                      ໃຊ້ເບີ Admin ກັບທຸກ Sub account
-                    </div>
-                    <button
-                      type="button"
-                      disabled={Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading}
-                      onClick={() => {
-                        const newSource = whatsAppUseAdminForAll ? 'self' : 'admin';
-                        handleUpdateWhatsAppSource(newSource, { applyToAll: true });
-                      }}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 'not-allowed' : 'pointer',
-                        opacity: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 0.6 : 1,
-                        padding: 0,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 46,
-                          height: 26,
-                          borderRadius: 999,
-                          background: whatsAppUseAdminForAll ? '#16a34a' : '#d1d5db',
-                          position: 'relative',
-                          transition: 'background 0.2s ease',
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: 3,
-                            left: whatsAppUseAdminForAll ? 24 : 3,
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            background: '#ffffff',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                            transition: 'left 0.2s ease',
-                          }}
-                        />
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ overflowY: 'auto', minHeight: 0, padding: '6px 0 10px' }}>
-                  {whatsAppConfigError ? (
-                    <div style={{ margin: '8px 14px', padding: '10px 12px', borderRadius: '12px', border: '1px solid #fecaca', background: '#fff1f2', color: '#be123c', fontSize: '13px' }}>
-                      {whatsAppConfigError}
-                    </div>
-                  ) : null}
-                  {whatsAppConfigLoading ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>ກຳລັງໂຫຼດຂໍ້ມູນ...</div>
-                  ) : filteredWhatsAppAccounts.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>ບໍ່ພົບບັນຊີ</div>
-                  ) : (
-                    filteredWhatsAppAccounts.map((account) => {
-                      const isAdminAccount = account.id === whatsAppAdminProfile?.id;
-                      const accountSource = normalizeWhatsAppNumberSource(account.whatsapp_number_source);
-                      const isUsingAdmin = isAdminAccount || accountSource === 'admin';
-                      const accountPhone = formatStoredWhatsAppPhone(account.phone || '');
-                      const toggleDisabled = isAdminAccount || Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading;
-                      const pendingSelfKey = `${account.id}:self`;
-                      const pendingAdminKey = `${account.id}:admin`;
-                      const isPending = whatsAppUpdatingKey === pendingSelfKey || whatsAppUpdatingKey === pendingAdminKey;
-                      return (
-                        <div key={account.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderBottom: '1px solid #f3f4f6' }}>
-                          <Avatar avatarUrl={account.avatar_url || ''} size={36} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>
-                              {account.username || 'Unnamed'} {isAdminAccount ? <span style={{ color: '#2563eb' }}>Admin</span> : null}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                              {accountPhone || 'ບໍ່ມີເບີ WhatsApp'}
-                            </div>
-                          </div>
-                          {isAdminAccount ? (
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', borderRadius: '999px', padding: '4px 8px' }}>ບັນຊີຫລັກ</div>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={toggleDisabled}
-                              onClick={() => handleUpdateWhatsAppSource(isUsingAdmin ? 'self' : 'admin', { profileId: account.id })}
-                              style={{
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: toggleDisabled ? 'not-allowed' : 'pointer',
-                                opacity: toggleDisabled ? 0.6 : 1,
-                                padding: 0,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: 46,
-                                  height: 26,
-                                  borderRadius: 999,
-                                  background: isUsingAdmin ? '#16a34a' : '#d1d5db',
-                                  position: 'relative',
-                                  transition: 'background 0.2s ease',
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    top: 3,
-                                    left: isUsingAdmin ? 24 : 3,
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: '50%',
-                                    background: '#ffffff',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                    transition: 'left 0.2s ease',
-                                  }}
-                                />
-                              </div>
-                            </button>
-                          )}
-                          {!isAdminAccount && (
-                            <div style={{ width: 88, fontSize: '11px', textAlign: 'right', color: '#4b5563' }}>
-                              {isPending ? 'ກຳລັງອັບເດດ...' : (isUsingAdmin ? 'ໃຊ້ເບີ Admin' : 'ໃຊ້ເບີຕົນເອງ')}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         {canManageSubAccounts && (
           <div style={{ marginBottom: '28px' }}>
             {showSubAccountPanel && (
