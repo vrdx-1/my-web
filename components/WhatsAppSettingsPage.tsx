@@ -178,7 +178,7 @@ export function WhatsAppSettingsPage() {
   }, [activeProfileId, canConfigureWhatsAppSource, loadSubAccounts, router]);
 
   return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, display: 'flex', flexDirection: 'column' }}>
+    <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={{ padding: '20px 15px 10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: 0, background: '#ffffff', zIndex: 100, borderBottom: '1px solid #eef2f7' }}>
         <button
           onClick={() => router.push('/profile')}
@@ -274,7 +274,7 @@ export function WhatsAppSettingsPage() {
         </div>
       </div>
 
-      <div data-sub-account-scroll="1" data-whatsapp-config-scroll="1" style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: '6px 0 10px', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
+      <div data-sub-account-scroll="1" data-whatsapp-config-scroll="1" style={{ padding: '6px 0 10px' }}>
         {whatsAppConfigError ? (
           <div style={{ margin: '8px 14px', padding: '10px 12px', borderRadius: '12px', border: '1px solid #fecaca', background: '#fff1f2', color: '#be123c', fontSize: '13px' }}>
             {whatsAppConfigError}
