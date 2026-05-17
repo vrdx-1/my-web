@@ -96,6 +96,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const [whatsAppConfigError, setWhatsAppConfigError] = useState('');
   const normalizedWhatsAppConfigSearchQuery = whatsAppConfigSearchQuery.trim().toLowerCase();
   const [whatsAppUpdatingKey, setWhatsAppUpdatingKey] = useState('');
+  const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState(true);
   const { activeProfileId, authUserId, availableProfiles, setActiveProfile, activateProfileRecord, refetchProfiles } = useSessionAndProfile();
 
   const canManageSubAccounts = isAdmin;
@@ -127,6 +128,26 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       : whatsAppSubAccounts;
     return [...adminAccounts, ...subAccounts];
   }, [normalizedWhatsAppConfigSearchQuery, whatsAppAdminProfile, whatsAppSubAccounts]);
+
+  useMemo(() => {
+    if (whatsAppSubAccounts.length === 0) {
+      setWhatsAppUseAdminForAll(true);
+      return;
+    }
+
+    const allUsingAdmin = whatsAppSubAccounts.every(
+      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'admin'
+    );
+    const allUsingSelf = whatsAppSubAccounts.every(
+      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'self'
+    );
+
+    if (allUsingAdmin) {
+      setWhatsAppUseAdminForAll(true);
+    } else if (allUsingSelf) {
+      setWhatsAppUseAdminForAll(false);
+    }
+  }, [whatsAppSubAccounts]);
 
   useEffect(() => {
     return () => {
@@ -1565,25 +1586,52 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                 </div>
 
                 <div style={{ padding: '8px 14px', borderBottom: '1px solid #eef2f7', background: '#fcfcfd' }}>
-                  <button
-                    type="button"
-                    disabled={Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading}
-                    onClick={() => handleUpdateWhatsAppSource('admin', { applyToAll: true })}
-                    style={{
-                      width: '100%',
-                      border: '1px solid #bfdbfe',
-                      background: '#eff6ff',
-                      color: '#1d4ed8',
-                      borderRadius: '12px',
-                      padding: '10px 12px',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      cursor: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 'not-allowed' : 'pointer',
-                      opacity: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 0.6 : 1,
-                    }}
-                  >
-                    ໃຊ້ເບີ Admin ກັບທຸກ Sub account
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', flex: 1 }}>
+                      ໃຊ້ເບີ Admin ກັບທຸກ Sub account
+                    </div>
+                    <button
+                      type="button"
+                      disabled={Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading}
+                      onClick={() => {
+                        const newSource = whatsAppUseAdminForAll ? 'self' : 'admin';
+                        handleUpdateWhatsAppSource(newSource, { applyToAll: true });
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 'not-allowed' : 'pointer',
+                        opacity: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading ? 0.6 : 1,
+                        padding: 0,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 46,
+                          height: 26,
+                          borderRadius: 999,
+                          background: whatsAppUseAdminForAll ? '#16a34a' : '#d1d5db',
+                          position: 'relative',
+                          transition: 'background 0.2s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 3,
+                            left: whatsAppUseAdminForAll ? 24 : 3,
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            background: '#ffffff',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                            transition: 'left 0.2s ease',
+                          }}
+                        />
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{ overflowY: 'auto', minHeight: 0, padding: '6px 0 10px' }}>
