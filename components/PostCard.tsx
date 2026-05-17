@@ -93,6 +93,7 @@ export function PostCard({
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
+  const [showNewPostInfo, setShowNewPostInfo] = React.useState(false);
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
   const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
@@ -125,6 +126,16 @@ export function PostCard({
   const priceText = priceValue && priceValue > 0
     ? `${priceValue.toLocaleString('en-US')} ${currencySymbol}`
     : 'ບໍ່ລະບຸລາຄາ';
+  const isPostWithin24Hours = React.useMemo(() => {
+    const createdAt = post?.created_at;
+    if (!createdAt) return false;
+
+    const createdTimeMs = new Date(createdAt).getTime();
+    if (!Number.isFinite(createdTimeMs)) return false;
+
+    const ageMs = Date.now() - createdTimeMs;
+    return ageMs >= 0 && ageMs <= 24 * 60 * 60 * 1000;
+  }, [post?.created_at]);
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -618,8 +629,17 @@ export function PostCard({
                 </span>
               </button>
             ) : (
-              <span
+              <div
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                }}
+              >
+                <span
+                  style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -653,6 +673,37 @@ export function PostCard({
                   {priceText}
                 </span>
               </span>
+                {isPostWithin24Hours && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowNewPostInfo(true);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '20px',
+                      padding: '0 8px',
+                      borderRadius: '999px',
+                      backgroundColor: '#ff6b35',
+                      color: '#fff',
+                      fontSize: '12px',
+                      lineHeight: '1',
+                      fontWeight: 700,
+                      letterSpacing: '0.01em',
+                      flexShrink: 0,
+                      border: 'none',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                    }}
+                  >
+                    ເຂົ້າໃໝ່
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -911,6 +962,58 @@ export function PostCard({
             <button
               type="button"
               onClick={() => setShowSoldInfo(false)}
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                background: '#1877f2',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ຕົກລົງ
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* New Post Info Modal - portal to body for full-screen overlay + center of viewport */}
+      {typeof document !== 'undefined' && isPostWithin24Hours && showNewPostInfo && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 2500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '320px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
+              ໂພສນີ້ຍັງບໍ່ຮອດ 24 ຊົ່ວໂມງ
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowNewPostInfo(false)}
               style={{
                 width: '100%',
                 padding: '10px 16px',
