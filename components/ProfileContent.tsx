@@ -189,20 +189,20 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
 
     const isMainProfile = pathname === '/profile';
     if (!isMainProfile) {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.overscrollBehavior = '';
-      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overscrollBehavior = 'auto';
+      document.documentElement.style.overscrollBehavior = 'auto';
       return;
     }
 
     // Nested routes like /profile/whatsapp-settings should also unlock scroll
     const isNestedRoute = pathname.startsWith('/profile/');
     if (isNestedRoute) {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.overscrollBehavior = '';
-      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overscrollBehavior = 'auto';
+      document.documentElement.style.overscrollBehavior = 'auto';
       return;
     }
 
@@ -226,10 +226,10 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
     return () => {
       document.removeEventListener('touchmove', preventPageScroll);
       document.removeEventListener('wheel', preventPageScroll);
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.overscrollBehavior = '';
-      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overscrollBehavior = 'auto';
+      document.documentElement.style.overscrollBehavior = 'auto';
     };
   }, [onBack, pathname]);
 
@@ -456,13 +456,13 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
         document.removeEventListener('wheel', preventDefault);
         document.removeEventListener('scroll', preventDefault);
         
-        document.body.style.overflow = '';
+        document.body.style.overflow = 'auto';
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.left = '';
         document.body.style.width = '';
         document.body.style.height = '';
-        document.documentElement.style.overflow = '';
+        document.documentElement.style.overflow = 'auto';
         
         window.scrollTo(scrollX, scrollY);
       };
@@ -470,13 +470,13 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
       const scrollY = document.body.style.top ? parseInt(document.body.style.top.replace('px', '')) * -1 : 0;
       const scrollX = document.body.style.left ? parseInt(document.body.style.left.replace('px', '')) * -1 : 0;
       
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'auto';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.width = '';
       document.body.style.height = '';
-      document.documentElement.style.overflow = '';
+      document.documentElement.style.overflow = 'auto';
       
       if (scrollY !== 0 || scrollX !== 0) {
         window.scrollTo(scrollX, scrollY);
@@ -568,7 +568,7 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
   const cancelEdit = () => {
     setIsEditingName(false);
     setEditingUsername(username);
-    if (typeof document !== 'undefined') document.body.style.overflow = '';
+    if (typeof document !== 'undefined') document.body.style.overflow = 'auto';
   };
 
   const handleEditNameClick = () => {
