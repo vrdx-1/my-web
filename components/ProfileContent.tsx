@@ -1456,20 +1456,34 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
                     aria-label="ตั้งค่าเบอร์ WhatsApp"
                     title="ตั้งค่าเบอร์ WhatsApp"
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      border: '1px solid #d1d5db',
-                      background: '#ffffff',
-                      color: '#1f2937',
-                      display: 'inline-flex',
+                      background: 'none',
+                      border: 'none',
+                      padding: 5,
+                      minWidth: 32,
+                      minHeight: 32,
+                      display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                       cursor: 'pointer',
                       touchAction: 'manipulation',
+                      borderRadius: 0,
+                      boxShadow: 'none',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
                     }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#1c1e21"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ transform: showWhatsAppSwitchPanel ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                    >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </button>
