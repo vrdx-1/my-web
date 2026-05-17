@@ -28,6 +28,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     if (isProfileSubPage) {
       document.body.style.overflow = 'auto';
       document.documentElement.style.overflow = 'auto';
+      document.body.style.overscrollBehavior = 'auto';
+      document.documentElement.style.overscrollBehavior = 'auto';
     }
   }, [isProfileSubPage]);
 
