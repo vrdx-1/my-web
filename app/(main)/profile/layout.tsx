@@ -23,6 +23,14 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
   const isMainProfile = pathname === PROFILE_PATH;
   const isProfileSubPage = pathname?.startsWith('/profile/') && pathname !== PROFILE_PATH;
+  // Unlock scroll for nested routes (whatsapp-settings, etc)
+  useEffect(() => {
+    if (isProfileSubPage) {
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    }
+  }, [isProfileSubPage]);
+
   // หน้าซับ (ການຕັ້ງຄ່າ ฯลฯ) ไม่มีแถบล่าง — ใช้เต็มจอ ไม่มีอะไรมาบังปุ่มອອກຈາກລະບົບ
   const wrapperStyle: React.CSSProperties = {
     position: 'fixed',
