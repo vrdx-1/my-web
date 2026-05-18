@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 import { internalServerError } from '@/lib/apiSecurity';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
+type SearchHistoryActor =
+  | { kind: 'user'; profileId: string }
+  | { kind: 'guest'; guestToken: string };
+
 function normalizeSearchTerm(input: string): { searchTerm: string; termKey: string } {
   const searchTerm = input.trim().slice(0, 200);
   const termKey = searchTerm.toLocaleLowerCase();
@@ -28,14 +32,39 @@ const noStoreHeaders = {
   Expires: '0',
 };
 
+function normalizeGuestToken(input: string | null | undefined): string | null {
+  const guestToken = String(input ?? '').trim();
+  return guestToken ? guestToken.slice(0, 200) : null;
+}
+
+async function resolveSearchHistoryActor(
+  request: NextRequest,
+  guestTokenHint?: string | null,
+): Promise<SearchHistoryActor | null> {
+  const resolved = await resolveServerActiveProfile(request);
+  if (resolved?.activeProfileId) {
+    return { kind: 'user', profileId: resolved.activeProfileId };
+  }
+
+  const guestToken = normalizeGuestToken(
+    guestTokenHint
+      ?? request.headers.get('x-guest-token')
+      ?? request.nextUrl.searchParams.get('guest_token')
+  );
+
+  if (!guestToken) {
+    return null;
+  }
+
+  return { kind: 'guest', guestToken };
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const resolved = await resolveServerActiveProfile(request);
-    if (!resolved?.activeProfileId) {
+    const actor = await resolveSearchHistoryActor(request);
+    if (!actor) {
       return NextResponse.json({ items: [] }, { headers: noStoreHeaders });
     }
-
-    console.log('Resolved Profile ID:', resolved?.activeProfileId);
 
     const admin = createAdminClient();
     if (!admin) {
@@ -56,18 +85,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({}, { headers: corsHeaders });
     }
 
-    const { data, error } = await admin
+    let query = admin
       .from('user_search_history')
       .select('search_term, display_text, last_search_type, search_count, last_searched_at')
-      .eq('user_id', resolved.activeProfileId)
       .order('last_searched_at', { ascending: false })
       .limit(limit);
+
+    query = actor.kind === 'user'
+      ? query.eq('user_id', actor.profileId)
+      : query.eq('guest_token', actor.guestToken);
+
+    const { data, error } = await query;
 
     if (error) {
       return internalServerError('search/history get failed', error);
     }
 
-    console.log('Search History Data:', data);
     return NextResponse.json({ items: data || [] }, { headers: corsHeaders });
   } catch (e) {
     return internalServerError('search/history unexpected error', e);
@@ -76,9 +109,13 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const resolved = await resolveServerActiveProfile(request);
-    if (!resolved?.activeProfileId) {
-      return NextResponse.json({ ok: true });
+    const body = await request.json().catch(() => ({}));
+    const actor = await resolveSearchHistoryActor(
+      request,
+      typeof body?.guest_token === 'string' ? body.guest_token : null,
+    );
+    if (!actor) {
+      return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
     }
 
     const admin = createAdminClient();
@@ -86,32 +123,34 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
     }
 
-    const body = await request.json().catch(() => ({}));
     const rawSearchTerm = typeof body?.search_term === 'string' ? body.search_term : '';
     const { searchTerm, termKey } = normalizeSearchTerm(rawSearchTerm);
+
+    const actorColumn = actor.kind === 'user' ? 'user_id' : 'guest_token';
+    const actorValue = actor.kind === 'user' ? actor.profileId : actor.guestToken;
 
     if (!searchTerm) {
       const { error } = await admin
         .from('user_search_history')
         .delete()
-        .eq('user_id', resolved.activeProfileId);
+        .eq(actorColumn, actorValue);
       if (error) {
         return internalServerError('search/history clear failed', error);
       }
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
     }
 
     const { error } = await admin
       .from('user_search_history')
       .delete()
-      .eq('user_id', resolved.activeProfileId)
+      .eq(actorColumn, actorValue)
       .eq('term_key', termKey);
 
     if (error) {
       return internalServerError('search/history delete item failed', error);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
   } catch (e) {
     return internalServerError('search/history unexpected error', e);
   }

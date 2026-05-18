@@ -94,12 +94,16 @@ function SearchPageContent() {
     setHistoryStatus('loading');
     try {
       const accessToken = session?.access_token ?? '';
+      const guestToken = !session?.user ? getPrimaryGuestToken() : '';
       const response = await fetch('/api/search/history?limit=20', {
         method: 'GET',
         cache: 'no-store',
         credentials: 'include',
         headers: mergeHeaders(
-          accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(guestToken ? { 'x-guest-token': guestToken } : {}),
+          },
           activeProfileId,
         ),
       });
@@ -187,16 +191,21 @@ function SearchPageContent() {
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
+        const guestToken = !session?.user ? getPrimaryGuestToken() : '';
         await fetch('/api/search/history', {
           method: 'DELETE',
           credentials: 'include',
           headers: mergeHeaders(
             {
               'Content-Type': 'application/json',
+              ...(guestToken ? { 'x-guest-token': guestToken } : {}),
             },
             activeProfileId,
           ),
-          body: JSON.stringify({ search_term: item.search_term }),
+          body: JSON.stringify({
+            search_term: item.search_term,
+            guest_token: guestToken || undefined,
+          }),
         });
       } catch {
         // ignore
@@ -204,7 +213,7 @@ function SearchPageContent() {
         setHistoryItems((prev) => prev.filter((entry) => entry.search_term !== item.search_term));
       }
     },
-    [activeProfileId],
+    [activeProfileId, session],
   );
 
   const showSuggestions = query.trim().length > 0;
