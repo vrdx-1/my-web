@@ -15,6 +15,8 @@ type SearchHistoryItem = {
   last_searched_at: string;
 };
 
+type HistoryStatus = 'idle' | 'loading' | 'loaded';
+
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +24,7 @@ function SearchPageContent() {
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<SearchHistoryItem[]>([]);
+  const [historyStatus, setHistoryStatus] = useState<HistoryStatus>('idle');
   const [yearSuggestions, setYearSuggestions] = useState<string[]>([]);
   const [loadingYearSuggestions, setLoadingYearSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,10 +91,12 @@ function SearchPageContent() {
 
   const loadHistory = useCallback(async () => {
     if (!sessionReady) return;
+    setHistoryStatus('loading');
     try {
       const accessToken = session?.access_token ?? '';
       const response = await fetch('/api/search/history?limit=20', {
         method: 'GET',
+        cache: 'no-store',
         credentials: 'include',
         headers: mergeHeaders(
           accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
@@ -101,11 +106,14 @@ function SearchPageContent() {
       const payload = await response.json().catch(() => ({ items: [] }));
       if (!response.ok) {
         setHistoryItems([]);
+        setHistoryStatus('loaded');
         return;
       }
       setHistoryItems(Array.isArray(payload?.items) ? payload.items : []);
+      setHistoryStatus('loaded');
     } catch {
       setHistoryItems([]);
+      setHistoryStatus('loaded');
     }
   }, [activeProfileId, session, sessionReady]);
 
@@ -201,6 +209,8 @@ function SearchPageContent() {
 
   const showSuggestions = query.trim().length > 0;
   const showHistory = query.trim().length === 0 && historyItems.length > 0;
+  const showHistoryLoading = query.trim().length === 0 && historyStatus === 'loading';
+  const showHistoryEmpty = query.trim().length === 0 && historyStatus === 'loaded' && historyItems.length === 0;
 
   const highlightMatch = (display: string, q: string) => {
     const qTrim = q.trim();
@@ -361,7 +371,7 @@ function SearchPageContent() {
         </button>
       </div>
 
-      {(showSuggestions || showHistory) && (
+      {(showSuggestions || showHistory || showHistoryLoading || showHistoryEmpty) && (
         <div style={{ background: '#fff', minHeight: 200 }}>
           {showSuggestions && (
             <ul style={{ listStyle: 'none', margin: 0, padding: '8px 0' }}>
@@ -398,6 +408,9 @@ function SearchPageContent() {
                 </li>
               ))}
             </ul>
+          )}
+          {showHistoryLoading && (
+            <div style={{ minHeight: 12 }} />
           )}
           {showHistory && (
             <div style={{ padding: '8px 0' }}>
@@ -463,6 +476,18 @@ function SearchPageContent() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {showHistoryEmpty && (
+            <div
+              style={{
+                padding: '20px 16px 12px',
+                color: '#667085',
+                fontSize: '15px',
+                fontFamily: LAO_FONT,
+              }}
+            >
+              ຍັງບໍ່ມີປະຫວັດການຄົ້ນຫາສຳລັບບັນຊີນີ້
             </div>
           )}
         </div>

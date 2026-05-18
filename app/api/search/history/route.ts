@@ -22,11 +22,17 @@ function createAdminClient() {
   );
 }
 
+const noStoreHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
+
 export async function GET(request: NextRequest) {
   try {
     const resolved = await resolveServerActiveProfile(request);
     if (!resolved?.activeProfileId) {
-      return NextResponse.json({ items: [] });
+      return NextResponse.json({ items: [] }, { headers: noStoreHeaders });
     }
 
     console.log('Resolved Profile ID:', resolved?.activeProfileId);
@@ -43,6 +49,7 @@ export async function GET(request: NextRequest) {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      ...noStoreHeaders,
     };
 
     if (request.method === 'OPTIONS') {
