@@ -23,12 +23,13 @@ type WhatsAppConfigAccount = {
 
 export function WhatsAppSettingsPage() {
   const router = useRouter();
-  const { activeProfileId, userProfile, availableProfiles, sessionReady } = useSessionAndProfile();
+  const { activeProfileId, userProfile, availableProfiles, session, sessionReady } = useSessionAndProfile();
 
   const [whatsAppConfigSearchQuery, setWhatsAppConfigSearchQuery] = useState('');
   const [whatsAppConfigError, setWhatsAppConfigError] = useState('');
   const [whatsAppUpdatingKey, setWhatsAppUpdatingKey] = useState('');
   const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState<boolean | null>(null);
+  const [whatsAppSourceOverrides, setWhatsAppSourceOverrides] = useState<Record<string, WhatsAppNumberSource>>({});
 
   // Use context data - no separate API call needed
   const canConfigureWhatsAppSource = Boolean(userProfile?.role === 'admin' || userProfile?.is_sub_account === true);
@@ -76,10 +77,10 @@ export function WhatsAppSettingsPage() {
     }
 
     const allUsingAdmin = whatsAppSubAccounts.every(
-      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'admin'
+      (account) => (whatsAppSourceOverrides[account.id] || normalizeWhatsAppNumberSource(account.whatsapp_number_source)) === 'admin'
     );
     const allUsingSelf = whatsAppSubAccounts.every(
-      (account) => normalizeWhatsAppNumberSource(account.whatsapp_number_source) === 'self'
+      (account) => (whatsAppSourceOverrides[account.id] || normalizeWhatsAppNumberSource(account.whatsapp_number_source)) === 'self'
     );
 
     if (allUsingAdmin) {
@@ -89,7 +90,7 @@ export function WhatsAppSettingsPage() {
     } else {
       setWhatsAppUseAdminForAll(false);
     }
-  }, [canConfigureWhatsAppSource, sessionReady, whatsAppSubAccounts]);
+  }, [canConfigureWhatsAppSource, sessionReady, whatsAppSourceOverrides, whatsAppSubAccounts]);
 
   const handleUpdateWhatsAppSource = useCallback(async (
     source: WhatsAppNumberSource,
@@ -97,12 +98,33 @@ export function WhatsAppSettingsPage() {
   ) => {
     if (!canConfigureWhatsAppSource) return;
 
+    const previousOverrides = { ...whatsAppSourceOverrides };
+
+    // Optimistic UI: flip immediately, then sync in background.
+    if (options.applyToAll) {
+      setWhatsAppSourceOverrides((prev) => {
+        const next = { ...prev };
+        whatsAppSubAccounts.forEach((account) => {
+          next[account.id] = source;
+        });
+        return next;
+      });
+    } else if (options.profileId) {
+      setWhatsAppSourceOverrides((prev) => ({
+        ...prev,
+        [options.profileId as string]: source,
+      }));
+    }
+
     const updatingKey = options.applyToAll ? `all:${source}` : `${options.profileId || 'unknown'}:${source}`;
     setWhatsAppUpdatingKey(updatingKey);
     setWhatsAppConfigError('');
 
     try {
-      let currentSession = (await supabase.auth.getSession()).data.session;
+      let currentSession = session;
+      if (!currentSession) {
+        currentSession = (await supabase.auth.getSession()).data.session;
+      }
       if (!currentSession?.access_token) {
         const refreshed = await supabase.auth.refreshSession();
         currentSession = refreshed.data.session ?? currentSession;
@@ -134,14 +156,13 @@ export function WhatsAppSettingsPage() {
       if (!response.ok) {
         throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to update WhatsApp settings');
       }
-
-      // No need for refetchProfiles - data updates will come from context refresh
     } catch (error) {
+      setWhatsAppSourceOverrides(previousOverrides);
       setWhatsAppConfigError(error instanceof Error ? error.message : 'Failed to update WhatsApp settings');
     } finally {
       setWhatsAppUpdatingKey('');
     }
-  }, [activeProfileId, canConfigureWhatsAppSource, router]);
+  }, [activeProfileId, canConfigureWhatsAppSource, router, session, whatsAppSourceOverrides, whatsAppSubAccounts]);
 
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
@@ -252,13 +273,10 @@ export function WhatsAppSettingsPage() {
         ) : (
           filteredWhatsAppAccounts.map((account) => {
             const isAdminAccount = account.id === whatsAppAdminProfile?.id;
-            const accountSource = normalizeWhatsAppNumberSource(account.whatsapp_number_source);
+            const accountSource = whatsAppSourceOverrides[account.id] || normalizeWhatsAppNumberSource(account.whatsapp_number_source);
             const isUsingAdmin = isAdminAccount || accountSource === 'admin';
             const accountPhone = formatStoredWhatsAppPhone(account.phone || '');
             const toggleDisabled = isAdminAccount || Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource;
-            const pendingSelfKey = `${account.id}:self`;
-            const pendingAdminKey = `${account.id}:admin`;
-            const isPending = whatsAppUpdatingKey === pendingSelfKey || whatsAppUpdatingKey === pendingAdminKey;
 
             return (
               <div key={account.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderBottom: '1px solid #f3f4f6' }}>
