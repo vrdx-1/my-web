@@ -95,6 +95,10 @@ function SearchPageContent() {
     try {
       const accessToken = session?.access_token ?? '';
       const guestToken = !session?.user ? getPrimaryGuestToken() : '';
+      if (guestToken) {
+        // DEBUG: log guestToken before API call
+        console.log('[DEBUG] guestToken sent to /api/search/history:', guestToken);
+      }
       const response = await fetch('/api/search/history?limit=20', {
         method: 'GET',
         cache: 'no-store',

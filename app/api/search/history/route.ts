@@ -63,7 +63,15 @@ export async function GET(request: NextRequest) {
   try {
     const actor = await resolveSearchHistoryActor(request);
     if (!actor) {
+      console.log('[DEBUG] No actor resolved for search/history');
       return NextResponse.json({ items: [] }, { headers: noStoreHeaders });
+    }
+
+    // DEBUG: log actor info
+    if (actor.kind === 'guest') {
+      console.log('[DEBUG] guestToken received in API:', actor.guestToken);
+    } else {
+      console.log('[DEBUG] userId received in API:', actor.profileId);
     }
 
     const admin = createAdminClient();
@@ -91,9 +99,13 @@ export async function GET(request: NextRequest) {
       .order('last_searched_at', { ascending: false })
       .limit(limit);
 
-    query = actor.kind === 'user'
-      ? query.eq('user_id', actor.profileId)
-      : query.eq('guest_token', actor.guestToken);
+    if (actor.kind === 'user') {
+      query = query.eq('user_id', actor.profileId);
+    } else {
+      query = query.eq('guest_token', actor.guestToken);
+      // DEBUG: log guestToken used in DB query
+      console.log('[DEBUG] guestToken used in DB query:', actor.guestToken);
+    }
 
     const { data, error } = await query;
 
