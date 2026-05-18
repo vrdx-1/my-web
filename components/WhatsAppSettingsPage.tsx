@@ -23,12 +23,12 @@ type WhatsAppConfigAccount = {
 
 export function WhatsAppSettingsPage() {
   const router = useRouter();
-  const { activeProfileId, userProfile, availableProfiles, session } = useSessionAndProfile();
+  const { activeProfileId, userProfile, availableProfiles, sessionReady } = useSessionAndProfile();
 
   const [whatsAppConfigSearchQuery, setWhatsAppConfigSearchQuery] = useState('');
   const [whatsAppConfigError, setWhatsAppConfigError] = useState('');
   const [whatsAppUpdatingKey, setWhatsAppUpdatingKey] = useState('');
-  const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState(true);
+  const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState<boolean | null>(null);
 
   // Use context data - no separate API call needed
   const canConfigureWhatsAppSource = Boolean(userProfile?.role === 'admin' || userProfile?.is_sub_account === true);
@@ -60,8 +60,18 @@ export function WhatsAppSettingsPage() {
   }, [normalizedWhatsAppConfigSearchQuery, whatsAppAdminProfile, whatsAppSubAccounts]);
 
   useEffect(() => {
+    if (!sessionReady) {
+      setWhatsAppUseAdminForAll(null);
+      return;
+    }
+
+    if (!canConfigureWhatsAppSource) {
+      setWhatsAppUseAdminForAll(null);
+      return;
+    }
+
     if (whatsAppSubAccounts.length === 0) {
-      setWhatsAppUseAdminForAll(true);
+      setWhatsAppUseAdminForAll(false);
       return;
     }
 
@@ -76,8 +86,10 @@ export function WhatsAppSettingsPage() {
       setWhatsAppUseAdminForAll(true);
     } else if (allUsingSelf) {
       setWhatsAppUseAdminForAll(false);
+    } else {
+      setWhatsAppUseAdminForAll(false);
     }
-  }, [whatsAppSubAccounts]);
+  }, [canConfigureWhatsAppSource, sessionReady, whatsAppSubAccounts]);
 
   const handleUpdateWhatsAppSource = useCallback(async (
     source: WhatsAppNumberSource,
@@ -186,16 +198,17 @@ export function WhatsAppSettingsPage() {
           </div>
           <button
             type="button"
-            disabled={Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource}
+            disabled={Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource || whatsAppUseAdminForAll == null}
             onClick={() => {
+              if (whatsAppUseAdminForAll == null) return;
               const newSource = whatsAppUseAdminForAll ? 'self' : 'admin';
               handleUpdateWhatsAppSource(newSource, { applyToAll: true });
             }}
             style={{
               border: 'none',
               background: 'transparent',
-              cursor: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource ? 'not-allowed' : 'pointer',
-              opacity: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource ? 0.6 : 1,
+              cursor: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource || whatsAppUseAdminForAll == null ? 'not-allowed' : 'pointer',
+              opacity: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource || whatsAppUseAdminForAll == null ? 0.6 : 1,
               padding: 0,
               flexShrink: 0,
             }}
@@ -205,7 +218,7 @@ export function WhatsAppSettingsPage() {
                 width: 46,
                 height: 26,
                 borderRadius: 999,
-                background: whatsAppUseAdminForAll ? '#16a34a' : '#d1d5db',
+                background: whatsAppUseAdminForAll === true ? '#16a34a' : '#d1d5db',
                 position: 'relative',
                 transition: 'background 0.2s ease',
               }}
@@ -214,7 +227,7 @@ export function WhatsAppSettingsPage() {
                 style={{
                   position: 'absolute',
                   top: 3,
-                  left: whatsAppUseAdminForAll ? 24 : 3,
+                  left: whatsAppUseAdminForAll === true ? 24 : 3,
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
