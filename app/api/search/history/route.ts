@@ -39,6 +39,16 @@ export async function GET(request: NextRequest) {
     const limitRaw = parseInt(request.nextUrl.searchParams.get('limit') || '20', 10);
     const limit = Number.isFinite(limitRaw) ? Math.min(50, Math.max(1, limitRaw)) : 20;
 
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
+    if (request.method === 'OPTIONS') {
+      return NextResponse.json({}, { headers: corsHeaders });
+    }
+
     const { data, error } = await admin
       .from('user_search_history')
       .select('search_term, display_text, last_search_type, search_count, last_searched_at')
@@ -51,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Search History Data:', data);
-    return NextResponse.json({ items: data || [] });
+    return NextResponse.json({ items: data || [] }, { headers: corsHeaders });
   } catch (e) {
     return internalServerError('search/history unexpected error', e);
   }
