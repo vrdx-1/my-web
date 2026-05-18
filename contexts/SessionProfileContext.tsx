@@ -106,7 +106,7 @@ export function SessionProfileProvider({ children }: { children: React.ReactNode
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id')
+        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, whatsapp_number_source')
         .or(`id.eq.${userId},parent_admin_id.eq.${userId}`);
 
       if (error) {

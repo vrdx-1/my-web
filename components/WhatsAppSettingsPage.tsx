@@ -23,16 +23,32 @@ type WhatsAppConfigAccount = {
 
 export function WhatsAppSettingsPage() {
   const router = useRouter();
-  const { activeProfileId, refetchProfiles } = useSessionAndProfile();
+  const { activeProfileId, userProfile, availableProfiles, session } = useSessionAndProfile();
 
-  const [canConfigureWhatsAppSource, setCanConfigureWhatsAppSource] = useState(false);
   const [whatsAppConfigSearchQuery, setWhatsAppConfigSearchQuery] = useState('');
-  const [whatsAppAdminProfile, setWhatsAppAdminProfile] = useState<WhatsAppConfigAccount | null>(null);
-  const [whatsAppSubAccounts, setWhatsAppSubAccounts] = useState<WhatsAppConfigAccount[]>([]);
-  const [whatsAppConfigLoading, setWhatsAppConfigLoading] = useState(true);
   const [whatsAppConfigError, setWhatsAppConfigError] = useState('');
   const [whatsAppUpdatingKey, setWhatsAppUpdatingKey] = useState('');
   const [whatsAppUseAdminForAll, setWhatsAppUseAdminForAll] = useState(true);
+
+  // Use context data - no separate API call needed
+  const canConfigureWhatsAppSource = Boolean(userProfile?.role === 'admin' || userProfile?.is_sub_account === true);
+  
+  const whatsAppAdminProfile = useMemo(() => {
+    if (!canConfigureWhatsAppSource) return null;
+    // For sub-accounts, find the parent admin; for admins, use themselves
+    if (userProfile?.is_sub_account && userProfile?.parent_admin_id) {
+      return availableProfiles.find((p) => p.id === userProfile.parent_admin_id) || null;
+    }
+    return userProfile || null;
+  }, [userProfile, availableProfiles, canConfigureWhatsAppSource]);
+
+  const whatsAppSubAccounts = useMemo(() => {
+    if (!canConfigureWhatsAppSource) return [];
+    const adminId = whatsAppAdminProfile?.id;
+    if (!adminId) return [];
+    // Get all sub accounts of this admin
+    return availableProfiles.filter((p) => p.is_sub_account && p.parent_admin_id === adminId);
+  }, [availableProfiles, whatsAppAdminProfile, canConfigureWhatsAppSource]);
 
   const normalizedWhatsAppConfigSearchQuery = whatsAppConfigSearchQuery.trim().toLowerCase();
   const filteredWhatsAppAccounts = useMemo(() => {
@@ -62,68 +78,6 @@ export function WhatsAppSettingsPage() {
       setWhatsAppUseAdminForAll(false);
     }
   }, [whatsAppSubAccounts]);
-
-  const loadSubAccounts = useCallback(async () => {
-    setWhatsAppConfigLoading(true);
-    setWhatsAppConfigError('');
-
-    try {
-      let currentSession = (await supabase.auth.getSession()).data.session;
-      if (!currentSession?.access_token) {
-        const refreshed = await supabase.auth.refreshSession();
-        currentSession = refreshed.data.session ?? currentSession;
-      }
-
-      if (!currentSession) {
-        router.replace('/register');
-        return;
-      }
-
-      const targetProfileId = activeProfileId || currentSession.user.id;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, is_sub_account')
-        .eq('id', targetProfileId)
-        .maybeSingle();
-
-      const canConfigure = profile?.role === 'admin' || profile?.is_sub_account === true;
-      setCanConfigureWhatsAppSource(canConfigure);
-      if (!canConfigure) {
-        setWhatsAppConfigError('ບັນຊີນີ້ບໍ່ສາມາດຕັ້ງຄ່າເບີ WhatsApp ໄດ້');
-        setWhatsAppAdminProfile(null);
-        setWhatsAppSubAccounts([]);
-        return;
-      }
-
-      const response = await fetch('/api/admin/sub-accounts', {
-        method: 'GET',
-        credentials: 'include',
-        headers: mergeHeaders(
-          currentSession.access_token ? { Authorization: `Bearer ${currentSession.access_token}` } : undefined,
-          activeProfileId,
-        ),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to load sub accounts');
-      }
-
-      const payload = await response.json().catch(() => ({}));
-      setWhatsAppAdminProfile(payload?.adminProfile ?? null);
-      setWhatsAppSubAccounts(Array.isArray(payload?.subAccounts) ? payload.subAccounts : []);
-      await refetchProfiles();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load sub accounts';
-      setWhatsAppConfigError(message);
-    } finally {
-      setWhatsAppConfigLoading(false);
-    }
-  }, [activeProfileId, refetchProfiles, router]);
-
-  useEffect(() => {
-    loadSubAccounts();
-  }, [loadSubAccounts]);
 
   const handleUpdateWhatsAppSource = useCallback(async (
     source: WhatsAppNumberSource,
@@ -169,13 +123,13 @@ export function WhatsAppSettingsPage() {
         throw new Error(typeof payload?.error === 'string' ? payload.error : 'Failed to update WhatsApp settings');
       }
 
-      await loadSubAccounts();
+      // No need for refetchProfiles - data updates will come from context refresh
     } catch (error) {
       setWhatsAppConfigError(error instanceof Error ? error.message : 'Failed to update WhatsApp settings');
     } finally {
       setWhatsAppUpdatingKey('');
     }
-  }, [activeProfileId, canConfigureWhatsAppSource, loadSubAccounts, router]);
+  }, [activeProfileId, canConfigureWhatsAppSource, router]);
 
   return (
     <main style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
@@ -232,7 +186,7 @@ export function WhatsAppSettingsPage() {
           </div>
           <button
             type="button"
-            disabled={Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading || !canConfigureWhatsAppSource}
+            disabled={Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource}
             onClick={() => {
               const newSource = whatsAppUseAdminForAll ? 'self' : 'admin';
               handleUpdateWhatsAppSource(newSource, { applyToAll: true });
@@ -240,8 +194,8 @@ export function WhatsAppSettingsPage() {
             style={{
               border: 'none',
               background: 'transparent',
-              cursor: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading || !canConfigureWhatsAppSource ? 'not-allowed' : 'pointer',
-              opacity: Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading || !canConfigureWhatsAppSource ? 0.6 : 1,
+              cursor: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource ? 'not-allowed' : 'pointer',
+              opacity: Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource ? 0.6 : 1,
               padding: 0,
               flexShrink: 0,
             }}
@@ -280,9 +234,7 @@ export function WhatsAppSettingsPage() {
             {whatsAppConfigError}
           </div>
         ) : null}
-        {whatsAppConfigLoading ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>ກຳລັງໂຫຼດຂໍ້ມູນ...</div>
-        ) : filteredWhatsAppAccounts.length === 0 ? (
+        {filteredWhatsAppAccounts.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>ບໍ່ພົບບັນຊີ</div>
         ) : (
           filteredWhatsAppAccounts.map((account) => {
@@ -290,7 +242,7 @@ export function WhatsAppSettingsPage() {
             const accountSource = normalizeWhatsAppNumberSource(account.whatsapp_number_source);
             const isUsingAdmin = isAdminAccount || accountSource === 'admin';
             const accountPhone = formatStoredWhatsAppPhone(account.phone || '');
-            const toggleDisabled = isAdminAccount || Boolean(whatsAppUpdatingKey) || whatsAppConfigLoading || !canConfigureWhatsAppSource;
+            const toggleDisabled = isAdminAccount || Boolean(whatsAppUpdatingKey) || !canConfigureWhatsAppSource;
             const pendingSelfKey = `${account.id}:self`;
             const pendingAdminKey = `${account.id}:admin`;
             const isPending = whatsAppUpdatingKey === pendingSelfKey || whatsAppUpdatingKey === pendingAdminKey;
@@ -358,7 +310,7 @@ export function WhatsAppSettingsPage() {
         )}
       </div>
 
-      {!canConfigureWhatsAppSource && !whatsAppConfigLoading ? (
+      {!canConfigureWhatsAppSource ? (
         <div style={{ padding: '10px 16px 16px', color: '#6b7280', fontSize: '13px' }}>
           ໜ້ານີ້ສຳລັບ Admin ແລະ Sub account ເທົ່ານັ້ນ
         </div>
