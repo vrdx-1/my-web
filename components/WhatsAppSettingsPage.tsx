@@ -312,11 +312,6 @@ export function WhatsAppSettingsPage() {
                     </div>
                   </button>
                 )}
-                {!isAdminAccount && (
-                  <div style={{ width: 88, fontSize: '11px', textAlign: 'right', color: '#4b5563' }}>
-                    {isPending ? 'ກຳລັງອັບເດດ...' : (isUsingAdmin ? 'ໃຊ້ເບີ Admin' : 'ໃຊ້ເບີຕົນເອງ')}
-                  </div>
-                )}
               </div>
             );
           })
