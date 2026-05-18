@@ -2,7 +2,8 @@
 
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCarDictionarySuggestions, getDeviceGuestToken } from '@/utils/postUtils';
+import { getCarDictionarySuggestions } from '@/utils/postUtils';
+import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -94,7 +95,7 @@ function SearchPageContent() {
     setHistoryStatus('loading');
     try {
       const accessToken = session?.access_token ?? '';
-        const guestToken = !session?.user ? getDeviceGuestToken() : '';
+        const guestToken = !session?.user ? getOrCreateGuestToken() : '';
       if (guestToken) {
         // DEBUG: log guestToken before API call
         console.log('[DEBUG] guestToken sent to /api/search/history:', guestToken);
@@ -145,12 +146,12 @@ function SearchPageContent() {
   }, []);
 
   const commitSearch = useCallback(
-    (term: string, searchType: 'manual' | 'suggestion' | 'history' = 'manual') => {
+    async (term: string, searchType: 'manual' | 'suggestion' | 'history' = 'manual') => {
       const t = term.trim();
       if (t) {
         const accessToken = session?.access_token ?? '';
-        const guestToken = !session?.user ? getDeviceGuestToken() : '';
-        fetch('/api/search/log', {
+        const guestToken = !session?.user ? getOrCreateGuestToken() : '';
+        await fetch('/api/search/log', {
           method: 'POST',
           credentials: 'include',
           headers: mergeHeaders(
@@ -166,9 +167,8 @@ function SearchPageContent() {
             search_type: searchType,
             guest_token: guestToken || undefined,
           }),
-        })
-          .then(() => loadHistory())
-          .catch(() => {});
+        }).catch(() => {});
+        await loadHistory();
       }
       router.push(t ? `/home?q=${encodeURIComponent(t)}` : '/home', { scroll: false });
     },
@@ -202,7 +202,7 @@ function SearchPageContent() {
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
-        const guestToken = !session?.user ? getDeviceGuestToken() : '';
+        const guestToken = !session?.user ? getOrCreateGuestToken() : '';
         await fetch('/api/search/history', {
           method: 'DELETE',
           credentials: 'include',

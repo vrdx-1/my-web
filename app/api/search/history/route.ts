@@ -48,6 +48,43 @@ function normalizeGuestToken(input: string | null | undefined): string | null {
   return guestToken ? guestToken.slice(0, 200) : null;
 }
 
+async function loadGuestHistoryFromSearchLogs(admin: ReturnType<typeof createAdminClient>, guestToken: string, limit: number) {
+  if (!admin) {
+    return { items: [], error: null } as const;
+  }
+
+  const fetchLimit = Math.min(200, Math.max(20, limit * 5));
+  const { data, error } = await admin
+    .from('search_logs')
+    .select('search_term, display_text, created_at')
+    .eq('guest_token', guestToken)
+    .order('created_at', { ascending: false })
+    .limit(fetchLimit);
+
+  if (error) {
+    return { items: [], error } as const;
+  }
+
+  const seen = new Set<string>();
+  const items = (data || [])
+    .map((row) => ({
+      search_term: row.search_term,
+      display_text: row.display_text ?? row.search_term,
+      last_search_type: 'manual',
+      search_count: 1,
+      last_searched_at: row.created_at,
+    }))
+    .filter((row) => {
+      const key = normalizeSearchTerm(row.search_term).termKey;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit);
+
+  return { items, error: null } as const;
+}
+
 async function resolveSearchHistoryActor(
   request: NextRequest,
   guestTokenHint?: string | null,
@@ -101,29 +138,23 @@ export async function GET(request: NextRequest) {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    let query = admin
+    if (actor.kind === 'guest') {
+      console.log('[DEBUG] guestToken used in DB query:', actor.guestToken);
+      const guestHistory = await loadGuestHistoryFromSearchLogs(admin, actor.guestToken, limit);
+      if (guestHistory.error) {
+        return internalServerError('search/history guest fallback failed', guestHistory.error);
+      }
+      return NextResponse.json({ items: guestHistory.items }, { headers: corsHeaders });
+    }
+
+    const { data, error } = await admin
       .from('user_search_history')
       .select('search_term, display_text, last_search_type, search_count, last_searched_at')
+      .eq('user_id', actor.profileId)
       .order('last_searched_at', { ascending: false })
       .limit(limit);
 
-    if (actor.kind === 'user') {
-      query = query.eq('user_id', actor.profileId);
-    } else {
-      query = query.eq('guest_token', actor.guestToken);
-      // DEBUG: log guestToken used in DB query
-      console.log('[DEBUG] guestToken used in DB query:', actor.guestToken);
-    }
-
-    const { data, error } = await query;
-
     if (error) {
-      // If the guest_token column doesn't exist yet (migration not applied), return empty gracefully
-      const isSchemaError = error.code === '42703' || (error.message || '').toLowerCase().includes('does not exist');
-      if (isSchemaError) {
-        console.error('[search/history] schema error — migration may not be applied:', error.message);
-        return NextResponse.json({ items: [] }, { headers: corsHeaders });
-      }
       return internalServerError('search/history get failed', error);
     }
 
@@ -152,14 +183,25 @@ export async function DELETE(request: NextRequest) {
     const rawSearchTerm = typeof body?.search_term === 'string' ? body.search_term : '';
     const { searchTerm, termKey } = normalizeSearchTerm(rawSearchTerm);
 
-    const actorColumn = actor.kind === 'user' ? 'user_id' : 'guest_token';
-    const actorValue = actor.kind === 'user' ? actor.profileId : actor.guestToken;
+    if (actor.kind === 'guest') {
+      let deleteQuery = admin.from('search_logs').delete().eq('guest_token', actor.guestToken);
+      if (searchTerm) {
+        deleteQuery = deleteQuery.eq('search_term', searchTerm);
+      }
+
+      const { error } = await deleteQuery;
+      if (error) {
+        return internalServerError('search/history guest delete failed', error);
+      }
+
+      return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
+    }
 
     if (!searchTerm) {
       const { error } = await admin
         .from('user_search_history')
         .delete()
-        .eq(actorColumn, actorValue);
+        .eq('user_id', actor.profileId);
       if (error) {
         return internalServerError('search/history clear failed', error);
       }
@@ -169,7 +211,7 @@ export async function DELETE(request: NextRequest) {
     const { error } = await admin
       .from('user_search_history')
       .delete()
-      .eq(actorColumn, actorValue)
+      .eq('user_id', actor.profileId)
       .eq('term_key', termKey);
 
     if (error) {
