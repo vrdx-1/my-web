@@ -18,7 +18,7 @@ type SearchHistoryItem = {
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, activeProfileId } = useSessionAndProfile();
+  const { session, activeProfileId, sessionReady } = useSessionAndProfile();
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<SearchHistoryItem[]>([]);
@@ -87,11 +87,16 @@ function SearchPageContent() {
   }, [query, yearSuggestions]);
 
   const loadHistory = useCallback(async () => {
+    if (!sessionReady) return;
     try {
+      const accessToken = session?.access_token ?? '';
       const response = await fetch('/api/search/history?limit=20', {
         method: 'GET',
         credentials: 'include',
-        headers: mergeHeaders(undefined, activeProfileId),
+        headers: mergeHeaders(
+          accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          activeProfileId,
+        ),
       });
       const payload = await response.json().catch(() => ({ items: [] }));
       if (!response.ok) {
@@ -102,7 +107,7 @@ function SearchPageContent() {
     } catch {
       setHistoryItems([]);
     }
-  }, [activeProfileId]);
+  }, [activeProfileId, session, sessionReady]);
 
   useEffect(() => {
     void loadHistory();
