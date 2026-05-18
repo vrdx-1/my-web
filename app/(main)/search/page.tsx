@@ -151,6 +151,7 @@ function SearchPageContent() {
             {
               'Content-Type': 'application/json',
               ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              ...(guestToken ? { 'x-guest-token': guestToken } : {}),
             },
             activeProfileId,
           ),

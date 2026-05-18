@@ -32,6 +32,17 @@ const noStoreHeaders = {
   Expires: '0',
 };
 
+const sharedCorsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-guest-token, x-active-profile-id',
+  ...noStoreHeaders,
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: sharedCorsHeaders });
+}
+
 function normalizeGuestToken(input: string | null | undefined): string | null {
   const guestToken = String(input ?? '').trim();
   return guestToken ? guestToken.slice(0, 200) : null;
@@ -41,22 +52,24 @@ async function resolveSearchHistoryActor(
   request: NextRequest,
   guestTokenHint?: string | null,
 ): Promise<SearchHistoryActor | null> {
-  const resolved = await resolveServerActiveProfile(request);
-  if (resolved?.activeProfileId) {
-    return { kind: 'user', profileId: resolved.activeProfileId };
-  }
-
-  const guestToken = normalizeGuestToken(
+  // Check explicit guest token FIRST to avoid cookie/session bleed-through on mobile
+  // webviews and PWA where the server may still see stale auth cookies after client logout.
+  const explicitGuestToken = normalizeGuestToken(
     guestTokenHint
       ?? request.headers.get('x-guest-token')
       ?? request.nextUrl.searchParams.get('guest_token')
   );
 
-  if (!guestToken) {
-    return null;
+  if (explicitGuestToken) {
+    return { kind: 'guest', guestToken: explicitGuestToken };
   }
 
-  return { kind: 'guest', guestToken };
+  const resolved = await resolveServerActiveProfile(request);
+  if (resolved?.activeProfileId) {
+    return { kind: 'user', profileId: resolved.activeProfileId };
+  }
+
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -82,15 +95,10 @@ export async function GET(request: NextRequest) {
     const limitRaw = parseInt(request.nextUrl.searchParams.get('limit') || '20', 10);
     const limit = Number.isFinite(limitRaw) ? Math.min(50, Math.max(1, limitRaw)) : 20;
 
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      ...noStoreHeaders,
-    };
+    const corsHeaders = sharedCorsHeaders;
 
     if (request.method === 'OPTIONS') {
-      return NextResponse.json({}, { headers: corsHeaders });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     let query = admin

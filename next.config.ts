@@ -58,4 +58,14 @@ const nextConfig: NextConfig = {
 export default withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
+  // Never cache personalized/session-sensitive API routes in the service worker
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^\/api\/search\//,
+        handler: 'NetworkOnly',
+      },
+    ],
+  },
 })(nextConfig);
