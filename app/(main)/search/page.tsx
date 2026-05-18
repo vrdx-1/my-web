@@ -498,18 +498,7 @@ function SearchPageContent() {
               </ul>
             </div>
           )}
-          {showHistoryEmpty && (
-            <div
-              style={{
-                padding: '20px 16px 12px',
-                color: '#667085',
-                fontSize: '15px',
-                fontFamily: LAO_FONT,
-              }}
-            >
-              ຍັງບໍ່ມີປະຫວັດການຄົ້ນຫາສຳລັບບັນຊີນີ້
-            </div>
-          )}
+          {showHistoryEmpty && <div style={{ minHeight: 12 }} />}
         </div>
       )}
 
