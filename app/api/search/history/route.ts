@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [] });
     }
 
+    console.log('Resolved Profile ID:', resolved?.activeProfileId);
+
     const admin = createAdminClient();
     if (!admin) {
       return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
@@ -48,6 +50,7 @@ export async function GET(request: NextRequest) {
       return internalServerError('search/history get failed', error);
     }
 
+    console.log('Search History Data:', data);
     return NextResponse.json({ items: data || [] });
   } catch (e) {
     return internalServerError('search/history unexpected error', e);
