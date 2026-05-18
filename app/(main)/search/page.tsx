@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCarDictionarySuggestions, getPrimaryGuestToken } from '@/utils/postUtils';
+import { getCarDictionarySuggestions, getDeviceGuestToken } from '@/utils/postUtils';
 import { LAO_FONT } from '@/utils/constants';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -20,7 +20,7 @@ type HistoryStatus = 'idle' | 'loading' | 'loaded';
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session, activeProfileId, sessionReady } = useSessionAndProfile();
+  const { session, activeProfileId, sessionReady, startSessionCheck } = useSessionAndProfile();
   const qFromUrl = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(() => qFromUrl);
   const [historyItems, setHistoryItems] = useState<SearchHistoryItem[]>([]);
@@ -94,7 +94,7 @@ function SearchPageContent() {
     setHistoryStatus('loading');
     try {
       const accessToken = session?.access_token ?? '';
-      const guestToken = !session?.user ? getPrimaryGuestToken() : '';
+        const guestToken = !session?.user ? getDeviceGuestToken() : '';
       if (guestToken) {
         // DEBUG: log guestToken before API call
         console.log('[DEBUG] guestToken sent to /api/search/history:', guestToken);
@@ -125,6 +125,12 @@ function SearchPageContent() {
     }
   }, [activeProfileId, session, sessionReady]);
 
+  // เรียก startSessionCheck ทันทีที่ mount เพื่อไม่ต้องรอ 3 วิ
+  // สำคัญสำหรับ Guest ที่เปิดหน้า /search โดยตรง (sessionReady จะเป็น false ตลอด 3 วิ ถ้าไม่เรียก)
+  useEffect(() => {
+    startSessionCheck();
+  }, [startSessionCheck]);
+
   useEffect(() => {
     void loadHistory();
   }, [loadHistory]);
@@ -143,7 +149,7 @@ function SearchPageContent() {
       const t = term.trim();
       if (t) {
         const accessToken = session?.access_token ?? '';
-        const guestToken = !session?.user ? getPrimaryGuestToken() : '';
+        const guestToken = !session?.user ? getDeviceGuestToken() : '';
         fetch('/api/search/log', {
           method: 'POST',
           credentials: 'include',
@@ -196,7 +202,7 @@ function SearchPageContent() {
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
-        const guestToken = !session?.user ? getPrimaryGuestToken() : '';
+        const guestToken = !session?.user ? getDeviceGuestToken() : '';
         await fetch('/api/search/history', {
           method: 'DELETE',
           credentials: 'include',

@@ -118,6 +118,12 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      // If the guest_token column doesn't exist yet (migration not applied), return empty gracefully
+      const isSchemaError = error.code === '42703' || (error.message || '').toLowerCase().includes('does not exist');
+      if (isSchemaError) {
+        console.error('[search/history] schema error — migration may not be applied:', error.message);
+        return NextResponse.json({ items: [] }, { headers: corsHeaders });
+      }
       return internalServerError('search/history get failed', error);
     }
 

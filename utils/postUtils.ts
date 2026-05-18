@@ -1399,3 +1399,17 @@ export const getPrimaryGuestToken = (postId?: string): string => {
   }
   return deviceToken;
 };
+/**
+ * Get the stable device-level guest token (device_guest_token).
+ * Always returns the same token for this device regardless of guest posts.
+ * Use this for search history — it must be consistent between save and load.
+ */
+export const getDeviceGuestToken = (): string => {
+  if (typeof window === 'undefined') return '';
+  let deviceToken = localStorage.getItem('device_guest_token');
+  if (!deviceToken) {
+    deviceToken = 'guest-' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('device_guest_token', deviceToken);
+  }
+  return deviceToken;
+};
