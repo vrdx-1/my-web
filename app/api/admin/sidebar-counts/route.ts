@@ -96,39 +96,52 @@ export async function GET(request: Request) {
 
   try {
     const [
-      reportsPending,
+      reportsTotal,
       problemReports,
       carsTotal,
       carEdits24h,
-      postBoostsPending,
+      postBoostsTotal,
       revenueLogs,
       downloadClickLogs,
       whatsappClickLogs,
-      verificationPending,
+      verificationTotal,
       hiddenPosts,
+      profilesTotal,
+      searchLogsTotal,
+      dailyUserVisitors,
+      dailyGuestVisitors,
     ] = await Promise.all([
-      admin.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      admin.from('reports').select('*', { count: 'exact', head: true }),
       admin.from('user_problem_reports').select('*', { count: 'exact', head: true }),
       admin.from('cars').select('*', { count: 'exact', head: true }),
       admin.from('car_edits').select('*', { count: 'exact', head: true }).gte('edited_at', twentyFourHoursAgo),
-      admin.from('post_boosts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      admin.from('post_boosts').select('*', { count: 'exact', head: true }),
       admin.from('revenue_logs').select('*', { count: 'exact', head: true }),
       admin.from('download_click_logs').select('*', { count: 'exact', head: true }),
       admin.from('whatsapp_click_logs').select('*', { count: 'exact', head: true }),
-      admin.from('verification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      admin.from('verification_requests').select('*', { count: 'exact', head: true }),
       admin.from('cars').select('*', { count: 'exact', head: true }).eq('is_hidden', true),
+      admin.from('profiles').select('*', { count: 'exact', head: true }),
+      admin.from('search_logs').select('*', { count: 'exact', head: true }),
+      admin.from('daily_user_visitors').select('*', { count: 'exact', head: true }),
+      admin.from('daily_guest_visitors').select('*', { count: 'exact', head: true }),
     ]);
 
-    counts['/admin/reporting'] = reportsPending.count ?? 0;
+    counts['/admin/reporting'] = reportsTotal.count ?? 0;
     counts['/admin/problem-reports'] = problemReports.count ?? 0;
     counts['/admin/review'] = carsTotal.count ?? 0;
     counts['/admin/edited-posts'] = carEdits24h.count ?? 0;
-    counts['/admin/boosting'] = postBoostsPending.count ?? 0;
+    counts['/admin/boosting'] = postBoostsTotal.count ?? 0;
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
     counts['/admin/download-clicks'] = downloadClickLogs.count ?? 0;
     counts['/admin/whatsapp-clicks'] = whatsappClickLogs.count ?? 0;
-    counts['/admin/verification'] = verificationPending.count ?? 0;
+    counts['/admin/verification'] = verificationTotal.count ?? 0;
     counts['/admin/hidden-posts'] = hiddenPosts.count ?? 0;
+    counts['/admin/post'] = carsTotal.count ?? 0;
+    counts['/admin/registrations'] = profilesTotal.count ?? 0;
+    counts['/admin/top-user'] = profilesTotal.count ?? 0;
+    counts['/admin/search-history'] = searchLogsTotal.count ?? 0;
+    counts['/admin/visitor'] = (dailyUserVisitors.count ?? 0) + (dailyGuestVisitors.count ?? 0);
   } catch (e) {
     console.error('sidebar-counts error:', e);
     return NextResponse.json({ error: 'Failed to fetch counts' }, { status: 500 });
