@@ -151,6 +151,7 @@ export async function GET(request: NextRequest) {
       .from('user_search_history')
       .select('search_term, display_text, last_search_type, search_count, last_searched_at')
       .eq('user_id', actor.profileId)
+      .eq('is_deleted', false)
       .order('last_searched_at', { ascending: false })
       .limit(limit);
 
@@ -198,21 +199,25 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (!searchTerm) {
+      // Soft delete all history for this user
       const { error } = await admin
         .from('user_search_history')
-        .delete()
-        .eq('user_id', actor.profileId);
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .eq('user_id', actor.profileId)
+        .eq('is_deleted', false);
       if (error) {
         return internalServerError('search/history clear failed', error);
       }
       return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
     }
 
+    // Soft delete single item
     const { error } = await admin
       .from('user_search_history')
-      .delete()
+      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
       .eq('user_id', actor.profileId)
-      .eq('term_key', termKey);
+      .eq('term_key', termKey)
+      .eq('is_deleted', false);
 
     if (error) {
       return internalServerError('search/history delete item failed', error);

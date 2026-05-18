@@ -1,0 +1,9 @@
+BEGIN;
+
+ALTER TABLE public.user_search_history
+  ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE public.user_search_history
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ NULL;
+
+COMMIT;
