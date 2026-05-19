@@ -54,6 +54,8 @@ interface PostCardProps {
   /** ลำดับโหลดรูปของการ์ด (โพสบนสุดก่อน แล้วไล่ลงล่าง): high / low — ส่งจาก feed ตาม index */
   imageFetchPriority?: 'high' | 'low' | 'auto';
   onProfileClick?: (post: any) => void;
+  customCaption?: React.ReactNode;
+  onPriceClick?: (post: any) => void;
 }
 
 /** ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts */
@@ -86,6 +88,8 @@ export function PostCard({
   priority = false,
   imageFetchPriority,
   onProfileClick,
+  customCaption,
+  onPriceClick,
 }: PostCardProps) {
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
@@ -516,7 +520,9 @@ export function PostCard({
       </div>
 
       {/* Caption */}
-      {normalizedCaption.trim() !== '' && (
+      {customCaption ? (
+        <>{customCaption}</>
+      ) : normalizedCaption.trim() !== '' && (
         <div
           role="text"
           ref={captionRef}
@@ -584,11 +590,15 @@ export function PostCard({
           }}
         >
           <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            {isOwner ? (
+            {isOwner || onPriceClick ? (
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (onPriceClick) {
+                    onPriceClick(post);
+                    return;
+                  }
                   setShowChangePriceModal(true);
                 }}
                 style={{

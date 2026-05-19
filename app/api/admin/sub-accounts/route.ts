@@ -6,6 +6,9 @@ import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { normalizeWhatsAppNumberSource } from '@/utils/whatsapp';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type EnsureAdminOptions = {
   allowSubAccounts?: boolean;
 };
@@ -33,6 +36,130 @@ function getAdminClient() {
     serviceRoleKey,
     { auth: { persistSession: false } }
   );
+}
+
+async function resolveRootAdminId(
+  admin: ReturnType<typeof getAdminClient>,
+  startId: string
+): Promise<string> {
+  let currentId = startId;
+  const visited = new Set<string>();
+
+  for (let i = 0; i < 20; i += 1) {
+    if (!currentId || visited.has(currentId)) break;
+    visited.add(currentId);
+
+    const { data, error } = await admin
+      .from('profiles')
+      .select('id, parent_admin_id')
+      .eq('id', currentId)
+      .single();
+
+    if (error || !data) break;
+
+    const parentId = typeof data.parent_admin_id === 'string' ? data.parent_admin_id.trim() : '';
+    if (!parentId || parentId === data.id) {
+      return data.id;
+    }
+
+    currentId = parentId;
+  }
+
+  return startId;
+}
+
+async function fetchSubAccountsByParentIds(
+  admin: ReturnType<typeof getAdminClient>,
+  parentIds: string[],
+  includeWhatsappSource: boolean
+) {
+  if (parentIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const PAGE_SIZE = 1000;
+  const rows: Array<{
+    id: string;
+    username?: string | null;
+    avatar_url?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+    whatsapp_number_source?: string | null;
+    updated_at?: string | null;
+  }> = [];
+
+  let from = 0;
+  while (true) {
+    const to = from + PAGE_SIZE - 1;
+    const query = includeWhatsappSource
+      ? admin
+          .from('profiles')
+          .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, whatsapp_number_source, updated_at')
+      : admin
+          .from('profiles')
+          .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, updated_at');
+
+    const { data, error } = await query
+      .in('parent_admin_id', parentIds)
+      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to);
+
+    if (error) return { data: null, error };
+
+    const batch = (data ?? []) as typeof rows;
+    rows.push(...batch);
+
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return { data: rows, error: null };
+}
+
+async function fetchAllSubAccountsRows(
+  admin: ReturnType<typeof getAdminClient>,
+  rootAdminId: string,
+  actorId: string,
+  includeWhatsappSource: boolean
+) {
+  const collected = new Map<string, {
+    id: string;
+    username?: string | null;
+    avatar_url?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+    whatsapp_number_source?: string | null;
+    updated_at?: string | null;
+  }>();
+
+  const visitedParents = new Set<string>();
+  let frontier = Array.from(new Set([rootAdminId, actorId].filter(Boolean)));
+
+  while (frontier.length > 0) {
+    const currentParents = frontier.filter((id) => !visitedParents.has(id));
+    if (currentParents.length === 0) break;
+    currentParents.forEach((id) => visitedParents.add(id));
+
+    const result = await fetchSubAccountsByParentIds(admin, currentParents, includeWhatsappSource);
+    if (result.error) return result;
+
+    const nextFrontier: string[] = [];
+    (result.data ?? []).forEach((row) => {
+      if (!collected.has(row.id)) {
+        collected.set(row.id, row);
+        nextFrontier.push(row.id);
+      }
+    });
+
+    frontier = nextFrontier;
+  }
+
+  return { data: Array.from(collected.values()), error: null };
 }
 
 async function ensureAdmin(options: EnsureAdminOptions = {}): Promise<EnsureAdminResult> {
@@ -165,20 +292,12 @@ export async function GET() {
     return internalServerError('admin/sub-accounts admin profile lookup failed', adminProfileError);
   }
 
-  const listWithSource = await admin
-    .from('profiles')
-    .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, whatsapp_number_source, updated_at')
-    .eq('is_sub_account', true)
-    .eq('parent_admin_id', auth.adminId)
-    .order('updated_at', { ascending: false });
+  const rootAdminId = await resolveRootAdminId(admin, auth.adminId);
+
+  const listWithSource = await fetchAllSubAccountsRows(admin, rootAdminId, auth.actorId, true);
 
   const listFallback = isMissingWhatsappSourceColumnError(listWithSource.error)
-    ? await admin
-        .from('profiles')
-        .select('id, username, avatar_url, phone, role, is_sub_account, parent_admin_id, updated_at')
-        .eq('is_sub_account', true)
-        .eq('parent_admin_id', auth.adminId)
-        .order('updated_at', { ascending: false })
+    ? await fetchAllSubAccountsRows(admin, rootAdminId, auth.actorId, false)
     : null;
 
   const data = (listFallback?.data || listWithSource.data) as Array<{
@@ -211,6 +330,11 @@ export async function GET() {
   }));
 
   return NextResponse.json({
+    meta: {
+      root_admin_id: rootAdminId,
+      actor_id: auth.actorId,
+      total_sub_accounts: subAccounts.length,
+    },
     adminProfile: {
       id: adminProfile.id,
       username: adminProfile.username ?? null,
@@ -223,6 +347,12 @@ export async function GET() {
       updated_at: adminProfile.updated_at ?? null,
     },
     subAccounts,
+  }, {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+    },
   });
 }
 

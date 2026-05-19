@@ -1,0 +1,271 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
+
+async function ensureAdmin() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll().map((c) => ({ name: c.name, value: c.value }));
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user?.id) {
+    return { ok: false, status: 401 as const, adminId: null };
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, id')
+    .eq('id', user.id)
+    .single();
+  if (profile?.role !== 'admin') {
+    return { ok: false, status: 403 as const, adminId: null };
+  }
+  return { ok: true, status: 200 as const, adminId: user.id };
+}
+
+function getAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) return null;
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+}
+
+/**
+ * GET: ดึงโพสของ sub-account หนึ่งตัว โดยแยกตาม status (recommend/sold)
+ * ?subAccountId=xxx&status=recommend
+ */
+export async function GET(request: NextRequest) {
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  const subAccountId = request.nextUrl.searchParams.get('subAccountId');
+  const statusParam = request.nextUrl.searchParams.get('status');
+  const status = statusParam === 'sold' ? 'sold' : 'recommend';
+
+  if (!subAccountId) {
+    return NextResponse.json({ error: 'subAccountId required' }, { status: 400 });
+  }
+
+  // ตรวจสอบว่า sub-account นี้เป็นของ admin เจ้านี้หรือไม่
+  const { data: subAccount } = await admin
+    .from('profiles')
+    .select('id, parent_admin_id, is_sub_account')
+    .eq('id', subAccountId)
+    .single();
+
+  if (!subAccount || subAccount.parent_admin_id !== auth.adminId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // ดึงโพส
+  const { data: posts, error: postsError } = await admin
+    .from('cars')
+    .select(
+      'id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified)'
+    )
+    .eq('user_id', subAccountId)
+    .eq('status', status)
+    .order('created_at', { ascending: false });
+
+  if (postsError) {
+    return internalServerError('admin/sub-account-posts list failed', postsError);
+  }
+
+  return NextResponse.json({ posts: posts ?? [] });
+}
+
+/**
+ * PATCH: อัปเดต caption หรือ price ของโพสหนึ่ง
+ * { carId, caption?, price?, price_currency? }
+ */
+export async function PATCH(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sub-account-posts:patch',
+    identifier: ip,
+    limit: 100,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
+
+    const carId = typeof body?.carId === 'string' ? (body.carId as string).trim() : '';
+  if (!carId) {
+    return NextResponse.json({ error: 'carId required' }, { status: 400 });
+  }
+
+  // ตรวจสอบว่าโพสนี้เป็นของ sub-account ของ admin เจ้านี้หรือไม่
+  const { data: car } = await admin
+    .from('cars')
+    .select('user_id, profiles!cars_user_id_fkey(parent_admin_id)')
+    .eq('id', carId)
+    .single();
+
+  if (!car) {
+    return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+  }
+
+  const profile = Array.isArray(car.profiles) ? car.profiles[0] : car.profiles;
+  if (profile?.parent_admin_id !== auth.adminId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // ประเมินข้อมูลที่ต้องอัปเดต
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: Record<string, any> = {};
+
+  if (typeof body.caption === 'string') {
+    updateData.caption = body.caption.trim();
+  }
+
+  if (body.price !== undefined) {
+    if (body.price === null) {
+      updateData.price = null;
+    } else {
+        const priceNum = Number(body.price as unknown as number);
+      if (Number.isFinite(priceNum)) {
+        updateData.price = Math.max(0, Math.trunc(priceNum));
+      }
+    }
+  }
+
+  if (typeof body.price_currency === 'string' && ['₭', '฿', '$'].includes(body.price_currency)) {
+    updateData.price_currency = body.price_currency;
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+  }
+
+  // บันทึก edit ลงในตาราง car_edits
+  updateData.updated_at = new Date().toISOString();
+
+  const { error: updateError } = await admin
+    .from('cars')
+    .update(updateData)
+    .eq('id', carId);
+
+  if (updateError) {
+    return internalServerError('admin/sub-account-posts update failed', updateError);
+  }
+
+  // บันทึกประวัติการแก้ไข
+  await admin
+    .from('car_edits')
+    .insert({
+      car_id: carId,
+      edited_at: new Date().toISOString(),
+    });
+
+  return NextResponse.json({ ok: true });
+}
+
+/**
+ * DELETE: ย้ายโพสไปฝั่ง "cleared" (สำหรับการจัดการอนาคต)
+ * อาจจะใช้ flag หรือ status อื่น หรือสร้าง table ใหม่
+ */
+export async function DELETE(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sub-account-posts:delete',
+    identifier: ip,
+    limit: 50,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  let body: { carId?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
+
+  const carId = typeof body?.carId === 'string' ? body.carId.trim() : '';
+  if (!carId) {
+    return NextResponse.json({ error: 'carId required' }, { status: 400 });
+  }
+
+  // ตรวจสอบ ownership
+  const { data: car } = await admin
+    .from('cars')
+    .select('user_id, profiles!cars_user_id_fkey(parent_admin_id)')
+    .eq('id', carId)
+    .single();
+
+  if (!car) {
+    return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+  }
+
+  const profile = Array.isArray(car.profiles) ? car.profiles[0] : car.profiles;
+  if (profile?.parent_admin_id !== auth.adminId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // อัปเดต status เป็น sold เพื่อให้ย้ายออกจาก recommend feed
+  const { error: updateError } = await admin
+    .from('cars')
+    .update({ status: 'sold' })
+    .eq('id', carId);
+
+  if (updateError) {
+    return internalServerError('admin/sub-account-posts clear failed', updateError);
+  }
+
+  return NextResponse.json({ ok: true });
+}
