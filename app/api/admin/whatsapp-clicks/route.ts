@@ -80,12 +80,20 @@ type CarLookupRow = {
   shares: number | null;
   is_hidden: boolean | null;
   is_boosted: boolean | null;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-    phone: string | null;
-    is_verified: boolean | null;
-  }[] | null;
+  profiles:
+    | {
+        username: string | null;
+        avatar_url: string | null;
+        phone: string | null;
+        is_verified: boolean | null;
+      }
+    | {
+        username: string | null;
+        avatar_url: string | null;
+        phone: string | null;
+        is_verified: boolean | null;
+      }[]
+    | null;
 };
 
 type NormalizedCarLookupRow = Omit<CarLookupRow, 'profiles'> & {
@@ -98,7 +106,9 @@ type NormalizedCarLookupRow = Omit<CarLookupRow, 'profiles'> & {
 };
 
 function normalizeCarRow(car: CarLookupRow): NormalizedCarLookupRow {
-  const profile = Array.isArray(car.profiles) && car.profiles.length > 0 ? car.profiles[0] : null;
+  const profile = Array.isArray(car.profiles)
+    ? (car.profiles.length > 0 ? car.profiles[0] : null)
+    : car.profiles;
   return {
     ...car,
     profiles: profile
