@@ -16,6 +16,25 @@ type PostClickInfo = {
   post: Record<string, unknown> | null;
 };
 
+type PersonPostInfo = {
+  postId: string | null;
+  shortId: string;
+  clickCount: number;
+};
+
+type PersonClickRow = {
+  personKey: string;
+  personType: 'user' | 'guest';
+  userId: string | null;
+  guestToken: string | null;
+  displayName: string;
+    avatarUrl: string | null;
+  totalClicks: number;
+  firstClickAt: string;
+  lastClickAt: string;
+  posts: PersonPostInfo[];
+};
+
 type AccountRow = {
   targetProfileId: string;
   username: string;
@@ -27,16 +46,22 @@ type AccountRow = {
   userClicks: number;
   guestClicks: number;
   posts: PostClickInfo[];
+  people: PersonClickRow[];
 };
 
 type WhatsAppLogRow = {
   id: number;
   created_at: string;
+  clicked_at: string | null;
   target_profile_id: string;
   user_id: string | null;
   guest_token: string | null;
   post_id: string | null;
   short_id: string | null;
+  clicker_kind: 'guest' | 'user' | 'admin' | 'admin_sub_account' | null;
+  clicker_role: string | null;
+  clicker_is_sub_account: boolean | null;
+  clicker_parent_admin_id: string | null;
 };
 
 type CarLookupRow = {
@@ -228,7 +253,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await admin
     .from('whatsapp_click_logs')
-    .select('id, created_at, target_profile_id, user_id, guest_token, post_id, short_id')
+    .select('id, created_at, clicked_at, target_profile_id, user_id, guest_token, post_id, short_id, clicker_kind, clicker_role, clicker_is_sub_account, clicker_parent_admin_id')
     .gte('created_at', startIso)
     .lt('created_at', nextIso)
     .order('created_at', { ascending: true });
@@ -238,9 +263,12 @@ export async function GET(request: NextRequest) {
   }
 
   const monthLogs = (data || []) as WhatsAppLogRow[];
+  const visibleMonthLogs = monthLogs.filter(
+    (row) => row.clicker_kind !== 'admin' && row.clicker_kind !== 'admin_sub_account'
+  );
   const dailyMap = new Map<string, number>();
 
-  for (const row of monthLogs) {
+  for (const row of visibleMonthLogs) {
     const day = getBangkokDateString(new Date(row.created_at));
     dailyMap.set(day, (dailyMap.get(day) ?? 0) + 1);
   }
@@ -257,7 +285,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const selectedDateLogs = monthLogs.filter(
+  const selectedDateLogs = visibleMonthLogs.filter(
     (row) => getBangkokDateString(new Date(row.created_at)) === selectedDate
   );
 
@@ -267,6 +295,15 @@ export async function GET(request: NextRequest) {
     guestClicks: number;
     uniquePeopleSet: Set<string>;
     postMap: Map<string, { postId: string | null; shortId: string; clickCount: number }>;
+    personMap: Map<string, {
+      personType: 'user' | 'guest';
+      userId: string | null;
+      guestToken: string | null;
+      totalClicks: number;
+      firstClickAt: string;
+      lastClickAt: string;
+      postMap: Map<string, { postId: string | null; shortId: string; clickCount: number }>;
+    }>;
   }>();
 
   for (const row of selectedDateLogs) {
@@ -278,6 +315,7 @@ export async function GET(request: NextRequest) {
         guestClicks: 0,
         uniquePeopleSet: new Set<string>(),
         postMap: new Map(),
+        personMap: new Map(),
       });
     }
 
@@ -299,6 +337,46 @@ export async function GET(request: NextRequest) {
       }
     } else {
       current.postMap.set(postKey, {
+        postId,
+        shortId,
+        clickCount: 1,
+      });
+    }
+
+    const clickAt = row.clicked_at || row.created_at;
+    const personType: 'user' | 'guest' = row.user_id ? 'user' : 'guest';
+    const personKey = row.user_id
+      ? `u:${row.user_id}`
+      : (row.guest_token && row.guest_token.trim() ? `g:${row.guest_token.trim()}` : `log:${row.id}`);
+
+    if (!current.personMap.has(personKey)) {
+      current.personMap.set(personKey, {
+        personType,
+        userId: row.user_id || null,
+        guestToken: row.user_id ? null : (row.guest_token?.trim() || null),
+        totalClicks: 0,
+        firstClickAt: clickAt,
+        lastClickAt: clickAt,
+        postMap: new Map(),
+      });
+    }
+
+    const personStats = current.personMap.get(personKey)!;
+    personStats.totalClicks += 1;
+    if (clickAt < personStats.firstClickAt) personStats.firstClickAt = clickAt;
+    if (clickAt > personStats.lastClickAt) personStats.lastClickAt = clickAt;
+
+    const personPost = personStats.postMap.get(postKey);
+    if (personPost) {
+      personPost.clickCount += 1;
+      if (!personPost.shortId || personPost.shortId === 'unknown') {
+        personPost.shortId = shortId;
+      }
+      if (!personPost.postId && postId) {
+        personPost.postId = postId;
+      }
+    } else {
+      personStats.postMap.set(postKey, {
         postId,
         shortId,
         clickCount: 1,
@@ -349,6 +427,28 @@ export async function GET(request: NextRequest) {
   const parentNameMap = new Map<string, string>();
   for (const row of parentRows || []) {
     parentNameMap.set(row.id, row.username || 'Unknown');
+  }
+
+  const clickedUserIds = new Set<string>();
+  for (const stats of accountMap.values()) {
+    for (const person of stats.personMap.values()) {
+      if (person.userId) clickedUserIds.add(person.userId);
+    }
+  }
+
+  const clickerUsernameMap = new Map<string, string>();
+  type ClickerProfileRow = { id: string; username: string | null; avatar_url: string | null };
+  const clickerAvatarMap = new Map<string, string | null>();
+  if (clickedUserIds.size > 0) {
+    const { data: clickerProfileRows } = await admin
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', Array.from(clickedUserIds));
+
+    for (const row of (clickerProfileRows || []) as ClickerProfileRow[]) {
+      clickerUsernameMap.set(row.id, row.username || 'Unknown user');
+      clickerAvatarMap.set(row.id, row.avatar_url || null);
+    }
   }
 
   const clickedPostIds = new Set<string>();
@@ -419,6 +519,41 @@ export async function GET(request: NextRequest) {
         })
         .sort((a, b) => b.clickCount - a.clickCount);
 
+      const people: PersonClickRow[] = Array.from(stats.personMap.entries())
+        .map(([personKey, personStats]) => {
+          const displayName = personStats.personType === 'user'
+            ? clickerUsernameMap.get(personStats.userId || '') || 'Unknown user'
+            : (personStats.guestToken || 'Guest (no token)');
+          const avatarUrl = personStats.personType === 'user'
+            ? (clickerAvatarMap.get(personStats.userId || '') || null)
+            : null;
+
+          const personPosts: PersonPostInfo[] = Array.from(personStats.postMap.values())
+            .sort((a, b) => b.clickCount - a.clickCount)
+            .map((postStats) => ({
+              postId: postStats.postId,
+              shortId: postStats.shortId,
+              clickCount: postStats.clickCount,
+            }));
+
+          return {
+            personKey,
+            personType: personStats.personType,
+            userId: personStats.userId,
+            guestToken: personStats.guestToken,
+            displayName,
+                        avatarUrl,
+            totalClicks: personStats.totalClicks,
+            firstClickAt: personStats.firstClickAt,
+            lastClickAt: personStats.lastClickAt,
+            posts: personPosts,
+          };
+        })
+        .sort((a, b) => {
+          if (b.totalClicks !== a.totalClicks) return b.totalClicks - a.totalClicks;
+          return b.lastClickAt.localeCompare(a.lastClickAt);
+        });
+
       return {
         targetProfileId: profileId,
         username: profile?.username || 'Unknown',
@@ -430,6 +565,7 @@ export async function GET(request: NextRequest) {
         userClicks: stats.userClicks,
         guestClicks: stats.guestClicks,
         posts,
+        people,
       };
     })
     .filter((row): row is AccountRow => row !== null)
@@ -449,7 +585,8 @@ export async function GET(request: NextRequest) {
     .from('whatsapp_click_logs')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', todayStartIso)
-    .lt('created_at', todayNextIso);
+    .lt('created_at', todayNextIso)
+    .or('clicker_kind.is.null,clicker_kind.eq.user,clicker_kind.eq.guest');
 
   return NextResponse.json({
     selectedDate,

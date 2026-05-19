@@ -361,7 +361,7 @@ export function PostCard({
             onProfileClick(post);
           }}
         >
-          <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} />
+          <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} useProfileImage />
         </div>
         <div style={{ flex: 1, minWidth: 0, marginTop: '2px' }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '3px', color: '#111111' }}>
@@ -380,7 +380,7 @@ export function PostCard({
                 onProfileClick(post);
               }}
             >
-              {post.profiles?.username?.toLowerCase() === 'guest user' ? 'User' : (post.profiles?.username || 'User')}
+              {post.profiles?.username || 'Unknown user'}
             </span>
             {post.profiles?.is_verified && (
               <svg

@@ -71,7 +71,7 @@ export const AdminPostCard = React.memo<AdminPostCardProps>(({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '5px', color: '#111111' }}>
 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, color: '#111111' }}>
-            {post.profiles?.username?.toLowerCase() === 'guest user' ? 'User' : (post.profiles?.username || 'User')}
+            {post.profiles?.username || 'Unknown user'}
             </span>
           </div>
           <div style={{ fontSize: '13px', color: '#4a4d52', lineHeight: '18px' }}>

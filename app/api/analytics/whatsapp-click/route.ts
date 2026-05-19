@@ -16,8 +16,8 @@ function getServiceRoleClient() {
 /**
  * POST /api/analytics/whatsapp-click
  * นับทุกครั้งที่กดปุ่ม WhatsApp ใต้ PostCard
- * - นับทั้ง user และ guest
- * - ไม่นับ role = admin
+ * - นับทั้ง user, guest, admin และ sub account
+ * - เก็บประเภทผู้กดเพื่อให้หน้าแอดมินกรองได้ตามต้องการ
  */
 export async function POST(request: Request) {
   const ip = getRequestIp(request);
@@ -99,6 +99,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: 'missing-target-profile' });
   }
 
+  let clickerKind: 'guest' | 'user' | 'admin' | 'admin_sub_account' = 'guest';
+  let clickerRole: string | null = null;
+  let clickerIsSubAccount = false;
+  let clickerParentAdminId: string | null = null;
+
   if (userId) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -106,12 +111,16 @@ export async function POST(request: Request) {
       .eq('id', userId)
       .maybeSingle();
 
-    if (profile?.role === 'admin') {
-      return NextResponse.json({ ok: true, skipped: 'admin' });
-    }
+    clickerRole = profile?.role ?? null;
+    clickerIsSubAccount = profile?.is_sub_account === true;
+    clickerParentAdminId = profile?.parent_admin_id ?? null;
 
-    if (profile?.is_sub_account === true && profile?.parent_admin_id) {
-      return NextResponse.json({ ok: true, skipped: 'admin-sub-account' });
+    if (clickerRole === 'admin') {
+      clickerKind = 'admin';
+    } else if (clickerIsSubAccount && clickerParentAdminId) {
+      clickerKind = 'admin_sub_account';
+    } else {
+      clickerKind = 'user';
     }
   }
 
@@ -139,6 +148,11 @@ export async function POST(request: Request) {
     short_id: shortId,
     source,
     user_agent: userAgent,
+    clicked_at: new Date().toISOString(),
+    clicker_kind: clickerKind,
+    clicker_role: clickerRole,
+    clicker_is_sub_account: clickerIsSubAccount,
+    clicker_parent_admin_id: clickerParentAdminId,
   });
 
   if (error) {

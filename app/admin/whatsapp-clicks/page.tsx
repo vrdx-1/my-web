@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Avatar } from '@/components/Avatar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PostCard } from '@/components/PostCard';
 import { PostFeedModals } from '@/components/PostFeedModals';
@@ -24,6 +25,22 @@ type AccountRow = {
   uniquePeople: number;
   userClicks: number;
   guestClicks: number;
+  people: Array<{
+    personKey: string;
+    personType: 'user' | 'guest';
+    userId: string | null;
+    guestToken: string | null;
+    displayName: string;
+    avatarUrl: string | null;
+    totalClicks: number;
+    firstClickAt: string;
+    lastClickAt: string;
+    posts: Array<{
+      postId: string | null;
+      shortId: string;
+      clickCount: number;
+    }>;
+  }>;
   posts: Array<{
     postId: string | null;
     shortId: string;
@@ -70,6 +87,30 @@ function getTodayBangkokDate(): string {
 function formatDisplayDate(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
   return `${day}/${month}/${year}`;
+}
+
+function formatBangkokDateTime(isoDate: string): string {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return new Intl.DateTimeFormat('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
+function maskGuestToken(token: string | null): string {
+  if (!token) return 'Guest (no token)';
+  const trimmed = token.trim();
+  if (!trimmed) return 'Guest (no token)';
+  if (trimmed.length <= 10) return `guest:${trimmed}`;
+  return `guest:${trimmed.slice(0, 5)}...${trimmed.slice(-4)}`;
 }
 
 export default function AdminWhatsAppClicksPage() {
@@ -170,7 +211,15 @@ export default function AdminWhatsAppClicksPage() {
         if (cancelled) return;
 
         setDailyRows(Array.isArray(payload?.dailyRows) ? payload.dailyRows : []);
-        setAccountRows(Array.isArray(payload?.accountRows) ? payload.accountRows : []);
+        setAccountRows(
+          Array.isArray(payload?.accountRows)
+            ? payload.accountRows.map((row: AccountRow) => ({
+                ...row,
+                posts: Array.isArray(row?.posts) ? row.posts : [],
+                people: Array.isArray(row?.people) ? row.people : [],
+              }))
+            : []
+        );
         setSummary({
           todayCount: Number(payload?.summary?.todayCount || 0),
           monthTotal: Number(payload?.summary?.monthTotal || 0),
@@ -309,6 +358,7 @@ export default function AdminWhatsAppClicksPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
+                      <th style={{ textAlign: 'center', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0', width: '50px' }}>Avatar</th>
                       <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Account</th>
                       <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Type</th>
                       <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Posts</th>
@@ -437,9 +487,84 @@ export default function AdminWhatsAppClicksPage() {
               </button>
             </div>
 
-            <div style={{ overflowY: 'auto', padding: '10px 0', background: '#fff' }}>
+            <div style={{ overflowY: 'auto', padding: '10px 0 18px', background: '#fff' }}>
+              <div style={{ margin: '0 16px 12px', padding: '12px', borderRadius: '12px', border: '1px solid #dbeafe', background: 'linear-gradient(135deg, #eff6ff 0%, #f8fbff 100%)', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(120px, 1fr))', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: 700, textTransform: 'uppercase' }}>Total Clicks</div>
+                  <div style={{ marginTop: '4px', fontSize: '18px', color: '#1e3a8a', fontWeight: 800 }}>{selectedAccountRow.totalClicks.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: 700, textTransform: 'uppercase' }}>Unique People</div>
+                  <div style={{ marginTop: '4px', fontSize: '18px', color: '#1e3a8a', fontWeight: 800 }}>{selectedAccountRow.uniquePeople.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: 700, textTransform: 'uppercase' }}>Posts Touched</div>
+                  <div style={{ marginTop: '4px', fontSize: '18px', color: '#1e3a8a', fontWeight: 800 }}>{selectedAccountRow.posts.length.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div style={{ margin: '0 16px 10px', fontSize: '13px', fontWeight: 800, color: '#0f172a', letterSpacing: '0.01em' }}>
+                Person-Unique Timeline
+              </div>
+
+              {selectedAccountRow.people.length === 0 ? (
+                <div style={{ margin: '0 16px 14px', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px' }}>
+                  No visible user/guest click details for this account on selected day.
+                </div>
+              ) : (
+                <div style={{ margin: '0 16px 14px', border: '1px solid #e2e8f0', borderRadius: '12px', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc' }}>
+                        <th style={{ textAlign: 'left', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Person</th>
+                        <th style={{ textAlign: 'left', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                        <th style={{ textAlign: 'right', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Clicks</th>
+                        <th style={{ textAlign: 'left', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>First Click</th>
+                        <th style={{ textAlign: 'left', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Last Click</th>
+                        <th style={{ textAlign: 'left', padding: '10px', fontSize: '12px', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Posts</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedAccountRow.people.map((person) => (
+                        <tr key={person.personKey} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '8px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                              <Avatar avatarUrl={person.avatarUrl} size={36} useProfileImage />
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px', fontSize: '13px', color: '#0f172a', fontWeight: 600 }}>
+                            {person.personType === 'user' ? person.displayName : maskGuestToken(person.guestToken)}
+                          </td>
+                          <td style={{ padding: '10px', fontSize: '12px', color: '#475569' }}>
+                            <span style={{ borderRadius: '999px', padding: '2px 8px', border: person.personType === 'user' ? '1px solid #86efac' : '1px solid #fecaca', background: person.personType === 'user' ? '#f0fdf4' : '#fef2f2', color: person.personType === 'user' ? '#166534' : '#b91c1c', fontWeight: 700 }}>
+                              {person.personType.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px', textAlign: 'right', fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>{person.totalClicks.toLocaleString()}</td>
+                          <td style={{ padding: '10px', fontSize: '12px', color: '#334155' }}>{formatBangkokDateTime(person.firstClickAt)}</td>
+                          <td style={{ padding: '10px', fontSize: '12px', color: '#334155' }}>{formatBangkokDateTime(person.lastClickAt)}</td>
+                          <td style={{ padding: '10px', fontSize: '12px', color: '#334155' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {person.posts.map((postItem, postIndex) => (
+                                <span key={`${person.personKey}-${postItem.shortId}-${postIndex}`} style={{ border: '1px solid #dbeafe', background: '#eff6ff', color: '#1e3a8a', borderRadius: '999px', padding: '2px 8px', fontSize: '12px', fontWeight: 700 }}>
+                                  {postItem.shortId} ({postItem.clickCount})
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div style={{ margin: '0 16px 10px', fontSize: '13px', fontWeight: 800, color: '#0f172a', letterSpacing: '0.01em' }}>
+                Post Preview
+              </div>
+
               {clickedPostsWithData.length === 0 ? (
-                <div style={{ padding: '20px 16px', fontSize: '14px', color: '#64748b' }}>
+                <div style={{ padding: '0 16px 12px', fontSize: '14px', color: '#64748b' }}>
                   No post details found for this account on selected day.
                 </div>
               ) : (
@@ -477,7 +602,7 @@ export default function AdminWhatsAppClicksPage() {
               )}
 
               {clickedPostsWithoutData.length > 0 ? (
-                <div style={{ margin: '10px 16px 16px', padding: '10px 12px', border: '1px solid #fee2e2', background: '#fff1f2', color: '#9f1239', borderRadius: '10px', fontSize: '13px' }}>
+                <div style={{ margin: '10px 16px 0', padding: '10px 12px', border: '1px solid #fee2e2', background: '#fff1f2', color: '#9f1239', borderRadius: '10px', fontSize: '13px' }}>
                   Some clicked posts could not be loaded: {clickedPostsWithoutData.map((item) => item.shortId).join(', ')}
                 </div>
               ) : null}
