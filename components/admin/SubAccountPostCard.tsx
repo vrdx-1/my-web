@@ -10,18 +10,22 @@ interface SubAccountPostCardProps {
   post: any;
   index: number;
   onUpdate?: (postId: string, data: any) => Promise<void> | void;
+  onClear?: (postId: string) => Promise<void> | void;
   isSaving?: boolean;
   session?: any;
   onRefresh?: () => void;
+  isClearedTab?: boolean;
 }
 
 export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
   post,
   index,
   onUpdate,
+  onClear,
   isSaving = false,
   session,
   onRefresh,
+  isClearedTab = false,
 }) => {
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [captionDraft, setCaptionDraft] = useState(post?.caption || '');
@@ -53,6 +57,13 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
       setSaveError(error instanceof Error ? error.message : 'ບໍ່ສາມາດບັນທຶກ caption ໄດ້');
     }
   }, [hasCaptionChanges, isSaving, onUpdate, post.id, captionDraft]);
+
+  const handleClear = useCallback(async () => {
+    if (!onClear || isSaving || isClearedTab) return;
+    const confirmed = window.confirm('ຢືນຢັນເຄລຍໂພສນີ້?');
+    if (!confirmed) return;
+    await onClear(post.id);
+  }, [onClear, isSaving, isClearedTab, post.id]);
 
   const captionNode = (
     <div style={{ padding: '0 15px 8px 15px', marginBottom: '6px', position: 'relative' }}>
@@ -181,28 +192,55 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
 
   return (
     <>
-      <PostCard
-        post={post}
-        index={index}
-        isLastElement={false}
-        showMenuButton={false}
-        session={session}
-        savedPosts={savedPosts}
-        justSavedPosts={justSavedPosts}
-        activeMenuState={activeMenuState}
-        isMenuAnimating={isMenuAnimating}
-        menuButtonRefs={menuButtonRefs as React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>}
-        onViewPost={() => {}}
-        onSave={() => {}}
-        onShare={() => {}}
-        onTogglePostStatus={() => {}}
-        onDeletePost={() => {}}
-        onReport={() => {}}
-        onSetActiveMenu={setActiveMenuState}
-        onSetMenuAnimating={setIsMenuAnimating}
-        customCaption={captionNode}
-        onPriceClick={() => setIsPriceModalOpen(true)}
-      />
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '12px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <PostCard
+            post={post}
+            index={index}
+            isLastElement={false}
+            showMenuButton={false}
+            session={session}
+            savedPosts={savedPosts}
+            justSavedPosts={justSavedPosts}
+            activeMenuState={activeMenuState}
+            isMenuAnimating={isMenuAnimating}
+            menuButtonRefs={menuButtonRefs as React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>}
+            onViewPost={() => {}}
+            onSave={() => {}}
+            onShare={() => {}}
+            onTogglePostStatus={() => {}}
+            onDeletePost={() => {}}
+            onReport={() => {}}
+            onSetActiveMenu={setActiveMenuState}
+            onSetMenuAnimating={setIsMenuAnimating}
+            customCaption={captionNode}
+            onPriceClick={() => setIsPriceModalOpen(true)}
+          />
+        </div>
+
+        <div style={{ width: '112px', flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={isSaving || isClearedTab}
+            style={{
+              width: '100%',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              background: isClearedTab ? '#e5e7eb' : '#111111',
+              color: isClearedTab ? '#6b7280' : '#ffffff',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: isSaving || isClearedTab ? 'not-allowed' : 'pointer',
+              opacity: isSaving ? 0.7 : 1,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+            }}
+          >
+            {isClearedTab ? 'ເຄລຍແລ້ວ' : 'clear'}
+          </button>
+        </div>
+      </div>
 
       <ChangePostPriceModal
         isOpen={isPriceModalOpen}

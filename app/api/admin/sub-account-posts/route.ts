@@ -5,6 +5,19 @@ import { cookies } from 'next/headers';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 
+const ADMIN_SUB_ACCOUNT_CLEARS_TABLE = 'admin_sub_account_clears';
+
+function isMissingClearsTableError(error: unknown): boolean {
+  return String((error as { code?: string } | null)?.code || '') === '42P01';
+}
+
+function buildNotInFilter(ids: string[]): string {
+  const escaped = ids
+    .map((id) => String(id).replace(/"/g, '').replace(/,/g, '').trim())
+    .filter(Boolean);
+  return `(${escaped.join(',')})`;
+}
+
 async function ensureAdmin() {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -32,13 +45,14 @@ async function ensureAdmin() {
   }
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, id')
+    .select('role, id, is_sub_account, parent_admin_id')
     .eq('id', user.id)
     .single();
   if (profile?.role !== 'admin') {
     return { ok: false, status: 403 as const, adminId: null };
   }
-  return { ok: true, status: 200 as const, adminId: user.id };
+  const resolvedAdminId = profile?.is_sub_account ? (profile?.parent_admin_id || user.id) : user.id;
+  return { ok: true, status: 200 as const, adminId: resolvedAdminId };
 }
 
 function getAdminClient() {
@@ -52,8 +66,8 @@ function getAdminClient() {
 }
 
 /**
- * GET: ดึงโพสของ sub-account หนึ่งตัว โดยแยกตาม status (recommend/sold)
- * ?subAccountId=xxx&status=recommend
+ * GET: ดึงโพสของ sub-account หนึ่งตัว โดยแยกตาม status (recommend/cleared)
+ * ?subAccountId=xxx&status=recommend|cleared
  */
 export async function GET(request: NextRequest) {
   const auth = await ensureAdmin();
@@ -68,7 +82,7 @@ export async function GET(request: NextRequest) {
 
   const subAccountId = request.nextUrl.searchParams.get('subAccountId');
   const statusParam = request.nextUrl.searchParams.get('status');
-  const status = statusParam === 'sold' ? 'sold' : 'recommend';
+  const status = statusParam === 'cleared' ? 'cleared' : 'recommend';
 
   if (!subAccountId) {
     return NextResponse.json({ error: 'subAccountId required' }, { status: 400 });
@@ -85,18 +99,78 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // ดึงโพส
-  const { data: posts, error: postsError } = await admin
+  if (status === 'cleared') {
+    const { data: clearedRows, error: clearedError } = await admin
+      .from(ADMIN_SUB_ACCOUNT_CLEARS_TABLE)
+      .select('car_id, cleared_at')
+      .eq('admin_id', auth.adminId)
+      .eq('sub_account_id', subAccountId)
+      .order('cleared_at', { ascending: false });
+
+    if (clearedError) {
+      if (isMissingClearsTableError(clearedError)) {
+        return NextResponse.json(
+          { error: 'Database migration required: create admin_sub_account_clears table' },
+          { status: 409 }
+        );
+      }
+      return internalServerError('admin/sub-account-posts list cleared failed', clearedError);
+    }
+
+    const clearedCarIds = Array.from(new Set((clearedRows ?? []).map((row) => String(row.car_id || '').trim()).filter(Boolean)));
+    if (clearedCarIds.length === 0) {
+      return NextResponse.json({ posts: [] });
+    }
+
+    const { data: cars, error: carsError } = await admin
+      .from('cars')
+      .select(
+        'id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified)'
+      )
+      .eq('user_id', subAccountId)
+      .in('id', clearedCarIds);
+
+    if (carsError) {
+      return internalServerError('admin/sub-account-posts list cleared cars failed', carsError);
+    }
+
+    const carsMap = new Map((cars ?? []).map((car) => [String(car.id), car]));
+    const orderedPosts = clearedCarIds
+      .map((id) => carsMap.get(String(id)))
+      .filter(Boolean);
+
+    return NextResponse.json({ posts: orderedPosts });
+  }
+
+  const { data: clearedRows, error: clearedError } = await admin
+    .from(ADMIN_SUB_ACCOUNT_CLEARS_TABLE)
+    .select('car_id')
+    .eq('admin_id', auth.adminId)
+    .eq('sub_account_id', subAccountId);
+
+  if (clearedError && !isMissingClearsTableError(clearedError)) {
+    return internalServerError('admin/sub-account-posts list cleared ids failed', clearedError);
+  }
+
+  const clearedCarIds = Array.from(new Set((clearedRows ?? []).map((row) => String(row.car_id || '').trim()).filter(Boolean)));
+
+  let postsQuery = admin
     .from('cars')
     .select(
       'id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified)'
     )
     .eq('user_id', subAccountId)
-    .eq('status', status)
+    .eq('status', 'recommend')
     .order('created_at', { ascending: false });
 
+  if (clearedCarIds.length > 0) {
+    postsQuery = postsQuery.not('id', 'in', buildNotInFilter(clearedCarIds));
+  }
+
+  const { data: posts, error: postsError } = await postsQuery;
+
   if (postsError) {
-    return internalServerError('admin/sub-account-posts list failed', postsError);
+    return internalServerError('admin/sub-account-posts list recommend failed', postsError);
   }
 
   return NextResponse.json({ posts: posts ?? [] });
@@ -182,9 +256,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
   }
 
-  // บันทึก edit ลงในตาราง car_edits
-  updateData.updated_at = new Date().toISOString();
-
   const { error: updateError } = await admin
     .from('cars')
     .update(updateData)
@@ -195,19 +266,23 @@ export async function PATCH(request: NextRequest) {
   }
 
   // บันทึกประวัติการแก้ไข
-  await admin
+  const { error: editLogError } = await admin
     .from('car_edits')
     .insert({
       car_id: carId,
       edited_at: new Date().toISOString(),
     });
 
+  if (editLogError) {
+    console.warn('[admin/sub-account-posts] car_edits insert failed', editLogError);
+  }
+
   return NextResponse.json({ ok: true });
 }
 
 /**
- * DELETE: ย้ายโพสไปฝั่ง "cleared" (สำหรับการจัดการอนาคต)
- * อาจจะใช้ flag หรือ status อื่น หรือสร้าง table ใหม่
+ * DELETE: ทำเครื่องหมายโพสว่า "cleared" (แยกจาก sold)
+ * { carId }
  */
 export async function DELETE(request: NextRequest) {
   const ip = getRequestIp(request);
@@ -257,14 +332,26 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // อัปเดต status เป็น sold เพื่อให้ย้ายออกจาก recommend feed
-  const { error: updateError } = await admin
-    .from('cars')
-    .update({ status: 'sold' })
-    .eq('id', carId);
+  const { error: clearError } = await admin
+    .from(ADMIN_SUB_ACCOUNT_CLEARS_TABLE)
+    .upsert(
+      {
+        admin_id: auth.adminId,
+        sub_account_id: String(car.user_id),
+        car_id: carId,
+        cleared_at: new Date().toISOString(),
+      },
+      { onConflict: 'admin_id,car_id' }
+    );
 
-  if (updateError) {
-    return internalServerError('admin/sub-account-posts clear failed', updateError);
+  if (clearError) {
+    if (isMissingClearsTableError(clearError)) {
+      return NextResponse.json(
+        { error: 'Database migration required: create admin_sub_account_clears table' },
+        { status: 409 }
+      );
+    }
+    return internalServerError('admin/sub-account-posts clear failed', clearError);
   }
 
   return NextResponse.json({ ok: true });

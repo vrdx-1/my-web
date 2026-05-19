@@ -24,28 +24,43 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
 }) => {
   const [activeTab, setActiveTab] = useState<'available' | 'cleared'>('available');
   const [posts, setPosts] = useState<any[]>([]);
+  const [tabCounts, setTabCounts] = useState<{ available: number; cleared: number }>({ available: 0, cleared: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [savingPostIds, setSavingPostIds] = useState<Set<string>>(new Set());
 
-  const statusMap = { available: 'recommend', cleared: 'sold' };
+  const statusMap = { available: 'recommend', cleared: 'cleared' };
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const status = statusMap[activeTab];
-      const res = await fetch(`${API_BASE}?subAccountId=${subAccountId}&status=${status}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) {
+      const [activeRes, availableRes, clearedRes] = await Promise.all([
+        fetch(`${API_BASE}?subAccountId=${subAccountId}&status=${status}`, { credentials: 'include' }),
+        fetch(`${API_BASE}?subAccountId=${subAccountId}&status=recommend`, { credentials: 'include' }),
+        fetch(`${API_BASE}?subAccountId=${subAccountId}&status=cleared`, { credentials: 'include' }),
+      ]);
+
+      if (!activeRes.ok || !availableRes.ok || !clearedRes.ok) {
         throw new Error('ບໍ່ສາມາດໂຫຼດໂພສໄດ້');
       }
-      const data = await res.json();
-      setPosts(Array.isArray(data.posts) ? data.posts : []);
+
+      const [activeData, availableData, clearedData] = await Promise.all([
+        activeRes.json(),
+        availableRes.json(),
+        clearedRes.json(),
+      ]);
+
+      setPosts(Array.isArray(activeData.posts) ? activeData.posts : []);
+      setTabCounts({
+        available: Array.isArray(availableData.posts) ? availableData.posts.length : 0,
+        cleared: Array.isArray(clearedData.posts) ? clearedData.posts.length : 0,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ມີຂໍ້ຜິດພາດເກີດຂື້ນ');
       setPosts([]);
+      setTabCounts({ available: 0, cleared: 0 });
     } finally {
       setLoading(false);
     }
@@ -68,7 +83,11 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
           body: JSON.stringify({ carId: postId, ...updateData }),
         });
         if (!res.ok) {
-          throw new Error('ບໍ່ສາມາດອັບເດດໄດ້');
+          const payload = await res.json().catch(() => ({}));
+          const message = typeof payload?.error === 'string' && payload.error.trim()
+            ? payload.error
+            : 'ບໍ່ສາມາດອັບເດດໄດ້';
+          throw new Error(message);
         }
         // อัปเดต posts ใน state โดยไม่ต้อง reload ทั้งหมด
         setPosts((prev) =>
@@ -92,6 +111,42 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
       }
     },
     []
+  );
+
+  const handleClearPost = useCallback(
+    async (postId: string) => {
+      setSavingPostIds((prev) => new Set([...prev, postId]));
+      try {
+        const res = await fetch(API_BASE, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carId: postId }),
+        });
+        if (!res.ok) {
+          throw new Error('ບໍ່ສາມາດເຄລຍໂພສໄດ້');
+        }
+
+        if (activeTab === 'available') {
+          setPosts((prev) => prev.filter((post) => post.id !== postId));
+          setTabCounts((prev) => ({
+            available: Math.max(0, prev.available - 1),
+            cleared: prev.cleared + 1,
+          }));
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'ມີຂໍ້ຜິດພາດເກີດຂື້ນ';
+        console.error(errorMsg);
+        throw err;
+      } finally {
+        setSavingPostIds((prev) => {
+          const next = new Set(prev);
+          next.delete(postId);
+          return next;
+        });
+      }
+    },
+    [activeTab]
   );
 
   return (
@@ -120,8 +175,8 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
       <div style={{ marginBottom: '18px' }}>
         <TabNavigation
           tabs={[
-            { value: 'available', label: 'ພ້ອມຂາຍ' },
-            { value: 'cleared', label: 'ຂາຍແລ້ວ' },
+            { value: 'available', label: `ພ້ອມຂາຍ (${tabCounts.available})` },
+            { value: 'cleared', label: `ເຄລຍແລ້ວ (${tabCounts.cleared})` },
           ]}
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab as 'available' | 'cleared')}
@@ -169,9 +224,11 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
               post={post}
               index={index}
               onUpdate={handleUpdatePost}
+              onClear={handleClearPost}
               isSaving={savingPostIds.has(post.id)}
               session={session}
               onRefresh={fetchPosts}
+              isClearedTab={activeTab === 'cleared'}
             />
           ))}
         </div>
