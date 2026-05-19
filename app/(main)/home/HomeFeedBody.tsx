@@ -45,10 +45,11 @@ export type HomeFeedBodyProps = {
     onLoadMore?: () => void;
     hideBoost?: boolean;
   };
+  onLocalPostUpdate?: (postId: string, data: Record<string, unknown>) => void;
 };
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
-export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, postFeedProps }: HomeFeedBodyProps) {
+export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, postFeedProps, onLocalPostUpdate }: HomeFeedBodyProps) {
   const {
     posts,
     session,
@@ -163,6 +164,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
                 onSetActiveMenu={onSetActiveMenu}
                 onSetMenuAnimating={onSetMenuAnimating}
                 hideBoost={hideBoost}
+                onLocalUpdate={onLocalPostUpdate}
               />
             </HomePostImageGate>
           );

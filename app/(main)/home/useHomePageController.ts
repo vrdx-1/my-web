@@ -154,6 +154,18 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     effectivePostList.setPage((page: number) => page + 1);
   }, [triggerRecommendLoadMore, effectivePostList]);
 
+  const handleLocalPostUpdate = useCallback((postId: string, updateData: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    effectivePostList.setPosts((prev: any[]) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return { ...post, ...updateData };
+        }
+        return post;
+      })
+    );
+  }, [effectivePostList]);
+
   const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
     enabled: !isSoldTabNoSearch,
     loadingMore: effectivePostList.loadingMore,
@@ -332,6 +344,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     effectiveSession,
     feedRestoreWrapRef,
     fullScreenViewer,
+    handleLocalPostUpdate,
     handlers,
     hasSearch,
     setHeaderVisibleFromScroll,

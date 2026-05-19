@@ -56,6 +56,7 @@ interface PostCardProps {
   onProfileClick?: (post: any) => void;
   customCaption?: React.ReactNode;
   onPriceClick?: (post: any) => void;
+  onLocalUpdate?: (postId: string, data: Record<string, unknown>) => void;
 }
 
 /** ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts */
@@ -90,6 +91,7 @@ export function PostCard({
   onProfileClick,
   customCaption,
   onPriceClick,
+  onLocalUpdate,
 }: PostCardProps) {
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
@@ -1059,7 +1061,13 @@ export function PostCard({
         price={post.price}
         currency={post.price_currency}
         onClose={() => setShowChangePriceModal(false)}
-        onSaved={() => setShowChangePriceSuccess(true)}
+        onSaved={(changes) => {
+          if (changes && onLocalUpdate) {
+            onLocalUpdate(post.id, changes);
+          } else {
+            setShowChangePriceSuccess(true);
+          }
+        }}
       />
 
       {showChangePriceSuccess && (

@@ -16,6 +16,7 @@ export interface HomePagePanelsProps {
   searchDataLoading: boolean;
   tab: 'recommend' | 'sold';
   onPrefetchNextPost: () => void;
+  onLocalPostUpdate?: (postId: string, data: Record<string, unknown>) => void;
   recommendPostFeedProps: HomeFeedBodyProps['postFeedProps'];
   soldTabProps: Omit<SoldTabFeedWrapperProps, 'isActive'>;
 }
@@ -33,6 +34,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
     searchDataLoading,
     tab,
     onPrefetchNextPost,
+    onLocalPostUpdate,
     recommendPostFeedProps,
     soldTabProps,
   } = props;
@@ -53,6 +55,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
           gateImageReady={tab === 'recommend' && !isSoldTabNoSearch}
           onPrefetchNextPost={onPrefetchNextPost}
           postFeedProps={recommendPostFeedProps}
+          onLocalPostUpdate={onLocalPostUpdate}
         />
       </div>
       <div

@@ -29,6 +29,7 @@ export function HomePageContent() {
     effectiveSession,
     feedRestoreWrapRef,
     fullScreenViewer,
+    handleLocalPostUpdate,
     handlers,
     hasSearch,
     isSoldTabActive,
@@ -111,6 +112,7 @@ export function HomePageContent() {
         searchDataLoading={searchDataLoading}
         tab={tab}
         onPrefetchNextPost={onPrefetchNextPost}
+        onLocalPostUpdate={handleLocalPostUpdate}
         recommendPostFeedProps={recommendPostFeedProps}
         soldTabProps={soldTabProps}
       />

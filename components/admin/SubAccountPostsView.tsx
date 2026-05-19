@@ -113,7 +113,7 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
     []
   );
 
-  const handleLocalPostUpdate = useCallback((postId: string, updateData: any) => {
+  const handleLocalPostUpdate = useCallback((postId: string, updateData: Record<string, unknown>) => {
     setPosts((prev) =>
       prev.map((post) => {
         if (post.id === postId) {

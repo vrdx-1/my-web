@@ -10,7 +10,7 @@ interface SubAccountPostCardProps {
   post: any;
   index: number;
   onUpdate?: (postId: string, data: any) => Promise<void> | void;
-  onLocalUpdate?: (postId: string, data: any) => void;
+  onLocalUpdate?: (postId: string, data: Record<string, unknown>) => void;
   onClear?: (postId: string) => Promise<void> | void;
   isSaving?: boolean;
   session?: any;
