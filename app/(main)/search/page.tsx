@@ -202,6 +202,7 @@ function SearchPageContent() {
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
+        const accessToken = session?.access_token ?? '';
         const guestToken = !session?.user ? getOrCreateGuestToken() : '';
         await fetch('/api/search/history', {
           method: 'DELETE',
@@ -209,6 +210,7 @@ function SearchPageContent() {
           headers: mergeHeaders(
             {
               'Content-Type': 'application/json',
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
               ...(guestToken ? { 'x-guest-token': guestToken } : {}),
             },
             activeProfileId,
