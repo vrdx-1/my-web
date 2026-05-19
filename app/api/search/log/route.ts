@@ -119,6 +119,9 @@ export async function POST(request: NextRequest) {
             search_count: nextCount,
             last_searched_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            // Restore visibility if user searches a previously-deleted term again
+            is_deleted: false,
+            deleted_at: null,
           })
           .eq('id', existingHistory.id);
 
