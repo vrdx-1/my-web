@@ -10,10 +10,10 @@ interface SubAccountPostCardProps {
   post: any;
   index: number;
   onUpdate?: (postId: string, data: any) => Promise<void> | void;
+  onLocalUpdate?: (postId: string, data: any) => void;
   onClear?: (postId: string) => Promise<void> | void;
   isSaving?: boolean;
   session?: any;
-  onRefresh?: () => void;
   isClearedTab?: boolean;
 }
 
@@ -21,10 +21,10 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
   post,
   index,
   onUpdate,
+  onLocalUpdate,
   onClear,
   isSaving = false,
   session,
-  onRefresh,
   isClearedTab = false,
 }) => {
   const [isEditingCaption, setIsEditingCaption] = useState(false);
@@ -248,8 +248,10 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
         price={post.price}
         currency={post.price_currency}
         onClose={() => setIsPriceModalOpen(false)}
-        onSaved={() => {
-          if (onRefresh) onRefresh();
+        onSaved={(changes) => {
+          if (changes && onLocalUpdate) {
+            onLocalUpdate(post.id, changes);
+          }
         }}
       />
     </>

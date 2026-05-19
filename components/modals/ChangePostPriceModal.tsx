@@ -12,7 +12,7 @@ interface ChangePostPriceModalProps {
   price: number | string | null | undefined;
   currency: Currency | null | undefined;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (changes?: { price: number | null; price_currency: Currency }) => void;
 }
 
 function normalizePrice(value: number | string | null | undefined): string {
@@ -77,7 +77,10 @@ export const ChangePostPriceModal = React.memo<ChangePostPriceModalProps>(({
 
       window.dispatchEvent(new CustomEvent('post:updated', { detail: { postId } }));
       onClose();
-      onSaved();
+      onSaved({
+        price: nextPrice && Number.isFinite(nextPrice) ? nextPrice : null,
+        price_currency: carCurrency,
+      });
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'ບໍ່ສາມາດປ່ຽນລາຄາໄດ້');
     } finally {

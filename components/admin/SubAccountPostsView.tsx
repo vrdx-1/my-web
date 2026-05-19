@@ -113,6 +113,17 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
     []
   );
 
+  const handleLocalPostUpdate = useCallback((postId: string, updateData: any) => {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return { ...post, ...updateData };
+        }
+        return post;
+      })
+    );
+  }, []);
+
   const handleClearPost = useCallback(
     async (postId: string) => {
       setSavingPostIds((prev) => new Set([...prev, postId]));
@@ -224,10 +235,10 @@ export const SubAccountPostsView = React.memo<SubAccountPostsViewProps>(({
               post={post}
               index={index}
               onUpdate={handleUpdatePost}
+              onLocalUpdate={handleLocalPostUpdate}
               onClear={handleClearPost}
               isSaving={savingPostIds.has(post.id)}
               session={session}
-              onRefresh={fetchPosts}
               isClearedTab={activeTab === 'cleared'}
             />
           ))}
