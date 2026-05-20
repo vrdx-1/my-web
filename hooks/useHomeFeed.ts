@@ -231,9 +231,24 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         cursorCreatedAt?: string;
         pageSize?: number;
         feedSeed?: string;
+        guestToken?: string;
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
       if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
+
+      // Send guest token so the server can personalise the feed for guests.
+      // (Logged-in userId is derived server-side from the session cookie.)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!(currentSession as any)?.user?.id) {
+        try {
+          const token = getPrimaryGuestToken();
+          if (token && typeof token === 'string' && token !== 'null') {
+            body.guestToken = token;
+          }
+        } catch {
+          // ignore
+        }
+      }
 
       // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
       const cursor = !isInitial ? lastPostRef.current : null;

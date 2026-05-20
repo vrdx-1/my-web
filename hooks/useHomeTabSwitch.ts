@@ -59,16 +59,10 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
           if (searchQuery.trim()) {
             searchData.fetchSearch();
           } else {
-            recommendFeed.setPosts([]);
-            recommendFeed.setPage(0);
-            recommendFeed.setHasMore(true);
-            recommendFeed.fetchPosts(true);
+            recommendFeed.refreshData();
           }
         } else {
-          soldTabRefreshRef.current?.setPosts([]);
-          soldTabRefreshRef.current?.setPage(0);
-          soldTabRefreshRef.current?.setHasMore(true);
-          soldTabRefreshRef.current?.fetchPosts(true);
+          soldTabRefreshRef.current?.refreshData?.();
         }
       }
     },

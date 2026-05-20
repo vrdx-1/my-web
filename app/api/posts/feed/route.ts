@@ -4,9 +4,11 @@ import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
 import { FEED_PAGE_SIZE } from '@/utils/constants';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
+import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import {
   FEED_TOP_CACHE_SIZE,
   feedCacheKey,
+  type FeedCachePayload,
   type FeedCacheStatus,
   getFeedFromCache,
   getFeedTop100FromCache,
@@ -15,15 +17,19 @@ import {
 } from '@/lib/redis';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import {
+  buildPersonalizedFeedOrder,
+  fetchUserSearchTerms,
+  fetchTrendingTerms,
+  type PersonalizedFeedRow,
+  type UserSearchTerm,
+  type TrendingTerm,
+} from '@/lib/personalizedFeed';
 
-type FeedOrderRow = {
-  id: string;
-  is_boosted: boolean;
-  user_id: string | null;
-  guest_token: string | null;
-  is_guest: boolean | null;
-  created_at: string | null;
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+/** FeedOrderRow = PersonalizedFeedRow (includes caption for in-memory scoring) */
+type FeedOrderRow = PersonalizedFeedRow;
 
 type FeedPostRow = {
   id: string;
@@ -33,6 +39,8 @@ type FeedPostRow = {
 
 type FeedResult = { postIds: string[]; hasMore: boolean; posts: FeedPostRow[]; feedSeed?: string };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function resolveFeedStatus(value: unknown): FeedCacheStatus {
   return value === 'sold' ? 'sold' : 'recommend';
 }
@@ -41,105 +49,55 @@ function createFeedSeed(): string {
   return randomUUID();
 }
 
-function getAccountKey(row: FeedOrderRow): string {
-  if (row.user_id) return `user:${row.user_id}`;
-  if (row.guest_token) return `guest:${row.guest_token}`;
-  if (row.is_guest) return `guest-post:${row.id}`;
-  return `post:${row.id}`;
-}
-
-function hashString(input: string): number {
-  let hash = 2166136261;
-  for (let index = 0; index < input.length; index += 1) {
-    hash ^= input.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
+/** Sanitise guest token from request body (device ID — not used for auth) */
+function sanitizeGuestToken(raw: unknown): string | undefined {
+  if (
+    typeof raw === 'string' &&
+    raw.length > 0 &&
+    raw.length < 128 &&
+    /^[a-zA-Z0-9_\-]+$/.test(raw)
+  ) {
+    return raw;
   }
-  return hash >>> 0;
+  return undefined;
 }
 
-function sortRowsWithinAccount(rows: FeedOrderRow[], feedSeed: string): FeedOrderRow[] {
-  return [...rows].sort((left, right) => {
-    const scoreDiff =
-      hashString(`${feedSeed}:post:${left.id}`) - hashString(`${feedSeed}:post:${right.id}`);
-    if (scoreDiff !== 0) return scoreDiff;
-    const createdDiff = (right.created_at || '').localeCompare(left.created_at || '');
-    if (createdDiff !== 0) return createdDiff;
-    return String(left.id).localeCompare(String(right.id));
-  });
-}
+// ─── DB fetch ─────────────────────────────────────────────────────────────────
 
-function interleaveAccounts(rows: FeedOrderRow[], feedSeed: string): FeedOrderRow[] {
-  const byAccount = new Map<string, FeedOrderRow[]>();
-  rows.forEach((row) => {
-    const accountKey = getAccountKey(row);
-    const current = byAccount.get(accountKey);
-    if (current) current.push(row);
-    else byAccount.set(accountKey, [row]);
-  });
-
-  const queue = Array.from(byAccount.entries())
-    .map(([accountKey, accountRows]) => ({
-      accountKey,
-      rows: sortRowsWithinAccount(accountRows, feedSeed),
-      score: hashString(`${feedSeed}:account:${accountKey}`),
-    }))
-    .sort((left, right) => {
-      if (left.score !== right.score) return left.score - right.score;
-      return left.accountKey.localeCompare(right.accountKey);
-    });
-
-  const ordered: FeedOrderRow[] = [];
-  let lastAccountKey: string | null = null;
-  while (queue.length > 0) {
-    let queueIndex = queue.findIndex((entry) => entry.accountKey !== lastAccountKey);
-    if (queueIndex === -1) queueIndex = 0;
-    const [entry] = queue.splice(queueIndex, 1);
-    const nextRow = entry.rows.shift();
-    if (!nextRow) continue;
-    ordered.push(nextRow);
-    lastAccountKey = entry.accountKey;
-    if (entry.rows.length > 0) queue.push(entry);
-  }
-
-  return ordered;
-}
-
-function buildRandomizedFeedOrder(rows: FeedOrderRow[], feedSeed: string): string[] {
-  const boosted = rows.filter((row) => row.is_boosted);
-  const regular = rows.filter((row) => !row.is_boosted);
-  return [...interleaveAccounts(boosted, feedSeed), ...interleaveAccounts(regular, feedSeed)].map((row) => row.id);
-}
-
+/**
+ * Fetch all visible posts for feed ordering.
+ * Fetches `caption` so personalised scoring runs entirely in memory (no extra DB round-trip).
+ */
 async function fetchAllFeedOrderRows(
   supabase: ReturnType<typeof createServerClient>,
   province?: string,
-  status: FeedCacheStatus = 'recommend'
-) {
+  status: FeedCacheStatus = 'recommend',
+): Promise<FeedOrderRow[]> {
   const rows: FeedOrderRow[] = [];
-  const pageSize = 1000;
-  let startIndex = 0;
+  const batchSize = 1000;
+  let offset = 0;
 
   while (true) {
     let query = supabase
       .from('cars')
-      .select('id, is_boosted, user_id, guest_token, is_guest, created_at')
+      .select('id, is_boosted, user_id, guest_token, is_guest, created_at, caption')
       .eq('status', status)
       .or('is_hidden.eq.false,is_hidden.is.null');
+
     if (province && province.trim() !== '') {
       query = query.eq('province', province.trim());
     }
-    const endIndex = startIndex + pageSize - 1;
+
     const { data, error } = await query
-      .order('is_boosted', { ascending: false })
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
-      .range(startIndex, endIndex);
+      .range(offset, offset + batchSize - 1);
 
     if (error) throw new Error('Feed query failed');
     const chunk = (data || []) as FeedOrderRow[];
     rows.push(...chunk);
-    if (chunk.length < pageSize) break;
-    startIndex += pageSize;
+    if (chunk.length < batchSize) break;
+    offset += batchSize;
   }
 
   return rows;
@@ -148,7 +106,7 @@ async function fetchAllFeedOrderRows(
 async function hydrateFeedPosts(
   supabase: ReturnType<typeof createServerClient>,
   postIds: string[],
-  status: FeedCacheStatus = 'recommend'
+  status: FeedCacheStatus = 'recommend',
 ): Promise<FeedPostRow[]> {
   if (postIds.length === 0) return [];
   const { data: postsData, error: postsErr } = await supabase
@@ -156,26 +114,28 @@ async function hydrateFeedPosts(
     .select(POST_WITH_PROFILE_SELECT)
     .in('id', postIds);
   if (postsErr || !postsData?.length) return [];
-  const order = new Map(postIds.map((id: string, index: number) => [String(id), index]));
-  const filtered = postsData.filter((post) => {
-    const row = post as FeedPostRow;
-    return row.status === status && !row.is_hidden;
-  }) as FeedPostRow[];
-  filtered.sort((left, right) => {
-    const leftIndex = order.get(String(left.id)) ?? 1e9;
-    const rightIndex = order.get(String(right.id)) ?? 1e9;
-    return leftIndex - rightIndex;
-  });
-  return filtered;
+  const order = new Map(postIds.map((id: string, idx: number) => [String(id), idx]));
+  const filtered: FeedPostRow[] = (postsData as FeedPostRow[]).filter(
+    (post) => post.status === status && !post.is_hidden,
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hydrated: FeedPostRow[] = await (attachEffectiveWhatsAppPhones as any)(supabase, filtered);
+  hydrated.sort((a, b) => (order.get(String(a.id)) ?? 1e9) - (order.get(String(b.id)) ?? 1e9));
+  return hydrated;
 }
 
-/** ตัดช่วงจาก payload ตาม startIndex, endIndex */
-function sliceFeedPayload(payload: FeedResult, startIndex: number, endIndex: number): FeedResult {
+function sliceFeedPayload(
+  payload: FeedCachePayload,
+  startIndex: number,
+  endIndex: number,
+): FeedResult {
   const postIds = payload.postIds.slice(startIndex, endIndex + 1);
-  const posts = payload.posts.slice(startIndex, endIndex + 1);
+  const posts = (payload.posts as FeedPostRow[]).slice(startIndex, endIndex + 1);
   const hasMore = payload.postIds.length > endIndex + 1 || payload.hasMore;
   return { postIds, hasMore, posts, feedSeed: payload.feedSeed };
 }
+
+// ─── Feed computation ─────────────────────────────────────────────────────────
 
 async function computeFeed(
   supabase: ReturnType<typeof createServerClient>,
@@ -183,12 +143,16 @@ async function computeFeed(
   endIndex: number,
   province?: string,
   feedSeed?: string,
-  status: FeedCacheStatus = 'recommend'
+  status: FeedCacheStatus = 'recommend',
+  userTerms: UserSearchTerm[] = [],
+  trendingTerms: TrendingTerm[] = [],
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
-  const orderedIds = buildRandomizedFeedOrder(
+  const orderedIds = buildPersonalizedFeedOrder(
     await fetchAllFeedOrderRows(supabase, province, status),
     resolvedSeed,
+    userTerms,
+    trendingTerms,
   );
   const postIds = orderedIds.slice(startIndex, endIndex + 1);
   const hasMore = endIndex + 1 < orderedIds.length;
@@ -202,12 +166,16 @@ async function computeFeedWithCursor(
   pageSize: number,
   province?: string,
   feedSeed?: string,
-  status: FeedCacheStatus = 'recommend'
+  status: FeedCacheStatus = 'recommend',
+  userTerms: UserSearchTerm[] = [],
+  trendingTerms: TrendingTerm[] = [],
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
-  const orderedIds = buildRandomizedFeedOrder(
+  const orderedIds = buildPersonalizedFeedOrder(
     await fetchAllFeedOrderRows(supabase, province, status),
     resolvedSeed,
+    userTerms,
+    trendingTerms,
   );
   const cursorIndex = orderedIds.findIndex((id) => id === cursorId);
   const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
@@ -218,8 +186,16 @@ async function computeFeedWithCursor(
   return { postIds, hasMore, posts, feedSeed: resolvedSeed };
 }
 
+// ─── POST /api/posts/feed ─────────────────────────────────────────────────────
 /**
- * POST /api/posts/feed — body: { startIndex, endIndex, province? } หรือ { cursorId, cursorBoosted, cursorCreatedAt, pageSize?, province? }
+ * Body: { startIndex?, endIndex?, province?, feedSeed?, status?, guestToken? }
+ *    or { cursorId, cursorBoosted, cursorCreatedAt, pageSize?, province?, feedSeed?, status?, guestToken? }
+ *
+ * Personalisation rules:
+ *  - userId: derived from session cookie (never trusted from body)
+ *  - guestToken: accepted from body (low-sensitivity device ID for guests)
+ *  - Has search history → personalised order, bypasses Redis cache
+ *  - No search history  → trending-enhanced order, uses Redis cache (shared)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -230,14 +206,12 @@ export async function POST(request: NextRequest) {
       limit: 120,
       windowSeconds: 60,
     });
-
-    if (!rateLimit.success) {
-      return tooManyRequests(rateLimit.reset);
-    }
+    if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
 
     const body = await request.json().catch(() => ({}));
     const province = typeof body.province === 'string' ? body.province : undefined;
-    const requestedFeedSeed = typeof body.feedSeed === 'string' && body.feedSeed ? body.feedSeed : undefined;
+    const requestedFeedSeed =
+      typeof body.feedSeed === 'string' && body.feedSeed ? body.feedSeed : undefined;
     const status = resolveFeedStatus(body.status);
 
     const cookieStore = await cookies();
@@ -250,16 +224,42 @@ export async function POST(request: NextRequest) {
             return cookieStore.get(name)?.value;
           },
         },
-      }
+      },
     );
 
-    // Cursor-based: โหลดหน้าถัดไปเร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน (ไม่ใช้ OFFSET)
+    // ── Resolve caller identity ───────────────────────────────────────────────
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser();
+    const userId = sessionUser?.id || undefined;
+    const guestToken = !userId ? sanitizeGuestToken(body.guestToken) : undefined;
+
+    // ── Fetch personalisation data in parallel ────────────────────────────────
+    // trending is always fetched (Redis-cached, very fast)
+    // user terms only fetched when identity is known
+    const [userTerms, trendingTerms] = await Promise.all([
+      fetchUserSearchTerms(supabase, userId, guestToken),
+      fetchTrendingTerms(supabase),
+    ]);
+
+    // Users with search history get a per-user order → bypass shared Redis cache
+    const isPersonalized = userTerms.length > 0;
+    const shouldBypassCache = !!requestedFeedSeed || isPersonalized;
+
+    // ── Cursor-based load-more ────────────────────────────────────────────────
     const cursorId = typeof body.cursorId === 'string' ? body.cursorId : undefined;
     const cursorBoosted = body.cursorBoosted;
-    const cursorCreatedAt = typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
+    const cursorCreatedAt =
+      typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
     if (cursorId && cursorCreatedAt && typeof cursorBoosted === 'boolean') {
-      const pageSize = Math.min(Math.max(1, parseInt(String(body.pageSize ?? FEED_PAGE_SIZE), 10)), 50);
-      const result = await computeFeedWithCursor(supabase, cursorId, pageSize, province, requestedFeedSeed, status);
+      const pageSize = Math.min(
+        Math.max(1, parseInt(String(body.pageSize ?? FEED_PAGE_SIZE), 10)),
+        50,
+      );
+      const result = await computeFeedWithCursor(
+        supabase, cursorId, pageSize, province, requestedFeedSeed, status,
+        userTerms, trendingTerms,
+      );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
@@ -267,30 +267,40 @@ export async function POST(request: NextRequest) {
 
     const startIndex = parseInt(String(body.startIndex ?? 0), 10);
     const endIndex = parseInt(String(body.endIndex ?? FEED_PAGE_SIZE - 1), 10);
-    const shouldBypassCache = !!requestedFeedSeed;
 
-    // ช่วง 0–(N-1) ใช้ cache ชุดโพส N รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
+    // ── Cached path (no personal history) → shared trending-enhanced cache ────
     if (!shouldBypassCache && endIndex < FEED_TOP_CACHE_SIZE) {
       let topCache = await getFeedTop100FromCache(province, status);
       const cacheHit = !!topCache;
       if (!topCache) {
-        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status);
+        const full = await computeFeed(
+          supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status,
+          [], trendingTerms,
+        );
         await setFeedTop100Cache(province, full, status);
         topCache = full;
       }
       const result = sliceFeedPayload(topCache, startIndex, endIndex);
       return NextResponse.json(result, {
-        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': cacheHit ? 'HIT' : 'MISS' },
+        headers: {
+          'Cache-Control': 'private, max-age=0',
+          'X-Feed-Cache': cacheHit ? 'HIT' : 'MISS',
+        },
       });
     }
 
+    // ── Bypass-cache path (personalised or explicit feedSeed) ─────────────────
     if (shouldBypassCache) {
-      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
+      const result = await computeFeed(
+        supabase, startIndex, endIndex, province, requestedFeedSeed, status,
+        userTerms, trendingTerms,
+      );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
     }
 
+    // ── Range cache (deep pagination, no personalisation) ─────────────────────
     const cacheKey = feedCacheKey(startIndex, endIndex, province, status);
     const cached = await getFeedFromCache(cacheKey);
     if (cached) {
@@ -298,10 +308,11 @@ export async function POST(request: NextRequest) {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'HIT' },
       });
     }
-
-    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
+    const result = await computeFeed(
+      supabase, startIndex, endIndex, province, requestedFeedSeed, status,
+      [], trendingTerms,
+    );
     await setFeedCache(cacheKey, result);
-
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
     });
@@ -310,9 +321,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * GET /api/posts/feed?startIndex=0&endIndex=9
- */
+// ─── GET /api/posts/feed (no personalisation — used by external tools) ─────────
 export async function GET(request: NextRequest) {
   try {
     const ip = getRequestIp(request);
@@ -322,10 +331,7 @@ export async function GET(request: NextRequest) {
       limit: 120,
       windowSeconds: 60,
     });
-
-    if (!rateLimit.success) {
-      return tooManyRequests(rateLimit.reset);
-    }
+    if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
 
     const searchParams = request.nextUrl.searchParams;
     const startIndex = parseInt(searchParams.get('startIndex') || '0');
@@ -345,26 +351,37 @@ export async function GET(request: NextRequest) {
             return cookieStore.get(name)?.value;
           },
         },
-      }
+      },
     );
 
-    // ช่วง 0–(N-1) ใช้ cache ชุดโพส N รายการ (โพสล่าสุด + Boost) อายุ 1 นาที
+    // GET has no body → use trending-only ordering (no personalisation)
+    const trendingTerms = await fetchTrendingTerms(supabase);
+
     if (!shouldBypassCache && endIndex < FEED_TOP_CACHE_SIZE) {
       let topCache = await getFeedTop100FromCache(province, status);
       const cacheHit = !!topCache;
       if (!topCache) {
-        const full = await computeFeed(supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status);
+        const full = await computeFeed(
+          supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status,
+          [], trendingTerms,
+        );
         await setFeedTop100Cache(province, full, status);
         topCache = full;
       }
       const result = sliceFeedPayload(topCache, startIndex, endIndex);
       return NextResponse.json(result, {
-        headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': cacheHit ? 'HIT' : 'MISS' },
+        headers: {
+          'Cache-Control': 'private, max-age=0',
+          'X-Feed-Cache': cacheHit ? 'HIT' : 'MISS',
+        },
       });
     }
 
     if (shouldBypassCache) {
-      const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
+      const result = await computeFeed(
+        supabase, startIndex, endIndex, province, requestedFeedSeed, status,
+        [], trendingTerms,
+      );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
       });
@@ -377,10 +394,11 @@ export async function GET(request: NextRequest) {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'HIT' },
       });
     }
-
-    const result = await computeFeed(supabase, startIndex, endIndex, province, requestedFeedSeed, status);
+    const result = await computeFeed(
+      supabase, startIndex, endIndex, province, requestedFeedSeed, status,
+      [], trendingTerms,
+    );
     await setFeedCache(cacheKey, result);
-
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
     });
