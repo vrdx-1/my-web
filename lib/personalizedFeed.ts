@@ -182,26 +182,26 @@ function interleaveBoost(
 }
 
 /**
- * For guest / no-history feeds, spread fresh posts across regular posts
- * at a fixed interval instead of grouping them all together.
- * e.g. interval=3 → fresh post every 3 regular posts.
+ * For guest / no-history feeds, scatter fresh posts at seed-derived positions
+ * so the gap between fresh posts is unpredictable on every refresh.
+ * Each fresh post is assigned a unique insertion index derived from feedSeed.
  */
 function interleaveFreshIntoRegular(
   regular: string[],
   fresh: string[],
-  interval: number,
+  feedSeed: string,
 ): string[] {
   if (fresh.length === 0) return regular;
   if (regular.length === 0) return fresh;
-  const result: string[] = [];
-  let fi = 0;
-  for (let i = 0; i < regular.length; i++) {
-    result.push(regular[i]);
-    if ((i + 1) % interval === 0 && fi < fresh.length) {
-      result.push(fresh[fi++]);
-    }
+
+  // Build a mutable copy and decide insertion positions using hashed seed.
+  // Each fresh post picks an index in [0, currentLength] independently.
+  const result = [...regular];
+  for (let fi = 0; fi < fresh.length; fi++) {
+    // Hash gives a number in [0, result.length] — different every refresh.
+    const pos = hashString(`${feedSeed}:fresh_insert:${fi}:${fresh[fi]}`) % (result.length + 1);
+    result.splice(pos, 0, fresh[fi]);
   }
-  while (fi < fresh.length) result.push(fresh[fi++]);
   return result;
 }
 
@@ -399,7 +399,7 @@ export function buildPersonalizedFeedOrder(
   // For users with personal history: keep original order (fresh before regular).
   const isGuestFeed = expandedUser.length === 0;
   const regularWithFresh = isGuestFeed
-    ? interleaveFreshIntoRegular(regularIds, freshIds, 3)
+    ? interleaveFreshIntoRegular(regularIds, freshIds, feedSeed)
     : [...freshIds, ...regularIds];
 
   // Merge non-boosted buckets in priority order
