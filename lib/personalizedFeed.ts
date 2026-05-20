@@ -182,9 +182,12 @@ function interleaveBoost(
 }
 
 /**
- * For guest / no-history feeds, scatter fresh posts at seed-derived positions
- * so the gap between fresh posts is unpredictable on every refresh.
- * Each fresh post is assigned a unique insertion index derived from feedSeed.
+ * For guest / no-history feeds, interleave fresh posts with a seed-random gap
+ * of 2–4 regular posts between each fresh post.
+ *
+ * This keeps fresh posts frequent (roughly 1 in every 2–4) while making the
+ * exact positions unpredictable — both the starting offset and each gap vary
+ * with feedSeed so every refresh looks different.
  */
 function interleaveFreshIntoRegular(
   regular: string[],
@@ -194,14 +197,23 @@ function interleaveFreshIntoRegular(
   if (fresh.length === 0) return regular;
   if (regular.length === 0) return fresh;
 
-  // Build a mutable copy and decide insertion positions using hashed seed.
-  // Each fresh post picks an index in [0, currentLength] independently.
-  const result = [...regular];
-  for (let fi = 0; fi < fresh.length; fi++) {
-    // Hash gives a number in [0, result.length] — different every refresh.
-    const pos = hashString(`${feedSeed}:fresh_insert:${fi}:${fresh[fi]}`) % (result.length + 1);
-    result.splice(pos, 0, fresh[fi]);
+  const result: string[] = [];
+  let fi = 0;
+  // First fresh post after 1–3 regular posts (seed-derived)
+  let nextFreshAt = hashString(`${feedSeed}:fresh_start`) % 3; // 0, 1, or 2
+
+  for (let i = 0; i < regular.length; i++) {
+    if (fi < fresh.length && i >= nextFreshAt) {
+      result.push(fresh[fi]);
+      fi++;
+      // Gap to next fresh: 2, 3, or 4 regular posts — seed-derived per slot
+      const gap = 2 + (hashString(`${feedSeed}:fresh_gap:${fi}`) % 3);
+      nextFreshAt = i + gap;
+    }
+    result.push(regular[i]);
   }
+  // Append any remaining fresh posts at the end
+  while (fi < fresh.length) result.push(fresh[fi++]);
   return result;
 }
 
