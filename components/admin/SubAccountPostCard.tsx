@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PostCard } from '@/components/PostCard';
 import { ChangePostPriceModal } from '@/components/modals/ChangePostPriceModal';
 
@@ -31,6 +31,16 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
   const [captionDraft, setCaptionDraft] = useState(post?.caption || '');
   const [saveError, setSaveError] = useState('');
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isEditingCaption && textareaRef.current) {
+      const el = textareaRef.current;
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [isEditingCaption, captionDraft]);
 
   const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
@@ -70,10 +80,14 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
       {isEditingCaption ? (
         <>
           <textarea
+            ref={textareaRef}
             value={captionDraft}
             onChange={(e) => {
               setCaptionDraft(e.target.value);
               setSaveError('');
+               const el = e.target;
+               el.style.height = 'auto';
+               el.style.height = `${el.scrollHeight}px`;
             }}
             placeholder="ໃສ່ຮາຍລະອຽດ..."
             style={{
@@ -85,7 +99,8 @@ export const SubAccountPostCard = React.memo<SubAccountPostCardProps>(({
               fontSize: '15px',
               lineHeight: '21px',
               fontWeight: 500,
-              resize: 'vertical',
+               resize: 'none',
+               overflow: 'hidden',
               outline: 'none',
               background: '#ffffff',
               color: '#111111',
