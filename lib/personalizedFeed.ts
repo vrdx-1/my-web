@@ -181,6 +181,30 @@ function interleaveBoost(
   return result;
 }
 
+/**
+ * For guest / no-history feeds, spread fresh posts across regular posts
+ * at a fixed interval instead of grouping them all together.
+ * e.g. interval=3 → fresh post every 3 regular posts.
+ */
+function interleaveFreshIntoRegular(
+  regular: string[],
+  fresh: string[],
+  interval: number,
+): string[] {
+  if (fresh.length === 0) return regular;
+  if (regular.length === 0) return fresh;
+  const result: string[] = [];
+  let fi = 0;
+  for (let i = 0; i < regular.length; i++) {
+    result.push(regular[i]);
+    if ((i + 1) % interval === 0 && fi < fresh.length) {
+      result.push(fresh[fi++]);
+    }
+  }
+  while (fi < fresh.length) result.push(fresh[fi++]);
+  return result;
+}
+
 // ─── Term expansion ───────────────────────────────────────────────────────────
 
 function expandTerm(term: string, weight: number): ExpandedTerm {
@@ -367,12 +391,22 @@ export function buildPersonalizedFeedOrder(
   // Boosted posts: interleave by account for variety
   const boostedOrdered = interleaveByAccount(boosted, feedSeed).map((r) => r.id);
 
+  const regularIds = regularOrdered.map((r) => r.id);
+  const freshIds = freshOrdered.map((r) => r.id);
+
+  // For guests / no personal history: spread fresh posts evenly across regular
+  // instead of grouping them all together → avoids a wall of 24h-old posts.
+  // For users with personal history: keep original order (fresh before regular).
+  const isGuestFeed = expandedUser.length === 0;
+  const regularWithFresh = isGuestFeed
+    ? interleaveFreshIntoRegular(regularIds, freshIds, 3)
+    : [...freshIds, ...regularIds];
+
   // Merge non-boosted buckets in priority order
   const nonBoosted: string[] = [
     ...personalOrdered.map((s) => s.row.id),
     ...trendingOrdered.map((s) => s.row.id),
-    ...freshOrdered.map((r) => r.id),
-    ...regularOrdered.map((r) => r.id),
+    ...regularWithFresh,
   ];
 
   // Interleave boosted every BOOST_INTERVAL positions
