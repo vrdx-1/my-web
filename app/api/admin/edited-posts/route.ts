@@ -51,6 +51,20 @@ function getAdminClient() {
   );
 }
 
+function isAdminOrAdminSubAccount(profile: unknown): boolean {
+  if (!profile || typeof profile !== 'object') return false;
+
+  const row = profile as {
+    role?: string | null;
+    is_sub_account?: boolean | null;
+    parent_admin_id?: string | null;
+  };
+
+  if (row.role === 'admin') return true;
+  if (row.is_sub_account && Boolean(row.parent_admin_id)) return true;
+  return false;
+}
+
 /**
  * GET: รายการโพสที่ผู้ใช้แก้ไขภายใน 24 ชั่วโมง (สำหรับหน้า Admin Review Edited)
  */
@@ -82,13 +96,18 @@ export async function GET() {
   const carIds = [...new Set(editsData.map((e) => e.car_id).filter(Boolean))];
   const { data: carsData, error: carsError } = await admin
     .from('cars')
-    .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified)')
+    .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles(username, avatar_url, phone, is_verified, role, is_sub_account, parent_admin_id)')
     .in('id', carIds);
 
   if (carsError) {
     return internalServerError('admin/edited-posts list cars failed', carsError);
   }
-  const carsMap = new Map((carsData ?? []).map((c) => [c.id, c]));
+  const filteredCarsData = (carsData ?? []).filter((car) => {
+    const profile = Array.isArray(car.profiles) ? car.profiles[0] : car.profiles;
+    return !isAdminOrAdminSubAccount(profile);
+  });
+
+  const carsMap = new Map(filteredCarsData.map((c) => [c.id, c]));
 
   const edits = editsData.map((e) => ({
     id: e.id,
