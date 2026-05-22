@@ -241,7 +241,7 @@ export default function AdminDownloadClicksPage() {
       </div>
 
       <div style={{ textAlign: 'center', padding: '40px 20px', color: '#777', fontSize: '14px' }}>
-        ຕົວເລກນີ້ເປັນຈຳນວນຄັ້ງທີ່ຜູ້ໃຊ້ກົດປຸ່ມດາວໂຫລດ
+        ຕົວເລກນີ້ເປັນຈຳນວນຄັ້ງທີ່ຜູ້ໃຊ້ກົດປຸ່ມ ດາວໂຫລດ
       </div>
     </main>
   );
