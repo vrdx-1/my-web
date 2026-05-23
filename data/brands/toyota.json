@@ -120,9 +120,9 @@
       ]
     },
     {
-      "modelId": "hilux-vigo",
-      "modelName": "Hilux Vigo",
-      "modelNameTh": "ไฮลักซ์ วีโก้",
+      "modelId": "vigo",
+      "modelName": "Vigo",
+      "modelNameTh": "วีโก้",
       "modelNameLo": "ວີໂກ້",
       "searchNames": [
         "hilux vigo",
@@ -142,9 +142,9 @@
       ]
     },
     {
-      "modelId": "hilux-revo",
-      "modelName": "Hilux Revo",
-      "modelNameTh": "ไฮลักซ์ รีโว่",
+      "modelId": "revo",
+      "modelName": "Revo",
+      "modelNameTh": "รีโว่",
       "modelNameLo": "ລີໂວ້",
       "searchNames": [
         "hilux revo",
