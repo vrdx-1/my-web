@@ -101,7 +101,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     }
 
     try {
-      await fetch('/api/posts/feed/impressions', {
+      const response = await fetch('/api/posts/feed/impressions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,6 +111,13 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
           guestToken,
         }),
       });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        console.warn('[feed viewport tracking] request failed', {
+          status: response.status,
+          error: errorPayload,
+        });
+      }
     } catch {
       // Ignore fire-and-forget tracking failures.
     }

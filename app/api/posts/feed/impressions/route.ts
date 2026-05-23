@@ -85,6 +85,41 @@ async function getCurrentCycleNo(admin: any, actor: FeedActor, scope: string): P
     return Number(existing.cycle_no);
   }
 
+  const isActorKeyMissing = !!error && String(error.message || '').toLowerCase().includes('actor_key');
+  if (isActorKeyMissing) {
+    let legacyQuery = admin
+      .from('feed_actor_cycle_state')
+      .select('cycle_no')
+      .eq('feed_scope', scope)
+      .limit(1);
+
+    legacyQuery = actor.actorColumn === 'user_id'
+      ? legacyQuery.eq('user_id', actor.actorValue)
+      : legacyQuery.eq('guest_token', actor.actorValue);
+
+    const { data: legacyExisting, error: legacyError } = await legacyQuery.maybeSingle();
+    if (!legacyError && legacyExisting?.cycle_no && Number(legacyExisting.cycle_no) > 0) {
+      return Number(legacyExisting.cycle_no);
+    }
+
+    const { error: legacyUpsertError } = await admin
+      .from('feed_actor_cycle_state')
+      .upsert(
+        {
+          user_id: actor.user_id,
+          guest_token: actor.guest_token,
+          feed_scope: scope,
+          cycle_no: 1,
+          last_reset_at: new Date().toISOString(),
+        },
+        { onConflict: actor.actorColumn === 'user_id' ? 'user_id,feed_scope' : 'guest_token,feed_scope' }
+      );
+    if (legacyUpsertError) {
+      console.error('[feed/impressions] legacy cycle upsert failed:', legacyUpsertError.message);
+    }
+    return 1;
+  }
+
   const { error: upsertError } = await admin
     .from('feed_actor_cycle_state')
     .upsert(
@@ -189,11 +224,31 @@ export async function POST(request: NextRequest) {
       seen_at: new Date().toISOString(),
     }));
 
-    const { error: upsertError } = await db
+    let { error: upsertError } = await db
       .from('feed_impressions')
       .upsert(payload, {
         onConflict: 'actor_key,feed_scope,cycle_no,post_id',
       });
+
+    if (upsertError && String(upsertError.message || '').toLowerCase().includes('actor_key')) {
+      const legacyPayload = regularVisiblePostIds.map((postId) => ({
+        post_id: postId,
+        user_id: actor.user_id,
+        guest_token: actor.guest_token,
+        feed_scope: scope,
+        cycle_no: cycleNo,
+        seen_at: new Date().toISOString(),
+      }));
+
+      const legacyRes = await db
+        .from('feed_impressions')
+        .upsert(legacyPayload, {
+          onConflict: actor.actorColumn === 'user_id'
+            ? 'user_id,feed_scope,cycle_no,post_id'
+            : 'guest_token,feed_scope,cycle_no,post_id',
+        });
+      upsertError = legacyRes.error;
+    }
 
     if (upsertError) {
       return internalServerError('feed/impressions upsert failed', upsertError);
