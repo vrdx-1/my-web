@@ -102,40 +102,48 @@ async function getCurrentCycleNo(admin: any, actor: FeedActor, scope: string): P
       return Number(legacyExisting.cycle_no);
     }
 
-    const { error: legacyUpsertError } = await admin
+    let legacyLookup = admin
       .from('feed_actor_cycle_state')
-      .upsert(
-        {
-          user_id: actor.user_id,
-          guest_token: actor.guest_token,
-          feed_scope: scope,
-          cycle_no: 1,
-          last_reset_at: new Date().toISOString(),
-        },
-        { onConflict: actor.actorColumn === 'user_id' ? 'user_id,feed_scope' : 'guest_token,feed_scope' }
-      );
-    if (legacyUpsertError) {
-      console.error('[feed/impressions] legacy cycle upsert failed:', legacyUpsertError.message);
+      .select('id, cycle_no')
+      .eq('feed_scope', scope)
+      .limit(1);
+    legacyLookup = actor.actorColumn === 'user_id'
+      ? legacyLookup.eq('user_id', actor.actorValue)
+      : legacyLookup.eq('guest_token', actor.actorValue);
+
+    const { data: legacyRow, error: legacyLookupError } = await legacyLookup.maybeSingle();
+    if (!legacyLookupError && legacyRow?.cycle_no && Number(legacyRow.cycle_no) > 0) {
+      return Number(legacyRow.cycle_no);
+    }
+
+    const { error: legacyInsertError } = await admin
+      .from('feed_actor_cycle_state')
+      .insert({
+        user_id: actor.user_id,
+        guest_token: actor.guest_token,
+        feed_scope: scope,
+        cycle_no: 1,
+        last_reset_at: new Date().toISOString(),
+      });
+    if (legacyInsertError && legacyInsertError.code !== '23505') {
+      console.error('[feed/impressions] legacy cycle insert failed:', legacyInsertError.message);
     }
     return 1;
   }
 
-  const { error: upsertError } = await admin
+  const { error: insertError } = await admin
     .from('feed_actor_cycle_state')
-    .upsert(
-      {
-        user_id: actor.user_id,
-        guest_token: actor.guest_token,
-        actor_key: actor.actorKey,
-        feed_scope: scope,
-        cycle_no: 1,
-        last_reset_at: new Date().toISOString(),
-      },
-      { onConflict: 'actor_key,feed_scope' }
-    );
+    .insert({
+      user_id: actor.user_id,
+      guest_token: actor.guest_token,
+      actor_key: actor.actorKey,
+      feed_scope: scope,
+      cycle_no: 1,
+      last_reset_at: new Date().toISOString(),
+    });
 
-  if (upsertError) {
-    console.error('[feed/impressions] feed_actor_cycle_state upsert failed:', upsertError.message);
+  if (insertError && insertError.code !== '23505') {
+    console.error('[feed/impressions] feed_actor_cycle_state insert failed:', insertError.message);
   }
 
   return 1;
@@ -214,7 +222,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, tracked: 0 });
     }
 
-    const payload = regularVisiblePostIds.map((postId) => ({
+    let existingIds = new Set<string>();
+
+    let existingQuery = db
+      .from('feed_impressions')
+      .select('post_id')
+      .eq('actor_key', actor.actorKey)
+      .eq('feed_scope', scope)
+      .eq('cycle_no', cycleNo)
+      .in('post_id', regularVisiblePostIds);
+
+    let existingRes = await existingQuery;
+    if (existingRes.error && String(existingRes.error.message || '').toLowerCase().includes('actor_key')) {
+      let legacyExistingQuery = db
+        .from('feed_impressions')
+        .select('post_id')
+        .eq('feed_scope', scope)
+        .eq('cycle_no', cycleNo)
+        .in('post_id', regularVisiblePostIds);
+      legacyExistingQuery = actor.actorColumn === 'user_id'
+        ? legacyExistingQuery.eq('user_id', actor.actorValue)
+        : legacyExistingQuery.eq('guest_token', actor.actorValue);
+      existingRes = await legacyExistingQuery;
+    }
+
+    if (existingRes.error) {
+      return internalServerError('feed/impressions existing lookup failed', existingRes.error);
+    }
+
+    for (const row of existingRes.data || []) {
+      const postId = typeof row.post_id === 'string' ? row.post_id : null;
+      if (postId) existingIds.add(postId);
+    }
+
+    const missingIds = regularVisiblePostIds.filter((id) => !existingIds.has(id));
+    if (missingIds.length === 0) {
+      return NextResponse.json({ ok: true, tracked: 0 });
+    }
+
+    let payload = missingIds.map((postId) => ({
       post_id: postId,
       user_id: actor.user_id,
       guest_token: actor.guest_token,
@@ -224,14 +270,12 @@ export async function POST(request: NextRequest) {
       seen_at: new Date().toISOString(),
     }));
 
-    let { error: upsertError } = await db
+    let insertRes = await db
       .from('feed_impressions')
-      .upsert(payload, {
-        onConflict: 'actor_key,feed_scope,cycle_no,post_id',
-      });
+      .insert(payload);
 
-    if (upsertError && String(upsertError.message || '').toLowerCase().includes('actor_key')) {
-      const legacyPayload = regularVisiblePostIds.map((postId) => ({
+    if (insertRes.error && String(insertRes.error.message || '').toLowerCase().includes('actor_key')) {
+      payload = missingIds.map((postId) => ({
         post_id: postId,
         user_id: actor.user_id,
         guest_token: actor.guest_token,
@@ -239,22 +283,16 @@ export async function POST(request: NextRequest) {
         cycle_no: cycleNo,
         seen_at: new Date().toISOString(),
       }));
-
-      const legacyRes = await db
+      insertRes = await db
         .from('feed_impressions')
-        .upsert(legacyPayload, {
-          onConflict: actor.actorColumn === 'user_id'
-            ? 'user_id,feed_scope,cycle_no,post_id'
-            : 'guest_token,feed_scope,cycle_no,post_id',
-        });
-      upsertError = legacyRes.error;
+        .insert(payload);
     }
 
-    if (upsertError) {
-      return internalServerError('feed/impressions upsert failed', upsertError);
+    if (insertRes.error && insertRes.error.code !== '23505') {
+      return internalServerError('feed/impressions insert failed', insertRes.error);
     }
 
-    return NextResponse.json({ ok: true, tracked: regularVisiblePostIds.length });
+    return NextResponse.json({ ok: true, tracked: missingIds.length });
   } catch (err) {
     return internalServerError('feed/impressions POST failed', err);
   }
