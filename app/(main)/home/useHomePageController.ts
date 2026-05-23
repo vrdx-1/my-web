@@ -47,13 +47,14 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   } = useReportModalState();
 
   const handleSubmitReportRef = useRef<(() => void) | null>(null);
-  const { session, sessionReady, activeProfileId, startSessionCheck } = useSessionAndProfile();
+  const { session, sessionReady, activeProfileId, authUserId, startSessionCheck } = useSessionAndProfile();
   const { firstFeedLoaded, setFirstFeedLoaded } = useFirstFeedLoaded();
 
   const tabData = useHomeTabData({
     session,
     sessionReady,
     activeProfileId,
+    authUserId,
     startSessionCheck,
     setFirstFeedLoaded,
   });
@@ -359,6 +360,8 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     searchDataLoading: searchData.loading,
     searchWaitingResults,
     selectedProvince,
+    activeProfileId,
+    authUserId,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,

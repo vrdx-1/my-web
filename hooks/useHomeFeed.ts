@@ -20,6 +20,7 @@ import {
   mergeJustPostedPost,
   prepareInitialHomeFeedState,
   readJustPostedRecommendPost,
+  migrateHomeFeedSeenPostIds,
   resolveHomeFeedActorKey,
   writeHomeFeedCache,
   type HomeFeedPost,
@@ -34,6 +35,8 @@ export interface HomeLikedSavedShared {
 
 interface UseHomeFeedOptions {
   session?: unknown;
+  activeProfileId?: string | null;
+  authUserId?: string | null;
   /** เมื่อ true = รู้แล้วว่าใครล็อกอิน/เกสต์ แล้วค่อยโหลดไลก์/เซฟ */
   sessionReady?: boolean;
   /** แขวงที่เลือกจากฟิลเตอร์หน้า Home — ว่าง = แสดงทุกแขวง */
@@ -82,7 +85,7 @@ function isBrowserReloadNavigation(): boolean {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
-  const { session, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
+  const { session, activeProfileId, authUserId, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
   const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
     if (isBrowserReloadNavigation()) return [];
     return getInitialPostsFromStorage(province);
@@ -107,6 +110,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const onInitialLoadDoneRef = useRef(onInitialLoadDone);
   const feedSeedRef = useRef<string | null>(null);
   const forceNewSeedOnNextInitialFetchRef = useRef(isBrowserReloadNavigation());
+  const lastResolvedActorKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     onInitialLoadDoneRef.current = onInitialLoadDone;
@@ -130,6 +134,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       cancelledRef.current = false;
     }
   }, [isActive]);
+
   /** ใช้เป็น startIndex ตอนโหลดเพิ่ม — อัปเดตตาม posts.length เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ */
   const postsLengthRef = useRef(0);
   postsLengthRef.current = posts.length;
@@ -228,6 +233,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         startIndex?: number;
         endIndex?: number;
         province?: string;
+        activeProfileId?: string;
+        authUserId?: string;
         cursorId?: string;
         cursorBoosted?: boolean;
         cursorCreatedAt?: string;
@@ -238,12 +245,21 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
       if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
+      if (typeof activeProfileId === 'string' && activeProfileId.trim()) {
+        body.activeProfileId = activeProfileId.trim();
+      }
+      if (typeof authUserId === 'string' && authUserId.trim()) {
+        body.authUserId = authUserId.trim();
+      }
 
       let guestTokenForActor: string | null = null;
-      const userIdForActor =
-        typeof (currentSession as { user?: { id?: string } } | undefined)?.user?.id === 'string'
-          ? (currentSession as { user?: { id?: string } }).user?.id || null
-          : null;
+      const userIdForActor = typeof activeProfileId === 'string' && activeProfileId.trim()
+        ? activeProfileId.trim()
+        : typeof authUserId === 'string' && authUserId.trim()
+          ? authUserId.trim()
+          : typeof (currentSession as { user?: { id?: string } } | undefined)?.user?.id === 'string'
+            ? (currentSession as { user?: { id?: string } }).user?.id || null
+            : null;
 
       // Send guest token so the server can personalise the feed for guests.
       // (Logged-in userId is derived server-side from the session cookie.)
@@ -425,6 +441,38 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     }
     await fetchPosts(true);
   }, [fetchPosts]);
+
+  useEffect(() => {
+    const currentUserId =
+      typeof activeProfileId === 'string' && activeProfileId.trim()
+        ? activeProfileId.trim()
+        : typeof authUserId === 'string' && authUserId.trim()
+          ? authUserId.trim()
+          : typeof currentSession?.user?.id === 'string'
+            ? currentSession.user.id
+            : null;
+
+    const currentActorKey = resolveHomeFeedActorKey(
+      currentUserId,
+      currentUserId ? null : (typeof window !== 'undefined' ? getPrimaryGuestToken() : null),
+    );
+
+    if (!currentActorKey) return;
+
+    const previousActorKey = lastResolvedActorKeyRef.current;
+    if (!previousActorKey) {
+      lastResolvedActorKeyRef.current = currentActorKey;
+      return;
+    }
+
+    if (previousActorKey !== currentActorKey) {
+      if (previousActorKey.startsWith('guest:') && currentActorKey.startsWith('user:')) {
+        migrateHomeFeedSeenPostIds(province, previousActorKey, currentActorKey);
+      }
+      lastResolvedActorKeyRef.current = currentActorKey;
+      void refreshData();
+    }
+  }, [activeProfileId, authUserId, currentSession?.user?.id, province, refreshData]);
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;

@@ -28,6 +28,8 @@ export type HomeFeedBodyProps = {
   enableViewportTracking?: boolean;
   /** scope จังหวัดของฟีดปัจจุบัน (ว่าง = all) */
   trackingProvince?: string;
+  trackingActiveProfileId?: string | null;
+  trackingAuthUserId?: string | null;
   postFeedProps: {
     posts: any[];
     session: any;
@@ -55,7 +57,7 @@ export type HomeFeedBodyProps = {
 };
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
-export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, enableViewportTracking = false, trackingProvince, postFeedProps, onLocalPostUpdate }: HomeFeedBodyProps) {
+export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, enableViewportTracking = false, trackingProvince, trackingActiveProfileId, trackingAuthUserId, postFeedProps, onLocalPostUpdate }: HomeFeedBodyProps) {
   const {
     posts,
     session,
@@ -102,7 +104,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     }
 
     const actorKey = resolveHomeFeedActorKey(
-      typeof session?.user?.id === 'string' ? session.user.id : null,
+      trackingActiveProfileId || (typeof session?.user?.id === 'string' ? session.user.id : trackingAuthUserId) || null,
       guestToken,
     );
     if (actorKey) {
@@ -117,6 +119,8 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
           postIds,
           status: 'recommend',
           province: trackingProvince,
+          activeProfileId: trackingActiveProfileId || undefined,
+          authUserId: trackingAuthUserId || undefined,
           guestToken,
         }),
       });
@@ -130,7 +134,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     } catch {
       // Ignore fire-and-forget tracking failures.
     }
-  }, [enableViewportTracking, session?.user?.id, trackingProvince]);
+  }, [enableViewportTracking, session?.user?.id, trackingProvince, trackingActiveProfileId, trackingAuthUserId]);
 
   const scheduleFlush = React.useCallback(() => {
     if (flushTimerRef.current != null) return;

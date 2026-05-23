@@ -105,6 +105,26 @@ export function markHomeFeedSeenPostIds(
   window.localStorage.setItem(key, JSON.stringify(payload));
 }
 
+export function migrateHomeFeedSeenPostIds(
+  province: string | undefined,
+  fromActorKey: string,
+  toActorKey: string,
+): void {
+  if (typeof window === 'undefined') return;
+  const fromKey = getHomeFeedSeenKey(normalizeScopeProvince(province), fromActorKey);
+  const toKey = getHomeFeedSeenKey(normalizeScopeProvince(province), toActorKey);
+  if (fromKey === toKey) return;
+
+  const fromRecord = parseStoredJson(window.localStorage.getItem(fromKey)) as HomeFeedSeenRecord | null;
+  const toRecord = parseStoredJson(window.localStorage.getItem(toKey)) as HomeFeedSeenRecord | null;
+  const fromIds = Array.isArray(fromRecord?.ids) ? fromRecord!.ids : [];
+  const toIds = Array.isArray(toRecord?.ids) ? toRecord!.ids : [];
+  if (fromIds.length === 0 && toIds.length === 0) return;
+
+  const merged = Array.from(new Set([...toIds, ...fromIds])).slice(-HOME_FEED_SEEN_MAX_IDS);
+  window.localStorage.setItem(toKey, JSON.stringify({ ts: Date.now(), ids: merged }));
+}
+
 function attachPreloadedImages(post: HomeFeedPost) {
   if (typeof sessionStorage === 'undefined' || !Array.isArray(post?.images)) return post;
   const preloadArr = parseStoredJson(sessionStorage.getItem(JUST_POSTED_PRELOAD_KEY));

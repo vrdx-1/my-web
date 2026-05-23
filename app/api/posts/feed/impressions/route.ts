@@ -38,7 +38,13 @@ function buildFeedScope(status: FeedCacheStatus, province?: string): string {
   return `${status}:${normalizedProvince}`;
 }
 
-async function resolveFeedActor(request: NextRequest, bodyGuestToken?: unknown): Promise<FeedActor | null> {
+async function resolveFeedActor(
+  request: NextRequest,
+  options?: { bodyGuestToken?: unknown; bodyActiveProfileId?: unknown; bodyAuthUserId?: unknown },
+): Promise<FeedActor | null> {
+  const bodyGuestToken = options?.bodyGuestToken;
+  const bodyActiveProfileId = typeof options?.bodyActiveProfileId === 'string' ? options.bodyActiveProfileId.trim() : '';
+  const bodyAuthUserId = typeof options?.bodyAuthUserId === 'string' ? options.bodyAuthUserId.trim() : '';
   const queryGuestToken = normalizeGuestToken(request.nextUrl.searchParams.get('guestToken'));
   const headerGuestToken = normalizeGuestToken(request.headers.get('x-guest-token'));
   const explicitGuestToken = normalizeGuestToken(bodyGuestToken) || headerGuestToken || queryGuestToken;
@@ -55,6 +61,26 @@ async function resolveFeedActor(request: NextRequest, bodyGuestToken?: unknown):
         actorValue: resolvedProfile.activeProfileId,
         actorKey: `user:${resolvedProfile.activeProfileId}`,
         user_id: resolvedProfile.activeProfileId,
+        guest_token: null,
+      };
+    }
+
+    if (bodyActiveProfileId) {
+      return {
+        actorColumn: 'user_id',
+        actorValue: bodyActiveProfileId,
+        actorKey: `user:${bodyActiveProfileId}`,
+        user_id: bodyActiveProfileId,
+        guest_token: null,
+      };
+    }
+
+    if (bodyAuthUserId) {
+      return {
+        actorColumn: 'user_id',
+        actorValue: bodyAuthUserId,
+        actorKey: `user:${bodyAuthUserId}`,
+        user_id: bodyAuthUserId,
         guest_token: null,
       };
     }
@@ -180,7 +206,11 @@ export async function POST(request: NextRequest) {
 
     const province = typeof body.province === 'string' ? body.province : undefined;
     const status = resolveFeedStatus(body.status);
-    const actor = await resolveFeedActor(request, body.guestToken ?? body.guest_token);
+    const actor = await resolveFeedActor(request, {
+      bodyGuestToken: body.guestToken ?? body.guest_token,
+      bodyActiveProfileId: body.activeProfileId,
+      bodyAuthUserId: body.authUserId,
+    });
 
     if (!actor) {
       return NextResponse.json({ ok: true, tracked: 0, reason: 'no-actor' });

@@ -18,6 +18,7 @@ export interface UseHomeTabDataOptions {
   session: Session | null;
   sessionReady: boolean;
   activeProfileId?: string | null;
+  authUserId?: string | null;
   startSessionCheck: () => void;
   setFirstFeedLoaded: (v: boolean) => void;
 }
@@ -42,7 +43,7 @@ export interface UseHomeTabDataReturn {
 }
 
 export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataReturn {
-  const { session, sessionReady, activeProfileId, startSessionCheck, setFirstFeedLoaded } = options;
+  const { session, sessionReady, activeProfileId, authUserId, startSessionCheck, setFirstFeedLoaded } = options;
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -67,6 +68,8 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
 
   const recommendFeed = useHomeFeed({
     session,
+    activeProfileId,
+    authUserId,
     sessionReady,
     province: selectedProvince,
     onInitialLoadDone: () => {

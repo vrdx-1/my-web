@@ -44,6 +44,8 @@ export function HomePageContent() {
     searchDataLoading,
     searchWaitingResults,
     selectedProvince,
+    activeProfileId,
+    authUserId,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,
@@ -111,6 +113,8 @@ export function HomePageContent() {
         searchWaitingResults={searchWaitingResults}
         hasSearch={hasSearch}
         selectedProvince={selectedProvince}
+        activeProfileId={activeProfileId}
+        authUserId={authUserId}
         searchDataLoading={searchDataLoading}
         tab={tab}
         onPrefetchNextPost={onPrefetchNextPost}

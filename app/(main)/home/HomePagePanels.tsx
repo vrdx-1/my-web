@@ -14,6 +14,8 @@ export interface HomePagePanelsProps {
   searchWaitingResults: boolean;
   hasSearch: boolean;
   selectedProvince: string;
+  activeProfileId: string | null;
+  authUserId: string | null;
   searchDataLoading: boolean;
   tab: 'recommend' | 'sold';
   onPrefetchNextPost: () => void;
@@ -33,6 +35,8 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
     searchWaitingResults,
     hasSearch,
     selectedProvince,
+    activeProfileId,
+    authUserId,
     searchDataLoading,
     tab,
     onPrefetchNextPost,
@@ -58,6 +62,8 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
           onPrefetchNextPost={onPrefetchNextPost}
           enableViewportTracking={tab === 'recommend' && !isSoldTabNoSearch && !hasSearch}
           trackingProvince={selectedProvince}
+          trackingActiveProfileId={activeProfileId}
+          trackingAuthUserId={authUserId}
           postFeedProps={recommendPostFeedProps}
           onLocalPostUpdate={onLocalPostUpdate}
         />
