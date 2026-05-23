@@ -112,6 +112,7 @@
         "prado",
         "ປຣາໂດ້",
         "ປາໂດ້",
+        "ປາໂດ",
         "พราโด้"
       ],
       "categoryIds": [
@@ -122,15 +123,18 @@
       "modelId": "hilux-vigo",
       "modelName": "Hilux Vigo",
       "modelNameTh": "ไฮลักซ์ วีโก้",
-      "modelNameLo": "ໄຮລັກ ວີໂກ້",
+      "modelNameLo": "ວີໂກ້",
       "searchNames": [
         "hilux vigo",
         "vigo",
         "วีโก้",
         "ວີໂກ້",
-        "hilux",
-        "ไฮลักซ์",
-        "ໄຮລັກ"
+        "ວິໂກ",
+        "ວິໂກ້",
+        "ວິໂກ່",
+        "ວີໂກ່",
+        "ວີໂກ",
+        "ไฮลักซ์"
       ],
       "categoryIds": [
         "pickup",
@@ -141,16 +145,19 @@
       "modelId": "hilux-revo",
       "modelName": "Hilux Revo",
       "modelNameTh": "ไฮลักซ์ รีโว่",
-      "modelNameLo": "ໄຮລັກ ລີໂວ້",
+      "modelNameLo": "ລີໂວ້",
       "searchNames": [
         "hilux revo",
         "revo",
         "รีโว่",
         "รีโว้",
         "ລີໂວ້",
-        "hilux",
-        "ไฮลักซ์",
-        "ໄຮລັກ"
+        "ລີໂວ",
+        "ລີໂວ່",
+        "ລິໂວ່",
+        "ລິໂວ້",
+        "ລິໂວ",
+        "ไฮลักซ์"
       ],
       "categoryIds": [
         "pickup",

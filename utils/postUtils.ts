@@ -56,13 +56,26 @@ function pickShortestMatching(items: string[], re: RegExp): string | null {
 }
 
 function buildModelDisplay(
+  modelId: string | undefined,
   searchNames: string[],
   modelName: string | undefined,
   modelNameLo: string | undefined,
   modelNameTh: string | undefined,
   lang: SearchLanguage,
 ): string {
-  const pool = uniqStringsCarSearch([...(searchNames ?? []), modelName, modelNameLo, modelNameTh]);
+  const primaryPool = uniqStringsCarSearch([modelId, modelName, modelNameLo, modelNameTh]);
+  const fallbackPool = uniqStringsCarSearch([...(searchNames ?? []), ...primaryPool]);
+
+  const byLangPrimary = (() => {
+    if (lang === 'latin') return uniqStringsCarSearch([modelName, modelId, modelNameLo, modelNameTh]);
+    if (lang === 'lo') return uniqStringsCarSearch([modelNameLo, modelName, modelNameTh, modelId]);
+    if (lang === 'th') return uniqStringsCarSearch([modelNameTh, modelName, modelNameLo, modelId]);
+    return uniqStringsCarSearch([modelName, modelNameLo, modelNameTh, modelId]);
+  })();
+
+  if (byLangPrimary.length > 0) return byLangPrimary[0] ?? '';
+
+  const pool = fallbackPool;
 
   if (lang === 'latin') {
     // ผู้ใช้พิมพ์ภาษาอังกฤษ → แสดงเฉพาะชื่อภาษาอังกฤษ/โรมันที่สั้นและชัดที่สุด
@@ -1090,6 +1103,7 @@ export function getCanonicalModelDisplayName(query: string): string | null {
     if (!info || info.kind !== 'model') continue;
 
     const displayName = buildModelDisplay(
+      info.modelId,
       info.searchNames ?? [],
       info.modelName,
       info.modelNameLo,
@@ -1153,6 +1167,25 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
 
   const items: Array<CarSuggestionItem & { _score: number }> = [];
 
+  function pickBestMatchedAlias(aliases: string[], query: string): string {
+    if (!query || aliases.length === 0) return aliases[0] ?? '';
+
+    let best = aliases[0] ?? '';
+    let bestScore = Number.NEGATIVE_INFINITY;
+    for (const alias of aliases) {
+      const norm = normalizeCarSearch(alias);
+      const score = scoreAliasForQuery(norm, query);
+      if (score === null) continue;
+      if (score > bestScore) {
+        bestScore = score;
+        best = alias;
+      } else if (score === bestScore && alias.length < best.length) {
+        best = alias;
+      }
+    }
+    return best;
+  }
+
   for (const [entity, m] of bestByEntity.entries()) {
     const info = CAR_INDEX.entityInfo.get(entity);
     if (!info) continue;
@@ -1170,32 +1203,38 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     // แสดงผลตามภาษาที่ผู้ใช้พิมพ์ (อังกฤษ/ไทย/ลาว) — ค้นหารุ่นอย่างเดียวแสดงแค่ชื่อรุ่น, ค้นหาแบรนด์จะแสดง แบรนด์+รุ่น (ในบล็อกด้านล่าง)
     let display = '';
     if (info.kind === 'model') {
-      const modelDisplay = buildModelDisplay(
-        info.searchNames ?? [],
+      const primaryAliases = uniqStringsCarSearch([
+        info.modelId,
         info.modelName,
-        info.modelNameLo,
         info.modelNameTh,
-        lang,
+        info.modelNameLo,
+      ]);
+      const primaryMatches = primaryAliases.filter((alias) =>
+        scoreAliasForQuery(normalizeCarSearch(alias), qNorm) !== null,
       );
-      display = modelDisplay;
-      // ถ้าคำค้นเป็น prefix ของชื่อรุ่นเต็ม ให้แสดงชื่อนั้น (เช่น พิมพ์ "land" ให้เห็น "Land Cruiser" ไม่ใช่ "lc40")
-      if (qNorm && modelDisplay) {
-        const nameCandidates = [
+
+      if (primaryMatches.length > 0) {
+        const modelDisplay = buildModelDisplay(
+          info.modelId,
+          info.searchNames ?? [],
           info.modelName,
           info.modelNameLo,
           info.modelNameTh,
-          ...(info.searchNames ?? []),
-        ].filter((s): s is string => typeof s === 'string' && s.trim() !== '');
-        const matchingNames = nameCandidates.filter((s) =>
-          normalizeCarSearch(s).startsWith(qNorm),
+          lang,
         );
-        if (matchingNames.length > 0) {
-          if (info.modelName && normalizeCarSearch(info.modelName).startsWith(qNorm)) {
-            display = info.modelName.trim();
-          } else {
-            matchingNames.sort((a, b) => a.length - b.length);
-            display = matchingNames[0].trim();
-          }
+        const startsWithPrimary = primaryMatches.filter((alias) =>
+          normalizeCarSearch(alias).startsWith(qNorm),
+        );
+        display = startsWithPrimary.length > 0
+          ? pickBestMatchedAlias(startsWithPrimary, qNorm).trim()
+          : modelDisplay;
+      } else {
+        // fallback: ผู้ใช้พิมพ์ไม่ตรง model fields หลัก จึงค่อยโชว์ alias จาก searchNames
+        const searchMatches = uniqStringsCarSearch(info.searchNames ?? []).filter((alias) =>
+          scoreAliasForQuery(normalizeCarSearch(alias), qNorm) !== null,
+        );
+        if (searchMatches.length > 0) {
+          display = pickBestMatchedAlias(searchMatches, qNorm).trim();
         }
       }
     } else {
@@ -1217,6 +1256,7 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
           if (!mInfo || mInfo.kind !== 'model') continue;
 
           const modelDisplay = buildModelDisplay(
+            mInfo.modelId,
             mInfo.searchNames ?? [],
             mInfo.modelName,
             mInfo.modelNameLo,
