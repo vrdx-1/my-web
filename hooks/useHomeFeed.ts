@@ -16,9 +16,11 @@ import {
 import {
   clearHomeFeedStorage,
   getInitialPostsFromStorage,
+  readHomeFeedSeenPostIds,
   mergeJustPostedPost,
   prepareInitialHomeFeedState,
   readJustPostedRecommendPost,
+  resolveHomeFeedActorKey,
   writeHomeFeedCache,
   type HomeFeedPost,
 } from '@/hooks/homeFeedStorage';
@@ -232,9 +234,16 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         pageSize?: number;
         feedSeed?: string;
         guestToken?: string;
+        excludePostIds?: string[];
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
       if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
+
+      let guestTokenForActor: string | null = null;
+      const userIdForActor =
+        typeof (currentSession as { user?: { id?: string } } | undefined)?.user?.id === 'string'
+          ? (currentSession as { user?: { id?: string } }).user?.id || null
+          : null;
 
       // Send guest token so the server can personalise the feed for guests.
       // (Logged-in userId is derived server-side from the session cookie.)
@@ -244,9 +253,18 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           const token = getPrimaryGuestToken();
           if (token && typeof token === 'string' && token !== 'null') {
             body.guestToken = token;
+            guestTokenForActor = token;
           }
         } catch {
           // ignore
+        }
+      }
+
+      const actorKey = resolveHomeFeedActorKey(userIdForActor, guestTokenForActor);
+      if (actorKey) {
+        const excludePostIds = readHomeFeedSeenPostIds(province, actorKey);
+        if (excludePostIds.length > 0) {
+          body.excludePostIds = excludePostIds;
         }
       }
 

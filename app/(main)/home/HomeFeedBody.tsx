@@ -9,6 +9,7 @@ import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { markHomeFeedSeenPostIds, resolveHomeFeedActorKey } from '@/hooks/homeFeedStorage';
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
@@ -98,6 +99,14 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
       } catch {
         guestToken = null;
       }
+    }
+
+    const actorKey = resolveHomeFeedActorKey(
+      typeof session?.user?.id === 'string' ? session.user.id : null,
+      guestToken,
+    );
+    if (actorKey) {
+      markHomeFeedSeenPostIds(trackingProvince, actorKey, postIds);
     }
 
     try {
