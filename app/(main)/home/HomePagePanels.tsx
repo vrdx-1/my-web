@@ -13,6 +13,7 @@ export interface HomePagePanelsProps {
   showFeedSkeleton: boolean;
   searchWaitingResults: boolean;
   hasSearch: boolean;
+  selectedProvince: string;
   searchDataLoading: boolean;
   tab: 'recommend' | 'sold';
   onPrefetchNextPost: () => void;
@@ -31,6 +32,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
     showFeedSkeleton,
     searchWaitingResults,
     hasSearch,
+    selectedProvince,
     searchDataLoading,
     tab,
     onPrefetchNextPost,
@@ -54,6 +56,8 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
           skeletonCount={3}
           gateImageReady={tab === 'recommend' && !isSoldTabNoSearch}
           onPrefetchNextPost={onPrefetchNextPost}
+          enableViewportTracking={tab === 'recommend' && !isSoldTabNoSearch && !hasSearch}
+          trackingProvince={selectedProvince}
           postFeedProps={recommendPostFeedProps}
           onLocalPostUpdate={onLocalPostUpdate}
         />

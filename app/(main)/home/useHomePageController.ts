@@ -358,6 +358,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     reportingPost,
     searchDataLoading: searchData.loading,
     searchWaitingResults,
+    selectedProvince,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,

@@ -43,6 +43,7 @@ export function HomePageContent() {
     reportingPost,
     searchDataLoading,
     searchWaitingResults,
+    selectedProvince,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,
@@ -109,6 +110,7 @@ export function HomePageContent() {
         showFeedSkeleton={showFeedSkeleton}
         searchWaitingResults={searchWaitingResults}
         hasSearch={hasSearch}
+        selectedProvince={selectedProvince}
         searchDataLoading={searchDataLoading}
         tab={tab}
         onPrefetchNextPost={onPrefetchNextPost}

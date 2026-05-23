@@ -8,6 +8,7 @@ import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { PostCard } from '@/components/PostCard';
 import { EmptyState } from '@/components/EmptyState';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 export type HomeFeedBodyProps = {
   showSkeleton: boolean;
@@ -22,6 +23,10 @@ export type HomeFeedBodyProps = {
   gateImageReady?: boolean;
   /** เรียกเมื่อโพสสุดท้ายในลิสต์โหลดรูปครบ — โหลดโพสถัดไปล่วงหน้า (เมื่อมีโพสในคิวไม่เกิน 2) */
   onPrefetchNextPost?: () => void;
+  /** เปิดเฉพาะแท็บแนะนำปกติ (ไม่ใช่ผลค้นหา) เพื่อ track impression จาก viewport จริง */
+  enableViewportTracking?: boolean;
+  /** scope จังหวัดของฟีดปัจจุบัน (ว่าง = all) */
+  trackingProvince?: string;
   postFeedProps: {
     posts: any[];
     session: any;
@@ -49,7 +54,7 @@ export type HomeFeedBodyProps = {
 };
 
 /** หน้าโฮม — ไม่ใช้ PostFeed เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
-export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, postFeedProps, onLocalPostUpdate }: HomeFeedBodyProps) {
+export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, mayShowEmptyState = true, isSearchLoading = false, skeletonCount, gateImageReady = false, onPrefetchNextPost, enableViewportTracking = false, trackingProvince, postFeedProps, onLocalPostUpdate }: HomeFeedBodyProps) {
   const {
     posts,
     session,
@@ -72,6 +77,120 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     hasMore = true,
     hideBoost = false,
   } = postFeedProps;
+
+  const observerRef = React.useRef<IntersectionObserver | null>(null);
+  const elementToPostIdRef = React.useRef<WeakMap<Element, string>>(new WeakMap());
+  const postToElementRef = React.useRef<Map<string, HTMLElement>>(new Map());
+  const trackedPostIdsRef = React.useRef<Set<string>>(new Set());
+  const pendingPostIdsRef = React.useRef<Set<string>>(new Set());
+  const flushTimerRef = React.useRef<number | null>(null);
+
+  const flushImpressions = React.useCallback(async () => {
+    if (!enableViewportTracking) return;
+    const postIds = Array.from(pendingPostIdsRef.current);
+    if (postIds.length === 0) return;
+    pendingPostIdsRef.current.clear();
+
+    let guestToken: string | null = null;
+    if (!session?.user?.id) {
+      try {
+        guestToken = getPrimaryGuestToken();
+      } catch {
+        guestToken = null;
+      }
+    }
+
+    try {
+      await fetch('/api/posts/feed/impressions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postIds,
+          status: 'recommend',
+          province: trackingProvince,
+          guestToken,
+        }),
+      });
+    } catch {
+      // Ignore fire-and-forget tracking failures.
+    }
+  }, [enableViewportTracking, session?.user?.id, trackingProvince]);
+
+  const scheduleFlush = React.useCallback(() => {
+    if (flushTimerRef.current != null) return;
+    flushTimerRef.current = window.setTimeout(() => {
+      flushTimerRef.current = null;
+      void flushImpressions();
+    }, 250);
+  }, [flushImpressions]);
+
+  const ensureObserver = React.useCallback(() => {
+    if (!enableViewportTracking) return null;
+    if (observerRef.current) return observerRef.current;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.25) return;
+          const postId = elementToPostIdRef.current.get(entry.target);
+          if (!postId) return;
+          if (trackedPostIdsRef.current.has(postId)) return;
+          trackedPostIdsRef.current.add(postId);
+          pendingPostIdsRef.current.add(postId);
+          scheduleFlush();
+        });
+      },
+      {
+        threshold: [0.25, 0.5],
+        rootMargin: '0px 0px -10% 0px',
+      },
+    );
+    return observerRef.current;
+  }, [enableViewportTracking, scheduleFlush]);
+
+  const registerImpressionRef = React.useCallback((postId: string, node: HTMLElement | null) => {
+    const prev = postToElementRef.current.get(postId);
+    if (prev && prev !== node) {
+      observerRef.current?.unobserve(prev);
+      elementToPostIdRef.current.delete(prev);
+      postToElementRef.current.delete(postId);
+    }
+
+    if (!node) {
+      if (prev) {
+        observerRef.current?.unobserve(prev);
+        elementToPostIdRef.current.delete(prev);
+      }
+      postToElementRef.current.delete(postId);
+      return;
+    }
+
+    postToElementRef.current.set(postId, node);
+    elementToPostIdRef.current.set(node, postId);
+    const observer = ensureObserver();
+    observer?.observe(node);
+  }, [ensureObserver]);
+
+  React.useEffect(() => {
+    if (!enableViewportTracking) return;
+    // Allow retracking if list content has changed substantially (e.g. refresh/new seed).
+    const currentIds = new Set(posts.map((post) => String(post.id)));
+    trackedPostIdsRef.current.forEach((id) => {
+      if (!currentIds.has(id)) trackedPostIdsRef.current.delete(id);
+    });
+  }, [enableViewportTracking, posts]);
+
+  React.useEffect(() => {
+    return () => {
+      if (flushTimerRef.current != null) {
+        clearTimeout(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+      postToElementRef.current.clear();
+      pendingPostIdsRef.current.clear();
+    };
+  }, []);
 
   const effectivelyShowSkeleton =
     showSkeleton ||
@@ -135,38 +254,39 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
           const isLastInFeed = index === posts.length - 1;
           const shouldGateImages = gateImageReady && index >= 2;
           return (
-            <HomePostImageGate
-              key={`${post.id}-${index}`}
-              post={post}
-              enabled={shouldGateImages}
-              onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
-            >
-              <PostCard
+            <div key={`${post.id}-${index}`} ref={(node) => registerImpressionRef(String(post.id), node)}>
+              <HomePostImageGate
                 post={post}
-                index={index}
-                isLastElement={isLastInFeed}
-                priority={index === 0}
-                imageFetchPriority={index < 3 ? 'high' : 'low'}
-                session={session}
-                savedPosts={savedPosts}
-                justSavedPosts={justSavedPosts}
-                activeMenuState={activeMenuState}
-                isMenuAnimating={isMenuAnimating}
-                lastPostElementRef={isLastInFeed ? lastPostElementRef : undefined}
-                menuButtonRefs={menuButtonRefs}
-                onViewPost={onViewPost}
-                onSave={onSave}
-                onShare={onShare}
-                onTogglePostStatus={onTogglePostStatus}
-                onDeletePost={onDeletePost}
-                onReport={onReport}
-                onRepost={onRepost}
-                onSetActiveMenu={onSetActiveMenu}
-                onSetMenuAnimating={onSetMenuAnimating}
-                hideBoost={hideBoost}
-                onLocalUpdate={onLocalPostUpdate}
-              />
-            </HomePostImageGate>
+                enabled={shouldGateImages}
+                onImagesReady={gateImageReady && isLastInFeed ? onPrefetchNextPost : undefined}
+              >
+                <PostCard
+                  post={post}
+                  index={index}
+                  isLastElement={isLastInFeed}
+                  priority={index === 0}
+                  imageFetchPriority={index < 3 ? 'high' : 'low'}
+                  session={session}
+                  savedPosts={savedPosts}
+                  justSavedPosts={justSavedPosts}
+                  activeMenuState={activeMenuState}
+                  isMenuAnimating={isMenuAnimating}
+                  lastPostElementRef={isLastInFeed ? lastPostElementRef : undefined}
+                  menuButtonRefs={menuButtonRefs}
+                  onViewPost={onViewPost}
+                  onSave={onSave}
+                  onShare={onShare}
+                  onTogglePostStatus={onTogglePostStatus}
+                  onDeletePost={onDeletePost}
+                  onReport={onReport}
+                  onRepost={onRepost}
+                  onSetActiveMenu={onSetActiveMenu}
+                  onSetMenuAnimating={onSetMenuAnimating}
+                  hideBoost={hideBoost}
+                  onLocalUpdate={onLocalPostUpdate}
+                />
+              </HomePostImageGate>
+            </div>
           );
         })}
         {bottomSlot}
