@@ -80,7 +80,7 @@ async function fetchAllFeedOrderRows(
   while (true) {
     let query = supabase
       .from('cars')
-      .select('id, is_boosted, user_id, guest_token, is_guest, created_at, caption')
+      .select('id, is_boosted, user_id, guest_token, is_guest, created_at, caption, profiles!cars_user_id_fkey(is_verified)')
       .eq('status', status)
       .or('is_hidden.eq.false,is_hidden.is.null');
 

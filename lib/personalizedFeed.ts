@@ -44,6 +44,9 @@ export type PersonalizedFeedRow = {
   is_guest: boolean | null;
   created_at: string | null;
   caption: string | null;
+  profiles?: {
+    is_verified?: boolean | null;
+  } | null;
 };
 
 type ExpandedTerm = {
@@ -65,6 +68,7 @@ const TRENDING_LOOKBACK_DAYS = 7;
 const MAX_TRENDING_SAMPLE = 2000;         // max search_logs rows to aggregate
 const MAX_USER_TERMS = 20;
 const MAX_TRENDING_TERMS = 30;
+const VERIFIED_PER_UNVERIFIED = 7;
 
 /** Number of regular posts between each boosted post insertion */
 export const BOOST_INTERVAL = 5;
@@ -214,6 +218,52 @@ function interleaveFreshIntoRegular(
   }
   // Append any remaining fresh posts at the end
   while (fi < fresh.length) result.push(fresh[fi++]);
+  return result;
+}
+
+function interleaveVerifiedRatio(
+  verifiedIds: string[],
+  unverifiedIds: string[],
+  verifiedPerUnverified: number,
+): string[] {
+  if (unverifiedIds.length === 0) return verifiedIds;
+  if (verifiedIds.length === 0) return unverifiedIds;
+
+  const safeRatio = Math.max(1, Math.floor(verifiedPerUnverified));
+  const result: string[] = [];
+
+  let verifiedIndex = 0;
+  let unverifiedIndex = 0;
+
+  // Keep top feed positions as verified first when verified posts are available.
+  const verifiedHeadCount = Math.min(verifiedIds.length, safeRatio);
+  while (verifiedIndex < verifiedHeadCount) {
+    result.push(verifiedIds[verifiedIndex]);
+    verifiedIndex += 1;
+  }
+
+  while (verifiedIndex < verifiedIds.length || unverifiedIndex < unverifiedIds.length) {
+    let pulledVerified = 0;
+    while (pulledVerified < safeRatio && verifiedIndex < verifiedIds.length) {
+      result.push(verifiedIds[verifiedIndex]);
+      verifiedIndex += 1;
+      pulledVerified += 1;
+    }
+
+    if (unverifiedIndex < unverifiedIds.length) {
+      result.push(unverifiedIds[unverifiedIndex]);
+      unverifiedIndex += 1;
+    }
+
+    if (verifiedIndex >= verifiedIds.length) {
+      while (unverifiedIndex < unverifiedIds.length) {
+        result.push(unverifiedIds[unverifiedIndex]);
+        unverifiedIndex += 1;
+      }
+      break;
+    }
+  }
+
   return result;
 }
 
@@ -421,6 +471,15 @@ export function buildPersonalizedFeedOrder(
     ...regularWithFresh,
   ];
 
+  const rowById = new Map(rows.map((row) => [row.id, row]));
+  const verifiedNonBoosted = nonBoosted.filter((id) => rowById.get(id)?.profiles?.is_verified === true);
+  const unverifiedNonBoosted = nonBoosted.filter((id) => rowById.get(id)?.profiles?.is_verified !== true);
+  const ratioOrderedNonBoosted = interleaveVerifiedRatio(
+    verifiedNonBoosted,
+    unverifiedNonBoosted,
+    VERIFIED_PER_UNVERIFIED,
+  );
+
   // Interleave boosted every BOOST_INTERVAL positions
-  return interleaveBoost(nonBoosted, boostedOrdered, BOOST_INTERVAL);
+  return interleaveBoost(ratioOrderedNonBoosted, boostedOrdered, BOOST_INTERVAL);
 }
