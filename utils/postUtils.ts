@@ -6,6 +6,7 @@
 import { safeParseJSON } from './storageUtils';
 import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
+import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -1079,8 +1080,37 @@ const CUSTOM_SUGGESTIONS: CarSuggestionItem[] = [
  * This supports UX like: "ລີໂ" -> "ລີໂວ້ 2025" when there's no competing model suggestion.
  */
 export function getCanonicalModelDisplayName(query: string): string | null {
-  const qNorm = normalizeCarSearch(query);
-  if (!qNorm) return null;
+  const qNormInitial = normalizeCarSearch(query);
+  if (!qNormInitial) return null;
+
+  function resolveModelQueryNorm(queryNorm: string): string {
+    const directEntities = CAR_INDEX.aliasToEntities.get(queryNorm);
+    if (directEntities) {
+      for (const entity of directEntities) {
+        const info = CAR_INDEX.entityInfo.get(entity);
+        if (info?.kind === 'model') return queryNorm;
+      }
+    }
+
+    let best = '';
+    for (const [aliasNorm, entities] of CAR_INDEX.aliasToEntities.entries()) {
+      if (aliasNorm.length < 2) continue;
+      if (!queryNorm.startsWith(aliasNorm)) continue;
+      let hasModel = false;
+      for (const entity of entities) {
+        const info = CAR_INDEX.entityInfo.get(entity);
+        if (info?.kind === 'model') {
+          hasModel = true;
+          break;
+        }
+      }
+      if (hasModel && aliasNorm.length > best.length) best = aliasNorm;
+    }
+
+    return best || queryNorm;
+  }
+
+  const qNorm = resolveModelQueryNorm(qNormInitial);
   const lang = detectSearchLanguage(query);
 
   const bestByModel = new Map<EntityKey, number>();
@@ -1139,10 +1169,36 @@ export function getCanonicalModelDisplayName(query: string): string | null {
 }
 
 export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSuggestionItem[] {
-  const qNorm = normalizeCarSearch(prefix);
-  if (!qNorm) return [];
+  const boundaryNormalizedPrefix = String(prefix ?? '')
+    .replace(/([a-zA-Z0-9])([\u0E00-\u0EFF])/g, '$1 $2')
+    .replace(/([\u0E00-\u0EFF])([a-zA-Z0-9])/g, '$1 $2');
+  const normalizedPrefix = removeSmartCabTermsFromQuery(boundaryNormalizedPrefix).trim() || prefix;
+  const qNormInitial = normalizeCarSearch(normalizedPrefix);
+  if (!qNormInitial) return [];
 
-  const lang = detectSearchLanguage(prefix);
+  function findLongestKnownPrefix(queryNorm: string): string {
+    if (CAR_INDEX.aliasToEntities.has(queryNorm) || CATEGORY_INDEX.aliasToCategoryIds.has(queryNorm)) {
+      return queryNorm;
+    }
+
+    let best = '';
+    for (const aliasNorm of CAR_INDEX.aliasToEntities.keys()) {
+      if (aliasNorm.length < 2) continue;
+      if (!queryNorm.startsWith(aliasNorm)) continue;
+      if (aliasNorm.length > best.length) best = aliasNorm;
+    }
+    for (const aliasNorm of CATEGORY_INDEX.aliasToCategoryIds.keys()) {
+      if (aliasNorm.length < 2) continue;
+      if (!queryNorm.startsWith(aliasNorm)) continue;
+      if (aliasNorm.length > best.length) best = aliasNorm;
+    }
+
+    return best || queryNorm;
+  }
+
+  const qNorm = findLongestKnownPrefix(qNormInitial);
+
+  const lang = detectSearchLanguage(normalizedPrefix);
 
   const bestByEntity = new Map<EntityKey, { score: number; matchedAliasNorm: string }>();
 

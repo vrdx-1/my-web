@@ -72,8 +72,28 @@ function uniqSearchTerms(items: string[]): string[] {
   return out;
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function insertSpacesAroundKnownTerms(query: string, knownTerms: string[]): string {
+  let out = String(query ?? '');
+  if (!out) return out;
+
+  const sorted = [...knownTerms].sort((a, b) => b.length - a.length);
+  for (const term of sorted) {
+    const t = String(term ?? '').trim();
+    if (!t) continue;
+    const pattern = new RegExp(escapeRegex(t), 'giu');
+    out = out.replace(pattern, ` ${t} `);
+  }
+
+  return out.replace(/\s+/g, ' ').trim();
+}
+
 function splitQueryTokens(query: string): string[] {
-  return String(query ?? '')
+  const withBoundaries = insertSpacesAroundKnownTerms(query, SMART_CAB_GROUP_TERMS);
+  return String(withBoundaries ?? '')
     .trim()
     .split(/\s+/)
     .map((t) => t.trim())
