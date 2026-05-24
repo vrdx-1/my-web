@@ -380,6 +380,8 @@ export function buildPersonalizedFeedOrder(
   feedSeed: string,
   userTerms: UserSearchTerm[],
   trendingTerms: TrendingTerm[],
+  viewerUserId?: string,
+  viewerGuestToken?: string,
 ): string[] {
   const cutoff24h = new Date(Date.now() - 86_400_000).toISOString();
 
@@ -393,6 +395,7 @@ export function buildPersonalizedFeedOrder(
 
   // Buckets
   const boosted: PersonalizedFeedRow[] = [];
+  const selfOwned: PersonalizedFeedRow[] = [];
   const personal: ScoredRow[] = [];
   const trending: ScoredRow[] = [];
   const fresh: PersonalizedFeedRow[] = [];
@@ -401,9 +404,17 @@ export function buildPersonalizedFeedOrder(
   for (const row of rows) {
     const caption = row.caption || '';
     const isNew24h = !!(row.created_at && row.created_at >= cutoff24h);
+    const isSelfOwned =
+      (!!viewerUserId && row.user_id === viewerUserId) ||
+      (!!viewerGuestToken && row.guest_token === viewerGuestToken);
 
     if (row.is_boosted) {
       boosted.push(row);
+      continue;
+    }
+
+    if (isSelfOwned) {
+      selfOwned.push(row);
       continue;
     }
 
@@ -466,6 +477,7 @@ export function buildPersonalizedFeedOrder(
 
   // Merge non-boosted buckets in priority order
   const nonBoosted: string[] = [
+    ...interleaveByAccount(selfOwned, feedSeed).map((row) => row.id),
     ...personalOrdered.map((s) => s.row.id),
     ...trendingOrdered.map((s) => s.row.id),
     ...regularWithFresh,

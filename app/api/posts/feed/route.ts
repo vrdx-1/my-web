@@ -146,6 +146,8 @@ async function computeFeed(
   status: FeedCacheStatus = 'recommend',
   userTerms: UserSearchTerm[] = [],
   trendingTerms: TrendingTerm[] = [],
+  viewerUserId?: string,
+  viewerGuestToken?: string,
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
   const orderedIds = buildPersonalizedFeedOrder(
@@ -153,6 +155,8 @@ async function computeFeed(
     resolvedSeed,
     userTerms,
     trendingTerms,
+    viewerUserId,
+    viewerGuestToken,
   );
   const postIds = orderedIds.slice(startIndex, endIndex + 1);
   const hasMore = endIndex + 1 < orderedIds.length;
@@ -169,6 +173,8 @@ async function computeFeedWithCursor(
   status: FeedCacheStatus = 'recommend',
   userTerms: UserSearchTerm[] = [],
   trendingTerms: TrendingTerm[] = [],
+  viewerUserId?: string,
+  viewerGuestToken?: string,
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
   const orderedIds = buildPersonalizedFeedOrder(
@@ -176,6 +182,8 @@ async function computeFeedWithCursor(
     resolvedSeed,
     userTerms,
     trendingTerms,
+    viewerUserId,
+    viewerGuestToken,
   );
   const cursorIndex = orderedIds.findIndex((id) => id === cursorId);
   const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
@@ -259,6 +267,7 @@ export async function POST(request: NextRequest) {
       const result = await computeFeedWithCursor(
         supabase, cursorId, pageSize, province, requestedFeedSeed, status,
         userTerms, trendingTerms,
+        userId, guestToken,
       );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
@@ -276,6 +285,7 @@ export async function POST(request: NextRequest) {
         const full = await computeFeed(
           supabase, 0, FEED_TOP_CACHE_SIZE - 1, province, requestedFeedSeed, status,
           [], trendingTerms,
+          userId, guestToken,
         );
         await setFeedTop100Cache(province, full, status);
         topCache = full;
@@ -294,6 +304,7 @@ export async function POST(request: NextRequest) {
       const result = await computeFeed(
         supabase, startIndex, endIndex, province, requestedFeedSeed, status,
         userTerms, trendingTerms,
+        userId, guestToken,
       );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },
@@ -311,6 +322,7 @@ export async function POST(request: NextRequest) {
     const result = await computeFeed(
       supabase, startIndex, endIndex, province, requestedFeedSeed, status,
       [], trendingTerms,
+      userId, guestToken,
     );
     await setFeedCache(cacheKey, result);
     return NextResponse.json(result, {
