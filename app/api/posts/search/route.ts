@@ -15,6 +15,7 @@ import {
   getStrictBrandSearchTerms,
 } from '@/utils/postUtils';
 import { extractYearsFromQuery, removeYearsFromQuery, removePartialYearSuffix } from '@/utils/yearSearchUtils';
+import { SMART_CAB_SUGGESTION_TERMS } from '@/utils/smartCabSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -36,6 +37,130 @@ type SearchPostRow = {
   is_boosted?: boolean | null;
   created_at: string;
 };
+
+
+type SearchTermGroup = {
+  source: string;
+  terms: string[];
+  categoryIds: string[];
+};
+
+const SMART_CAB_GROUP_TERMS = SMART_CAB_SUGGESTION_TERMS.map((t) => String(t ?? '').trim()).filter(Boolean);
+const SMART_CAB_GROUP_TERM_KEYS = new Set<string>(SMART_CAB_GROUP_TERMS.map((t) => normalizeGroupText(t)));
+
+function normalizeGroupText(text: string): string {
+  return String(text ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[()[\]{}"“”'‘’]/g, ' ')
+    .replace(/[.,;:!/?\\|@#$%^&*_+=~`<>-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function uniqSearchTerms(items: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    const value = String(item ?? '').trim();
+    if (!value) continue;
+    const key = normalizeGroupText(value);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+
+function splitQueryTokens(query: string): string[] {
+  return String(query ?? '')
+    .trim()
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+function buildSearchTermGroups(query: string): SearchTermGroup[] {
+  const tokens = splitQueryTokens(query);
+  if (tokens.length === 0) return [];
+
+  const phraseCache = new Map<string, SearchTermGroup & { recognized: boolean }>();
+
+  const resolvePhrase = (phrase: string): SearchTermGroup & { recognized: boolean } => {
+    const key = normalizeGroupText(phrase);
+    if (!key) {
+      return { source: phrase, terms: [], categoryIds: [], recognized: false };
+    }
+    const cached = phraseCache.get(key);
+    if (cached) return cached;
+
+    const strictBrandTerms = getStrictBrandSearchTerms(phrase);
+    const categoryIds = getSearchCategoryIds(phrase);
+    const isSmartCabGroup = SMART_CAB_GROUP_TERM_KEYS.has(key);
+
+    const terms = uniqSearchTerms(
+      isSmartCabGroup
+        ? SMART_CAB_GROUP_TERMS
+        : strictBrandTerms
+          ? strictBrandTerms
+          : expandWithoutBrandAliases(phrase),
+    );
+
+    const recognized = isSmartCabGroup || Boolean(strictBrandTerms) || categoryIds.length > 0 || terms.length > 1;
+    const result = {
+      source: phrase,
+      terms: terms.length > 0 ? terms : [phrase],
+      categoryIds,
+      recognized,
+    };
+    phraseCache.set(key, result);
+    return result;
+  };
+
+  const groups: SearchTermGroup[] = [];
+  let index = 0;
+
+  while (index < tokens.length) {
+    let matched: (SearchTermGroup & { recognized: boolean }) | null = null;
+    let consumed = 1;
+
+    for (let end = tokens.length; end > index; end -= 1) {
+      const phrase = tokens.slice(index, end).join(' ');
+      const resolved = resolvePhrase(phrase);
+      if (!resolved.recognized) continue;
+      matched = resolved;
+      consumed = end - index;
+      break;
+    }
+
+    if (matched) {
+      groups.push({
+        source: matched.source,
+        terms: uniqSearchTerms(matched.terms),
+        categoryIds: uniqSearchTerms(matched.categoryIds),
+      });
+      index += consumed;
+      continue;
+    }
+
+    const rawToken = tokens[index];
+    const resolvedRaw = resolvePhrase(rawToken);
+    groups.push({
+      source: rawToken,
+      terms: uniqSearchTerms(resolvedRaw.terms.length > 0 ? resolvedRaw.terms : [rawToken]),
+      categoryIds: uniqSearchTerms(resolvedRaw.categoryIds),
+    });
+    index += 1;
+  }
+
+  return groups.filter((group) => group.terms.length > 0);
+}
+
+function captionMatchesAllGroups(caption: string, groups: SearchTermGroup[]): boolean {
+  if (!groups.length) return true;
+  return groups.every((group) => captionMatchesAnyAlias(caption, group.terms));
+}
+
 
 /** ใช้ดึงโพสจาก cars โดยข้าม RLS — ถ้าไม่มี key จะใช้ client ปกติ */
 function getCarsReadClient(supabase: ReturnType<typeof createServerClient>) {
@@ -118,16 +243,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const terms = expandWithoutBrandAliases(queryForMatching)
-      .map((t) => String(t ?? '').trim())
-      .filter(Boolean);
-    // ถ้าค้นหาแบรนด์แบบ strict (เช่น Nissan/ນີດສັນ/นิสสัน) ให้ใช้เฉพาะ alias แบรนด์นั้น
-    // ไม่ขยายไปรุ่น เพื่อให้แสดงเฉพาะโพสที่มีชื่อแบรนด์จริง ๆ ใน caption
-    const strictBrandTerms = getStrictBrandSearchTerms(queryForMatching);
-    const searchTerms = strictBrandTerms
-      ? strictBrandTerms.map((t) => String(t ?? '').trim()).filter(Boolean)
-      : terms;
-    const matchedCategoryIds = getSearchCategoryIds(queryForMatching);
+    const searchGroups = buildSearchTermGroups(queryForMatching);
+    const searchTerms = uniqSearchTerms(searchGroups.flatMap((group) => group.terms));
+    const matchedCategoryIds = uniqSearchTerms(searchGroups.flatMap((group) => group.categoryIds));
+    const canUseCategoryShortcut = matchedCategoryIds.length > 0 && searchGroups.length === 1;
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -143,7 +262,7 @@ export async function GET(request: NextRequest) {
     );
     const carsClient = getCarsReadClient(supabase);
 
-    if (matchedCategoryIds.length > 0) {
+    if (canUseCategoryShortcut) {
       let categoryQuery = carsClient
         .from('cars')
         .select(POST_WITH_PROFILE_SELECT)
@@ -279,6 +398,10 @@ export async function GET(request: NextRequest) {
         posts.push(post);
       }
 
+      if (searchGroups.length > 1) {
+        posts = posts.filter((post) => captionMatchesAllGroups(post.caption, searchGroups));
+      }
+
       // Extract years from query for ranking
       const queryYears = extractYearsFromQuery(query);
 
@@ -333,6 +456,10 @@ export async function GET(request: NextRequest) {
     let posts = (await attachEffectiveWhatsAppPhones(carsClient, (data || []) as SearchPostRow[])).filter(
       (p: SearchPostRow) => (p.status === 'recommend' || p.status === 'sold') && !p.is_hidden,
     ) as SearchPostRow[];
+
+    if (searchGroups.length > 1) {
+      posts = posts.filter((post) => captionMatchesAllGroups(post.caption, searchGroups));
+    }
 
     const priorityTerms = getSearchPriorityTerms(queryForMatching);
     if (queryYears.length > 0 && priorityTerms.length > 0) {
