@@ -5,11 +5,12 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
+import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SUGGESTION_LIMIT = 300;
-const MAX_SUGGESTIONS = 15; // ลดจำนวน suggestions ให้พอดี
+const MAX_SUGGESTIONS = 30;
 
 /**
  * GET /api/posts/search/suggestions?q=...
@@ -41,8 +42,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Extract base model name (without year)
-    const baseQuery = getModelNameFromQuery(query);
+    // Extract base model name (without year / Smart Cab suffix terms)
+    const queryWithoutSmartCab = removeSmartCabTermsFromQuery(query);
+    const baseQuery = getModelNameFromQuery(queryWithoutSmartCab);
     const queryYears = extractYearsFromQuery(query);
 
     let modelQueryForSuggestions = baseQuery;
@@ -114,17 +116,25 @@ export async function GET(request: NextRequest) {
     const availableYears = generateYearSuggestions(terms, matchedPosts);
 
     // Filter by full year match OR partial year prefix (e.g. "revo20" → show years starting with "20")
-    const partialPrefix = extractPartialYearPrefix(query) ?? trailingDigitsPrefix;
+    const partialPrefix = extractPartialYearPrefix(queryWithoutSmartCab) ?? trailingDigitsPrefix;
     const yearsForSuggestions = queryYears.length > 0
       ? availableYears.filter((year) => queryYears.includes(year))
       : partialPrefix
         ? availableYears.filter((year) => String(year).startsWith(partialPrefix))
         : availableYears;
 
-    // Use canonical name (e.g. "Revo") so suggestions show "Revo 2015" not "revo 2015"
-    const suggestions = yearsForSuggestions
-      .slice(0, MAX_SUGGESTIONS)
-      .map((year) => formatYearSuggestion(canonicalName, year));
+    // Show all Smart Cab keyword variants in this group when they exist in matched captions.
+    const availableSmartCabTerms = collectAvailableSmartCabTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
+
+    // Order: base model/brand first, then year suggestions, then Smart Cab grouped suggestions.
+    const suggestions = [
+      canonicalName,
+      ...yearsForSuggestions.map((year) => formatYearSuggestion(canonicalName, year)),
+      ...availableSmartCabTerms.map((term) => `${canonicalName} ${term}`),
+    ].filter((item, index, arr) => arr.indexOf(item) === index)
+      .slice(0, MAX_SUGGESTIONS);
 
     return NextResponse.json(
       { suggestions },
