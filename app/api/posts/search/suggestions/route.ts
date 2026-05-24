@@ -135,11 +135,20 @@ export async function GET(request: NextRequest) {
       return prefersNoSpaceSmartCab ? [noSpace, withSpace] : [withSpace, noSpace];
     });
 
+    const smartCabYearSuggestions = availableSmartCabTerms.flatMap((term) =>
+      yearsForSuggestions.flatMap((year) => {
+        const noSpace = `${canonicalName}${term}${year}`;
+        const withSpace = `${canonicalName} ${term} ${year}`;
+        return prefersNoSpaceSmartCab ? [noSpace, withSpace] : [withSpace, noSpace];
+      })
+    );
+
     // Order: base model/brand first, then year suggestions, then Smart Cab grouped suggestions.
     const suggestions = [
       canonicalName,
       ...yearsForSuggestions.map((year) => formatYearSuggestion(canonicalName, year)),
       ...smartCabSuggestions,
+      ...smartCabYearSuggestions,
     ].filter((item, index, arr) => arr.indexOf(item) === index)
       .slice(0, MAX_SUGGESTIONS);
 
