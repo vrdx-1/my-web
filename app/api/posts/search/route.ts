@@ -387,7 +387,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const topIds = sortBySeed(allOrdered, searchSeed).slice(0, SEARCH_LIMIT).map((r) => r.id);
+      const topIds = sortBySeed(allOrdered, searchSeed).slice(0, 200).map((r) => r.id);
       if (topIds.length === 0) {
         return NextResponse.json(
           { posts: [] },

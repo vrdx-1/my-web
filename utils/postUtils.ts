@@ -7,6 +7,7 @@ import { safeParseJSON } from './storageUtils';
 import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
 import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
+import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -1172,7 +1173,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const boundaryNormalizedPrefix = String(prefix ?? '')
     .replace(/([a-zA-Z0-9])([\u0E00-\u0EFF])/g, '$1 $2')
     .replace(/([\u0E00-\u0EFF])([a-zA-Z0-9])/g, '$1 $2');
-  const normalizedPrefix = removeSmartCabTermsFromQuery(boundaryNormalizedPrefix).trim() || prefix;
+  const withoutSmartCab = removeSmartCabTermsFromQuery(boundaryNormalizedPrefix);
+  const normalizedPrefix = removeLeftOriginalTermsFromQuery(withoutSmartCab).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
