@@ -9,6 +9,7 @@ import categoriesData from '@/data/categories.json';
 import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
+import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -1176,7 +1177,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
     .replace(/([\u0E00-\u0EFF])([a-zA-Z0-9])/g, '$1 $2');
   const withoutSmartCab = removeSmartCabTermsFromQuery(boundaryNormalizedPrefix);
   const withoutLeftOriginal = removeLeftOriginalTermsFromQuery(withoutSmartCab);
-  const normalizedPrefix = removeMoveSteeringTermsFromQuery(withoutLeftOriginal).trim() || prefix;
+  const withoutMoveSteering = removeMoveSteeringTermsFromQuery(withoutLeftOriginal);
+  const normalizedPrefix = removeLaoCenterTermsFromQuery(withoutMoveSteering).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 

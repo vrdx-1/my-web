@@ -8,11 +8,12 @@ import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, e
 import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
+import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SUGGESTION_LIMIT = 300;
-const MAX_SUGGESTIONS = 80;
+const MAX_SUGGESTIONS = 200;
 
 function normalizeText(value: string): string {
   return String(value ?? '')
@@ -77,6 +78,28 @@ function firstIndexOfAnyTerm(text: string, terms: string[]): number {
   return Number.isFinite(best) ? best : -1;
 }
 
+function formatCombinedSuggestion(
+  canonicalName: string,
+  queryNormalized: string,
+  terms: string[],
+  year?: number,
+): string {
+  const ordered = [...terms].sort((left, right) => {
+    const leftIndex = queryNormalized.indexOf(normalizeText(left));
+    const rightIndex = queryNormalized.indexOf(normalizeText(right));
+    const leftFound = leftIndex >= 0;
+    const rightFound = rightIndex >= 0;
+
+    if (leftFound && rightFound) return leftIndex - rightIndex;
+    if (leftFound) return -1;
+    if (rightFound) return 1;
+    return 0;
+  });
+
+  if (year == null) return `${canonicalName} ${ordered.join(' ')}`;
+  return `${canonicalName} ${ordered.join(' ')} ${year}`;
+}
+
 /**
  * GET /api/posts/search/suggestions?q=...
  * Returns model suggestions with available years
@@ -110,7 +133,8 @@ export async function GET(request: NextRequest) {
     // Extract base model name (without year / grouped suffix terms)
     const queryWithoutSmartCab = removeSmartCabTermsFromQuery(query);
     const queryWithoutLeftOriginalTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
-    const queryWithoutFeatureTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
+    const queryWithoutMoveSteeringTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
+    const queryWithoutFeatureTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(query);
 
@@ -200,6 +224,9 @@ export async function GET(request: NextRequest) {
     const availableMoveSteeringTerms = collectAvailableMoveSteeringTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableLaoCenterTerms = collectAvailableLaoCenterTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
 
     const queryNormalized = normalizeText(query);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
@@ -243,6 +270,17 @@ export async function GET(request: NextRequest) {
     const moveSteeringSuggestions = availableMoveSteeringTerms.map((term) => `${canonicalName} ${term}`);
 
     const moveSteeringYearSuggestions = availableMoveSteeringTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const laoCenterSuggestions = availableLaoCenterTerms.map((term) => `${canonicalName} ${term}`);
+
+    const laoCenterYearSuggestions = availableLaoCenterTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -365,6 +403,217 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    const mixedCenterAndSmartSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableSmartCabTerms
+        .filter((smartTerm) =>
+          hasAllTermsInAnyPost(
+            matchedPosts as Array<{ caption?: unknown }>,
+            [centerTerm, smartTerm],
+          ),
+        )
+        .map((smartTerm) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, smartTerm]))
+    );
+
+    const mixedCenterAndSmartYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableSmartCabTerms.flatMap((smartTerm) =>
+        yearsForSuggestions
+          .filter((year) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, smartTerm],
+              year,
+            ),
+          )
+          .map((year) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, smartTerm], year))
+      )
+    );
+
+    const mixedCenterAndLeftSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableLeftOriginalTerms
+        .filter((leftTerm) =>
+          hasAllTermsInAnyPost(
+            matchedPosts as Array<{ caption?: unknown }>,
+            [centerTerm, leftTerm],
+          ),
+        )
+        .map((leftTerm) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, leftTerm]))
+    );
+
+    const mixedCenterAndLeftYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        yearsForSuggestions
+          .filter((year) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, leftTerm],
+              year,
+            ),
+          )
+          .map((year) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, leftTerm], year))
+      )
+    );
+
+    const mixedCenterAndMoveSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms
+        .filter((moveTerm) =>
+          hasAllTermsInAnyPost(
+            matchedPosts as Array<{ caption?: unknown }>,
+            [centerTerm, moveTerm],
+          ),
+        )
+        .map((moveTerm) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm]))
+    );
+
+    const mixedCenterAndMoveYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        yearsForSuggestions
+          .filter((year) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, moveTerm],
+              year,
+            ),
+          )
+          .map((year) => formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm], year))
+      )
+    );
+
+    const mixedCenterLeftSmartSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        availableSmartCabTerms
+          .filter((smartTerm) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, leftTerm, smartTerm],
+            ),
+          )
+          .map((smartTerm) =>
+            formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, leftTerm, smartTerm])
+          )
+      )
+    );
+
+    const mixedCenterLeftSmartYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        availableSmartCabTerms.flatMap((smartTerm) =>
+          yearsForSuggestions
+            .filter((year) =>
+              hasAllTermsInAnyPost(
+                matchedPosts as Array<{ caption?: unknown }>,
+                [centerTerm, leftTerm, smartTerm],
+                year,
+              ),
+            )
+            .map((year) =>
+              formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, leftTerm, smartTerm], year)
+            )
+        )
+      )
+    );
+
+    const mixedCenterMoveSmartSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableSmartCabTerms
+          .filter((smartTerm) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, moveTerm, smartTerm],
+            ),
+          )
+          .map((smartTerm) =>
+            formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, smartTerm])
+          )
+      )
+    );
+
+    const mixedCenterMoveSmartYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableSmartCabTerms.flatMap((smartTerm) =>
+          yearsForSuggestions
+            .filter((year) =>
+              hasAllTermsInAnyPost(
+                matchedPosts as Array<{ caption?: unknown }>,
+                [centerTerm, moveTerm, smartTerm],
+                year,
+              ),
+            )
+            .map((year) =>
+              formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, smartTerm], year)
+            )
+        )
+      )
+    );
+
+    const mixedCenterMoveLeftSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableLeftOriginalTerms
+          .filter((leftTerm) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [centerTerm, moveTerm, leftTerm],
+            ),
+          )
+          .map((leftTerm) =>
+            formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, leftTerm])
+          )
+      )
+    );
+
+    const mixedCenterMoveLeftYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableLeftOriginalTerms.flatMap((leftTerm) =>
+          yearsForSuggestions
+            .filter((year) =>
+              hasAllTermsInAnyPost(
+                matchedPosts as Array<{ caption?: unknown }>,
+                [centerTerm, moveTerm, leftTerm],
+                year,
+              ),
+            )
+            .map((year) =>
+              formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, leftTerm], year)
+            )
+        )
+      )
+    );
+
+    const mixedAllFourSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableLeftOriginalTerms.flatMap((leftTerm) =>
+          availableSmartCabTerms
+            .filter((smartTerm) =>
+              hasAllTermsInAnyPost(
+                matchedPosts as Array<{ caption?: unknown }>,
+                [centerTerm, moveTerm, leftTerm, smartTerm],
+              ),
+            )
+            .map((smartTerm) =>
+              formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, leftTerm, smartTerm])
+            )
+        )
+      )
+    );
+
+    const mixedAllFourYearSuggestions = availableLaoCenterTerms.flatMap((centerTerm) =>
+      availableMoveSteeringTerms.flatMap((moveTerm) =>
+        availableLeftOriginalTerms.flatMap((leftTerm) =>
+          availableSmartCabTerms.flatMap((smartTerm) =>
+            yearsForSuggestions
+              .filter((year) =>
+                hasAllTermsInAnyPost(
+                  matchedPosts as Array<{ caption?: unknown }>,
+                  [centerTerm, moveTerm, leftTerm, smartTerm],
+                  year,
+                ),
+              )
+              .map((year) =>
+                formatCombinedSuggestion(canonicalName, queryNormalized, [centerTerm, moveTerm, leftTerm, smartTerm], year)
+              )
+          )
+        )
+      )
+    );
+
     // Order: base model/brand first, then year suggestions, then grouped feature suggestions.
     const suggestions = [
       canonicalName,
@@ -375,6 +624,8 @@ export async function GET(request: NextRequest) {
       ...leftOriginalYearSuggestions,
       ...moveSteeringSuggestions,
       ...moveSteeringYearSuggestions,
+      ...laoCenterSuggestions,
+      ...laoCenterYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -383,6 +634,20 @@ export async function GET(request: NextRequest) {
       ...mixedMoveAndLeftYearSuggestions,
       ...mixedAllThreeSuggestions,
       ...mixedAllThreeYearSuggestions,
+      ...mixedCenterAndSmartSuggestions,
+      ...mixedCenterAndSmartYearSuggestions,
+      ...mixedCenterAndLeftSuggestions,
+      ...mixedCenterAndLeftYearSuggestions,
+      ...mixedCenterAndMoveSuggestions,
+      ...mixedCenterAndMoveYearSuggestions,
+      ...mixedCenterLeftSmartSuggestions,
+      ...mixedCenterLeftSmartYearSuggestions,
+      ...mixedCenterMoveSmartSuggestions,
+      ...mixedCenterMoveSmartYearSuggestions,
+      ...mixedCenterMoveLeftSuggestions,
+      ...mixedCenterMoveLeftYearSuggestions,
+      ...mixedAllFourSuggestions,
+      ...mixedAllFourYearSuggestions,
     ].filter((item, index, arr) => arr.indexOf(item) === index)
       .slice(0, MAX_SUGGESTIONS);
 
