@@ -7,11 +7,12 @@ import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDis
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
 import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
+import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SUGGESTION_LIMIT = 300;
-const MAX_SUGGESTIONS = 30;
+const MAX_SUGGESTIONS = 80;
 
 function normalizeText(value: string): string {
   return String(value ?? '')
@@ -45,6 +46,23 @@ function hasCombinedTermInAnyPost(
 ): boolean {
   return posts.some((post) => {
     if (!postHasTerm(post, firstTerm) || !postHasTerm(post, secondTerm)) return false;
+    if (year == null) return true;
+    return postHasYear(post, year);
+  });
+}
+
+function hasAllTermsInAnyPost(
+  posts: Array<{ caption?: unknown }>,
+  terms: string[],
+  year?: number,
+): boolean {
+  const cleanTerms = terms.map((term) => String(term ?? '').trim()).filter(Boolean);
+  if (cleanTerms.length === 0) return false;
+
+  return posts.some((post) => {
+    for (const term of cleanTerms) {
+      if (!postHasTerm(post, term)) return false;
+    }
     if (year == null) return true;
     return postHasYear(post, year);
   });
@@ -91,7 +109,8 @@ export async function GET(request: NextRequest) {
 
     // Extract base model name (without year / grouped suffix terms)
     const queryWithoutSmartCab = removeSmartCabTermsFromQuery(query);
-    const queryWithoutFeatureTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
+    const queryWithoutLeftOriginalTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
+    const queryWithoutFeatureTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(query);
 
@@ -178,6 +197,9 @@ export async function GET(request: NextRequest) {
     const availableLeftOriginalTerms = collectAvailableLeftOriginalTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableMoveSteeringTerms = collectAvailableMoveSteeringTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
 
     const queryNormalized = normalizeText(query);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
@@ -210,6 +232,17 @@ export async function GET(request: NextRequest) {
     const leftOriginalSuggestions = availableLeftOriginalTerms.map((term) => `${canonicalName} ${term}`);
 
     const leftOriginalYearSuggestions = availableLeftOriginalTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const moveSteeringSuggestions = availableMoveSteeringTerms.map((term) => `${canonicalName} ${term}`);
+
+    const moveSteeringYearSuggestions = availableMoveSteeringTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -253,6 +286,85 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    const mixedMoveAndSmartSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableSmartCabTerms
+        .filter((smartTerm) =>
+          hasAllTermsInAnyPost(
+            matchedPosts as Array<{ caption?: unknown }>,
+            [moveTerm, smartTerm],
+          ),
+        )
+        .map((smartTerm) => `${canonicalName} ${moveTerm} ${smartTerm}`)
+    );
+
+    const mixedMoveAndSmartYearSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableSmartCabTerms.flatMap((smartTerm) =>
+        yearsForSuggestions
+          .filter((year) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [moveTerm, smartTerm],
+              year,
+            ),
+          )
+          .map((year) => `${canonicalName} ${moveTerm} ${smartTerm} ${year}`)
+      )
+    );
+
+    const mixedMoveAndLeftSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableLeftOriginalTerms
+        .filter((leftTerm) =>
+          hasAllTermsInAnyPost(
+            matchedPosts as Array<{ caption?: unknown }>,
+            [moveTerm, leftTerm],
+          ),
+        )
+        .map((leftTerm) => `${canonicalName} ${moveTerm} ${leftTerm}`)
+    );
+
+    const mixedMoveAndLeftYearSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        yearsForSuggestions
+          .filter((year) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [moveTerm, leftTerm],
+              year,
+            ),
+          )
+          .map((year) => `${canonicalName} ${moveTerm} ${leftTerm} ${year}`)
+      )
+    );
+
+    const mixedAllThreeSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        availableSmartCabTerms
+          .filter((smartTerm) =>
+            hasAllTermsInAnyPost(
+              matchedPosts as Array<{ caption?: unknown }>,
+              [moveTerm, leftTerm, smartTerm],
+            ),
+          )
+          .map((smartTerm) => `${canonicalName} ${moveTerm} ${leftTerm} ${smartTerm}`)
+      )
+    );
+
+    const mixedAllThreeYearSuggestions = availableMoveSteeringTerms.flatMap((moveTerm) =>
+      availableLeftOriginalTerms.flatMap((leftTerm) =>
+        availableSmartCabTerms.flatMap((smartTerm) =>
+          yearsForSuggestions
+            .filter((year) =>
+              hasAllTermsInAnyPost(
+                matchedPosts as Array<{ caption?: unknown }>,
+                [moveTerm, leftTerm, smartTerm],
+                year,
+              ),
+            )
+            .map((year) => `${canonicalName} ${moveTerm} ${leftTerm} ${smartTerm} ${year}`)
+        )
+      )
+    );
+
     // Order: base model/brand first, then year suggestions, then grouped feature suggestions.
     const suggestions = [
       canonicalName,
@@ -261,8 +373,16 @@ export async function GET(request: NextRequest) {
       ...smartCabYearSuggestions,
       ...leftOriginalSuggestions,
       ...leftOriginalYearSuggestions,
+      ...moveSteeringSuggestions,
+      ...moveSteeringYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
+      ...mixedMoveAndSmartSuggestions,
+      ...mixedMoveAndSmartYearSuggestions,
+      ...mixedMoveAndLeftSuggestions,
+      ...mixedMoveAndLeftYearSuggestions,
+      ...mixedAllThreeSuggestions,
+      ...mixedAllThreeYearSuggestions,
     ].filter((item, index, arr) => arr.indexOf(item) === index)
       .slice(0, MAX_SUGGESTIONS);
 
