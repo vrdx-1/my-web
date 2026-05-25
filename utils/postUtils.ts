@@ -10,7 +10,7 @@ import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
-import { removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
+import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTermsFromQuery } from '@/utils/champSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -683,15 +683,23 @@ const BRAND_NAMES_SET = (() => {
   return set;
 })();
 
+const CHAMP_GROUP_NORMALIZED_SET = new Set(
+  CHAMP_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 /**
  * ขยายคำค้นโดยกรอง brand aliases และ model อื่นออกเมื่อค้นรุ่น (ให้ผลตรงคำค้น)
  * ใช้ฝั่ง frontend เพื่อเลือกชุดคำส่งให้ API/DB
  */
 export function expandWithoutBrandAliases(query: string): string[] {
+  const queryNorm = normalizeCarSearch(query);
+  if (CHAMP_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(CHAMP_SUGGESTION_TERMS);
+  }
+
   const expanded = expandCarSearchAliases(query);
   if (expanded.length <= 1) return expanded;
 
-  const queryNorm = normalizeCarSearch(query);
   if (BRAND_NAMES_SET.has(normalizeForFallback(query))) return expanded;
 
   // ค้นหาหมวดหมู่ (pickup/van/sedan ฯลฯ) — ใช้ชื่อรุ่นจาก CATEGORY_MODELS / category-models/*.json
@@ -1180,7 +1188,7 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutLeftOriginal = removeLeftOriginalTermsFromQuery(withoutSmartCab);
   const withoutMoveSteering = removeMoveSteeringTermsFromQuery(withoutLeftOriginal);
   const withoutLaoCenter = removeLaoCenterTermsFromQuery(withoutMoveSteering);
-  const normalizedPrefix = removeChampTermsFromQuery(withoutLaoCenter).trim() || prefix;
+  const normalizedPrefix = removeChampGroupTermsFromQuery(withoutLaoCenter).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
