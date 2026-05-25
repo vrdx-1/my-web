@@ -12,6 +12,10 @@ export const CHAMP_SUGGESTION_TERMS: string[] = [
   'champ',
 ];
 
+const CHAMP_SUGGESTION_TERMS_BY_LENGTH_DESC = [...CHAMP_SUGGESTION_TERMS].sort(
+  (left, right) => right.length - left.length,
+);
+
 function normalizeText(value: string): string {
   return String(value ?? '')
     .toLowerCase()
@@ -24,7 +28,8 @@ export function removeChampTermsFromQuery(query: string): string {
   if (!normalized) return '';
 
   let output = normalized;
-  for (const term of CHAMP_SUGGESTION_TERMS) {
+  // Remove longer aliases first to avoid partial stripping (e.g. "champ" by "cham").
+  for (const term of CHAMP_SUGGESTION_TERMS_BY_LENGTH_DESC) {
     const termNorm = normalizeText(term);
     if (!termNorm) continue;
     output = output.replaceAll(termNorm, ' ');

@@ -25,6 +25,18 @@ function normalizeText(value: string): string {
     .trim();
 }
 
+function compactNormalizedText(value: string): string {
+  return normalizeText(value).replace(/\s+/g, '');
+}
+
+function addMixedScriptWordBoundaries(value: string): string {
+  return String(value ?? '')
+    .replace(/([a-zA-Z0-9])([\u0E00-\u0EFF])/g, '$1 $2')
+    .replace(/([\u0E00-\u0EFF])([a-zA-Z0-9])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function postHasTerm(post: { caption?: unknown }, term: string): boolean {
   const caption = normalizeText(typeof post?.caption === 'string' ? post.caption : '');
   if (!caption) return false;
@@ -103,6 +115,99 @@ function formatCombinedSuggestion(
   return `${canonicalName} ${ordered.join(' ')} ${year}`;
 }
 
+function extractFeatureQueryFragments(query: string, canonicalName: string): string[] {
+  const fragments: string[] = [];
+  const queryNormalized = normalizeText(query);
+  const canonicalNormalized = normalizeText(canonicalName);
+
+  if (queryNormalized.startsWith(canonicalNormalized)) {
+    const suffix = queryNormalized.slice(canonicalNormalized.length).trim();
+    if (suffix) {
+      fragments.push(suffix);
+      for (const part of suffix.split(' ')) {
+        const token = part.trim();
+        if (token) fragments.push(token);
+      }
+    }
+  }
+
+  const queryCompact = compactNormalizedText(query);
+  const canonicalCompact = compactNormalizedText(canonicalName);
+  if (queryCompact.startsWith(canonicalCompact)) {
+    const compactSuffix = queryCompact.slice(canonicalCompact.length).trim();
+    if (compactSuffix) fragments.push(compactSuffix);
+  }
+
+  return Array.from(new Set(fragments.filter(Boolean)));
+}
+
+function scoreSuggestionByTypedIntent(
+  suggestion: string,
+  canonicalName: string,
+  featureQueryFragments: string[],
+  availableFeatureTerms: string[],
+): number {
+  if (suggestion === canonicalName) return 1_000_000;
+  if (featureQueryFragments.length === 0) return 0;
+
+  const suggestionNormalized = normalizeText(suggestion);
+  const suggestionCompact = compactNormalizedText(suggestion);
+  const canonicalNormalized = normalizeText(canonicalName);
+  const canonicalCompact = compactNormalizedText(canonicalName);
+
+  const suggestionFeatureNormalized = suggestionNormalized.startsWith(canonicalNormalized)
+    ? suggestionNormalized.slice(canonicalNormalized.length).trim()
+    : suggestionNormalized;
+  const suggestionFeatureCompact = suggestionCompact.startsWith(canonicalCompact)
+    ? suggestionCompact.slice(canonicalCompact.length).trim()
+    : suggestionCompact;
+
+  let score = 0;
+
+  for (const fragment of featureQueryFragments) {
+    const fragmentNormalized = normalizeText(fragment);
+    const fragmentCompact = compactNormalizedText(fragment);
+    if (!fragmentNormalized && !fragmentCompact) continue;
+
+    const startsWithFragment =
+      (!!fragmentNormalized && suggestionFeatureNormalized.startsWith(fragmentNormalized))
+      || (!!fragmentCompact && suggestionFeatureCompact.startsWith(fragmentCompact));
+    const containsFragment =
+      (!!fragmentNormalized && suggestionFeatureNormalized.includes(fragmentNormalized))
+      || (!!fragmentCompact && suggestionFeatureCompact.includes(fragmentCompact));
+
+    if (startsWithFragment) {
+      score += 180;
+    } else if (containsFragment) {
+      score += 80;
+    }
+
+    for (const term of availableFeatureTerms) {
+      const termNormalized = normalizeText(term);
+      const termCompact = compactNormalizedText(term);
+      if (!termNormalized && !termCompact) continue;
+
+      const fragmentMatchesTermPrefix =
+        (!!fragmentNormalized && termNormalized.startsWith(fragmentNormalized))
+        || (!!fragmentCompact && termCompact.startsWith(fragmentCompact));
+
+      if (!fragmentMatchesTermPrefix) continue;
+
+      const suggestionHasTerm =
+        (!!termNormalized && suggestionFeatureNormalized.includes(termNormalized))
+        || (!!termCompact && suggestionFeatureCompact.includes(termCompact));
+
+      if (suggestionHasTerm) {
+        score += 320;
+      } else {
+        score += 40;
+      }
+    }
+  }
+
+  return score;
+}
+
 /**
  * GET /api/posts/search/suggestions?q=...
  * Returns model suggestions with available years
@@ -125,6 +230,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get('q') ?? '';
     const query = (typeof q === 'string' ? q : '').trim();
+    const queryWithBoundaries = addMixedScriptWordBoundaries(query);
 
     const pageRaw = Number(searchParams.get('page') ?? '1');
     const pageSizeRaw = Number(searchParams.get('pageSize') ?? String(DEFAULT_SUGGESTIONS_PAGE_SIZE));
@@ -141,13 +247,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract base model name (without year / grouped suffix terms)
-    const queryWithoutSmartCab = removeSmartCabTermsFromQuery(query);
+    const queryWithoutSmartCab = removeSmartCabTermsFromQuery(queryWithBoundaries);
     const queryWithoutLeftOriginalTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
     const queryWithoutMoveSteeringTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
     const queryWithoutLaoCenterTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
     const queryWithoutFeatureTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
-    const queryYears = extractYearsFromQuery(query);
+    const queryYears = extractYearsFromQuery(queryWithBoundaries);
+
+    const leadingLatinTokenMatch = queryWithBoundaries.match(/^([a-zA-Z0-9]+)/);
+    const leadingLatinToken = leadingLatinTokenMatch?.[1]?.trim() ?? '';
 
     let modelQueryForSuggestions = baseQuery;
 
@@ -162,6 +271,16 @@ export async function GET(request: NextRequest) {
     // starts with the typed query — prevents "vi" from showing "vi 2015" (which resolves
     // to Phantom VI / Mark VI, not a meaningful suggestion for the user).
     let canonicalName = getCanonicalModelDisplayName(modelQueryForSuggestions);
+
+    // Keep a clearly typed Latin model token stable (e.g. "Vigo ..." should not drift to "Vigor").
+    if (leadingLatinToken) {
+      const canonicalFromLeadingToken = getCanonicalModelDisplayName(leadingLatinToken);
+      if (canonicalFromLeadingToken) {
+        modelQueryForSuggestions = leadingLatinToken;
+        canonicalName = canonicalFromLeadingToken;
+      }
+    }
+
     if (!canonicalName && trailingModelPart && trailingDigitsPrefix) {
       const fallbackCanonical = getCanonicalModelDisplayName(trailingModelPart);
       if (fallbackCanonical) {
@@ -242,7 +361,7 @@ export async function GET(request: NextRequest) {
       matchedPosts as Array<{ caption?: unknown }>
     );
 
-    const queryNormalized = normalizeText(query);
+    const queryNormalized = normalizeText(queryWithBoundaries);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
     const leftOriginalFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableLeftOriginalTerms);
     const preferSmartCabBeforeLeft =
@@ -250,7 +369,7 @@ export async function GET(request: NextRequest) {
         ? smartCabFirstIndex < leftOriginalFirstIndex
         : false;
 
-    const prefersNoSpaceSmartCab = /\s/.test(query) === false;
+    const prefersNoSpaceSmartCab = /\s/.test(queryWithBoundaries) === false;
     const smartCabSuggestions = availableSmartCabTerms.flatMap((term) => {
       const noSpace = `${canonicalName}${term}`;
       const withSpace = `${canonicalName} ${term}`;
@@ -685,8 +804,8 @@ export async function GET(request: NextRequest) {
       collectSubsets(0, []);
     }
 
-    // Order: base model/brand first, then year suggestions, then grouped feature suggestions.
-      const allSuggestions = [
+    // Build raw suggestions first, then re-rank by typed feature intent.
+    const rawSuggestions = [
       canonicalName,
       ...yearsForSuggestions.map((year) => formatYearSuggestion(canonicalName, year)),
       ...champSuggestions,
@@ -723,12 +842,45 @@ export async function GET(request: NextRequest) {
       ...mixedCenterMoveLeftYearSuggestions,
       ...mixedAllFourSuggestions,
       ...mixedAllFourYearSuggestions,
-    ].filter((item, index, arr) => arr.indexOf(item) === index)
-        .slice(0, MAX_SUGGESTIONS_POOL);
+    ].filter((item, index, arr) => arr.indexOf(item) === index);
 
-      const offset = (page - 1) * pageSize;
-      const suggestions = allSuggestions.slice(offset, offset + pageSize);
-      const hasMore = offset + pageSize < allSuggestions.length;
+    const availableFeatureTerms = Array.from(
+      new Set([
+        ...availableSmartCabTerms,
+        ...availableLeftOriginalTerms,
+        ...availableMoveSteeringTerms,
+        ...availableLaoCenterTerms,
+        ...availableChampTerms,
+      ].filter(Boolean)),
+    );
+
+    const featureQueryFragments = extractFeatureQueryFragments(queryWithBoundaries, canonicalName);
+
+    const rankedSuggestions = rawSuggestions
+      .map((suggestion, index) => ({
+        suggestion,
+        index,
+        score: scoreSuggestionByTypedIntent(
+          suggestion,
+          canonicalName,
+          featureQueryFragments,
+          availableFeatureTerms,
+        ),
+      }))
+      .sort((left, right) => {
+        const leftIsCanonical = left.suggestion === canonicalName;
+        const rightIsCanonical = right.suggestion === canonicalName;
+        if (leftIsCanonical !== rightIsCanonical) return leftIsCanonical ? -1 : 1;
+        if (right.score !== left.score) return right.score - left.score;
+        return left.index - right.index;
+      })
+      .map((item) => item.suggestion);
+
+    const allSuggestions = rankedSuggestions.slice(0, MAX_SUGGESTIONS_POOL);
+
+    const offset = (page - 1) * pageSize;
+    const suggestions = allSuggestions.slice(offset, offset + pageSize);
+    const hasMore = offset + pageSize < allSuggestions.length;
 
     return NextResponse.json(
         {
