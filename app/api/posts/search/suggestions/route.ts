@@ -9,11 +9,14 @@ import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery } from '@/u
 import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
+import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
 const SUGGESTION_LIMIT = 300;
-const MAX_SUGGESTIONS = 200;
+const DEFAULT_SUGGESTIONS_PAGE_SIZE = 200;
+const MAX_SUGGESTIONS_PAGE_SIZE = 400;
+const MAX_SUGGESTIONS_POOL = 1200;
 
 function normalizeText(value: string): string {
   return String(value ?? '')
@@ -123,6 +126,13 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') ?? '';
     const query = (typeof q === 'string' ? q : '').trim();
 
+    const pageRaw = Number(searchParams.get('page') ?? '1');
+    const pageSizeRaw = Number(searchParams.get('pageSize') ?? String(DEFAULT_SUGGESTIONS_PAGE_SIZE));
+    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+    const pageSize = Number.isFinite(pageSizeRaw) && pageSizeRaw > 0
+      ? Math.min(Math.floor(pageSizeRaw), MAX_SUGGESTIONS_PAGE_SIZE)
+      : DEFAULT_SUGGESTIONS_PAGE_SIZE;
+
     if (query.length === 0) {
       return NextResponse.json(
         { suggestions: [] },
@@ -134,7 +144,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutSmartCab = removeSmartCabTermsFromQuery(query);
     const queryWithoutLeftOriginalTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
     const queryWithoutMoveSteeringTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
-    const queryWithoutFeatureTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
+    const queryWithoutLaoCenterTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
+    const queryWithoutFeatureTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(query);
 
@@ -227,6 +238,9 @@ export async function GET(request: NextRequest) {
     const availableLaoCenterTerms = collectAvailableLaoCenterTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableChampTerms = collectAvailableChampTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
 
     const queryNormalized = normalizeText(query);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
@@ -281,6 +295,17 @@ export async function GET(request: NextRequest) {
     const laoCenterSuggestions = availableLaoCenterTerms.map((term) => `${canonicalName} ${term}`);
 
     const laoCenterYearSuggestions = availableLaoCenterTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const champSuggestions = availableChampTerms.map((term) => `${canonicalName} ${term}`);
+
+    const champYearSuggestions = availableChampTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -614,10 +639,58 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    const extraFeatureGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+    ].filter((group) => group.length > 0);
+
+    const champMixedSuggestions: string[] = [];
+    const champMixedYearSuggestions: string[] = [];
+    const canonicalForMixed = canonicalName as string;
+
+    function collectSubsets(start: number, current: string[][]) {
+      if (current.length > 0) {
+        const termLists = [availableChampTerms, ...current];
+        const stack: string[][] = [[]];
+        for (const list of termLists) {
+          const next: string[][] = [];
+          for (const base of stack) {
+            for (const term of list) {
+              next.push([...base, term]);
+            }
+          }
+          stack.splice(0, stack.length, ...next);
+        }
+
+        for (const termsCombo of stack) {
+          if (!hasAllTermsInAnyPost(matchedPosts as Array<{ caption?: unknown }>, termsCombo)) continue;
+          champMixedSuggestions.push(formatCombinedSuggestion(canonicalForMixed, queryNormalized, termsCombo));
+          for (const year of yearsForSuggestions) {
+            if (!hasAllTermsInAnyPost(matchedPosts as Array<{ caption?: unknown }>, termsCombo, year)) continue;
+            champMixedYearSuggestions.push(formatCombinedSuggestion(canonicalForMixed, queryNormalized, termsCombo, year));
+          }
+        }
+      }
+
+      for (let index = start; index < extraFeatureGroups.length; index += 1) {
+        current.push(extraFeatureGroups[index]);
+        collectSubsets(index + 1, current);
+        current.pop();
+      }
+    }
+
+    if (availableChampTerms.length > 0) {
+      collectSubsets(0, []);
+    }
+
     // Order: base model/brand first, then year suggestions, then grouped feature suggestions.
-    const suggestions = [
+      const allSuggestions = [
       canonicalName,
       ...yearsForSuggestions.map((year) => formatYearSuggestion(canonicalName, year)),
+      ...champSuggestions,
+      ...champYearSuggestions,
       ...smartCabSuggestions,
       ...smartCabYearSuggestions,
       ...leftOriginalSuggestions,
@@ -626,6 +699,8 @@ export async function GET(request: NextRequest) {
       ...moveSteeringYearSuggestions,
       ...laoCenterSuggestions,
       ...laoCenterYearSuggestions,
+      ...champMixedSuggestions,
+      ...champMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -649,10 +724,23 @@ export async function GET(request: NextRequest) {
       ...mixedAllFourSuggestions,
       ...mixedAllFourYearSuggestions,
     ].filter((item, index, arr) => arr.indexOf(item) === index)
-      .slice(0, MAX_SUGGESTIONS);
+        .slice(0, MAX_SUGGESTIONS_POOL);
+
+      const offset = (page - 1) * pageSize;
+      const suggestions = allSuggestions.slice(offset, offset + pageSize);
+      const hasMore = offset + pageSize < allSuggestions.length;
 
     return NextResponse.json(
-      { suggestions },
+        {
+          suggestions,
+          pagination: {
+            page,
+            pageSize,
+            total: allSuggestions.length,
+            hasMore,
+            nextPage: hasMore ? page + 1 : null,
+          },
+        },
       { headers: { 'Cache-Control': 'private, max-age=300' } }
     );
   } catch (error) {

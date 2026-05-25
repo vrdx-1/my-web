@@ -10,6 +10,7 @@ import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
+import { removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -1178,7 +1179,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutSmartCab = removeSmartCabTermsFromQuery(boundaryNormalizedPrefix);
   const withoutLeftOriginal = removeLeftOriginalTermsFromQuery(withoutSmartCab);
   const withoutMoveSteering = removeMoveSteeringTermsFromQuery(withoutLeftOriginal);
-  const normalizedPrefix = removeLaoCenterTermsFromQuery(withoutMoveSteering).trim() || prefix;
+  const withoutLaoCenter = removeLaoCenterTermsFromQuery(withoutMoveSteering);
+  const normalizedPrefix = removeChampTermsFromQuery(withoutLaoCenter).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
