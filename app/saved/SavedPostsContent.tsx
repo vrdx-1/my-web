@@ -43,6 +43,11 @@ export function SavedPostsContent() {
   const [feedReady, setFeedReady] = useState(false);
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
+  const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
+  const [hasFetchedSold, setHasFetchedSold] = useState(false);
+  const fixedHeaderRef = useRef<HTMLDivElement | null>(null);
+  const [fixedHeaderHeight, setFixedHeaderHeight] = useState(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+  const savedScopeKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -54,14 +59,44 @@ export function SavedPostsContent() {
     });
     return () => cancelAnimationFrame(id);
   }, [mounted]);
+
+  useEffect(() => {
+    const element = fixedHeaderRef.current;
+    if (!element) {
+      setFixedHeaderHeight(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+      return;
+    }
+
+    const updateHeaderHeight = () => {
+      const nextHeight = element.offsetHeight;
+      if (!nextHeight) return;
+      setFixedHeaderHeight((prev) => (Math.abs(prev - nextHeight) < 1 ? prev : nextHeight));
+    };
+
+    updateHeaderHeight();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => updateHeaderHeight())
+      : null;
+
+    if (resizeObserver) {
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', updateHeaderHeight, { passive: true });
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, []);
+
   const [justSavedPosts, setJustSavedPosts] = useState<{ [key: string]: boolean }>({});
   const [reportingPost, setReportingPost] = useState<any | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
-  const hasFetchedRecommendRef = useRef(false);
-  const hasFetchedSoldRef = useRef(false);
 
   const recommendListData = usePostListData({
     type: 'saved',
@@ -83,6 +118,7 @@ export function SavedPostsContent() {
   });
 
   const postListData = tab === 'recommend' ? recommendListData : soldListData;
+  const savedScopeKey = activeProfileId || authUserId || session?.user?.id || 'guest';
 
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
@@ -138,23 +174,55 @@ export function SavedPostsContent() {
 
   useEffect(() => {
     if (!sessionReady || recommendListData.session === undefined) return;
-    if (!hasFetchedRecommendRef.current && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
-      hasFetchedRecommendRef.current = true;
+    if (!hasFetchedRecommend && tab === 'recommend' && recommendListData.posts.length === 0 && !recommendListData.loadingMore) {
+      setHasFetchedRecommend(true);
       recommendListData.setPage(0);
       recommendListData.setHasMore(true);
       recommendListData.fetchPosts(true);
     }
-  }, [sessionReady, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore]);
+  }, [sessionReady, recommendListData.session, tab, recommendListData.posts.length, recommendListData.loadingMore, hasFetchedRecommend]);
 
   useEffect(() => {
     if (tab !== 'sold' || !sessionReady || soldListData.session === undefined) return;
-    if (!hasFetchedSoldRef.current && soldListData.posts.length === 0 && !soldListData.loadingMore) {
-      hasFetchedSoldRef.current = true;
+    if (!hasFetchedSold && soldListData.posts.length === 0 && !soldListData.loadingMore) {
+      setHasFetchedSold(true);
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true);
     }
-  }, [tab, sessionReady, soldListData.session, soldListData.posts.length, soldListData.loadingMore]);
+  }, [tab, sessionReady, soldListData.session, soldListData.posts.length, soldListData.loadingMore, hasFetchedSold]);
+
+  useEffect(() => {
+    if (!sessionReady || recommendListData.session === undefined) return;
+    if (savedScopeKeyRef.current === null) {
+      savedScopeKeyRef.current = savedScopeKey;
+      return;
+    }
+    if (savedScopeKeyRef.current === savedScopeKey) return;
+
+    savedScopeKeyRef.current = savedScopeKey;
+    setHasFetchedRecommend(false);
+    setHasFetchedSold(false);
+    setTabRefreshing(true);
+
+    recommendListData.setPosts([]);
+    recommendListData.setPage(0);
+    recommendListData.setHasMore(true);
+
+    soldListData.setPosts([]);
+    soldListData.setPage(0);
+    soldListData.setHasMore(true);
+  }, [
+    savedScopeKey,
+    sessionReady,
+    recommendListData.session,
+    recommendListData.setPosts,
+    recommendListData.setPage,
+    recommendListData.setHasMore,
+    soldListData.setPosts,
+    soldListData.setPage,
+    soldListData.setHasMore,
+  ]);
 
   useEffect(() => {
     if (!postListData.loadingMore) setTabRefreshing(false);
@@ -170,24 +238,6 @@ export function SavedPostsContent() {
       soldListData.fetchPosts(false, soldListData.page);
     }
   }, [soldListData.page, soldListData.session]);
-
-  // ถ้าหน้าแรกของ saves ถูกกรองจนว่าง (เช่นโพสต์ที่บันทึกไว้เป็น sold/hidden) ให้ไล่โหลดหน้าถัดไปอัตโนมัติจนกว่าจะเจอรายการหรือหมด
-  useEffect(() => {
-    const hasFetchedCurrentTab = tab === 'recommend' ? hasFetchedRecommendRef.current : hasFetchedSoldRef.current;
-    if (!sessionReady || postListData.session === undefined) return;
-    if (!hasFetchedCurrentTab) return;
-    if (postListData.loadingMore || !postListData.hasMore) return;
-    if (postListData.posts.length > 0) return;
-    postListData.setPage((prev) => prev + 1);
-  }, [
-    tab,
-    sessionReady,
-    postListData.session,
-    postListData.loadingMore,
-    postListData.hasMore,
-    postListData.posts.length,
-    postListData.setPage,
-  ]);
 
   const handlers = usePostFeedHandlers({
     session: postListData.session,
@@ -249,14 +299,17 @@ export function SavedPostsContent() {
 
   // Skeleton เฉพาะพื้นที่โพสต์ — Header + แท็บພ້ອມຂາຍ/ຂາຍແລ້ວ แสดงจริงเสมอ (เหมือนหน้า liked)
   const isFeedSkeleton = postListData.posts.length === 0 && postListData.loadingMore;
+  const hasReadyRecommendFeed = hasFetchedRecommend || recommendListData.posts.length > 0;
+  const hasReadySoldFeed = hasFetchedSold || soldListData.posts.length > 0;
   const showFeedSkeleton =
     !mounted ||
     !feedReady ||
     !sessionReady ||
-    isFeedSkeleton;
+    isFeedSkeleton ||
+    (tab === 'recommend' ? !hasReadyRecommendFeed : !hasReadySoldFeed);
   const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
   const headerSpacerStyle = {
-    height: LAYOUT_CONSTANTS.HEADER_HEIGHT,
+    height: fixedHeaderHeight,
     pointerEvents: 'none' as const,
   };
 
@@ -264,6 +317,7 @@ export function SavedPostsContent() {
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
 
       <div
+        ref={fixedHeaderRef}
         style={{
           position: 'fixed',
           top: 0,
@@ -293,7 +347,8 @@ export function SavedPostsContent() {
               list.setPage(0);
               list.setHasMore(true);
               list.fetchPosts(true);
-              if (v === 'sold') hasFetchedSoldRef.current = true;
+              if (v === 'recommend') setHasFetchedRecommend(true);
+              if (v === 'sold') setHasFetchedSold(true);
             } else {
               setTab(v);
               const targetList = v === 'recommend' ? recommendListData : soldListData;

@@ -155,7 +155,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const hydratedFromCacheRef = useRef(false);
   const cancelledRef = useRef(false);
   const previousCacheKeyRef = useRef<string | null>(null);
-  /** เก็บรายการโพสต์ฝั่งขายแล้วทั้งหมดสำหรับ liked/saved tab sold เพื่อแบ่งหน้าได้ถูกต้อง */
+  /** เก็บรายการโพสต์ทั้งหมดของแท็บ liked/saved ปัจจุบัน เพื่อแบ่งหน้าในหน่วยความจำและเลี่ยงการไล่ข้ามหน้าว่างทีละรอบ */
   const soldTabFullListRef = useRef<any[] | null>(null);
   const soldFeedSeedRef = useRef<string | null>(null);
   const forceNewSoldSeedOnNextInitialFetchRef = useRef(type === 'sold' && isBrowserReloadNavigation());
@@ -294,6 +294,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
 
     const soldWillClearLoadingInOnDone = false;
     let fetchedRowsCount: number | null = null;
+    let likedSavedListSource: { table: string; column: string; idOrToken: string } | null = null;
     try {
       let postIds: string[] = [];
 
@@ -477,6 +478,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const isUser = !!currentUserId;
         const table = isUser ? 'post_saves' : 'post_saves_guest';
         const column = isUser ? 'user_id' : 'guest_token';
+        likedSavedListSource = { table, column, idOrToken };
         
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) { setLoadingMore(false); setHasMore(false); }
@@ -535,6 +537,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const isUser = !!currentUserId;
         const table = isUser ? 'post_likes' : 'post_likes_guest';
         const column = isUser ? 'user_id' : 'guest_token';
+        likedSavedListSource = { table, column, idOrToken };
         
         // ตรวจสอบอีกครั้งก่อน query - ป้องกันการส่ง "null" ไปยัง database
         if (!idOrToken || idOrToken === 'null' || idOrToken === 'undefined' || idOrToken === '' || typeof idOrToken !== 'string') {
@@ -869,7 +872,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               : hydratedPosts;
 
           // Filter logic for saved/liked/sold pages
-          const filteredPosts = orderedPostsData.filter(postData => {
+          let filteredPosts = orderedPostsData.filter(postData => {
             if (type === 'saved' || type === 'liked') {
               const isNotHidden = !postData.is_hidden;
               const isOwner = isOwnedByProfileScope(postData.user_id, {
@@ -886,6 +889,69 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             }
             return true;
           });
+
+          const shouldBackfillInitialSavedRecommend =
+            type === 'saved' &&
+            tab === 'recommend' &&
+            isInitial &&
+            currentPage === 0 &&
+            filteredPosts.length === 0 &&
+            likedSavedListSource !== null &&
+            (fetchedRowsCount ?? postIds.length) >= listPageSize;
+
+          if (shouldBackfillInitialSavedRecommend) {
+            let nextRangeStart = rangeEnd + 1;
+            while (filteredPosts.length === 0 && !cancelledRef.current && fetchIdRef.current === currentFetchId) {
+              const nextRangeEnd = nextRangeStart + listPageSize - 1;
+              const { data: extraSavedRows, error: extraSavedError } = await supabase
+                .from(likedSavedListSource.table)
+                .select('post_id')
+                .eq(likedSavedListSource.column, likedSavedListSource.idOrToken)
+                .order('created_at', { ascending: false })
+                .range(nextRangeStart, nextRangeEnd);
+
+              if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
+              if (extraSavedError || !extraSavedRows || extraSavedRows.length === 0) break;
+
+              const extraPostIds = extraSavedRows
+                .map((item: { post_id: string }) => item.post_id)
+                .filter((id): id is string => !!id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
+
+              if (extraPostIds.length > 0) {
+                const { data: extraPostsData, error: extraPostsError } = await supabase
+                  .from('cars')
+                  .select(POST_WITH_PROFILE_SELECT)
+                  .in('id', extraPostIds)
+                  .order('created_at', { ascending: false });
+
+                if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
+                if (extraPostsError) break;
+
+                if (extraPostsData) {
+                  const hydratedExtraPosts = await attachEffectiveWhatsAppPhones(supabase, extraPostsData as any[]);
+                  const extraOrder = new Map<string, number>(extraPostIds.map((id, idx) => [String(id), idx]));
+                  const extraOrderedPosts = [...hydratedExtraPosts].sort((a: any, b: any) => {
+                    const ai = extraOrder.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER;
+                    const bi = extraOrder.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER;
+                    return ai - bi;
+                  });
+
+                  filteredPosts = extraOrderedPosts.filter((postData) => {
+                    const isNotHidden = !postData.is_hidden;
+                    const isOwner = isOwnedByProfileScope(postData.user_id, {
+                      activeProfileId: currentUserId,
+                      authUserId: authUserId || session?.user?.id || null,
+                      availableProfiles,
+                    });
+                    return postData.status === 'recommend' && (isNotHidden || isOwner);
+                  });
+                }
+              }
+
+              if (extraSavedRows.length < listPageSize) break;
+              nextRangeStart += listPageSize;
+            }
+          }
 
           // เตรียมชุดโพสต์ใหม่สำหรับเติมเข้า state แบบ sequential
           const existingIds = new Set((isInitial ? [] : posts).map(p => p.id));
