@@ -488,6 +488,7 @@ export function PostCard({
           <div style={{ marginTop: '-2px' }}>
             <PostCardMenu
               post={post}
+              session={session}
               isOwner={isOwner}
               hideBoost={hideBoost}
               activeMenuState={activeMenuState}

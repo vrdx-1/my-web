@@ -6,9 +6,11 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
+import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface PostCardMenuProps {
   post: any;
+  session: any;
   isOwner: boolean;
   hideBoost: boolean;
   activeMenuState: string | null;
@@ -27,6 +29,7 @@ interface PostCardMenuProps {
 
 export const PostCardMenu = React.memo<PostCardMenuProps>(({
   post,
+  session,
   isOwner,
   hideBoost,
   activeMenuState,
@@ -127,6 +130,10 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             }}
             onSave={() => {
               onSetActiveMenu(null);
+              if (!session) {
+                router.push(REGISTER_PATH);
+                return;
+              }
               onSave(post.id);
             }}
             saveLabel={saveLabel}
