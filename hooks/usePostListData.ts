@@ -890,16 +890,17 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
             return true;
           });
 
-          const shouldBackfillInitialSavedRecommend =
+          let backfillReachedSourceEnd = false;
+          let effectiveSourceRowsCount = fetchedRowsCount ?? postIds.length;
+
+          const shouldBackfillSavedRecommend =
             type === 'saved' &&
             tab === 'recommend' &&
-            isInitial &&
-            currentPage === 0 &&
             filteredPosts.length === 0 &&
             likedSavedListSource !== null &&
             (fetchedRowsCount ?? postIds.length) >= listPageSize;
 
-          if (shouldBackfillInitialSavedRecommend) {
+          if (shouldBackfillSavedRecommend) {
             let nextRangeStart = rangeEnd + 1;
             while (filteredPosts.length === 0 && !cancelledRef.current && fetchIdRef.current === currentFetchId) {
               const nextRangeEnd = nextRangeStart + listPageSize - 1;
@@ -911,7 +912,13 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 .range(nextRangeStart, nextRangeEnd);
 
               if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
-              if (extraSavedError || !extraSavedRows || extraSavedRows.length === 0) break;
+              if (extraSavedError || !extraSavedRows) break;
+
+              effectiveSourceRowsCount = extraSavedRows.length;
+              if (extraSavedRows.length === 0) {
+                backfillReachedSourceEnd = true;
+                break;
+              }
 
               const extraPostIds = extraSavedRows
                 .map((item: { post_id: string }) => item.post_id)
@@ -948,7 +955,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 }
               }
 
-              if (extraSavedRows.length < listPageSize) break;
+              if (extraSavedRows.length < listPageSize) {
+                backfillReachedSourceEnd = true;
+                break;
+              }
               nextRangeStart += listPageSize;
             }
           }
@@ -973,8 +983,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
               // sold จัดการ hasMore ไปแล้วด้านบน (ทั้งกรณี search และไม่ search)
             } else {
               // liked / saved / my-posts: ใช้ listPageSize ของชุดนี้
-              const sourceRowsCount = fetchedRowsCount ?? postIds.length;
-              const reachedEndOfIds = sourceRowsCount < listPageSize;
+              const sourceRowsCount = effectiveSourceRowsCount;
+              const reachedEndOfIds = backfillReachedSourceEnd || sourceRowsCount < listPageSize;
               setHasMore(!reachedEndOfIds);
             }
           }
