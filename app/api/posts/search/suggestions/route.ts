@@ -5,7 +5,7 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
-import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
+import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery, SMART_CAB_SUGGESTION_TERMS } from '@/utils/smartCabSuggestionTerms';
 import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
@@ -146,6 +146,7 @@ function scoreSuggestionByTypedIntent(
   canonicalName: string,
   featureQueryFragments: string[],
   availableFeatureTerms: string[],
+  preferredFeatureTerms: string[],
 ): number {
   if (suggestion === canonicalName) return 1_000_000;
   if (featureQueryFragments.length === 0) return 0;
@@ -205,7 +206,39 @@ function scoreSuggestionByTypedIntent(
     }
   }
 
+  // When user types a known feature-group term, surface sibling aliases from the same
+  // group earlier (e.g. smart cab variants) without changing search matching behavior.
+  for (const preferredTerm of preferredFeatureTerms) {
+    const preferredNormalized = normalizeText(preferredTerm);
+    const preferredCompact = compactNormalizedText(preferredTerm);
+    if (!preferredNormalized && !preferredCompact) continue;
+
+    const suggestionHasPreferredTerm =
+      (!!preferredNormalized && suggestionFeatureNormalized.includes(preferredNormalized))
+      || (!!preferredCompact && suggestionFeatureCompact.includes(preferredCompact));
+
+    if (suggestionHasPreferredTerm) {
+      score += 520;
+      break;
+    }
+  }
+
   return score;
+}
+
+function queryContainsTerm(query: string, term: string): boolean {
+  const queryNormalized = normalizeText(query);
+  const queryCompact = compactNormalizedText(query);
+  const termNormalized = normalizeText(term);
+  const termCompact = compactNormalizedText(term);
+
+  if (!queryNormalized && !queryCompact) return false;
+  if (!termNormalized && !termCompact) return false;
+
+  return (
+    (!!termNormalized && queryNormalized.includes(termNormalized))
+    || (!!termCompact && queryCompact.includes(termCompact))
+  );
 }
 
 /**
@@ -360,6 +393,19 @@ export async function GET(request: NextRequest) {
     const availableChampTerms = collectAvailableChampTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
+    const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const smartCabTermsForSuggestionList = queryTargetsSmartCabGroup
+      ? Array.from(
+        new Set([
+          ...prioritizedSmartCabTerms,
+          ...SMART_CAB_SUGGESTION_TERMS,
+          ...availableSmartCabTerms,
+        ]),
+      )
+      : availableSmartCabTerms;
 
     const queryNormalized = normalizeText(queryWithBoundaries);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
@@ -370,7 +416,7 @@ export async function GET(request: NextRequest) {
         : false;
 
     const prefersNoSpaceSmartCab = /\s/.test(queryWithBoundaries) === false;
-    const smartCabSuggestions = availableSmartCabTerms.flatMap((term) => {
+    const smartCabSuggestions = smartCabTermsForSuggestionList.flatMap((term) => {
       const noSpace = `${canonicalName}${term}`;
       const withSpace = `${canonicalName} ${term}`;
       return prefersNoSpaceSmartCab ? [noSpace, withSpace] : [withSpace, noSpace];
@@ -846,11 +892,31 @@ export async function GET(request: NextRequest) {
 
     const availableFeatureTerms = Array.from(
       new Set([
-        ...availableSmartCabTerms,
+        ...smartCabTermsForSuggestionList,
         ...availableLeftOriginalTerms,
         ...availableMoveSteeringTerms,
         ...availableLaoCenterTerms,
         ...availableChampTerms,
+      ].filter(Boolean)),
+    );
+
+    const preferredFeatureTerms = Array.from(
+      new Set([
+        ...(queryTargetsSmartCabGroup
+          ? smartCabTermsForSuggestionList
+          : []),
+        ...(availableLeftOriginalTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableLeftOriginalTerms
+          : []),
+        ...(availableMoveSteeringTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableMoveSteeringTerms
+          : []),
+        ...(availableLaoCenterTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableLaoCenterTerms
+          : []),
+        ...(availableChampTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableChampTerms
+          : []),
       ].filter(Boolean)),
     );
 
@@ -865,6 +931,7 @@ export async function GET(request: NextRequest) {
           canonicalName,
           featureQueryFragments,
           availableFeatureTerms,
+          preferredFeatureTerms,
         ),
       }))
       .sort((left, right) => {

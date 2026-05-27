@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { normalizeSmartCabQueryForSearch } from '@/utils/normalizeSearchQuery';
 
 export interface SearchLikedSavedShared {
   likedPosts: { [key: string]: boolean };
@@ -121,7 +122,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     let aborted = false;
     try {
       const params = new URLSearchParams();
-      params.set('q', q);
+      params.set('q', normalizeSmartCabQueryForSearch(q));
       if (province && province.trim() !== '') params.set('province', province.trim());
       const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
       if (cancelledRef.current) return;

@@ -3,6 +3,7 @@ type CaptionLike = { caption?: unknown };
 // Keep this list in display order. Any query that matches one term is treated as the same group.
 export const SMART_CAB_SUGGESTION_TERMS: string[] = [
   'ສະມາດແຄັບ',
+  'ສມາດແຄັບ',
   'ສມາສແຄັບ',
   'ສະມາສແຄັບ',
   'ສະມາດແຄບ',
@@ -21,6 +22,10 @@ export const SMART_CAB_SUGGESTION_TERMS: string[] = [
   'ສະມັດແຄັປ',
 ];
 
+const SMART_CAB_SUGGESTION_TERMS_BY_LENGTH_DESC = [...SMART_CAB_SUGGESTION_TERMS].sort(
+  (left, right) => right.length - left.length,
+);
+
 function normalizeText(value: string): string {
   return String(value ?? '')
     .toLowerCase()
@@ -33,7 +38,8 @@ export function removeSmartCabTermsFromQuery(query: string): string {
   if (!normalized) return '';
 
   let output = normalized;
-  for (const term of SMART_CAB_SUGGESTION_TERMS) {
+  // Remove longer aliases first to avoid partial stripping (e.g. "smartcap" by "cap").
+  for (const term of SMART_CAB_SUGGESTION_TERMS_BY_LENGTH_DESC) {
     const termNorm = normalizeText(term);
     if (!termNorm) continue;
     output = output.replaceAll(termNorm, ' ');
