@@ -12,6 +12,7 @@ import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestion
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTermsFromQuery } from '@/utils/champSuggestionTerms';
 import { ROCCO_SUGGESTION_TERMS, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
+import { VXL_SUGGESTION_TERMS, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -692,6 +693,10 @@ const ROCCO_GROUP_NORMALIZED_SET = new Set(
   ROCCO_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const VXL_GROUP_NORMALIZED_SET = new Set(
+  VXL_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -712,6 +717,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (ROCCO_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(ROCCO_SUGGESTION_TERMS);
+  }
+
+  if (VXL_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(VXL_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1206,7 +1215,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutMoveSteering = removeMoveSteeringTermsFromQuery(withoutLeftOriginal);
   const withoutLaoCenter = removeLaoCenterTermsFromQuery(withoutMoveSteering);
   const withoutChamp = removeChampGroupTermsFromQuery(withoutLaoCenter);
-  const normalizedPrefix = removeRoccoTermsFromQuery(withoutChamp).trim() || prefix;
+  const withoutRocco = removeRoccoTermsFromQuery(withoutChamp);
+  const normalizedPrefix = removeVxlTermsFromQuery(withoutRocco).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 

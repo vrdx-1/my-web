@@ -11,6 +11,7 @@ import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } f
 import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
 import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
+import { collectAvailableVxlTerms, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -357,7 +358,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutMoveSteeringTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
     const queryWithoutLaoCenterTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
     const queryWithoutChampTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
-    const queryWithoutFeatureTerms = removeRoccoTermsFromQuery(queryWithoutChampTerms);
+    const queryWithoutRoccoTerms = removeRoccoTermsFromQuery(queryWithoutChampTerms);
+    const queryWithoutFeatureTerms = removeVxlTermsFromQuery(queryWithoutRoccoTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -469,6 +471,9 @@ export async function GET(request: NextRequest) {
     const availableRoccoTerms = collectAvailableRoccoTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableVxlTerms = collectAvailableVxlTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
     const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
@@ -558,6 +563,17 @@ export async function GET(request: NextRequest) {
     const roccoSuggestions = availableRoccoTerms.map((term) => `${canonicalName} ${term}`);
 
     const roccoYearSuggestions = availableRoccoTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const vxlSuggestions = availableVxlTerms.map((term) => `${canonicalName} ${term}`);
+
+    const vxlYearSuggestions = availableVxlTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -897,6 +913,7 @@ export async function GET(request: NextRequest) {
       availableMoveSteeringTerms,
       availableLaoCenterTerms,
       availableRoccoTerms,
+      availableVxlTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -944,6 +961,7 @@ export async function GET(request: NextRequest) {
       availableMoveSteeringTerms,
       availableLaoCenterTerms,
       availableChampTerms,
+      availableVxlTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -956,6 +974,27 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableRoccoTerms,
       roccoCompanionGroups,
+    );
+
+    const vxlCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: vxlMixedSuggestions,
+      mixedYearSuggestions: vxlMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableVxlTerms,
+      vxlCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -974,10 +1013,14 @@ export async function GET(request: NextRequest) {
       ...laoCenterYearSuggestions,
       ...roccoSuggestions,
       ...roccoYearSuggestions,
+      ...vxlSuggestions,
+      ...vxlYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
       ...roccoMixedYearSuggestions,
+      ...vxlMixedSuggestions,
+      ...vxlMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1010,6 +1053,7 @@ export async function GET(request: NextRequest) {
         ...availableLaoCenterTerms,
         ...availableChampTerms,
         ...availableRoccoTerms,
+        ...availableVxlTerms,
       ].filter(Boolean)),
     );
 
@@ -1032,6 +1076,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availableRoccoTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableRoccoTerms
+          : []),
+        ...(availableVxlTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableVxlTerms
           : []),
       ].filter(Boolean)),
     );
