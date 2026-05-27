@@ -21,6 +21,7 @@ const MAX_SUGGESTIONS_POOL = 1200;
 
 function normalizeText(value: string): string {
   return String(value ?? '')
+    .normalize('NFKC')
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();

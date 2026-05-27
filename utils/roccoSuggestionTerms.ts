@@ -24,6 +24,7 @@ const ROCCO_SUGGESTION_TERMS_BY_LENGTH_DESC = [...ROCCO_SUGGESTION_TERMS].sort(
 
 function normalizeText(value: string): string {
   return String(value ?? '')
+    .normalize('NFKC')
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();

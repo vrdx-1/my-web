@@ -11,7 +11,7 @@ import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestion
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTermsFromQuery } from '@/utils/champSuggestionTerms';
-import { removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
+import { ROCCO_SUGGESTION_TERMS, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -688,6 +688,10 @@ const CHAMP_GROUP_NORMALIZED_SET = new Set(
   CHAMP_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const ROCCO_GROUP_NORMALIZED_SET = new Set(
+  ROCCO_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -704,6 +708,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (CHAMP_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(CHAMP_SUGGESTION_TERMS);
+  }
+
+  if (ROCCO_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(ROCCO_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
