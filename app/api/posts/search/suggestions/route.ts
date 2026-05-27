@@ -12,6 +12,7 @@ import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@
 import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
 import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 import { collectAvailableVxlTerms, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
+import { collectAvailableVxrTerms, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -359,7 +360,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutLaoCenterTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
     const queryWithoutChampTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
     const queryWithoutRoccoTerms = removeRoccoTermsFromQuery(queryWithoutChampTerms);
-    const queryWithoutFeatureTerms = removeVxlTermsFromQuery(queryWithoutRoccoTerms);
+    const queryWithoutVxlTerms = removeVxlTermsFromQuery(queryWithoutRoccoTerms);
+    const queryWithoutFeatureTerms = removeVxrTermsFromQuery(queryWithoutVxlTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -474,6 +476,9 @@ export async function GET(request: NextRequest) {
     const availableVxlTerms = collectAvailableVxlTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableVxrTerms = collectAvailableVxrTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
     const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
@@ -574,6 +579,17 @@ export async function GET(request: NextRequest) {
     const vxlSuggestions = availableVxlTerms.map((term) => `${canonicalName} ${term}`);
 
     const vxlYearSuggestions = availableVxlTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const vxrSuggestions = availableVxrTerms.map((term) => `${canonicalName} ${term}`);
+
+    const vxrYearSuggestions = availableVxrTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -914,6 +930,7 @@ export async function GET(request: NextRequest) {
       availableLaoCenterTerms,
       availableRoccoTerms,
       availableVxlTerms,
+      availableVxrTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -962,6 +979,7 @@ export async function GET(request: NextRequest) {
       availableLaoCenterTerms,
       availableChampTerms,
       availableVxlTerms,
+      availableVxrTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -983,6 +1001,7 @@ export async function GET(request: NextRequest) {
       availableLaoCenterTerms,
       availableChampTerms,
       availableRoccoTerms,
+      availableVxrTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -995,6 +1014,28 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableVxlTerms,
       vxlCompanionGroups,
+    );
+
+    const vxrCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: vxrMixedSuggestions,
+      mixedYearSuggestions: vxrMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableVxrTerms,
+      vxrCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -1015,12 +1056,16 @@ export async function GET(request: NextRequest) {
       ...roccoYearSuggestions,
       ...vxlSuggestions,
       ...vxlYearSuggestions,
+      ...vxrSuggestions,
+      ...vxrYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
       ...roccoMixedYearSuggestions,
       ...vxlMixedSuggestions,
       ...vxlMixedYearSuggestions,
+      ...vxrMixedSuggestions,
+      ...vxrMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1054,6 +1099,7 @@ export async function GET(request: NextRequest) {
         ...availableChampTerms,
         ...availableRoccoTerms,
         ...availableVxlTerms,
+        ...availableVxrTerms,
       ].filter(Boolean)),
     );
 
@@ -1079,6 +1125,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availableVxlTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableVxlTerms
+          : []),
+        ...(availableVxrTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableVxrTerms
           : []),
       ].filter(Boolean)),
     );

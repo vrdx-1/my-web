@@ -13,6 +13,7 @@ import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms'
 import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTermsFromQuery } from '@/utils/champSuggestionTerms';
 import { ROCCO_SUGGESTION_TERMS, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 import { VXL_SUGGESTION_TERMS, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
+import { VXR_SUGGESTION_TERMS, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -697,6 +698,10 @@ const VXL_GROUP_NORMALIZED_SET = new Set(
   VXL_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const VXR_GROUP_NORMALIZED_SET = new Set(
+  VXR_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -721,6 +726,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (VXL_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(VXL_SUGGESTION_TERMS);
+  }
+
+  if (VXR_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(VXR_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1216,7 +1225,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutLaoCenter = removeLaoCenterTermsFromQuery(withoutMoveSteering);
   const withoutChamp = removeChampGroupTermsFromQuery(withoutLaoCenter);
   const withoutRocco = removeRoccoTermsFromQuery(withoutChamp);
-  const normalizedPrefix = removeVxlTermsFromQuery(withoutRocco).trim() || prefix;
+  const withoutVxl = removeVxlTermsFromQuery(withoutRocco);
+  const normalizedPrefix = removeVxrTermsFromQuery(withoutVxl).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
