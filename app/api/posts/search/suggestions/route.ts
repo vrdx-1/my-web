@@ -13,7 +13,7 @@ import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/c
 import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 import { collectAvailableVxlTerms, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
 import { collectAvailableVxrTerms, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
-import { TEIY_SUGGESTION_TERMS, collectAvailableTeiyTerms, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
+import { collectAvailableTeiyTerms, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -526,6 +526,12 @@ export async function GET(request: NextRequest) {
     );
     const availableTeiyTerms = collectAvailableTeiyTerms(
       matchedPosts as Array<{ caption?: unknown }>
+    );
+    const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsVxrGroup = availableVxrTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsTeiyGroup = availableTeiyTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
@@ -1242,6 +1248,14 @@ export async function GET(request: NextRequest) {
           featureQueryFragments,
           availableFeatureTerms,
           preferredFeatureTerms,
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsVxlGroup ? availableVxlTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsVxrGroup ? availableVxrTerms : [],
         ) + scoreSuggestionByActiveGroupTerms(
           suggestion,
           canonicalName,
