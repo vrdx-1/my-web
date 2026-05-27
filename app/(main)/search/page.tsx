@@ -66,24 +66,32 @@ function SearchPageContent() {
     const q = query.trim();
     if (q.length === 0) return [];
     const dictionarySuggestions = getCarDictionarySuggestions(q, Number.MAX_SAFE_INTEGER);
-    
+
     const combined: SuggestionItem[] = [];
+    const seenKeys = new Set<string>();
 
-    // Add year suggestions first
-    for (const yearSug of yearSuggestions) {
-      combined.push({
-        display: yearSug,
-        searchKey: yearSug,
-        type: 'year',
-      });
-    }
+    const pushIfUnique = (item: SuggestionItem) => {
+      const key = `${item.display}`.trim().toLowerCase();
+      if (!key || seenKeys.has(key)) return;
+      seenKeys.add(key);
+      combined.push(item);
+    };
 
-    // Add dictionary suggestions
+    // Keep brand/model overview at the top.
     for (const dictSug of dictionarySuggestions) {
-      combined.push({
+      pushIfUnique({
         display: dictSug.display,
         searchKey: dictSug.searchKey,
         type: 'dictionary',
+      });
+    }
+
+    // Then append API suggestions (year + feature groups) in server-ranked order.
+    for (const yearSug of yearSuggestions) {
+      pushIfUnique({
+        display: yearSug,
+        searchKey: yearSug,
+        type: 'year',
       });
     }
 

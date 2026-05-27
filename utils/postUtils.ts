@@ -11,6 +11,7 @@ import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestion
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTermsFromQuery } from '@/utils/champSuggestionTerms';
+import { removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -1196,7 +1197,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutLeftOriginal = removeLeftOriginalTermsFromQuery(withoutSmartCab);
   const withoutMoveSteering = removeMoveSteeringTermsFromQuery(withoutLeftOriginal);
   const withoutLaoCenter = removeLaoCenterTermsFromQuery(withoutMoveSteering);
-  const normalizedPrefix = removeChampGroupTermsFromQuery(withoutLaoCenter).trim() || prefix;
+  const withoutChamp = removeChampGroupTermsFromQuery(withoutLaoCenter);
+  const normalizedPrefix = removeRoccoTermsFromQuery(withoutChamp).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 

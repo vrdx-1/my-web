@@ -10,6 +10,7 @@ import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } f
 import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
 import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
+import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -241,6 +242,72 @@ function queryContainsTerm(query: string, term: string): boolean {
   );
 }
 
+function isYearOnlySuggestion(suggestion: string, canonicalName: string): boolean {
+  const normalized = normalizeText(suggestion);
+  const canonical = normalizeText(canonicalName);
+  if (!normalized || !canonical) return false;
+  if (!normalized.startsWith(canonical)) return false;
+
+  const rest = normalized.slice(canonical.length).trim();
+  return /^\d{4}$/.test(rest);
+}
+
+function buildMixedSuggestionsForGroup(
+  canonicalName: string,
+  queryNormalized: string,
+  matchedPosts: Array<{ caption?: unknown }>,
+  yearsForSuggestions: number[],
+  primaryTerms: string[],
+  companionGroups: string[][],
+): { mixedSuggestions: string[]; mixedYearSuggestions: string[] } {
+  const mixedSuggestions: string[] = [];
+  const mixedYearSuggestions: string[] = [];
+
+  if (primaryTerms.length === 0 || companionGroups.length === 0) {
+    return { mixedSuggestions, mixedYearSuggestions };
+  }
+
+  function walkCompanions(start: number, selected: string[][]) {
+    if (selected.length > 0) {
+      const termLists = [primaryTerms, ...selected];
+      const stack: string[][] = [[]];
+
+      for (const list of termLists) {
+        const next: string[][] = [];
+        for (const base of stack) {
+          for (const term of list) {
+            next.push([...base, term]);
+          }
+        }
+        stack.splice(0, stack.length, ...next);
+      }
+
+      for (const termsCombo of stack) {
+        if (!hasAllTermsInAnyPost(matchedPosts, termsCombo)) continue;
+        mixedSuggestions.push(formatCombinedSuggestion(canonicalName, queryNormalized, termsCombo));
+
+        for (const year of yearsForSuggestions) {
+          if (!hasAllTermsInAnyPost(matchedPosts, termsCombo, year)) continue;
+          mixedYearSuggestions.push(formatCombinedSuggestion(canonicalName, queryNormalized, termsCombo, year));
+        }
+      }
+    }
+
+    for (let index = start; index < companionGroups.length; index += 1) {
+      selected.push(companionGroups[index]);
+      walkCompanions(index + 1, selected);
+      selected.pop();
+    }
+  }
+
+  walkCompanions(0, []);
+
+  return {
+    mixedSuggestions: Array.from(new Set(mixedSuggestions)),
+    mixedYearSuggestions: Array.from(new Set(mixedYearSuggestions)),
+  };
+}
+
 /**
  * GET /api/posts/search/suggestions?q=...
  * Returns model suggestions with available years
@@ -284,7 +351,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutLeftOriginalTerms = removeLeftOriginalTermsFromQuery(queryWithoutSmartCab);
     const queryWithoutMoveSteeringTerms = removeMoveSteeringTermsFromQuery(queryWithoutLeftOriginalTerms);
     const queryWithoutLaoCenterTerms = removeLaoCenterTermsFromQuery(queryWithoutMoveSteeringTerms);
-    const queryWithoutFeatureTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
+    const queryWithoutChampTerms = removeChampTermsFromQuery(queryWithoutLaoCenterTerms);
+    const queryWithoutFeatureTerms = removeRoccoTermsFromQuery(queryWithoutChampTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -393,6 +461,9 @@ export async function GET(request: NextRequest) {
     const availableChampTerms = collectAvailableChampTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableRoccoTerms = collectAvailableRoccoTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
     const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
@@ -471,6 +542,17 @@ export async function GET(request: NextRequest) {
     const champSuggestions = availableChampTerms.map((term) => `${canonicalName} ${term}`);
 
     const champYearSuggestions = availableChampTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const roccoSuggestions = availableRoccoTerms.map((term) => `${canonicalName} ${term}`);
+
+    const roccoYearSuggestions = availableRoccoTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -809,6 +891,7 @@ export async function GET(request: NextRequest) {
       availableLeftOriginalTerms,
       availableMoveSteeringTerms,
       availableLaoCenterTerms,
+      availableRoccoTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -850,6 +933,26 @@ export async function GET(request: NextRequest) {
       collectSubsets(0, []);
     }
 
+    const roccoCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: roccoMixedSuggestions,
+      mixedYearSuggestions: roccoMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableRoccoTerms,
+      roccoCompanionGroups,
+    );
+
     // Build raw suggestions first, then re-rank by typed feature intent.
     const rawSuggestions = [
       canonicalName,
@@ -864,8 +967,12 @@ export async function GET(request: NextRequest) {
       ...moveSteeringYearSuggestions,
       ...laoCenterSuggestions,
       ...laoCenterYearSuggestions,
+      ...roccoSuggestions,
+      ...roccoYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
+      ...roccoMixedSuggestions,
+      ...roccoMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -897,6 +1004,7 @@ export async function GET(request: NextRequest) {
         ...availableMoveSteeringTerms,
         ...availableLaoCenterTerms,
         ...availableChampTerms,
+        ...availableRoccoTerms,
       ].filter(Boolean)),
     );
 
@@ -916,6 +1024,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availableChampTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableChampTerms
+          : []),
+        ...(availableRoccoTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableRoccoTerms
           : []),
       ].filter(Boolean)),
     );
@@ -938,6 +1049,11 @@ export async function GET(request: NextRequest) {
         const leftIsCanonical = left.suggestion === canonicalName;
         const rightIsCanonical = right.suggestion === canonicalName;
         if (leftIsCanonical !== rightIsCanonical) return leftIsCanonical ? -1 : 1;
+
+        const leftIsYearOnly = isYearOnlySuggestion(left.suggestion, canonicalName);
+        const rightIsYearOnly = isYearOnlySuggestion(right.suggestion, canonicalName);
+        if (leftIsYearOnly !== rightIsYearOnly) return leftIsYearOnly ? -1 : 1;
+
         if (right.score !== left.score) return right.score - left.score;
         return left.index - right.index;
       })
