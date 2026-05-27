@@ -253,6 +253,10 @@ function isYearOnlySuggestion(suggestion: string, canonicalName: string): boolea
   return /^\d{4}$/.test(rest);
 }
 
+function hasFeatureLikeQueryFragment(fragments: string[]): boolean {
+  return fragments.some((fragment) => /[a-zA-Z\u0E00-\u0EFF]/u.test(fragment));
+}
+
 function buildMixedSuggestionsForGroup(
   canonicalName: string,
   queryNormalized: string,
@@ -1033,6 +1037,7 @@ export async function GET(request: NextRequest) {
     );
 
     const featureQueryFragments = extractFeatureQueryFragments(queryWithBoundaries, canonicalName);
+    const preferYearOnlySuggestions = !hasFeatureLikeQueryFragment(featureQueryFragments);
 
     const rankedSuggestions = rawSuggestions
       .map((suggestion, index) => ({
@@ -1051,9 +1056,11 @@ export async function GET(request: NextRequest) {
         const rightIsCanonical = right.suggestion === canonicalName;
         if (leftIsCanonical !== rightIsCanonical) return leftIsCanonical ? -1 : 1;
 
-        const leftIsYearOnly = isYearOnlySuggestion(left.suggestion, canonicalName);
-        const rightIsYearOnly = isYearOnlySuggestion(right.suggestion, canonicalName);
-        if (leftIsYearOnly !== rightIsYearOnly) return leftIsYearOnly ? -1 : 1;
+        if (preferYearOnlySuggestions) {
+          const leftIsYearOnly = isYearOnlySuggestion(left.suggestion, canonicalName);
+          const rightIsYearOnly = isYearOnlySuggestion(right.suggestion, canonicalName);
+          if (leftIsYearOnly !== rightIsYearOnly) return leftIsYearOnly ? -1 : 1;
+        }
 
         if (right.score !== left.score) return right.score - left.score;
         return left.index - right.index;
