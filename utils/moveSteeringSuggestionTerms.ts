@@ -6,6 +6,7 @@ export const MOVE_STEERING_SUGGESTION_TERMS: string[] = [
   'ຍາຍພວງ',
   'ຍ້າຍພ່ວງ',
   'ຍາຍພ່ວງ',
+  'ບ້າຍພວງ',
   'ຍ້າຍພ້ວງ',
   'ຍາຍພ້ວງ',
 ];

@@ -13,6 +13,7 @@ export const SMART_CAB_SUGGESTION_TERMS: string[] = [
   'smart-cab',
   'ສມາດແຄບ',
   'smartcap',
+  'cap',
   'ສະມັດແຄັບ',
   'ແຄັບ',
   'smardcab',
