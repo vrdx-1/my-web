@@ -14,6 +14,7 @@ import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery as removeChampGroupTe
 import { ROCCO_SUGGESTION_TERMS, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
 import { VXL_SUGGESTION_TERMS, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
 import { VXR_SUGGESTION_TERMS, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
+import { TEIY_SUGGESTION_TERMS, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -702,6 +703,10 @@ const VXR_GROUP_NORMALIZED_SET = new Set(
   VXR_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const TEIY_GROUP_NORMALIZED_SET = new Set(
+  TEIY_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -730,6 +735,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (VXR_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(VXR_SUGGESTION_TERMS);
+  }
+
+  if (TEIY_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(TEIY_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1226,7 +1235,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutChamp = removeChampGroupTermsFromQuery(withoutLaoCenter);
   const withoutRocco = removeRoccoTermsFromQuery(withoutChamp);
   const withoutVxl = removeVxlTermsFromQuery(withoutRocco);
-  const normalizedPrefix = removeVxrTermsFromQuery(withoutVxl).trim() || prefix;
+  const withoutVxr = removeVxrTermsFromQuery(withoutVxl);
+  const normalizedPrefix = removeTeiyTermsFromQuery(withoutVxr).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
