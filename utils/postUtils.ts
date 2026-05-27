@@ -6,7 +6,7 @@
 import { safeParseJSON } from './storageUtils';
 import carsData from '@/data';
 import categoriesData from '@/data/categories.json';
-import { removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
+import { SMART_CAB_SUGGESTION_TERMS, removeSmartCabTermsFromQuery } from '@/utils/smartCabSuggestionTerms';
 import { removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
 import { removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
 import { removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
@@ -687,12 +687,20 @@ const CHAMP_GROUP_NORMALIZED_SET = new Set(
   CHAMP_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
+  SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 /**
  * ขยายคำค้นโดยกรอง brand aliases และ model อื่นออกเมื่อค้นรุ่น (ให้ผลตรงคำค้น)
  * ใช้ฝั่ง frontend เพื่อเลือกชุดคำส่งให้ API/DB
  */
 export function expandWithoutBrandAliases(query: string): string[] {
   const queryNorm = normalizeCarSearch(query);
+  if (SMART_CAB_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(SMART_CAB_SUGGESTION_TERMS);
+  }
+
   if (CHAMP_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(CHAMP_SUGGESTION_TERMS);
   }
