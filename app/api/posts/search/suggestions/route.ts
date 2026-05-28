@@ -5,20 +5,20 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { expandWithoutBrandAliases, captionMatchesAnyAlias, getCanonicalModelDisplayName } from '@/utils/postUtils';
 import { generateYearSuggestions, getModelNameFromQuery, formatYearSuggestion, extractYearsFromQuery, extractPartialYearPrefix } from '@/utils/yearSearchUtils';
-import { collectAvailableSmartCabTerms, removeSmartCabTermsFromQuery, SMART_CAB_SUGGESTION_TERMS } from '@/utils/smartCabSuggestionTerms';
-import { collectAvailableLeftOriginalTerms, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
-import { collectAvailableMoveSteeringTerms, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
-import { collectAvailableLaoCenterTerms, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
-import { collectAvailableChampTerms, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
-import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
-import { collectAvailableVxlTerms, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
-import { collectAvailableVxrTerms, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
-import { collectAvailableTeiyTerms, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
-import { collectAvailableLegenderTerms, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
-import { collectAvailableKapukTerms, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
-import { collectAvailableAutoTerms, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
-import { collectAvailablePhovinTerms, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
-import { collectAvailableKatheiyTerms, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
+import { removeSmartCabTermsFromQuery, SMART_CAB_SUGGESTION_TERMS } from '@/utils/smartCabSuggestionTerms';
+import { LEFT_ORIGINAL_SUGGESTION_TERMS, removeLeftOriginalTermsFromQuery } from '@/utils/leftOriginalSuggestionTerms';
+import { MOVE_STEERING_SUGGESTION_TERMS, removeMoveSteeringTermsFromQuery } from '@/utils/moveSteeringSuggestionTerms';
+import { LAO_CENTER_SUGGESTION_TERMS, removeLaoCenterTermsFromQuery } from '@/utils/laoCenterSuggestionTerms';
+import { CHAMP_SUGGESTION_TERMS, removeChampTermsFromQuery } from '@/utils/champSuggestionTerms';
+import { ROCCO_SUGGESTION_TERMS, removeRoccoTermsFromQuery } from '@/utils/roccoSuggestionTerms';
+import { VXL_SUGGESTION_TERMS, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
+import { VXR_SUGGESTION_TERMS, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
+import { TEIY_SUGGESTION_TERMS, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
+import { LEGENDER_SUGGESTION_TERMS, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
+import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
+import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
+import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
+import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -47,51 +47,173 @@ function addMixedScriptWordBoundaries(value: string): string {
     .trim();
 }
 
-function postHasTerm(post: { caption?: unknown }, term: string): boolean {
-  const caption = normalizeText(typeof post?.caption === 'string' ? post.caption : '');
-  if (!caption) return false;
-  return caption.includes(normalizeText(term));
+type SuggestionPost = { caption?: unknown };
+
+type PostAnalysis = {
+  normalizedCaptions: string[];
+  yearSets: Array<Set<number>>;
+  termToPostIds: Map<string, Set<number>>;
+  yearToPostIds: Map<number, Set<number>>;
+  comboHasAnyCache: Map<string, boolean>;
+};
+
+const POST_ANALYSIS_CACHE = new WeakMap<SuggestionPost[], PostAnalysis>();
+
+function getOrCreatePostAnalysis(posts: SuggestionPost[]): PostAnalysis {
+  const cached = POST_ANALYSIS_CACHE.get(posts);
+  if (cached) return cached;
+
+  const normalizedCaptions: string[] = [];
+  const yearSets: Array<Set<number>> = [];
+
+  for (const post of posts) {
+    const rawCaption = typeof post?.caption === 'string' ? post.caption : '';
+    normalizedCaptions.push(normalizeText(rawCaption));
+    yearSets.push(new Set(extractYearsFromQuery(rawCaption)));
+  }
+
+  const analysis: PostAnalysis = {
+    normalizedCaptions,
+    yearSets,
+    termToPostIds: new Map(),
+    yearToPostIds: new Map(),
+    comboHasAnyCache: new Map(),
+  };
+
+  POST_ANALYSIS_CACHE.set(posts, analysis);
+  return analysis;
 }
 
-function postHasYear(post: { caption?: unknown }, year: number): boolean {
-  const caption = typeof post?.caption === 'string' ? post.caption : '';
-  if (!caption) return false;
-  return extractYearsFromQuery(caption).includes(year);
+function getPostIdsForTerm(analysis: PostAnalysis, term: string): Set<number> {
+  const termNormalized = normalizeText(term);
+  if (!termNormalized) return new Set<number>();
+
+  const cached = analysis.termToPostIds.get(termNormalized);
+  if (cached) return cached;
+
+  const postIds = new Set<number>();
+  for (let index = 0; index < analysis.normalizedCaptions.length; index += 1) {
+    const caption = analysis.normalizedCaptions[index] ?? '';
+    if (!caption) continue;
+    if (caption.includes(termNormalized)) {
+      postIds.add(index);
+    }
+  }
+
+  analysis.termToPostIds.set(termNormalized, postIds);
+  return postIds;
 }
 
-function collectYearsForTerm(posts: Array<{ caption?: unknown }>, term: string, years: number[]): number[] {
+function getPostIdsForYear(analysis: PostAnalysis, year: number): Set<number> {
+  const cached = analysis.yearToPostIds.get(year);
+  if (cached) return cached;
+
+  const postIds = new Set<number>();
+  for (let index = 0; index < analysis.yearSets.length; index += 1) {
+    if (analysis.yearSets[index]?.has(year)) {
+      postIds.add(index);
+    }
+  }
+
+  analysis.yearToPostIds.set(year, postIds);
+  return postIds;
+}
+
+function hasSetIntersection(left: Set<number>, right: Set<number>): boolean {
+  if (left.size === 0 || right.size === 0) return false;
+
+  const [small, large] = left.size <= right.size ? [left, right] : [right, left];
+  for (const value of small) {
+    if (large.has(value)) return true;
+  }
+
+  return false;
+}
+
+function collectYearsForTerm(posts: SuggestionPost[], term: string, years: number[]): number[] {
   if (!term || years.length === 0) return [];
-  return years.filter((year) => posts.some((post) => postHasTerm(post, term) && postHasYear(post, year)));
+
+  const analysis = getOrCreatePostAnalysis(posts);
+  const termPostIds = getPostIdsForTerm(analysis, term);
+  if (termPostIds.size === 0) return [];
+
+  return years.filter((year) => hasSetIntersection(termPostIds, getPostIdsForYear(analysis, year)));
 }
 
 function hasCombinedTermInAnyPost(
-  posts: Array<{ caption?: unknown }>,
+  posts: SuggestionPost[],
   firstTerm: string,
   secondTerm: string,
   year?: number,
 ): boolean {
-  return posts.some((post) => {
-    if (!postHasTerm(post, firstTerm) || !postHasTerm(post, secondTerm)) return false;
-    if (year == null) return true;
-    return postHasYear(post, year);
-  });
+  return hasAllTermsInAnyPost(posts, [firstTerm, secondTerm], year);
 }
 
 function hasAllTermsInAnyPost(
-  posts: Array<{ caption?: unknown }>,
+  posts: SuggestionPost[],
   terms: string[],
   year?: number,
 ): boolean {
-  const cleanTerms = terms.map((term) => String(term ?? '').trim()).filter(Boolean);
+  const cleanTerms = Array.from(
+    new Set(
+      terms
+        .map((term) => normalizeText(String(term ?? '')))
+        .filter(Boolean),
+    ),
+  );
+
   if (cleanTerms.length === 0) return false;
 
-  return posts.some((post) => {
-    for (const term of cleanTerms) {
-      if (!postHasTerm(post, term)) return false;
+  const analysis = getOrCreatePostAnalysis(posts);
+  const cacheKey = `${year == null ? 'any' : String(year)}|${[...cleanTerms].sort().join('|')}`;
+  const cached = analysis.comboHasAnyCache.get(cacheKey);
+  if (cached != null) return cached;
+
+  let candidatePostIds: Set<number> | null = null;
+  for (const term of cleanTerms) {
+    const termPostIds = getPostIdsForTerm(analysis, term);
+    if (termPostIds.size === 0) {
+      analysis.comboHasAnyCache.set(cacheKey, false);
+      return false;
     }
-    if (year == null) return true;
-    return postHasYear(post, year);
-  });
+
+    if (candidatePostIds == null || termPostIds.size < candidatePostIds.size) {
+      candidatePostIds = termPostIds;
+    }
+  }
+
+  if (!candidatePostIds || candidatePostIds.size === 0) {
+    analysis.comboHasAnyCache.set(cacheKey, false);
+    return false;
+  }
+
+  const filteredPostIds = new Set<number>(candidatePostIds);
+  for (const term of cleanTerms) {
+    const termPostIds = getPostIdsForTerm(analysis, term);
+    for (const postId of filteredPostIds) {
+      if (!termPostIds.has(postId)) {
+        filteredPostIds.delete(postId);
+      }
+    }
+
+    if (filteredPostIds.size === 0) {
+      analysis.comboHasAnyCache.set(cacheKey, false);
+      return false;
+    }
+  }
+
+  if (year != null) {
+    const yearPostIds = getPostIdsForYear(analysis, year);
+    for (const postId of filteredPostIds) {
+      if (!yearPostIds.has(postId)) {
+        filteredPostIds.delete(postId);
+      }
+    }
+  }
+
+  const hasMatch = filteredPostIds.size > 0;
+  analysis.comboHasAnyCache.set(cacheKey, hasMatch);
+  return hasMatch;
 }
 
 function firstIndexOfAnyTerm(text: string, terms: string[]): number {
@@ -510,49 +632,26 @@ export async function GET(request: NextRequest) {
         ? availableYears.filter((year) => String(year).startsWith(partialPrefix))
         : availableYears;
 
-    // Show all Smart Cab keyword variants in this group when they exist in matched captions.
-    const availableSmartCabTerms = collectAvailableSmartCabTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableLeftOriginalTerms = collectAvailableLeftOriginalTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableMoveSteeringTerms = collectAvailableMoveSteeringTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableLaoCenterTerms = collectAvailableLaoCenterTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableChampTerms = collectAvailableChampTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableRoccoTerms = collectAvailableRoccoTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableVxlTerms = collectAvailableVxlTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableVxrTerms = collectAvailableVxrTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableTeiyTerms = collectAvailableTeiyTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableLegenderTerms = collectAvailableLegenderTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableKapukTerms = collectAvailableKapukTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableAutoTerms = collectAvailableAutoTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availablePhovinTerms = collectAvailablePhovinTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
-    const availableKatheiyTerms = collectAvailableKatheiyTerms(
-      matchedPosts as Array<{ caption?: unknown }>
-    );
+    // Show only feature-group terms that exist in matched captions.
+    const matchedSuggestionPosts = matchedPosts as SuggestionPost[];
+    const postAnalysis = getOrCreatePostAnalysis(matchedSuggestionPosts);
+    const collectAvailableTermsByIndex = (terms: string[]): string[] =>
+      terms.filter((term) => getPostIdsForTerm(postAnalysis, term).size > 0);
+
+    const availableSmartCabTerms = collectAvailableTermsByIndex(SMART_CAB_SUGGESTION_TERMS);
+    const availableLeftOriginalTerms = collectAvailableTermsByIndex(LEFT_ORIGINAL_SUGGESTION_TERMS);
+    const availableMoveSteeringTerms = collectAvailableTermsByIndex(MOVE_STEERING_SUGGESTION_TERMS);
+    const availableLaoCenterTerms = collectAvailableTermsByIndex(LAO_CENTER_SUGGESTION_TERMS);
+    const availableChampTerms = collectAvailableTermsByIndex(CHAMP_SUGGESTION_TERMS);
+    const availableRoccoTerms = collectAvailableTermsByIndex(ROCCO_SUGGESTION_TERMS);
+    const availableVxlTerms = collectAvailableTermsByIndex(VXL_SUGGESTION_TERMS);
+    const availableVxrTerms = collectAvailableTermsByIndex(VXR_SUGGESTION_TERMS);
+    const availableTeiyTerms = collectAvailableTermsByIndex(TEIY_SUGGESTION_TERMS);
+    const availableLegenderTerms = collectAvailableTermsByIndex(LEGENDER_SUGGESTION_TERMS);
+    const availableKapukTerms = collectAvailableTermsByIndex(KAPUK_SUGGESTION_TERMS);
+    const availableAutoTerms = collectAvailableTermsByIndex(AUTO_SUGGESTION_TERMS);
+    const availablePhovinTerms = collectAvailableTermsByIndex(PHOVIN_SUGGESTION_TERMS);
+    const availableKatheiyTerms = collectAvailableTermsByIndex(KATHEIY_SUGGESTION_TERMS);
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
