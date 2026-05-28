@@ -16,6 +16,7 @@ import { VXL_SUGGESTION_TERMS, removeVxlTermsFromQuery } from '@/utils/vxlSugges
 import { VXR_SUGGESTION_TERMS, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
 import { TEIY_SUGGESTION_TERMS, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
 import { LEGENDER_SUGGESTION_TERMS, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
+import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -712,6 +713,10 @@ const LEGENDER_GROUP_NORMALIZED_SET = new Set(
   LEGENDER_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const KAPUK_GROUP_NORMALIZED_SET = new Set(
+  KAPUK_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -748,6 +753,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (LEGENDER_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(LEGENDER_SUGGESTION_TERMS);
+  }
+
+  if (KAPUK_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(KAPUK_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1246,7 +1255,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutVxl = removeVxlTermsFromQuery(withoutRocco);
   const withoutVxr = removeVxrTermsFromQuery(withoutVxl);
   const withoutTeiy = removeTeiyTermsFromQuery(withoutVxr);
-  const normalizedPrefix = removeLegenderTermsFromQuery(withoutTeiy).trim() || prefix;
+  const withoutLegender = removeLegenderTermsFromQuery(withoutTeiy);
+  const normalizedPrefix = removeKapukTermsFromQuery(withoutLegender).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
