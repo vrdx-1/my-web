@@ -17,6 +17,13 @@ type SearchHistoryItem = {
 };
 
 type HistoryStatus = 'idle' | 'loading' | 'loaded';
+type SuggestionsPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  hasMore: boolean;
+  nextPage: number | null;
+};
 
 function SearchPageContent() {
   const router = useRouter();
@@ -28,39 +35,108 @@ function SearchPageContent() {
   const [historyStatus, setHistoryStatus] = useState<HistoryStatus>('idle');
   const [yearSuggestions, setYearSuggestions] = useState<string[]>([]);
   const [loadingYearSuggestions, setLoadingYearSuggestions] = useState(false);
+  const [suggestionsPage, setSuggestionsPage] = useState(1);
+  const [suggestionsHasMore, setSuggestionsHasMore] = useState(false);
+  const [loadingMoreSuggestions, setLoadingMoreSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsSentinelRef = useRef<HTMLDivElement | null>(null);
 
   /** ซิงก์คำค้นกับ URL (แก้กรณี guest หรือ client nav ที่ state เริ่มต้นไม่ตรงกับ ?q=) */
   useEffect(() => {
     setQuery((prev) => (prev !== qFromUrl ? qFromUrl : prev));
   }, [qFromUrl]);
 
-  // Fetch year suggestions from API
+  const loadSuggestionPage = useCallback(async (q: string, page: number, append: boolean) => {
+    const qTrim = q.trim();
+    if (!qTrim) {
+      setYearSuggestions([]);
+      setSuggestionsPage(1);
+      setSuggestionsHasMore(false);
+      return;
+    }
+
+    try {
+      if (append) {
+        setLoadingMoreSuggestions(true);
+      } else {
+        setLoadingYearSuggestions(true);
+      }
+
+      const response = await fetch(
+        `/api/posts/search/suggestions?q=${encodeURIComponent(qTrim)}&page=${page}&pageSize=200`
+      );
+      const data = await response.json();
+      const apiSuggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
+      const pagination = (data?.pagination ?? null) as SuggestionsPagination | null;
+      const hasMore = !!pagination?.hasMore;
+      const nextPage = pagination?.nextPage ?? null;
+
+      setYearSuggestions((prev) => {
+        if (!append) return apiSuggestions;
+        const merged = [...prev, ...apiSuggestions];
+        return merged.filter((item, index, arr) => arr.indexOf(item) === index);
+      });
+
+      if (hasMore && typeof nextPage === 'number') {
+        setSuggestionsPage(nextPage);
+      }
+      setSuggestionsHasMore(hasMore);
+    } catch (err) {
+      console.error('Failed to fetch year suggestions:', err);
+      if (!append) {
+        setYearSuggestions([]);
+        setSuggestionsHasMore(false);
+      }
+    } finally {
+      setLoadingYearSuggestions(false);
+      setLoadingMoreSuggestions(false);
+    }
+  }, []);
+
+  // Fetch first page suggestions from API.
   useEffect(() => {
     const q = query.trim();
     if (q.length === 0) {
       setYearSuggestions([]);
+      setSuggestionsPage(1);
+      setSuggestionsHasMore(false);
       return;
     }
 
-    setLoadingYearSuggestions(true);
     const timer = setTimeout(() => {
-      fetch(`/api/posts/search/suggestions?q=${encodeURIComponent(q)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setYearSuggestions(data.suggestions || []);
-        })
-        .catch((err) => {
-          console.error('Failed to fetch year suggestions:', err);
-          setYearSuggestions([]);
-        })
-        .finally(() => {
-          setLoadingYearSuggestions(false);
-        });
+      void loadSuggestionPage(q, 1, false);
     }, 300); // Debounce
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, loadSuggestionPage]);
+
+  // Infinite load for suggestions when scrolling to the bottom.
+  useEffect(() => {
+    const shouldShowSuggestions = query.trim().length > 0;
+    if (!shouldShowSuggestions || !suggestionsHasMore || loadingMoreSuggestions || loadingYearSuggestions) return;
+
+    const node = suggestionsSentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (loadingMoreSuggestions || loadingYearSuggestions) return;
+        void loadSuggestionPage(query, suggestionsPage, true);
+      },
+      { root: null, rootMargin: '0px 0px 320px 0px', threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [
+    query,
+    suggestionsHasMore,
+    loadingMoreSuggestions,
+    loadingYearSuggestions,
+    loadSuggestionPage,
+    suggestionsPage,
+  ]);
 
   const suggestions = useMemo(() => {
     const q = query.trim();
@@ -404,40 +480,44 @@ function SearchPageContent() {
       {(showSuggestions || showHistory || showHistoryLoading || showHistoryEmpty) && (
         <div style={{ background: '#fff', minHeight: 200 }}>
           {showSuggestions && (
-            <ul style={{ listStyle: 'none', margin: 0, padding: '8px 0' }}>
-              {suggestions.map((item, i) => (
-                <li key={`${item.searchKey}-${i}`}>
-                  <button
-                    type="button"
-                    onClick={() => handleSuggestionClick(item)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      textAlign: 'left',
-                      border: 'none',
-                      background: 'none',
-                      fontSize: '16px',
-                      fontFamily: LAO_FONT,
-                      color: '#111',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                    }}
-                  >
-                    <span style={{ flexShrink: 0, color: '#65676b', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
-                      <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                    </span>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {highlightMatch(item.display, query)}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul style={{ listStyle: 'none', margin: 0, padding: '8px 0' }}>
+                {suggestions.map((item, i) => (
+                  <li key={`${item.searchKey}-${i}`}>
+                    <button
+                      type="button"
+                      onClick={() => handleSuggestionClick(item)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        textAlign: 'left',
+                        border: 'none',
+                        background: 'none',
+                        fontSize: '16px',
+                        fontFamily: LAO_FONT,
+                        color: '#111',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                      }}
+                    >
+                      <span style={{ flexShrink: 0, color: '#65676b', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden>
+                        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                      </span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {highlightMatch(item.display, query)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {loadingMoreSuggestions && <div style={{ minHeight: 16 }} />}
+              {suggestionsHasMore && <div ref={suggestionsSentinelRef} style={{ height: 1 }} aria-hidden />}
+            </>
           )}
           {showHistoryLoading && (
             <div style={{ minHeight: 12 }} />
