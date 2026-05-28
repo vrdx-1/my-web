@@ -25,6 +25,8 @@ type SuggestionsPagination = {
   nextPage: number | null;
 };
 
+const SEARCH_HEADER_HEIGHT = 66;
+
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -343,8 +345,12 @@ function SearchPageContent() {
           padding: '16px 12px 10px 8px',
           borderBottom: 'none',
           background: '#fff',
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER.maxWidth,
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
@@ -477,6 +483,8 @@ function SearchPageContent() {
         </button>
       </div>
 
+      <div style={{ height: SEARCH_HEADER_HEIGHT }} aria-hidden />
+
       {(showSuggestions || showHistory || showHistoryLoading || showHistoryEmpty) && (
         <div style={{ background: '#fff', minHeight: 200 }}>
           {showSuggestions && (
@@ -605,6 +613,13 @@ function SearchPageFallback() {
           borderBottom: 'none',
           background: '#fff',
           minHeight: 56,
+          position: 'fixed',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: LAYOUT_CONSTANTS.MAIN_CONTAINER.maxWidth,
+          zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -614,6 +629,8 @@ function SearchPageFallback() {
         <div style={{ flex: 1, height: 40, borderRadius: 20, background: '#fff', border: '1px solid #d0d5dd' }} />
         <div style={{ width: 72, height: 40, borderRadius: 20, background: '#e4e6eb' }} />
       </div>
+
+      <div style={{ height: SEARCH_HEADER_HEIGHT }} aria-hidden />
     </main>
   );
 }
