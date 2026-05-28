@@ -18,6 +18,7 @@ import { collectAvailableLegenderTerms, removeLegenderTermsFromQuery } from '@/u
 import { collectAvailableKapukTerms, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
 import { collectAvailableAutoTerms, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
 import { collectAvailablePhovinTerms, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
+import { collectAvailableKatheiyTerms, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -409,7 +410,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutLegenderTerms = removeLegenderTermsFromQuery(queryWithoutTeiyTerms);
     const queryWithoutKapukTerms = removeKapukTermsFromQuery(queryWithoutLegenderTerms);
     const queryWithoutAutoTerms = removeAutoTermsFromQuery(queryWithoutKapukTerms);
-    const queryWithoutFeatureTerms = removePhovinTermsFromQuery(queryWithoutAutoTerms);
+    const queryWithoutPhovinTerms = removePhovinTermsFromQuery(queryWithoutAutoTerms);
+    const queryWithoutFeatureTerms = removeKatheiyTermsFromQuery(queryWithoutPhovinTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -548,6 +550,9 @@ export async function GET(request: NextRequest) {
     const availablePhovinTerms = collectAvailablePhovinTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableKatheiyTerms = collectAvailableKatheiyTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
@@ -567,6 +572,9 @@ export async function GET(request: NextRequest) {
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsPhovinGroup = availablePhovinTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsKatheiyGroup = availableKatheiyTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
@@ -735,6 +743,17 @@ export async function GET(request: NextRequest) {
     const phovinSuggestions = availablePhovinTerms.map((term) => `${canonicalName} ${term}`);
 
     const phovinYearSuggestions = availablePhovinTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const katheiySuggestions = availableKatheiyTerms.map((term) => `${canonicalName} ${term}`);
+
+    const katheiyYearSuggestions = availableKatheiyTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -1081,6 +1100,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -1135,6 +1155,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1162,6 +1183,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1189,6 +1211,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1216,6 +1239,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1243,6 +1267,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1270,6 +1295,7 @@ export async function GET(request: NextRequest) {
       availableLegenderTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1297,6 +1323,7 @@ export async function GET(request: NextRequest) {
       availableLegenderTerms,
       availableKapukTerms,
       availablePhovinTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1324,6 +1351,7 @@ export async function GET(request: NextRequest) {
       availableLegenderTerms,
       availableKapukTerms,
       availableAutoTerms,
+      availableKatheiyTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1336,6 +1364,34 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availablePhovinTerms,
       phovinCompanionGroups,
+    );
+
+    const katheiyCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+      availableVxrTerms,
+      availableTeiyTerms,
+      availableLegenderTerms,
+      availableKapukTerms,
+      availableAutoTerms,
+      availablePhovinTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: katheiyMixedSuggestions,
+      mixedYearSuggestions: katheiyMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableKatheiyTerms,
+      katheiyCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -1368,6 +1424,8 @@ export async function GET(request: NextRequest) {
       ...autoYearSuggestions,
       ...phovinSuggestions,
       ...phovinYearSuggestions,
+      ...katheiySuggestions,
+      ...katheiyYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
@@ -1386,6 +1444,8 @@ export async function GET(request: NextRequest) {
       ...autoMixedYearSuggestions,
       ...phovinMixedSuggestions,
       ...phovinMixedYearSuggestions,
+      ...katheiyMixedSuggestions,
+      ...katheiyMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1425,6 +1485,7 @@ export async function GET(request: NextRequest) {
         ...availableKapukTerms,
         ...availableAutoTerms,
         ...availablePhovinTerms,
+        ...availableKatheiyTerms,
       ].filter(Boolean)),
     );
 
@@ -1468,6 +1529,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availablePhovinTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availablePhovinTerms
+          : []),
+        ...(availableKatheiyTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableKatheiyTerms
           : []),
       ].filter(Boolean)),
     );
@@ -1513,6 +1577,10 @@ export async function GET(request: NextRequest) {
           suggestion,
           canonicalName,
           queryTargetsPhovinGroup ? availablePhovinTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsKatheiyGroup ? availableKatheiyTerms : [],
         ),
       }))
       .sort((left, right) => {

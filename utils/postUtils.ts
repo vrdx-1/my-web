@@ -19,6 +19,7 @@ import { LEGENDER_SUGGESTION_TERMS, removeLegenderTermsFromQuery } from '@/utils
 import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
 import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
 import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
+import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -727,6 +728,10 @@ const PHOVIN_GROUP_NORMALIZED_SET = new Set(
   PHOVIN_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const KATHEIY_GROUP_NORMALIZED_SET = new Set(
+  KATHEIY_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -775,6 +780,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (PHOVIN_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(PHOVIN_SUGGESTION_TERMS);
+  }
+
+  if (KATHEIY_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(KATHEIY_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1276,7 +1285,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutLegender = removeLegenderTermsFromQuery(withoutTeiy);
   const withoutKapuk = removeKapukTermsFromQuery(withoutLegender);
   const withoutAuto = removeAutoTermsFromQuery(withoutKapuk);
-  const normalizedPrefix = removePhovinTermsFromQuery(withoutAuto).trim() || prefix;
+  const withoutPhovin = removePhovinTermsFromQuery(withoutAuto);
+  const normalizedPrefix = removeKatheiyTermsFromQuery(withoutPhovin).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
