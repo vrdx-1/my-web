@@ -701,63 +701,65 @@ export async function GET(request: NextRequest) {
     const postAnalysis = getOrCreatePostAnalysis(matchedSuggestionPosts);
     const collectAvailableTermsByIndex = (terms: string[]): string[] =>
       terms.filter((term) => getPostIdsForTerm(postAnalysis, term).size > 0);
+    const hasAnyAvailableTermInGroup = (terms: string[]): boolean =>
+      collectAvailableTermsByIndex(terms).length > 0;
 
     const featureQueryFragments = extractFeatureQueryFragments(queryWithBoundaries, canonicalName);
 
     const availableSmartCabTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(SMART_CAB_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(SMART_CAB_SUGGESTION_TERMS) ? SMART_CAB_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableLeftOriginalTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(LEFT_ORIGINAL_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(LEFT_ORIGINAL_SUGGESTION_TERMS) ? LEFT_ORIGINAL_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableMoveSteeringTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(MOVE_STEERING_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(MOVE_STEERING_SUGGESTION_TERMS) ? MOVE_STEERING_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableLaoCenterTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(LAO_CENTER_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(LAO_CENTER_SUGGESTION_TERMS) ? LAO_CENTER_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableChampTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(CHAMP_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(CHAMP_SUGGESTION_TERMS) ? CHAMP_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableRoccoTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(ROCCO_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(ROCCO_SUGGESTION_TERMS) ? ROCCO_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableVxlTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(VXL_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(VXL_SUGGESTION_TERMS) ? VXL_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableVxrTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(VXR_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(VXR_SUGGESTION_TERMS) ? VXR_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableTeiyTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(TEIY_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(TEIY_SUGGESTION_TERMS) ? TEIY_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableLegenderTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(LEGENDER_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(LEGENDER_SUGGESTION_TERMS) ? LEGENDER_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableKapukTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(KAPUK_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(KAPUK_SUGGESTION_TERMS) ? KAPUK_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableAutoTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(AUTO_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(AUTO_SUGGESTION_TERMS) ? AUTO_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availablePhovinTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(PHOVIN_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(PHOVIN_SUGGESTION_TERMS) ? PHOVIN_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const availableKatheiyTerms = selectPreferredSuggestionTerms(
-      collectAvailableTermsByIndex(KATHEIY_SUGGESTION_TERMS),
+      hasAnyAvailableTermInGroup(KATHEIY_SUGGESTION_TERMS) ? KATHEIY_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
