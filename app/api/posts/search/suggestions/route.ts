@@ -280,7 +280,9 @@ function scoreSuggestionByTypedIntent(
   availableFeatureTerms: string[],
   preferredFeatureTerms: string[],
 ): number {
-  if (suggestion === canonicalName) return 1_000_000;
+  if (suggestion === canonicalName) {
+    return featureQueryFragments.length === 0 ? 1_000_000 : 0;
+  }
   if (featureQueryFragments.length === 0) return 0;
 
   const suggestionNormalized = normalizeText(suggestion);
@@ -423,6 +425,68 @@ function isYearOnlySuggestion(suggestion: string, canonicalName: string): boolea
 
 function hasFeatureLikeQueryFragment(fragments: string[]): boolean {
   return fragments.some((fragment) => /[a-zA-Z\u0E00-\u0EFF]/u.test(fragment));
+}
+
+function scoreSuggestionTermAgainstQuery(term: string, featureQueryFragments: string[]): number {
+  const termNormalized = normalizeText(term);
+  const termCompact = compactNormalizedText(term);
+  if (!termNormalized && !termCompact) return Number.NEGATIVE_INFINITY;
+
+  if (featureQueryFragments.length === 0) {
+    return 0;
+  }
+
+  let score = 0;
+
+  for (const fragment of featureQueryFragments) {
+    const fragmentNormalized = normalizeText(fragment);
+    const fragmentCompact = compactNormalizedText(fragment);
+    if (!fragmentNormalized && !fragmentCompact) continue;
+
+    const termStartsWithFragment =
+      (!!fragmentNormalized && termNormalized.startsWith(fragmentNormalized))
+      || (!!fragmentCompact && termCompact.startsWith(fragmentCompact));
+    const fragmentStartsWithTerm =
+      (!!fragmentNormalized && fragmentNormalized.startsWith(termNormalized))
+      || (!!fragmentCompact && fragmentCompact.startsWith(termCompact));
+    const termContainsFragment =
+      (!!fragmentNormalized && termNormalized.includes(fragmentNormalized))
+      || (!!fragmentCompact && termCompact.includes(fragmentCompact));
+    const fragmentContainsTerm =
+      (!!fragmentNormalized && fragmentNormalized.includes(termNormalized))
+      || (!!fragmentCompact && fragmentCompact.includes(termCompact));
+
+    if (termStartsWithFragment) {
+      score += 1_000 + termNormalized.length;
+    } else if (fragmentStartsWithTerm) {
+      score += 850 + termNormalized.length;
+    } else if (termContainsFragment) {
+      score += 500;
+    } else if (fragmentContainsTerm) {
+      score += 250;
+    }
+  }
+
+  return score;
+}
+
+function selectPreferredSuggestionTerms(availableTerms: string[], featureQueryFragments: string[]): string[] {
+  if (availableTerms.length === 0) return [];
+
+  let bestTerm = availableTerms[0];
+  let bestScore = Number.NEGATIVE_INFINITY;
+
+  for (let index = 0; index < availableTerms.length; index += 1) {
+    const term = availableTerms[index];
+    const score = scoreSuggestionTermAgainstQuery(term, featureQueryFragments);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestTerm = term;
+    }
+  }
+
+  return bestTerm ? [bestTerm] : [];
 }
 
 function buildMixedSuggestionsForGroup(
@@ -638,20 +702,64 @@ export async function GET(request: NextRequest) {
     const collectAvailableTermsByIndex = (terms: string[]): string[] =>
       terms.filter((term) => getPostIdsForTerm(postAnalysis, term).size > 0);
 
-    const availableSmartCabTerms = collectAvailableTermsByIndex(SMART_CAB_SUGGESTION_TERMS);
-    const availableLeftOriginalTerms = collectAvailableTermsByIndex(LEFT_ORIGINAL_SUGGESTION_TERMS);
-    const availableMoveSteeringTerms = collectAvailableTermsByIndex(MOVE_STEERING_SUGGESTION_TERMS);
-    const availableLaoCenterTerms = collectAvailableTermsByIndex(LAO_CENTER_SUGGESTION_TERMS);
-    const availableChampTerms = collectAvailableTermsByIndex(CHAMP_SUGGESTION_TERMS);
-    const availableRoccoTerms = collectAvailableTermsByIndex(ROCCO_SUGGESTION_TERMS);
-    const availableVxlTerms = collectAvailableTermsByIndex(VXL_SUGGESTION_TERMS);
-    const availableVxrTerms = collectAvailableTermsByIndex(VXR_SUGGESTION_TERMS);
-    const availableTeiyTerms = collectAvailableTermsByIndex(TEIY_SUGGESTION_TERMS);
-    const availableLegenderTerms = collectAvailableTermsByIndex(LEGENDER_SUGGESTION_TERMS);
-    const availableKapukTerms = collectAvailableTermsByIndex(KAPUK_SUGGESTION_TERMS);
-    const availableAutoTerms = collectAvailableTermsByIndex(AUTO_SUGGESTION_TERMS);
-    const availablePhovinTerms = collectAvailableTermsByIndex(PHOVIN_SUGGESTION_TERMS);
-    const availableKatheiyTerms = collectAvailableTermsByIndex(KATHEIY_SUGGESTION_TERMS);
+    const featureQueryFragments = extractFeatureQueryFragments(queryWithBoundaries, canonicalName);
+
+    const availableSmartCabTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(SMART_CAB_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableLeftOriginalTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(LEFT_ORIGINAL_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableMoveSteeringTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(MOVE_STEERING_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableLaoCenterTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(LAO_CENTER_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableChampTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(CHAMP_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableRoccoTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(ROCCO_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableVxlTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(VXL_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableVxrTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(VXR_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableTeiyTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(TEIY_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableLegenderTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(LEGENDER_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableKapukTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(KAPUK_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableAutoTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(AUTO_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availablePhovinTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(PHOVIN_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
+    const availableKatheiyTerms = selectPreferredSuggestionTerms(
+      collectAvailableTermsByIndex(KATHEIY_SUGGESTION_TERMS),
+      featureQueryFragments,
+    );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
@@ -676,19 +784,10 @@ export async function GET(request: NextRequest) {
     const queryTargetsKatheiyGroup = availableKatheiyTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
-    const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
     const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
-    const smartCabTermsForSuggestionList = queryTargetsSmartCabGroup
-      ? Array.from(
-        new Set([
-          ...prioritizedSmartCabTerms,
-          ...SMART_CAB_SUGGESTION_TERMS,
-          ...availableSmartCabTerms,
-        ]),
-      )
-      : availableSmartCabTerms;
+    const smartCabTermsForSuggestionList = availableSmartCabTerms;
 
     const queryNormalized = normalizeText(queryWithBoundaries);
     const smartCabFirstIndex = firstIndexOfAnyTerm(queryNormalized, availableSmartCabTerms);
@@ -1635,8 +1734,8 @@ export async function GET(request: NextRequest) {
       ].filter(Boolean)),
     );
 
-    const featureQueryFragments = extractFeatureQueryFragments(queryWithBoundaries, canonicalName);
     const preferYearOnlySuggestions = !hasFeatureLikeQueryFragment(featureQueryFragments);
+    const preferCanonicalSuggestion = featureQueryFragments.length === 0;
 
     const rankedSuggestions = rawSuggestions
       .map((suggestion, index) => ({
@@ -1683,9 +1782,11 @@ export async function GET(request: NextRequest) {
         ),
       }))
       .sort((left, right) => {
-        const leftIsCanonical = left.suggestion === canonicalName;
-        const rightIsCanonical = right.suggestion === canonicalName;
-        if (leftIsCanonical !== rightIsCanonical) return leftIsCanonical ? -1 : 1;
+        if (preferCanonicalSuggestion) {
+          const leftIsCanonical = left.suggestion === canonicalName;
+          const rightIsCanonical = right.suggestion === canonicalName;
+          if (leftIsCanonical !== rightIsCanonical) return leftIsCanonical ? -1 : 1;
+        }
 
         if (preferYearOnlySuggestions) {
           const leftIsYearOnly = isYearOnlySuggestion(left.suggestion, canonicalName);
