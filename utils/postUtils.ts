@@ -18,6 +18,7 @@ import { TEIY_SUGGESTION_TERMS, removeTeiyTermsFromQuery } from '@/utils/teiySug
 import { LEGENDER_SUGGESTION_TERMS, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
 import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
 import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
+import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -722,6 +723,10 @@ const AUTO_GROUP_NORMALIZED_SET = new Set(
   AUTO_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const PHOVIN_GROUP_NORMALIZED_SET = new Set(
+  PHOVIN_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -766,6 +771,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (AUTO_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(AUTO_SUGGESTION_TERMS);
+  }
+
+  if (PHOVIN_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(PHOVIN_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1266,7 +1275,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutTeiy = removeTeiyTermsFromQuery(withoutVxr);
   const withoutLegender = removeLegenderTermsFromQuery(withoutTeiy);
   const withoutKapuk = removeKapukTermsFromQuery(withoutLegender);
-  const normalizedPrefix = removeAutoTermsFromQuery(withoutKapuk).trim() || prefix;
+  const withoutAuto = removeAutoTermsFromQuery(withoutKapuk);
+  const normalizedPrefix = removePhovinTermsFromQuery(withoutAuto).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 
