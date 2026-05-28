@@ -14,6 +14,7 @@ import { collectAvailableRoccoTerms, removeRoccoTermsFromQuery } from '@/utils/r
 import { collectAvailableVxlTerms, removeVxlTermsFromQuery } from '@/utils/vxlSuggestionTerms';
 import { collectAvailableVxrTerms, removeVxrTermsFromQuery } from '@/utils/vxrSuggestionTerms';
 import { collectAvailableTeiyTerms, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
+import { collectAvailableLegenderTerms, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -401,7 +402,9 @@ export async function GET(request: NextRequest) {
     const queryWithoutRoccoTerms = removeRoccoTermsFromQuery(queryWithoutChampTerms);
     const queryWithoutVxlTerms = removeVxlTermsFromQuery(queryWithoutRoccoTerms);
     const queryWithoutVxrTerms = removeVxrTermsFromQuery(queryWithoutVxlTerms);
-    const baseQuery = getModelNameFromQuery(queryWithoutVxrTerms);
+    const queryWithoutTeiyTerms = removeTeiyTermsFromQuery(queryWithoutVxrTerms);
+    const queryWithoutFeatureTerms = removeLegenderTermsFromQuery(queryWithoutTeiyTerms);
+    const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
     const leadingLatinTokenMatch = queryWithBoundaries.match(/^([a-zA-Z0-9]+)/);
@@ -492,7 +495,7 @@ export async function GET(request: NextRequest) {
     const availableYears = generateYearSuggestions(terms, matchedPosts);
 
     // Filter by full year match OR partial year prefix (e.g. "revo20" → show years starting with "20")
-    const partialPrefix = extractPartialYearPrefix(queryWithoutVxrTerms) ?? trailingDigitsPrefix;
+    const partialPrefix = extractPartialYearPrefix(queryWithoutFeatureTerms) ?? trailingDigitsPrefix;
     const yearsForSuggestions = queryYears.length > 0
       ? availableYears.filter((year) => queryYears.includes(year))
       : partialPrefix
@@ -527,6 +530,9 @@ export async function GET(request: NextRequest) {
     const availableTeiyTerms = collectAvailableTeiyTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableLegenderTerms = collectAvailableLegenderTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
@@ -534,6 +540,9 @@ export async function GET(request: NextRequest) {
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsTeiyGroup = availableTeiyTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsLegenderGroup = availableLegenderTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
@@ -658,6 +667,17 @@ export async function GET(request: NextRequest) {
     const teiySuggestions = availableTeiyTerms.map((term) => `${canonicalName} ${term}`);
 
     const teiyYearSuggestions = availableTeiyTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const legenderSuggestions = availableLegenderTerms.map((term) => `${canonicalName} ${term}`);
+
+    const legenderYearSuggestions = availableLegenderTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -1000,6 +1020,7 @@ export async function GET(request: NextRequest) {
       availableVxlTerms,
       availableVxrTerms,
       availableTeiyTerms,
+      availableLegenderTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -1050,6 +1071,7 @@ export async function GET(request: NextRequest) {
       availableVxlTerms,
       availableVxrTerms,
       availableTeiyTerms,
+      availableLegenderTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1073,6 +1095,7 @@ export async function GET(request: NextRequest) {
       availableRoccoTerms,
       availableVxrTerms,
       availableTeiyTerms,
+      availableLegenderTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1096,6 +1119,7 @@ export async function GET(request: NextRequest) {
       availableRoccoTerms,
       availableVxlTerms,
       availableTeiyTerms,
+      availableLegenderTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1119,6 +1143,7 @@ export async function GET(request: NextRequest) {
       availableRoccoTerms,
       availableVxlTerms,
       availableVxrTerms,
+      availableLegenderTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1131,6 +1156,30 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableTeiyTerms,
       teiyCompanionGroups,
+    );
+
+    const legenderCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+      availableVxrTerms,
+      availableTeiyTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: legenderMixedSuggestions,
+      mixedYearSuggestions: legenderMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableLegenderTerms,
+      legenderCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -1155,6 +1204,8 @@ export async function GET(request: NextRequest) {
       ...vxrYearSuggestions,
       ...teiySuggestions,
       ...teiyYearSuggestions,
+      ...legenderSuggestions,
+      ...legenderYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
@@ -1165,6 +1216,8 @@ export async function GET(request: NextRequest) {
       ...vxrMixedYearSuggestions,
       ...teiyMixedSuggestions,
       ...teiyMixedYearSuggestions,
+      ...legenderMixedSuggestions,
+      ...legenderMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1200,6 +1253,7 @@ export async function GET(request: NextRequest) {
         ...availableVxlTerms,
         ...availableVxrTerms,
         ...availableTeiyTerms,
+        ...availableLegenderTerms,
       ].filter(Boolean)),
     );
 
@@ -1232,6 +1286,9 @@ export async function GET(request: NextRequest) {
         ...(availableTeiyTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableTeiyTerms
           : []),
+        ...(availableLegenderTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableLegenderTerms
+          : []),
       ].filter(Boolean)),
     );
 
@@ -1260,6 +1317,10 @@ export async function GET(request: NextRequest) {
           suggestion,
           canonicalName,
           queryTargetsTeiyGroup ? availableTeiyTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsLegenderGroup ? availableLegenderTerms : [],
         ),
       }))
       .sort((left, right) => {
