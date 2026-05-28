@@ -81,6 +81,8 @@ function HomeHeaderChromeContainer({
 }
 
 function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
+    // Prefetch notification/profile หลังโหลดโฮมสำเร็จ (firstFeedLoaded)
+    // (firstFeedLoaded จะถูกประกาศทีเดียวด้านล่าง ไม่ซ้ำ)
   const router = useRouter();
   const pathname = usePathname();
   const [initialPathname] = useState(() =>

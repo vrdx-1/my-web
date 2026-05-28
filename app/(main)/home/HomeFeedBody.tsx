@@ -81,6 +81,17 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     hideBoost = false,
   } = postFeedProps;
 
+  // เพิ่ม state สำหรับ skeleton transition (กันจอขาวระหว่างเปลี่ยน tab หรือโหลดใหม่)
+  const [showingSkeleton, setShowingSkeleton] = React.useState(showSkeleton);
+  React.useEffect(() => {
+    if (showSkeleton) setShowingSkeleton(true);
+    else {
+      // delay hide skeleton เล็กน้อยเพื่อกันกระพริบ
+      const t = setTimeout(() => setShowingSkeleton(false), 120);
+      return () => clearTimeout(t);
+    }
+  }, [showSkeleton]);
+
   const observerRef = React.useRef<IntersectionObserver | null>(null);
   const elementToPostIdRef = React.useRef<WeakMap<Element, string>>(new WeakMap());
   const postToElementRef = React.useRef<Map<string, HTMLElement>>(new Map());
@@ -212,8 +223,9 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     };
   }, []);
 
+  // เงื่อนไข skeleton ที่ครอบคลุม: loading, empty, กำลังเปลี่ยน tab, หรือ transition
   const effectivelyShowSkeleton =
-    showSkeleton ||
+    showingSkeleton ||
     (forceSkeletonWhenEmpty && posts.length === 0) ||
     (isSearchLoading && posts.length === 0);
 

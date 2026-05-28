@@ -1,17 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { hasRouteVisited } from '@/utils/visitedRoutesStore';
 
 /**
- * Skeleton หน้าโฮม — แสดงเฉพาะโหลดครั้งแรก ถ้าเคยโหลดแล้วไม่แสดง (แบบ Facebook)
+ * Skeleton หน้าโฮม — แสดงทันทีที่โหลด, ถ้าเคยเข้าแล้วจะไม่กระพริบ (ใช้ useRef จำ state)
  */
 export default function HomeLoading() {
   const pathname = usePathname();
-  if (hasRouteVisited(pathname)) return null;
+  const shownRef = useRef(false);
+  if (hasRouteVisited(pathname)) {
+    shownRef.current = true;
+    return null;
+  }
+  if (shownRef.current) return null;
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
       <FeedSkeleton count={3} />

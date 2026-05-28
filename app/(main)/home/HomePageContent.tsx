@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { HomePagePanels } from './HomePagePanels';
@@ -14,16 +14,10 @@ import {
   recordHomeMotionDuration,
 } from '@/lib/homeMotionProfiler';
 
-function subscribeToClientMount() {
-  return () => {};
-}
-
 export function HomePageContent() {
-  const clientMounted = useSyncExternalStore(
-    subscribeToClientMount,
-    () => true,
-    () => false,
-  );
+  // optimize hydration: ใช้ useState + useEffect เพื่อให้ skeleton แสดงจนกว่าจะ mount จริง
+  const [clientMounted, setClientMounted] = useState(false);
+  useEffect(() => { setClientMounted(true); }, []);
 
   const {
     effectiveSession,
@@ -90,13 +84,10 @@ export function HomePageContent() {
 
   /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
   if (!clientMounted) {
+    // แสดง skeleton เต็มหน้าจอทันที (กันจอขาว)
     return (
       <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-        <div>
-          <div ref={recommendPanelRef} style={{ display: 'block' }} aria-hidden={false}>
-            <FeedSkeleton count={3} />
-          </div>
-        </div>
+        <FeedSkeleton count={3} />
       </main>
     );
   }
