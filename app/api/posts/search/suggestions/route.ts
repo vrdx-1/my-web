@@ -16,6 +16,7 @@ import { collectAvailableVxrTerms, removeVxrTermsFromQuery } from '@/utils/vxrSu
 import { collectAvailableTeiyTerms, removeTeiyTermsFromQuery } from '@/utils/teiySuggestionTerms';
 import { collectAvailableLegenderTerms, removeLegenderTermsFromQuery } from '@/utils/legenderSuggestionTerms';
 import { collectAvailableKapukTerms, removeKapukTermsFromQuery } from '@/utils/kapukSuggestionTerms';
+import { collectAvailableAutoTerms, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -405,7 +406,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutVxrTerms = removeVxrTermsFromQuery(queryWithoutVxlTerms);
     const queryWithoutTeiyTerms = removeTeiyTermsFromQuery(queryWithoutVxrTerms);
     const queryWithoutLegenderTerms = removeLegenderTermsFromQuery(queryWithoutTeiyTerms);
-    const queryWithoutFeatureTerms = removeKapukTermsFromQuery(queryWithoutLegenderTerms);
+    const queryWithoutKapukTerms = removeKapukTermsFromQuery(queryWithoutLegenderTerms);
+    const queryWithoutFeatureTerms = removeAutoTermsFromQuery(queryWithoutKapukTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -538,6 +540,9 @@ export async function GET(request: NextRequest) {
     const availableKapukTerms = collectAvailableKapukTerms(
       matchedPosts as Array<{ caption?: unknown }>
     );
+    const availableAutoTerms = collectAvailableAutoTerms(
+      matchedPosts as Array<{ caption?: unknown }>
+    );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
@@ -551,6 +556,9 @@ export async function GET(request: NextRequest) {
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsKapukGroup = availableKapukTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsAutoGroup = availableAutoTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
     const prioritizedSmartCabTerms = ['ແຄັບ', 'cap', 'smartcap', 'smart cap', 'smartcab', 'smart-cab'];
@@ -697,6 +705,17 @@ export async function GET(request: NextRequest) {
     const kapukSuggestions = availableKapukTerms.map((term) => `${canonicalName} ${term}`);
 
     const kapukYearSuggestions = availableKapukTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const autoSuggestions = availableAutoTerms.map((term) => `${canonicalName} ${term}`);
+
+    const autoYearSuggestions = availableAutoTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -1041,6 +1060,7 @@ export async function GET(request: NextRequest) {
       availableTeiyTerms,
       availableLegenderTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -1093,6 +1113,7 @@ export async function GET(request: NextRequest) {
       availableTeiyTerms,
       availableLegenderTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1118,6 +1139,7 @@ export async function GET(request: NextRequest) {
       availableTeiyTerms,
       availableLegenderTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1143,6 +1165,7 @@ export async function GET(request: NextRequest) {
       availableTeiyTerms,
       availableLegenderTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1168,6 +1191,7 @@ export async function GET(request: NextRequest) {
       availableVxrTerms,
       availableLegenderTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1193,6 +1217,7 @@ export async function GET(request: NextRequest) {
       availableVxrTerms,
       availableTeiyTerms,
       availableKapukTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1218,6 +1243,7 @@ export async function GET(request: NextRequest) {
       availableVxrTerms,
       availableTeiyTerms,
       availableLegenderTerms,
+      availableAutoTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1230,6 +1256,32 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableKapukTerms,
       kapukCompanionGroups,
+    );
+
+    const autoCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+      availableVxrTerms,
+      availableTeiyTerms,
+      availableLegenderTerms,
+      availableKapukTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: autoMixedSuggestions,
+      mixedYearSuggestions: autoMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableAutoTerms,
+      autoCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -1258,6 +1310,8 @@ export async function GET(request: NextRequest) {
       ...legenderYearSuggestions,
       ...kapukSuggestions,
       ...kapukYearSuggestions,
+      ...autoSuggestions,
+      ...autoYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
@@ -1272,6 +1326,8 @@ export async function GET(request: NextRequest) {
       ...legenderMixedYearSuggestions,
       ...kapukMixedSuggestions,
       ...kapukMixedYearSuggestions,
+      ...autoMixedSuggestions,
+      ...autoMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1309,6 +1365,7 @@ export async function GET(request: NextRequest) {
         ...availableTeiyTerms,
         ...availableLegenderTerms,
         ...availableKapukTerms,
+        ...availableAutoTerms,
       ].filter(Boolean)),
     );
 
@@ -1347,6 +1404,9 @@ export async function GET(request: NextRequest) {
         ...(availableKapukTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableKapukTerms
           : []),
+        ...(availableAutoTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableAutoTerms
+          : []),
       ].filter(Boolean)),
     );
 
@@ -1383,6 +1443,10 @@ export async function GET(request: NextRequest) {
           suggestion,
           canonicalName,
           queryTargetsKapukGroup ? availableKapukTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsAutoGroup ? availableAutoTerms : [],
         ),
       }))
       .sort((left, right) => {
