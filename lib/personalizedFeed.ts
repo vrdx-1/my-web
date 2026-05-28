@@ -1,4 +1,51 @@
 /**
+ * สร้าง feed ที่เรียงโพสต์ตามความนิยม (trending) โดย interleave verified/unverified 7:1 และแทรก boost ตามเดิม
+ * ใช้สำหรับ global feed ที่ cache ร่วมกันได้ทุกคน
+ */
+export function buildTrendingFeedOrder(
+  rows: PersonalizedFeedRow[],
+  trendingTerms: TrendingTerm[],
+  feedSeed: string
+): string[] {
+  // 1. แยก boosted post ออกก่อน
+  const boosted: PersonalizedFeedRow[] = [];
+  const nonBoosted: PersonalizedFeedRow[] = [];
+  for (const row of rows) {
+    if (row.is_boosted) boosted.push(row);
+    else nonBoosted.push(row);
+  }
+
+  // 2. สร้าง map สำหรับความนิยม (term → count)
+  const trendingMap = new Map<string, number>();
+  for (const t of trendingTerms) {
+    trendingMap.set(t.search_term.trim().toLowerCase(), t.count);
+  }
+
+  // 3. ให้คะแนนโพสต์แต่ละโพสต์ตาม term ที่ match ใน caption
+  const scored: Array<{ row: PersonalizedFeedRow; score: number }> = nonBoosted.map((row) => {
+    const caption = (row.caption || '').toLowerCase();
+    let score = 0;
+    for (const [term, count] of trendingMap.entries()) {
+      if (term.length > 1 && caption.includes(term)) score += count;
+    }
+    return { row, score };
+  });
+
+  // 4. เรียงโพสต์ตามคะแนนความนิยม (มาก → น้อย)
+  scored.sort((a, b) => b.score - a.score || (b.row.created_at || '').localeCompare(a.row.created_at || ''));
+
+  // 5. แยก verified/unverified
+  const verified = scored.filter(s => s.row.profiles?.is_verified === true).map(s => s.row.id);
+  const unverified = scored.filter(s => s.row.profiles?.is_verified !== true).map(s => s.row.id);
+
+  // 6. Interleave verified:unverified 7:1
+  const interleaved = interleaveVerifiedRatio(verified, unverified, VERIFIED_PER_UNVERIFIED);
+
+  // 7. Interleave boosted ทุก BOOST_INTERVAL
+  const boostedIds = interleaveByAccount(boosted, feedSeed).map(r => r.id);
+  return interleaveBoost(interleaved, boostedIds, BOOST_INTERVAL);
+}
+/**
  * Personalized Feed — scoring & ordering logic
  *
  * Priority order (highest → lowest):
