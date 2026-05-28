@@ -37,9 +37,10 @@ function SearchPageContent() {
   const [historyStatus, setHistoryStatus] = useState<HistoryStatus>('idle');
   const [yearSuggestions, setYearSuggestions] = useState<string[]>([]);
   const [loadingYearSuggestions, setLoadingYearSuggestions] = useState(false);
-  const [suggestionsPage, setSuggestionsPage] = useState(1);
-  const [suggestionsHasMore, setSuggestionsHasMore] = useState(false);
-  const [loadingMoreSuggestions, setLoadingMoreSuggestions] = useState(false);
+  // ดึง suggestion ทั้งหมดในครั้งเดียว ไม่ต้องแบ่งหน้า
+  // const [suggestionsPage, setSuggestionsPage] = useState(1);
+  // const [suggestionsHasMore, setSuggestionsHasMore] = useState(false);
+  // const [loadingMoreSuggestions, setLoadingMoreSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsSentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,97 +49,43 @@ function SearchPageContent() {
     setQuery((prev) => (prev !== qFromUrl ? qFromUrl : prev));
   }, [qFromUrl]);
 
-  const loadSuggestionPage = useCallback(async (q: string, page: number, append: boolean) => {
+  // โหลด suggestion ทั้งหมดในครั้งเดียว (pageSize=1200)
+  const loadSuggestionPage = useCallback(async (q: string) => {
     const qTrim = q.trim();
     if (!qTrim) {
       setYearSuggestions([]);
-      setSuggestionsPage(1);
-      setSuggestionsHasMore(false);
       return;
     }
-
     try {
-      if (append) {
-        setLoadingMoreSuggestions(true);
-      } else {
-        setLoadingYearSuggestions(true);
-      }
-
+      setLoadingYearSuggestions(true);
       const response = await fetch(
-        `/api/posts/search/suggestions?q=${encodeURIComponent(qTrim)}&page=${page}&pageSize=200`
+        `/api/posts/search/suggestions?q=${encodeURIComponent(qTrim)}&page=1&pageSize=1200`
       );
       const data = await response.json();
       const apiSuggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
-      const pagination = (data?.pagination ?? null) as SuggestionsPagination | null;
-      const hasMore = !!pagination?.hasMore;
-      const nextPage = pagination?.nextPage ?? null;
-
-      setYearSuggestions((prev) => {
-        if (!append) return apiSuggestions;
-        const merged = [...prev, ...apiSuggestions];
-        return merged.filter((item, index, arr) => arr.indexOf(item) === index);
-      });
-
-      if (hasMore && typeof nextPage === 'number') {
-        setSuggestionsPage(nextPage);
-      }
-      setSuggestionsHasMore(hasMore);
+      setYearSuggestions(apiSuggestions);
     } catch (err) {
       console.error('Failed to fetch year suggestions:', err);
-      if (!append) {
-        setYearSuggestions([]);
-        setSuggestionsHasMore(false);
-      }
+      setYearSuggestions([]);
     } finally {
       setLoadingYearSuggestions(false);
-      setLoadingMoreSuggestions(false);
     }
   }, []);
 
-  // Fetch first page suggestions from API.
+  // Fetch all suggestions from API in one request.
   useEffect(() => {
     const q = query.trim();
     if (q.length === 0) {
       setYearSuggestions([]);
-      setSuggestionsPage(1);
-      setSuggestionsHasMore(false);
       return;
     }
-
     const timer = setTimeout(() => {
-      void loadSuggestionPage(q, 1, false);
+      void loadSuggestionPage(q);
     }, 300); // Debounce
-
     return () => clearTimeout(timer);
   }, [query, loadSuggestionPage]);
 
-  // Infinite load for suggestions when scrolling to the bottom.
-  useEffect(() => {
-    const shouldShowSuggestions = query.trim().length > 0;
-    if (!shouldShowSuggestions || !suggestionsHasMore || loadingMoreSuggestions || loadingYearSuggestions) return;
-
-    const node = suggestionsSentinelRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting) return;
-        if (loadingMoreSuggestions || loadingYearSuggestions) return;
-        void loadSuggestionPage(query, suggestionsPage, true);
-      },
-      { root: null, rootMargin: '0px 0px 320px 0px', threshold: 0 }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [
-    query,
-    suggestionsHasMore,
-    loadingMoreSuggestions,
-    loadingYearSuggestions,
-    loadSuggestionPage,
-    suggestionsPage,
-  ]);
+  // ตัด infinite scroll/observer suggestion ออก (โหลดทีเดียว)
 
   const suggestions = useMemo(() => {
     const q = query.trim();
@@ -523,8 +470,7 @@ function SearchPageContent() {
                   </li>
                 ))}
               </ul>
-              {loadingMoreSuggestions && <div style={{ minHeight: 16 }} />}
-              {suggestionsHasMore && <div ref={suggestionsSentinelRef} style={{ height: 1 }} aria-hidden />}
+              {/* infinite scroll ถูกตัดออก suggestion โหลดทีเดียว */}
             </>
           )}
           {showHistoryLoading && (
