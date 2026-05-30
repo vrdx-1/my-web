@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { HOME_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE } from '@/utils/constants';
+import { HOME_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FIRST_BATCH_FEED_PAGE_SIZE } from '@/utils/constants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
@@ -91,6 +91,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     return getInitialPostsFromStorage(province);
   });
   const [page, setPage] = useState(0);
+  // state สำหรับ track ว่าโหลด batch 5 โพสต์แรกแล้วหรือยัง
+  const [firstBatchLoaded, setFirstBatchLoaded] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
@@ -115,6 +117,17 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   useEffect(() => {
     onInitialLoadDoneRef.current = onInitialLoadDone;
   }, [onInitialLoadDone]);
+
+  // หลัง initial load 2 โพสต์แรกเสร็จ ให้ trigger โหลด 5 โพสต์ถัดไปทันที (ถ้ายังไม่โหลด)
+  useEffect(() => {
+    if (posts.length === INITIAL_FEED_PAGE_SIZE && !firstBatchLoaded && hasMore) {
+      setFirstBatchLoaded(true);
+      // โหลด 5 โพสต์ถัดไป
+      (async () => {
+        await fetchPosts(false, undefined, false, FIRST_BATCH_FEED_PAGE_SIZE);
+      })();
+    }
+  }, [posts.length, firstBatchLoaded, hasMore]);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -201,7 +214,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     return () => { likesSavesCancelled = true; };
   }, [sessionReady, currentSession, sharedLikedSaved]);
 
-  const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false) => {
+  // เพิ่ม pageSizeOverride สำหรับ batch 5 โพสต์แรก
+  const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false, pageSizeOverride?: number) => {
     if (loadingMore && !isInitial) return;
     // Explicit refresh/reload: force a new seed so backend bypasses cached ordering.
     if (isInitial && forceNewSeedOnNextInitialFetchRef.current) {
@@ -224,7 +238,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
     // โหลดเพิ่มใช้ offset จากจำนวนโพสต์จริง (ไม่ใช้ page) เพื่อไม่ข้ามรายการเมื่อ backend คืนน้อยกว่าที่ขอ
     const rangeStart = currentPage === 0 ? 0 : postsLengthRef.current;
-    const pageSize = isInitial ? INITIAL_FEED_PAGE_SIZE : HOME_FEED_PAGE_SIZE;
+    let pageSize = isInitial ? INITIAL_FEED_PAGE_SIZE : HOME_FEED_PAGE_SIZE;
+    if (!isInitial && pageSizeOverride) pageSize = pageSizeOverride;
     const rangeEnd = rangeStart + pageSize - 1;
 
     try {
