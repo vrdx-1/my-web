@@ -41,7 +41,7 @@ export const HOME_FEED_PAGE_SIZE = 20;
 /** จำนวนโพสต์ที่โหลดต่อทันทีหลัง initial (เช่น 5 โพสต์) */
 export const FIRST_BATCH_FEED_PAGE_SIZE = 5;
 /** อายุ cache ฟีดหน้าโฮม (มิลลิวินาที) — ใช้แสดงผลทันทีเมื่อกลับมาเปิดเว็บ แล้วค่อยโหลดที่อัปเดตใหม่ทีหลัง */
-export const FEED_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 ชั่วโมง
+export const FEED_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 ชั่วโมง
 /** จำนวนการแจ้งเตือนต่อหน้า (lazy load หน้า Notification) */
 export const NOTIFICATION_PAGE_SIZE = 20;
 /** อายุ cache รายการหน้าแจ้งเตือน (มิลลิวินาที) — แสดงของเก่าก่อน แล้วโหลดใหม่ด้านหลัง */

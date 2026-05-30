@@ -444,18 +444,31 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
   const initialLoadFromCacheRef = useRef(false);
 
+  // ดึงโพสต์จาก cache แล้ว random ใหม่ทุกครั้งที่ refresh
   const refreshData = useCallback(async () => {
     setPage(0);
     setHasMore(true);
-    forceNewSeedOnNextInitialFetchRef.current = true;
-    feedSeedRef.current = null;
-    try {
-      clearHomeFeedStorage({ clearCache: true });
-    } catch {
-      // ignore
+    // ดึงโพสต์จาก cache
+    const { fromCache, initialPosts, hasMore: initialHasMore } = prepareInitialHomeFeedState(province);
+    if (fromCache && Array.isArray(initialPosts) && initialPosts.length > 0) {
+      // shuffle โพสต์ใน cache
+      const shuffled = [...initialPosts];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      setPosts(shuffled);
+      setHasMore(initialHasMore);
+    } else {
+      // ถ้าไม่มี cache ให้ fetch ใหม่จาก server
+      forceNewSeedOnNextInitialFetchRef.current = true;
+      feedSeedRef.current = null;
+      try {
+        clearHomeFeedStorage({ clearCache: true });
+      } catch {}
+      await fetchPosts(true);
     }
-    await fetchPosts(true);
-  }, [fetchPosts]);
+  }, [fetchPosts, province]);
 
   useEffect(() => {
     const currentUserId =
