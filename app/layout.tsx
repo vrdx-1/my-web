@@ -6,6 +6,7 @@ import { BackHandlerProvider } from "@/components/BackHandlerContext";
 import RedirectToHomeOnReturn from "@/components/RedirectToHomeOnReturn";
 import { ErrorBoundaryWrapper } from "@/components/ErrorBoundaryWrapper";
 import { SWRProvider } from "@/components/SWRProvider";
+import { SuggestionTermsProvider } from "@/contexts/SuggestionTermsContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { DailyVisitorTracker } from "@/components/DailyVisitorTracker";
 import { BottomNavWrapper } from "@/components/BottomNavWrapper";
@@ -69,7 +70,8 @@ export default function RootLayout({
       >
         <DevServiceWorkerReset />
         <ErrorBoundaryWrapper>
-          <SWRProvider>
+          <SuggestionTermsProvider>
+            <SWRProvider>
             {/* กดย้อนกลับ (browser/มือถือ) ปิด overlay ตามสเต็ป แล้ว back ตามสเต็ป */}
             <CreatePostProvider>
             <NotificationRefreshProvider>
@@ -90,7 +92,8 @@ export default function RootLayout({
             </HomeRefreshProvider>
             </NotificationRefreshProvider>
             </CreatePostProvider>
-          </SWRProvider>
+            </SWRProvider>
+          </SuggestionTermsProvider>
         </ErrorBoundaryWrapper>
       </body>
     </html>
