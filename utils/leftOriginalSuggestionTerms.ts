@@ -9,6 +9,7 @@ export const LEFT_ORIGINAL_SUGGESTION_TERMS: string[] = [
   'ຊາຍເດມ',
   'ຊ້າຍເດມ',
   'ຊ້ວຍເດີມ',
+  'ຊ້ວຍເດີ່ມ',
   'ຊ້ວຍເດິມ',
   'ຊ້ວຍເດມ',
   'ຊວຍເດີມ',
