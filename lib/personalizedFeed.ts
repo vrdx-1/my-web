@@ -5,7 +5,8 @@
 export function buildTrendingFeedOrder(
   rows: PersonalizedFeedRow[],
   trendingTerms: TrendingTerm[],
-  feedSeed: string
+  feedSeed: string,
+  ownerUserId?: string
 ): string[] {
   // 1. แยก boosted post ออกก่อน
   const boosted: PersonalizedFeedRow[] = [];
@@ -13,6 +14,14 @@ export function buildTrendingFeedOrder(
   for (const row of rows) {
     if (row.is_boosted) boosted.push(row);
     else nonBoosted.push(row);
+  }
+
+  // 1.1 ถ้ามี ownerUserId ให้แยก boost ของเจ้าของไว้
+  let ownerBoosted: PersonalizedFeedRow[] = [];
+  let otherBoosted: PersonalizedFeedRow[] = boosted;
+  if (ownerUserId) {
+    ownerBoosted = boosted.filter(b => b.user_id === ownerUserId);
+    otherBoosted = boosted.filter(b => b.user_id !== ownerUserId);
   }
 
   // 2. สร้าง map สำหรับความนิยม (term → count)
@@ -41,9 +50,19 @@ export function buildTrendingFeedOrder(
   // 6. Interleave verified:unverified 7:1
   const interleaved = interleaveVerifiedRatio(verified, unverified, VERIFIED_PER_UNVERIFIED);
 
-  // 7. Interleave boosted ทุก BOOST_INTERVAL
-  const boostedIds = interleaveByAccount(boosted, feedSeed).map(r => r.id);
-  return interleaveBoost(interleaved, boostedIds, BOOST_INTERVAL);
+  // 7. Interleave boosted ทุก BOOST_INTERVAL (ยกเว้น ownerBoosted จะอยู่บนสุด)
+  const boostedIds = interleaveByAccount(otherBoosted, feedSeed).map(r => r.id);
+  let result = interleaveBoost(interleaved, boostedIds, BOOST_INTERVAL);
+  if (ownerBoosted.length > 0) {
+    // ownerBoosted เรียงตาม created_at ใหม่สุดก่อน
+    const sortedOwnerBoosted = [...ownerBoosted].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+    const ownerIds = sortedOwnerBoosted.map(r => r.id);
+    // ลบ id เหล่านี้ออกจาก result ก่อน (กันซ้ำ)
+    result = result.filter(id => !ownerIds.includes(id));
+    // prepend owner boost
+    result = [...ownerIds, ...result];
+  }
+  return result;
 }
 /**
  * Personalized Feed — scoring & ordering logic
