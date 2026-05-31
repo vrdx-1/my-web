@@ -86,6 +86,9 @@ function isBrowserReloadNavigation(): boolean {
 }
 
 export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
+  // HYBRID FEED LOGIC: ใช้ cache เสมอ + ดึง boost สดจาก DB เสมอ
+  // - backend จะ merge cache + boost สด และจัดเรียง owner boost ให้อยู่บนสุดถ้า user เป็นเจ้าของ
+  // - ต้องส่ง activeProfileId/authUserId เสมอ เพื่อให้ backend จัด feed owner boost ให้ถูกต้อง
   const { session, activeProfileId, authUserId, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
   const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
     if (isBrowserReloadNavigation()) return [];
@@ -216,6 +219,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   }, [sessionReady, currentSession, sharedLikedSaved]);
 
   // เพิ่ม pageSizeOverride สำหรับ batch 5 โพสต์แรก
+  // ดึง feed แบบ hybrid: cache เสมอ + boost สดเสมอ (backend merge ให้)
+  // ถ้า user เป็นเจ้าของ boost backend จะจัด boost owner ให้อยู่บนสุด
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number, backgroundRefresh = false, pageSizeOverride?: number) => {
     if (loadingMore && !isInitial) return;
     // Explicit refresh/reload: force a new seed so backend bypasses cached ordering.
@@ -261,6 +266,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
       if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
+      // ส่ง user id/profie id เสมอ เพื่อให้ backend จัด boost owner ให้ถูกต้อง
       if (typeof activeProfileId === 'string' && activeProfileId.trim()) {
         body.activeProfileId = activeProfileId.trim();
       }
@@ -301,6 +307,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       }
 
       // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
+      // backend จะ merge cache + boost สด และจัดเรียง owner boost ให้อัตโนมัติ
       const cursor = !isInitial ? lastPostRef.current : null;
       if (cursor) {
         body.cursorId = cursor.id;
