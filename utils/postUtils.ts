@@ -21,6 +21,7 @@ import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSug
 import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS, removeFullOptionTermsFromQuery } from '@/utils/fullOptionSuggestionTerms';
+import { TAENG_SOM_SUGGESTION_TERMS, removeTaengSomTermsFromQuery } from '@/utils/taengSomSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { CATEGORY_MODELS } from '@/data/category-models';
@@ -737,6 +738,10 @@ const FULL_OPTION_GROUP_NORMALIZED_SET = new Set(
   FULL_OPTION_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const TAENG_SOM_GROUP_NORMALIZED_SET = new Set(
+  TAENG_SOM_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const SMART_CAB_GROUP_NORMALIZED_SET = new Set(
   SMART_CAB_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -793,6 +798,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (FULL_OPTION_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(FULL_OPTION_SUGGESTION_TERMS);
+  }
+
+  if (TAENG_SOM_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(TAENG_SOM_SUGGESTION_TERMS);
   }
 
   const expanded = expandCarSearchAliases(query);
@@ -1296,7 +1305,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutAuto = removeAutoTermsFromQuery(withoutKapuk);
   const withoutPhovin = removePhovinTermsFromQuery(withoutAuto);
   const withoutKatheiy = removeKatheiyTermsFromQuery(withoutPhovin);
-  const normalizedPrefix = removeFullOptionTermsFromQuery(withoutKatheiy).trim() || prefix;
+  const withoutFullOption = removeFullOptionTermsFromQuery(withoutKatheiy);
+  const normalizedPrefix = removeTaengSomTermsFromQuery(withoutFullOption).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
 

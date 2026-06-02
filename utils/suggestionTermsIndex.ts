@@ -15,6 +15,7 @@ import { AUTO_SUGGESTION_TERMS } from './autoSuggestionTerms';
 import { PHOVIN_SUGGESTION_TERMS } from './phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS } from './katheiySuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS } from './fullOptionSuggestionTerms';
+import { TAENG_SOM_SUGGESTION_TERMS } from './taengSomSuggestionTerms';
 
 export const ALL_SUGGESTION_TERMS: string[] = [
   ...SMART_CAB_SUGGESTION_TERMS,
@@ -31,6 +32,7 @@ export const ALL_SUGGESTION_TERMS: string[] = [
   ...PHOVIN_SUGGESTION_TERMS,
   ...KATHEIY_SUGGESTION_TERMS,
   ...FULL_OPTION_SUGGESTION_TERMS,
+  ...TAENG_SOM_SUGGESTION_TERMS,
 ];
 
 export const ALL_SUGGESTION_TERMS_SET = new Set(ALL_SUGGESTION_TERMS);

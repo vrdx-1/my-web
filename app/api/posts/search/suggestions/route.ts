@@ -20,6 +20,7 @@ import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSug
 import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS, removeFullOptionTermsFromQuery } from '@/utils/fullOptionSuggestionTerms';
+import { TAENG_SOM_SUGGESTION_TERMS, removeTaengSomTermsFromQuery } from '@/utils/taengSomSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 
@@ -599,7 +600,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutAutoTerms = removeAutoTermsFromQuery(queryWithoutKapukTerms);
     const queryWithoutPhovinTerms = removePhovinTermsFromQuery(queryWithoutAutoTerms);
     const queryWithoutKatheiyTerms = removeKatheiyTermsFromQuery(queryWithoutPhovinTerms);
-    const queryWithoutFeatureTerms = removeFullOptionTermsFromQuery(queryWithoutKatheiyTerms);
+    const queryWithoutFullOptionTerms = removeFullOptionTermsFromQuery(queryWithoutKatheiyTerms);
+    const queryWithoutFeatureTerms = removeTaengSomTermsFromQuery(queryWithoutFullOptionTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
 
@@ -768,6 +770,10 @@ export async function GET(request: NextRequest) {
       hasAnyAvailableTermInGroup(FULL_OPTION_SUGGESTION_TERMS) ? FULL_OPTION_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
+    const availableTaengSomTerms = selectPreferredSuggestionTerms(
+      hasAnyAvailableTermInGroup(TAENG_SOM_SUGGESTION_TERMS) ? TAENG_SOM_SUGGESTION_TERMS : [],
+      featureQueryFragments,
+    );
     const queryTargetsVxlGroup = availableVxlTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
@@ -793,6 +799,9 @@ export async function GET(request: NextRequest) {
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsFullOptionGroup = availableFullOptionTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsTaengSomGroup = availableTaengSomTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsSmartCabGroup = SMART_CAB_SUGGESTION_TERMS.some((term) =>
@@ -974,6 +983,17 @@ export async function GET(request: NextRequest) {
     const fullOptionSuggestions = availableFullOptionTerms.map((term) => `${canonicalName} ${term}`);
 
     const fullOptionYearSuggestions = availableFullOptionTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const taengSomSuggestions = availableTaengSomTerms.map((term) => `${canonicalName} ${term}`);
+
+    const taengSomYearSuggestions = availableTaengSomTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -1322,6 +1342,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const champMixedSuggestions: string[] = [];
@@ -1378,6 +1399,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1407,6 +1429,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1436,6 +1459,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1465,6 +1489,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1494,6 +1519,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1523,6 +1549,7 @@ export async function GET(request: NextRequest) {
       availablePhovinTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1581,6 +1608,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availableKatheiyTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1610,6 +1638,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1639,6 +1668,8 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableFullOptionTerms,
+      availableTaengSomTerms,
     ].filter((group) => group.length > 0);
 
     const {
@@ -1651,6 +1682,36 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableFullOptionTerms,
       fullOptionCompanionGroups,
+    );
+
+    const taengSomCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+      availableVxrTerms,
+      availableTeiyTerms,
+      availableLegenderTerms,
+      availableKapukTerms,
+      availableAutoTerms,
+      availablePhovinTerms,
+      availableKatheiyTerms,
+      availableFullOptionTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: taengSomMixedSuggestions,
+      mixedYearSuggestions: taengSomMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableTaengSomTerms,
+      taengSomCompanionGroups,
     );
 
     // Build raw suggestions first, then re-rank by typed feature intent.
@@ -1687,6 +1748,8 @@ export async function GET(request: NextRequest) {
       ...katheiyYearSuggestions,
       ...fullOptionSuggestions,
       ...fullOptionYearSuggestions,
+      ...taengSomSuggestions,
+      ...taengSomYearSuggestions,
       ...champMixedSuggestions,
       ...champMixedYearSuggestions,
       ...roccoMixedSuggestions,
@@ -1709,6 +1772,8 @@ export async function GET(request: NextRequest) {
       ...katheiyMixedYearSuggestions,
       ...fullOptionMixedSuggestions,
       ...fullOptionMixedYearSuggestions,
+      ...taengSomMixedSuggestions,
+      ...taengSomMixedYearSuggestions,
       ...mixedTermSuggestions,
       ...mixedTermYearSuggestions,
       ...mixedMoveAndSmartSuggestions,
@@ -1750,6 +1815,7 @@ export async function GET(request: NextRequest) {
         ...availablePhovinTerms,
         ...availableKatheiyTerms,
         ...availableFullOptionTerms,
+        ...availableTaengSomTerms,
       ].filter(Boolean)),
     );
 
@@ -1799,6 +1865,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availableFullOptionTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableFullOptionTerms
+          : []),
+        ...(availableTaengSomTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableTaengSomTerms
           : []),
       ].filter(Boolean)),
     );
@@ -1852,6 +1921,10 @@ export async function GET(request: NextRequest) {
           suggestion,
           canonicalName,
           queryTargetsFullOptionGroup ? availableFullOptionTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsTaengSomGroup ? availableTaengSomTerms : [],
         ),
       }))
       .sort((left, right) => {
