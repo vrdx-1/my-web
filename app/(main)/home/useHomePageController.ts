@@ -77,6 +77,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const priceSortOrder = homeProvince?.priceSortOrder ?? '';
   const soldListData = usePostListData({
     type: 'sold',
     session,
@@ -87,6 +88,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    priceSortOrder,
   });
 
   const { isSoldTabNoSearch, effectivePostList } = useHomeEffectivePostList({
@@ -104,6 +106,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
       selectedProvince,
       minPriceKip,
       maxPriceKip,
+      priceSortOrder,
     });
 
   const effectiveLoadingMore = effectivePostList.loadingMore;
@@ -112,6 +115,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     selectedProvince,
     minPriceKip,
     maxPriceKip,
+    priceSortOrder,
     soldListData,
     effectiveLoadingMore,
     mainTab: mainTab ?? null,

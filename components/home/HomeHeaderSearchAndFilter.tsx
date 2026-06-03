@@ -25,8 +25,10 @@ export function HomeHeaderSearchAndFilter() {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const priceSortOrder = homeProvince?.priceSortOrder ?? '';
   const setSelectedProvince = homeProvince?.setSelectedProvince;
   const setPriceRange = homeProvince?.setPriceRange;
+  const setPriceSortOrder = homeProvince?.setPriceSortOrder;
 
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -39,7 +41,8 @@ export function HomeHeaderSearchAndFilter() {
   useEffect(() => {
     setSelectedProvince?.('');
     setPriceRange?.(null, null);
-  }, [searchQuery, setSelectedProvince, setPriceRange]);
+    setPriceSortOrder?.('');
+  }, [searchQuery, setSelectedProvince, setPriceRange, setPriceSortOrder]);
 
   const handleSearchClick = useCallback(() => {
     mainTabScroll?.saveCurrentScroll('/home');
@@ -84,11 +87,12 @@ export function HomeHeaderSearchAndFilter() {
     }, 300);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null }) => {
+  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc' }) => {
     setSelectedProvince?.(filters.province);
     setPriceRange?.(filters.minPriceKip, filters.maxPriceKip);
+    setPriceSortOrder?.(filters.priceSortOrder);
     closePicker();
-  }, [closePicker, setPriceRange, setSelectedProvince]);
+  }, [closePicker, setPriceRange, setPriceSortOrder, setSelectedProvince]);
 
   return (
     <>
@@ -221,6 +225,7 @@ export function HomeHeaderSearchAndFilter() {
         selectedProvince={selectedProvince}
         minPriceKip={minPriceKip}
         maxPriceKip={maxPriceKip}
+        priceSortOrder={priceSortOrder}
         onClose={closePicker}
         onApplyFilters={handleApplyFilters}
       />

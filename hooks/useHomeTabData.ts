@@ -56,6 +56,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const priceSortOrder = homeProvince?.priceSortOrder ?? '';
 
   const sharedLikedSaved = useHomeLikedSaved(session, sessionReady, activeProfileId);
 
@@ -76,6 +77,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    priceSortOrder,
     onInitialLoadDone: () => {
       startSessionCheck();
       setFirstFeedLoaded(true);
@@ -89,6 +91,7 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    priceSortOrder,
     session,
     activeProfileId,
     sessionReady,

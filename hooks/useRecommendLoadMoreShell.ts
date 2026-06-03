@@ -10,6 +10,7 @@ interface UseRecommendLoadMoreShellOptions {
   selectedProvince: string;
   minPriceKip: number | null;
   maxPriceKip: number | null;
+  priceSortOrder: '' | 'asc' | 'desc';
 }
 
 interface UseRecommendLoadMoreShellReturn {
@@ -28,7 +29,7 @@ interface UseRecommendLoadMoreShellReturn {
 export function useRecommendLoadMoreShell(
   options: UseRecommendLoadMoreShellOptions
 ): UseRecommendLoadMoreShellReturn {
-  const { postListLoadingMore, isSoldTabNoSearch, selectedProvince, minPriceKip, maxPriceKip } = options;
+  const { postListLoadingMore, isSoldTabNoSearch, selectedProvince, minPriceKip, maxPriceKip, priceSortOrder } = options;
   const [shell, setShell] = useState(false);
 
   const triggerLoadMore = useCallback(() => {
@@ -52,7 +53,7 @@ export function useRecommendLoadMoreShell(
   // Reset เมื่อเปลี่ยนจังหวัดหรือช่วงราคา
   useEffect(() => {
     setShell(false);
-  }, [selectedProvince, minPriceKip, maxPriceKip]);
+  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder]);
 
   // Auto-reset หลังจาก 8s ถ้า API ไม่ตอบสนอง
   useEffect(() => {

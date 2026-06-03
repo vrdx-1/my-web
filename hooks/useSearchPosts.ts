@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { normalizeSmartCabQueryForSearch } from '@/utils/normalizeSearchQuery';
+import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 
 export interface SearchLikedSavedShared {
   likedPosts: { [key: string]: boolean };
@@ -19,6 +20,7 @@ interface UseSearchPostsOptions {
   province?: string;
   minPriceKip?: number | null;
   maxPriceKip?: number | null;
+  priceSortOrder?: HomePriceSortOrder;
   session?: any;
   activeProfileId?: string | null;
   sessionReady?: boolean;
@@ -46,6 +48,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     province,
     minPriceKip = null,
     maxPriceKip = null,
+    priceSortOrder = '',
     session,
     activeProfileId,
     sessionReady = true,
@@ -138,6 +141,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       if (province && province.trim() !== '') params.set('province', province.trim());
       if (minPriceKip != null) params.set('minPriceKip', String(minPriceKip));
       if (maxPriceKip != null) params.set('maxPriceKip', String(maxPriceKip));
+      if (priceSortOrder) params.set('priceSortOrder', priceSortOrder);
       const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
       if (cancelledRef.current) return;
       const data = await res.json().catch(() => ({}));
@@ -153,7 +157,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     } finally {
       if (!aborted && !cancelledRef.current) setLoading(false);
     }
-  }, [query, province, minPriceKip, maxPriceKip]);
+  }, [query, province, minPriceKip, maxPriceKip, priceSortOrder]);
 
   useEffect(() => {
     if (!enabled) {
@@ -167,7 +171,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     }
     setLoading(true);
     fetchSearch();
-  }, [enabled, query, province, minPriceKip, maxPriceKip, fetchSearch]);
+  }, [enabled, query, province, minPriceKip, maxPriceKip, priceSortOrder, fetchSearch]);
 
   return {
     posts,

@@ -7,6 +7,7 @@ import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type O
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
+import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -80,6 +81,7 @@ interface UsePostListDataOptions {
   /** สำหรับ type 'sold' ในหน้าโฮม: ช่วงราคาที่ต้องการกรอง (ກີບ) */
   minPriceKip?: number | null;
   maxPriceKip?: number | null;
+  priceSortOrder?: HomePriceSortOrder;
   /** สำหรับ type 'my-posts': คำค้น caption/รหัสโพสต์ */
   searchQuery?: string;
   /** สำหรับ type 'my-posts': จำกัดเฉพาะโพสต์ของ sub account ของ admin */
@@ -144,6 +146,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     province,
     minPriceKip = null,
     maxPriceKip = null,
+    priceSortOrder = '',
     searchQuery,
     onlySubAccounts = false,
     subAccountProfileIds = [],
@@ -600,6 +603,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           province?: string;
           minPriceKip?: number;
           maxPriceKip?: number;
+          priceSortOrder?: HomePriceSortOrder;
           status: 'sold';
           feedSeed?: string;
         } = {
@@ -615,6 +619,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         if (maxPriceKip != null) {
           requestBody.maxPriceKip = maxPriceKip;
+        }
+        if (priceSortOrder) {
+          requestBody.priceSortOrder = priceSortOrder;
         }
         if (soldFeedSeedRef.current) {
           requestBody.feedSeed = soldFeedSeedRef.current;
@@ -1176,6 +1183,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     province,
     minPriceKip,
     maxPriceKip,
+    priceSortOrder,
     searchQuery,
     onlySubAccounts,
     subAccountProfileIds,
