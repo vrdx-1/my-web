@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 
@@ -52,6 +52,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const [draftProvince, setDraftProvince] = useState('');
   const [showProvincePopup, setShowProvincePopup] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
+  const isScrollLockedRef = useRef(false);
+  const lockedScrollYRef = useRef(0);
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +64,53 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setDraftProvince(selectedProvince);
     setShowProvincePopup(false);
   }, [selectedProvince, showProvincePicker]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const shouldLockScroll = showProvincePicker || showProvincePopup;
+    const body = document.body;
+    const html = document.documentElement;
+
+    if (shouldLockScroll && !isScrollLockedRef.current) {
+      lockedScrollYRef.current = window.scrollY;
+      body.style.position = 'fixed';
+      body.style.top = `-${lockedScrollYRef.current}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      html.style.overflow = 'hidden';
+      isScrollLockedRef.current = true;
+    }
+
+    if (!shouldLockScroll && isScrollLockedRef.current) {
+      const restoreY = lockedScrollYRef.current;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      html.style.overflow = '';
+      window.scrollTo(0, restoreY);
+      isScrollLockedRef.current = false;
+    }
+
+    return () => {
+      if (!isScrollLockedRef.current) return;
+      const restoreY = lockedScrollYRef.current;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      html.style.overflow = '';
+      window.scrollTo(0, restoreY);
+      isScrollLockedRef.current = false;
+    };
+  }, [mounted, showProvincePicker, showProvincePopup]);
 
   const handleCancel = () => {
     onClose();
@@ -252,7 +301,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               position: 'absolute',
               right: 8,
               top: `${(triggerRect?.bottom ?? 140) + 8}px`,
-              width: 'min(280px, 88vw)',
+              width: 'min(208px, 70vw)',
               maxHeight: '70vh',
               overflowY: 'auto',
               background: '#fff',
