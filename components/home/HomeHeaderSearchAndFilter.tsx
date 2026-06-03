@@ -9,10 +9,10 @@ import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPortal';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
-const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 4;
+const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 6;
 const ICON_SIZE = 21;
-const SEARCH_BAR_GAP = 8;
-const FILTER_ICON_SIZE = 20;
+const SEARCH_BAR_GAP = 10;
+const FILTER_ICON_SIZE = 19;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -113,7 +113,7 @@ export function HomeHeaderSearchAndFilter() {
             minWidth: 0,
             width: '100%',
             maxWidth: '100%',
-            height: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
+            height: `${CONTROL_SIZE}px`,
             borderRadius: '999px',
             background: '#ffffff',
             color: '#1f2937',
@@ -122,8 +122,8 @@ export function HomeHeaderSearchAndFilter() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            paddingLeft: '15px',
-            paddingRight: '13px',
+            paddingLeft: '14px',
+            paddingRight: '14px',
             // allow opening search/province immediately even while feed refresh runs in background
             touchAction: 'manipulation',
             pointerEvents: 'auto',
@@ -175,12 +175,12 @@ export function HomeHeaderSearchAndFilter() {
           onClick={handleFilterClick}
           aria-label="Filter"
           style={{
-            width: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
-            height: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
+            width: `${CONTROL_SIZE}px`,
+            height: `${CONTROL_SIZE}px`,
             borderRadius: '50%',
             border: '1px solid #d0d5dd',
             background: '#ffffff',
-            color: '#111111',
+            color: '#6b7280',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',

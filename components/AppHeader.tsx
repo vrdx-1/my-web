@@ -62,7 +62,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   const router = useRouter();
   const pathname = usePathname();
   const isHomeSearchHeader = showOnlySearch && !!homeCenterContent;
-  const homeLogoSize = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 4;
+  const homeLogoSize = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 6;
   const logoSize = isHomeSearchHeader ? homeLogoSize : LAYOUT_CONSTANTS.HEADER_LOGO_SIZE;
 
   const onProfileClick = pathname === '/home' && setProfileOverlayOpen
@@ -133,14 +133,14 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   return (
     <div className={!slideWithContainer ? 'header-visibility-surface' : undefined} style={rootStyle}>
       <div style={{ 
-          padding: isHomeSearchHeader ? '16px 12px 8px' : '9px 15px', 
+          padding: isHomeSearchHeader ? '12px 12px 8px' : '9px 15px', 
           display: 'flex', 
           alignItems: 'center', 
           minWidth: 0,
           width: '100%',
           boxSizing: 'border-box',
           overflow: 'hidden',
-          gap: isHomeSearchHeader ? '12px' : '8px', 
+          gap: isHomeSearchHeader ? '10px' : '8px', 
           borderBottom: 'none',
         }}>
         {/* Logo (brand name removed per request); หน้าโฮม: กดโลโก้ = full refresh (ล้างค้นหา + ທຸກແຂວງ) */}
@@ -148,7 +148,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           display: 'flex',
           alignItems: 'center',
           flexShrink: 0,
-          marginRight: isHomeSearchHeader ? '4px' : '8px',
+          marginRight: isHomeSearchHeader ? 0 : '8px',
         }}>
           {pathname === '/home' && onTabRefresh ? (
             <button
