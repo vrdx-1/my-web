@@ -148,15 +148,16 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               border: 'none',
               background: 'transparent',
               padding: 0,
-              fontSize: '16px',
+              fontSize: '18px',
               color: '#111111',
               fontFamily: LAO_FONT,
+              fontWeight: 400,
               cursor: 'pointer',
             }}
           >
             ຍົກເລີກ
           </button>
-          <span style={{ fontSize: '18px', fontWeight: 600 }}>ຕົວກອງ</span>
+          <span style={{ fontSize: '21px', fontWeight: 700 }}>ຕົວກອງ</span>
           <button
             type="button"
             onClick={handleSearch}
@@ -164,10 +165,10 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               border: 'none',
               background: 'transparent',
               padding: 0,
-              fontSize: '16px',
+              fontSize: '18px',
               color: '#1877f2',
               fontFamily: LAO_FONT,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: 'pointer',
             }}
           >
