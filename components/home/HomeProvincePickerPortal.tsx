@@ -200,6 +200,15 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     });
   };
 
+  const handleResetFilters = () => {
+    onApplyFilters({
+      province: '',
+      minPriceKip: null,
+      maxPriceKip: null,
+      priceSortOrder: '',
+    });
+  };
+
   const sliderMinValue = clampPrice(draftMinPriceKip, PRICE_MIN_BOUND, PRICE_MAX_BOUND);
   const sliderMaxValue = maxPriceUnlimited
     ? PRICE_MAX_BOUND
@@ -781,6 +790,34 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </div>
         </div>
         <div style={{ flex: 1, minHeight: 0 }} />
+        <div
+          style={{
+            padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
+            display: 'flex',
+            justifyContent: 'center',
+            flexShrink: 0,
+            background: '#fff',
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            style={{
+              border: '1px solid #d0d5dd',
+              background: '#f8fafc',
+              color: '#344054',
+              borderRadius: 999,
+              padding: '10px 18px',
+              fontFamily: LAO_FONT,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              minWidth: 140,
+            }}
+          >
+            ລ້າງຕົວກອງ
+          </button>
+        </div>
       </div>
 
       {showProvincePopup && (
