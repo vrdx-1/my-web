@@ -792,7 +792,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         <div style={{ flex: 1, minHeight: 0 }} />
         <div
           style={{
-            padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
+            padding: '12px 16px calc(48px + env(safe-area-inset-bottom, 0px))',
             display: 'flex',
             justifyContent: 'center',
             flexShrink: 0,
@@ -840,9 +840,10 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           <div
             style={{
               position: 'absolute',
-              right: 8,
-              top: `${(triggerRect?.bottom ?? 140) + 8}px`,
-              width: 'min(208px, 70vw)',
+              left: triggerRect ? `${triggerRect.left + triggerRect.width / 2}px` : '50%',
+              top: triggerRect ? `${triggerRect.bottom + 8}px` : '140px',
+              transform: 'translateX(-50%)',
+              width: 'min(240px, 72vw)',
               maxHeight: '70vh',
               overflowY: 'auto',
               background: '#fff',
