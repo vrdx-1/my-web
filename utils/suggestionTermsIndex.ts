@@ -14,6 +14,7 @@ import { KAPUK_SUGGESTION_TERMS } from './kapukSuggestionTerms';
 import { AUTO_SUGGESTION_TERMS } from './autoSuggestionTerms';
 import { PHOVIN_SUGGESTION_TERMS } from './phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS } from './katheiySuggestionTerms';
+import { ADVENTURE_SUGGESTION_TERMS } from './adventureSuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS } from './fullOptionSuggestionTerms';
 import { TAENG_SOM_SUGGESTION_TERMS } from './taengSomSuggestionTerms';
 
@@ -31,6 +32,7 @@ export const ALL_SUGGESTION_TERMS: string[] = [
   ...AUTO_SUGGESTION_TERMS,
   ...PHOVIN_SUGGESTION_TERMS,
   ...KATHEIY_SUGGESTION_TERMS,
+  ...ADVENTURE_SUGGESTION_TERMS,
   ...FULL_OPTION_SUGGESTION_TERMS,
   ...TAENG_SOM_SUGGESTION_TERMS,
 ];

@@ -19,6 +19,7 @@ import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapuk
 import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
 import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
+import { ADVENTURE_SUGGESTION_TERMS, removeAdventureTermsFromQuery } from '@/utils/adventureSuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS, removeFullOptionTermsFromQuery } from '@/utils/fullOptionSuggestionTerms';
 import { TAENG_SOM_SUGGESTION_TERMS, removeTaengSomTermsFromQuery } from '@/utils/taengSomSuggestionTerms';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
@@ -600,7 +601,8 @@ export async function GET(request: NextRequest) {
     const queryWithoutAutoTerms = removeAutoTermsFromQuery(queryWithoutKapukTerms);
     const queryWithoutPhovinTerms = removePhovinTermsFromQuery(queryWithoutAutoTerms);
     const queryWithoutKatheiyTerms = removeKatheiyTermsFromQuery(queryWithoutPhovinTerms);
-    const queryWithoutFullOptionTerms = removeFullOptionTermsFromQuery(queryWithoutKatheiyTerms);
+    const queryWithoutAdventureTerms = removeAdventureTermsFromQuery(queryWithoutKatheiyTerms);
+    const queryWithoutFullOptionTerms = removeFullOptionTermsFromQuery(queryWithoutAdventureTerms);
     const queryWithoutFeatureTerms = removeTaengSomTermsFromQuery(queryWithoutFullOptionTerms);
     const baseQuery = getModelNameFromQuery(queryWithoutFeatureTerms);
     const queryYears = extractYearsFromQuery(queryWithBoundaries);
@@ -766,6 +768,10 @@ export async function GET(request: NextRequest) {
       hasAnyAvailableTermInGroup(KATHEIY_SUGGESTION_TERMS) ? KATHEIY_SUGGESTION_TERMS : [],
       featureQueryFragments,
     );
+    const availableAdventureTerms = selectPreferredSuggestionTerms(
+      hasAnyAvailableTermInGroup(ADVENTURE_SUGGESTION_TERMS) ? ADVENTURE_SUGGESTION_TERMS : [],
+      featureQueryFragments,
+    );
     const availableFullOptionTerms = selectPreferredSuggestionTerms(
       hasAnyAvailableTermInGroup(FULL_OPTION_SUGGESTION_TERMS) ? FULL_OPTION_SUGGESTION_TERMS : [],
       featureQueryFragments,
@@ -796,6 +802,9 @@ export async function GET(request: NextRequest) {
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsKatheiyGroup = availableKatheiyTerms.some((term) =>
+      queryContainsTerm(queryWithBoundaries, term),
+    );
+    const queryTargetsAdventureGroup = availableAdventureTerms.some((term) =>
       queryContainsTerm(queryWithBoundaries, term),
     );
     const queryTargetsFullOptionGroup = availableFullOptionTerms.some((term) =>
@@ -972,6 +981,17 @@ export async function GET(request: NextRequest) {
     const katheiySuggestions = availableKatheiyTerms.map((term) => `${canonicalName} ${term}`);
 
     const katheiyYearSuggestions = availableKatheiyTerms.flatMap((term) => {
+      const realYears = collectYearsForTerm(
+        matchedPosts as Array<{ caption?: unknown }>,
+        term,
+        yearsForSuggestions,
+      );
+      return realYears.map((year) => `${canonicalName} ${term} ${year}`);
+    });
+
+    const adventureSuggestions = availableAdventureTerms.map((term) => `${canonicalName} ${term}`);
+
+    const adventureYearSuggestions = availableAdventureTerms.flatMap((term) => {
       const realYears = collectYearsForTerm(
         matchedPosts as Array<{ caption?: unknown }>,
         term,
@@ -1341,6 +1361,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1398,6 +1419,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1428,6 +1450,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1458,6 +1481,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1488,6 +1512,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1518,6 +1543,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1548,6 +1574,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1578,6 +1605,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
     ].filter((group) => group.length > 0);
 
@@ -1607,6 +1635,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1637,6 +1666,7 @@ export async function GET(request: NextRequest) {
       availableKapukTerms,
       availableAutoTerms,
       availablePhovinTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1651,6 +1681,37 @@ export async function GET(request: NextRequest) {
       yearsForSuggestions,
       availableKatheiyTerms,
       katheiyCompanionGroups,
+    );
+
+    const adventureCompanionGroups = [
+      availableSmartCabTerms,
+      availableLeftOriginalTerms,
+      availableMoveSteeringTerms,
+      availableLaoCenterTerms,
+      availableChampTerms,
+      availableRoccoTerms,
+      availableVxlTerms,
+      availableVxrTerms,
+      availableTeiyTerms,
+      availableLegenderTerms,
+      availableKapukTerms,
+      availableAutoTerms,
+      availablePhovinTerms,
+      availableKatheiyTerms,
+      availableFullOptionTerms,
+      availableTaengSomTerms,
+    ].filter((group) => group.length > 0);
+
+    const {
+      mixedSuggestions: adventureMixedSuggestions,
+      mixedYearSuggestions: adventureMixedYearSuggestions,
+    } = buildMixedSuggestionsForGroup(
+      canonicalName,
+      queryNormalized,
+      matchedPosts as Array<{ caption?: unknown }>,
+      yearsForSuggestions,
+      availableAdventureTerms,
+      adventureCompanionGroups,
     );
 
     const fullOptionCompanionGroups = [
@@ -1668,6 +1729,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
       availableTaengSomTerms,
     ].filter((group) => group.length > 0);
@@ -1699,6 +1761,7 @@ export async function GET(request: NextRequest) {
       availableAutoTerms,
       availablePhovinTerms,
       availableKatheiyTerms,
+      availableAdventureTerms,
       availableFullOptionTerms,
     ].filter((group) => group.length > 0);
 
@@ -1746,6 +1809,8 @@ export async function GET(request: NextRequest) {
       ...phovinYearSuggestions,
       ...katheiySuggestions,
       ...katheiyYearSuggestions,
+      ...adventureSuggestions,
+      ...adventureYearSuggestions,
       ...fullOptionSuggestions,
       ...fullOptionYearSuggestions,
       ...taengSomSuggestions,
@@ -1770,6 +1835,8 @@ export async function GET(request: NextRequest) {
       ...phovinMixedYearSuggestions,
       ...katheiyMixedSuggestions,
       ...katheiyMixedYearSuggestions,
+      ...adventureMixedSuggestions,
+      ...adventureMixedYearSuggestions,
       ...fullOptionMixedSuggestions,
       ...fullOptionMixedYearSuggestions,
       ...taengSomMixedSuggestions,
@@ -1814,6 +1881,7 @@ export async function GET(request: NextRequest) {
         ...availableAutoTerms,
         ...availablePhovinTerms,
         ...availableKatheiyTerms,
+        ...availableAdventureTerms,
         ...availableFullOptionTerms,
         ...availableTaengSomTerms,
       ].filter(Boolean)),
@@ -1862,6 +1930,9 @@ export async function GET(request: NextRequest) {
           : []),
         ...(availableKatheiyTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableKatheiyTerms
+          : []),
+        ...(availableAdventureTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
+          ? availableAdventureTerms
           : []),
         ...(availableFullOptionTerms.some((term) => queryContainsTerm(queryWithBoundaries, term))
           ? availableFullOptionTerms
@@ -1917,6 +1988,10 @@ export async function GET(request: NextRequest) {
           suggestion,
           canonicalName,
           queryTargetsKatheiyGroup ? availableKatheiyTerms : [],
+        ) + scoreSuggestionByActiveGroupTerms(
+          suggestion,
+          canonicalName,
+          queryTargetsAdventureGroup ? availableAdventureTerms : [],
         ) + scoreSuggestionByActiveGroupTerms(
           suggestion,
           canonicalName,

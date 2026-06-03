@@ -20,6 +20,7 @@ import { KAPUK_SUGGESTION_TERMS, removeKapukTermsFromQuery } from '@/utils/kapuk
 import { AUTO_SUGGESTION_TERMS, removeAutoTermsFromQuery } from '@/utils/autoSuggestionTerms';
 import { PHOVIN_SUGGESTION_TERMS, removePhovinTermsFromQuery } from '@/utils/phovinSuggestionTerms';
 import { KATHEIY_SUGGESTION_TERMS, removeKatheiyTermsFromQuery } from '@/utils/katheiySuggestionTerms';
+import { ADVENTURE_SUGGESTION_TERMS, removeAdventureTermsFromQuery } from '@/utils/adventureSuggestionTerms';
 import { FULL_OPTION_SUGGESTION_TERMS, removeFullOptionTermsFromQuery } from '@/utils/fullOptionSuggestionTerms';
 import { TAENG_SOM_SUGGESTION_TERMS, removeTaengSomTermsFromQuery } from '@/utils/taengSomSuggestionTerms';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -734,6 +735,10 @@ const KATHEIY_GROUP_NORMALIZED_SET = new Set(
   KATHEIY_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
 
+const ADVENTURE_GROUP_NORMALIZED_SET = new Set(
+  ADVENTURE_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
+);
+
 const FULL_OPTION_GROUP_NORMALIZED_SET = new Set(
   FULL_OPTION_SUGGESTION_TERMS.map((term) => normalizeCarSearch(term)).filter(Boolean)
 );
@@ -794,6 +799,10 @@ export function expandWithoutBrandAliases(query: string): string[] {
 
   if (KATHEIY_GROUP_NORMALIZED_SET.has(queryNorm)) {
     return uniqStringsCarSearch(KATHEIY_SUGGESTION_TERMS);
+  }
+
+  if (ADVENTURE_GROUP_NORMALIZED_SET.has(queryNorm)) {
+    return uniqStringsCarSearch(ADVENTURE_SUGGESTION_TERMS);
   }
 
   if (FULL_OPTION_GROUP_NORMALIZED_SET.has(queryNorm)) {
@@ -1305,7 +1314,8 @@ export function getCarDictionarySuggestions(prefix: string, limit = 9): CarSugge
   const withoutAuto = removeAutoTermsFromQuery(withoutKapuk);
   const withoutPhovin = removePhovinTermsFromQuery(withoutAuto);
   const withoutKatheiy = removeKatheiyTermsFromQuery(withoutPhovin);
-  const withoutFullOption = removeFullOptionTermsFromQuery(withoutKatheiy);
+  const withoutAdventure = removeAdventureTermsFromQuery(withoutKatheiy);
+  const withoutFullOption = removeFullOptionTermsFromQuery(withoutAdventure);
   const normalizedPrefix = removeTaengSomTermsFromQuery(withoutFullOption).trim() || prefix;
   const qNormInitial = normalizeCarSearch(normalizedPrefix);
   if (!qNormInitial) return [];
