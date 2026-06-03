@@ -12,6 +12,7 @@ import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPo
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 4;
 const ICON_SIZE = 21;
 const SEARCH_BAR_GAP = 8;
+const FILTER_ICON_SIZE = 20;
 /**
  * แท็บค้นหา (ยาว ซ้ายเกือบติดโลโก้ ขวาเกือบติดปุ่มฟิลเตอร์) และปุ่มฟิลเตอร์ province สำหรับ Header หน้า Home
  */
@@ -26,14 +27,10 @@ export function HomeHeaderSearchAndFilter() {
 
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [filterButtonRect, setFilterButtonRect] = useState<DOMRect | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
-  // Anchor สำหรับจัดตำแหน่งป๊อปอัป (เดิมใช้ปุ่มฟิลเตอร์วงกลม แต่รอบนี้ย้ายไปไว้ที่ "ข้อความแขวงสีแดง")
-  const filterButtonRef = useRef<HTMLSpanElement>(null);
 
   /** แสดงคำค้นและแขวงเสมอ (ไม่ใช้ mounted เพื่อไม่ให้ guest เห็นแถบค้นว่างชั่วคราว) */
   const queryToShow = searchQuery;
-  const provinceToShow = selectedProvince;
 
   /** เมื่อผู้ใช้เปลี่ยนหรือแก้ไขคำค้นหา (URL ?q= เปลี่ยน) ให้ฟิลเตอร์กลับเป็น "ທຸກແຂວງ" */
   useEffect(() => {
@@ -65,9 +62,7 @@ export function HomeHeaderSearchAndFilter() {
 
   const handleFilterClick = useCallback(() => {
     if (showProvincePicker) return;
-    const rect = filterButtonRef.current?.getBoundingClientRect() ?? null;
-    setFilterButtonRect(rect);
-    // แสดงป๊อปทันทีโดยไม่รอ — ใช้ requestAnimationFrame แยกให้เบราว์เซอร์วาดป๊อปก่อนงานอื่น
+    // แสดง bottom sheet ทันทีโดยไม่รอ
     requestAnimationFrame(() => {
       setShowProvincePicker(true);
       requestAnimationFrame(() => {
@@ -110,36 +105,7 @@ export function HomeHeaderSearchAndFilter() {
         {/* แท็บค้นหา — ยาวจากซ้ายเกือบติดโลโก้ ถึงขวาเกือบติดปุ่มฟิลเตอร์, มีไอคอน + "ຄົ້ນຫາ" */}
         <button
           type="button"
-          onClick={(e) => {
-            // ปุ่มค้นหาครอบทั้งแถบไว้ ทำให้ click พลาด "ตัวหนังสือสีแดงเลือกแขวง" แล้วไป trigger ค้นหาได้
-            // ถ้า click อยู่ในพื้นที่ปุ่มแขวง (มี tolerance) ให้เปิด province picker แทน
-            const target = e.target;
-            const el = target instanceof Element ? target : null;
-            const filterBtnHit =
-              !!el?.closest?.('[data-home-filter-btn]') ||
-              (() => {
-                const rect = filterButtonRef.current?.getBoundingClientRect();
-                if (!rect) return false;
-                const tolerance = 16; // เผื่อพื้นที่คลิกกรณีไม่โดนตัวอักษรเป๊ะ
-                const x = e.clientX;
-                const y = e.clientY;
-                return (
-                  x >= rect.left - tolerance &&
-                  x <= rect.right + tolerance &&
-                  y >= rect.top - tolerance &&
-                  y <= rect.bottom + tolerance
-                );
-              })();
-
-            if (filterBtnHit) {
-              e.preventDefault();
-              e.stopPropagation();
-              handleFilterClick();
-              return;
-            }
-
-            handleSearchClick();
-          }}
+          onClick={handleSearchClick}
           aria-label="Search"
           style={{
             flex: '1 1 0%',
@@ -203,66 +169,53 @@ export function HomeHeaderSearchAndFilter() {
               {queryToShow.trim() || 'ຄົ້ນຫາ'}
             </span>
           </span>
-          <span
-            style={{
-              flexShrink: 0,
-              fontSize: '16px',
-              color: '#111111',
-              fontWeight: 500,
-              fontFamily: LAO_FONT,
-              minWidth: 0,
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-            ref={filterButtonRef}
-            data-home-filter-btn
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              // ไม่ให้งานคลิกนี้ไป trigger search button ข้างนอก
-              e.preventDefault();
-              e.stopPropagation();
-              handleFilterClick();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                handleFilterClick();
-              }
-            }}
+        </button>
+        <button
+          type="button"
+          onClick={handleFilterClick}
+          aria-label="Filter"
+          style={{
+            width: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
+            height: `${Math.max(CONTROL_SIZE + 2, 46)}px`,
+            borderRadius: '50%',
+            border: '1px solid #d0d5dd',
+            background: '#ffffff',
+            color: '#111111',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+            pointerEvents: 'auto',
+          }}
+        >
+          <svg
+            width={FILTER_ICON_SIZE}
+            height={FILTER_ICON_SIZE}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
           >
-            <span
-              style={{
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {provinceToShow === '' ? 'ທຸກແຂວງ' : provinceToShow}
-            </span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M6 9l6 6 6-6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
+            <line x1="3" y1="8" x2="21" y2="8" />
+            <circle cx="9" cy="8" r="2.9" fill="#ffffff" stroke="currentColor" />
+            <line x1="3" y1="16" x2="21" y2="16" />
+            <circle cx="15" cy="16" r="2.9" fill="#ffffff" stroke="currentColor" />
+          </svg>
         </button>
       </div>
 
       <HomeProvincePickerPortal
         showProvincePicker={showProvincePicker}
         isAnimating={isAnimating}
-        filterButtonRect={filterButtonRect}
         pickerRef={pickerRef}
         selectedProvince={selectedProvince}
         onClose={closePicker}
-        onSelectProvince={handleSelectProvince}
+        onApplyProvince={handleSelectProvince}
       />
     </>
   );

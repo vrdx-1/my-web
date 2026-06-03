@@ -32,28 +32,44 @@ function SelectedCheckBadge() {
 export interface HomeProvincePickerPortalProps {
   showProvincePicker: boolean;
   isAnimating: boolean;
-  filterButtonRect: DOMRect | null;
   pickerRef: React.RefObject<HTMLDivElement | null>;
   selectedProvince: string;
   onClose: () => void;
-  onSelectProvince: (province: string) => void;
+  onApplyProvince: (province: string) => void;
 }
 
 function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const {
     showProvincePicker,
     isAnimating,
-    filterButtonRect,
     pickerRef,
     selectedProvince,
     onClose,
-    onSelectProvince,
+    onApplyProvince,
   } = props;
 
   const [mounted, setMounted] = useState(false);
+  const [draftProvince, setDraftProvince] = useState('');
+  const [showProvincePopup, setShowProvincePopup] = useState(false);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!showProvincePicker) return;
+    setDraftProvince(selectedProvince);
+    setShowProvincePopup(false);
+  }, [selectedProvince, showProvincePicker]);
+
+  const handleCancel = () => {
+    onClose();
+  };
+
+  const handleSearch = () => {
+    onApplyProvince(draftProvince);
+  };
 
   if (!mounted) return null;
 
@@ -90,56 +106,32 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         onTouchStart={(event) => event.stopPropagation()}
         style={{
           position: 'fixed',
-          ...(filterButtonRect
-            ? (() => {
-                const gap = 8;
-                const width =
-                  typeof window !== 'undefined'
-                    ? Math.min(220, Math.round(window.innerWidth * 0.62))
-                    : 220;
-                const left = Math.max(8, filterButtonRect.right - width);
-                const top = filterButtonRect.bottom + gap;
-                const fullHeight =
-                  typeof window !== 'undefined' ? window.innerHeight - top - gap : 500;
-                const height = Math.round(fullHeight * 0.92);
-
-                return {
-                  left: `${left}px`,
-                  top: `${top}px`,
-                  width: `${width}px`,
-                  height: `${height}px`,
-                };
-              })()
-            : {
-                left: '50%',
-                top: '8vh',
-                bottom: '8vh',
-                width: 'min(280px, 88vw)',
-                marginLeft: 'min(-140px, -44vw)',
-              }),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: '85vh',
           background: '#fff',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-          borderRadius: '12px',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.2)',
+          borderTopLeftRadius: '16px',
+          borderTopRightRadius: '16px',
           zIndex: 10002,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          transform: showProvincePicker && !isAnimating ? 'scale(1)' : 'scale(0.96)',
+          transform: showProvincePicker && !isAnimating ? 'translateY(0)' : 'translateY(100%)',
           opacity: showProvincePicker && !isAnimating ? 1 : 0,
-          transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+          transition: 'transform 0.28s ease-out, opacity 0.2s ease-out',
           pointerEvents: showProvincePicker ? 'auto' : 'none',
         }}
       >
         <div
-          onClick={() => onSelectProvince('')}
           style={{
-            padding: '10px 12px',
-            minHeight: 42,
+            padding: '12px 16px 10px',
+            minHeight: 52,
             boxSizing: 'border-box',
             fontSize: '16px',
             lineHeight: '1.3',
-            background: selectedProvince === '' ? '#e7f3ff' : '#fff',
-            cursor: 'pointer',
+            borderBottom: '1px solid #eceff3',
             fontFamily: LAO_FONT,
             color: '#111111',
             display: 'flex',
@@ -149,30 +141,136 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             flexShrink: 0,
           }}
         >
-          <span>ທຸກແຂວງ</span>
-          {selectedProvince === '' && <SelectedCheckBadge />}
+          <button
+            type="button"
+            onClick={handleCancel}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              fontSize: '16px',
+              color: '#111111',
+              fontFamily: LAO_FONT,
+              cursor: 'pointer',
+            }}
+          >
+            ຍົກເລີກ
+          </button>
+          <span style={{ fontSize: '18px', fontWeight: 600 }}>ຕົວກອງ</span>
+          <button
+            type="button"
+            onClick={handleSearch}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              fontSize: '16px',
+              color: '#1877f2',
+              fontFamily: LAO_FONT,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ຄົ້ນຫາ
+          </button>
         </div>
         <div
           style={{
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            WebkitOverflowScrolling: 'touch',
-            flex: 1,
-            minHeight: 0,
-            touchAction: 'pan-y',
+            padding: '14px 16px 12px',
+            borderBottom: '1px solid #f2f4f7',
+            flexShrink: 0,
           }}
         >
-          {LAO_PROVINCES.map((province) => (
-            <div
-              key={province}
-              onClick={() => onSelectProvince(province)}
+          <button
+            type="button"
+            onClick={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              setTriggerRect(rect);
+              setShowProvincePopup(true);
+            }}
+            style={{
+              width: '100%',
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              cursor: 'pointer',
+              fontFamily: LAO_FONT,
+              color: '#111111',
+              fontSize: '16px',
+              textAlign: 'left',
+            }}
+          >
+            <span>ເລືອກແຂວງ</span>
+            <span
               style={{
-                padding: '6px 12px',
-                minHeight: 34,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 500,
+              }}
+            >
+              {draftProvince || 'ທຸກແຂວງ'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M6 9l6 6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }} />
+      </div>
+
+      {showProvincePopup && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10003,
+            pointerEvents: 'auto',
+          }}
+        >
+          <div
+            onClick={() => setShowProvincePopup(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.2)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: `${(triggerRect?.bottom ?? 140) + 8}px`,
+              width: 'min(280px, 88vw)',
+              maxHeight: '70vh',
+              overflowY: 'auto',
+              background: '#fff',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div
+              onClick={() => {
+                setDraftProvince('');
+                setShowProvincePopup(false);
+              }}
+              style={{
+                padding: '10px 14px',
+                minHeight: 42,
                 boxSizing: 'border-box',
-                fontSize: '15px',
+                fontSize: '16px',
                 lineHeight: '1.3',
-                background: selectedProvince === province ? '#e7f3ff' : '#fff',
+                background: draftProvince === '' ? '#e7f3ff' : '#fff',
                 cursor: 'pointer',
                 fontFamily: LAO_FONT,
                 color: '#111111',
@@ -180,14 +278,42 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 8,
+                flexShrink: 0,
               }}
             >
-              <span>{province}</span>
-              {selectedProvince === province && <SelectedCheckBadge />}
+              <span>ທຸກແຂວງ</span>
+              {draftProvince === '' && <SelectedCheckBadge />}
             </div>
-          ))}
+            {LAO_PROVINCES.map((province) => (
+              <div
+                key={province}
+                onClick={() => {
+                  setDraftProvince(province);
+                  setShowProvincePopup(false);
+                }}
+                style={{
+                  padding: '8px 14px',
+                  minHeight: 40,
+                  boxSizing: 'border-box',
+                  fontSize: '15px',
+                  lineHeight: '1.3',
+                  background: draftProvince === province ? '#e7f3ff' : '#fff',
+                  cursor: 'pointer',
+                  fontFamily: LAO_FONT,
+                  color: '#111111',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <span>{province}</span>
+                {draftProvince === province && <SelectedCheckBadge />}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>,
     document.body,
   );
