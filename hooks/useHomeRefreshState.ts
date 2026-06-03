@@ -19,6 +19,8 @@ interface SoldListDataLike {
 export interface UseHomeRefreshStateOptions {
   tab: HomeTab;
   selectedProvince: string;
+  minPriceKip: number | null;
+  maxPriceKip: number | null;
   soldListData: SoldListDataLike;
   effectiveLoadingMore: boolean;
   mainTab: ReturnType<typeof useMainTabContext> | null;
@@ -29,6 +31,8 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   const {
     tab,
     selectedProvince,
+    minPriceKip,
+    maxPriceKip,
     soldListData,
     effectiveLoadingMore,
     mainTab,
@@ -38,6 +42,8 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   const prevLoadingMoreRef = useRef(false);
   const prevTabRef = useRef<HomeTab>(tab);
   const prevProvinceRef = useRef(selectedProvince);
+  const prevMinPriceRef = useRef(minPriceKip);
+  const prevMaxPriceRef = useRef(maxPriceKip);
   const soldTabRefreshRef = useRef<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setPosts: React.Dispatch<React.SetStateAction<any[]>>;
@@ -63,11 +69,16 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   useEffect(() => {
     const previousTab = prevTabRef.current;
     const previousProvince = prevProvinceRef.current;
+    const previousMinPrice = prevMinPriceRef.current;
+    const previousMaxPrice = prevMaxPriceRef.current;
     const enteredSoldTab = tab === 'sold' && previousTab !== 'sold';
     const provinceChanged = previousProvince !== selectedProvince;
+    const priceChanged = previousMinPrice !== minPriceKip || previousMaxPrice !== maxPriceKip;
 
     prevTabRef.current = tab;
     prevProvinceRef.current = selectedProvince;
+    prevMinPriceRef.current = minPriceKip;
+    prevMaxPriceRef.current = maxPriceKip;
 
     if (tab !== 'sold') return;
 
@@ -80,7 +91,7 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
       return;
     }
 
-    if (provinceChanged) {
+    if (provinceChanged || priceChanged) {
       soldListData.setPage(0);
       soldListData.setHasMore(true);
       soldListData.fetchPosts(true);
@@ -88,6 +99,8 @@ export function useHomeRefreshState(options: UseHomeRefreshStateOptions) {
   }, [
     tab,
     selectedProvince,
+    minPriceKip,
+    maxPriceKip,
     soldListData,
   ]);
 

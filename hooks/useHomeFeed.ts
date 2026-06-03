@@ -42,6 +42,9 @@ interface UseHomeFeedOptions {
   sessionReady?: boolean;
   /** แขวงที่เลือกจากฟิลเตอร์หน้า Home — ว่าง = แสดงทุกแขวง */
   province?: string;
+  /** ช่วงราคาฟิลเตอร์ (หน่วย: ກີບ) */
+  minPriceKip?: number | null;
+  maxPriceKip?: number | null;
   /** เรียกครั้งเดียวเมื่อโหลดโพสต์ชุดแรกเสร็จ (จาก cache หรือ API) */
   onInitialLoadDone?: () => void;
   /** ถ้ามี = ใช้ liked/saved นี้แทนโหลดเอง (ลด request ซ้ำในหน้าโฮม) */
@@ -89,7 +92,19 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   // HYBRID FEED LOGIC: ใช้ cache เสมอ + ดึง boost สดจาก DB เสมอ
   // - backend จะ merge cache + boost สด และจัดเรียง owner boost ให้อยู่บนสุดถ้า user เป็นเจ้าของ
   // - ต้องส่ง activeProfileId/authUserId เสมอ เพื่อให้ backend จัด feed owner boost ให้ถูกต้อง
-  const { session, activeProfileId, authUserId, sessionReady = true, province, onInitialLoadDone, sharedLikedSaved, isActive = true } = options;
+  const {
+    session,
+    activeProfileId,
+    authUserId,
+    sessionReady = true,
+    province,
+    minPriceKip = null,
+    maxPriceKip = null,
+    onInitialLoadDone,
+    sharedLikedSaved,
+    isActive = true,
+  } = options;
+  const hasPriceFilter = minPriceKip != null || maxPriceKip != null;
   const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
     if (isBrowserReloadNavigation()) return [];
     return getInitialPostsFromStorage(province);
@@ -102,6 +117,10 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
   const [savedPosts, setSavedPosts] = useState<{ [key: string]: boolean }>({});
   const currentSession = session ?? undefined;
+  const currentSessionUserId =
+    typeof (currentSession as { user?: { id?: string } } | undefined)?.user?.id === 'string'
+      ? (currentSession as { user?: { id?: string } }).user?.id || null
+      : null;
   const likedPostsOut = sharedLikedSaved ? sharedLikedSaved.likedPosts : likedPosts;
   const savedPostsOut = sharedLikedSaved ? sharedLikedSaved.savedPosts : savedPosts;
   const setLikedPostsOut = sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
@@ -180,8 +199,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     if (!sessionReady) return;
     if (currentSession === undefined) return;
     let idOrToken: string | null = null;
-    if (currentSession?.user?.id) {
-      const uid = currentSession.user.id;
+    if (currentSessionUserId) {
+      const uid = currentSessionUserId;
       if (typeof uid === 'string' && uid !== 'null' && /^[0-9a-f-]{36}$/i.test(uid)) {
         idOrToken = uid;
       }
@@ -193,7 +212,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       } catch {}
     }
     if (!idOrToken) return;
-    const isUser = !!currentSession?.user?.id;
+    const isUser = !!currentSessionUserId;
     const likesTable = isUser ? 'post_likes' : 'post_likes_guest';
     const likesColumn = isUser ? 'user_id' : 'guest_token';
     const savesTable = isUser ? 'post_saves' : 'post_saves_guest';
@@ -254,6 +273,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         startIndex?: number;
         endIndex?: number;
         province?: string;
+        minPriceKip?: number;
+        maxPriceKip?: number;
         activeProfileId?: string;
         authUserId?: string;
         cursorId?: string;
@@ -265,6 +286,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         excludePostIds?: string[];
       } = {};
       if (province && province.trim() !== '') body.province = province.trim();
+      if (minPriceKip != null) body.minPriceKip = minPriceKip;
+      if (maxPriceKip != null) body.maxPriceKip = maxPriceKip;
       if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
       // ส่ง user id/profie id เสมอ เพื่อให้ backend จัด boost owner ให้ถูกต้อง
       if (typeof activeProfileId === 'string' && activeProfileId.trim()) {
@@ -447,7 +470,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         }
       }
     }
-  }, [page, loadingMore, province, fireInitialLoadDone]);
+  }, [page, loadingMore, province, minPriceKip, maxPriceKip, fireInitialLoadDone]);
   const fetchPostsRef = useRef(fetchPosts);
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
   const initialLoadFromCacheRef = useRef(false);
@@ -457,6 +480,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     setPage(0);
     setHasMore(true);
     // ดึงโพสต์จาก cache
+    if (hasPriceFilter) {
+      await fetchPosts(true);
+      return;
+    }
+
     const { fromCache, initialPosts, hasMore: initialHasMore } = prepareInitialHomeFeedState(province);
     // หา actorKey ปัจจุบัน
     let userId: string | null = null;
@@ -464,8 +492,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       userId = activeProfileId.trim();
     } else if (typeof authUserId === 'string' && authUserId.trim()) {
       userId = authUserId.trim();
-    } else if (typeof currentSession?.user?.id === 'string') {
-      userId = currentSession.user.id;
+    } else if (currentSessionUserId) {
+      userId = currentSessionUserId;
     }
     const actorKey = resolveHomeFeedActorKey(
       userId,
@@ -525,7 +553,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       } catch {}
       await fetchPosts(true);
     }
-  }, [fetchPosts, province, activeProfileId, authUserId, currentSession]);
+  }, [fetchPosts, hasPriceFilter, province, activeProfileId, authUserId, currentSession]);
 
   useEffect(() => {
     const currentUserId =
@@ -533,8 +561,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         ? activeProfileId.trim()
         : typeof authUserId === 'string' && authUserId.trim()
           ? authUserId.trim()
-          : typeof currentSession?.user?.id === 'string'
-            ? currentSession.user.id
+          : currentSessionUserId
+            ? currentSessionUserId
             : null;
 
     const currentActorKey = resolveHomeFeedActorKey(
@@ -557,7 +585,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       lastResolvedActorKeyRef.current = currentActorKey;
       void refreshData();
     }
-  }, [activeProfileId, authUserId, currentSession?.user?.id, province, refreshData]);
+  }, [activeProfileId, authUserId, currentSessionUserId, province, minPriceKip, maxPriceKip, refreshData]);
 
   useEffect(() => {
     initialLoadFromCacheRef.current = false;
@@ -566,6 +594,16 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     if (shouldBypassCachedFeed) {
       forceNewSeedOnNextInitialFetchRef.current = true;
     }
+
+    if (hasPriceFilter) {
+      setPosts([]);
+      setLoadingMore(true);
+      setHasMore(true);
+      setPage(0);
+      fetchPostsRef.current(true);
+      return;
+    }
+
     const { fromCache, initialPosts, hasMore: initialHasMore, justPostedPost } =
       prepareInitialHomeFeedState(province);
     const useCachedFeed = fromCache && !shouldBypassCachedFeed;
@@ -608,7 +646,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     } else {
       fetchPostsRef.current(true);
     }
-  }, [province, fireInitialLoadDone]);
+  }, [province, minPriceKip, maxPriceKip, hasPriceFilter, fireInitialLoadDone]);
 
   const lastFetchedPageRef = useRef<number | null>(null);
   useEffect(() => {

@@ -23,7 +23,10 @@ export function HomeHeaderSearchAndFilter() {
   const homeProvince = useHomeProvince();
   const mainTabScroll = useMainTabScroll();
   const selectedProvince = homeProvince?.selectedProvince ?? '';
+  const minPriceKip = homeProvince?.minPriceKip ?? null;
+  const maxPriceKip = homeProvince?.maxPriceKip ?? null;
   const setSelectedProvince = homeProvince?.setSelectedProvince;
+  const setPriceRange = homeProvince?.setPriceRange;
 
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -35,7 +38,8 @@ export function HomeHeaderSearchAndFilter() {
   /** เมื่อผู้ใช้เปลี่ยนหรือแก้ไขคำค้นหา (URL ?q= เปลี่ยน) ให้ฟิลเตอร์กลับเป็น "ທຸກແຂວງ" */
   useEffect(() => {
     setSelectedProvince?.('');
-  }, [searchQuery, setSelectedProvince]);
+    setPriceRange?.(null, null);
+  }, [searchQuery, setSelectedProvince, setPriceRange]);
 
   const handleSearchClick = useCallback(() => {
     mainTabScroll?.saveCurrentScroll('/home');
@@ -80,10 +84,11 @@ export function HomeHeaderSearchAndFilter() {
     }, 300);
   }, []);
 
-  const handleSelectProvince = useCallback((province: string) => {
-    setSelectedProvince?.(province);
+  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null }) => {
+    setSelectedProvince?.(filters.province);
+    setPriceRange?.(filters.minPriceKip, filters.maxPriceKip);
     closePicker();
-  }, [closePicker, setSelectedProvince]);
+  }, [closePicker, setPriceRange, setSelectedProvince]);
 
   return (
     <>
@@ -214,8 +219,10 @@ export function HomeHeaderSearchAndFilter() {
         isAnimating={isAnimating}
         pickerRef={pickerRef}
         selectedProvince={selectedProvince}
+        minPriceKip={minPriceKip}
+        maxPriceKip={maxPriceKip}
         onClose={closePicker}
-        onApplyProvince={handleSelectProvince}
+        onApplyFilters={handleApplyFilters}
       />
     </>
   );

@@ -6,6 +6,48 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 
+const PRICE_MIN_BOUND = 0;
+const PRICE_MAX_BOUND = 1_000_000_000;
+const PRICE_INPUT_MAX_BOUND = 90_000_000_000;
+const PRICE_ROW_BASE_WIDTH = 300;
+const PRICE_ROW_MAX_WIDTH = 460;
+const PRICE_BASE_MAX_TEXT = '1,000,000,000';
+const PRICE_DEFAULT_MIN = 100_000_000;
+const PRICE_DEFAULT_MAX = 500_000_000;
+const PRICE_THRESHOLD_TIER = 1_000_000_000;
+const PRICE_STEP_LOW = 10_000_000;
+const PRICE_STEP_HIGH = 100_000_000;
+
+function clampPrice(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function snapPriceToTier(value: number) {
+  const step = value > PRICE_THRESHOLD_TIER ? PRICE_STEP_HIGH : PRICE_STEP_LOW;
+  return Math.round(value / step) * step;
+}
+
+function normalizeMinFromFilter(value: number | null) {
+  if (value == null) return PRICE_DEFAULT_MIN;
+  return clampPrice(value, PRICE_MIN_BOUND, PRICE_INPUT_MAX_BOUND);
+}
+
+function normalizeMaxFromFilter(value: number | null) {
+  if (value == null) return PRICE_DEFAULT_MAX;
+  return clampPrice(value, PRICE_MIN_BOUND, PRICE_INPUT_MAX_BOUND);
+}
+
+function formatPriceLabel(value: number) {
+  return `${value.toLocaleString('en-US')} ກີບ`;
+}
+
+function parseDigitsInput(value: string) {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  const numeric = Number(digits);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function SelectedCheckBadge() {
   return (
     <span
@@ -34,8 +76,10 @@ export interface HomeProvincePickerPortalProps {
   isAnimating: boolean;
   pickerRef: React.RefObject<HTMLDivElement | null>;
   selectedProvince: string;
+  minPriceKip: number | null;
+  maxPriceKip: number | null;
   onClose: () => void;
-  onApplyProvince: (province: string) => void;
+  onApplyFilters: (filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null }) => void;
 }
 
 function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
@@ -44,12 +88,22 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     isAnimating,
     pickerRef,
     selectedProvince,
+    minPriceKip,
+    maxPriceKip,
     onClose,
-    onApplyProvince,
+    onApplyFilters,
   } = props;
 
   const [mounted, setMounted] = useState(false);
   const [draftProvince, setDraftProvince] = useState('');
+  const [draftMinPriceKip, setDraftMinPriceKip] = useState(PRICE_DEFAULT_MIN);
+  const [draftMaxPriceKip, setDraftMaxPriceKip] = useState(PRICE_DEFAULT_MAX);
+  const [maxPriceUnlimited, setMaxPriceUnlimited] = useState(false);
+  const [isSliderHandlesSwapped, setIsSliderHandlesSwapped] = useState(false);
+  const [isEditingMinPrice, setIsEditingMinPrice] = useState(false);
+  const [isEditingMaxPrice, setIsEditingMaxPrice] = useState(false);
+  const [minPriceInputText, setMinPriceInputText] = useState('');
+  const [maxPriceInputText, setMaxPriceInputText] = useState('');
   const [showProvincePopup, setShowProvincePopup] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const isScrollLockedRef = useRef(false);
@@ -62,8 +116,18 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   useEffect(() => {
     if (!showProvincePicker) return;
     setDraftProvince(selectedProvince);
+    const nextMin = normalizeMinFromFilter(minPriceKip);
+    const nextMax = normalizeMaxFromFilter(maxPriceKip);
+    setDraftMinPriceKip(Math.min(nextMin, nextMax));
+    setDraftMaxPriceKip(Math.max(nextMin, nextMax));
+    setMaxPriceUnlimited(false);
+    setIsSliderHandlesSwapped(false);
+    setIsEditingMinPrice(false);
+    setIsEditingMaxPrice(false);
+    setMinPriceInputText('');
+    setMaxPriceInputText('');
     setShowProvincePopup(false);
-  }, [selectedProvince, showProvincePicker]);
+  }, [selectedProvince, minPriceKip, maxPriceKip, showProvincePicker]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -117,8 +181,24 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   };
 
   const handleSearch = () => {
-    onApplyProvince(draftProvince);
+    onApplyFilters({
+      province: draftProvince,
+      minPriceKip: draftMinPriceKip <= PRICE_MIN_BOUND ? null : draftMinPriceKip,
+      maxPriceKip: maxPriceUnlimited ? null : draftMaxPriceKip,
+    });
   };
+
+  const sliderMinValue = clampPrice(draftMinPriceKip, PRICE_MIN_BOUND, PRICE_MAX_BOUND);
+  const sliderMaxValue = maxPriceUnlimited
+    ? PRICE_MAX_BOUND
+    : clampPrice(draftMaxPriceKip, PRICE_MIN_BOUND, PRICE_MAX_BOUND);
+  const sliderPrimaryThumbValue = isSliderHandlesSwapped ? sliderMaxValue : sliderMinValue;
+  const sliderSecondaryThumbValue = isSliderHandlesSwapped ? sliderMinValue : sliderMaxValue;
+  const maxInputDisplayText = maxPriceUnlimited ? '' : draftMaxPriceKip.toLocaleString('en-US');
+  const extraMaxChars = Math.max(0, maxInputDisplayText.length - PRICE_BASE_MAX_TEXT.length);
+  const priceRowWidth = Math.min(PRICE_ROW_MAX_WIDTH, PRICE_ROW_BASE_WIDTH + extraMaxChars * 24);
+  const minPercent = ((sliderMinValue - PRICE_MIN_BOUND) / (PRICE_MAX_BOUND - PRICE_MIN_BOUND)) * 100;
+  const maxPercent = ((sliderMaxValue - PRICE_MIN_BOUND) / (PRICE_MAX_BOUND - PRICE_MIN_BOUND)) * 100;
 
   if (!mounted) return null;
 
@@ -276,6 +356,278 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             </span>
           </button>
         </div>
+        <div
+          style={{
+            padding: '14px 16px 14px',
+            borderBottom: '1px solid #f2f4f7',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              marginBottom: 10,
+              fontFamily: LAO_FONT,
+              color: '#111111',
+              fontSize: '16px',
+            }}
+          >
+            <span>ຊ່ວງລາຄາ</span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                minWidth: 0,
+                flex: '0 0 auto',
+                width: `min(86vw, ${priceRowWidth}px)`,
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  flex: '0 0 42%',
+                  minWidth: 0,
+                }}
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={isEditingMinPrice ? minPriceInputText : (draftMinPriceKip > 0 ? draftMinPriceKip.toLocaleString('en-US') : '')}
+                  placeholder="0"
+                  onFocus={() => {
+                    setIsEditingMinPrice(true);
+                    setMinPriceInputText('');
+                  }}
+                  onChange={(event) => {
+                    const parsed = parseDigitsInput(event.target.value);
+                    if (parsed == null) {
+                      setMinPriceInputText('');
+                      return;
+                    }
+                    const next = clampPrice(parsed, PRICE_MIN_BOUND, draftMaxPriceKip);
+                    setDraftMinPriceKip(next);
+                    setIsSliderHandlesSwapped(false);
+                    setMinPriceInputText(next.toLocaleString('en-US'));
+                  }}
+                  onBlur={() => {
+                    setIsEditingMinPrice(false);
+                    setMinPriceInputText('');
+                  }}
+                  style={{
+                    width: '100%',
+                    minWidth: 0,
+                    height: 32,
+                    borderRadius: 8,
+                    border: '1px solid #d0d5dd',
+                    padding: '0 42px 0 10px',
+                    fontFamily: LAO_FONT,
+                    fontSize: 13,
+                    color: '#111111',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontFamily: LAO_FONT,
+                    fontSize: 13,
+                    color: '#667085',
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ກີບ
+                </span>
+              </div>
+              <span style={{ fontFamily: LAO_FONT, fontSize: 13, color: '#98a2b3' }}>-</span>
+              <div
+                style={{
+                  position: 'relative',
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                }}
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={isEditingMaxPrice ? maxPriceInputText : (maxPriceUnlimited ? '' : draftMaxPriceKip.toLocaleString('en-US'))}
+                  placeholder="ບໍ່ຈຳກັດ"
+                  onFocus={() => {
+                    setIsEditingMaxPrice(true);
+                    setMaxPriceInputText('');
+                  }}
+                  onChange={(event) => {
+                    const parsed = parseDigitsInput(event.target.value);
+                    if (parsed == null) {
+                      setMaxPriceInputText('');
+                      return;
+                    }
+                    const next = clampPrice(parsed, draftMinPriceKip, PRICE_INPUT_MAX_BOUND);
+                    setMaxPriceUnlimited(false);
+                    setDraftMaxPriceKip(next);
+                    setIsSliderHandlesSwapped(false);
+                    setMaxPriceInputText(next.toLocaleString('en-US'));
+                  }}
+                  onBlur={() => {
+                    if (maxPriceInputText.trim().length === 0) {
+                      setMaxPriceUnlimited(true);
+                      setDraftMaxPriceKip(PRICE_MAX_BOUND);
+                    }
+                    setIsEditingMaxPrice(false);
+                    setMaxPriceInputText('');
+                  }}
+                  style={{
+                    width: '100%',
+                    minWidth: 0,
+                    height: 32,
+                    borderRadius: 8,
+                    border: '1px solid #d0d5dd',
+                    padding: '0 42px 0 10px',
+                    fontFamily: LAO_FONT,
+                    fontSize: 13,
+                    color: '#111111',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontFamily: LAO_FONT,
+                    fontSize: 13,
+                    color: '#667085',
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ກີບ
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="home-price-slider" style={{ position: 'relative', height: 30 }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 4,
+                borderRadius: 999,
+                background: '#dbe2ea',
+                transform: 'translateY(-50%)',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: `${minPercent}%`,
+                width: `${Math.max(maxPercent - minPercent, 0)}%`,
+                height: 4,
+                borderRadius: 999,
+                background: '#1877f2',
+                transform: 'translateY(-50%)',
+              }}
+            />
+            <input
+              type="range"
+              min={PRICE_MIN_BOUND}
+              max={PRICE_MAX_BOUND}
+              step={PRICE_STEP_LOW}
+              value={sliderPrimaryThumbValue}
+              onChange={(event) => {
+                const raw = Number(event.target.value);
+                const snapped = snapPriceToTier(raw);
+                const next = clampPrice(snapped, PRICE_MIN_BOUND, PRICE_MAX_BOUND);
+                if (!isSliderHandlesSwapped) {
+                  if (next > sliderMaxValue) {
+                    setDraftMinPriceKip(sliderMaxValue);
+                    setDraftMaxPriceKip(next);
+                    setMaxPriceUnlimited(next >= PRICE_MAX_BOUND);
+                    setIsSliderHandlesSwapped(true);
+                    return;
+                  }
+                  setDraftMinPriceKip(next);
+                  return;
+                }
+
+                if (next < sliderMinValue) {
+                  setDraftMaxPriceKip(sliderMinValue);
+                  setDraftMinPriceKip(next);
+                  setMaxPriceUnlimited(sliderMinValue >= PRICE_MAX_BOUND);
+                  setIsSliderHandlesSwapped(false);
+                  return;
+                }
+
+                if (next >= PRICE_MAX_BOUND) {
+                  setMaxPriceUnlimited(true);
+                  setDraftMaxPriceKip(PRICE_MAX_BOUND);
+                  return;
+                }
+
+                setMaxPriceUnlimited(false);
+                setDraftMaxPriceKip(next);
+              }}
+              className="home-price-range home-price-range-min"
+              aria-label="Min price"
+            />
+            <input
+              type="range"
+              min={PRICE_MIN_BOUND}
+              max={PRICE_MAX_BOUND}
+              step={PRICE_STEP_LOW}
+              value={sliderSecondaryThumbValue}
+              onChange={(event) => {
+                const raw = Number(event.target.value);
+                const snapped = snapPriceToTier(raw);
+                const next = clampPrice(snapped, PRICE_MIN_BOUND, PRICE_MAX_BOUND);
+                if (!isSliderHandlesSwapped) {
+                  if (next < sliderMinValue) {
+                    setDraftMinPriceKip(next);
+                    setDraftMaxPriceKip(sliderMinValue);
+                    setMaxPriceUnlimited(sliderMinValue >= PRICE_MAX_BOUND);
+                    setIsSliderHandlesSwapped(true);
+                    return;
+                  }
+
+                  if (next >= PRICE_MAX_BOUND) {
+                    setMaxPriceUnlimited(true);
+                    setDraftMaxPriceKip(PRICE_MAX_BOUND);
+                    return;
+                  }
+
+                  setMaxPriceUnlimited(false);
+                  setDraftMaxPriceKip(next);
+                  return;
+                }
+
+                if (next > sliderMaxValue) {
+                  setDraftMaxPriceKip(next);
+                  setDraftMinPriceKip(sliderMaxValue);
+                  setMaxPriceUnlimited(next >= PRICE_MAX_BOUND);
+                  setIsSliderHandlesSwapped(false);
+                  return;
+                }
+
+                setDraftMinPriceKip(next);
+              }}
+              className="home-price-range home-price-range-max"
+              aria-label="Max price"
+            />
+          </div>
+        </div>
         <div style={{ flex: 1, minHeight: 0 }} />
       </div>
 
@@ -364,6 +716,62 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .home-price-range {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 30px;
+          margin: 0;
+          background: transparent;
+          pointer-events: none;
+          -webkit-appearance: none;
+          appearance: none;
+        }
+
+        .home-price-range::-webkit-slider-runnable-track {
+          height: 4px;
+          background: transparent;
+        }
+
+        .home-price-range::-moz-range-track {
+          height: 4px;
+          background: transparent;
+        }
+
+        .home-price-range::-webkit-slider-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 2px solid #1877f2;
+          box-shadow: 0 1px 3px rgba(24, 119, 242, 0.4);
+          pointer-events: auto;
+          cursor: pointer;
+          -webkit-appearance: none;
+          margin-top: -8px;
+        }
+
+        .home-price-range::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 2px solid #1877f2;
+          box-shadow: 0 1px 3px rgba(24, 119, 242, 0.4);
+          pointer-events: auto;
+          cursor: pointer;
+        }
+
+        .home-price-range-max {
+          z-index: 2;
+        }
+
+        .home-price-range-min {
+          z-index: 3;
+        }
+      `}</style>
     </div>,
     document.body,
   );

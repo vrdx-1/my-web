@@ -52,7 +52,7 @@ export function useHomeRefresh(options: UseHomeRefreshOptions) {
   const doRefresh = useCallback(
     (refreshOptions?: { fromHomeButton?: boolean }) => {
       resetHomeRefreshScrollTop();
-      homeProvince?.setSelectedProvince('');
+      homeProvince?.resetFilters();
       let useNormalFeed = !searchQuery.trim();
       if (refreshOptions?.fromHomeButton) {
         mainTab?.setHomeTab('recommend');

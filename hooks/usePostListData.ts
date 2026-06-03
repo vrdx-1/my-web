@@ -77,6 +77,9 @@ interface UsePostListDataOptions {
   sharedLikedSaved?: PostListLikedSavedShared | null;
   /** สำหรับ type 'sold' ในหน้าโฮม: กรองตามจังหวัด (ທຸກແຂວງ ถ้าว่าง) */
   province?: string;
+  /** สำหรับ type 'sold' ในหน้าโฮม: ช่วงราคาที่ต้องการกรอง (ກີບ) */
+  minPriceKip?: number | null;
+  maxPriceKip?: number | null;
   /** สำหรับ type 'my-posts': คำค้น caption/รหัสโพสต์ */
   searchQuery?: string;
   /** สำหรับ type 'my-posts': จำกัดเฉพาะโพสต์ของ sub account ของ admin */
@@ -139,6 +142,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     loadAll = false,
     sharedLikedSaved,
     province,
+    minPriceKip = null,
+    maxPriceKip = null,
     searchQuery,
     onlySubAccounts = false,
     subAccountProfileIds = [],
@@ -593,6 +598,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           startIndex: number;
           endIndex: number;
           province?: string;
+          minPriceKip?: number;
+          maxPriceKip?: number;
           status: 'sold';
           feedSeed?: string;
         } = {
@@ -602,6 +609,12 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         };
         if (province && province.trim() !== '') {
           requestBody.province = province.trim();
+        }
+        if (minPriceKip != null) {
+          requestBody.minPriceKip = minPriceKip;
+        }
+        if (maxPriceKip != null) {
+          requestBody.maxPriceKip = maxPriceKip;
         }
         if (soldFeedSeedRef.current) {
           requestBody.feedSeed = soldFeedSeedRef.current;
@@ -1161,6 +1174,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     loadingMore,
     loadAll,
     province,
+    minPriceKip,
+    maxPriceKip,
     searchQuery,
     onlySubAccounts,
     subAccountProfileIds,

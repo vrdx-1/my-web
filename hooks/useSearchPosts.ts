@@ -17,6 +17,8 @@ export interface SearchLikedSavedShared {
 interface UseSearchPostsOptions {
   query: string;
   province?: string;
+  minPriceKip?: number | null;
+  maxPriceKip?: number | null;
   session?: any;
   activeProfileId?: string | null;
   sessionReady?: boolean;
@@ -39,7 +41,17 @@ interface UseSearchPostsReturn {
 }
 
 export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsReturn {
-  const { query, province, session, activeProfileId, sessionReady = true, sharedLikedSaved, enabled = true } = options;
+  const {
+    query,
+    province,
+    minPriceKip = null,
+    maxPriceKip = null,
+    session,
+    activeProfileId,
+    sessionReady = true,
+    sharedLikedSaved,
+    enabled = true,
+  } = options;
   const [posts, setPosts] = useState<any[]>([]);
   const q = (query || '').trim();
   const shouldLoad = enabled && q.length > 0;
@@ -124,6 +136,8 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       const params = new URLSearchParams();
       params.set('q', normalizeSmartCabQueryForSearch(q));
       if (province && province.trim() !== '') params.set('province', province.trim());
+      if (minPriceKip != null) params.set('minPriceKip', String(minPriceKip));
+      if (maxPriceKip != null) params.set('maxPriceKip', String(maxPriceKip));
       const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
       if (cancelledRef.current) return;
       const data = await res.json().catch(() => ({}));
@@ -139,7 +153,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     } finally {
       if (!aborted && !cancelledRef.current) setLoading(false);
     }
-  }, [query, province]);
+  }, [query, province, minPriceKip, maxPriceKip]);
 
   useEffect(() => {
     if (!enabled) {
@@ -153,7 +167,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     }
     setLoading(true);
     fetchSearch();
-  }, [enabled, query, province, fetchSearch]);
+  }, [enabled, query, province, minPriceKip, maxPriceKip, fetchSearch]);
 
   return {
     posts,
