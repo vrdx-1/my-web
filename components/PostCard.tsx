@@ -304,34 +304,6 @@ export function PostCard({
   }, [showPriceEstimatePopup]);
 
   React.useEffect(() => {
-    if (!showPriceEstimatePopup || typeof document === 'undefined') return;
-
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      const anchor = priceEstimatePopupRef.current;
-      const target = event.target;
-
-      if (!(target instanceof Node)) return;
-      if (anchor?.contains(target)) return;
-
-      const popup = document.querySelector('[data-price-estimate-popup="true"]');
-      if (popup?.contains(target)) return;
-
-      // Prevent tap/click-through to underlying post image while closing popup.
-      event.preventDefault();
-      event.stopPropagation();
-      setShowPriceEstimatePopup(false);
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown, { passive: false });
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [showPriceEstimatePopup]);
-
-  React.useEffect(() => {
     clearCaptionToggleStabilizers();
     setIsCaptionExpanded(false);
     setShowPriceEstimatePopup(false);
@@ -1209,11 +1181,11 @@ export function PostCard({
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setShowPriceEstimatePopup(false);
             }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              setShowPriceEstimatePopup(false);
             }}
             style={{
               position: 'fixed',
