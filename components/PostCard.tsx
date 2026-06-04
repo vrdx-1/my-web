@@ -300,7 +300,11 @@ export function PostCard({
     };
 
     window.addEventListener('scroll', handleScrollClose, { passive: true });
-    return () => window.removeEventListener('scroll', handleScrollClose);
+    window.addEventListener('touchmove', handleScrollClose, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollClose);
+      window.removeEventListener('touchmove', handleScrollClose);
+    };
   }, [showPriceEstimatePopup]);
 
   React.useEffect(() => {
@@ -1179,8 +1183,11 @@ export function PostCard({
           <div
             aria-hidden="true"
             onPointerDown={(e) => {
-              e.preventDefault();
               e.stopPropagation();
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation();
+              setShowPriceEstimatePopup(false);
             }}
             onClick={(e) => {
               e.preventDefault();
