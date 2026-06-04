@@ -143,6 +143,10 @@ export function PostCard({
   const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
   const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
   const [showPriceEstimatePopup, setShowPriceEstimatePopup] = React.useState(false);
+  const [priceEstimatePopupPosition, setPriceEstimatePopupPosition] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [cardExchangeRates, setCardExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
@@ -211,6 +215,7 @@ export function PostCard({
 
   const priceChipBackground = showPriceEstimatePopup ? '#ffffff' : 'transparent';
   const priceChipBoxShadow = showPriceEstimatePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none';
+  const priceChipBorder = '1px solid #d1d5db';
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -257,9 +262,78 @@ export function PostCard({
   }, []);
 
   React.useEffect(() => {
+    if (!showPriceEstimatePopup) {
+      setPriceEstimatePopupPosition(null);
+      return;
+    }
+
+    const updatePopupPosition = () => {
+      const anchor = priceEstimatePopupRef.current;
+      if (!anchor || typeof window === 'undefined') {
+        setPriceEstimatePopupPosition(null);
+        return;
+      }
+
+      const rect = anchor.getBoundingClientRect();
+      const popupWidth = 250;
+      const horizontalMargin = 12;
+      const maxLeft = Math.max(horizontalMargin, window.innerWidth - popupWidth - horizontalMargin);
+
+      setPriceEstimatePopupPosition({
+        top: rect.bottom + 8,
+        left: Math.min(Math.max(rect.left, horizontalMargin), maxLeft),
+      });
+    };
+
+    updatePopupPosition();
+    window.addEventListener('resize', updatePopupPosition, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', updatePopupPosition);
+    };
+  }, [showPriceEstimatePopup]);
+
+  React.useEffect(() => {
+    if (!showPriceEstimatePopup || typeof window === 'undefined') return;
+
+    const handleScrollClose = () => {
+      setShowPriceEstimatePopup(false);
+    };
+
+    window.addEventListener('scroll', handleScrollClose, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollClose);
+  }, [showPriceEstimatePopup]);
+
+  React.useEffect(() => {
+    if (!showPriceEstimatePopup || typeof document === 'undefined') return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const anchor = priceEstimatePopupRef.current;
+      const target = event.target;
+
+      if (!(target instanceof Node)) return;
+      if (anchor?.contains(target)) return;
+
+      const popup = document.querySelector('[data-price-estimate-popup="true"]');
+      if (popup?.contains(target)) return;
+
+      setShowPriceEstimatePopup(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [showPriceEstimatePopup]);
+
+  React.useEffect(() => {
     clearCaptionToggleStabilizers();
     setIsCaptionExpanded(false);
     setShowPriceEstimatePopup(false);
+    setPriceEstimatePopupPosition(null);
   }, [post.id, normalizedCaption, clearCaptionToggleStabilizers]);
 
   React.useEffect(() => clearCaptionToggleStabilizers, [clearCaptionToggleStabilizers]);
@@ -686,22 +760,8 @@ export function PostCard({
               display: 'flex',
               alignItems: 'center',
               overflow: 'visible',
-              position: 'relative',
-              zIndex: showPriceEstimatePopup ? 60 : undefined,
             }}
           >
-            {showPriceEstimatePopup && priceValue && priceValue > 0 ? (
-              <div
-                onClick={() => setShowPriceEstimatePopup(false)}
-                aria-hidden="true"
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.3)',
-                  zIndex: 0,
-                }}
-              />
-            ) : null}
             <div
               ref={priceEstimatePopupRef}
               style={{
@@ -711,7 +771,7 @@ export function PostCard({
                 gap: '6px',
                 minWidth: 0,
                 maxWidth: '100%',
-                zIndex: 1,
+                zIndex: showPriceEstimatePopup ? 1001 : 1,
               }}
             >
               {isOwner || onPriceClick ? (
@@ -736,7 +796,8 @@ export function PostCard({
                     minHeight: '34px',
                     borderRadius: '12px',
                     color: '#1c1e21',
-                    border: showPriceEstimatePopup ? 'none' : '1px solid #d1d5db',
+                    border: priceChipBorder,
+                    boxSizing: 'border-box',
                     boxShadow: priceChipBoxShadow,
                     fontSize: '14px',
                     fontWeight: 600,
@@ -773,7 +834,8 @@ export function PostCard({
                     minHeight: '34px',
                     borderRadius: '12px',
                     color: '#1c1e21',
-                    border: showPriceEstimatePopup ? 'none' : '1px solid #d1d5db',
+                    border: priceChipBorder,
+                    boxSizing: 'border-box',
                     boxShadow: priceChipBoxShadow,
                     fontSize: '14px',
                     fontWeight: 600,
@@ -814,7 +876,7 @@ export function PostCard({
                   borderRadius: '10px',
                   border: 'none',
                   background: 'transparent',
-                  color: '#374151',
+                  color: '#6b7280',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -827,46 +889,6 @@ export function PostCard({
                   <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-
-              {showPriceEstimatePopup && priceValue && priceValue > 0 ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    left: 0,
-                    minWidth: '250px',
-                    background: '#fff',
-                    border: 'none',
-                    borderRadius: '16px',
-                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
-                    padding: '16px 18px',
-                    zIndex: 2,
-                  }}
-                >
-                  <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                    ລາຄາປະມານ
-                  </div>
-                  {estimatedLines.map((line) => (
-                    <div
-                      key={line.symbol}
-                      style={{
-                        fontSize: '16px',
-                        lineHeight: '21px',
-                        fontWeight: 700,
-                        color: '#0f172a',
-                        marginBottom: '2px',
-                        display: 'grid',
-                        gridTemplateColumns: 'auto 18px',
-                        alignItems: 'center',
-                        columnGap: '4px',
-                      }}
-                    >
-                      <span style={{ textAlign: 'left' }}>{line.amount}</span>
-                      <span style={{ textAlign: 'left' }}>{line.symbol}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -1176,6 +1198,60 @@ export function PostCard({
           message="ປ່ຽນລາຄາສຳເລັດ"
           onClose={() => setShowChangePriceSuccess(false)}
         />
+      )}
+
+      {showPriceEstimatePopup && priceValue && priceValue > 0 && priceEstimatePopupPosition && typeof document !== 'undefined' && createPortal(
+        <>
+          <div
+            aria-hidden="true"
+            onClick={() => setShowPriceEstimatePopup(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.3)',
+              zIndex: 999,
+            }}
+          />
+          <div
+            data-price-estimate-popup="true"
+            style={{
+              position: 'fixed',
+              top: priceEstimatePopupPosition.top,
+              left: priceEstimatePopupPosition.left,
+              minWidth: '250px',
+              background: '#fff',
+              border: '1px solid #d8e1eb',
+              borderRadius: '16px',
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+              padding: '16px 18px',
+              zIndex: 1002,
+            }}
+          >
+            <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+              ລາຄາປະມານ
+            </div>
+            {estimatedLines.map((line) => (
+              <div
+                key={line.symbol}
+                style={{
+                  fontSize: '16px',
+                  lineHeight: '21px',
+                  fontWeight: 700,
+                  color: '#0f172a',
+                  marginBottom: '2px',
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 18px',
+                  alignItems: 'center',
+                  columnGap: '4px',
+                }}
+              >
+                <span style={{ textAlign: 'left' }}>{line.amount}</span>
+                <span style={{ textAlign: 'left' }}>{line.symbol}</span>
+              </div>
+            ))}
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );
