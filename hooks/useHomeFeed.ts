@@ -356,7 +356,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       }
 
       const actorKey = resolveHomeFeedActorKey(userIdForActor, guestTokenForActor);
-      if (actorKey) {
+      // Price-filtered/sorted feeds should not exclude previously seen IDs,
+      // otherwise narrow ranges can intermittently return empty results.
+      if (actorKey && !hasPriceFilter && !hasPriceSort) {
         const excludePostIds = readHomeFeedSeenPostIds(province, actorKey);
         if (excludePostIds.length > 0) {
           body.excludePostIds = excludePostIds;
@@ -365,7 +367,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
 
       // โหลดเพิ่ม: ใช้ cursor แทน offset เพื่อให้เร็วเท่ากันไม่ว่าเลื่อนลึกแค่ไหน
       // backend จะ merge cache + boost สด และจัดเรียง owner boost ให้อัตโนมัติ
-      const cursor = !isInitial ? lastPostRef.current : null;
+      const useCursorPagination = !isInitial && !hasPriceFilter && !hasPriceSort;
+      const cursor = useCursorPagination ? lastPostRef.current : null;
       if (cursor) {
         body.cursorId = cursor.id;
         body.cursorBoosted = cursor.is_boosted;
@@ -385,7 +388,17 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
 
       const isWithinClientPriceFilter = (post: HomeFeedPost) => {
+        // Server already applies price filter/sort; avoid client-side double filtering.
+        if (hasPriceFilter || hasPriceSort) return true;
+
         if (!hasPriceFilter) return true;
+
+        const approxLak = Number((post as { approx_price_lak?: unknown }).approx_price_lak);
+        if (Number.isFinite(approxLak) && approxLak > 0) {
+          if (minPriceKip != null && approxLak < minPriceKip) return false;
+          if (maxPriceKip != null && approxLak > maxPriceKip) return false;
+          return true;
+        }
 
         const displayLak = typeof (post as { display_price?: unknown }).display_price === 'number'
           ? ((post as { display_price?: number }).display_price ?? null)
@@ -464,14 +477,18 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (isInitial) {
         // ใช้โพสที่เก็บไว้จาก create-post แสดงครั้งเดียว ไม่ fetch แยก เพื่อไม่ให้จอกระพริบ
         let initialList = ordered;
-        try {
-          const justPostedPost = readJustPostedRecommendPost();
-          if (justPostedPost) {
-            initialList = mergeJustPostedPost(ordered, justPostedPost);
+        // When price filter/sort is active, avoid local just-post injection
+        // because it can introduce out-of-range posts into filtered results.
+        if (!hasPriceFilter && !hasPriceSort) {
+          try {
+            const justPostedPost = readJustPostedRecommendPost();
+            if (justPostedPost) {
+              initialList = mergeJustPostedPost(ordered, justPostedPost);
+            }
+            clearHomeFeedStorage();
+          } catch {
+            // ignore
           }
-          clearHomeFeedStorage();
-        } catch {
-          // ignore
         }
         const filteredInitialList = initialList.filter(isWithinClientPriceFilter);
         setPosts(filteredInitialList);

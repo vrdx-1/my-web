@@ -152,13 +152,18 @@ export function toEstimatedPrices(
   };
 }
 
-export function withLakDisplayPrice<T extends { price?: unknown; price_currency?: unknown }>(
+export function withLakDisplayPrice<T extends { price?: unknown; price_currency?: unknown; approx_price_lak?: unknown }>(
   post: T,
   rates: ExchangeRates = DEFAULT_EXCHANGE_RATES,
 ): T & { display_price: number | null; display_price_currency: CurrencySymbol } {
+  const approxLak = Number(post.approx_price_lak);
+  const displayPrice = Number.isFinite(approxLak) && approxLak > 0
+    ? approxLak
+    : toLakPrice(post.price, post.price_currency, rates);
+
   return {
     ...post,
-    display_price: toLakPrice(post.price, post.price_currency, rates),
+    display_price: displayPrice,
     display_price_currency: '₭',
   };
 }

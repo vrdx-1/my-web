@@ -39,11 +39,39 @@ type FeedPostRow = {
 
 type FeedResult = { postIds: string[]; hasMore: boolean; posts: FeedPostRow[]; feedSeed?: string };
 
+type PriceSortOrder = '' | 'asc' | 'desc';
+
+type PriceFilter = {
+  minPriceKip: number | null;
+  maxPriceKip: number | null;
+  priceSortOrder: PriceSortOrder;
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function resolveFeedStatus(value: unknown): FeedCacheStatus {
   return value === 'sold' ? 'sold' : 'recommend';
 }
+
+function sanitizePriceBound(value: unknown): number | null {
+  if (value == null) return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function resolvePriceSortOrder(value: unknown): PriceSortOrder {
+  return value === 'asc' || value === 'desc' ? value : '';
+}
+
+function priceFilterIsActive(pf: PriceFilter): boolean {
+  return pf.minPriceKip != null || pf.maxPriceKip != null || pf.priceSortOrder !== '';
+}
+
+const NO_PRICE_FILTER: PriceFilter = {
+  minPriceKip: null,
+  maxPriceKip: null,
+  priceSortOrder: '',
+};
 
 function createFeedSeed(): string {
   return randomUUID();
@@ -72,20 +100,33 @@ async function fetchAllFeedOrderRows(
   supabase: ReturnType<typeof createServerClient>,
   province?: string,
   status: FeedCacheStatus = 'recommend',
+  priceFilter: PriceFilter = NO_PRICE_FILTER,
 ): Promise<FeedOrderRow[]> {
   const rows: FeedOrderRow[] = [];
   const batchSize = 1000;
   let offset = 0;
+  const { minPriceKip, maxPriceKip, priceSortOrder } = priceFilter;
+  const hasPriceSort = priceSortOrder === 'asc' || priceSortOrder === 'desc';
 
   while (true) {
     let query = supabase
       .from('cars')
-      .select('id, is_boosted, user_id, guest_token, is_guest, created_at, caption, profiles!cars_user_id_fkey(is_verified)')
+      .select('id, is_boosted, user_id, guest_token, is_guest, created_at, caption, approx_price_lak, profiles!cars_user_id_fkey(is_verified)')
       .eq('status', status)
       .or('is_hidden.eq.false,is_hidden.is.null');
 
     if (province && province.trim() !== '') {
       query = query.eq('province', province.trim());
+    }
+
+    if (minPriceKip != null) query = query.gte('approx_price_lak', minPriceKip);
+    if (maxPriceKip != null) query = query.lte('approx_price_lak', maxPriceKip);
+
+    if (hasPriceSort) {
+      query = query.order('approx_price_lak', {
+        ascending: priceSortOrder === 'asc',
+        nullsFirst: false,
+      });
     }
 
     const { data, error } = await query
@@ -148,16 +189,25 @@ async function computeFeed(
   trendingTerms: TrendingTerm[] = [],
   viewerUserId?: string,
   viewerGuestToken?: string,
+  priceFilter: PriceFilter = NO_PRICE_FILTER,
 ): Promise<FeedResult> {
   const resolvedSeed = feedSeed || createFeedSeed();
-  const orderedIds = buildPersonalizedFeedOrder(
-    await fetchAllFeedOrderRows(supabase, province, status),
-    resolvedSeed,
-    userTerms,
-    trendingTerms,
-    viewerUserId,
-    viewerGuestToken,
-  );
+  const rows = await fetchAllFeedOrderRows(supabase, province, status, priceFilter);
+
+  // When the user explicitly sorts by price, keep the DB sort order — personalised
+  // re-ranking would scramble it. Filter-only requests still get personalised order.
+  const hasPriceSort =
+    priceFilter.priceSortOrder === 'asc' || priceFilter.priceSortOrder === 'desc';
+  const orderedIds = hasPriceSort
+    ? rows.map((r) => r.id)
+    : buildPersonalizedFeedOrder(
+        rows,
+        resolvedSeed,
+        userTerms,
+        trendingTerms,
+        viewerUserId,
+        viewerGuestToken,
+      );
   const postIds = orderedIds.slice(startIndex, endIndex + 1);
   const hasMore = endIndex + 1 < orderedIds.length;
   const posts = await hydrateFeedPosts(supabase, postIds, status);
@@ -222,6 +272,13 @@ export async function POST(request: NextRequest) {
       typeof body.feedSeed === 'string' && body.feedSeed ? body.feedSeed : undefined;
     const status = resolveFeedStatus(body.status);
 
+    const priceFilter: PriceFilter = {
+      minPriceKip: sanitizePriceBound(body.minPriceKip),
+      maxPriceKip: sanitizePriceBound(body.maxPriceKip),
+      priceSortOrder: resolvePriceSortOrder(body.priceSortOrder),
+    };
+    const hasPriceFilter = priceFilterIsActive(priceFilter);
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -250,16 +307,27 @@ export async function POST(request: NextRequest) {
       fetchTrendingTerms(supabase),
     ]);
 
-    // Users with search history get a per-user order → bypass shared Redis cache
+    // Users with search history get a per-user order → bypass shared Redis cache.
+    // Price filters/sort use bounds that aren't captured in the cache key, so they
+    // also bypass shared caches — caching ranges keyed on free-form min/max isn't
+    // worth the hit rate.
     const isPersonalized = userTerms.length > 0;
-    const shouldBypassCache = !!requestedFeedSeed || isPersonalized;
+    const shouldBypassCache = !!requestedFeedSeed || isPersonalized || hasPriceFilter;
 
     // ── Cursor-based load-more ────────────────────────────────────────────────
+    // Client disables cursor pagination when a price filter/sort is active
+    // (narrow ranges make cursor windows unreliable); we ignore cursor here too
+    // so the price-filtered path always recomputes from offsets.
     const cursorId = typeof body.cursorId === 'string' ? body.cursorId : undefined;
     const cursorBoosted = body.cursorBoosted;
     const cursorCreatedAt =
       typeof body.cursorCreatedAt === 'string' ? body.cursorCreatedAt : undefined;
-    if (cursorId && cursorCreatedAt && typeof cursorBoosted === 'boolean') {
+    if (
+      !hasPriceFilter &&
+      cursorId &&
+      cursorCreatedAt &&
+      typeof cursorBoosted === 'boolean'
+    ) {
       const pageSize = Math.min(
         Math.max(1, parseInt(String(body.pageSize ?? FEED_PAGE_SIZE), 10)),
         50,
@@ -299,12 +367,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ── Bypass-cache path (personalised or explicit feedSeed) ─────────────────
+    // ── Bypass-cache path (personalised, explicit feedSeed, or price filter) ─
     if (shouldBypassCache) {
       const result = await computeFeed(
         supabase, startIndex, endIndex, province, requestedFeedSeed, status,
         userTerms, trendingTerms,
         userId, guestToken,
+        priceFilter,
       );
       return NextResponse.json(result, {
         headers: { 'Cache-Control': 'private, max-age=0', 'X-Feed-Cache': 'MISS' },

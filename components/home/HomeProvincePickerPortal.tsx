@@ -13,8 +13,8 @@ const PRICE_INPUT_MAX_BOUND = 90_000_000_000;
 const PRICE_ROW_BASE_WIDTH = 300;
 const PRICE_ROW_MAX_WIDTH = 460;
 const PRICE_BASE_MAX_TEXT = '1,000,000,000';
-const PRICE_DEFAULT_MIN = 100_000_000;
-const PRICE_DEFAULT_MAX = 500_000_000;
+const PRICE_DEFAULT_MIN = PRICE_MIN_BOUND;
+const PRICE_DEFAULT_MAX = PRICE_MAX_BOUND;
 const PRICE_BUTTON_STEP = 10_000_000;
 const PRICE_THRESHOLD_TIER = 1_000_000_000;
 const PRICE_STEP_LOW = 10_000_000;
@@ -131,7 +131,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
     setDraftPriceSortOrder(priceSortOrder);
-    setMaxPriceUnlimited(false);
+    setMaxPriceUnlimited(maxPriceKip == null);
     setIsSliderHandlesSwapped(false);
     setIsEditingMinPrice(false);
     setIsEditingMaxPrice(false);
@@ -449,7 +449,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   placeholder="0"
                   onFocus={() => {
                     setIsEditingMinPrice(true);
-                    setMinPriceInputText('');
+                    setMinPriceInputText(draftMinPriceKip > 0 ? draftMinPriceKip.toLocaleString('en-US') : '');
                   }}
                   onChange={(event) => {
                     const parsed = parseDigitsInput(event.target.value);
@@ -511,7 +511,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   placeholder="ບໍ່ຈຳກັດ"
                   onFocus={() => {
                     setIsEditingMaxPrice(true);
-                    setMaxPriceInputText('');
+                    setMaxPriceInputText(maxPriceUnlimited ? '' : draftMaxPriceKip.toLocaleString('en-US'));
                   }}
                   onChange={(event) => {
                     const parsed = parseDigitsInput(event.target.value);
