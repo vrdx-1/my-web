@@ -246,7 +246,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         pointerEvents: 'none',
         visibility: showProvincePicker ? 'visible' : 'hidden',
         opacity: showProvincePicker ? 1 : 0,
-        transition: 'opacity 0.15s ease-out',
+        transition: 'none',
       }}
     >
       <div
@@ -284,7 +284,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           flexDirection: 'column',
           transform: showProvincePicker && !isAnimating ? 'translateY(0)' : 'translateY(100%)',
           opacity: showProvincePicker && !isAnimating ? 1 : 0,
-          transition: 'transform 0.28s ease-out, opacity 0.2s ease-out',
+          transition: 'none',
           pointerEvents: showProvincePicker ? 'auto' : 'none',
         }}
       >

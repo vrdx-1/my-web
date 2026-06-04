@@ -70,22 +70,15 @@ export function HomeHeaderSearchAndFilter() {
 
   const handleFilterClick = useCallback(() => {
     if (showProvincePicker) return;
-    // แสดง bottom sheet ทันทีโดยไม่รอ
-    requestAnimationFrame(() => {
-      setShowProvincePicker(true);
-      requestAnimationFrame(() => {
-        setIsAnimating(false);
-      });
-    });
-    setIsAnimating(true);
+    // เปิดทันทีแบบไม่มี animation เพื่อให้ตอบสนองเร็วที่สุด
+    setIsAnimating(false);
+    setShowProvincePicker(true);
   }, [showProvincePicker]);
 
   const closePicker = useCallback(() => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      setShowProvincePicker(false);
-      setIsAnimating(false);
-    }, 300);
+    // ปิดทันทีแบบไม่มี animation เพื่อให้ตอบสนองเร็วที่สุด
+    setShowProvincePicker(false);
+    setIsAnimating(false);
   }, []);
 
   const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc' }) => {
