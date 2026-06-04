@@ -208,6 +208,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     const shouldLockScroll = showProvincePicker || showProvincePopup || showCurrencyPopup;
     const body = document.body;
     const html = document.documentElement;
+    const stopBackgroundScroll = (event: TouchEvent | WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      const insidePopup = target.closest('[data-home-province-picker], [data-home-province-popup], [data-home-currency-popup]');
+      if (!insidePopup) {
+        event.preventDefault();
+      }
+    };
 
     if (shouldLockScroll && !isScrollLockedRef.current) {
       lockedScrollYRef.current = window.scrollY;
@@ -217,8 +225,15 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       body.style.right = '0';
       body.style.width = '100%';
       body.style.overflow = 'hidden';
+      body.style.overscrollBehavior = 'none';
       html.style.overflow = 'hidden';
+      html.style.overscrollBehavior = 'none';
       isScrollLockedRef.current = true;
+    }
+
+    if (shouldLockScroll) {
+      document.addEventListener('touchmove', stopBackgroundScroll, { passive: false });
+      document.addEventListener('wheel', stopBackgroundScroll, { passive: false });
     }
 
     if (!shouldLockScroll && isScrollLockedRef.current) {
@@ -229,12 +244,16 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       body.style.right = '';
       body.style.width = '';
       body.style.overflow = '';
+      body.style.overscrollBehavior = '';
       html.style.overflow = '';
+      html.style.overscrollBehavior = '';
       window.scrollTo(0, restoreY);
       isScrollLockedRef.current = false;
     }
 
     return () => {
+      document.removeEventListener('touchmove', stopBackgroundScroll);
+      document.removeEventListener('wheel', stopBackgroundScroll);
       if (!isScrollLockedRef.current) return;
       const restoreY = lockedScrollYRef.current;
       body.style.position = '';
@@ -243,7 +262,9 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       body.style.right = '';
       body.style.width = '';
       body.style.overflow = '';
+      body.style.overscrollBehavior = '';
       html.style.overflow = '';
+      html.style.overscrollBehavior = '';
       window.scrollTo(0, restoreY);
       isScrollLockedRef.current = false;
     };
@@ -277,11 +298,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const sliderMaxValue = maxPriceUnlimited
     ? priceBounds.maxBound
     : clampPrice(draftMaxPriceKip, priceBounds.minBound, priceBounds.maxBound);
-  const inputTextWidth = 142;
-  const inputBoxMinWidth = 166;
   const currencyPopupWidth = 120;
   const currencyPopupViewportPadding = 12;
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
+  const priceRowMaxWidth = Math.min(420, Math.max(260, viewportWidth - 52));
+  const priceSeparatorWidth = 10;
+  const priceRowGap = 8;
+  const inputBoxMinWidth = Math.floor((priceRowMaxWidth - priceSeparatorWidth - priceRowGap * 2) / 2);
+  const inputTextWidth = Math.max(90, inputBoxMinWidth - 24);
   const currencyPopupLeft = currencyTriggerRect
     ? Math.max(
       currencyPopupViewportPadding,
@@ -590,8 +614,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                width: 'auto',
+                gap: priceRowGap,
+                width: priceRowMaxWidth,
               }}
             >
               <div
@@ -1053,6 +1077,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             }}
           />
           <div
+            data-home-province-popup
             style={{
               position: 'absolute',
               left: triggerRect ? `${triggerRect.left + triggerRect.width / 2}px` : '50%',
@@ -1140,6 +1165,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             }}
           />
           <div
+            data-home-currency-popup
             style={{
               position: 'absolute',
               left: `${currencyPopupLeft}px`,
