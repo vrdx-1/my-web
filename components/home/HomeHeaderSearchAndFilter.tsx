@@ -26,6 +26,7 @@ export function HomeHeaderSearchAndFilter() {
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
+  const hasActiveFilters = selectedProvince.trim().length > 0 || minPriceKip != null || maxPriceKip != null || priceSortOrder !== '';
   const setSelectedProvince = homeProvince?.setSelectedProvince;
   const setPriceRange = homeProvince?.setPriceRange;
   const setPriceSortOrder = homeProvince?.setPriceSortOrder;
@@ -184,6 +185,7 @@ export function HomeHeaderSearchAndFilter() {
           onClick={handleFilterClick}
           aria-label="Filter"
           style={{
+            position: 'relative',
             width: `${CONTROL_SIZE}px`,
             height: `${CONTROL_SIZE}px`,
             borderRadius: '50%',
@@ -215,6 +217,22 @@ export function HomeHeaderSearchAndFilter() {
             <line x1="3" y1="16" x2="21" y2="16" />
             <circle cx="15" cy="16" r="2.9" fill="#ffffff" stroke="currentColor" />
           </svg>
+          {hasActiveFilters && (
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                top: 7,
+                right: 7,
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: '#16a34a',
+                border: '2px solid #ffffff',
+                boxSizing: 'border-box',
+              }}
+            />
+          )}
         </button>
       </div>
 

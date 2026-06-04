@@ -13,8 +13,8 @@ const PRICE_INPUT_MAX_BOUND = 90_000_000_000;
 const PRICE_ROW_BASE_WIDTH = 300;
 const PRICE_ROW_MAX_WIDTH = 460;
 const PRICE_BASE_MAX_TEXT = '1,000,000,000';
-const PRICE_DEFAULT_MIN = PRICE_MIN_BOUND;
-const PRICE_DEFAULT_MAX = PRICE_MAX_BOUND;
+const PRICE_DEFAULT_MIN = 100_000_000;
+const PRICE_DEFAULT_MAX = 500_000_000;
 const PRICE_BUTTON_STEP = 10_000_000;
 const PRICE_THRESHOLD_TIER = 1_000_000_000;
 const PRICE_STEP_LOW = 10_000_000;
@@ -131,7 +131,9 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
     setDraftPriceSortOrder(priceSortOrder);
-    setMaxPriceUnlimited(maxPriceKip == null);
+    // Keep "no filter selected yet" showing default finite range (100M-500M).
+    // Unlimited max is only shown when user explicitly applied an open-ended range.
+    setMaxPriceUnlimited(maxPriceKip == null && minPriceKip != null);
     setIsSliderHandlesSwapped(false);
     setIsEditingMinPrice(false);
     setIsEditingMaxPrice(false);
