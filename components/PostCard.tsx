@@ -19,8 +19,49 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { mergeHeaders } from '@/utils/activeProfile';
 import { resolveEffectiveWhatsAppPhone } from '@/utils/whatsapp';
+import {
+  DEFAULT_EXCHANGE_RATES,
+  formatEstimatedPrice,
+  toEstimatedPrices,
+  type ExchangeRates,
+} from '@/utils/exchangeRates';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
+
+let ratesCache: ExchangeRates | null = null;
+let ratesCacheLoadedAt = 0;
+let ratesRequestInFlight: Promise<ExchangeRates> | null = null;
+
+async function getLatestExchangeRates(): Promise<ExchangeRates> {
+  const now = Date.now();
+  if (ratesCache && now - ratesCacheLoadedAt < 5_000) {
+    return ratesCache;
+  }
+
+  if (ratesRequestInFlight) {
+    return ratesRequestInFlight;
+  }
+
+  ratesRequestInFlight = (async () => {
+    const res = await fetch('/api/exchange-rates/latest', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+
+    const json = await res.json().catch(() => ({}));
+    const nextRates = (json as { rates?: ExchangeRates })?.rates;
+    const normalized = nextRates ?? DEFAULT_EXCHANGE_RATES;
+
+    ratesCache = normalized;
+    ratesCacheLoadedAt = Date.now();
+    return normalized;
+  })().finally(() => {
+    ratesRequestInFlight = null;
+  });
+
+  return ratesRequestInFlight;
+}
 
 interface PostCardProps {
   post: any;
@@ -102,6 +143,8 @@ export function PostCard({
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
   const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
+  const [showPriceEstimatePopup, setShowPriceEstimatePopup] = React.useState(false);
+  const [cardExchangeRates, setCardExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [isCaptionOverflowing, setIsCaptionOverflowing] = React.useState(false);
@@ -109,6 +152,7 @@ export function PostCard({
   const [collapsedCaption, setCollapsedCaption] = React.useState('');
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const captionRef = React.useRef<HTMLDivElement | null>(null);
+  const priceEstimatePopupRef = React.useRef<HTMLDivElement | null>(null);
   const captionToggleUnlockTimeoutRef = React.useRef<number | null>(null);
   const normalizedCaption = React.useMemo(() => {
     const rawCaption = typeof post.caption === 'string' ? post.caption : '';
@@ -131,6 +175,26 @@ export function PostCard({
   const priceText = priceValue && priceValue > 0
     ? `${priceValue.toLocaleString('en-US')} ${currencySymbol}`
     : 'ບໍ່ລະບຸລາຄາ';
+  const estimatedPrices = React.useMemo(
+    () => toEstimatedPrices(post.price, currencySymbol, cardExchangeRates),
+    [currencySymbol, cardExchangeRates, post.price],
+  );
+
+  const estimateCurrencies = React.useMemo(() => {
+    if (currencySymbol === '$') return ['₭', '฿'] as const;
+    if (currencySymbol === '฿') return ['₭', '$'] as const;
+    return ['$', '฿'] as const;
+  }, [currencySymbol]);
+
+  const estimatedLines = React.useMemo(() => {
+    const map: Record<'₭' | '฿' | '$', number | null> = {
+      '₭': estimatedPrices.approx_price_lak,
+      '฿': estimatedPrices.approx_price_thb,
+      '$': estimatedPrices.approx_price_usd,
+    };
+
+    return estimateCurrencies.map((symbol) => formatEstimatedPrice(map[symbol], symbol));
+  }, [estimateCurrencies, estimatedPrices.approx_price_lak, estimatedPrices.approx_price_thb, estimatedPrices.approx_price_usd]);
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -160,11 +224,44 @@ export function PostCard({
   }, [registerVisibilityRef, index]);
 
   React.useEffect(() => {
+    let active = true;
+
+    getLatestExchangeRates()
+      .then((rates) => {
+        if (!active) return;
+        setCardExchangeRates(rates);
+      })
+      .catch(() => {
+        // keep fallback default rates
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
     clearCaptionToggleStabilizers();
     setIsCaptionExpanded(false);
+    setShowPriceEstimatePopup(false);
   }, [post.id, normalizedCaption, clearCaptionToggleStabilizers]);
 
   React.useEffect(() => clearCaptionToggleStabilizers, [clearCaptionToggleStabilizers]);
+
+  React.useEffect(() => {
+    if (!showPriceEstimatePopup) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!priceEstimatePopupRef.current) return;
+      const target = event.target as Node | null;
+      if (target && !priceEstimatePopupRef.current.contains(target)) {
+        setShowPriceEstimatePopup(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showPriceEstimatePopup]);
 
   const trackWhatsAppClick = React.useCallback((targetProfileId: string, postId: string) => {
     const payload: Record<string, string> = {
@@ -578,105 +675,161 @@ export function PostCard({
             alignItems: 'center',
             justifyContent: 'space-between',
             minWidth: 0,
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
-          <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            {isOwner || onPriceClick ? (
+          <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'visible' }}>
+            <div
+              ref={priceEstimatePopupRef}
+              style={{
+                position: 'relative',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                minWidth: 0,
+                maxWidth: '100%',
+              }}
+            >
+              {isOwner || onPriceClick ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onPriceClick) {
+                      onPriceClick(post);
+                      return;
+                    }
+                    setShowChangePriceModal(true);
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    padding: '8px 16px',
+                    minHeight: '34px',
+                    borderRadius: '12px',
+                    color: '#1c1e21',
+                    border: '1px solid #d1d5db',
+                    boxShadow: 'none',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    letterSpacing: '0.01em',
+                    whiteSpace: 'nowrap',
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#1c1e21',
+                      fontSize: '16px',
+                      lineHeight: '21px',
+                      fontWeight: 700,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {priceText}
+                  </span>
+                </button>
+              ) : (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    padding: '8px 16px',
+                    minHeight: '34px',
+                    borderRadius: '12px',
+                    color: '#1c1e21',
+                    border: '1px solid #d1d5db',
+                    boxShadow: 'none',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    letterSpacing: '0.01em',
+                    whiteSpace: 'nowrap',
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#1c1e21',
+                      fontSize: '16px',
+                      lineHeight: '21px',
+                      fontWeight: 700,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {priceText}
+                  </span>
+                </span>
+              )}
+
               <button
                 type="button"
+                aria-label="ສະແດງລາຄາປະມານ"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (onPriceClick) {
-                    onPriceClick(post);
-                    return;
-                  }
-                  setShowChangePriceModal(true);
+                  if (!priceValue || priceValue <= 0) return;
+                  setShowPriceEstimatePopup((prev) => !prev);
                 }}
                 style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '10px',
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'transparent',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  padding: '8px 16px',
-                  minHeight: '34px',
-                  borderRadius: '12px',
-                  color: '#1c1e21',
-                  border: '1px solid #d1d5db',
-                  boxShadow: 'none',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  letterSpacing: '0.01em',
-                  whiteSpace: 'nowrap',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
+                  cursor: priceValue && priceValue > 0 ? 'pointer' : 'not-allowed',
+                  opacity: priceValue && priceValue > 0 ? 1 : 0.6,
+                  padding: 0,
                 }}
               >
-                <span
-                  style={{
-                    color: '#1c1e21',
-                    fontSize: '16px',
-                    lineHeight: '21px',
-                    fontWeight: 700,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {priceText}
-                </span>
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
-            ) : (
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                }}
-              >
-                <span
+
+              {showPriceEstimatePopup && priceValue && priceValue > 0 ? (
+                <div
                   style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'transparent',
-                  padding: '8px 16px',
-                  minHeight: '34px',
-                  borderRadius: '12px',
-                  color: '#1c1e21',
-                  border: '1px solid #d1d5db',
-                  boxShadow: 'none',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  letterSpacing: '0.01em',
-                  whiteSpace: 'nowrap',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#1c1e21',
-                    fontSize: '16px',
-                    lineHeight: '21px',
-                    fontWeight: 700,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    left: 0,
+                    minWidth: '178px',
+                    background: '#fff',
+                    border: '1px solid #dbe3ee',
+                    borderRadius: '12px',
+                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
+                    padding: '12px',
+                    zIndex: 50,
                   }}
                 >
-                  {priceText}
-                </span>
-              </span>
-              </div>
-            )}
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    ລາຄາປະມານ
+                  </div>
+                  {estimatedLines.map((line) => (
+                    <div key={line} style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: '22px' }}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {/* Action Buttons */}

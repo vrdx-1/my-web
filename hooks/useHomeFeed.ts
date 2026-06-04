@@ -27,6 +27,11 @@ import {
   type HomeFeedPost,
 } from '@/hooks/homeFeedStorage';
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
+import {
+  DEFAULT_EXCHANGE_RATES,
+  normalizeExchangeRates,
+  toLakPrice,
+} from '../utils/exchangeRates';
 
 export interface HomeLikedSavedShared {
   likedPosts: { [key: string]: boolean };
@@ -109,6 +114,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   } = options;
   const hasPriceFilter = minPriceKip != null || maxPriceKip != null;
   const hasPriceSort = priceSortOrder === 'asc' || priceSortOrder === 'desc';
+  const [clientExchangeRates, setClientExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
   const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
     if (isBrowserReloadNavigation()) return [];
     return getInitialPostsFromStorage(province);
@@ -144,6 +150,28 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
   useEffect(() => {
     onInitialLoadDoneRef.current = onInitialLoadDone;
   }, [onInitialLoadDone]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadExchangeRates = async () => {
+      const { data } = await supabase
+        .from('exchange_rates')
+        .select('lak_to_thb, lak_to_usd, thb_to_lak, thb_to_usd, usd_to_lak, usd_to_thb')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!active) return;
+      setClientExchangeRates(normalizeExchangeRates(data));
+    };
+
+    loadExchangeRates();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // หลัง initial load 2 โพสต์แรกเสร็จ ให้ trigger โหลด 5 โพสต์ถัดไปทันที (ถ้ายังไม่โหลด)
   useEffect(() => {
@@ -355,6 +383,28 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         signal,
       });
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
+
+      const isWithinClientPriceFilter = (post: HomeFeedPost) => {
+        if (!hasPriceFilter) return true;
+
+        const displayLak = typeof (post as { display_price?: unknown }).display_price === 'number'
+          ? ((post as { display_price?: number }).display_price ?? null)
+          : null;
+
+        let lakPrice: number | null = displayLak;
+        if (lakPrice == null) {
+          lakPrice = toLakPrice(
+            (post as { price?: number | string | null }).price,
+            (post as { price_currency?: string | null }).price_currency,
+            clientExchangeRates,
+          );
+        }
+
+        if (lakPrice == null) return true;
+        if (minPriceKip != null && lakPrice < minPriceKip) return false;
+        if (maxPriceKip != null && lakPrice > maxPriceKip) return false;
+        return true;
+      };
       const data = await res.json().catch(() => ({}));
       if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
       if (typeof data.feedSeed === 'string' && data.feedSeed) {
@@ -423,22 +473,25 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         } catch {
           // ignore
         }
-        setPosts(initialList);
-        preloadPostsVisibleImages(initialList, 2);
+        const filteredInitialList = initialList.filter(isWithinClientPriceFilter);
+        setPosts(filteredInitialList);
+        preloadPostsVisibleImages(filteredInitialList, 2);
         fireInitialLoadDone();
         markHomeMotionEvent('initial-feed-ready', {
-          postCount: initialList.length,
+          postCount: filteredInitialList.length,
           backgroundRefresh,
         });
         try {
-          writeHomeFeedCache(province, ordered, nextHasMore);
+          writeHomeFeedCache(province, filteredInitialList, nextHasMore);
         } catch {
           // ignore
         }
       } else {
         setPosts((prev) => {
           const ids = new Set(prev.map((post) => String(post.id)));
-          const newOnes = ordered.filter((post) => !ids.has(String(post.id)));
+          const newOnes = ordered
+            .filter(isWithinClientPriceFilter)
+            .filter((post) => !ids.has(String(post.id)));
           return newOnes.length ? [...prev, ...newOnes] : prev;
         });
         recordHomeMotionDuration('feed-hydrate', 'append-feed-posts', 0, {
@@ -446,8 +499,24 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         });
       }
     } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return;
-      throw e;
+      if (e instanceof Error && e.name === 'AbortError') {
+        if (isInitial) {
+          fireInitialLoadDone();
+        }
+        return;
+      }
+
+      if (isInitial) {
+        // ถ้า initial fetch ล้มเหลว อย่าให้หน้า Home ค้าง skeleton ตลอด
+        setPosts([]);
+        setHasMore(false);
+        fireInitialLoadDone();
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('useHomeFeed fetchPosts failed:', e);
+      }
+      return;
     } finally {
       endHomeMotionTimer(fetchTimer, {
         isInitial,
@@ -476,7 +545,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         }
       }
     }
-  }, [page, loadingMore, province, minPriceKip, maxPriceKip, priceSortOrder, hasPriceSort, fireInitialLoadDone]);
+  }, [page, loadingMore, province, minPriceKip, maxPriceKip, priceSortOrder, hasPriceSort, hasPriceFilter, clientExchangeRates, fireInitialLoadDone]);
   const fetchPostsRef = useRef(fetchPosts);
   useEffect(() => { fetchPostsRef.current = fetchPosts; }, [fetchPosts]);
   const initialLoadFromCacheRef = useRef(false);

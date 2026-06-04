@@ -117,6 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Review (Edited)', path: '/admin/edited-posts' },
     { name: 'Boosting', path: '/admin/boosting' },
     { name: 'Revenue', path: '/admin/revenue' },
+    { name: 'Exchange Rates', path: '/admin/exchange-rates' },
     { name: 'Download Clicks', path: '/admin/download-clicks' },
     { name: 'WhatsApp Clicks', path: '/admin/whatsapp-clicks' },
     { name: 'All Post', path: '/admin/post' },
