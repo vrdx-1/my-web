@@ -21,7 +21,6 @@ import { mergeHeaders } from '@/utils/activeProfile';
 import { resolveEffectiveWhatsAppPhone } from '@/utils/whatsapp';
 import {
   DEFAULT_EXCHANGE_RATES,
-  formatEstimatedPrice,
   toEstimatedPrices,
   type ExchangeRates,
 } from '@/utils/exchangeRates';
@@ -193,7 +192,21 @@ export function PostCard({
       '$': estimatedPrices.approx_price_usd,
     };
 
-    return estimateCurrencies.map((symbol) => formatEstimatedPrice(map[symbol], symbol));
+    return estimateCurrencies.map((symbol) => {
+      const value = map[symbol];
+      if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+        return { symbol, amount: '-' };
+      }
+
+      const fractionDigits = symbol === '₭' ? 0 : 2;
+      return {
+        symbol,
+        amount: value.toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: fractionDigits,
+        }),
+      };
+    });
   }, [estimateCurrencies, estimatedPrices.approx_price_lak, estimatedPrices.approx_price_thb, estimatedPrices.approx_price_usd]);
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
@@ -788,8 +801,8 @@ export function PostCard({
                   width: '30px',
                   height: '30px',
                   borderRadius: '10px',
-                  border: '1px solid #d1d5db',
-                  background: '#fff',
+                  border: 'none',
+                  background: 'transparent',
                   color: '#374151',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -810,21 +823,35 @@ export function PostCard({
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
                     left: 0,
-                    minWidth: '178px',
+                    minWidth: '250px',
                     background: '#fff',
                     border: '1px solid #dbe3ee',
-                    borderRadius: '12px',
+                    borderRadius: '16px',
                     boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
-                    padding: '12px',
+                    padding: '16px 18px',
                     zIndex: 50,
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
                     ລາຄາປະມານ
                   </div>
                   {estimatedLines.map((line) => (
-                    <div key={line} style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: '22px' }}>
-                      {line}
+                    <div
+                      key={line.symbol}
+                      style={{
+                        fontSize: '16px',
+                        lineHeight: '21px',
+                        fontWeight: 700,
+                        color: '#0f172a',
+                        marginBottom: '2px',
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 18px',
+                        alignItems: 'center',
+                        columnGap: '4px',
+                      }}
+                    >
+                      <span style={{ textAlign: 'left' }}>{line.amount}</span>
+                      <span style={{ textAlign: 'left' }}>{line.symbol}</span>
                     </div>
                   ))}
                 </div>
