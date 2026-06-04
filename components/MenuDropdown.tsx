@@ -198,9 +198,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           width: '230px',
           overflow: 'hidden',
           touchAction: 'manipulation',
-          transform: isAnimating ? 'translateY(-10px) scale(0.95)' : 'translateY(0) scale(1)',
-          opacity: isAnimating ? 0 : 1,
-          transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
           pointerEvents: 'auto',
         }}
       >

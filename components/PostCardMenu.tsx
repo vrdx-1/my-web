@@ -32,16 +32,16 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   session,
   isOwner,
   hideBoost,
-  activeMenuState,
-  isMenuAnimating,
+  activeMenuState: _activeMenuState,
+  isMenuAnimating: _isMenuAnimating,
   menuButtonRefs,
   onSave,
   saveLabel,
   onShare,
   onDeletePost,
   onReport,
-  onSetActiveMenu,
-  onSetMenuAnimating,
+  onSetActiveMenu: _onSetActiveMenu,
+  onSetMenuAnimating: _onSetMenuAnimating,
   onOpenPrivateNote,
   onRepost,
 }) => {
@@ -53,31 +53,30 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   const canRepost = !isSoldPost && Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isMenuOpen || typeof window === 'undefined') return;
+
+    const closeMenuOnScroll = () => {
+      setIsMenuOpen(false);
+    };
+
+    window.addEventListener('scroll', closeMenuOnScroll, { passive: true });
+    window.addEventListener('touchmove', closeMenuOnScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', closeMenuOnScroll);
+      window.removeEventListener('touchmove', closeMenuOnScroll);
+    };
+  }, [isMenuOpen]);
 
   const handleMenuClick = () => {
-    if (activeMenuState === menuInstanceId) {
-      onSetMenuAnimating(true);
-      setTimeout(() => {
-        onSetActiveMenu(null);
-        onSetMenuAnimating(false);
-      }, 300);
-    } else {
-      onSetActiveMenu(menuInstanceId);
-      onSetMenuAnimating(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          onSetMenuAnimating(false);
-        });
-      });
-    }
+    setIsMenuOpen((prev) => !prev);
   };
 
   const handleMenuClose = () => {
-    onSetMenuAnimating(true);
-    setTimeout(() => {
-      onSetActiveMenu(null);
-      onSetMenuAnimating(false);
-    }, 300);
+    setIsMenuOpen(false);
   };
 
   return (
@@ -105,7 +104,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
       </button>
       
       {/* Menu Dropdown */}
-      {activeMenuState === menuInstanceId && (() => {
+      {isMenuOpen && (() => {
         const buttonEl = menuButtonRefs.current[menuInstanceId];
         const rect = buttonEl?.getBoundingClientRect();
         const menuTop = rect ? rect.bottom + 4 : 0;
@@ -115,21 +114,21 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           <MenuDropdown
             postId={post.id}
             isOwner={isOwner}
-            isOpen={activeMenuState === menuInstanceId}
-            isAnimating={isMenuAnimating}
+            isOpen={isMenuOpen}
+            isAnimating={false}
             menuTop={menuTop}
             menuRight={menuRight}
             onClose={handleMenuClose}
             onEdit={() => {
-              onSetActiveMenu(null);
+              setIsMenuOpen(false);
               router.push(`/edit-post/${post.id}`);
             }}
             onDelete={() => {
-              onSetActiveMenu(null);
+              setIsMenuOpen(false);
               onDeletePost(post.id);
             }}
             onSave={() => {
-              onSetActiveMenu(null);
+              setIsMenuOpen(false);
               if (!session) {
                 router.push(REGISTER_PATH);
                 return;
@@ -138,25 +137,25 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             }}
             saveLabel={saveLabel}
             onShare={() => {
-              onSetActiveMenu(null);
+              setIsMenuOpen(false);
               onShare(post);
             }}
             onBoost={
               hideBoost
                 ? undefined
                 : () => {
-                    onSetActiveMenu(null);
+                    setIsMenuOpen(false);
                     router.push(`/boost_post?id=${post.id}`);
                   }
             }
             onReport={() => {
-              onSetActiveMenu(null);
+              setIsMenuOpen(false);
               onReport(post);
             }}
             onPrivateNote={
               isOwner
                 ? () => {
-                    onSetActiveMenu(null);
+                    setIsMenuOpen(false);
                     onOpenPrivateNote?.();
                   }
                 : undefined
@@ -164,7 +163,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             onRepost={
               isOwner && canRepost && typeof onRepost === 'function'
                 ? () => {
-                    onSetActiveMenu(null);
+                    setIsMenuOpen(false);
                     setShowRepostConfirm(true);
                   }
                 : undefined
