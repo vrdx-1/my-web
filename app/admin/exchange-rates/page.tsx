@@ -152,7 +152,7 @@ export default function AdminExchangeRatesPage() {
       <div style={{ marginBottom: '18px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px' }}>Exchange Rates</h1>
         <p style={{ color: '#475569', margin: 0 }}>
-          ອັບເດດອັດຕາແລກປ່ຽນເພື່ອໃຫ້ລະບົບຄຳນວນລາຄາປະມານໃໝ່ທຸກໂພສອັດຕະໂນມັດ
+          ອັບເດດອັດຕາແລກປ່ຽນເພື່ອໃຫ້ລະບົບຄຳນວນອັດຕາແລກປ່ຽນໂດຍປະມານໃໝ່ທຸກໂພສອັດຕະໂນມັດ
         </p>
       </div>
 

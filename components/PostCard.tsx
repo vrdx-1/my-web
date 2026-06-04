@@ -864,7 +864,7 @@ export function PostCard({
 
               <button
                 type="button"
-                aria-label="ສະແດງລາຄາປະມານ"
+                aria-label="ສະແດງອັດຕາແລກປ່ຽນໂດຍປະມານ"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!priceValue || priceValue <= 0) return;
@@ -1220,7 +1220,7 @@ export function PostCard({
               left: priceEstimatePopupPosition.left,
               minWidth: '250px',
               background: '#fff',
-              border: '1px solid #d8e1eb',
+              border: 'none',
               borderRadius: '16px',
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
               padding: '16px 18px',
@@ -1228,7 +1228,7 @@ export function PostCard({
             }}
           >
             <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-              ລາຄາປະມານ
+              ອັດຕາແລກປ່ຽນໂດຍປະມານ
             </div>
             {estimatedLines.map((line) => (
               <div
