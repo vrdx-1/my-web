@@ -316,11 +316,14 @@ export function PostCard({
       const popup = document.querySelector('[data-price-estimate-popup="true"]');
       if (popup?.contains(target)) return;
 
+      // Prevent tap/click-through to underlying post image while closing popup.
+      event.preventDefault();
+      event.stopPropagation();
       setShowPriceEstimatePopup(false);
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown, { passive: true });
+    document.addEventListener('touchstart', handlePointerDown, { passive: false });
 
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
@@ -1203,7 +1206,15 @@ export function PostCard({
         <>
           <div
             aria-hidden="true"
-            onClick={() => setShowPriceEstimatePopup(false)}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowPriceEstimatePopup(false);
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             style={{
               position: 'fixed',
               inset: 0,
