@@ -1224,25 +1224,29 @@ export function PostCard({
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
               padding: '16px 18px',
               zIndex: 1002,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
             }}
           >
-            <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#C2410C', marginBottom: '8px' }}>
+            <div style={{ fontSize: '20px', lineHeight: '26px', fontWeight: 700, color: '#C2410C' }}>
               ອັດຕາແລກປ່ຽນໂດຍປະມານ
             </div>
-            {estimatedLines.map((line) => (
-              <div
-                key={line.symbol}
-                style={{
-                  fontSize: '16px',
-                  lineHeight: '21px',
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  marginBottom: '2px',
-                }}
-              >
-                {line.amount === '-' ? line.amount : `${line.amount} ${line.symbol}`}
-              </div>
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {estimatedLines.map((line) => (
+                <div
+                  key={line.symbol}
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '21px',
+                    fontWeight: 700,
+                    color: '#0f172a',
+                  }}
+                >
+                  {line.amount === '-' ? line.amount : `${line.amount} ${line.symbol}`}
+                </div>
+              ))}
+            </div>
           </div>
         </>,
         document.body
