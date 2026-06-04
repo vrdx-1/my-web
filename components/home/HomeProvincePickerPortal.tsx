@@ -435,34 +435,37 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             type="button"
             onClick={handleCancel}
             style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
               border: 'none',
               background: 'transparent',
-              padding: 0,
-              fontSize: '18px',
-              color: '#111111',
-              fontFamily: LAO_FONT,
-              fontWeight: 400,
+              color: '#000',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
+            aria-label="Back"
           >
-            ຍົກເລີກ
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
           </button>
           <span style={{ fontSize: '21px', fontWeight: 700 }}>ຕົວກອງ</span>
           <button
             type="button"
-            onClick={handleSearch}
+            aria-hidden
+            tabIndex={-1}
             style={{
-              border: 'none',
-              background: 'transparent',
-              padding: 0,
-              fontSize: '18px',
-              color: '#1877f2',
-              fontFamily: LAO_FONT,
-              fontWeight: 700,
-              cursor: 'pointer',
+              width: 36,
+              height: 36,
+              opacity: 0,
+              pointerEvents: 'none',
             }}
           >
-            ຄົ້ນຫາ
+            .
           </button>
         </div>
         <div
@@ -1034,6 +1037,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             padding: '12px 16px calc(48px + env(safe-area-inset-bottom, 0px))',
             display: 'flex',
             justifyContent: 'center',
+            alignItems: 'center',
+            gap: 10,
             flexShrink: 0,
             background: '#fff',
           }}
@@ -1046,15 +1051,41 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               background: '#f8fafc',
               color: '#344054',
               borderRadius: 999,
-              padding: '10px 18px',
+              padding: '0 18px',
+              height: 40,
               fontFamily: LAO_FONT,
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
-              minWidth: 140,
+              minWidth: 156,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             ລ້າງຕົວກອງ
+          </button>
+          <button
+            type="button"
+            onClick={handleSearch}
+            style={{
+              border: 'none',
+              background: '#1877f2',
+              color: '#fff',
+              borderRadius: 999,
+              padding: '0 18px',
+              height: 40,
+              fontFamily: LAO_FONT,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              minWidth: 156,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            ຄົ້ນຫາ
           </button>
         </div>
       </div>
