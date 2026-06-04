@@ -209,6 +209,9 @@ export function PostCard({
     });
   }, [estimateCurrencies, estimatedPrices.approx_price_lak, estimatedPrices.approx_price_thb, estimatedPrices.approx_price_usd]);
 
+  const priceChipBackground = showPriceEstimatePopup ? '#ffffff' : 'transparent';
+  const priceChipBoxShadow = showPriceEstimatePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none';
+
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
       window.clearTimeout(captionToggleUnlockTimeoutRef.current);
@@ -260,21 +263,6 @@ export function PostCard({
   }, [post.id, normalizedCaption, clearCaptionToggleStabilizers]);
 
   React.useEffect(() => clearCaptionToggleStabilizers, [clearCaptionToggleStabilizers]);
-
-  React.useEffect(() => {
-    if (!showPriceEstimatePopup) return;
-
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (!priceEstimatePopupRef.current) return;
-      const target = event.target as Node | null;
-      if (target && !priceEstimatePopupRef.current.contains(target)) {
-        setShowPriceEstimatePopup(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [showPriceEstimatePopup]);
 
   const trackWhatsAppClick = React.useCallback((targetProfileId: string, postId: string) => {
     const payload: Record<string, string> = {
@@ -691,7 +679,29 @@ export function PostCard({
             overflow: 'visible',
           }}
         >
-          <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'center', overflow: 'visible' }}>
+          <div
+            style={{
+              minWidth: 0,
+              flex: '1 1 auto',
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'visible',
+              position: 'relative',
+              zIndex: showPriceEstimatePopup ? 60 : undefined,
+            }}
+          >
+            {showPriceEstimatePopup && priceValue && priceValue > 0 ? (
+              <div
+                onClick={() => setShowPriceEstimatePopup(false)}
+                aria-hidden="true"
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.3)',
+                  zIndex: 0,
+                }}
+              />
+            ) : null}
             <div
               ref={priceEstimatePopupRef}
               style={{
@@ -701,6 +711,7 @@ export function PostCard({
                 gap: '6px',
                 minWidth: 0,
                 maxWidth: '100%',
+                zIndex: 1,
               }}
             >
               {isOwner || onPriceClick ? (
@@ -718,7 +729,7 @@ export function PostCard({
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'transparent',
+                    background: priceChipBackground,
                     appearance: 'none',
                     WebkitAppearance: 'none',
                     padding: '8px 16px',
@@ -726,7 +737,7 @@ export function PostCard({
                     borderRadius: '12px',
                     color: '#1c1e21',
                     border: '1px solid #d1d5db',
-                    boxShadow: 'none',
+                    boxShadow: priceChipBoxShadow,
                     fontSize: '14px',
                     fontWeight: 600,
                     letterSpacing: '0.01em',
@@ -757,13 +768,13 @@ export function PostCard({
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'transparent',
+                    background: priceChipBackground,
                     padding: '8px 16px',
                     minHeight: '34px',
                     borderRadius: '12px',
                     color: '#1c1e21',
                     border: '1px solid #d1d5db',
-                    boxShadow: 'none',
+                    boxShadow: priceChipBoxShadow,
                     fontSize: '14px',
                     fontWeight: 600,
                     letterSpacing: '0.01em',
@@ -829,7 +840,7 @@ export function PostCard({
                     borderRadius: '16px',
                     boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
                     padding: '16px 18px',
-                    zIndex: 50,
+                    zIndex: 2,
                   }}
                 >
                   <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
