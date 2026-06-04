@@ -222,13 +222,13 @@ export function HomeHeaderSearchAndFilter() {
               aria-hidden
               style={{
                 position: 'absolute',
-                top: 7,
-                right: 7,
-                width: 12,
-                height: 12,
+                top: -2,
+                right: -2,
+                width: 18,
+                height: 18,
                 borderRadius: '50%',
                 background: '#16a34a',
-                border: '2px solid #ffffff',
+                border: '2.5px solid #ffffff',
                 boxSizing: 'border-box',
               }}
             />
