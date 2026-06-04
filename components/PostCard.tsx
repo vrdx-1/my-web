@@ -202,12 +202,11 @@ export function PostCard({
         return { symbol, amount: '-' };
       }
 
-      const fractionDigits = symbol === '₭' ? 0 : 2;
       return {
         symbol,
         amount: value.toLocaleString('en-US', {
           minimumFractionDigits: 0,
-          maximumFractionDigits: fractionDigits,
+          maximumFractionDigits: 0,
         }),
       };
     });
@@ -1227,7 +1226,7 @@ export function PostCard({
               zIndex: 1002,
             }}
           >
-            <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+            <div style={{ fontSize: '16px', lineHeight: '21px', fontWeight: 700, color: '#C2410C', marginBottom: '8px' }}>
               ອັດຕາແລກປ່ຽນໂດຍປະມານ
             </div>
             {estimatedLines.map((line) => (
@@ -1239,14 +1238,9 @@ export function PostCard({
                   fontWeight: 700,
                   color: '#0f172a',
                   marginBottom: '2px',
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 18px',
-                  alignItems: 'center',
-                  columnGap: '4px',
                 }}
               >
-                <span style={{ textAlign: 'left' }}>{line.amount}</span>
-                <span style={{ textAlign: 'left' }}>{line.symbol}</span>
+                {line.amount === '-' ? line.amount : `${line.amount} ${line.symbol}`}
               </div>
             ))}
           </div>
