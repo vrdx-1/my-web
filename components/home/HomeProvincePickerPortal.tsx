@@ -19,6 +19,8 @@ const PRICE_BUTTON_STEP = 10_000_000;
 const PRICE_THRESHOLD_TIER = 1_000_000_000;
 const PRICE_STEP_LOW = 10_000_000;
 const PRICE_STEP_HIGH = 100_000_000;
+const FILTER_OPTION_TEXT_SIZE = 16;
+const FILTER_OPTION_TEXT_COLOR = '#111111';
 
 function clampPrice(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -290,12 +292,11 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       >
         <div
           style={{
-            padding: '12px 16px 10px',
-            minHeight: 52,
+            padding: '16px 16px 14px',
+            minHeight: 64,
             boxSizing: 'border-box',
             fontSize: '16px',
             lineHeight: '1.3',
-            borderBottom: '1px solid #eceff3',
             fontFamily: LAO_FONT,
             color: '#111111',
             display: 'flex',
@@ -340,21 +341,26 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </button>
         </div>
         <div
-          aria-hidden
           style={{
-            height: 16,
-            background: '#f7f9fc',
-            borderTop: '1px solid #eef2f6',
-            borderBottom: '1px solid #eef2f6',
-            flexShrink: 0,
-          }}
-        />
-        <div
-          style={{
-            padding: '18px 16px 16px',
+            margin: '12px 16px 0',
+            padding: '16px',
+            background: '#ffffff',
+            border: '1px solid #d0d5dd',
+            borderRadius: 16,
             flexShrink: 0,
           }}
         >
+          <div
+            style={{
+              fontFamily: LAO_FONT,
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#111111',
+              marginBottom: 10,
+            }}
+          >
+            ເລືອກແຂວງ
+          </div>
           <button
             type="button"
             onClick={(event) => {
@@ -373,8 +379,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               gap: 12,
               cursor: 'pointer',
               fontFamily: LAO_FONT,
-              color: '#111111',
-              fontSize: '16px',
+              color: FILTER_OPTION_TEXT_COLOR,
+              fontSize: `${FILTER_OPTION_TEXT_SIZE}px`,
               textAlign: 'left',
             }}
           >
@@ -400,21 +406,26 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </button>
         </div>
         <div
-          aria-hidden
           style={{
-            height: 16,
-            background: '#f7f9fc',
-            borderTop: '1px solid #eef2f6',
-            borderBottom: '1px solid #eef2f6',
-            flexShrink: 0,
-          }}
-        />
-        <div
-          style={{
-            padding: '18px 16px',
+            margin: '12px 16px 0',
+            padding: '16px',
+            background: '#ffffff',
+            border: '1px solid #d0d5dd',
+            borderRadius: 16,
             flexShrink: 0,
           }}
         >
+          <div
+            style={{
+              fontFamily: LAO_FONT,
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#111111',
+              marginBottom: 12,
+            }}
+          >
+            ກຳນົດຊ່ວງລາຄາ
+          </div>
           <div
             style={{
               display: 'flex',
@@ -490,7 +501,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     transform: 'translateY(-50%)',
                     fontFamily: LAO_FONT,
                     fontSize: 13,
-                    color: '#667085',
+                    color: FILTER_OPTION_TEXT_COLOR,
                     pointerEvents: 'none',
                     whiteSpace: 'nowrap',
                   }}
@@ -557,7 +568,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     transform: 'translateY(-50%)',
                     fontFamily: LAO_FONT,
                     fontSize: 13,
-                    color: '#667085',
+                    color: FILTER_OPTION_TEXT_COLOR,
                     pointerEvents: 'none',
                     whiteSpace: 'nowrap',
                   }}
@@ -573,22 +584,29 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               onClick={handleDecreaseMinPrice}
               aria-label="Decrease minimum price"
               style={{
-                width: 40,
-                height: 40,
-                textAlign: 'center',
-                fontSize: 28,
-                fontWeight: 700,
-                lineHeight: 1,
-                color: '#667085',
-                border: 'none',
-                background: 'transparent',
+                width: 38,
+                height: 38,
+                color: '#475467',
+                border: '1px solid #d0d5dd',
+                background: '#f8fafc',
                 padding: 0,
-                borderRadius: 8,
+                borderRadius: 999,
                 cursor: 'pointer',
                 userSelect: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              -
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M6 12h12"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
             <div className="home-price-slider" style={{ position: 'relative', height: 30, flex: 1 }}>
               <div
@@ -706,88 +724,145 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               onClick={handleIncreaseMaxPrice}
               aria-label="Increase maximum price"
               style={{
-                width: 40,
-                height: 40,
-                textAlign: 'center',
-                fontSize: 28,
-                fontWeight: 700,
-                lineHeight: 1,
-                color: '#667085',
-                border: 'none',
-                background: 'transparent',
+                width: 38,
+                height: 38,
+                color: '#475467',
+                border: '1px solid #d0d5dd',
+                background: '#f8fafc',
                 padding: 0,
-                borderRadius: 8,
+                borderRadius: 999,
                 cursor: 'pointer',
                 userSelect: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              +
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M12 6v12M6 12h12"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
           </div>
         </div>
         <div
-          aria-hidden
           style={{
-            height: 16,
-            background: '#f7f9fc',
-            borderTop: '1px solid #eef2f6',
-            borderBottom: '1px solid #eef2f6',
-            flexShrink: 0,
-          }}
-        />
-        <div
-          style={{
-            padding: '18px 16px',
+            margin: '12px 16px 0',
+            padding: '16px',
+            background: '#ffffff',
+            border: '1px solid #d0d5dd',
+            borderRadius: 16,
             flexShrink: 0,
             display: 'flex',
             justifyContent: 'center',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}
         >
+          <div
+            style={{
+              width: '100%',
+              fontFamily: LAO_FONT,
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#111111',
+              marginBottom: 12,
+              textAlign: 'left',
+            }}
+          >
+            ຈັດລຽງຕາມລາຄາ
+          </div>
           <div
             role="group"
             aria-label="Price sort order"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
+              display: 'flex',
+              flexDirection: 'column',
               gap: 8,
-              padding: 4,
-              borderRadius: 999,
-              background: '#f4f6f8',
+              width: '100%',
+              alignItems: 'center',
             }}
           >
             <button
               type="button"
               onClick={() => setDraftPriceSortOrder('asc')}
+              aria-pressed={draftPriceSortOrder === 'asc'}
               style={{
+                width: 'auto',
                 border: 'none',
-                borderRadius: 999,
-                padding: '7px 12px',
+                borderRadius: 12,
+                padding: '10px 8px',
                 fontFamily: LAO_FONT,
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: FILTER_OPTION_TEXT_SIZE,
+                fontWeight: 500,
                 cursor: 'pointer',
-                background: draftPriceSortOrder === 'asc' ? '#1877f2' : 'transparent',
-                color: draftPriceSortOrder === 'asc' ? '#fff' : '#475467',
+                background: draftPriceSortOrder === 'asc' ? '#e7f3ff' : '#ffffff',
+                color: FILTER_OPTION_TEXT_COLOR,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
               }}
             >
-              ສະແດງລາຄາຖືກສຸດກ່ອນ
+              <span>ສະແດງລາຄາຖືກສຸດກ່ອນ</span>
+              {draftPriceSortOrder === 'asc' ? (
+                <SelectedCheckBadge />
+              ) : (
+                <span
+                  aria-hidden
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    border: '1.5px solid #cbd5e1',
+                    display: 'inline-block',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
             </button>
             <button
               type="button"
               onClick={() => setDraftPriceSortOrder('desc')}
+              aria-pressed={draftPriceSortOrder === 'desc'}
               style={{
+                width: 'auto',
                 border: 'none',
-                borderRadius: 999,
-                padding: '7px 12px',
+                borderRadius: 12,
+                padding: '10px 8px',
                 fontFamily: LAO_FONT,
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: FILTER_OPTION_TEXT_SIZE,
+                fontWeight: 500,
                 cursor: 'pointer',
-                background: draftPriceSortOrder === 'desc' ? '#1877f2' : 'transparent',
-                color: draftPriceSortOrder === 'desc' ? '#fff' : '#475467',
+                background: draftPriceSortOrder === 'desc' ? '#e7f3ff' : '#ffffff',
+                color: FILTER_OPTION_TEXT_COLOR,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
               }}
             >
-              ສະແດງລາຄາແພງສຸດກ່ອນ
+              <span>ສະແດງລາຄາແພງສຸດກ່ອນ</span>
+              {draftPriceSortOrder === 'desc' ? (
+                <SelectedCheckBadge />
+              ) : (
+                <span
+                  aria-hidden
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    border: '1.5px solid #cbd5e1',
+                    display: 'inline-block',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
             </button>
           </div>
         </div>
