@@ -846,7 +846,12 @@ export function PostCard({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!priceValue || priceValue <= 0) return;
-                  setShowPriceEstimatePopup((prev) => !prev);
+                  setShowPriceEstimatePopup((prev) => {
+                    if (!prev) {
+                      fetch('/api/analytics/exchange-rate-popup-click', { method: 'POST' }).catch(() => {});
+                    }
+                    return !prev;
+                  });
                 }}
                 style={{
                   width: '30px',
