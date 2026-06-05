@@ -26,6 +26,8 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
   const [showList, setShowList] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const isScrollLockedRef = useRef(false);
+  const lockedScrollYRef = useRef(0);
 
   if (variant === 'list') {
     // List variant (used in create-post step 3)
@@ -147,6 +149,73 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
     };
   }, [variant, showList]);
 
+  useEffect(() => {
+    if (variant !== 'button') return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    const stopBackgroundScroll = (event: TouchEvent | WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      const insideDropdown = target.closest('[data-province-dropdown], [data-province-button]');
+      if (!insideDropdown) {
+        event.preventDefault();
+      }
+    };
+
+    if (showList && !isScrollLockedRef.current) {
+      lockedScrollYRef.current = window.scrollY;
+      body.style.position = 'fixed';
+      body.style.top = `-${lockedScrollYRef.current}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      body.style.overscrollBehavior = 'none';
+      html.style.overflow = 'hidden';
+      html.style.overscrollBehavior = 'none';
+      isScrollLockedRef.current = true;
+    }
+
+    if (showList) {
+      document.addEventListener('touchmove', stopBackgroundScroll, { passive: false, capture: true });
+      document.addEventListener('wheel', stopBackgroundScroll, { passive: false, capture: true });
+    }
+
+    if (!showList && isScrollLockedRef.current) {
+      const restoreY = lockedScrollYRef.current;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      body.style.overscrollBehavior = '';
+      html.style.overflow = '';
+      html.style.overscrollBehavior = '';
+      window.scrollTo(0, restoreY);
+      isScrollLockedRef.current = false;
+    }
+
+    return () => {
+      document.removeEventListener('touchmove', stopBackgroundScroll, true);
+      document.removeEventListener('wheel', stopBackgroundScroll, true);
+      if (!isScrollLockedRef.current) return;
+      const restoreY = lockedScrollYRef.current;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      body.style.overscrollBehavior = '';
+      html.style.overflow = '';
+      html.style.overscrollBehavior = '';
+      window.scrollTo(0, restoreY);
+      isScrollLockedRef.current = false;
+    };
+  }, [variant, showList]);
+
   return (
     <>
       {showList && (
@@ -158,6 +227,7 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
               background: 'rgba(0,0,0,0.3)',
               zIndex: 10001,
               pointerEvents: 'auto',
+              touchAction: 'none',
             }}
             onClick={handleClose}
           />
@@ -177,7 +247,9 @@ export const ProvinceDropdown = React.memo<ProvinceDropdownProps>(({
               width: '200px',
               maxHeight: 'min(560px, 95vh)',
               overflowY: 'auto',
-              touchAction: 'manipulation',
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
               transform: isAnimating 
                 ? 'translate(-50%, -50%) translateY(-10px) scale(0.95)' 
                 : 'translate(-50%, -50%)',

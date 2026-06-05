@@ -232,8 +232,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     }
 
     if (shouldLockScroll) {
-      document.addEventListener('touchmove', stopBackgroundScroll, { passive: false });
-      document.addEventListener('wheel', stopBackgroundScroll, { passive: false });
+      document.addEventListener('touchmove', stopBackgroundScroll, { passive: false, capture: true });
+      document.addEventListener('wheel', stopBackgroundScroll, { passive: false, capture: true });
     }
 
     if (!shouldLockScroll && isScrollLockedRef.current) {
@@ -252,8 +252,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     }
 
     return () => {
-      document.removeEventListener('touchmove', stopBackgroundScroll);
-      document.removeEventListener('wheel', stopBackgroundScroll);
+      document.removeEventListener('touchmove', stopBackgroundScroll, true);
+      document.removeEventListener('wheel', stopBackgroundScroll, true);
       if (!isScrollLockedRef.current) return;
       const restoreY = lockedScrollYRef.current;
       body.style.position = '';
@@ -386,6 +386,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           background: 'rgba(0,0,0,0.4)',
           zIndex: 10001,
           pointerEvents: showProvincePicker ? 'auto' : 'none',
+          touchAction: 'none',
         }}
         onClick={onClose}
       />
@@ -521,7 +522,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               }}
             >
               {draftProvince || 'ທຸກແຂວງ'}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden
+                style={{ display: 'block', transform: 'translateY(1px)' }}
+              >
                 <path
                   d="M6 9l6 6 6-6"
                   stroke="currentColor"
@@ -1031,14 +1039,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             </button>
           </div>
         </div>
-        <div style={{ flex: 1, minHeight: 0 }} />
+        <div style={{ height: 20, flexShrink: 0 }} />
         <div
           style={{
-            padding: '12px 16px calc(48px + env(safe-area-inset-bottom, 0px))',
+            padding: '8px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: 10,
+            gap: 12,
             flexShrink: 0,
             background: '#fff',
           }}
@@ -1051,13 +1059,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               background: '#f8fafc',
               color: '#344054',
               borderRadius: 999,
-              padding: '0 18px',
-              height: 40,
+              padding: '0 24px',
+              height: 52,
               fontFamily: LAO_FONT,
-              fontSize: 14,
-              fontWeight: 600,
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1,
               cursor: 'pointer',
-              minWidth: 156,
+              minWidth: 176,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1073,13 +1082,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               background: '#1877f2',
               color: '#fff',
               borderRadius: 999,
-              padding: '0 18px',
-              height: 40,
+              padding: '0 24px',
+              height: 52,
               fontFamily: LAO_FONT,
-              fontSize: 14,
-              fontWeight: 600,
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1,
               cursor: 'pointer',
-              minWidth: 156,
+              minWidth: 176,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1105,6 +1115,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               position: 'absolute',
               inset: 0,
               background: 'rgba(0,0,0,0.2)',
+              touchAction: 'none',
             }}
           />
           <div
@@ -1117,6 +1128,9 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               width: 'min(240px, 72vw)',
               maxHeight: '70vh',
               overflowY: 'auto',
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
               background: '#fff',
               borderRadius: '12px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
@@ -1193,6 +1207,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               position: 'absolute',
               inset: 0,
               background: 'rgba(0,0,0,0.2)',
+              touchAction: 'none',
             }}
           />
           <div
