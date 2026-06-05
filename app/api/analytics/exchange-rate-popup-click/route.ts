@@ -17,7 +17,7 @@ function getServiceRoleClient() {
  * นับจำนวนครั้งที่กดดูปอบอับ "อัตราแลกเปลี่ยนโดยประมาณ"
  * ไม่นับการกดของ admin และ sub-account ของ admin
  */
-  const isSubAdmin = profile?.is_sub_account === true;
+export async function POST(request: Request) {
   const ip = getRequestIp(request);
   const rateLimit = await checkRateLimit({
     namespace: 'analytics:exchange-rate-popup-click',
@@ -27,24 +27,28 @@ function getServiceRoleClient() {
   });
 
   if (!rateLimit.success) {
-    const resolvedProfile = await resolveServerActiveProfile(request);
-    const activeProfileId = resolvedProfile?.activeProfileId ?? null;
-  } = await supabase.auth.getUser();
+    return tooManyRequests(rateLimit.reset);
+  }
 
-    if (activeProfileId) {
-      const { data: profile } = await admin
-  // ไม่นับการกดของ admin และ sub-account ของ admin
-        .select('role, is_sub_account, parent_admin_id')
-        .eq('id', activeProfileId)
+  const admin = getServiceRoleClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  const resolvedProfile = await resolveServerActiveProfile(request);
+  const activeProfileId = resolvedProfile?.activeProfileId ?? null;
+
+  if (activeProfileId) {
+    const { data: profile } = await admin
       .from('profiles')
-      .select('role, is_sub_account')
-      const isAdmin = profile?.role === 'admin';
-      const isSubAdmin = Boolean(profile?.is_sub_account && profile?.parent_admin_id);
-
-      if (isAdmin || isSubAdmin) {
+      .select('role, is_sub_account, parent_admin_id')
+      .eq('id', activeProfileId)
       .maybeSingle();
 
-    if (profile?.role === 'admin' || profile?.is_sub_account === true) {
+    const isAdmin = profile?.role === 'admin';
+    const isSubAdmin = profile?.is_sub_account === true;
+
+    if (isAdmin || isSubAdmin) {
       return NextResponse.json({ ok: true, skipped: 'admin' });
     }
   }
