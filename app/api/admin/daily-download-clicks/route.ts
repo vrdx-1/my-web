@@ -58,6 +58,44 @@ function getAdminClient() {
   });
 }
 
+const DOWNLOAD_CLICKS_PAGE_SIZE = 1000;
+type AdminClient = NonNullable<ReturnType<typeof getAdminClient>>;
+
+async function fetchDownloadClickCreatedAtRows(
+  admin: AdminClient,
+  startIso: string,
+  nextYearStartIso: string
+) {
+  const allRows: Array<{ created_at: string }> = [];
+  let from = 0;
+
+  for (;;) {
+    const to = from + DOWNLOAD_CLICKS_PAGE_SIZE - 1;
+    const { data, error } = await admin
+      .from('download_click_logs')
+      .select('created_at')
+      .gte('created_at', startIso)
+      .lt('created_at', nextYearStartIso)
+      .order('created_at', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      return { rows: null, error };
+    }
+
+    const pageRows = (data || []) as Array<{ created_at: string }>;
+    allRows.push(...pageRows);
+
+    if (pageRows.length < DOWNLOAD_CLICKS_PAGE_SIZE) {
+      break;
+    }
+
+    from += DOWNLOAD_CLICKS_PAGE_SIZE;
+  }
+
+  return { rows: allRows, error: null };
+}
+
 function getBangkokDateString(date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Bangkok',
@@ -119,19 +157,14 @@ export async function GET(request: NextRequest) {
   const year = Math.max(minYear, Math.min(maxYear, normalizedYear));
 
   const { startIso, nextYearStartIso } = getBangkokYearBoundaryUtcIso(year);
-  const { data, error } = await admin
-    .from('download_click_logs')
-    .select('created_at')
-    .gte('created_at', startIso)
-    .lt('created_at', nextYearStartIso)
-    .order('created_at', { ascending: true });
+  const queryRes = await fetchDownloadClickCreatedAtRows(admin, startIso, nextYearStartIso);
 
-  if (error) {
-    return internalServerError('admin/daily-download-clicks query failed', error);
+  if (queryRes.error) {
+    return internalServerError('admin/daily-download-clicks query failed', queryRes.error);
   }
 
   const grouped = new Map<string, number>();
-  for (const row of data || []) {
+  for (const row of queryRes.rows || []) {
     const dateKey = getBangkokDateString(new Date(row.created_at));
     grouped.set(dateKey, (grouped.get(dateKey) ?? 0) + 1);
   }
