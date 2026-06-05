@@ -848,7 +848,17 @@ export function PostCard({
                   if (!priceValue || priceValue <= 0) return;
                   setShowPriceEstimatePopup((prev) => {
                     if (!prev) {
-                      fetch('/api/analytics/exchange-rate-popup-click', { method: 'POST' }).catch(() => {});
+                      void fetch('/api/analytics/exchange-rate-popup-click', {
+                        method: 'POST',
+                        headers: mergeHeaders(
+                          {
+                            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                          },
+                          activeProfileId,
+                        ),
+                        credentials: 'include',
+                        keepalive: true,
+                      }).catch(() => {});
                     }
                     return !prev;
                   });
