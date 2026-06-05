@@ -337,6 +337,13 @@ export function MyPostsContent() {
     session: postListData.session,
     posts: postListData.posts,
     setPosts: postListData.setPosts,
+    repostOptions: {
+      reorderToTop: searchQuery.trim() === '',
+      onSuccess: () => {
+        if (searchQuery.trim() !== '' || typeof window === 'undefined') return;
+        window.scrollTo(0, 0);
+      },
+    },
     viewingPostHook,
     headerScroll: lockedHeaderScroll,
     menu,

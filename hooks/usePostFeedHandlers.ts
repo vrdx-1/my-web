@@ -14,6 +14,10 @@ interface UsePostFeedHandlersProps {
   session: any;
   posts: any[];
   setPosts: React.Dispatch<React.SetStateAction<any[]>>;
+  repostOptions?: {
+    reorderToTop?: boolean;
+    onSuccess?: (payload: { postId: string; post: any }) => void;
+  };
   viewingPostHook: ReturnType<typeof useViewingPost>;
   setHeaderVisible?: (visible: boolean) => void;
   headerScroll?: ReturnType<typeof useHeaderScroll>;
@@ -34,6 +38,7 @@ export function usePostFeedHandlers({
   session,
   posts,
   setPosts,
+  repostOptions,
   viewingPostHook,
   setHeaderVisible,
   headerScroll,
@@ -141,10 +146,13 @@ export function usePostFeedHandlers({
     async (postId: string) => {
       const postToRestore = posts.find((p) => String(p.id) === String(postId));
       if (!postToRestore || postToRestore.status !== 'recommend') return;
-      await repostPost(postId, setPosts, postToRestore);
+      await repostPost(postId, setPosts, postToRestore, {
+        reorderToTop: repostOptions?.reorderToTop,
+      });
       setShowRepostSuccess(true);
+      repostOptions?.onSuccess?.({ postId, post: postToRestore });
     },
-    [posts, setPosts]
+    [posts, repostOptions, setPosts]
   );
 
   return useMemo(

@@ -238,6 +238,13 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     session: effectiveSession,
     posts,
     setPosts: effectivePostList.setPosts,
+    repostOptions: {
+      reorderToTop: !hasSearch,
+      onSuccess: () => {
+        if (hasSearch || typeof window === 'undefined') return;
+        window.scrollTo(0, 0);
+      },
+    },
     viewingPostHook,
     setHeaderVisible: setHeaderVisibleFromScroll,
     menu,

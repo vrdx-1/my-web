@@ -190,16 +190,23 @@ export async function repostPost(
   setPosts: (updater: (prev: any[]) => any[]) => void,
   /** ใช้ rollback ถ้าอัปเดต DB ไม่สำเร็จ */
   postToRestore?: any,
+  options?: {
+    /** true = ดันโพสต์ที่ repost ไปบนสุด, false = คงลำดับฟีดเดิม */
+    reorderToTop?: boolean;
+  },
 ): Promise<void> {
   if (postToRestore?.status !== 'recommend') {
     return;
   }
 
   const nowIso = new Date().toISOString();
+  const reorderToTop = options?.reorderToTop ?? true;
 
   setPosts((prev) => {
     const updated = prev.map((p) => (String(p.id) === String(postId) ? { ...p, created_at: nowIso } : p));
-    updated.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+    if (reorderToTop) {
+      updated.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+    }
     return updated;
   });
 
@@ -212,7 +219,9 @@ export async function repostPost(
             ? { ...p, created_at: postToRestore.created_at }
             : p
         );
-        restored.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+        if (reorderToTop) {
+          restored.sort((a, b) => new Date((b as any).created_at).getTime() - new Date((a as any).created_at).getTime());
+        }
         return restored;
       });
     }
