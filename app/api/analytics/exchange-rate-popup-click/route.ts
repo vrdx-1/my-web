@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
+import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 
 function getServiceRoleClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -18,7 +17,7 @@ function getServiceRoleClient() {
  * นับจำนวนครั้งที่กดดูปอบอับ "อัตราแลกเปลี่ยนโดยประมาณ"
  * ไม่นับการกดของ admin และ sub-account ของ admin
  */
-export async function POST(request: Request) {
+  const isSubAdmin = profile?.is_sub_account === true;
   const ip = getRequestIp(request);
   const rateLimit = await checkRateLimit({
     namespace: 'analytics:exchange-rate-popup-click',
@@ -28,44 +27,21 @@ export async function POST(request: Request) {
   });
 
   if (!rateLimit.success) {
-    return tooManyRequests(rateLimit.reset);
-  }
-
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll().map((c) => ({ name: c.name, value: c.value }));
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
-
-  const admin = getServiceRoleClient();
-  if (!admin) {
-    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
-  }
-
-  const {
-    data: { user },
+    const resolvedProfile = await resolveServerActiveProfile(request);
+    const activeProfileId = resolvedProfile?.activeProfileId ?? null;
   } = await supabase.auth.getUser();
 
-  const userId: string | null = user?.id ?? null;
-
+    if (activeProfileId) {
+      const { data: profile } = await admin
   // ไม่นับการกดของ admin และ sub-account ของ admin
-  if (userId) {
-    const { data: profile } = await supabase
+        .select('role, is_sub_account, parent_admin_id')
+        .eq('id', activeProfileId)
       .from('profiles')
       .select('role, is_sub_account')
-      .eq('id', userId)
+      const isAdmin = profile?.role === 'admin';
+      const isSubAdmin = Boolean(profile?.is_sub_account && profile?.parent_admin_id);
+
+      if (isAdmin || isSubAdmin) {
       .maybeSingle();
 
     if (profile?.role === 'admin' || profile?.is_sub_account === true) {
