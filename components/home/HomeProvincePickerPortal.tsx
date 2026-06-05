@@ -212,12 +212,47 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setShowSelectFilterWarning(false);
   }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, showProvincePicker, draftCurrency, priceBounds.inputMaxBound, priceBounds.minBound]);
 
+  // Effect 1: body scroll lock — only triggered by the outer filter open/close.
+  // Must NOT depend on sub-popup states so that opening showProvincePopup / showCurrencyPopup
+  // does not trigger a cleanup→unlock→relock cycle (which lets iOS momentum scroll fire briefly).
   useEffect(() => {
-    if (!mounted) return;
-
-    const shouldLockScroll = showProvincePicker || showProvincePopup || showCurrencyPopup;
+    if (!mounted || !showProvincePicker) return;
     const body = document.body;
     const html = document.documentElement;
+    lockedScrollYRef.current = window.scrollY;
+    body.style.position = 'fixed';
+    body.style.top = `-${lockedScrollYRef.current}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'none';
+    html.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
+    isScrollLockedRef.current = true;
+    return () => {
+      const restoreY = lockedScrollYRef.current;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      body.style.overscrollBehavior = '';
+      html.style.overflow = '';
+      html.style.overscrollBehavior = '';
+      window.scrollTo(0, restoreY);
+      isScrollLockedRef.current = false;
+    };
+  }, [mounted, showProvincePicker]);
+
+  // Effect 2: touchmove/wheel prevention — allows scrolling inside the picker/popups
+  // but blocks background scroll. Runs independently from body lock so sub-popup toggles
+  // never cause a scroll-unlock cycle.
+  useEffect(() => {
+    if (!mounted) return;
+    const shouldPrevent = showProvincePicker || showProvincePopup || showCurrencyPopup;
+    if (!shouldPrevent) return;
     const stopBackgroundScroll = (event: TouchEvent | WheelEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
@@ -226,57 +261,11 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         event.preventDefault();
       }
     };
-
-    if (shouldLockScroll && !isScrollLockedRef.current) {
-      lockedScrollYRef.current = window.scrollY;
-      body.style.position = 'fixed';
-      body.style.top = `-${lockedScrollYRef.current}px`;
-      body.style.left = '0';
-      body.style.right = '0';
-      body.style.width = '100%';
-      body.style.overflow = 'hidden';
-      body.style.overscrollBehavior = 'none';
-      html.style.overflow = 'hidden';
-      html.style.overscrollBehavior = 'none';
-      isScrollLockedRef.current = true;
-    }
-
-    if (shouldLockScroll) {
-      document.addEventListener('touchmove', stopBackgroundScroll, { passive: false, capture: true });
-      document.addEventListener('wheel', stopBackgroundScroll, { passive: false, capture: true });
-    }
-
-    if (!shouldLockScroll && isScrollLockedRef.current) {
-      const restoreY = lockedScrollYRef.current;
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      body.style.overscrollBehavior = '';
-      html.style.overflow = '';
-      html.style.overscrollBehavior = '';
-      window.scrollTo(0, restoreY);
-      isScrollLockedRef.current = false;
-    }
-
+    document.addEventListener('touchmove', stopBackgroundScroll, { passive: false, capture: true });
+    document.addEventListener('wheel', stopBackgroundScroll, { passive: false, capture: true });
     return () => {
       document.removeEventListener('touchmove', stopBackgroundScroll, true);
       document.removeEventListener('wheel', stopBackgroundScroll, true);
-      if (!isScrollLockedRef.current) return;
-      const restoreY = lockedScrollYRef.current;
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      body.style.overscrollBehavior = '';
-      html.style.overflow = '';
-      html.style.overscrollBehavior = '';
-      window.scrollTo(0, restoreY);
-      isScrollLockedRef.current = false;
     };
   }, [mounted, showProvincePicker, showProvincePopup, showCurrencyPopup]);
 
