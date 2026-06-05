@@ -47,10 +47,8 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
 }) => {
   const router = useRouter();
   const menuInstanceId = React.useId();
-  const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
-  const isSoldPost = post.status === 'sold';
-  const postCreatedAt = new Date(post.created_at).getTime();
-  const canRepost = !isSoldPost && Number.isFinite(postCreatedAt) && Date.now() - postCreatedAt >= SIX_DAYS_MS;
+  const isRecommendPost = post.status === 'recommend';
+  const canRepost = isOwner && isRecommendPost && typeof onRepost === 'function';
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -161,7 +159,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                 : undefined
             }
             onRepost={
-              isOwner && canRepost && typeof onRepost === 'function'
+              canRepost
                 ? () => {
                     setIsMenuOpen(false);
                     setShowRepostConfirm(true);
@@ -172,7 +170,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
         );
       })()}
 
-      {typeof document !== 'undefined' && !isSoldPost && showRepostConfirm && createPortal(
+      {typeof document !== 'undefined' && canRepost && showRepostConfirm && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -196,7 +194,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ຢືນຢັນການໂພສໃໝ່?
+              ທ່ານຕ້ອງການໂພສໃໝ່ບໍ
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
               <button
@@ -243,7 +241,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                   opacity: isReposting ? 0.6 : 1,
                 }}
               >
-                {isReposting ? 'ກຳລັງໂພສໃໝ່...' : 'ຢືນຢັນ'}
+                {isReposting ? 'ກຳລັງໂພສໃໝ່...' : 'ໂພສໃໝ່'}
               </button>
             </div>
           </div>

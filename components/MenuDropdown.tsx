@@ -252,7 +252,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
             {showRepost && (
               <div onClick={onRepost} style={menuItemStyleBalanced}>
                 <ActionLabel
-                  label="ໂພສໃໝ່"
+                  label="ຣີໂພສ"
                   icon={repostIcon}
                 />
               </div>
