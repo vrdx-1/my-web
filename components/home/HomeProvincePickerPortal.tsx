@@ -22,6 +22,11 @@ const PRICE_STEP_LOW = 10_000_000;
 const PRICE_STEP_HIGH = 100_000_000;
 const FILTER_OPTION_TEXT_SIZE = 16;
 const FILTER_OPTION_TEXT_COLOR = '#111111';
+const FILTER_SEARCH_BUTTON_BLUE = '#1877f2';
+const FILTER_SEARCH_BUTTON_DISABLED_BG = '#c6ccd6';
+const FILTER_ACCENT_BLUE = FILTER_SEARCH_BUTTON_BLUE;
+const FILTER_PROVINCE_SELECTED_BLUE = '#0f5fcc';
+const FILTER_RANGE_INACTIVE_COLOR = '#98a2b3';
 const CURRENCY_OPTIONS: CurrencySymbol[] = ['₭', '$', '฿'];
 
 function toLakFromCurrency(value: number, currency: CurrencySymbol) {
@@ -103,7 +108,7 @@ function SelectedCheckBadge() {
         width: 18,
         height: 18,
         borderRadius: '50%',
-        background: '#1877f2',
+        background: FILTER_ACCENT_BLUE,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -154,6 +159,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const [draftMinPriceKip, setDraftMinPriceKip] = useState(PRICE_DEFAULT_MIN);
   const [draftMaxPriceKip, setDraftMaxPriceKip] = useState(PRICE_DEFAULT_MAX);
   const [draftPriceSortOrder, setDraftPriceSortOrder] = useState<HomePriceSortOrder>('');
+  const [isPriceRangeCustomized, setIsPriceRangeCustomized] = useState(false);
   const [maxPriceUnlimited, setMaxPriceUnlimited] = useState(false);
   const [isSliderHandlesSwapped, setIsSliderHandlesSwapped] = useState(false);
   const [isEditingMinPrice, setIsEditingMinPrice] = useState(false);
@@ -162,6 +168,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const [maxPriceInputText, setMaxPriceInputText] = useState('');
   const [showProvincePopup, setShowProvincePopup] = useState(false);
   const [showCurrencyPopup, setShowCurrencyPopup] = useState(false);
+  const [showSelectFilterWarning, setShowSelectFilterWarning] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [currencyTriggerRect, setCurrencyTriggerRect] = useState<DOMRect | null>(null);
   const isScrollLockedRef = useRef(false);
@@ -190,6 +197,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
     setDraftPriceSortOrder(priceSortOrder);
+    setIsPriceRangeCustomized(minPriceKip != null || maxPriceKip != null);
     // Keep "no filter selected yet" showing default finite range (100M-500M).
     // Unlimited max is only shown when user explicitly applied an open-ended range.
     setMaxPriceUnlimited(maxPriceKip == null && minPriceKip != null);
@@ -200,6 +208,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setMaxPriceInputText('');
     setShowProvincePopup(false);
     setShowCurrencyPopup(false);
+    setShowSelectFilterWarning(false);
   }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, showProvincePicker, draftCurrency, priceBounds.inputMaxBound, priceBounds.minBound]);
 
   useEffect(() => {
@@ -274,18 +283,34 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     onClose();
   };
 
+  const hasAnySelectedFilter = draftProvince.trim().length > 0 || isPriceRangeCustomized || draftPriceSortOrder !== '';
+
+  const showMissingFilterWarning = () => {
+    setShowSelectFilterWarning(true);
+  };
+
   const handleSearch = () => {
+    if (!hasAnySelectedFilter) {
+      showMissingFilterWarning();
+      return;
+    }
     const minPriceLak = toLakFromCurrency(draftMinPriceKip, draftCurrency);
     const maxPriceLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency);
+    const shouldApplyPriceRange = isPriceRangeCustomized;
     onApplyFilters({
       province: draftProvince,
-      minPriceKip: draftMinPriceKip <= priceBounds.minBound ? null : toRoundedInt(minPriceLak),
-      maxPriceKip: maxPriceUnlimited ? null : toRoundedInt(maxPriceLak),
+      minPriceKip: shouldApplyPriceRange
+        ? (draftMinPriceKip <= priceBounds.minBound ? null : toRoundedInt(minPriceLak))
+        : null,
+      maxPriceKip: shouldApplyPriceRange
+        ? (maxPriceUnlimited ? null : toRoundedInt(maxPriceLak))
+        : null,
       priceSortOrder: draftPriceSortOrder,
     });
   };
 
   const handleResetFilters = () => {
+    setShowSelectFilterWarning(false);
     onApplyFilters({
       province: '',
       minPriceKip: null,
@@ -300,7 +325,10 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     : clampPrice(draftMaxPriceKip, priceBounds.minBound, priceBounds.maxBound);
   const currencyPopupWidth = 120;
   const currencyPopupViewportPadding = 12;
+  const provincePopupViewportPadding = 28;
+  const provincePopupMinVisibleHeight = 260;
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 844;
   const priceRowMaxWidth = Math.min(420, Math.max(260, viewportWidth - 52));
   const priceSeparatorWidth = 10;
   const priceRowGap = 8;
@@ -315,8 +343,24 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       ),
     )
     : 16;
+  const provincePopupTopBase = triggerRect ? triggerRect.bottom + 8 : 140;
+  const provincePopupTop = Math.max(
+    provincePopupViewportPadding,
+    Math.min(
+      provincePopupTopBase,
+      viewportHeight - provincePopupMinVisibleHeight - provincePopupViewportPadding,
+    ),
+  );
+  const provincePopupMaxHeight = Math.max(
+    provincePopupMinVisibleHeight,
+    viewportHeight - provincePopupTop - provincePopupViewportPadding,
+  );
   const sliderPrimaryThumbValue = isSliderHandlesSwapped ? sliderMaxValue : sliderMinValue;
   const sliderSecondaryThumbValue = isSliderHandlesSwapped ? sliderMinValue : sliderMaxValue;
+  const priceRangeAccentColor = isPriceRangeCustomized ? FILTER_ACCENT_BLUE : FILTER_RANGE_INACTIVE_COLOR;
+  const priceRangeAccentShadow = isPriceRangeCustomized
+    ? '0 1px 3px rgba(24, 119, 242, 0.4)'
+    : '0 1px 2px rgba(15, 23, 42, 0.18)';
   const maxInputDisplayText = maxPriceUnlimited ? '' : draftMaxPriceKip.toLocaleString('en-US');  const extraMaxChars = Math.max(0, maxInputDisplayText.length - PRICE_BASE_MAX_TEXT.length);
   const priceRowWidth = Math.min(PRICE_ROW_MAX_WIDTH, PRICE_ROW_BASE_WIDTH + extraMaxChars * 24);
   const minPercent = ((sliderMinValue - priceBounds.minBound) / (priceBounds.maxBound - priceBounds.minBound)) * 100;
@@ -324,12 +368,14 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
 
   const handleDecreaseMinPrice = () => {
     const next = clampPrice(draftMinPriceKip - priceBounds.buttonStep, priceBounds.minBound, draftMaxPriceKip);
+    setIsPriceRangeCustomized(true);
     setDraftMinPriceKip(next);
   };
 
   const handleIncreaseMaxPrice = () => {
     const currentMax = maxPriceUnlimited ? draftMaxPriceKip : draftMaxPriceKip;
     const next = clampPrice(currentMax + priceBounds.buttonStep, draftMinPriceKip, priceBounds.inputMaxBound);
+    setIsPriceRangeCustomized(true);
     setMaxPriceUnlimited(false);
     setDraftMaxPriceKip(next);
   };
@@ -519,6 +565,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 alignItems: 'center',
                 gap: 6,
                 fontWeight: 500,
+                color: draftProvince ? FILTER_PROVINCE_SELECTED_BLUE : FILTER_OPTION_TEXT_COLOR,
               }}
             >
               {draftProvince || 'ທຸກແຂວງ'}
@@ -660,6 +707,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                       return;
                     }
                     const next = clampPrice(parsed, priceBounds.minBound, draftMaxPriceKip);
+                    setIsPriceRangeCustomized(true);
                     setDraftMinPriceKip(next);
                     setIsSliderHandlesSwapped(false);
                     setMinPriceInputText(next.toLocaleString('en-US'));
@@ -718,6 +766,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                       return;
                     }
                     const next = clampPrice(parsed, draftMinPriceKip, priceBounds.inputMaxBound);
+                    setIsPriceRangeCustomized(true);
                     setMaxPriceUnlimited(false);
                     setDraftMaxPriceKip(next);
                     setIsSliderHandlesSwapped(false);
@@ -725,6 +774,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   }}
                   onBlur={() => {
                     if (maxPriceInputText.trim().length === 0) {
+                      setIsPriceRangeCustomized(true);
                       setMaxPriceUnlimited(true);
                       setDraftMaxPriceKip(priceBounds.maxBound);
                     }
@@ -781,7 +831,16 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 />
               </svg>
             </button>
-            <div className="home-price-slider" style={{ position: 'relative', height: 30, flex: 1 }}>
+            <div
+              className="home-price-slider"
+              style={{
+                position: 'relative',
+                height: 30,
+                flex: 1,
+                ['--price-accent-color' as any]: priceRangeAccentColor,
+                ['--price-accent-shadow' as any]: priceRangeAccentShadow,
+              }}
+            >
               <div
                 style={{
                   position: 'absolute',
@@ -802,7 +861,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   width: `${Math.max(maxPercent - minPercent, 0)}%`,
                   height: 4,
                   borderRadius: 999,
-                  background: '#1877f2',
+                  background: priceRangeAccentColor,
                   transform: 'translateY(-50%)',
                 }}
               />
@@ -818,17 +877,20 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   const next = clampPrice(snapped, priceBounds.minBound, priceBounds.maxBound);
                   if (!isSliderHandlesSwapped) {
                     if (next > sliderMaxValue) {
+                      setIsPriceRangeCustomized(true);
                       setDraftMinPriceKip(sliderMaxValue);
                       setDraftMaxPriceKip(next);
                       setMaxPriceUnlimited(next >= priceBounds.maxBound);
                       setIsSliderHandlesSwapped(true);
                       return;
                     }
+                    setIsPriceRangeCustomized(true);
                     setDraftMinPriceKip(next);
                     return;
                   }
 
                   if (next < sliderMinValue) {
+                    setIsPriceRangeCustomized(true);
                     setDraftMaxPriceKip(sliderMinValue);
                     setDraftMinPriceKip(next);
                     setMaxPriceUnlimited(sliderMinValue >= priceBounds.maxBound);
@@ -837,11 +899,13 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   }
 
                   if (next >= priceBounds.maxBound) {
+                    setIsPriceRangeCustomized(true);
                     setMaxPriceUnlimited(true);
                     setDraftMaxPriceKip(priceBounds.maxBound);
                     return;
                   }
 
+                  setIsPriceRangeCustomized(true);
                   setMaxPriceUnlimited(false);
                   setDraftMaxPriceKip(next);
                 }}
@@ -860,6 +924,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                   const next = clampPrice(snapped, priceBounds.minBound, priceBounds.maxBound);
                   if (!isSliderHandlesSwapped) {
                     if (next < sliderMinValue) {
+                      setIsPriceRangeCustomized(true);
                       setDraftMinPriceKip(next);
                       setDraftMaxPriceKip(sliderMinValue);
                       setMaxPriceUnlimited(sliderMinValue >= priceBounds.maxBound);
@@ -868,17 +933,20 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     }
 
                     if (next >= priceBounds.maxBound) {
+                      setIsPriceRangeCustomized(true);
                       setMaxPriceUnlimited(true);
                       setDraftMaxPriceKip(priceBounds.maxBound);
                       return;
                     }
 
+                    setIsPriceRangeCustomized(true);
                     setMaxPriceUnlimited(false);
                     setDraftMaxPriceKip(next);
                     return;
                   }
 
                   if (next > sliderMaxValue) {
+                    setIsPriceRangeCustomized(true);
                     setDraftMaxPriceKip(next);
                     setDraftMinPriceKip(sliderMaxValue);
                     setMaxPriceUnlimited(next >= priceBounds.maxBound);
@@ -886,6 +954,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     return;
                   }
 
+                  setIsPriceRangeCustomized(true);
                   setDraftMinPriceKip(next);
                 }}
                 className="home-price-range home-price-range-max"
@@ -1077,9 +1146,10 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           <button
             type="button"
             onClick={handleSearch}
+            aria-disabled={!hasAnySelectedFilter}
             style={{
               border: 'none',
-              background: '#1877f2',
+              background: hasAnySelectedFilter ? FILTER_SEARCH_BUTTON_BLUE : FILTER_SEARCH_BUTTON_DISABLED_BG,
               color: '#fff',
               borderRadius: 999,
               padding: '0 24px',
@@ -1088,11 +1158,12 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               fontSize: 18,
               fontWeight: 700,
               lineHeight: 1,
-              cursor: 'pointer',
+              cursor: hasAnySelectedFilter ? 'pointer' : 'not-allowed',
               minWidth: 176,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
+              opacity: hasAnySelectedFilter ? 1 : 0.95,
             }}
           >
             ຄົ້ນຫາ
@@ -1123,10 +1194,10 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             style={{
               position: 'absolute',
               left: triggerRect ? `${triggerRect.left + triggerRect.width / 2}px` : '50%',
-              top: triggerRect ? `${triggerRect.bottom + 8}px` : '140px',
+              top: `${provincePopupTop}px`,
               transform: 'translateX(-50%)',
               width: 'min(240px, 72vw)',
-              maxHeight: '70vh',
+              maxHeight: `${provincePopupMaxHeight}px`,
               overflowY: 'auto',
               overscrollBehavior: 'contain',
               WebkitOverflowScrolling: 'touch',
@@ -1252,6 +1323,68 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </div>
         </div>
       )}
+
+      {showSelectFilterWarning && (
+        <div
+          onClick={() => setShowSelectFilterWarning(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 10005,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            pointerEvents: 'auto',
+            touchAction: 'manipulation',
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '320px',
+              width: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p
+              style={{
+                fontSize: '16px',
+                marginBottom: '20px',
+                textAlign: 'center',
+                color: '#111111',
+                fontFamily: LAO_FONT,
+              }}
+            >
+              ກະລຸນາເລືອກຕົວກອງກ່ອນ
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowSelectFilterWarning(false)}
+                style={{
+                  padding: '10px 24px',
+                  background: FILTER_SEARCH_BUTTON_BLUE,
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontFamily: LAO_FONT,
+                  touchAction: 'manipulation',
+                }}
+              >
+                ຕົກລົງ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style jsx>{`
         .home-price-range {
           position: absolute;
@@ -1281,8 +1414,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           height: 20px;
           border-radius: 999px;
           background: #ffffff;
-          border: 2px solid #1877f2;
-          box-shadow: 0 1px 3px rgba(24, 119, 242, 0.4);
+          border: 2px solid var(--price-accent-color);
+          box-shadow: var(--price-accent-shadow);
           pointer-events: auto;
           cursor: pointer;
           -webkit-appearance: none;
@@ -1294,8 +1427,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           height: 20px;
           border-radius: 999px;
           background: #ffffff;
-          border: 2px solid #1877f2;
-          box-shadow: 0 1px 3px rgba(24, 119, 242, 0.4);
+          border: 2px solid var(--price-accent-color);
+          box-shadow: var(--price-accent-shadow);
           pointer-events: auto;
           cursor: pointer;
         }
