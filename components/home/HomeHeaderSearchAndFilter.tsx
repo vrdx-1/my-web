@@ -7,6 +7,9 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
 import { useMainTabScroll } from '@/contexts/MainTabScrollContext';
 import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPortal';
+import { useSessionProfileContext } from '@/contexts/SessionProfileContext';
+import { getOrCreateGuestToken } from '@/utils/guestToken';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 6;
@@ -30,6 +33,7 @@ export function HomeHeaderSearchAndFilter() {
   const setSelectedProvince = homeProvince?.setSelectedProvince;
   const setPriceRange = homeProvince?.setPriceRange;
   const setPriceSortOrder = homeProvince?.setPriceSortOrder;
+  const { session, activeProfileId } = useSessionProfileContext() ?? {};
 
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -81,12 +85,38 @@ export function HomeHeaderSearchAndFilter() {
     setIsAnimating(false);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc' }) => {
+  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc'; displayCurrency: string }) => {
     setSelectedProvince?.(filters.province);
     setPriceRange?.(filters.minPriceKip, filters.maxPriceKip);
     setPriceSortOrder?.(filters.priceSortOrder);
     closePicker();
-  }, [closePicker, setPriceRange, setPriceSortOrder, setSelectedProvince]);
+
+    // บันทึกประวัติการใช้ตัวกรอง (fire-and-forget)
+    try {
+      const accessToken = session?.access_token ?? '';
+      const guestToken = !session?.user ? getOrCreateGuestToken() : '';
+      fetch('/api/filter/log', {
+        method: 'POST',
+        credentials: 'include',
+        headers: mergeHeaders(
+          {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(guestToken ? { 'x-guest-token': guestToken } : {}),
+          },
+          activeProfileId,
+        ),
+        body: JSON.stringify({
+          province: filters.province || undefined,
+          min_price_kip: filters.minPriceKip ?? undefined,
+          max_price_kip: filters.maxPriceKip ?? undefined,          display_currency: (filters.minPriceKip != null || filters.maxPriceKip != null) ? filters.displayCurrency : undefined,          price_sort_order: filters.priceSortOrder || undefined,
+          guest_token: guestToken || undefined,
+        }),
+      }).catch(() => {});
+    } catch {
+      // fire-and-forget — ไม่บล็อก UI
+    }
+  }, [activeProfileId, closePicker, session, setPriceRange, setPriceSortOrder, setSelectedProvince]);
 
   return (
     <>

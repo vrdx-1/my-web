@@ -137,6 +137,7 @@ export interface HomeProvincePickerPortalProps {
     minPriceKip: number | null;
     maxPriceKip: number | null;
     priceSortOrder: HomePriceSortOrder;
+    displayCurrency: CurrencySymbol;
   }) => void;
 }
 
@@ -306,6 +307,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         ? (maxPriceUnlimited ? null : toRoundedInt(maxPriceLak))
         : null,
       priceSortOrder: draftPriceSortOrder,
+      displayCurrency: draftCurrency,
     });
   };
 
@@ -316,6 +318,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       minPriceKip: null,
       maxPriceKip: null,
       priceSortOrder: '',
+      displayCurrency: draftCurrency,
     });
   };
 

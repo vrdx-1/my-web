@@ -124,6 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Hidden Post', path: '/admin/hidden-posts' },
     { name: 'Top User', path: '/admin/top-user' },
     { name: 'Search History', path: '/admin/search-history' },
+    { name: 'Filter History', path: '/admin/filter-history' },
   ];
 
   return (
