@@ -10,6 +10,7 @@ import { HomeProvincePickerPortal } from '@/components/home/HomeProvincePickerPo
 import { useSessionProfileContext } from '@/contexts/SessionProfileContext';
 import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { mergeHeaders } from '@/utils/activeProfile';
+import type { CurrencySymbol } from '@/utils/exchangeRates';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 6;
@@ -29,10 +30,12 @@ export function HomeHeaderSearchAndFilter() {
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
+  const displayCurrency = homeProvince?.displayCurrency ?? '₭';
   const hasActiveFilters = selectedProvince.trim().length > 0 || minPriceKip != null || maxPriceKip != null || priceSortOrder !== '';
   const setSelectedProvince = homeProvince?.setSelectedProvince;
   const setPriceRange = homeProvince?.setPriceRange;
   const setPriceSortOrder = homeProvince?.setPriceSortOrder;
+  const setDisplayCurrency = homeProvince?.setDisplayCurrency;
   const { session, activeProfileId } = useSessionProfileContext() ?? {};
 
   const [showProvincePicker, setShowProvincePicker] = useState(false);
@@ -85,10 +88,11 @@ export function HomeHeaderSearchAndFilter() {
     setIsAnimating(false);
   }, []);
 
-  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc'; displayCurrency: string }) => {
+  const handleApplyFilters = useCallback((filters: { province: string; minPriceKip: number | null; maxPriceKip: number | null; priceSortOrder: '' | 'asc' | 'desc'; displayCurrency: CurrencySymbol }) => {
     setSelectedProvince?.(filters.province);
     setPriceRange?.(filters.minPriceKip, filters.maxPriceKip);
     setPriceSortOrder?.(filters.priceSortOrder);
+    setDisplayCurrency?.(filters.displayCurrency);
     closePicker();
 
     // บันทึกประวัติการใช้ตัวกรอง (fire-and-forget)
@@ -109,14 +113,16 @@ export function HomeHeaderSearchAndFilter() {
         body: JSON.stringify({
           province: filters.province || undefined,
           min_price_kip: filters.minPriceKip ?? undefined,
-          max_price_kip: filters.maxPriceKip ?? undefined,          display_currency: (filters.minPriceKip != null || filters.maxPriceKip != null) ? filters.displayCurrency : undefined,          price_sort_order: filters.priceSortOrder || undefined,
+          max_price_kip: filters.maxPriceKip ?? undefined,
+          display_currency: (filters.minPriceKip != null || filters.maxPriceKip != null) ? filters.displayCurrency : undefined,
+          price_sort_order: filters.priceSortOrder || undefined,
           guest_token: guestToken || undefined,
         }),
       }).catch(() => {});
     } catch {
       // fire-and-forget — ไม่บล็อก UI
     }
-  }, [activeProfileId, closePicker, session, setPriceRange, setPriceSortOrder, setSelectedProvince]);
+  }, [activeProfileId, closePicker, session, setDisplayCurrency, setPriceRange, setPriceSortOrder, setSelectedProvince]);
 
   return (
     <>
@@ -267,6 +273,7 @@ export function HomeHeaderSearchAndFilter() {
         minPriceKip={minPriceKip}
         maxPriceKip={maxPriceKip}
         priceSortOrder={priceSortOrder}
+        displayCurrency={displayCurrency}
         onClose={closePicker}
         onApplyFilters={handleApplyFilters}
       />

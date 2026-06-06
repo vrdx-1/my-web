@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useState } from 'react';
+import type { CurrencySymbol } from '@/utils/exchangeRates';
 
 export type HomePriceSortOrder = '' | 'asc' | 'desc';
 
@@ -11,8 +12,10 @@ interface HomeProvinceContextValue {
   minPriceKip: number | null;
   maxPriceKip: number | null;
   priceSortOrder: HomePriceSortOrder;
+  displayCurrency: CurrencySymbol;
   setPriceRange: (minPriceKip: number | null, maxPriceKip: number | null) => void;
   setPriceSortOrder: (order: HomePriceSortOrder) => void;
+  setDisplayCurrency: (currency: CurrencySymbol) => void;
   resetFilters: () => void;
 }
 
@@ -23,6 +26,7 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
   const [minPriceKip, setMinPriceKip] = useState<number | null>(null);
   const [maxPriceKip, setMaxPriceKip] = useState<number | null>(null);
   const [priceSortOrder, setPriceSortOrderState] = useState<HomePriceSortOrder>('');
+  const [displayCurrency, setDisplayCurrencyState] = useState<CurrencySymbol>('₭');
 
   const setSelectedProvince = useCallback((v: string) => setState(v), []);
   const setPriceRange = useCallback((min: number | null, max: number | null) => {
@@ -32,11 +36,15 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
   const setPriceSortOrder = useCallback((order: HomePriceSortOrder) => {
     setPriceSortOrderState(order);
   }, []);
+  const setDisplayCurrency = useCallback((currency: CurrencySymbol) => {
+    setDisplayCurrencyState(currency);
+  }, []);
   const resetFilters = useCallback(() => {
     setState('');
     setMinPriceKip(null);
     setMaxPriceKip(null);
     setPriceSortOrderState('');
+    setDisplayCurrencyState('₭');
   }, []);
 
   return (
@@ -47,8 +55,10 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
         minPriceKip,
         maxPriceKip,
         priceSortOrder,
+        displayCurrency,
         setPriceRange,
         setPriceSortOrder,
+        setDisplayCurrency,
         resetFilters,
       }}
     >

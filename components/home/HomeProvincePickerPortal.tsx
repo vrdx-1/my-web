@@ -131,6 +131,7 @@ export interface HomeProvincePickerPortalProps {
   minPriceKip: number | null;
   maxPriceKip: number | null;
   priceSortOrder: HomePriceSortOrder;
+  displayCurrency: CurrencySymbol;
   onClose: () => void;
   onApplyFilters: (filters: {
     province: string;
@@ -150,6 +151,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     minPriceKip,
     maxPriceKip,
     priceSortOrder,
+    displayCurrency,
     onClose,
     onApplyFilters,
   } = props;
@@ -183,6 +185,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   useEffect(() => {
     if (!showProvincePicker) return;
     setDraftProvince(selectedProvince);
+    setDraftCurrency(displayCurrency);
     const nextMinLak = normalizeMinFromFilter(minPriceKip);
     const nextMaxLak = normalizeMaxFromFilter(maxPriceKip);
     const nextMin = clampPrice(
@@ -210,7 +213,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setShowProvincePopup(false);
     setShowCurrencyPopup(false);
     setShowSelectFilterWarning(false);
-  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, showProvincePicker, draftCurrency, priceBounds.inputMaxBound, priceBounds.minBound]);
+  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, displayCurrency, showProvincePicker, draftCurrency, priceBounds.inputMaxBound, priceBounds.minBound]);
 
   // Effect 1: body scroll lock — only triggered by the outer filter open/close.
   // Must NOT depend on sub-popup states so that opening showProvincePopup / showCurrencyPopup
