@@ -186,17 +186,18 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     if (!showProvincePicker) return;
     setDraftProvince(selectedProvince);
     setDraftCurrency(displayCurrency);
+    const nextBounds = getPriceBoundsForCurrency(displayCurrency);
     const nextMinLak = normalizeMinFromFilter(minPriceKip);
     const nextMaxLak = normalizeMaxFromFilter(maxPriceKip);
     const nextMin = clampPrice(
-      toRoundedInt(fromLakToCurrency(nextMinLak, draftCurrency)),
-      priceBounds.minBound,
-      priceBounds.inputMaxBound,
+      toRoundedInt(fromLakToCurrency(nextMinLak, displayCurrency)),
+      nextBounds.minBound,
+      nextBounds.inputMaxBound,
     );
     const nextMax = clampPrice(
-      toRoundedInt(fromLakToCurrency(nextMaxLak, draftCurrency)),
-      priceBounds.minBound,
-      priceBounds.inputMaxBound,
+      toRoundedInt(fromLakToCurrency(nextMaxLak, displayCurrency)),
+      nextBounds.minBound,
+      nextBounds.inputMaxBound,
     );
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
@@ -213,7 +214,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setShowProvincePopup(false);
     setShowCurrencyPopup(false);
     setShowSelectFilterWarning(false);
-  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, displayCurrency, showProvincePicker, draftCurrency, priceBounds.inputMaxBound, priceBounds.minBound]);
+  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, displayCurrency, showProvincePicker]);
 
   // Effect 1: body scroll lock — only triggered by the outer filter open/close.
   // Must NOT depend on sub-popup states so that opening showProvincePopup / showCurrencyPopup
