@@ -56,10 +56,8 @@ function formatPrice(value: number | null, currency: '₭' | '$' | '฿' | null)
     if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M ₭`;
     return `${value.toLocaleString()} ₭`;
   }
-  // USD: lak ÷ exchange rate approx 20500
-  if (cur === '$') return `$${(value / 20500).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  // THB: lak ÷ exchange rate approx 590
-  return `฿${(value / 590).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  if (cur === '$') return `$${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 function sortOrderLabel(order: 'asc' | 'desc' | null): string {

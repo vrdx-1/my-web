@@ -137,6 +137,8 @@ export interface HomeProvincePickerPortalProps {
     province: string;
     minPriceKip: number | null;
     maxPriceKip: number | null;
+    minPriceDisplay: number | null;
+    maxPriceDisplay: number | null;
     priceSortOrder: HomePriceSortOrder;
     displayCurrency: CurrencySymbol;
   }) => void;
@@ -291,6 +293,12 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     const minPriceLak = toLakFromCurrency(draftMinPriceKip, draftCurrency);
     const maxPriceLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency);
     const shouldApplyPriceRange = isPriceRangeCustomized;
+    const minPriceDisplay = shouldApplyPriceRange
+      ? (draftMinPriceKip <= priceBounds.minBound ? null : toRoundedInt(draftMinPriceKip))
+      : null;
+    const maxPriceDisplay = shouldApplyPriceRange
+      ? (maxPriceUnlimited ? null : toRoundedInt(draftMaxPriceKip))
+      : null;
     onApplyFilters({
       province: draftProvince,
       minPriceKip: shouldApplyPriceRange
@@ -299,6 +307,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       maxPriceKip: shouldApplyPriceRange
         ? (maxPriceUnlimited ? null : toRoundedInt(maxPriceLak))
         : null,
+      minPriceDisplay,
+      maxPriceDisplay,
       priceSortOrder: draftPriceSortOrder,
       displayCurrency: draftCurrency,
     });
@@ -310,6 +320,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       province: '',
       minPriceKip: null,
       maxPriceKip: null,
+      minPriceDisplay: null,
+      maxPriceDisplay: null,
       priceSortOrder: '',
       displayCurrency: draftCurrency,
     });
