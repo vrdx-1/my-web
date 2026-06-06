@@ -338,11 +338,8 @@ export function MyPostsContent() {
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     repostOptions: {
-      reorderToTop: searchQuery.trim() === '',
-      onSuccess: () => {
-        if (searchQuery.trim() !== '' || typeof window === 'undefined') return;
-        window.scrollTo(0, 0);
-      },
+      // Keep current feed order/scroll position like Home; only update time on the post itself.
+      reorderToTop: false,
     },
     viewingPostHook,
     headerScroll: lockedHeaderScroll,
