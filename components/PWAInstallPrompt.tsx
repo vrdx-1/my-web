@@ -15,6 +15,7 @@ const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 const APP_NAME = 'Jutpai';
 const APP_ICON = '/icons/icon-192x192.png';
+const HINT_IOS_TITLE = 'ຂັ້ນຕອນຕິດຕັ້ງແອັບ:';
 
 declare global {
   interface Window {
@@ -258,6 +259,9 @@ export function PWAInstallPrompt() {
         >
           {isIOS ? (
             <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.7 }}>
+              <div style={{ marginBottom: 4, fontWeight: 600 }}>
+                {HINT_IOS_TITLE}
+              </div>
               {HINT_IOS_LINES.map((line, i) => (
                 <div key={i} style={{ marginBottom: i < HINT_IOS_LINES.length - 1 ? 4 : 0 }}>
                   {line}
