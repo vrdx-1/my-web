@@ -284,7 +284,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       const target = event.target as HTMLElement | null;
       if (!target) return;
       const insidePopup = target.closest('[data-home-province-picker], [data-home-province-popup], [data-home-currency-popup]');
-      if (!insidePopup) {
+      const insideScrollable = target.closest('[data-home-scrollable]');
+      if (!insidePopup || !insideScrollable) {
         event.preventDefault();
       }
     };
@@ -536,6 +537,17 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             .
           </button>
         </div>
+        <div
+          data-home-scrollable
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+          }}
+        >
         <div
           style={{
             margin: '12px 16px 0',
@@ -1130,6 +1142,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           </div>
         </div>
         <div style={{ height: 20, flexShrink: 0 }} />
+        </div>
         <div
           style={{
             padding: '8px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
@@ -1212,6 +1225,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           />
           <div
             data-home-province-popup
+            data-home-scrollable
             style={{
               position: 'absolute',
               left: triggerRect ? `${triggerRect.left + triggerRect.width / 2}px` : '50%',
