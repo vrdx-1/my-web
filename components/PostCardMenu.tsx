@@ -194,7 +194,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ທ່ານຕ້ອງການໂພສໃໝ່ບໍ
+              ທ່ານຕ້ອງການໂພສໃໝ່ບໍ?
             </h3>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
               <button
