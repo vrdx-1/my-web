@@ -20,6 +20,8 @@ const PRICE_BUTTON_STEP = 10_000_000;
 const PRICE_THRESHOLD_TIER = 1_000_000_000;
 const PRICE_STEP_LOW = 10_000_000;
 const PRICE_STEP_HIGH = 100_000_000;
+const PRICE_STEP_THB = 10_000;
+const PRICE_STEP_USD = 1_000;
 const FILTER_OPTION_TEXT_SIZE = 16;
 const FILTER_OPTION_TEXT_COLOR = '#111111';
 const FILTER_SEARCH_BUTTON_BLUE = '#1877f2';
@@ -51,10 +53,22 @@ function getPriceBoundsForCurrency(currency: CurrencySymbol) {
   const inputMaxBound = toRoundedInt(fromLakToCurrency(PRICE_INPUT_MAX_BOUND, currency));
   const defaultMin = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MIN, currency));
   const defaultMax = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MAX, currency));
-  const buttonStep = Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_BUTTON_STEP, currency)));
+  const buttonStep = currency === '฿'
+    ? PRICE_STEP_THB
+    : currency === '$'
+      ? PRICE_STEP_USD
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_BUTTON_STEP, currency)));
   const thresholdTier = toRoundedInt(fromLakToCurrency(PRICE_THRESHOLD_TIER, currency));
-  const stepLow = Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_LOW, currency)));
-  const stepHigh = Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_HIGH, currency)));
+  const stepLow = currency === '฿'
+    ? PRICE_STEP_THB
+    : currency === '$'
+      ? PRICE_STEP_USD
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_LOW, currency)));
+  const stepHigh = currency === '฿'
+    ? PRICE_STEP_THB
+    : currency === '$'
+      ? PRICE_STEP_USD
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_HIGH, currency)));
 
   return {
     minBound: 0,
@@ -77,6 +91,21 @@ function clampPrice(value: number, min: number, max: number) {
 function snapPriceToTier(value: number, thresholdTier: number, stepLow: number, stepHigh: number) {
   const step = value > thresholdTier ? stepHigh : stepLow;
   return Math.round(value / step) * step;
+}
+
+function snapToNearestPriceStep(
+  value: number,
+  bounds: {
+    minBound: number;
+    inputMaxBound: number;
+    thresholdTier: number;
+    stepLow: number;
+    stepHigh: number;
+  },
+) {
+  const rounded = toRoundedInt(value);
+  const snapped = snapPriceToTier(rounded, bounds.thresholdTier, bounds.stepLow, bounds.stepHigh);
+  return clampPrice(snapped, bounds.minBound, bounds.inputMaxBound);
 }
 
 function normalizeMinFromFilter(value: number | null) {
@@ -191,16 +220,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     const nextBounds = getPriceBoundsForCurrency(displayCurrency);
     const nextMinLak = normalizeMinFromFilter(minPriceKip);
     const nextMaxLak = normalizeMaxFromFilter(maxPriceKip);
-    const nextMin = clampPrice(
-      toRoundedInt(fromLakToCurrency(nextMinLak, displayCurrency)),
-      nextBounds.minBound,
-      nextBounds.inputMaxBound,
-    );
-    const nextMax = clampPrice(
-      toRoundedInt(fromLakToCurrency(nextMaxLak, displayCurrency)),
-      nextBounds.minBound,
-      nextBounds.inputMaxBound,
-    );
+    const nextMin = snapToNearestPriceStep(fromLakToCurrency(nextMinLak, displayCurrency), nextBounds);
+    const nextMax = snapToNearestPriceStep(fromLakToCurrency(nextMaxLak, displayCurrency), nextBounds);
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
     setDraftPriceSortOrder(priceSortOrder);
@@ -395,16 +416,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     const currentMaxLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency);
     const nextBounds = getPriceBoundsForCurrency(nextCurrency);
 
-    const nextMin = clampPrice(
-      toRoundedInt(fromLakToCurrency(currentMinLak, nextCurrency)),
-      nextBounds.minBound,
-      nextBounds.inputMaxBound,
-    );
-    const nextMaxFromLak = clampPrice(
-      toRoundedInt(fromLakToCurrency(currentMaxLak, nextCurrency)),
-      nextBounds.minBound,
-      nextBounds.inputMaxBound,
-    );
+    const nextMin = snapToNearestPriceStep(fromLakToCurrency(currentMinLak, nextCurrency), nextBounds);
+    const nextMaxFromLak = snapToNearestPriceStep(fromLakToCurrency(currentMaxLak, nextCurrency), nextBounds);
 
     setDraftCurrency(nextCurrency);
     setDraftMinPriceKip(Math.min(nextMin, nextMaxFromLak));
