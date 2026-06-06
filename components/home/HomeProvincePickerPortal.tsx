@@ -1145,7 +1145,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
         </div>
         <div
           style={{
-            padding: '8px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
+            padding: '8px 16px calc(44px + env(safe-area-inset-bottom, 0px))',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
