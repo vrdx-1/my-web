@@ -639,7 +639,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 10,
-              marginBottom: 12,
+              marginBottom: 26,
             }}
           >
             <span
@@ -697,7 +697,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 0,
-              marginBottom: 10,
+              marginBottom: 24,
               fontFamily: LAO_FONT,
               color: '#111111',
               fontSize: '16px',
@@ -1062,7 +1062,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 8,
+              gap: 2,
               width: '100%',
               alignItems: 'center',
             }}
@@ -1075,7 +1075,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 width: 'auto',
                 border: 'none',
                 borderRadius: 12,
-                padding: '10px 8px',
+                padding: '6px 8px',
                 fontFamily: LAO_FONT,
                 fontSize: FILTER_OPTION_TEXT_SIZE,
                 fontWeight: 500,
@@ -1113,7 +1113,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 width: 'auto',
                 border: 'none',
                 borderRadius: 12,
-                padding: '10px 8px',
+                padding: '6px 8px',
                 fontFamily: LAO_FONT,
                 fontSize: FILTER_OPTION_TEXT_SIZE,
                 fontWeight: 500,
@@ -1151,7 +1151,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 width: 'auto',
                 border: 'none',
                 borderRadius: 12,
-                padding: '10px 8px',
+                padding: '6px 8px',
                 fontFamily: LAO_FONT,
                 fontSize: FILTER_OPTION_TEXT_SIZE,
                 fontWeight: 500,
