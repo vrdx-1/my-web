@@ -207,6 +207,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const [currencyTriggerRect, setCurrencyTriggerRect] = useState<DOMRect | null>(null);
   const isScrollLockedRef = useRef(false);
   const lockedScrollYRef = useRef(0);
+  const isMobileIPhone = typeof navigator !== 'undefined' && /iPhone/i.test(navigator.userAgent);
   const priceBounds = getPriceBoundsForCurrency(draftCurrency);
 
   useEffect(() => {
@@ -756,7 +757,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     border: 'none',
                     padding: 0,
                     fontFamily: LAO_FONT,
-                    fontSize: 13,
+                    // iPhone Safari zooms on focus when input font-size is below 16px.
+                    fontSize: isMobileIPhone ? 16 : 13,
                     color: '#111111',
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -821,7 +823,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                     border: 'none',
                     padding: 0,
                     fontFamily: LAO_FONT,
-                    fontSize: 13,
+                    // iPhone Safari zooms on focus when input font-size is below 16px.
+                    fontSize: isMobileIPhone ? 16 : 13,
                     color: '#111111',
                     outline: 'none',
                     boxSizing: 'border-box',
