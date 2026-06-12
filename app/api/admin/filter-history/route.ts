@@ -41,6 +41,16 @@ type PersonSummary = {
   last_used_at: string;
 };
 
+type StatsPayload = {
+  totalFilters: number;
+  guestCount: number;
+  userCount: number;
+  provinceCount: number;
+  priceRangeCount: number;
+  priceSortCount: number;
+  latestPostFirstCount: number;
+};
+
 async function ensureAdmin() {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -198,7 +208,8 @@ export async function GET(request: NextRequest) {
     const userCount = scopedRows.filter((r) => r.person_type === 'user').length;
     const provinceCount = scopedRows.filter((r) => !!r.province).length;
     const priceRangeCount = scopedRows.filter((r) => r.min_price_kip != null || r.max_price_kip != null).length;
-    const sortOrderCount = scopedRows.filter((r) => !!r.price_sort_order || r.latest_post_first === true).length;
+    const priceSortCount = scopedRows.filter((r) => !!r.price_sort_order).length;
+    const latestPostFirstCount = scopedRows.filter((r) => r.latest_post_first === true).length;
 
     // Top provinces
     const provinceCountMap = new Map<string, number>();
@@ -228,7 +239,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({
-      stats: { totalFilters, guestCount, userCount, provinceCount, priceRangeCount, sortOrderCount },
+      stats: { totalFilters, guestCount, userCount, provinceCount, priceRangeCount, priceSortCount, latestPostFirstCount },
       people,
       topProvinces,
       recentFilters,

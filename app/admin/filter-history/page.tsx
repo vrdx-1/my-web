@@ -16,6 +16,7 @@ interface FilterLog {
   max_price_kip: number | null;
   display_currency: '₭' | '$' | '฿' | null;
   price_sort_order: 'asc' | 'desc' | null;
+  latest_post_first: boolean | null;
   created_at: string;
 }
 
@@ -38,7 +39,8 @@ interface StatsPayload {
   userCount: number;
   provinceCount: number;
   priceRangeCount: number;
-  sortOrderCount: number;
+  priceSortCount: number;
+  latestPostFirstCount: number;
 }
 
 function formatKip(value: number | null): string {
@@ -66,6 +68,11 @@ function sortOrderLabel(order: 'asc' | 'desc' | null): string {
   return '-';
 }
 
+function latestPostFirstLabel(value: boolean | null): string {
+  if (value === true) return 'ໂພສໃໝ່ລ່າສຸດກ່ອນ';
+  return '-';
+}
+
 function filterBadge(log: FilterLog): string {
   const parts: string[] = [];
   if (log.province) parts.push(`ແຂວງ: ${log.province}`);
@@ -88,7 +95,8 @@ export default function AdminFilterHistoryPage() {
     userCount: 0,
     provinceCount: 0,
     priceRangeCount: 0,
-    sortOrderCount: 0,
+    priceSortCount: 0,
+    latestPostFirstCount: 0,
   });
   const [people, setPeople] = useState<PersonSummary[]>([]);
   const [selectedPersonKey, setSelectedPersonKey] = useState('');
@@ -102,7 +110,7 @@ export default function AdminFilterHistoryPage() {
   }, [filter, selectedPersonKey]);
 
   const resetData = () => {
-    setStats({ totalFilters: 0, guestCount: 0, userCount: 0, provinceCount: 0, priceRangeCount: 0, sortOrderCount: 0 });
+    setStats({ totalFilters: 0, guestCount: 0, userCount: 0, provinceCount: 0, priceRangeCount: 0, priceSortCount: 0, latestPostFirstCount: 0 });
     setPeople([]);
     setTopProvinces([]);
     setRecentFilters([]);
@@ -133,7 +141,7 @@ export default function AdminFilterHistoryPage() {
         return;
       }
 
-      setStats(payload.stats ?? { totalFilters: 0, guestCount: 0, userCount: 0, provinceCount: 0, priceRangeCount: 0, sortOrderCount: 0 });
+      setStats(payload.stats ?? { totalFilters: 0, guestCount: 0, userCount: 0, provinceCount: 0, priceRangeCount: 0, priceSortCount: 0, latestPostFirstCount: 0 });
       setPeople(Array.isArray(payload.people) ? payload.people : []);
       setTopProvinces(Array.isArray(payload.topProvinces) ? payload.topProvinces : []);
       setRecentFilters(Array.isArray(payload.recentFilters) ? payload.recentFilters : []);
@@ -216,7 +224,8 @@ export default function AdminFilterHistoryPage() {
         <StatCard label="User" value={stats.userCount.toLocaleString()} loading={loading} variant="centered" />
         <StatCard label="ກອງຕາມແຂວງ" value={stats.provinceCount.toLocaleString()} loading={loading} variant="centered" />
         <StatCard label="ກອງຕາມລາຄາ" value={stats.priceRangeCount.toLocaleString()} loading={loading} variant="centered" />
-        <StatCard label="ກຳນົດລຳດັບລາຄາ" value={stats.sortOrderCount.toLocaleString()} loading={loading} variant="centered" />
+        <StatCard label="ກຳນົດລຳດັບລາຄາ" value={stats.priceSortCount.toLocaleString()} loading={loading} variant="centered" />
+        <StatCard label="ໂພສໃໝ່ລ່າສຸດກ່ອນ" value={stats.latestPostFirstCount.toLocaleString()} loading={loading} variant="centered" />
       </div>
 
       {/* Tab buttons */}
@@ -297,13 +306,14 @@ export default function AdminFilterHistoryPage() {
                 <th style={{ padding: 12, textAlign: 'left', fontWeight: 'bold', color: '#4b4f56' }}>ລາຄາສູງສຸດ</th>
                 <th style={{ padding: 12, textAlign: 'left', fontWeight: 'bold', color: '#4b4f56' }}>ສະກຸນເງິນ</th>
                 <th style={{ padding: 12, textAlign: 'left', fontWeight: 'bold', color: '#4b4f56' }}>ລຳດັບລາຄາ</th>
+                <th style={{ padding: 12, textAlign: 'left', fontWeight: 'bold', color: '#4b4f56' }}>ໂພສໃໝ່</th>
                 <th style={{ padding: 12, textAlign: 'left', fontWeight: 'bold', color: '#4b4f56' }}>ເວລາ</th>
               </tr>
             </thead>
             <tbody>
               {recentFilters.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#65676b' }}>ບໍ່ມີຂໍ້ມູນ</td>
+                  <td colSpan={9} style={{ padding: 40, textAlign: 'center', color: '#65676b' }}>ບໍ່ມີຂໍ້ມູນ</td>
                 </tr>
               ) : (
                 recentFilters.map((log) => (
@@ -356,6 +366,19 @@ export default function AdminFilterHistoryPage() {
                           color: log.price_sort_order === 'asc' ? '#166534' : '#9d174d',
                         }}>
                           {sortOrderLabel(log.price_sort_order)}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>-</span>
+                      )}
+                    </td>
+                    <td style={{ padding: 12 }}>
+                      {log.latest_post_first ? (
+                        <span style={{
+                          display: 'inline-block', padding: '2px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                          background: '#dcfce7',
+                          color: '#166534',
+                        }}>
+                          {latestPostFirstLabel(log.latest_post_first)}
                         </span>
                       ) : (
                         <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>-</span>
