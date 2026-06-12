@@ -78,6 +78,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
+  const feedModeKey = `${selectedProvince.trim() || 'all'}|${minPriceKip ?? 'min'}|${maxPriceKip ?? 'max'}|${priceSortOrder || 'none'}`;
   const soldListData = usePostListData({
     type: 'sold',
     session,
@@ -377,6 +378,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     selectedProvince,
     activeProfileId,
     authUserId,
+    feedModeKey,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,

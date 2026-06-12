@@ -22,6 +22,7 @@ const corsHeaders = {
  *   min_price_kip?: number | null,
  *   max_price_kip?: number | null,
  *   price_sort_order?: 'asc' | 'desc' | '',
+ *   latest_post_first?: boolean,
  *   guest_token?: string,
  * }
  */
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest) {
     const price_sort_order = price_sort_order_raw === 'asc' || price_sort_order_raw === 'desc'
       ? price_sort_order_raw
       : null;
+    const latest_post_first = body.latest_post_first === true || price_sort_order_raw === 'latest'
+      ? true
+      : null;
     const display_currency_raw = body.display_currency;
     const display_currency = display_currency_raw === '₭' || display_currency_raw === '$' || display_currency_raw === '฿'
       ? display_currency_raw as '₭' | '$' | '฿'
@@ -52,7 +56,8 @@ export async function POST(request: NextRequest) {
     const hasFilter = (province && province.length > 0)
       || min_price_kip != null
       || max_price_kip != null
-      || price_sort_order != null;
+      || price_sort_order != null
+      || latest_post_first === true;
 
     if (!hasFilter) {
       return NextResponse.json({ ok: true }, { headers: corsHeaders });
@@ -125,6 +130,7 @@ export async function POST(request: NextRequest) {
       max_price_kip,
       display_currency: (min_price_kip != null || max_price_kip != null) ? display_currency : null,
       price_sort_order,
+      latest_post_first,
     };
 
     const { error } = await adminClient.from('filter_search_logs').insert(row);
@@ -132,7 +138,7 @@ export async function POST(request: NextRequest) {
       return internalServerError('filter/log insert failed', error);
     }
 
-    console.log(`[Filter Log] actor=${actorRole} province=${province ?? '-'} price=${min_price_kip ?? '-'}-${max_price_kip ?? '-'} sort=${price_sort_order ?? '-'}`);
+    console.log(`[Filter Log] actor=${actorRole} province=${province ?? '-'} price=${min_price_kip ?? '-'}-${max_price_kip ?? '-'} sort=${price_sort_order ?? '-'} latest=${latest_post_first === true ? '1' : '-'}`);
     return NextResponse.json({ ok: true }, { headers: corsHeaders });
   } catch (e) {
     return internalServerError('filter/log unexpected error', e);

@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import type { CurrencySymbol } from '@/utils/exchangeRates';
 
-export type HomePriceSortOrder = '' | 'asc' | 'desc';
+export type HomePriceSortOrder = '' | 'asc' | 'desc' | 'latest';
 
 /** ค่าว่าง '' = "ທຸກແຂວງ" (default ของ home province picker). ไม่ persist — ทุกครั้งที่ refresh/เข้าเว็บใหม่ เป็น "ທຸກແຂວງ" เสมอ */
 interface HomeProvinceContextValue {

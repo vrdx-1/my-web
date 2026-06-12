@@ -40,6 +40,7 @@ export function HomePageContent() {
     selectedProvince,
     activeProfileId,
     authUserId,
+    feedModeKey,
     setReportReason,
     setReportingPost,
     showFeedSkeleton,
@@ -108,6 +109,7 @@ export function HomePageContent() {
         authUserId={authUserId}
         searchDataLoading={searchDataLoading}
         tab={tab}
+        feedModeKey={feedModeKey}
         onPrefetchNextPost={onPrefetchNextPost}
         onLocalPostUpdate={handleLocalPostUpdate}
         recommendPostFeedProps={recommendPostFeedProps}

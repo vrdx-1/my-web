@@ -1050,11 +1050,11 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               textAlign: 'left',
             }}
           >
-            ຈັດລຽງຕາມລາຄາ
+            ຈັດລຽງຕາມ
           </div>
           <div
             role="group"
-            aria-label="Price sort order"
+            aria-label="Sort order"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -1084,7 +1084,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 gap: 6,
               }}
             >
-              <span>ສະແດງລາຄາຖືກສຸດກ່ອນ</span>
+              <span>ລາຄາຖືກສຸດກ່ອນ</span>
               {draftPriceSortOrder === 'asc' ? (
                 <SelectedCheckBadge />
               ) : (
@@ -1122,8 +1122,46 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 gap: 6,
               }}
             >
-              <span>ສະແດງລາຄາແພງສຸດກ່ອນ</span>
+              <span>ລາຄາແພງສຸດກ່ອນ</span>
               {draftPriceSortOrder === 'desc' ? (
+                <SelectedCheckBadge />
+              ) : (
+                <span
+                  aria-hidden
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    border: '1.5px solid #cbd5e1',
+                    display: 'inline-block',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDraftPriceSortOrder('latest')}
+              aria-pressed={draftPriceSortOrder === 'latest'}
+              style={{
+                width: 'auto',
+                border: 'none',
+                borderRadius: 12,
+                padding: '10px 8px',
+                fontFamily: LAO_FONT,
+                fontSize: FILTER_OPTION_TEXT_SIZE,
+                fontWeight: 500,
+                cursor: 'pointer',
+                background: draftPriceSortOrder === 'latest' ? '#e7f3ff' : '#ffffff',
+                color: FILTER_OPTION_TEXT_COLOR,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <span>ໂພສໃໝ່ລ່າສຸດກ່ອນ</span>
+              {draftPriceSortOrder === 'latest' ? (
                 <SelectedCheckBadge />
               ) : (
                 <span

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import type { HomeTab } from './useHomeTabData';
+import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 
 interface SoldListDataLike {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +22,7 @@ export interface UseHomeRefreshStateOptions {
   selectedProvince: string;
   minPriceKip: number | null;
   maxPriceKip: number | null;
-  priceSortOrder: '' | 'asc' | 'desc';
+  priceSortOrder: HomePriceSortOrder;
   soldListData: SoldListDataLike;
   effectiveLoadingMore: boolean;
   mainTab: ReturnType<typeof useMainTabContext> | null;

@@ -18,6 +18,7 @@ export interface HomePagePanelsProps {
   authUserId: string | null;
   searchDataLoading: boolean;
   tab: 'recommend' | 'sold';
+  feedModeKey: string;
   onPrefetchNextPost: () => void;
   onLocalPostUpdate?: (postId: string, data: Record<string, unknown>) => void;
   recommendPostFeedProps: HomeFeedBodyProps['postFeedProps'];
@@ -39,6 +40,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
     authUserId,
     searchDataLoading,
     tab,
+    feedModeKey,
     onPrefetchNextPost,
     onLocalPostUpdate,
     recommendPostFeedProps,
@@ -48,6 +50,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
   return (
     <div ref={feedRestoreWrapRef}>
       <div
+        key={`recommend-${feedModeKey}`}
         ref={recommendPanelRef}
         style={{ display: isSoldTabNoSearch ? 'none' : 'block' }}
         aria-hidden={isSoldTabNoSearch}
@@ -69,6 +72,7 @@ function HomePagePanelsBase(props: HomePagePanelsProps) {
         />
       </div>
       <div
+        key={`sold-${feedModeKey}`}
         ref={soldPanelRef}
         style={{ display: isSoldTabNoSearch ? 'block' : 'none' }}
         aria-hidden={!isSoldTabNoSearch}

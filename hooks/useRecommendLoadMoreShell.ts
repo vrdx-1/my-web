@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useState, useEffect, useCallback } from 'react';
+import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 
 interface UseRecommendLoadMoreShellOptions {
   postListLoadingMore: boolean;
@@ -10,7 +11,7 @@ interface UseRecommendLoadMoreShellOptions {
   selectedProvince: string;
   minPriceKip: number | null;
   maxPriceKip: number | null;
-  priceSortOrder: '' | 'asc' | 'desc';
+  priceSortOrder: HomePriceSortOrder;
 }
 
 interface UseRecommendLoadMoreShellReturn {

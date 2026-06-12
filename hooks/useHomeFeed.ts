@@ -113,10 +113,12 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     isActive = true,
   } = options;
   const hasPriceFilter = minPriceKip != null || maxPriceKip != null;
-  const hasPriceSort = priceSortOrder === 'asc' || priceSortOrder === 'desc';
+  const hasPriceSort = priceSortOrder === 'asc' || priceSortOrder === 'desc' || priceSortOrder === 'latest';
+  const shouldBypassInitialCache = hasPriceFilter || hasPriceSort;
+  const shouldPersistHomeFeedCache = !shouldBypassInitialCache;
   const [clientExchangeRates, setClientExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
   const [posts, setPosts] = useState<HomeFeedPost[]>(() => {
-    if (isBrowserReloadNavigation()) return [];
+    if (isBrowserReloadNavigation() || shouldBypassInitialCache) return [];
     return getInitialPostsFromStorage(province);
   });
   const [page, setPage] = useState(0);
@@ -300,6 +302,57 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     const rangeEnd = rangeStart + pageSize - 1;
 
     try {
+      if (priceSortOrder === 'latest') {
+        let latestQuery = supabase
+          .from('cars')
+          .select(POST_WITH_PROFILE_SELECT)
+          .eq('status', 'recommend')
+          .or('is_hidden.eq.false,is_hidden.is.null');
+
+        if (province && province.trim() !== '') {
+          latestQuery = latestQuery.eq('province', province.trim());
+        }
+        if (minPriceKip != null) {
+          latestQuery = latestQuery.gte('approx_price_lak', minPriceKip);
+        }
+        if (maxPriceKip != null) {
+          latestQuery = latestQuery.lte('approx_price_lak', maxPriceKip);
+        }
+
+        const { data: latestRows, error: latestError } = await latestQuery
+          .order('created_at', { ascending: false, nullsFirst: false })
+          .order('id', { ascending: false })
+          .range(rangeStart, rangeStart + pageSize);
+
+        if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
+        if (latestError) throw latestError;
+
+        const latestList = Array.isArray(latestRows) ? latestRows as HomeFeedPost[] : [];
+        const nextHasMore = latestList.length > pageSize;
+        const pageRows = nextHasMore ? latestList.slice(0, pageSize) : latestList;
+        const orderedLatest = await attachEffectiveWhatsAppPhones(supabase, pageRows);
+
+        if (cancelledRef.current || currentFetchId !== fetchIdRef.current) return;
+
+        setHasMore(nextHasMore);
+
+        if (isInitial) {
+          setPosts(orderedLatest.filter((post) => !post.is_hidden));
+          preloadPostsVisibleImages(orderedLatest, 2);
+          fireInitialLoadDone();
+        } else {
+          setPosts((prev) => {
+            const ids = new Set(prev.map((post) => String(post.id)));
+            const newOnes = orderedLatest
+              .filter((post) => !post.is_hidden)
+              .filter((post) => !ids.has(String(post.id)));
+            return newOnes.length ? [...prev, ...newOnes] : prev;
+          });
+        }
+
+        return;
+      }
+
       const url = '/api/posts/feed';
       const body: {
         startIndex?: number;
@@ -308,6 +361,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         minPriceKip?: number;
         maxPriceKip?: number;
         priceSortOrder?: HomePriceSortOrder;
+        latestPostFirst?: boolean;
         activeProfileId?: string;
         authUserId?: string;
         cursorId?: string;
@@ -457,9 +511,7 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
         if (error) return;
         const order = new Map(postIds.map((id, i) => [String(id), i]));
         const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, (postsData || []) as HomeFeedPost[]);
-        ordered = hydratedPosts.filter(
-          (post) => post.status === 'recommend' && !post.is_hidden,
-        );
+        ordered = hydratedPosts.filter((post) => !post.is_hidden);
         ordered.sort((a, b) => {
           const ai = order.get(String(a.id)) ?? 1e9;
           const bi = order.get(String(b.id)) ?? 1e9;
@@ -499,7 +551,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           backgroundRefresh,
         });
         try {
-          writeHomeFeedCache(province, filteredInitialList, nextHasMore);
+          if (shouldPersistHomeFeedCache) {
+            writeHomeFeedCache(province, filteredInitialList, nextHasMore);
+          }
         } catch {
           // ignore
         }
@@ -688,6 +742,11 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
     }
 
     if (hasPriceFilter || hasPriceSort) {
+      try {
+        clearHomeFeedStorage({ clearCache: true });
+      } catch {
+        // ignore
+      }
       setPosts([]);
       setLoadingMore(true);
       setHasMore(true);

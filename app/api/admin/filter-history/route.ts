@@ -16,6 +16,7 @@ type FilterLogRow = {
   max_price_kip: number | null;
   display_currency: '₭' | '$' | '฿' | null;
   price_sort_order: 'asc' | 'desc' | null;
+  latest_post_first: boolean | null;
   created_at: string;
 };
 
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
     // Query filter_search_logs
     let query = adminClient
       .from('filter_search_logs')
-      .select('id, user_id, guest_token, actor_role, province, min_price_kip, max_price_kip, display_currency, price_sort_order, created_at')
+      .select('id, user_id, guest_token, actor_role, province, min_price_kip, max_price_kip, display_currency, price_sort_order, latest_post_first, created_at')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -197,7 +198,7 @@ export async function GET(request: NextRequest) {
     const userCount = scopedRows.filter((r) => r.person_type === 'user').length;
     const provinceCount = scopedRows.filter((r) => !!r.province).length;
     const priceRangeCount = scopedRows.filter((r) => r.min_price_kip != null || r.max_price_kip != null).length;
-    const sortOrderCount = scopedRows.filter((r) => !!r.price_sort_order).length;
+    const sortOrderCount = scopedRows.filter((r) => !!r.price_sort_order || r.latest_post_first === true).length;
 
     // Top provinces
     const provinceCountMap = new Map<string, number>();
@@ -222,6 +223,7 @@ export async function GET(request: NextRequest) {
       max_price_kip: r.max_price_kip,
       display_currency: r.display_currency,
       price_sort_order: r.price_sort_order,
+      latest_post_first: r.latest_post_first,
       created_at: r.created_at,
     }));
 

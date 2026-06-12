@@ -11,6 +11,7 @@ import { useSessionProfileContext } from '@/contexts/SessionProfileContext';
 import { getOrCreateGuestToken } from '@/utils/guestToken';
 import { mergeHeaders } from '@/utils/activeProfile';
 import type { CurrencySymbol } from '@/utils/exchangeRates';
+import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 
 /** ให้ปุ่มฟิลเตอร์และแถบค้น co สูงเท่าโลโก้ใน header */
 const CONTROL_SIZE = LAYOUT_CONSTANTS.HEADER_LOGO_SIZE + 6;
@@ -94,7 +95,7 @@ export function HomeHeaderSearchAndFilter() {
     maxPriceKip: number | null;
     minPriceDisplay: number | null;
     maxPriceDisplay: number | null;
-    priceSortOrder: '' | 'asc' | 'desc';
+    priceSortOrder: HomePriceSortOrder;
     displayCurrency: CurrencySymbol;
   }) => {
     setSelectedProvince?.(filters.province);
@@ -123,7 +124,10 @@ export function HomeHeaderSearchAndFilter() {
           min_price_kip: filters.minPriceDisplay ?? undefined,
           max_price_kip: filters.maxPriceDisplay ?? undefined,
           display_currency: (filters.minPriceDisplay != null || filters.maxPriceDisplay != null) ? filters.displayCurrency : undefined,
-          price_sort_order: filters.priceSortOrder || undefined,
+          price_sort_order: filters.priceSortOrder === 'asc' || filters.priceSortOrder === 'desc'
+            ? filters.priceSortOrder
+            : undefined,
+          latest_post_first: filters.priceSortOrder === 'latest' ? true : undefined,
           guest_token: guestToken || undefined,
         }),
       }).catch(() => {});

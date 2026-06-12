@@ -142,6 +142,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       if (minPriceKip != null) params.set('minPriceKip', String(minPriceKip));
       if (maxPriceKip != null) params.set('maxPriceKip', String(maxPriceKip));
       if (priceSortOrder) params.set('priceSortOrder', priceSortOrder);
+      if (priceSortOrder === 'latest') params.set('latestPostFirst', '1');
       const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
       if (cancelledRef.current) return;
       const data = await res.json().catch(() => ({}));
