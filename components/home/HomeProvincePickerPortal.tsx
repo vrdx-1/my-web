@@ -21,7 +21,7 @@ const PRICE_THRESHOLD_TIER = 1_000_000_000;
 const PRICE_STEP_LOW = 10_000_000;
 const PRICE_STEP_HIGH = 100_000_000;
 const PRICE_STEP_THB = 10_000;
-const PRICE_STEP_USD = 1_000;
+const PRICE_STEP_USD = 500;
 const FILTER_OPTION_TEXT_SIZE = 16;
 const FILTER_OPTION_TEXT_COLOR = '#111111';
 const FILTER_SEARCH_BUTTON_BLUE = '#1877f2';
@@ -49,10 +49,6 @@ function toRoundedInt(value: number) {
 }
 
 function getPriceBoundsForCurrency(currency: CurrencySymbol) {
-  const maxBound = toRoundedInt(fromLakToCurrency(PRICE_MAX_BOUND, currency));
-  const inputMaxBound = toRoundedInt(fromLakToCurrency(PRICE_INPUT_MAX_BOUND, currency));
-  const defaultMin = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MIN, currency));
-  const defaultMax = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MAX, currency));
   const buttonStep = currency === '฿'
     ? PRICE_STEP_THB
     : currency === '$'
@@ -69,6 +65,11 @@ function getPriceBoundsForCurrency(currency: CurrencySymbol) {
     : currency === '$'
       ? PRICE_STEP_USD
       : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_HIGH, currency)));
+  const rawMaxBound = toRoundedInt(fromLakToCurrency(PRICE_MAX_BOUND, currency));
+  const maxBound = Math.max(stepLow, Math.floor(rawMaxBound / stepLow) * stepLow);
+  const inputMaxBound = toRoundedInt(fromLakToCurrency(PRICE_INPUT_MAX_BOUND, currency));
+  const defaultMin = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MIN, currency));
+  const defaultMax = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MAX, currency));
 
   return {
     minBound: 0,
