@@ -469,7 +469,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          height: '85vh',
+          height: '91vh',
           background: '#fff',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.2)',
           borderTopLeftRadius: '16px',
@@ -840,13 +840,13 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               onClick={handleDecreaseMinPrice}
               aria-label="Decrease minimum price"
               style={{
-                width: 38,
-                height: 38,
+                width: 28,
+                height: 28,
                 color: '#475467',
-                border: '1px solid #d0d5dd',
-                background: '#f8fafc',
+                border: 'none',
+                background: 'transparent',
                 padding: 0,
-                borderRadius: 999,
+                borderRadius: 0,
                 cursor: 'pointer',
                 userSelect: 'none',
                 display: 'inline-flex',
@@ -999,13 +999,13 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
               onClick={handleIncreaseMaxPrice}
               aria-label="Increase maximum price"
               style={{
-                width: 38,
-                height: 38,
+                width: 28,
+                height: 28,
                 color: '#475467',
-                border: '1px solid #d0d5dd',
-                background: '#f8fafc',
+                border: 'none',
+                background: 'transparent',
                 padding: 0,
-                borderRadius: 999,
+                borderRadius: 0,
                 cursor: 'pointer',
                 userSelect: 'none',
                 display: 'inline-flex',
