@@ -56,6 +56,9 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const minPriceDisplay = homeProvince?.minPriceDisplay ?? null;
+  const maxPriceDisplay = homeProvince?.maxPriceDisplay ?? null;
+  const displayCurrency = homeProvince?.displayCurrency ?? '₭';
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
 
   const sharedLikedSaved = useHomeLikedSaved(session, sessionReady, activeProfileId);
@@ -77,6 +80,9 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    minPriceDisplay,
+    maxPriceDisplay,
+    displayCurrency,
     priceSortOrder,
     onInitialLoadDone: () => {
       startSessionCheck();
@@ -91,6 +97,9 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    minPriceDisplay,
+    maxPriceDisplay,
+    displayCurrency,
     priceSortOrder,
     session,
     activeProfileId,

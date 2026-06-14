@@ -30,6 +30,8 @@ export function HomeHeaderSearchAndFilter() {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const minPriceDisplay = homeProvince?.minPriceDisplay ?? null;
+  const maxPriceDisplay = homeProvince?.maxPriceDisplay ?? null;
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
   const displayCurrency = homeProvince?.displayCurrency ?? '₭';
   const hasActiveFilters = selectedProvince.trim().length > 0 || minPriceKip != null || maxPriceKip != null || priceSortOrder !== '';
@@ -99,7 +101,12 @@ export function HomeHeaderSearchAndFilter() {
     displayCurrency: CurrencySymbol;
   }) => {
     setSelectedProvince?.(filters.province);
-    setPriceRange?.(filters.minPriceKip, filters.maxPriceKip);
+    setPriceRange?.(
+      filters.minPriceKip,
+      filters.maxPriceKip,
+      filters.minPriceDisplay,
+      filters.maxPriceDisplay,
+    );
     setPriceSortOrder?.(filters.priceSortOrder);
     setDisplayCurrency?.(filters.displayCurrency);
     closePicker();
@@ -284,6 +291,8 @@ export function HomeHeaderSearchAndFilter() {
         selectedProvince={selectedProvince}
         minPriceKip={minPriceKip}
         maxPriceKip={maxPriceKip}
+        minPriceDisplay={minPriceDisplay}
+        maxPriceDisplay={maxPriceDisplay}
         priceSortOrder={priceSortOrder}
         displayCurrency={displayCurrency}
         onClose={closePicker}

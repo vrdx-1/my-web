@@ -21,6 +21,7 @@ import { mergeHeaders } from '@/utils/activeProfile';
 import { resolveEffectiveWhatsAppPhone } from '@/utils/whatsapp';
 import {
   DEFAULT_EXCHANGE_RATES,
+  getApproxPriceValue,
   toEstimatedPrices,
   type ExchangeRates,
 } from '@/utils/exchangeRates';
@@ -179,8 +180,21 @@ export function PostCard({
     ? `${priceValue.toLocaleString('en-US')} ${currencySymbol}`
     : 'ບໍ່ລະບຸລາຄາ';
   const estimatedPrices = React.useMemo(
-    () => toEstimatedPrices(post.price, currencySymbol, cardExchangeRates),
-    [currencySymbol, cardExchangeRates, post.price],
+    () => {
+      const approxLak = getApproxPriceValue(post, '₭');
+      const approxThb = getApproxPriceValue(post, '฿');
+      const approxUsd = getApproxPriceValue(post, '$');
+      if (approxLak != null || approxThb != null || approxUsd != null) {
+        return {
+          approx_price_lak: approxLak,
+          approx_price_thb: approxThb,
+          approx_price_usd: approxUsd,
+        };
+      }
+
+      return toEstimatedPrices(post.price, currencySymbol, cardExchangeRates);
+    },
+    [cardExchangeRates, currencySymbol, post],
   );
 
   const estimateCurrencies = React.useMemo(() => {

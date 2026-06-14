@@ -1,5 +1,13 @@
 export type CurrencySymbol = '₭' | '฿' | '$';
 
+export type ApproxPriceColumn = 'approx_price_lak' | 'approx_price_thb' | 'approx_price_usd';
+
+type ApproxPriceSource = {
+  approx_price_lak?: unknown;
+  approx_price_thb?: unknown;
+  approx_price_usd?: unknown;
+};
+
 export interface ExchangeRates {
   lak_to_thb: number;
   lak_to_usd: number;
@@ -21,6 +29,24 @@ export const DEFAULT_EXCHANGE_RATES: ExchangeRates = {
 export function normalizeCurrencySymbol(value: unknown): CurrencySymbol {
   if (value === '฿' || value === '$') return value;
   return '₭';
+}
+
+function normalizeApproxPriceValue(value: unknown): number | null {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return numeric;
+}
+
+export function getApproxPriceColumn(currency: unknown): ApproxPriceColumn {
+  const symbol = normalizeCurrencySymbol(currency);
+  if (symbol === '฿') return 'approx_price_thb';
+  if (symbol === '$') return 'approx_price_usd';
+  return 'approx_price_lak';
+}
+
+export function getApproxPriceValue(source: ApproxPriceSource, currency: unknown): number | null {
+  const column = getApproxPriceColumn(currency);
+  return normalizeApproxPriceValue(source[column]);
 }
 
 export function normalizeExchangeRates(input: unknown): ExchangeRates {

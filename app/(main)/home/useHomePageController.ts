@@ -77,8 +77,11 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
+  const minPriceDisplay = homeProvince?.minPriceDisplay ?? null;
+  const maxPriceDisplay = homeProvince?.maxPriceDisplay ?? null;
+  const displayCurrency = homeProvince?.displayCurrency ?? '₭';
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
-  const feedModeKey = `${selectedProvince.trim() || 'all'}|${minPriceKip ?? 'min'}|${maxPriceKip ?? 'max'}|${priceSortOrder || 'none'}`;
+  const feedModeKey = `${selectedProvince.trim() || 'all'}|${minPriceKip ?? 'min'}|${maxPriceKip ?? 'max'}|${minPriceDisplay ?? 'min-display'}|${maxPriceDisplay ?? 'max-display'}|${displayCurrency}|${priceSortOrder || 'none'}`;
   const soldListData = usePostListData({
     type: 'sold',
     session,
@@ -89,6 +92,9 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
+    minPriceDisplay,
+    maxPriceDisplay,
+    displayCurrency,
     priceSortOrder,
   });
 

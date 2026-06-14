@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { normalizeSmartCabQueryForSearch } from '@/utils/normalizeSearchQuery';
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
+import type { CurrencySymbol } from '@/utils/exchangeRates';
 
 export interface SearchLikedSavedShared {
   likedPosts: { [key: string]: boolean };
@@ -20,6 +21,9 @@ interface UseSearchPostsOptions {
   province?: string;
   minPriceKip?: number | null;
   maxPriceKip?: number | null;
+  minPriceDisplay?: number | null;
+  maxPriceDisplay?: number | null;
+  displayCurrency?: CurrencySymbol;
   priceSortOrder?: HomePriceSortOrder;
   session?: any;
   activeProfileId?: string | null;
@@ -48,6 +52,9 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     province,
     minPriceKip = null,
     maxPriceKip = null,
+    minPriceDisplay = null,
+    maxPriceDisplay = null,
+    displayCurrency = '₭',
     priceSortOrder = '',
     session,
     activeProfileId,
@@ -141,6 +148,9 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
       if (province && province.trim() !== '') params.set('province', province.trim());
       if (minPriceKip != null) params.set('minPriceKip', String(minPriceKip));
       if (maxPriceKip != null) params.set('maxPriceKip', String(maxPriceKip));
+      if (minPriceDisplay != null) params.set('minPriceDisplay', String(minPriceDisplay));
+      if (maxPriceDisplay != null) params.set('maxPriceDisplay', String(maxPriceDisplay));
+      if (minPriceDisplay != null || maxPriceDisplay != null) params.set('displayCurrency', displayCurrency);
       if (priceSortOrder) params.set('priceSortOrder', priceSortOrder);
       if (priceSortOrder === 'latest') params.set('latestPostFirst', '1');
       const res = await fetch(`/api/posts/search?${params.toString()}`, { signal });
@@ -158,7 +168,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     } finally {
       if (!aborted && !cancelledRef.current) setLoading(false);
     }
-  }, [query, province, minPriceKip, maxPriceKip, priceSortOrder]);
+  }, [query, province, minPriceKip, maxPriceKip, minPriceDisplay, maxPriceDisplay, displayCurrency, priceSortOrder]);
 
   useEffect(() => {
     if (!enabled) {
@@ -172,7 +182,7 @@ export function useSearchPosts(options: UseSearchPostsOptions): UseSearchPostsRe
     }
     setLoading(true);
     fetchSearch();
-  }, [enabled, query, province, minPriceKip, maxPriceKip, priceSortOrder, fetchSearch]);
+  }, [enabled, query, province, minPriceKip, maxPriceKip, minPriceDisplay, maxPriceDisplay, displayCurrency, priceSortOrder, fetchSearch]);
 
   return {
     posts,

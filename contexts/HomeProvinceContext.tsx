@@ -11,9 +11,16 @@ interface HomeProvinceContextValue {
   setSelectedProvince: (v: string) => void;
   minPriceKip: number | null;
   maxPriceKip: number | null;
+  minPriceDisplay: number | null;
+  maxPriceDisplay: number | null;
   priceSortOrder: HomePriceSortOrder;
   displayCurrency: CurrencySymbol;
-  setPriceRange: (minPriceKip: number | null, maxPriceKip: number | null) => void;
+  setPriceRange: (
+    minPriceKip: number | null,
+    maxPriceKip: number | null,
+    minPriceDisplay?: number | null,
+    maxPriceDisplay?: number | null,
+  ) => void;
   setPriceSortOrder: (order: HomePriceSortOrder) => void;
   setDisplayCurrency: (currency: CurrencySymbol) => void;
   resetFilters: () => void;
@@ -25,13 +32,22 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
   const [selectedProvince, setState] = useState<string>('');
   const [minPriceKip, setMinPriceKip] = useState<number | null>(null);
   const [maxPriceKip, setMaxPriceKip] = useState<number | null>(null);
+  const [minPriceDisplay, setMinPriceDisplay] = useState<number | null>(null);
+  const [maxPriceDisplay, setMaxPriceDisplay] = useState<number | null>(null);
   const [priceSortOrder, setPriceSortOrderState] = useState<HomePriceSortOrder>('');
   const [displayCurrency, setDisplayCurrencyState] = useState<CurrencySymbol>('₭');
 
   const setSelectedProvince = useCallback((v: string) => setState(v), []);
-  const setPriceRange = useCallback((min: number | null, max: number | null) => {
+  const setPriceRange = useCallback((
+    min: number | null,
+    max: number | null,
+    nextMinDisplay: number | null = null,
+    nextMaxDisplay: number | null = null,
+  ) => {
     setMinPriceKip(min);
     setMaxPriceKip(max);
+    setMinPriceDisplay(nextMinDisplay);
+    setMaxPriceDisplay(nextMaxDisplay);
   }, []);
   const setPriceSortOrder = useCallback((order: HomePriceSortOrder) => {
     setPriceSortOrderState(order);
@@ -43,6 +59,8 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
     setState('');
     setMinPriceKip(null);
     setMaxPriceKip(null);
+    setMinPriceDisplay(null);
+    setMaxPriceDisplay(null);
     setPriceSortOrderState('');
     setDisplayCurrencyState('₭');
   }, []);
@@ -54,6 +72,8 @@ export function HomeProvinceProvider({ children }: { children: React.ReactNode }
         setSelectedProvince,
         minPriceKip,
         maxPriceKip,
+        minPriceDisplay,
+        maxPriceDisplay,
         priceSortOrder,
         displayCurrency,
         setPriceRange,

@@ -123,6 +123,11 @@ function formatPriceLabel(value: number) {
   return `${value.toLocaleString('en-US')} ກີບ`;
 }
 
+type PriceSliderStyle = React.CSSProperties & {
+  '--price-accent-color': string;
+  '--price-accent-shadow': string;
+};
+
 function parseDigitsInput(value: string) {
   const digits = value.replace(/\D/g, '');
   if (!digits) return null;
@@ -160,6 +165,8 @@ export interface HomeProvincePickerPortalProps {
   selectedProvince: string;
   minPriceKip: number | null;
   maxPriceKip: number | null;
+  minPriceDisplay: number | null;
+  maxPriceDisplay: number | null;
   priceSortOrder: HomePriceSortOrder;
   displayCurrency: CurrencySymbol;
   onClose: () => void;
@@ -182,6 +189,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     selectedProvince,
     minPriceKip,
     maxPriceKip,
+    minPriceDisplay,
+    maxPriceDisplay,
     priceSortOrder,
     displayCurrency,
     onClose,
@@ -220,10 +229,19 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setDraftProvince(selectedProvince);
     setDraftCurrency(displayCurrency);
     const nextBounds = getPriceBoundsForCurrency(displayCurrency);
-    const nextMinLak = normalizeMinFromFilter(minPriceKip);
-    const nextMaxLak = normalizeMaxFromFilter(maxPriceKip);
-    const nextMin = snapToNearestPriceStep(fromLakToCurrency(nextMinLak, displayCurrency), nextBounds);
-    const nextMax = snapToNearestPriceStep(fromLakToCurrency(nextMaxLak, displayCurrency), nextBounds);
+    const hasStoredDisplayRange = minPriceDisplay != null || maxPriceDisplay != null;
+    const nextMin = hasStoredDisplayRange
+      ? snapToNearestPriceStep(normalizeMinFromFilter(minPriceDisplay), nextBounds)
+      : snapToNearestPriceStep(
+        fromLakToCurrency(normalizeMinFromFilter(minPriceKip), displayCurrency),
+        nextBounds,
+      );
+    const nextMax = hasStoredDisplayRange
+      ? snapToNearestPriceStep(normalizeMaxFromFilter(maxPriceDisplay), nextBounds)
+      : snapToNearestPriceStep(
+        fromLakToCurrency(normalizeMaxFromFilter(maxPriceKip), displayCurrency),
+        nextBounds,
+      );
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
     setDraftMaxPriceKip(Math.max(nextMin, nextMax));
     setDraftPriceSortOrder(priceSortOrder);
@@ -239,7 +257,16 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     setShowProvincePopup(false);
     setShowCurrencyPopup(false);
     setShowSelectFilterWarning(false);
-  }, [selectedProvince, minPriceKip, maxPriceKip, priceSortOrder, displayCurrency, showProvincePicker]);
+  }, [
+    selectedProvince,
+    minPriceKip,
+    maxPriceKip,
+    minPriceDisplay,
+    maxPriceDisplay,
+    priceSortOrder,
+    displayCurrency,
+    showProvincePicker,
+  ]);
 
   // Effect 1: body scroll lock — only triggered by the outer filter open/close.
   // Must NOT depend on sub-popup states so that opening showProvincePopup / showCurrencyPopup
@@ -874,9 +901,9 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
                 position: 'relative',
                 height: 30,
                 flex: 1,
-                ['--price-accent-color' as any]: priceRangeAccentColor,
-                ['--price-accent-shadow' as any]: priceRangeAccentShadow,
-              }}
+                '--price-accent-color': priceRangeAccentColor,
+                '--price-accent-shadow': priceRangeAccentShadow,
+              } as PriceSliderStyle}
             >
               <div
                 style={{

@@ -8,6 +8,7 @@ import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { sequentialAppendItems } from '@/utils/preloadSequential';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
+import type { CurrencySymbol } from '@/utils/exchangeRates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -81,6 +82,9 @@ interface UsePostListDataOptions {
   /** สำหรับ type 'sold' ในหน้าโฮม: ช่วงราคาที่ต้องการกรอง (ກີບ) */
   minPriceKip?: number | null;
   maxPriceKip?: number | null;
+  minPriceDisplay?: number | null;
+  maxPriceDisplay?: number | null;
+  displayCurrency?: CurrencySymbol;
   priceSortOrder?: HomePriceSortOrder;
   /** สำหรับ type 'my-posts': คำค้น caption/รหัสโพสต์ */
   searchQuery?: string;
@@ -146,6 +150,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     province,
     minPriceKip = null,
     maxPriceKip = null,
+    minPriceDisplay = null,
+    maxPriceDisplay = null,
+    displayCurrency = '₭',
     priceSortOrder = '',
     searchQuery,
     onlySubAccounts = false,
@@ -603,6 +610,9 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           province?: string;
           minPriceKip?: number;
           maxPriceKip?: number;
+          minPriceDisplay?: number;
+          maxPriceDisplay?: number;
+          displayCurrency?: CurrencySymbol;
           priceSortOrder?: HomePriceSortOrder;
           status: 'sold';
           feedSeed?: string;
@@ -619,6 +629,15 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         }
         if (maxPriceKip != null) {
           requestBody.maxPriceKip = maxPriceKip;
+        }
+        if (minPriceDisplay != null) {
+          requestBody.minPriceDisplay = minPriceDisplay;
+        }
+        if (maxPriceDisplay != null) {
+          requestBody.maxPriceDisplay = maxPriceDisplay;
+        }
+        if (minPriceDisplay != null || maxPriceDisplay != null) {
+          requestBody.displayCurrency = displayCurrency;
         }
         if (priceSortOrder) {
           requestBody.priceSortOrder = priceSortOrder;
