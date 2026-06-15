@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/preserve-manual-memoization, @typescript-eslint/no-explicit-any */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -58,11 +58,21 @@ export function SoldTabFeedWrapper({
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
   const effectiveLoadingMore = soldListData.loadingMore || soldLoadMoreShell;
 
+  // refs เพื่อกันการ recreate callback / effect ทุกครั้งที่ loading/hasMore เปลี่ยน
+  const soldLoadingMoreRef = useRef(soldListData.loadingMore);
+  soldLoadingMoreRef.current = soldListData.loadingMore;
+  const soldHasMoreRef = useRef(soldListData.hasMore);
+  soldHasMoreRef.current = soldListData.hasMore;
+  const soldSessionRef = useRef(soldListData.session);
+  soldSessionRef.current = soldListData.session;
+  const soldFetchPostsRef = useRef(soldListData.fetchPosts);
+  soldFetchPostsRef.current = soldListData.fetchPosts;
+
   const handleSoldLoadMore = useCallback(() => {
-    if (soldListData.loadingMore || soldLoadMoreShell || !soldListData.hasMore) return;
+    if (soldLoadingMoreRef.current || soldLoadMoreShell || !soldHasMoreRef.current) return;
     setSoldLoadMoreShell(true);
     soldListData.setPage((p) => p + 1);
-  }, [soldListData.loadingMore, soldLoadMoreShell, soldListData.hasMore, soldListData.setPage]);
+  }, [soldLoadMoreShell, soldListData.setPage]);
 
   useEffect(() => {
     if (soldListData.loadingMore) setSoldLoadMoreShell(false);
@@ -77,17 +87,15 @@ export function SoldTabFeedWrapper({
   useEffect(() => {
     if (!isActive) return;
     if (soldListData.page === 0) return;
-    if (soldListData.loadingMore) return;
-    if (soldListData.session === undefined) return;
-    if (!soldListData.hasMore) return;
-    soldListData.fetchPosts(false);
+    if (soldLoadingMoreRef.current) return;
+    if (soldSessionRef.current === undefined) return;
+    if (!soldHasMoreRef.current) return;
+    soldFetchPostsRef.current(false);
   }, [
     isActive,
     soldListData.page,
-    soldListData.loadingMore,
-    soldListData.session,
-    soldListData.hasMore,
-    soldListData.fetchPosts,
+    // loadingMore/hasMore/session/fetchPosts ถูกอ่านผ่าน ref แทน deps
+    // เพื่อกัน effect re-fire ทุกครั้งที่ loading state เปลี่ยน
   ]);
 
   useEffect(() => {

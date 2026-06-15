@@ -170,6 +170,11 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const hydratedFromCacheRef = useRef(false);
   const cancelledRef = useRef(false);
   const previousCacheKeyRef = useRef<string | null>(null);
+  // ใช้ ref แทน state ใน fetchPosts deps เพื่อกัน re-create cascade ทุกครั้ง loading เปลี่ยน
+  const loadingMoreRef = useRef(false);
+  loadingMoreRef.current = loadingMore;
+  const pageRef = useRef(0);
+  pageRef.current = page;
   /** เก็บรายการโพสต์ทั้งหมดของแท็บ liked/saved ปัจจุบัน เพื่อแบ่งหน้าในหน่วยความจำและเลี่ยงการไล่ข้ามหน้าว่างทีละรอบ */
   const soldTabFullListRef = useRef<any[] | null>(null);
   const soldFeedSeedRef = useRef<string | null>(null);
@@ -276,13 +281,13 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
 
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (currentSession === undefined) return;
-    if (loadingMore && !isInitial) return;
+    if (loadingMoreRef.current && !isInitial) return;
 
     const currentFetchId = ++fetchIdRef.current;
     const skipSkeleton = isInitial && cacheableTypes.includes(type) && hydratedFromCacheRef.current;
     if (!skipSkeleton) setLoadingMore(true);
     
-    const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : page);
+    const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
     // หน้า liked / saved / my-posts โหลดทีละน้อยแบบโฮม (6 แล้ว 10); หน้าอื่นใช้ LIST_FEED_PAGE_SIZE
     const isIncrementalList = type === 'liked' || type === 'saved' || type === 'my-posts';
     const listPageSize = isIncrementalList
@@ -1196,8 +1201,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     availableProfiles,
     tab,
     status,
-    page,
-    loadingMore,
+    // page และ loadingMore ถูกเอาออกจาก deps แล้ว — ใช้ pageRef/loadingMoreRef แทน
+    // เพื่อกัน fetchPosts re-create ทุกครั้งที่ loading/page state เปลี่ยน
     loadAll,
     province,
     minPriceKip,
