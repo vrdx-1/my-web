@@ -130,6 +130,9 @@ const EditPhoneModalComponent = ({
         <input
           type="text"
           autoComplete="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          enterKeyHint="done"
           value={editingPhone}
           onChange={e => {
             const rawValue = e.target.value;

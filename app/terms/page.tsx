@@ -36,8 +36,12 @@ export default function TermsAndPolicies() {
       maxWidth: '600px', 
       margin: '0 auto', 
       background: '#fff', 
-      minHeight: '100vh', 
-      fontFamily: LAO_FONT 
+      minHeight: '100dvh', 
+      height: '100dvh',
+      fontFamily: LAO_FONT,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
     }}>
       
       {/* Header - ปุ่มย้อนกลับ */}
@@ -48,7 +52,8 @@ export default function TermsAndPolicies() {
         position: 'sticky', 
         top: 0, 
         background: '#fff', 
-        zIndex: 100 
+        zIndex: 100,
+        flexShrink: 0,
       }}>
         <button 
           onClick={() => router.back()} 
@@ -60,7 +65,7 @@ export default function TermsAndPolicies() {
         </button>
       </div>
 
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: '20px', flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             <PageSpinner />
