@@ -24,7 +24,11 @@ function getFeedListCacheKey(
   availableProfiles: OwnershipProfileRecord[] = [],
   searchQuery?: string,
   onlySubAccounts?: boolean,
-  subAccountProfileIds: string[] = []
+  subAccountProfileIds: string[] = [],
+  soldProvince?: string,
+  soldMinPriceKip?: number | null,
+  soldMaxPriceKip?: number | null,
+  soldPriceSortOrder?: HomePriceSortOrder
 ): string {
   const resolvedAuthUserId = authUserId || session?.user?.id || null;
   const uid = type === 'my-posts'
@@ -50,6 +54,9 @@ function getFeedListCacheKey(
   }
   if (tab && (type === 'saved' || type === 'liked')) {
     return `${base}:${tab}`;
+  }
+  if (type === 'sold') {
+    return `${base}:province=${(soldProvince ?? '').trim() || 'all'}:min=${soldMinPriceKip ?? 'none'}:max=${soldMaxPriceKip ?? 'none'}:sort=${soldPriceSortOrder || 'none'}`;
   }
   return base;
 }
@@ -191,9 +198,23 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     else setCurrentSession(undefined);
   }, [session, sessionReady]);
 
-  const cacheableTypes: PostListType[] = ['liked', 'saved', 'my-posts'];
+  const cacheableTypes: PostListType[] = ['liked', 'saved', 'sold', 'my-posts'];
   const cacheKey = cacheableTypes.includes(type) && currentSession !== undefined
-    ? getFeedListCacheKey(type, currentSession, activeProfileId, tab, authUserId, availableProfiles, searchQuery, onlySubAccounts, subAccountProfileIds)
+    ? getFeedListCacheKey(
+        type,
+        currentSession,
+        activeProfileId,
+        tab,
+        authUserId,
+        availableProfiles,
+        searchQuery,
+        onlySubAccounts,
+        subAccountProfileIds,
+        province,
+        minPriceKip,
+        maxPriceKip,
+        priceSortOrder,
+      )
     : null;
 
   useEffect(() => {
