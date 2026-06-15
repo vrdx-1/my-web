@@ -1230,9 +1230,10 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     };
   }, [refreshData]);
 
-  // โหลดหน้าถัดไปอัตโนมัติจนหมด (เฉพาะ sold) — liked/saved ใช้ infinite scroll ให้ผู้ใช้เลื่อนโหลดเอง
+  // sold ต้องไม่ไล่โหลดหน้าถัดไปอัตโนมัติจนหมดตอนสลับแท็บ
+  // ให้ infinite scroll ของ SoldTabFeedWrapper เป็นตัวเรียกโหลดเพิ่มเมื่อผู้ใช้เลื่อนถึงท้ายเอง
   useEffect(() => {
-    if (type === 'my-posts' || type === 'liked' || type === 'saved' || loadAll) return;
+    if (type === 'sold' || type === 'my-posts' || type === 'liked' || type === 'saved' || loadAll) return;
     if (!hasMore || loadingMore) return;
     const expectedFull = (page + 1) * LIST_FEED_PAGE_SIZE;
     const gotFullPage = posts.length === expectedFull;
