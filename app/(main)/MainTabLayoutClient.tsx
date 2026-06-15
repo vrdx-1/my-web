@@ -28,6 +28,7 @@ import {
 } from '@/lib/homeMotionProfiler';
 
 const MemoizedMainTabPanels = MainTabPanels;
+const PENDING_HOME_SCROLL_AFTER_REGISTER_KEY = 'mainTab_pending_home_scroll_after_register';
 
 function HomeHeaderChromeContainer({
   session,
@@ -248,6 +249,44 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [resolvedPathname, isProfileOverlayOpen]);
 
   useEffect(() => {
+    if (resolvedPathname !== '/home' || typeof window === 'undefined') return;
+
+    let pendingScroll: number | null = null;
+    try {
+      const raw = window.sessionStorage.getItem(PENDING_HOME_SCROLL_AFTER_REGISTER_KEY);
+      if (raw != null) {
+        const n = Number(raw);
+        if (Number.isFinite(n)) pendingScroll = Math.max(0, n);
+      }
+      window.sessionStorage.removeItem(PENDING_HOME_SCROLL_AFTER_REGISTER_KEY);
+    } catch {
+      pendingScroll = null;
+    }
+
+    if (pendingScroll == null) return;
+
+    const restore = () => {
+      window.scrollTo({ top: pendingScroll as number, left: 0, behavior: 'auto' });
+      mainTabScroll?.saveCurrentScroll('/home');
+    };
+
+    const rafId = requestAnimationFrame(() => {
+      restore();
+      requestAnimationFrame(restore);
+    });
+
+    const timer = window.setTimeout(restore, 320);
+    const lateTimer = window.setTimeout(restore, 1200);
+    const finalTimer = window.setTimeout(restore, 2200);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(timer);
+      window.clearTimeout(lateTimer);
+      window.clearTimeout(finalTimer);
+    };
+  }, [resolvedPathname, mainTabScroll]);
+
+  useEffect(() => {
     if (typeof document === 'undefined' || typeof navigator === 'undefined') return;
 
     const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
@@ -301,7 +340,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     }
 
     const returnedHomeFromMainTab =
-      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile');
+      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile' || prev === '/register');
     if (!returnedHomeFromMainTab) return;
 
     // ยิง restore ทันที + retry 2 เฟรม + timeout เพื่อกันจังหวะ iOS/layout race

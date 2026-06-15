@@ -62,7 +62,6 @@ export function MainTabProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const triggerTabChange = useCallback((tab: MainTab) => {
-    setHomeTabState(tab);
     tabChangeRequestIdRef.current += 1;
     setTabChangeRequest({
       requestId: tabChangeRequestIdRef.current,

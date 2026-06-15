@@ -5,6 +5,7 @@ import { readMainTabScrollStorage, useMainTabScroll } from '@/contexts/MainTabSc
 import { useHomeTabScroll } from '@/contexts/HomeTabScrollContext';
 
 const FORCE_SHOW_HEADER_EVENT = 'home:force-header-visible';
+const HOME_TAB_SCROLL_KEY_PREFIX = 'homeTabScrollY:';
 
 export interface UseHomeScrollCoordinatorOptions {
   pathname: string;
@@ -18,8 +19,35 @@ export interface UseHomeScrollCoordinatorOptions {
   hasSearch: boolean;
 }
 
+function resolveTabFromStateKey(key: string): 'recommend' | 'sold' | null {
+  if (key.startsWith('recommend|')) return 'recommend';
+  if (key.startsWith('sold|')) return 'sold';
+  return null;
+}
+
 function buildTabStateScrollKey(tab: 'recommend' | 'sold', scrollStateKey: string): string {
   return `${tab}|${scrollStateKey}`;
+}
+
+function readPersistentHomeTabScroll(tab: 'recommend' | 'sold'): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = window.sessionStorage.getItem(`${HOME_TAB_SCROLL_KEY_PREFIX}${tab}`);
+    if (raw == null) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.max(0, n) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writePersistentHomeTabScroll(tab: 'recommend' | 'sold', y: number): void {
+  if (typeof window === 'undefined' || !Number.isFinite(y)) return;
+  try {
+    window.sessionStorage.setItem(`${HOME_TAB_SCROLL_KEY_PREFIX}${tab}`, String(Math.max(0, y)));
+  } catch {
+    // ignore
+  }
 }
 
 function getPageScrollY(): number {
@@ -60,6 +88,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   const tabRefreshingRef = useRef(tabRefreshing);
 
   const tabStateScrollMapRef = useRef<Map<string, number>>(new Map());
+  const homeTabScrollByTabRef = useRef<Partial<Record<'recommend' | 'sold', number>>>({});
   const prevShowSoldRef = useRef<boolean | null>(null);
   const prevPathnameRef = useRef<string | null>(null);
   const prevTabStateScrollKeyRef = useRef<string | null>(null);
@@ -71,6 +100,22 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
   useEffect(() => {
     tabRefreshingRef.current = tabRefreshing;
   }, [tabRefreshing]);
+
+  useEffect(() => {
+    if (pathname !== '/home') return;
+
+    const onScroll = () => {
+      const y = getPageScrollY();
+      homeTabScrollByTabRef.current[activeTab] = y;
+      writePersistentHomeTabScroll(activeTab, y);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [pathname, activeTab]);
 
   const feedRestoreWrapRef = useRef<HTMLDivElement | null>(null);
   const recommendPanelRef = useRef<HTMLDivElement | null>(null);
@@ -180,10 +225,21 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     if (previousKey === currentKey) return;
 
-    tabStateScrollMapRef.current.set(previousKey, getPageScrollY());
+    const previousY = getPageScrollY();
+    tabStateScrollMapRef.current.set(previousKey, previousY);
+    const previousTab = resolveTabFromStateKey(previousKey);
+    if (previousTab) {
+      homeTabScrollByTabRef.current[previousTab] = previousY;
+      writePersistentHomeTabScroll(previousTab, previousY);
+    }
     prevTabStateScrollKeyRef.current = currentKey;
 
-    const targetY = tabStateScrollMapRef.current.get(currentKey) ?? 0;
+    const currentTab = resolveTabFromStateKey(currentKey);
+    const targetY =
+      (currentTab != null ? homeTabScrollByTabRef.current[currentTab] : undefined) ??
+      (currentTab != null ? readPersistentHomeTabScroll(currentTab) : undefined) ??
+      tabStateScrollMapRef.current.get(currentKey) ??
+      0;
     setPageScrollY(Math.max(0, targetY));
   }, [pathname, activeTab, scrollStateKey]);
 
@@ -237,6 +293,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       const y = typeof window !== 'undefined' ? getPageScrollY() : 0;
       const key = buildTabStateScrollKey(activeTab, scrollStateKey);
       tabStateScrollMapRef.current.set(key, y);
+      homeTabScrollByTabRef.current[activeTab] = y;
+      writePersistentHomeTabScroll(activeTab, y);
     });
     return () => {
       registerSaveBeforeSwitch(null);
@@ -264,15 +322,32 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     const targetTab: 'recommend' | 'sold' = showSold ? 'sold' : 'recommend';
     const targetStateKey = buildTabStateScrollKey(targetTab, scrollStateKey);
-    const targetScrollY = tabStateScrollMapRef.current.get(targetStateKey) ?? 0;
+    const targetScrollY =
+      homeTabScrollByTabRef.current[targetTab] ??
+      readPersistentHomeTabScroll(targetTab) ??
+      tabStateScrollMapRef.current.get(targetStateKey) ??
+      0;
     const normalizedTargetScrollY = Number.isFinite(targetScrollY)
       ? Math.max(0, targetScrollY)
       : 0;
 
+    const isIOS =
+      typeof navigator !== 'undefined' && /iPad|iPhone|iPod/i.test(navigator.userAgent);
     let settled = false;
+    let delayedFallbackTimer: ReturnType<typeof setTimeout> | null = null;
     const cancelRestore = restoreWindowScroll(normalizedTargetScrollY, {
       maxAttempts: 4,
-      onSettled: () => {
+      onSettled: (finalY) => {
+        if (Math.abs(finalY - normalizedTargetScrollY) > 4) {
+          delayedFallbackTimer = setTimeout(() => {
+            setPageScrollY(normalizedTargetScrollY);
+            settled = true;
+            showHeaderAfterRestore();
+            scheduleChromeStartupLock(false);
+          }, isIOS ? 420 : 240);
+          return;
+        }
+
         settled = true;
         showHeaderAfterRestore();
         scheduleChromeStartupLock(false);
@@ -281,6 +356,7 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     return () => {
       cancelRestore();
+      if (delayedFallbackTimer != null) clearTimeout(delayedFallbackTimer);
       if (!settled) scheduleChromeStartupLock(false);
     };
   }, [isSoldTabActive, scrollStateKey, scheduleChromeStartupLock]);

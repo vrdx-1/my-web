@@ -62,6 +62,8 @@ const NAV_DEBOUNCE_MS = 400;
 const CREATE_POST_DEBOUNCE_MS = 400;
 
 const LAST_HOME_URL_KEY = 'mainTab_lastHomeUrl';
+const PENDING_HOME_SCROLL_AFTER_REGISTER_KEY = 'mainTab_pending_home_scroll_after_register';
+const MAIN_TAB_HOME_SCROLL_STORAGE_KEY = 'mainTabScroll_/home';
 
 function HomeNavIcon({ isActive }: { isActive: boolean }) {
   if (isActive) {
@@ -301,10 +303,40 @@ export const BottomNav = React.memo(function BottomNav() {
 
           // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
           if (path === '/notification' && !session) {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+              mainTabScroll?.saveCurrentScroll(pathname);
+              if (pathname === '/home' && typeof window !== 'undefined') {
+                try {
+                  const homeScrollY = Number(window.scrollY ?? 0);
+                  window.sessionStorage.setItem(
+                    PENDING_HOME_SCROLL_AFTER_REGISTER_KEY,
+                    String(homeScrollY),
+                  );
+                  window.sessionStorage.setItem(MAIN_TAB_HOME_SCROLL_STORAGE_KEY, String(homeScrollY));
+                } catch {
+                  // ignore
+                }
+              }
+            }
             router.push(REGISTER_PATH, { scroll: false });
             return;
           }
           if (path === '/profile' && !session) {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+              mainTabScroll?.saveCurrentScroll(pathname);
+              if (pathname === '/home' && typeof window !== 'undefined') {
+                try {
+                  const homeScrollY = Number(window.scrollY ?? 0);
+                  window.sessionStorage.setItem(
+                    PENDING_HOME_SCROLL_AFTER_REGISTER_KEY,
+                    String(homeScrollY),
+                  );
+                  window.sessionStorage.setItem(MAIN_TAB_HOME_SCROLL_STORAGE_KEY, String(homeScrollY));
+                } catch {
+                  // ignore
+                }
+              }
+            }
             router.push(REGISTER_PATH, { scroll: false });
             return;
           }

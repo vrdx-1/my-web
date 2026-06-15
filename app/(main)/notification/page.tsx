@@ -123,22 +123,10 @@ export default function NotificationPage() {
     refresh,
   } = useNotificationPage({ isActive: pathname === '/notification' });
   const notificationRefreshContext = useNotificationRefreshContext();
-  const didScrollToTopRef = useRef(false);
   const { visibleIndices, setCardRef } = useNotificationListLazyImages(
     scrollContainerRef,
     visibleItemsWithTime.length
   );
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    if (loading || notifications.length === 0) return;
-    if (didScrollToTopRef.current) return;
-    didScrollToTopRef.current = true;
-    requestAnimationFrame(() => scrollContainerRef.current?.scrollTo(0, 0));
-  }, [loading, notifications.length, scrollContainerRef]);
 
   useEffect(() => {
     notificationRefreshContext?.register(refresh);
@@ -155,12 +143,7 @@ export default function NotificationPage() {
       if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = y;
     };
     mainTabScroll.registerScroll('/notification', getScroll, setScroll);
-    const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
-    if (prev !== '/notification' && pathname === '/notification') {
-      if (typeof window !== 'undefined') window.scrollTo(0, 0);
-      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
-    }
     return () => mainTabScroll.unregisterScroll('/notification');
   }, [mainTabScroll, scrollContainerRef, pathname]);
 

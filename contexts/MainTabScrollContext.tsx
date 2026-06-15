@@ -95,6 +95,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
         const y = entry.getScroll();
         if (typeof y === 'number' && Number.isFinite(y)) {
           savedScrollRef.current[tabId] = y;
+          lastWindowScrollByTabRef.current[tabId] = y;
           setStoredScroll(tabId, y);
         }
       } catch {
@@ -108,6 +109,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     const y = getPageScrollY();
     if (typeof y === 'number' && Number.isFinite(y)) {
       savedScrollRef.current[tabId] = y;
+      lastWindowScrollByTabRef.current[tabId] = y;
       setStoredScroll(tabId, y);
     }
   }, []);
