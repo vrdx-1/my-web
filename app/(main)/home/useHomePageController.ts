@@ -229,13 +229,15 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     hasSearch,
   });
 
+  // ขณะที่แท็บขายแล้วกำลังโหลดครั้งแรก (skeleton แสดงอยู่) ให้ปิด scroll-hide
+  // เพื่อป้องกัน header/bottom-nav กระตุกกระพริบเนื่องจาก threshold ที่ตั้งไว้ไวมาก
+  const isSoldSkeletonShowing =
+    isSoldTabActive &&
+    soldListData.posts.length === 0 &&
+    (soldListData.loadingMore || tabRefreshing);
+
   const headerScroll = useHeaderScroll({
-    disableScrollHide: false,
-    sensitivity: isSoldTabActive ? 1.8 : 1,
-    minScrollDeltaPx: isSoldTabActive ? 1 : undefined,
-    hideAccumulatedDeltaPx: isSoldTabActive ? 2 : undefined,
-    showAccumulatedDeltaPx: isSoldTabActive ? 2 : undefined,
-    visibilityCooldownMs: isSoldTabActive ? 80 : undefined,
+    disableScrollHide: isSoldSkeletonShowing,
     onVisibilityChange: (visible) => setHeaderVisible?.(visible),
     suppressHideUntilRef,
   });

@@ -118,7 +118,7 @@ export function useHeaderScroll(options?: UseHeaderScrollOptions): UseHeaderScro
     onVisibilityChangeRef.current = onVisibilityChange;
   }, [onVisibilityChange]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     disableScrollHideRef.current = disableScrollHide;
   }, [disableScrollHide]);
 
