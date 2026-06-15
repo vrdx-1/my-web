@@ -1,10 +1,9 @@
 /**
- * สร้าง feed ที่เรียงโพสต์ตามความนิยม (trending) โดย interleave verified/unverified 7:1 และแทรก boost ตามเดิม
+ * สร้าง feed แบบสุ่ม (seed-random) และแทรก boost ตามเดิม
  * ใช้สำหรับ global feed ที่ cache ร่วมกันได้ทุกคน
  */
 export function buildTrendingFeedOrder(
   rows: PersonalizedFeedRow[],
-  trendingTerms: TrendingTerm[],
   feedSeed: string,
   ownerUserId?: string
 ): string[] {
@@ -24,35 +23,12 @@ export function buildTrendingFeedOrder(
     otherBoosted = boosted.filter(b => b.user_id !== ownerUserId);
   }
 
-  // 2. สร้าง map สำหรับความนิยม (term → count)
-  const trendingMap = new Map<string, number>();
-  for (const t of trendingTerms) {
-    trendingMap.set(t.search_term.trim().toLowerCase(), t.count);
-  }
+  // 2. จัดลำดับโพสต์ธรรมดาแบบสุ่มตาม seed และกระจายตามบัญชี
+  const randomizedNonBoosted = interleaveByAccount(nonBoosted, feedSeed).map((r) => r.id);
 
-  // 3. ให้คะแนนโพสต์แต่ละโพสต์ตาม term ที่ match ใน caption
-  const scored: Array<{ row: PersonalizedFeedRow; score: number }> = nonBoosted.map((row) => {
-    const caption = (row.caption || '').toLowerCase();
-    let score = 0;
-    for (const [term, count] of trendingMap.entries()) {
-      if (term.length > 1 && caption.includes(term)) score += count;
-    }
-    return { row, score };
-  });
-
-  // 4. เรียงโพสต์ตามคะแนนความนิยม (มาก → น้อย)
-  scored.sort((a, b) => b.score - a.score || (b.row.created_at || '').localeCompare(a.row.created_at || ''));
-
-  // 5. แยก verified/unverified
-  const verified = scored.filter(s => s.row.profiles?.is_verified === true).map(s => s.row.id);
-  const unverified = scored.filter(s => s.row.profiles?.is_verified !== true).map(s => s.row.id);
-
-  // 6. Interleave verified:unverified 7:1
-  const interleaved = interleaveVerifiedRatio(verified, unverified, VERIFIED_PER_UNVERIFIED);
-
-  // 7. Interleave boosted ทุก BOOST_INTERVAL (ยกเว้น ownerBoosted จะอยู่บนสุด)
+  // 3. Interleave boosted ทุก BOOST_INTERVAL (ยกเว้น ownerBoosted จะอยู่บนสุด)
   const boostedIds = interleaveByAccount(otherBoosted, feedSeed).map(r => r.id);
-  let result = interleaveBoost(interleaved, boostedIds, BOOST_INTERVAL);
+  let result = interleaveBoost(randomizedNonBoosted, boostedIds, BOOST_INTERVAL);
   if (ownerBoosted.length > 0) {
     // ownerBoosted เรียงตาม created_at ใหม่สุดก่อน
     const sortedOwnerBoosted = [...ownerBoosted].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
