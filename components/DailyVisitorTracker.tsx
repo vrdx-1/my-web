@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 
@@ -45,10 +46,14 @@ async function postDailyVisitor(payload: Record<string, unknown>): Promise<boole
 }
 
 export function DailyVisitorTracker() {
+  const pathname = usePathname();
   const inFlightRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+    const isHome = pathname === '/' || pathname === '/home';
 
     const trackByKey = async (
       date: string,
@@ -98,20 +103,47 @@ export function DailyVisitorTracker() {
       await trackByKey(date, 'guest', guestToken, { guestToken });
     };
 
-    void run();
+    const scheduleRun = (sessionOverride?: Session | null) => {
+      if (cancelled) return;
+      const runner = () => {
+        if (cancelled) return;
+        void run(sessionOverride);
+      };
+
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        idleId = (
+          window as Window & { requestIdleCallback: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number }
+        ).requestIdleCallback(runner, { timeout: isHome ? 7000 : 3000 });
+        return;
+      }
+
+      timeoutId = window.setTimeout(runner, isHome ? 1800 : 600);
+    };
+
+    scheduleRun();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return;
-      void run(session ?? null);
+      scheduleRun(session ?? null);
     });
 
     return () => {
       cancelled = true;
+      if (timeoutId != null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (idleId != null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (
+          window as Window & { cancelIdleCallback: (id: number) => void }
+        ).cancelIdleCallback(idleId);
+        idleId = null;
+      }
       subscription.unsubscribe();
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

@@ -99,6 +99,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   const mainTab = useMainTabContext();
   const createPostContext = useCreatePostContext();
   const homeRefreshContext = useHomeRefreshContext();
+  const { firstFeedLoaded } = useFirstFeedLoaded();
   const setHeaderVisible = useSetHeaderVisibility();
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
@@ -378,7 +379,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
   /** Prefetch หน้าอื่นเมื่อเครื่องว่าง — delay 4–5 วินาทีบนโฮมเพื่อลดงานช่วงโหลดหน้าแรก */
   useEffect(() => {
-    const delay = resolvedPathname === '/home' ? 4500 : 1000;
+    if (resolvedPathname === '/home' && !firstFeedLoaded) return;
+
+    const delay = resolvedPathname === '/home' ? 1200 : 1000;
     const t = setTimeout(() => {
       if (resolvedPathname === '/home') {
         router.prefetch('/notification');
@@ -390,12 +393,11 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       }
     }, delay);
     return () => clearTimeout(t);
-  }, [resolvedPathname, router]);
+  }, [resolvedPathname, router, firstFeedLoaded]);
 
   const loadingTab =
     mainTab?.navigatingToTab ?? (mainTab?.tabRefreshing ? mainTab?.homeTab ?? null : null);
 
-  const { firstFeedLoaded } = useFirstFeedLoaded();
   /** หน้าโฮม: ต้อง mount header/tab bar ตั้งแต่เฟรมแรกหลัง refresh เพื่อให้ motion system พร้อมทันที */
   const showHomeHeader = resolvedPathname === '/home';
   const lockHomeChromeLayout = showHomeHeader && !firstFeedLoaded;
