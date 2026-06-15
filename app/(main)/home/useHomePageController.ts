@@ -325,6 +325,7 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     loadingMore: isSoldTabNoSearch ? false : effectivePostList.loadingMore || recommendLoadMoreShell,
     hasMore: isSoldTabNoSearch ? false : effectivePostList.hasMore ?? true,
     onLoadMore: handleRecommendLoadMore,
+    hideBoost: tab === 'sold' && hasSearch,
   });
 
   const soldTabProps: Omit<SoldTabFeedWrapperProps, 'isActive'> = useMemo(

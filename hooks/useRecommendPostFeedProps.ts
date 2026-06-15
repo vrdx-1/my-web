@@ -25,6 +25,7 @@ interface UseRecommendPostFeedPropsOptions {
   loadingMore: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
+  hideBoost?: boolean;
 }
 
 export function useRecommendPostFeedProps(options: UseRecommendPostFeedPropsOptions) {
@@ -50,7 +51,7 @@ export function useRecommendPostFeedProps(options: UseRecommendPostFeedPropsOpti
       loadingMore: options.loadingMore,
       hasMore: options.hasMore,
       onLoadMore: options.onLoadMore,
-      hideBoost: false,
+      hideBoost: options.hideBoost ?? false,
     }),
     [
       options.posts,
@@ -73,6 +74,7 @@ export function useRecommendPostFeedProps(options: UseRecommendPostFeedPropsOpti
       options.loadingMore,
       options.hasMore,
       options.onLoadMore,
+      options.hideBoost,
     ],
   );
 }

@@ -232,6 +232,17 @@ function SearchPageContent() {
     [commitSearch],
   );
 
+  const handleClearQuery = useCallback(() => {
+    setQuery('');
+    const input = inputRef.current;
+    if (!input) return;
+    requestAnimationFrame(() => {
+      input.focus({ preventScroll: true });
+      const len = input.value.length;
+      input.setSelectionRange(len, len);
+    });
+  }, []);
+
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
@@ -381,7 +392,9 @@ function SearchPageContent() {
           {query.trim().length > 0 && (
             <button
               type="button"
-              onClick={() => setQuery('')}
+              onMouseDown={(e) => e.preventDefault()}
+              onTouchStart={(e) => e.preventDefault()}
+              onClick={handleClearQuery}
               aria-label="Clear"
               style={{
                 position: 'absolute',
