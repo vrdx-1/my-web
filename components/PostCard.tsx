@@ -148,6 +148,10 @@ export function PostCard({
     top: number;
     left: number;
   } | null>(null);
+  const [soldInfoCenterPosition, setSoldInfoCenterPosition] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [cardExchangeRates, setCardExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
@@ -229,6 +233,26 @@ export function PostCard({
   const priceChipBackground = showPriceEstimatePopup ? '#ffffff' : 'transparent';
   const priceChipBoxShadow = showPriceEstimatePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none';
   const priceChipBorder = '1px solid #d1d5db';
+
+  const computeSoldInfoCenterPosition = React.useCallback(() => {
+    if (typeof window === 'undefined') return null;
+    const cardEl = cardRef.current;
+    if (!cardEl) return null;
+
+    const rect = cardEl.getBoundingClientRect();
+    return {
+      left: rect.left + rect.width / 2,
+      top: rect.top + rect.height / 2,
+    };
+  }, []);
+
+  const openSoldInfoPopup = React.useCallback(() => {
+    const position = computeSoldInfoCenterPosition();
+    if (position) {
+      setSoldInfoCenterPosition(position);
+    }
+    setShowSoldInfo(true);
+  }, [computeSoldInfoCenterPosition]);
 
   const clearCaptionToggleStabilizers = React.useCallback(() => {
     if (typeof window !== 'undefined' && captionToggleUnlockTimeoutRef.current != null) {
@@ -335,6 +359,30 @@ export function PostCard({
       window.removeEventListener('touchmove', handleScrollClose);
     };
   }, [showSoldInfo]);
+
+  React.useEffect(() => {
+    if (!showSoldInfo || typeof window === 'undefined') {
+      setSoldInfoCenterPosition(null);
+      return;
+    }
+
+    const updateSoldInfoPosition = () => {
+      const position = computeSoldInfoCenterPosition();
+      if (!position) {
+        setSoldInfoCenterPosition(null);
+        return;
+      }
+
+      setSoldInfoCenterPosition(position);
+    };
+
+    updateSoldInfoPosition();
+    window.addEventListener('resize', updateSoldInfoPosition, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', updateSoldInfoPosition);
+    };
+  }, [computeSoldInfoCenterPosition, showSoldInfo]);
 
   React.useEffect(() => {
     clearCaptionToggleStabilizers();
@@ -947,7 +995,7 @@ export function PostCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (isSoldPost) {
-                      setShowSoldInfo(true);
+                      openSoldInfoPopup();
                       return;
                     }
                     if (!isSoldPost) {
@@ -979,7 +1027,7 @@ export function PostCard({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowSoldInfo(true);
+                    openSoldInfoPopup();
                   }}
                   style={{
                     background: '#e0245e',
@@ -1139,8 +1187,8 @@ export function PostCard({
         document.body
       )}
 
-      {/* Sold Info Modal (same design size as logout confirm) - portal to body for full-screen overlay + center of viewport */}
-      {typeof document !== 'undefined' && isSoldPost && showSoldInfo && createPortal(
+      {/* Sold Info Modal with full-screen overlay */}
+      {typeof document !== 'undefined' && isSoldPost && showSoldInfo && soldInfoCenterPosition && createPortal(
         <div
           aria-hidden="true"
           onPointerDown={(e) => {
@@ -1160,23 +1208,22 @@ export function PostCard({
             inset: 0,
             background: 'rgba(0,0,0,0.4)',
             zIndex: 2500,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
+              position: 'absolute',
+              top: `${soldInfoCenterPosition.top}px`,
+              left: `${soldInfoCenterPosition.left}px`,
+              transform: 'translate(-50%, -50%)',
               background: '#fff',
               borderRadius: '12px',
-              padding: '14px',
-              maxWidth: '320px',
+              padding: '10px',
+              maxWidth: '236px',
               width: '100%',
               boxShadow: '0 12px 28px rgba(15, 23, 42, 0.18)',
-              border: '1px solid #e2e8f0',
-              position: 'relative',
+              border: 'none',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
