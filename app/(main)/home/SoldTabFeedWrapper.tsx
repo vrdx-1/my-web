@@ -1,26 +1,22 @@
 'use client';
 
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/preserve-manual-memoization, @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import type { UsePostListDataReturn } from '@/hooks/usePostListData';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { memo, useEffect, useState } from 'react';
+import type { UseSoldPostListDataReturn } from '@/hooks/useSoldPostListData';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useMenu } from '@/hooks/useMenu';
 import { useViewingPost } from '@/hooks/useViewingPost';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
-import { HomeFeedBody } from './HomeFeedBody';
+import { SoldVirtualFeedBody } from './SoldVirtualFeedBody';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 
-/** style คงที่ — ห้ามเป็น object literal inline เพราะจะสร้าง object ใหม่ทุก render */
-const FEED_CONTAINER_STYLE: React.CSSProperties = { animation: 'feed-content-fade-in 0.25s ease-out forwards' };
-
 export type SoldTabFeedWrapperProps = {
   /** ข้อมูล feed แท็บขายแล้วจากหน้าหลัก — เก็บไว้ไม่หาย  เมื่อสลับแท็บ */
-  soldListData: UsePostListDataReturn;
+  soldListData: UseSoldPostListDataReturn;
   menu: ReturnType<typeof useMenu>;
   viewingPostHook: ReturnType<typeof useViewingPost>;
   setHeaderVisible: (visible: boolean) => void;
@@ -61,22 +57,11 @@ function SoldTabFeedWrapperBase({
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
   const effectiveLoadingMore = soldListData.loadingMore || soldLoadMoreShell;
 
-  // refs เพื่อกันการ recreate callback / effect ทุกครั้งที่ loading/hasMore เปลี่ยน
-  const soldLoadingMoreRef = useRef(soldListData.loadingMore);
-  soldLoadingMoreRef.current = soldListData.loadingMore;
-  const soldHasMoreRef = useRef(soldListData.hasMore);
-  soldHasMoreRef.current = soldListData.hasMore;
-  const soldSessionRef = useRef(soldListData.session);
-  soldSessionRef.current = soldListData.session;
-  const soldFetchPostsRef = useRef(soldListData.fetchPosts);
-  soldFetchPostsRef.current = soldListData.fetchPosts;
-
-  const handleSoldLoadMore = useCallback(() => {
-    if (soldLoadingMoreRef.current || soldLoadMoreShell || !soldHasMoreRef.current) return;
+  const handleSoldLoadMore = () => {
+    if (soldListData.loadingMore || soldLoadMoreShell || !soldListData.hasMore) return;
     setSoldLoadMoreShell(true);
     soldListData.setPage((p) => p + 1);
-  }, [soldLoadMoreShell, soldListData.setPage]);
-
+  };
   useEffect(() => {
     if (soldListData.loadingMore) setSoldLoadMoreShell(false);
   }, [soldListData.loadingMore]);
@@ -90,29 +75,23 @@ function SoldTabFeedWrapperBase({
   useEffect(() => {
     if (!isActive) return;
     if (soldListData.page === 0) return;
-    if (soldLoadingMoreRef.current) return;
-    if (soldSessionRef.current === undefined) return;
-    if (!soldHasMoreRef.current) return;
-    soldFetchPostsRef.current(false);
+    if (soldListData.loadingMore) return;
+    if (soldListData.session === undefined) return;
+    if (!soldListData.hasMore) return;
+    soldListData.fetchPosts(false);
   }, [
     isActive,
     soldListData.page,
-    // loadingMore/hasMore/session/fetchPosts ถูกอ่านผ่าน ref แทน deps
-    // เพื่อกัน effect re-fire ทุกครั้งที่ loading state เปลี่ยน
+    soldListData.loadingMore,
+    soldListData.session,
+    soldListData.hasMore,
+    soldListData.fetchPosts,
   ]);
-
   useEffect(() => {
     if (!soldLoadMoreShell) return;
     const t = window.setTimeout(() => setSoldLoadMoreShell(false), 8000);
     return () => clearTimeout(t);
   }, [soldLoadMoreShell]);
-
-  const { lastElementRef: lastPostElementRef } = useInfiniteScroll({
-    enabled: isActive,
-    loadingMore: effectiveLoadingMore,
-    hasMore: soldListData.hasMore,
-    onLoadMore: handleSoldLoadMore,
-  });
 
   const { toggleSave } = usePostInteractions({
     session: soldListData.session,
@@ -146,36 +125,29 @@ function SoldTabFeedWrapperBase({
 
   return (
     <>
-      <div style={FEED_CONTAINER_STYLE}>
-        <HomeFeedBody
-          showSkeleton={showSkeleton}
-          skeletonCount={3}
-            gateImageReady={isActive && !isRefreshing}
-          postFeedProps={{
-            posts: soldListData.posts,
-            session: soldListData.session,
-            savedPosts: soldListData.savedPosts,
-            justSavedPosts,
-            activeMenuState: menu.activeMenuState,
-            isMenuAnimating: menu.isMenuAnimating,
-            lastPostElementRef,
-            menuButtonRefs: menu.menuButtonRefs,
-            onViewPost: handlers.handleViewPost,
-            onSave: toggleSave,
-            onShare: handlers.handleShare,
-            onTogglePostStatus: handlers.handleTogglePostStatus,
-            onDeletePost: handlers.handleDeletePost,
-            onReport: handlers.handleReport,
-            onRepost: handlers.handleRepost,
-            onSetActiveMenu: menu.setActiveMenu,
-            onSetMenuAnimating: menu.setIsMenuAnimating,
-            loadingMore: effectiveLoadingMore,
-            hasMore: soldListData.hasMore ?? true,
-            onLoadMore: handleSoldLoadMore,
-            hideBoost: true,
-          }}
-        />
-      </div>
+      <SoldVirtualFeedBody
+        posts={soldListData.posts}
+        session={soldListData.session}
+        savedPosts={soldListData.savedPosts}
+        justSavedPosts={justSavedPosts}
+        activeMenuState={menu.activeMenuState}
+        isMenuAnimating={menu.isMenuAnimating}
+        menuButtonRefs={menu.menuButtonRefs}
+        onViewPost={handlers.handleViewPost}
+        onSave={toggleSave}
+        onShare={handlers.handleShare}
+        onTogglePostStatus={handlers.handleTogglePostStatus}
+        onDeletePost={handlers.handleDeletePost}
+        onReport={handlers.handleReport}
+        onRepost={handlers.handleRepost}
+        onSetActiveMenu={menu.setActiveMenu}
+        onSetMenuAnimating={menu.setIsMenuAnimating}
+        loadingMore={effectiveLoadingMore}
+        hasMore={soldListData.hasMore ?? true}
+        onLoadMore={handleSoldLoadMore}
+        showSkeleton={showSkeleton}
+        isRefreshing={isRefreshing}
+      />
       {handlers.showReportSuccess && (
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
       )}

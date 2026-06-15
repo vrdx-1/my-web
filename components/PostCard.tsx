@@ -98,6 +98,7 @@ interface PostCardProps {
   customCaption?: React.ReactNode;
   onPriceClick?: (post: any) => void;
   onLocalUpdate?: (postId: string, data: Record<string, unknown>) => void;
+  exchangeRatesOverride?: ExchangeRates | null;
 }
 
 /** ไม่ใช้ React.memo เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" ในหน้า saved/liked/my-posts */
@@ -133,6 +134,7 @@ export function PostCard({
   customCaption,
   onPriceClick,
   onLocalUpdate,
+  exchangeRatesOverride = null,
 }: PostCardProps) {
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
@@ -152,7 +154,7 @@ export function PostCard({
     top: number;
     left: number;
   } | null>(null);
-  const [cardExchangeRates, setCardExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
+  const [cardExchangeRates, setCardExchangeRates] = React.useState<ExchangeRates>(exchangeRatesOverride ?? DEFAULT_EXCHANGE_RATES);
   const [isTogglingStatus, setIsTogglingStatus] = React.useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [isCaptionOverflowing, setIsCaptionOverflowing] = React.useState(false);
@@ -282,8 +284,12 @@ export function PostCard({
   }, [registerVisibilityRef, index]);
 
   React.useEffect(() => {
-    let active = true;
+    if (exchangeRatesOverride) {
+      setCardExchangeRates(exchangeRatesOverride);
+      return;
+    }
 
+    let active = true;
     getLatestExchangeRates()
       .then((rates) => {
         if (!active) return;
@@ -296,7 +302,7 @@ export function PostCard({
     return () => {
       active = false;
     };
-  }, []);
+  }, [exchangeRatesOverride]);
 
   React.useEffect(() => {
     if (!showPriceEstimatePopup) {

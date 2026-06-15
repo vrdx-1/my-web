@@ -1,12 +1,12 @@
 'use client';
 
 import type { UseHomeTabDataReturn } from '@/hooks/useHomeTabData';
-import type { UsePostListDataReturn } from '@/hooks/usePostListData';
+import type { UseSoldPostListDataReturn } from '@/hooks/useSoldPostListData';
 
 interface UseHomeEffectivePostListOptions {
   tab: 'recommend' | 'sold';
   tabPostList: UseHomeTabDataReturn['postList'];
-  soldListData: UsePostListDataReturn;
+  soldListData: UseSoldPostListDataReturn;
   hasSearch: boolean;
 }
 
