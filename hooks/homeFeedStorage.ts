@@ -208,6 +208,26 @@ export function prepareInitialHomeFeedState(province?: string) {
   };
 }
 
+/**
+ * อ่าน cache ทั้งหมด (ไม่ slice) — ใช้ใน refreshData เพื่อให้มี pool โพสต์
+ * เยอะพอสำหรับ client-side shuffle โดยไม่ต้องเรียก server
+ */
+export function prepareFullHomeFeedCacheForRefresh(province?: string): {
+  fromCache: boolean;
+  allPosts: HomeFeedPost[];
+  hasMore: boolean;
+} {
+  const cachedFeed = readCachedFeed(province);
+  if (!cachedFeed) {
+    return { fromCache: false, allPosts: [], hasMore: true };
+  }
+  return {
+    fromCache: true,
+    allPosts: cachedFeed.posts,
+    hasMore: !!cachedFeed.hasMore,
+  };
+}
+
 export function clearHomeFeedStorage(options?: { clearCache?: boolean }) {
   if (typeof window === 'undefined') return;
 

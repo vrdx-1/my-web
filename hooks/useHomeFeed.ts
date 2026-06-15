@@ -20,6 +20,7 @@ import {
   markHomeFeedSeenPostIds,
   mergeJustPostedPost,
   prepareInitialHomeFeedState,
+  prepareFullHomeFeedCacheForRefresh,
   readJustPostedRecommendPost,
   migrateHomeFeedSeenPostIds,
   resolveHomeFeedActorKey,
@@ -584,7 +585,19 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
           const newOnes = ordered
             .filter(isWithinClientPriceFilter)
             .filter((post) => !ids.has(String(post.id)));
-          return newOnes.length ? [...prev, ...newOnes] : prev;
+          if (!newOnes.length) return prev;
+          const next = [...prev, ...newOnes];
+          // อัปเดต localStorage cache เพื่อให้ refresh ครั้งต่อไป shuffle จาก pool ที่ใหญ่ขึ้น
+          // จำกัดไว้ที่ 60 โพสต์เพื่อไม่ให้ localStorage ใหญ่เกิน
+          try {
+            if (shouldPersistHomeFeedCache && !hasPriceFilter && !hasPriceSort) {
+              const MAX_CACHE_POSTS = 60;
+              writeHomeFeedCache(province, next.slice(0, MAX_CACHE_POSTS), nextHasMore);
+            }
+          } catch {
+            // ignore
+          }
+          return next;
         });
         recordHomeMotionDuration('feed-hydrate', 'append-feed-posts', 0, {
           appendedCount: ordered.length,
@@ -652,7 +665,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       return;
     }
 
-    const { fromCache, initialPosts, hasMore: initialHasMore } = prepareInitialHomeFeedState(province);
+    // ใช้ full cache pool (ไม่ slice ตาม INITIAL_FEED_PAGE_SIZE) เพื่อให้มีโพสต์เพียงพอสำหรับ shuffle
+    const { fromCache, allPosts, hasMore: cacheHasMore } = prepareFullHomeFeedCacheForRefresh(province);
     // หา actorKey ปัจจุบัน
     let userId: string | null = null;
     if (typeof activeProfileId === 'string' && activeProfileId.trim()) {
@@ -667,48 +681,38 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       userId ? null : (typeof window !== 'undefined' ? getPrimaryGuestToken() : null),
     );
 
-    if (fromCache && Array.isArray(initialPosts) && initialPosts.length > 0 && actorKey) {
+    if (fromCache && Array.isArray(allPosts) && allPosts.length > 0 && actorKey) {
       // 1. filter seen ก่อน
       const seenIds = readHomeFeedSeenPostIds(province, actorKey);
-      const filtered = initialPosts.filter(post => post.id && !seenIds.includes(String(post.id)));
-      // 2. ถ้าเหลือ < 10 ให้ fetch จาก server ทันที
-      if (filtered.length < 10) {
-        // fetch จาก server
+      const filtered = allPosts.filter(post => post.id && !seenIds.includes(String(post.id)));
+      // 2. ถ้าเหลือ < 10 ให้ clear seen-list แล้วใช้ pool ทั้งหมด (แทนที่จะ fetch server)
+      const pool = filtered.length >= 10 ? filtered : (() => {
+        // reset seen → ใช้ทั้ง cache pool
+        try {
+          window.localStorage.removeItem(
+            `home_feed_seen:${(province || '').trim() || 'all'}:${actorKey}`
+          );
+        } catch {}
+        return [...allPosts];
+      })();
+
+      // ถ้ายังไม่มีเลย → fetch server
+      if (pool.length === 0) {
         forceNewSeedOnNextInitialFetchRef.current = true;
         feedSeedRef.current = null;
-        try {
-          clearHomeFeedStorage({ clearCache: true });
-        } catch {}
+        try { clearHomeFeedStorage({ clearCache: true }); } catch {}
         await fetchPosts(true);
-        // fallback: ถ้า fetch แล้วยังได้น้อย ให้ clear seen-list แล้ว random ใหม่
-        // (ต้องอ่าน cache ใหม่หลัง fetch)
-        const { fromCache: fc2, initialPosts: ip2 } = prepareInitialHomeFeedState(province);
-        if (fc2 && Array.isArray(ip2) && ip2.length > 0) {
-          try {
-            window.localStorage.removeItem(
-              `home_feed_seen:${(province || '').trim() || 'all'}:${actorKey}`
-            );
-          } catch {}
-          const shuffled2 = [...ip2];
-          for (let i = shuffled2.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled2[i], shuffled2[j]] = [shuffled2[j], shuffled2[i]];
-          }
-          setPosts(shuffled2);
-          setHasMore(true);
-          // mark seen ใหม่
-          markHomeFeedSeenPostIds(province, actorKey, shuffled2.map(p => String(p.id)));
-        }
         return;
       }
-      // 3. random (shuffle)
-      const shuffled = [...filtered];
+
+      // 3. shuffle in-memory — zero server latency
+      const shuffled = [...pool];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
       setPosts(shuffled);
-      setHasMore(initialHasMore);
+      setHasMore(cacheHasMore || shuffled.length < allPosts.length);
       // 4. mark seen กับโพสต์ที่แสดงผลทันที
       markHomeFeedSeenPostIds(province, actorKey, shuffled.map(p => String(p.id)));
     } else {

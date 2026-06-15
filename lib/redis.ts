@@ -116,3 +116,50 @@ export async function invalidateFeedCache(): Promise<void> {
     // ignore
   }
 }
+
+// ─── FeedOrderRows cache (lightweight ordering data) ──────────────────────────
+// เก็บ FeedOrderRow[] ที่ใช้จัด sort/shuffle ลำดับ feed ใน Redis
+// ไม่มีข้อมูล post เต็ม — ใช้ได้ทุก seed โดย shuffle in-memory แล้วค่อย hydrate
+// ถูก invalidate พร้อม feed:* ทุกครั้งที่มีโพสต์เปลี่ยนแปลง
+
+const FEED_ORDER_ROWS_PREFIX = 'feed:order-rows:';
+/** อายุ cache FeedOrderRow[] — 3 นาที (invalidate เร็วกว่าถ้ามีโพสต์เปลี่ยน) */
+export const FEED_ORDER_ROWS_TTL_SEC = 3 * 60;
+
+export function feedOrderRowsCacheKey(province?: string, status: FeedCacheStatus = 'recommend'): string {
+  const p = province?.trim() || 'all';
+  return `${FEED_ORDER_ROWS_PREFIX}${status}:${p}`;
+}
+
+export async function getFeedOrderRowsFromCache<T = unknown>(
+  province?: string,
+  status: FeedCacheStatus = 'recommend',
+): Promise<T[] | null> {
+  const redis = getRedis();
+  if (!redis) return null;
+  try {
+    const raw = await redis.get<T[]>(feedOrderRowsCacheKey(province, status));
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as T[];
+    }
+  } catch (_) {
+    // cache miss or parse error → fallback to DB
+  }
+  return null;
+}
+
+export async function setFeedOrderRowsCache<T = unknown>(
+  province: string | undefined,
+  rows: T[],
+  status: FeedCacheStatus = 'recommend',
+): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+  try {
+    await redis.set(feedOrderRowsCacheKey(province, status), JSON.stringify(rows), { ex: FEED_ORDER_ROWS_TTL_SEC });
+  } catch (_) {
+    // ignore cache write errors
+  }
+}

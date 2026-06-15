@@ -13,6 +13,10 @@ import {
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 import type { CurrencySymbol } from '@/utils/exchangeRates';
 
+function createSoldFeedSeed(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export interface PostListLikedSavedShared {
   likedPosts: { [key: string]: boolean };
   savedPosts: { [key: string]: boolean };
@@ -112,6 +116,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
   const cancelledRef = useRef(false);
   const cursorRef = useRef<SoldCursor | null>(null);
   const previousCacheKeyRef = useRef<string | null>(null);
+  const feedSeedRef = useRef<string | null>(null);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -240,17 +245,24 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
     if (currentSession === undefined) return;
     if (loadingMore && !isInitial) return;
 
+    const hasPriceMode = !!(minPriceKip != null || maxPriceKip != null || minPriceDisplay != null || maxPriceDisplay != null || priceSortOrder);
+
     const currentFetchId = ++fetchIdRef.current;
     setLoadingMore(true);
 
     if (isInitial) {
       cursorRef.current = null;
+      // สร้าง seed ใหม่ทุก initial fetch เพื่อให้ server สุ่มลำดับใหม่
+      if (!hasPriceMode) {
+        feedSeedRef.current = createSoldFeedSeed();
+      }
     }
 
     try {
       const body: {
         status: 'sold';
         pageSize: number;
+        feedSeed?: string;
         province?: string;
         minPriceKip?: number;
         maxPriceKip?: number;
@@ -277,14 +289,24 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
       }
       if (priceSortOrder) body.priceSortOrder = priceSortOrder;
 
-      const useCursor = !priceSortOrder || priceSortOrder === 'latest';
-      if (!isInitial && useCursor && cursorRef.current) {
-        body.cursorId = cursorRef.current.id;
-        body.cursorCreatedAt = cursorRef.current.createdAt;
-      } else if (!isInitial && !useCursor) {
-        const startIndex = posts.length;
+      if (!hasPriceMode) {
+        // Random path: ส่ง feedSeed + startIndex/endIndex (server ใช้ computeFeed)
+        if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
+        const pageSize = isInitial ? SOLD_INITIAL_FEED_PAGE_SIZE : SOLD_FEED_PAGE_SIZE;
+        const startIndex = isInitial ? 0 : posts.length;
         body.startIndex = startIndex;
-        body.endIndex = startIndex + SOLD_FEED_PAGE_SIZE - 1;
+        body.endIndex = startIndex + pageSize - 1;
+      } else {
+        // Price-filter path: ใช้ cursor เดิม
+        const useCursor = (!priceSortOrder || priceSortOrder === 'latest') && !isInitial && !!cursorRef.current;
+        if (useCursor) {
+          body.cursorId = cursorRef.current!.id;
+          body.cursorCreatedAt = cursorRef.current!.createdAt;
+        } else if (!isInitial) {
+          const startIndex = posts.length;
+          body.startIndex = startIndex;
+          body.endIndex = startIndex + SOLD_FEED_PAGE_SIZE - 1;
+        }
       }
 
       const response = await fetch('/api/posts/feed', {
@@ -320,19 +342,22 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         });
       }
 
-      const nextCursor = payload?.nextCursor;
-      if (nextCursor && typeof nextCursor.id === 'string' && typeof nextCursor.createdAt === 'string') {
-        cursorRef.current = {
-          id: nextCursor.id,
-          createdAt: nextCursor.createdAt,
-        };
-      } else if (filteredPosts.length > 0) {
-        const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string };
-        if (typeof last.id === 'string' && typeof last.created_at === 'string') {
+      // cursor ใช้เฉพาะ price-filter path เท่านั้น
+      if (hasPriceMode) {
+        const nextCursor = payload?.nextCursor;
+        if (nextCursor && typeof nextCursor.id === 'string' && typeof nextCursor.createdAt === 'string') {
           cursorRef.current = {
-            id: last.id,
-            createdAt: last.created_at,
+            id: nextCursor.id,
+            createdAt: nextCursor.createdAt,
           };
+        } else if (filteredPosts.length > 0) {
+          const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string };
+          if (typeof last.id === 'string' && typeof last.created_at === 'string') {
+            cursorRef.current = {
+              id: last.id,
+              createdAt: last.created_at,
+            };
+          }
         }
       }
 
