@@ -18,12 +18,10 @@ const OVERLAY_STYLE: React.CSSProperties = {
 const CONTAINER_STYLE: React.CSSProperties = {
   width: '100%', height: '100%', background: '#ffffff', backgroundColor: '#ffffff', position: 'relative',
   overflowY: 'auto', overflowX: 'hidden', scrollBehavior: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none',
+  WebkitOverflowScrolling: 'touch',
+  overscrollBehaviorY: 'contain',
+  overscrollBehaviorX: 'none',
   touchAction: 'pan-y', // อนุญาตให้เลื่อนได้เฉพาะแนวตั้งเท่านั้น
-};
-/** บน iOS ::-webkit-scrollbar ไม่ทำงาน ใช้ wrapper clip scrollbar ออก (กว้างเกิน 30px แล้วให้ wrapper overflow:hidden) */
-const CONTAINER_STYLE_IOS_CLIP: React.CSSProperties = {
-  ...CONTAINER_STYLE,
-  width: 'calc(100% + 30px)',
 };
 const WRAPPER_CLIP_STYLE: React.CSSProperties = {
   overflow: 'hidden', width: '100%', height: '100%',
@@ -91,7 +89,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   onImageClick,
 }) => {
   const shouldHide = !viewingPost;
-  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/i.test(navigator.userAgent);
 
   const [enterPhase, setEnterPhase] = useState<'offscreen' | 'entered'>('offscreen');
   const [enterTransitionActive, setEnterTransitionActive] = useState(false);
@@ -204,49 +201,6 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
     };
   }, [enterPhase, initialImageIndex, images.length]);
 
-  // ป้องกันการเลื่อนซ้ายขวาเด็ดขาด: watch scrollLeft และ reset เป็น 0 ทันที
-  useEffect(() => {
-    if (!isViewingModeOpen) return;
-    const container = document.getElementById('viewing-mode-container');
-    if (!container) return;
-
-    // Watch scroll event และ reset scrollLeft เป็น 0 ทันที
-    const preventHorizontalScroll = () => {
-      if (container.scrollLeft !== 0) {
-        container.scrollLeft = 0;
-      }
-    };
-    container.addEventListener('scroll', preventHorizontalScroll, { passive: false });
-
-    // อย่าใช้ preventDefault บน touchmove — จะทำให้การเลื่อนแนวตั้งค้างบนมือถือ (ยกเลิก touch sequence)
-    // ใช้แค่ scroll listener + rAF ด้านล่าง reset scrollLeft ก็พอ
-
-    // Watch wheel event (สำหรับ desktop) และ preventDefault ถ้ามีการเลื่อนแนวนอน
-    const handleWheel = (e: WheelEvent) => {
-      if (e.deltaX !== 0) {
-        e.preventDefault();
-        container.scrollLeft = 0;
-      }
-    };
-    container.addEventListener('wheel', handleWheel, { passive: false });
-
-    // ใช้ requestAnimationFrame เพื่อ watch scrollLeft ตลอดเวลาและ reset เป็น 0
-    let rafId: number;
-    const watchScrollLeft = () => {
-      if (container.scrollLeft !== 0) {
-        container.scrollLeft = 0;
-      }
-      rafId = requestAnimationFrame(watchScrollLeft);
-    };
-    rafId = requestAnimationFrame(watchScrollLeft);
-
-    return () => {
-      container.removeEventListener('scroll', preventHorizontalScroll);
-      container.removeEventListener('wheel', handleWheel);
-      cancelAnimationFrame(rafId);
-    };
-  }, [isViewingModeOpen]);
-
   if (shouldHide) return null;
 
   // เปิด: สไลด์มาจากด้านขวา (animation เหมือน Bottom sheet 0.3s ease-out). ปิด: ไม่สไลด์ออก สลับหน้าทันที
@@ -263,27 +217,8 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
   // เรียก onTouchMove ของ parent (สำหรับ swipe ลงปิด modal)
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     onTouchMove(e);
-    // อย่า preventDefault เพื่อกันเลื่อนแนวนอน — จะทำให้การเลื่อนขึ้นลงค้างบนมือถือ
-    // scrollLeft ถูก reset อยู่แล้วใน useEffect (scroll listener + rAF)
+    // อย่า preventDefault บน touchmove เพราะ iOS จะยกเลิก momentum/inertia scroll ได้
   }, [onTouchMove]);
-
-  // Reset scrollLeft ใน container โดยไม่ preventDefault (ป้องกันค้าง)
-  const handleContainerTouchMove = useCallback((e: React.TouchEvent) => {
-    const container = e.currentTarget as HTMLElement;
-    if (container.scrollLeft !== 0) {
-      container.scrollLeft = 0;
-    }
-  }, []);
-
-  // Handler เพื่อป้องกันการเลื่อนซ้ายขวาใน container (wheel event สำหรับ desktop)
-  const handleContainerWheel = useCallback((e: React.WheelEvent) => {
-    const container = e.currentTarget as HTMLElement;
-    // ถ้ามีการเลื่อนแนวนอน ให้ preventDefault และบังคับให้ scrollLeft เป็น 0
-    if (container.scrollLeft !== 0) {
-      e.preventDefault();
-      container.scrollLeft = 0;
-    }
-  }, []);
 
   return (
     <div style={overlayStyle} onTouchStart={onTouchStart} onTouchMove={handleTouchMove} onTouchEnd={onTouchEnd}>
@@ -291,9 +226,7 @@ export const ViewingPostModal = React.memo<ViewingPostModalProps>(({
         <div
           ref={scrollContainerRef}
           id="viewing-mode-container"
-          style={isIOS ? CONTAINER_STYLE_IOS_CLIP : CONTAINER_STYLE}
-          onTouchMove={handleContainerTouchMove}
-          onWheel={handleContainerWheel}
+          style={CONTAINER_STYLE}
         >
         <div style={HEADER_STYLE}>
           <button type="button" onClick={onClose} style={BACK_BTN_STYLE} aria-label="Back">
