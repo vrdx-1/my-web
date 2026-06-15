@@ -6,7 +6,12 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LAO_PROVINCES, LAO_FONT } from '@/utils/constants';
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
-import { DEFAULT_EXCHANGE_RATES, type CurrencySymbol } from '@/utils/exchangeRates';
+import {
+  DEFAULT_EXCHANGE_RATES,
+  normalizeExchangeRates,
+  type CurrencySymbol,
+  type ExchangeRates,
+} from '@/utils/exchangeRates';
 
 const PRICE_MIN_BOUND = 0;
 const PRICE_MAX_BOUND = 1_000_000_000;
@@ -31,15 +36,15 @@ const FILTER_PROVINCE_SELECTED_BLUE = '#0f5fcc';
 const FILTER_RANGE_INACTIVE_COLOR = '#98a2b3';
 const CURRENCY_OPTIONS: CurrencySymbol[] = ['₭', '$', '฿'];
 
-function toLakFromCurrency(value: number, currency: CurrencySymbol) {
-  if (currency === '฿') return value * DEFAULT_EXCHANGE_RATES.thb_to_lak;
-  if (currency === '$') return value * DEFAULT_EXCHANGE_RATES.usd_to_lak;
+function toLakFromCurrency(value: number, currency: CurrencySymbol, rates: ExchangeRates) {
+  if (currency === '฿') return value * rates.thb_to_lak;
+  if (currency === '$') return value * rates.usd_to_lak;
   return value;
 }
 
-function fromLakToCurrency(valueLak: number, currency: CurrencySymbol) {
-  if (currency === '฿') return valueLak * DEFAULT_EXCHANGE_RATES.lak_to_thb;
-  if (currency === '$') return valueLak * DEFAULT_EXCHANGE_RATES.lak_to_usd;
+function fromLakToCurrency(valueLak: number, currency: CurrencySymbol, rates: ExchangeRates) {
+  if (currency === '฿') return valueLak * rates.lak_to_thb;
+  if (currency === '$') return valueLak * rates.lak_to_usd;
   return valueLak;
 }
 
@@ -48,28 +53,28 @@ function toRoundedInt(value: number) {
   return Math.max(0, Math.round(value));
 }
 
-function getPriceBoundsForCurrency(currency: CurrencySymbol) {
+function getPriceBoundsForCurrency(currency: CurrencySymbol, rates: ExchangeRates) {
   const buttonStep = currency === '฿'
     ? PRICE_STEP_THB
     : currency === '$'
       ? PRICE_STEP_USD
-      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_BUTTON_STEP, currency)));
-  const thresholdTier = toRoundedInt(fromLakToCurrency(PRICE_THRESHOLD_TIER, currency));
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_BUTTON_STEP, currency, rates)));
+  const thresholdTier = toRoundedInt(fromLakToCurrency(PRICE_THRESHOLD_TIER, currency, rates));
   const stepLow = currency === '฿'
     ? PRICE_STEP_THB
     : currency === '$'
       ? PRICE_STEP_USD
-      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_LOW, currency)));
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_LOW, currency, rates)));
   const stepHigh = currency === '฿'
     ? PRICE_STEP_THB
     : currency === '$'
       ? PRICE_STEP_USD
-      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_HIGH, currency)));
-  const rawMaxBound = toRoundedInt(fromLakToCurrency(PRICE_MAX_BOUND, currency));
+      : Math.max(1, toRoundedInt(fromLakToCurrency(PRICE_STEP_HIGH, currency, rates)));
+  const rawMaxBound = toRoundedInt(fromLakToCurrency(PRICE_MAX_BOUND, currency, rates));
   const maxBound = Math.max(stepLow, Math.floor(rawMaxBound / stepLow) * stepLow);
-  const inputMaxBound = toRoundedInt(fromLakToCurrency(PRICE_INPUT_MAX_BOUND, currency));
-  const defaultMin = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MIN, currency));
-  const defaultMax = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MAX, currency));
+  const inputMaxBound = toRoundedInt(fromLakToCurrency(PRICE_INPUT_MAX_BOUND, currency, rates));
+  const defaultMin = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MIN, currency, rates));
+  const defaultMax = toRoundedInt(fromLakToCurrency(PRICE_DEFAULT_MAX, currency, rates));
 
   return {
     minBound: 0,
@@ -213,33 +218,57 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const [showProvincePopup, setShowProvincePopup] = useState(false);
   const [showCurrencyPopup, setShowCurrencyPopup] = useState(false);
   const [showSelectFilterWarning, setShowSelectFilterWarning] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [currencyTriggerRect, setCurrencyTriggerRect] = useState<DOMRect | null>(null);
   const isScrollLockedRef = useRef(false);
   const lockedScrollYRef = useRef(0);
   const isMobileIPhone = typeof navigator !== 'undefined' && /iPhone/i.test(navigator.userAgent);
-  const priceBounds = getPriceBoundsForCurrency(draftCurrency);
+  const priceBounds = getPriceBoundsForCurrency(draftCurrency, exchangeRates);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadLatestExchangeRates = async () => {
+      try {
+        const response = await fetch('/api/exchange-rates/latest', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const payload = await response.json().catch(() => null) as { rates?: unknown } | null;
+        if (cancelled || !payload) return;
+
+        setExchangeRates(normalizeExchangeRates(payload.rates));
+      } catch {
+        // Keep default exchange rates when request fails.
+      }
+    };
+
+    void loadLatestExchangeRates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!showProvincePicker) return;
     setDraftProvince(selectedProvince);
     setDraftCurrency(displayCurrency);
-    const nextBounds = getPriceBoundsForCurrency(displayCurrency);
+    const nextBounds = getPriceBoundsForCurrency(displayCurrency, exchangeRates);
     const hasStoredDisplayRange = minPriceDisplay != null || maxPriceDisplay != null;
     const nextMin = hasStoredDisplayRange
       ? snapToNearestPriceStep(normalizeMinFromFilter(minPriceDisplay), nextBounds)
       : snapToNearestPriceStep(
-        fromLakToCurrency(normalizeMinFromFilter(minPriceKip), displayCurrency),
+        fromLakToCurrency(normalizeMinFromFilter(minPriceKip), displayCurrency, exchangeRates),
         nextBounds,
       );
     const nextMax = hasStoredDisplayRange
       ? snapToNearestPriceStep(normalizeMaxFromFilter(maxPriceDisplay), nextBounds)
       : snapToNearestPriceStep(
-        fromLakToCurrency(normalizeMaxFromFilter(maxPriceKip), displayCurrency),
+        fromLakToCurrency(normalizeMaxFromFilter(maxPriceKip), displayCurrency, exchangeRates),
         nextBounds,
       );
     setDraftMinPriceKip(Math.min(nextMin, nextMax));
@@ -266,6 +295,7 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
     priceSortOrder,
     displayCurrency,
     showProvincePicker,
+    exchangeRates,
   ]);
 
   // Effect 1: body scroll lock — only triggered by the outer filter open/close.
@@ -341,8 +371,8 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
       showMissingFilterWarning();
       return;
     }
-    const minPriceLak = toLakFromCurrency(draftMinPriceKip, draftCurrency);
-    const maxPriceLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency);
+    const minPriceLak = toLakFromCurrency(draftMinPriceKip, draftCurrency, exchangeRates);
+    const maxPriceLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency, exchangeRates);
     const shouldApplyPriceRange = isPriceRangeCustomized;
     const minPriceDisplay = shouldApplyPriceRange
       ? (draftMinPriceKip <= priceBounds.minBound ? null : toRoundedInt(draftMinPriceKip))
@@ -442,12 +472,12 @@ function HomeProvincePickerPortalBase(props: HomeProvincePickerPortalProps) {
   const handleCurrencyChange = (nextCurrency: CurrencySymbol) => {
     if (nextCurrency === draftCurrency) return;
 
-    const currentMinLak = toLakFromCurrency(draftMinPriceKip, draftCurrency);
-    const currentMaxLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency);
-    const nextBounds = getPriceBoundsForCurrency(nextCurrency);
+    const currentMinLak = toLakFromCurrency(draftMinPriceKip, draftCurrency, exchangeRates);
+    const currentMaxLak = toLakFromCurrency(draftMaxPriceKip, draftCurrency, exchangeRates);
+    const nextBounds = getPriceBoundsForCurrency(nextCurrency, exchangeRates);
 
-    const nextMin = snapToNearestPriceStep(fromLakToCurrency(currentMinLak, nextCurrency), nextBounds);
-    const nextMaxFromLak = snapToNearestPriceStep(fromLakToCurrency(currentMaxLak, nextCurrency), nextBounds);
+    const nextMin = snapToNearestPriceStep(fromLakToCurrency(currentMinLak, nextCurrency, exchangeRates), nextBounds);
+    const nextMaxFromLak = snapToNearestPriceStep(fromLakToCurrency(currentMaxLak, nextCurrency, exchangeRates), nextBounds);
 
     setDraftCurrency(nextCurrency);
     setDraftMinPriceKip(Math.min(nextMin, nextMaxFromLak));
