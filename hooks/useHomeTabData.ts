@@ -9,6 +9,8 @@ import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useHomeSearchResultSources, HOME_SOLD_STUB, type HomePostListSource } from '@/hooks/useHomeSearchResultSources';
 import { useMainTabContext } from '@/contexts/MainTabContext';
 import { useHomeProvince } from '@/contexts/HomeProvinceContext';
+import { readSoldFeedCache, writeSoldFeedCache } from '@/hooks/homeFeedStorage';
+import { useFirstFeedLoaded } from '@/contexts/FirstFeedLoadedContext';
 
 export type HomeTab = 'recommend' | 'sold';
 
@@ -44,6 +46,7 @@ export interface UseHomeTabDataReturn {
 
 export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataReturn {
   const { session, sessionReady, activeProfileId, authUserId, startSessionCheck, setFirstFeedLoaded } = options;
+  const { firstFeedLoaded } = useFirstFeedLoaded();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -107,6 +110,44 @@ export function useHomeTabData(options: UseHomeTabDataOptions): UseHomeTabDataRe
     sharedLikedSaved,
     enabled: searchQuery.trim().length > 0,
   });
+
+  // Prefetch sold feed ใน background หลัง recommend โหลดครั้งแรกเสร็จ
+  // เพื่อให้เมื่อ user สลับมา sold tab จะเห็น content ทันที (hit localStorage cache)
+  const soldPrefetchedRef = useRef(false);
+  const recommendInitialDoneRef = useRef(false);
+
+  // ฟัง event ที่ onInitialLoadDone ยิงผ่าน setFirstFeedLoaded เพื่อ trigger prefetch
+  useEffect(() => {
+    if (recommendInitialDoneRef.current) return;
+    if (soldPrefetchedRef.current) return;
+    // รอ firstFeedLoaded จาก context
+    if (!firstFeedLoaded) return;
+    recommendInitialDoneRef.current = true;
+    // ข้ามถ้ามี price filter
+    const hasPriceMode = !!(minPriceKip != null || maxPriceKip != null || minPriceDisplay != null || maxPriceDisplay != null || priceSortOrder);
+    if (hasPriceMode) return;
+    // ข้ามถ้า localStorage cache ยังใช้ได้อยู่
+    if (readSoldFeedCache(selectedProvince)) return;
+    soldPrefetchedRef.current = true;
+    // fire-and-forget: fetch sold feed และเขียน localStorage cache
+    const body: Record<string, unknown> = {
+      status: 'sold',
+      startIndex: 0,
+      endIndex: 4,
+    };
+    if (selectedProvince.trim()) body.province = selectedProvince.trim();
+    fetch('/api/posts/feed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((payload) => {
+        if (!payload || !Array.isArray(payload.posts) || payload.posts.length === 0) return;
+        writeSoldFeedCache(selectedProvince, payload.posts, !!payload.hasMore);
+      })
+      .catch(() => {});
+  }, [firstFeedLoaded, selectedProvince, minPriceKip, maxPriceKip, minPriceDisplay, maxPriceDisplay, priceSortOrder]);
 
   const hasSearch = searchQuery.trim().length > 0;
 

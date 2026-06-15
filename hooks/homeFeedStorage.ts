@@ -10,6 +10,65 @@ const HOME_FEED_SEEN_PREFIX = 'home_feed_seen';
 const HOME_FEED_SEEN_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const HOME_FEED_SEEN_MAX_IDS = 2000;
 
+// ─── Sold feed localStorage cache ──────────────────────────────────────────────
+const SOLD_FEED_CACHE_PREFIX = 'sold_feed_cache:';
+/** อายุ cache sold feed — 30 นาที (สั้นกว่า recommend เพราะ sold มี post เปลี่ยนน้อยกว่า) */
+const SOLD_FEED_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
+
+interface SoldFeedCacheRecord {
+  province: string;
+  posts: HomeFeedPost[];
+  hasMore: boolean;
+  ts: number;
+}
+
+function getSoldFeedCacheKey(province?: string): string {
+  return `${SOLD_FEED_CACHE_PREFIX}${(province ?? '').trim() || 'all'}`;
+}
+
+export function readSoldFeedCache(province?: string): { posts: HomeFeedPost[]; hasMore: boolean } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(getSoldFeedCacheKey(province));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SoldFeedCacheRecord;
+    if (!Array.isArray(parsed?.posts) || parsed.posts.length === 0) return null;
+    const age = Date.now() - (parsed.ts || 0);
+    if (age >= SOLD_FEED_CACHE_MAX_AGE_MS) {
+      window.localStorage.removeItem(getSoldFeedCacheKey(province));
+      return null;
+    }
+    return { posts: parsed.posts, hasMore: !!parsed.hasMore };
+  } catch {
+    return null;
+  }
+}
+
+export function writeSoldFeedCache(province: string | undefined, posts: HomeFeedPost[], hasMore: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: SoldFeedCacheRecord = {
+      province: (province ?? '').trim() || 'all',
+      posts: posts.slice(0, 60), // จำกัด 60 โพสต์เพื่อไม่ให้ localStorage ใหญ่เกิน
+      hasMore,
+      ts: Date.now(),
+    };
+    window.localStorage.setItem(getSoldFeedCacheKey(province), JSON.stringify(payload));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+export function clearSoldFeedCache(province?: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(getSoldFeedCacheKey(province));
+  } catch {
+    // ignore
+  }
+}
+// ───────────────────────────────────────────────────────────────────────────────
+
 interface HomeFeedSeenRecord {
   ts: number;
   ids: string[];

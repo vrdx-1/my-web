@@ -12,6 +12,11 @@ import {
 } from '@/utils/constants';
 import type { HomePriceSortOrder } from '@/contexts/HomeProvinceContext';
 import type { CurrencySymbol } from '@/utils/exchangeRates';
+import {
+  readSoldFeedCache,
+  writeSoldFeedCache,
+  clearSoldFeedCache,
+} from '@/hooks/homeFeedStorage';
 
 function createSoldFeedSeed(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -159,11 +164,30 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
     }
 
     cursorRef.current = null;
-    setPosts([]);
     setPage(0);
     setHasMore(true);
     setLoadingMore(false);
-  }, [cacheKey]);
+
+    // stale-while-revalidate: แสดง localStorage cache ทันที ถ้าไม่มี in-memory cache
+    // (ไม่ใช้กับ price-filter เพราะ cache นี้เก็บเฉพาะ no-filter)
+    const hasPriceModeLocal = !!(
+      minPriceKip != null ||
+      maxPriceKip != null ||
+      minPriceDisplay != null ||
+      maxPriceDisplay != null ||
+      priceSortOrder
+    );
+    if (!hasPriceModeLocal) {
+      const lsCache = readSoldFeedCache(province);
+      if (lsCache && lsCache.posts.length > 0) {
+        setPosts(lsCache.posts as any[]);
+        setHasMore(lsCache.hasMore);
+        return;
+      }
+    }
+
+    setPosts([]);
+  }, [cacheKey, province, minPriceKip, maxPriceKip, minPriceDisplay, maxPriceDisplay, priceSortOrder]);
 
   useEffect(() => {
     if (!cacheKey || loadingMore) return;
@@ -334,11 +358,21 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
 
       if (isInitial) {
         setPosts(filteredPosts);
+        // เขียน localStorage cache เฉพาะ no-price-filter
+        if (!hasPriceMode && filteredPosts.length > 0) {
+          try { writeSoldFeedCache(province, filteredPosts, nextHasMore); } catch {}
+        }
       } else {
         setPosts((prev) => {
           const ids = new Set(prev.map((post: any) => String(post.id)));
           const toAdd = filteredPosts.filter((post: any) => !ids.has(String(post.id)));
-          return toAdd.length === 0 ? prev : [...prev, ...toAdd];
+          if (toAdd.length === 0) return prev;
+          const next = [...prev, ...toAdd];
+          // อัปเดต localStorage cache เพื่อให้ครั้งต่อไปมี pool ใหญ่ขึ้น
+          if (!hasPriceMode) {
+            try { writeSoldFeedCache(province, next, nextHasMore); } catch {}
+          }
+          return next;
         });
       }
 
@@ -388,8 +422,10 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
     setPage(0);
     setHasMore(true);
     cursorRef.current = null;
+    // ล้าง localStorage cache เพื่อให้ fetch ใหม่จาก server (เหมือน recommend feed)
+    try { clearSoldFeedCache(province); } catch {}
     await fetchPosts(true);
-  }, [fetchPosts]);
+  }, [fetchPosts, province]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
