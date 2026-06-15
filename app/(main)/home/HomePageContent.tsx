@@ -15,7 +15,7 @@ import {
 } from '@/lib/homeMotionProfiler';
 
 export function HomePageContent() {
-  // optimize hydration: ใช้ useState + useEffect เพื่อให้ skeleton แสดงจนกว่าจะ mount จริง
+  // ใช้ flag นี้เฉพาะงานที่ต้องรอ browser จริง เช่น profiler/scroll coordination
   const [clientMounted, setClientMounted] = useState(false);
   useEffect(() => { setClientMounted(true); }, []);
 
@@ -83,18 +83,8 @@ export function HomePageContent() {
     };
   }, [clientMounted]);
 
-  /** เฟรมแรกหลัง hydrate: อย่า return null — จะเห็นพื้นขาวก่อนโฮมโผล่ */
-  if (!clientMounted) {
-    // แสดง skeleton เต็มหน้าจอทันที (กันจอขาว)
-    return (
-      <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
-        <FeedSkeleton count={3} />
-      </main>
-    );
-  }
-
   return (
-    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
+    <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER} suppressHydrationWarning>
       <HomePagePanels
         feedRestoreWrapRef={feedRestoreWrapRef}
         recommendPanelRef={recommendPanelRef}
