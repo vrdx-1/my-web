@@ -241,14 +241,14 @@ export function PostCard({
   }, []);
 
   React.useEffect(() => {
-    const anyModalOpen = showMarkSoldConfirm || showSoldInfo || showPrivateNotePopup || showChangePriceModal || showChangePriceSuccess;
+    const anyModalOpen = showMarkSoldConfirm || showPrivateNotePopup || showChangePriceModal || showChangePriceSuccess;
     if (typeof document === 'undefined' || !anyModalOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [showMarkSoldConfirm, showSoldInfo, showPrivateNotePopup, showChangePriceModal, showChangePriceSuccess]);
+  }, [showMarkSoldConfirm, showPrivateNotePopup, showChangePriceModal, showChangePriceSuccess]);
 
   React.useEffect(() => {
     if (!registerVisibilityRef) return;
@@ -320,6 +320,21 @@ export function PostCard({
       window.removeEventListener('touchmove', handleScrollClose);
     };
   }, [showPriceEstimatePopup]);
+
+  React.useEffect(() => {
+    if (!showSoldInfo || typeof window === 'undefined') return;
+
+    const handleScrollClose = () => {
+      setShowSoldInfo(false);
+    };
+
+    window.addEventListener('scroll', handleScrollClose, { passive: true });
+    window.addEventListener('touchmove', handleScrollClose, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollClose);
+      window.removeEventListener('touchmove', handleScrollClose);
+    };
+  }, [showSoldInfo]);
 
   React.useEffect(() => {
     clearCaptionToggleStabilizers();
@@ -1127,6 +1142,19 @@ export function PostCard({
       {/* Sold Info Modal (same design size as logout confirm) - portal to body for full-screen overlay + center of viewport */}
       {typeof document !== 'undefined' && isSoldPost && showSoldInfo && createPortal(
         <div
+          aria-hidden="true"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchMove={(e) => {
+            e.stopPropagation();
+            setShowSoldInfo(false);
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowSoldInfo(false);
+          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -1139,38 +1167,67 @@ export function PostCard({
           }}
         >
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: '#fff',
               borderRadius: '12px',
-              padding: '20px',
+              padding: '14px',
               maxWidth: '320px',
               width: '100%',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              boxShadow: '0 12px 28px rgba(15, 23, 42, 0.18)',
+              border: '1px solid #e2e8f0',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0',
             }}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-              ຂາຍແລ້ວເດີ
-            </h3>
             <button
               type="button"
+              aria-label="ປິດ"
               onClick={() => setShowSoldInfo(false)}
               style={{
-                width: '100%',
-                padding: '10px 16px',
-                background: '#1877f2',
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                width: '32px',
+                height: '32px',
+                borderRadius: 0,
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontWeight: 'bold',
-                color: '#fff',
+                background: 'transparent',
+                color: '#000000',
+                fontSize: '30px',
+                lineHeight: 1,
+                fontWeight: 500,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                padding: 0,
               }}
             >
-              ຕົກລົງ
+              ×
             </button>
+            <div
+              aria-hidden="true"
+              style={{
+                width: '172px',
+                height: '172px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                filter: 'drop-shadow(0 8px 16px rgba(153, 27, 27, 0.2))',
+              }}
+            >
+              <svg width="172" height="172" viewBox="0 0 172 172" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="36" width="144" height="100" rx="22" fill="#EF1111"/>
+                <rect x="24" y="46" width="124" height="80" rx="16" stroke="#FFFFFF" strokeWidth="5"/>
+                <text x="86" y="95" textAnchor="middle" fontSize="30" fontWeight="800" fill="#FFFFFF" style={{ letterSpacing: '0.4px' }}>
+                  ຂາຍແລ້ວ
+                </text>
+              </svg>
+            </div>
           </div>
         </div>,
         document.body

@@ -12,7 +12,7 @@ import { mergeHeaders } from '@/utils/activeProfile'
 const DOCUMENT_TYPES = [
   { value: 'id_card', label: 'ບັດປະຈຳຕົວ' },
   { value: 'driver_license', label: 'ໃບຂັບຂີ່' },
-  { value: 'passport', label: 'ໜັງສືຜ່ານແດນ (Passport)' },
+  { value: 'passport', label: 'Passport' },
 ] as const
 
 type DocType = typeof DOCUMENT_TYPES[number]['value']
