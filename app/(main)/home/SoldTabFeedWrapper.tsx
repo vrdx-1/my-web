@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/preserve-manual-memoization, @typescript-eslint/no-explicit-any */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { UsePostListDataReturn } from '@/hooks/usePostListData';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
@@ -14,6 +14,9 @@ import { HomeFeedBody } from './HomeFeedBody';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+
+/** style คงที่ — ห้ามเป็น object literal inline เพราะจะสร้าง object ใหม่ทุก render */
+const FEED_CONTAINER_STYLE: React.CSSProperties = { animation: 'feed-content-fade-in 0.25s ease-out forwards' };
 
 export type SoldTabFeedWrapperProps = {
   /** ข้อมูล feed แท็บขายแล้วจากหน้าหลัก — เก็บไว้ไม่หาย  เมื่อสลับแท็บ */
@@ -36,7 +39,7 @@ export type SoldTabFeedWrapperProps = {
 };
 
 /** แสดง feed แท็บขายแล้ว — รับข้อมูลจากหน้าหลัก เพื่อให้สลับแท็บแล้วแสดงทันทีโดยไม่โหลดใหม่ */
-export function SoldTabFeedWrapper({
+function SoldTabFeedWrapperBase({
   soldListData,
   menu,
   viewingPostHook,
@@ -143,7 +146,7 @@ export function SoldTabFeedWrapper({
 
   return (
     <>
-      <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
+      <div style={FEED_CONTAINER_STYLE}>
         <HomeFeedBody
           showSkeleton={showSkeleton}
           skeletonCount={3}
@@ -191,3 +194,4 @@ export function SoldTabFeedWrapper({
     </>
   );
 }
+export const SoldTabFeedWrapper = memo(SoldTabFeedWrapperBase);

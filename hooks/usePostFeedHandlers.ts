@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useViewingPost } from './useViewingPost';
 import { useHeaderScroll } from './useHeaderScroll';
@@ -52,6 +52,10 @@ export function usePostFeedHandlers({
 }: UsePostFeedHandlersProps) {
   const router = useRouter();
 
+  // ใช้ ref แทน posts ใน deps ของ callbacks — ป้องกัน cascade recreation ทุกครั้ง posts array เปลี่ยน
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+
   const handleViewPost = useCallback(
     async (post: any, imageIndex: number = 0) => {
       const onClose = setHeaderVisible || headerScroll?.setIsHeaderVisible || (() => {});
@@ -62,10 +66,10 @@ export function usePostFeedHandlers({
 
   const handleTogglePostStatus = useCallback(
     (postId: string, currentStatus: string) => {
-      const postToRestore = posts.find((p) => p.id === postId);
+      const postToRestore = postsRef.current.find((p) => p.id === postId);
       return togglePostStatus(postId, currentStatus, setPosts, postToRestore);
     },
-    [setPosts, posts]
+    [setPosts]
   );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -144,7 +148,7 @@ export function usePostFeedHandlers({
 
   const handleRepost = useCallback(
     async (postId: string) => {
-      const postToRestore = posts.find((p) => String(p.id) === String(postId));
+      const postToRestore = postsRef.current.find((p) => String(p.id) === String(postId));
       if (!postToRestore || postToRestore.status !== 'recommend') return;
       await repostPost(postId, setPosts, postToRestore, {
         reorderToTop: repostOptions?.reorderToTop,
@@ -152,7 +156,7 @@ export function usePostFeedHandlers({
       setShowRepostSuccess(true);
       repostOptions?.onSuccess?.({ postId, post: postToRestore });
     },
-    [posts, repostOptions, setPosts]
+    [repostOptions, setPosts]
   );
 
   return useMemo(

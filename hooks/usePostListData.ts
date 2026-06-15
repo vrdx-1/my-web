@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LIST_FEED_PAGE_SIZE, INITIAL_FEED_PAGE_SIZE, FEED_PAGE_SIZE } from '@/utils/constants';
 import { getOwnedProfileIds, getPrimaryGuestToken, isOwnedByProfileScope, type OwnershipProfileRecord } from '@/utils/postUtils';
@@ -1246,7 +1246,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     if (gotFullPage || gotPartialPage) setPage((p) => p + 1);
   }, [posts.length, hasMore, loadingMore, page, type, loadAll]);
 
-  return {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => ({
     posts,
     page,
     hasMore,
@@ -1261,5 +1262,6 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     setSavedPosts: setSavedPostsOut,
     fetchPosts,
     refreshData,
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [posts, page, hasMore, loadingMore, currentSession, likedPostsOut, savedPostsOut, setPosts, setPage, setHasMore, setLikedPostsOut, setSavedPostsOut, fetchPosts, refreshData]);
 }
