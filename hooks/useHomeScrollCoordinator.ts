@@ -11,9 +11,15 @@ export interface UseHomeScrollCoordinatorOptions {
   clientMounted: boolean;
   firstFeedLoaded: boolean;
   showFeedSkeleton: boolean;
+  activeTab: 'recommend' | 'sold';
+  scrollStateKey: string;
   isSoldTabActive: boolean;
   tabRefreshing: boolean;
   hasSearch: boolean;
+}
+
+function buildTabStateScrollKey(tab: 'recommend' | 'sold', scrollStateKey: string): string {
+  return `${tab}|${scrollStateKey}`;
 }
 
 function getPageScrollY(): number {
@@ -36,17 +42,27 @@ function setPageScrollY(y: number): void {
 }
 
 export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOptions) {
-  const { pathname, clientMounted, firstFeedLoaded, showFeedSkeleton, isSoldTabActive, tabRefreshing, hasSearch } = options;
+  const {
+    pathname,
+    clientMounted,
+    firstFeedLoaded,
+    showFeedSkeleton,
+    activeTab,
+    scrollStateKey,
+    isSoldTabActive,
+    tabRefreshing,
+    hasSearch,
+  } = options;
 
   const homeTabScroll = useHomeTabScroll();
   const mainTabScroll = useMainTabScroll();
   const registerSaveBeforeSwitch = homeTabScroll?.registerSaveBeforeSwitch;
   const tabRefreshingRef = useRef(tabRefreshing);
 
-  const recommendScrollRef = useRef(0);
-  const soldScrollRef = useRef(0);
+  const tabStateScrollMapRef = useRef<Map<string, number>>(new Map());
   const prevShowSoldRef = useRef<boolean | null>(null);
   const prevPathnameRef = useRef<string | null>(null);
+  const prevTabStateScrollKeyRef = useRef<string | null>(null);
   const pendingHomeRouteScrollRestoreRef = useRef(false);
   const suppressHideUntilRef = useRef<number | null>(null);
   const [isChromeStartupLocked, setIsChromeStartupLocked] = useState(pathname === '/home');
@@ -133,6 +149,8 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
     if (prev === '/home' && pathname !== '/home') {
+      const activeStateKey = buildTabStateScrollKey(activeTab, scrollStateKey);
+      tabStateScrollMapRef.current.set(activeStateKey, getPageScrollY());
       // iPhone/Safari บางจังหวะ reset scroll เร็วมากตอนเปลี่ยน route
       // บันทึกซ้ำตอน leave จาก /home เพื่อกันค่าหาย/กลายเป็น 0
       mainTabScroll?.saveCurrentScroll('/home');
@@ -147,7 +165,27 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       pendingHomeRouteScrollRestoreRef.current = false;
       scheduleChromeStartupLock(false);
     }
-  }, [pathname, hasSearch, scheduleChromeStartupLock, mainTabScroll]);
+  }, [pathname, hasSearch, scheduleChromeStartupLock, mainTabScroll, activeTab, scrollStateKey]);
+
+  useLayoutEffect(() => {
+    if (pathname !== '/home') return;
+
+    const currentKey = buildTabStateScrollKey(activeTab, scrollStateKey);
+    const previousKey = prevTabStateScrollKeyRef.current;
+
+    if (!previousKey) {
+      prevTabStateScrollKeyRef.current = currentKey;
+      return;
+    }
+
+    if (previousKey === currentKey) return;
+
+    tabStateScrollMapRef.current.set(previousKey, getPageScrollY());
+    prevTabStateScrollKeyRef.current = currentKey;
+
+    const targetY = tabStateScrollMapRef.current.get(currentKey) ?? 0;
+    setPageScrollY(Math.max(0, targetY));
+  }, [pathname, activeTab, scrollStateKey]);
 
   useEffect(() => {
     if (pathname !== '/home') return;
@@ -197,13 +235,13 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
     if (!registerSaveBeforeSwitch) return;
     registerSaveBeforeSwitch(() => {
       const y = typeof window !== 'undefined' ? getPageScrollY() : 0;
-      if (isSoldTabActive) soldScrollRef.current = y;
-      else recommendScrollRef.current = y;
+      const key = buildTabStateScrollKey(activeTab, scrollStateKey);
+      tabStateScrollMapRef.current.set(key, y);
     });
     return () => {
       registerSaveBeforeSwitch(null);
     };
-  }, [isSoldTabActive, registerSaveBeforeSwitch]);
+  }, [activeTab, scrollStateKey, registerSaveBeforeSwitch]);
 
   useLayoutEffect(() => {
     const showSold = isSoldTabActive;
@@ -224,8 +262,15 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
       });
     };
 
+    const targetTab: 'recommend' | 'sold' = showSold ? 'sold' : 'recommend';
+    const targetStateKey = buildTabStateScrollKey(targetTab, scrollStateKey);
+    const targetScrollY = tabStateScrollMapRef.current.get(targetStateKey) ?? 0;
+    const normalizedTargetScrollY = Number.isFinite(targetScrollY)
+      ? Math.max(0, targetScrollY)
+      : 0;
+
     let settled = false;
-    const cancelRestore = restoreWindowScroll(0, {
+    const cancelRestore = restoreWindowScroll(normalizedTargetScrollY, {
       maxAttempts: 4,
       onSettled: () => {
         settled = true;
@@ -236,10 +281,9 @@ export function useHomeScrollCoordinator(options: UseHomeScrollCoordinatorOption
 
     return () => {
       cancelRestore();
-      // Tab switch บนหน้าโฮมต้องกลับไปเริ่มจากบนสุดเสมอ ไม่ restore scroll เดิมของแท็บ
       if (!settled) scheduleChromeStartupLock(false);
     };
-  }, [isSoldTabActive, scheduleChromeStartupLock]);
+  }, [isSoldTabActive, scrollStateKey, scheduleChromeStartupLock]);
 
   useLayoutEffect(() => {
     if (pathname !== '/home') {

@@ -77,11 +77,10 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
   const selectedProvince = homeProvince?.selectedProvince ?? '';
   const minPriceKip = homeProvince?.minPriceKip ?? null;
   const maxPriceKip = homeProvince?.maxPriceKip ?? null;
-  const minPriceDisplay = homeProvince?.minPriceDisplay ?? null;
-  const maxPriceDisplay = homeProvince?.maxPriceDisplay ?? null;
   const displayCurrency = homeProvince?.displayCurrency ?? '₭';
   const priceSortOrder = homeProvince?.priceSortOrder ?? '';
-  const feedModeKey = `${selectedProvince.trim() || 'all'}|${minPriceKip ?? 'min'}|${maxPriceKip ?? 'max'}|${minPriceDisplay ?? 'min-display'}|${maxPriceDisplay ?? 'max-display'}|${displayCurrency}|${priceSortOrder || 'none'}`;
+  const feedModeKey = `${selectedProvince.trim() || 'all'}|${minPriceKip ?? 'min'}|${maxPriceKip ?? 'max'}|${priceSortOrder || 'none'}`;
+  const homeScrollStateKey = `${feedModeKey}|q:${searchQuery.trim() || 'none'}`;
   const soldListData = usePostListData({
     type: 'sold',
     session,
@@ -92,8 +91,6 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     province: selectedProvince,
     minPriceKip,
     maxPriceKip,
-    minPriceDisplay,
-    maxPriceDisplay,
     displayCurrency,
     priceSortOrder,
   });
@@ -223,6 +220,8 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     clientMounted,
     firstFeedLoaded,
     showFeedSkeleton,
+    activeTab: isSoldTabActive ? 'sold' : 'recommend',
+    scrollStateKey: homeScrollStateKey,
     isSoldTabActive,
     tabRefreshing,
     hasSearch,
@@ -325,7 +324,6 @@ export function useHomePageController(options: UseHomePageControllerOptions) {
     loadingMore: isSoldTabNoSearch ? false : effectivePostList.loadingMore || recommendLoadMoreShell,
     hasMore: isSoldTabNoSearch ? false : effectivePostList.hasMore ?? true,
     onLoadMore: handleRecommendLoadMore,
-    hideBoost: tab === 'sold' && hasSearch,
   });
 
   const soldTabProps: Omit<SoldTabFeedWrapperProps, 'isActive'> = useMemo(

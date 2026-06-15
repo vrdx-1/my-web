@@ -50,20 +50,12 @@ export function useHomeTabSwitch(options: UseHomeTabSwitchOptions) {
           soldTabRefreshRef.current?.refreshData?.();
         }
       } else {
-        mainTab?.setNavigatingToTab(newTab);
         mainTab?.setHomeTab(newTab);
-        mainTab?.setTabRefreshing(true);
-        setTabRefreshing(true);
-
-        if (newTab === 'recommend') {
-          if (searchQuery.trim()) {
-            searchData.fetchSearch();
-          } else {
-            recommendFeed.refreshData();
-          }
-        } else {
-          soldTabRefreshRef.current?.refreshData?.();
-        }
+        // Keep the current feed state when switching tabs.
+        // We only refresh when user taps the currently active tab again.
+        mainTab?.setNavigatingToTab(null);
+        mainTab?.setTabRefreshing(false);
+        setTabRefreshing(false);
       }
     },
     [tab, mainTab, searchQuery, recommendFeed, searchData, soldTabRefreshRef, setTabRefreshing]
