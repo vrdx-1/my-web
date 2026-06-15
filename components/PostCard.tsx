@@ -966,7 +966,7 @@ export function PostCard({
           <div style={{ display: 'flex', alignItems: 'center', minWidth: '32px', justifyContent: 'flex-end', flexShrink: 0, marginLeft: '12px' }}>
             {isOwner ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                {!hideBoost && (
+                {!hideBoost && !isSoldPost && (
                   <button
                     type="button"
                     onClick={(e) => {
