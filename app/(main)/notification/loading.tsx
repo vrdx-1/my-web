@@ -6,14 +6,21 @@ import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { LAO_FONT } from '@/utils/constants';
 import { hasRouteVisited } from '@/utils/visitedRoutesStore';
 
+const NOTIFICATION_HEADER_HEIGHT = 58;
+
 const HEADER_STYLE: React.CSSProperties = {
   padding: '15px',
+  height: NOTIFICATION_HEADER_HEIGHT,
+  boxSizing: 'border-box',
   borderBottom: '1px solid #f0f0f0',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  position: 'sticky',
+  position: 'fixed',
   top: 0,
+  left: 0,
+  right: 0,
+  width: '100%',
   background: '#ffffff',
   backgroundColor: '#ffffff',
   zIndex: 1000,
@@ -42,6 +49,7 @@ export default function NotificationLoading() {
           ການແຈ້ງເຕືອນ
         </h1>
       </div>
+      <div style={{ height: NOTIFICATION_HEADER_HEIGHT }} aria-hidden />
       <div style={{ flex: 1 }}>
         <NotificationSkeleton count={5} />
       </div>

@@ -48,13 +48,20 @@ const BOTTOM_SLOT_STYLE = {
   flexShrink: 0,
 };
 
+const NOTIFICATION_HEADER_HEIGHT = 58;
+
 const HEADER_STYLE = {
   padding: '15px',
+  height: NOTIFICATION_HEADER_HEIGHT,
+  boxSizing: 'border-box' as const,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  position: 'sticky' as const,
+  position: 'fixed' as const,
   top: 0,
+  left: 0,
+  right: 0,
+  width: '100%',
   background: '#ffffff',
   backgroundColor: '#ffffff',
   zIndex: 1000,
@@ -163,6 +170,8 @@ export default function NotificationPage() {
           ການແຈ້ງເຕືອນ
         </h1>
       </div>
+
+      <div style={{ height: NOTIFICATION_HEADER_HEIGHT }} aria-hidden />
 
       {loading ? (
         <div style={{ flex: 1 }}>

@@ -62,6 +62,9 @@ function ComparePageHeader({
   const buttonRef = React.useRef<HTMLButtonElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [position, setPosition] = React.useState<{ top: number; right: number } | null>(null);
+  const isDisabled = count === 0;
+  const menuTextColor = isDisabled ? '#9ca3af' : '#000000';
+  const menuIconColor = isDisabled ? '#9ca3af' : '#4a4d52';
 
   React.useEffect(() => {
     if (!isMenuOpen || typeof window === 'undefined') return;
@@ -88,8 +91,11 @@ function ComparePageHeader({
     <>
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
           zIndex: 90,
           background: 'rgba(255, 255, 255, 0.96)',
           backdropFilter: 'blur(10px)',
@@ -169,20 +175,56 @@ function ComparePageHeader({
                 setIsMenuOpen(false);
                 onClearAll();
               }}
-              disabled={count === 0}
+              disabled={isDisabled}
               style={{
                 width: '100%',
                 border: 'none',
                 background: '#ffffff',
                 textAlign: 'left',
-                padding: '15px 18px',
+                padding: '14px 18px',
                 fontSize: 17,
-                fontWeight: 400,
-                color: count === 0 ? '#9ca3af' : '#4a4d52',
-                cursor: count === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 'normal',
+                color: menuTextColor,
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                minHeight: 50,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                lineHeight: '24px',
+                fontFamily: 'inherit',
+                opacity: 1,
               }}
             >
-              ລົບລາຍການທັງໝົດ
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: menuIconColor,
+                  flexShrink: 0,
+                  opacity: 1,
+                }}
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ display: 'block' }}
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+              </span>
+              <span>ລົບລາຍການທັງໝົດ</span>
             </button>
           </div>
         </div>,
@@ -629,6 +671,8 @@ export function ComparePostsContent() {
         }}
       />
 
+      <div style={{ height: 64 }} aria-hidden />
+
       <div style={{ padding: '14px 12px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {showLoadingSkeleton ? (
           Array.from({ length: 3 }).map((_, index) => (
@@ -676,11 +720,8 @@ export function ComparePostsContent() {
             >
               <CompareIcon size={32} color="currentColor" />
             </div>
-            <div style={{ fontSize: 18, lineHeight: '24px', fontWeight: 800, color: '#111827' }}>
+            <div style={{ fontSize: 18, lineHeight: '24px', fontWeight: 700, color: '#6b7280' }}>
               ຍັງບໍ່ມີລາຍການປຽບທຽບ
-            </div>
-            <div style={{ fontSize: 14, lineHeight: '21px', color: '#6b7280', maxWidth: 260 }}>
-              ເລືອກໂພສຈາກປຸ່ມໄຂ່ປາໃນ PostCard ເພື່ອເພີ່ມເຂົ້າລາຍການປຽບທຽບ
             </div>
           </div>
         ) : null}
