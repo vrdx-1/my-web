@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Bell, House, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { CompareIcon } from '@/components/icons/CompareIcon';
+import { useComparePosts } from '@/contexts/ComparePostsContext';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
@@ -214,6 +215,7 @@ export const BottomNav = React.memo(function BottomNav() {
   const lastCreatePostTriggerRef = useRef<number>(0);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const { session, userProfile } = useSessionAndProfile();
+  const comparePosts = useComparePosts();
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
@@ -265,6 +267,7 @@ export const BottomNav = React.memo(function BottomNav() {
 
         if (path === '/compare') {
           const compareHref = session ? '/compare' : REGISTER_PATH;
+          const showCompareBadge = comparePosts.unreadCount > 0;
           return (
             <Link
               key={path}
@@ -309,6 +312,32 @@ export const BottomNav = React.memo(function BottomNav() {
                 }}
               >
                 <CompareNavIcon isActive={match(effectivePath)} />
+                {showCompareBadge && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -9,
+                      minWidth: 16,
+                      height: 16,
+                      padding: '0 4px',
+                      borderRadius: 999,
+                      background: '#e0245e',
+                      border: '1px solid #ffffff',
+                      boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
+                      color: '#fff',
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: '16px',
+                      zIndex: 2,
+                    }}
+                  >
+                    {comparePosts.unreadCount > 99 ? '99+' : comparePosts.unreadCount}
+                  </span>
+                )}
               </span>
             </Link>
           );

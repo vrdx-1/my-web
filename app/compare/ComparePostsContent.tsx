@@ -548,7 +548,7 @@ function ComparePostRow({
 }
 
 export function ComparePostsContent() {
-  const { postIds, count, loaded, clearAll, removePost } = useComparePosts();
+  const { postIds, count, loaded, clearAll, removePost, markAllViewed } = useComparePosts();
   const { session, activeProfileId } = useSessionAndProfile();
   const [posts, setPosts] = React.useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = React.useState(false);
@@ -568,6 +568,11 @@ export function ComparePostsContent() {
       active = false;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!loaded) return;
+    void markAllViewed();
+  }, [loaded, markAllViewed, postIds]);
 
   React.useEffect(() => {
     if (!loaded) return;

@@ -6,6 +6,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
+import { SuccessPopup } from './modals/SuccessPopup';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 
 interface PostCardMenuProps {
@@ -55,6 +56,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [showCompareSuccess, setShowCompareSuccess] = React.useState(false);
 
   React.useEffect(() => {
     if (!isMenuOpen || typeof window === 'undefined') return;
@@ -134,7 +136,11 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                 router.push(REGISTER_PATH);
                 return;
               }
-              void onCompare?.(post.id);
+              Promise.resolve(onCompare?.(post.id))
+                .then(() => {
+                  setShowCompareSuccess(true);
+                })
+                .catch(() => {});
             }}
             onSave={() => {
               setIsMenuOpen(false);
@@ -258,6 +264,13 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           </div>
         </div>,
         document.body
+      )}
+
+      {showCompareSuccess && (
+        <SuccessPopup
+          message="ເພີ່ມເຂົ້າລາຍການປຽບທຽບສຳເລັດ"
+          onClose={() => setShowCompareSuccess(false)}
+        />
       )}
     </div>
   );
