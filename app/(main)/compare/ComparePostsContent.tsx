@@ -522,7 +522,7 @@ function ComparePostRow({
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#6b7280',
-                transform: isCaptionExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transform: isCaptionExpanded ? 'translateY(24px) rotate(180deg)' : 'translateY(24px) rotate(0deg)',
                 transition: 'transform 0.2s ease',
               }}
             >
