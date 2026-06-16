@@ -462,13 +462,13 @@ function ComparePostRow({
               aria-label="ລົບອອກຈາກລາຍການປຽບທຽບ"
               onClick={onRemove}
               style={{
-                width: 24,
-                height: 24,
+                width: 28,
+                height: 28,
                 flexShrink: 0,
                 border: 'none',
                 background: 'transparent',
                 color: '#374151',
-                fontSize: 24,
+                fontSize: 30,
                 lineHeight: 1,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -745,7 +745,7 @@ export function ComparePostsContent() {
 
       {showClearAllSuccess && (
         <SuccessPopup
-          message="ລົບລາຍການທັງໝົດສຳເລັດ"
+          message="ລົບສຳເລັດ"
           onClose={() => setShowClearAllSuccess(false)}
         />
       )}
