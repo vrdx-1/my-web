@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SuccessPopupProps {
   message: string;
@@ -17,7 +18,9 @@ export const SuccessPopup = React.memo<SuccessPopupProps>(({ message, onClose })
     };
   }, []);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -92,7 +95,8 @@ export const SuccessPopup = React.memo<SuccessPopupProps>(({ message, onClose })
           ຕົກລົງ
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useComparePosts } from '@/contexts/ComparePostsContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -590,6 +590,7 @@ function ComparePostRow({
 export function ComparePostsContent() {
   const { postIds, count, loaded, clearAll, removePost, markAllViewed } = useComparePosts();
   const { session, activeProfileId } = useSessionAndProfile();
+  const pathname = usePathname();
   const [posts, setPosts] = React.useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = React.useState(false);
   const [exchangeRates, setExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
@@ -611,9 +612,9 @@ export function ComparePostsContent() {
   }, []);
 
   React.useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || pathname !== '/compare') return;
     void markAllViewed();
-  }, [loaded, markAllViewed, postIds]);
+  }, [loaded, markAllViewed, pathname, postIds]);
 
   React.useEffect(() => {
     if (!loaded) return;
