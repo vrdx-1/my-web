@@ -97,8 +97,7 @@ function ComparePageHeader({
           right: 0,
           width: '100%',
           zIndex: 90,
-          background: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(10px)',
+          background: '#ffffff',
           borderBottom: '1px solid #eef2f7',
         }}
       >
