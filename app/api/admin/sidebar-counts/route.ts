@@ -104,6 +104,7 @@ export async function GET(request: Request) {
       revenueLogs,
       downloadClickLogs,
       whatsappClickLogs,
+      compareUsageLogs,
       verificationTotal,
       hiddenPosts,
       profilesTotal,
@@ -119,6 +120,7 @@ export async function GET(request: Request) {
       admin.from('revenue_logs').select('*', { count: 'exact', head: true }),
       admin.from('download_click_logs').select('*', { count: 'exact', head: true }),
       admin.from('whatsapp_click_logs').select('*', { count: 'exact', head: true }),
+      admin.from('compare_usage_logs').select('*', { count: 'exact', head: true }),
       admin.from('verification_requests').select('*', { count: 'exact', head: true }),
       admin.from('cars').select('*', { count: 'exact', head: true }).eq('is_hidden', true),
       admin.from('profiles').select('*', { count: 'exact', head: true }),
@@ -135,6 +137,7 @@ export async function GET(request: Request) {
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
     counts['/admin/download-clicks'] = downloadClickLogs.count ?? 0;
     counts['/admin/whatsapp-clicks'] = whatsappClickLogs.count ?? 0;
+    counts['/admin/compare-usage'] = compareUsageLogs.count ?? 0;
     counts['/admin/verification'] = verificationTotal.count ?? 0;
     counts['/admin/hidden-posts'] = hiddenPosts.count ?? 0;
     counts['/admin/post'] = carsTotal.count ?? 0;

@@ -209,16 +209,16 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           pointerEvents: 'auto',
         }}
       >
+        {showCompare && (
+          <div onClick={onCompare} style={menuItemStyleBalanced}>
+            <ActionLabel
+              label="ເພີ່ມເຂົ້າປຽບທຽບ"
+              icon={compareIcon}
+            />
+          </div>
+        )}
         {isOwner ? (
           <>
-            {showCompare && (
-              <div onClick={onCompare} style={menuItemStyleBalanced}>
-                <ActionLabel
-                  label="ເພີ່ມເຂົ້າປຽບທຽບ"
-                  icon={compareIcon}
-                />
-              </div>
-            )}
             <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}

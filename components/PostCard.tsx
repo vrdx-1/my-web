@@ -724,6 +724,7 @@ export function PostCard({
             <PostCardMenu
               post={post}
               session={session}
+              activeProfileId={activeProfileId}
               isOwner={isOwner}
               hideBoost={hideBoost}
               activeMenuState={activeMenuState}

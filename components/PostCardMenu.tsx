@@ -8,10 +8,12 @@ import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
 import { SuccessPopup } from './modals/SuccessPopup';
 import { REGISTER_PATH } from '@/utils/authRoutes';
+import { mergeHeaders } from '@/utils/activeProfile';
 
 interface PostCardMenuProps {
   post: any;
   session: any;
+  activeProfileId?: string | null;
   isOwner: boolean;
   hideBoost: boolean;
   activeMenuState: string | null;
@@ -32,6 +34,7 @@ interface PostCardMenuProps {
 export const PostCardMenu = React.memo<PostCardMenuProps>(({
   post,
   session,
+  activeProfileId,
   isOwner,
   hideBoost,
   activeMenuState: _activeMenuState,
@@ -81,6 +84,52 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   const handleMenuClose = () => {
     setIsMenuOpen(false);
   };
+
+  const trackCompareUsage = React.useCallback(async () => {
+    try {
+      const response = await fetch('/api/analytics/compare-click', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: true,
+        headers: mergeHeaders(
+          { 'Content-Type': 'application/json' },
+          activeProfileId,
+        ),
+        body: JSON.stringify({ post_id: post.id }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        console.warn('[compare-usage] request failed', {
+          status: response.status,
+          postId: post.id,
+          activeProfileId,
+          payload,
+        });
+        return;
+      }
+
+      if (payload?.skipped) {
+        console.debug('[compare-usage] skipped', {
+          reason: payload?.skipped_reason || 'unknown',
+          postId: post.id,
+          activeProfileId,
+        });
+        return;
+      }
+
+      console.debug('[compare-usage] inserted', {
+        postId: post.id,
+        activeProfileId,
+      });
+    } catch (error) {
+      console.warn('[compare-usage] request error', {
+        postId: post.id,
+        activeProfileId,
+        error,
+      });
+    }
+  }, [activeProfileId, post.id]);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -132,7 +181,11 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             }}
             onCompare={() => {
               setIsMenuOpen(false);
+              void trackCompareUsage();
               if (!session) {
+                console.debug('[compare-usage] guest click redirected to register', {
+                  postId: post.id,
+                });
                 router.push(REGISTER_PATH);
                 return;
               }
