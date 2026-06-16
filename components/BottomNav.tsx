@@ -193,7 +193,8 @@ function CompareNavIcon({ isActive }: { isActive: boolean }) {
     <CompareIcon
       size={NAV_ICON_SIZE}
       color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
-      strokeWidth={isActive ? 2.05 : 1.95}
+      strokeWidth={isActive ? 2 : 2}
+      variant={isActive ? 'filled' : 'outline'}
       style={{
         position: 'absolute',
         inset: 0,
