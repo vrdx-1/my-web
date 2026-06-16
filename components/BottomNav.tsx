@@ -2,7 +2,6 @@
 
 import React, { useRef, useState, useEffect, Suspense, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { Bell, House, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { CompareIcon } from '@/components/icons/CompareIcon';
@@ -265,84 +264,6 @@ export const BottomNav = React.memo(function BottomNav() {
         const isPostSlot = path === '/create-post';
         const isCreatePostButton = isPostSlot && (isHome || isCompare || isNotificationOrProfile);
 
-        if (path === '/compare') {
-          const compareHref = session ? '/compare' : REGISTER_PATH;
-          const showCompareBadge = comparePosts.unreadCount > 0;
-          return (
-            <Link
-              key={path}
-              href={compareHref}
-              onClick={() => {
-                if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
-                  mainTabScroll?.saveCurrentScroll(pathname);
-                }
-              }}
-              aria-label={label}
-              aria-current={match(effectivePath) ? 'page' : undefined}
-              style={{
-                position: 'relative',
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0px',
-                background: 'none',
-                border: 'none',
-                padding: NAV_BUTTON_PADDING,
-                cursor: 'pointer',
-                color: match(effectivePath) ? '#1877f2' : NAV_ICON_INACTIVE,
-                touchAction: 'manipulation',
-                minWidth: 0,
-                minHeight: NAV_BUTTON_MIN_HEIGHT,
-                overflow: 'visible',
-                textDecoration: 'none',
-              }}
-            >
-              <span
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: NAV_ICON_SIZE,
-                  height: NAV_ICON_SIZE,
-                  transform: `translateY(${NAV_ICON_SHIFT_UP_PX}px)`,
-                  flexShrink: 0,
-                }}
-              >
-                <CompareNavIcon isActive={match(effectivePath)} />
-                {showCompareBadge && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: -5,
-                      right: -9,
-                      minWidth: 16,
-                      height: 16,
-                      padding: '0 4px',
-                      borderRadius: 999,
-                      background: '#e0245e',
-                      border: '1px solid #ffffff',
-                      boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
-                      color: '#fff',
-                      fontSize: 10,
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: '16px',
-                      zIndex: 2,
-                    }}
-                  >
-                    {comparePosts.unreadCount > 99 ? '99+' : comparePosts.unreadCount}
-                  </span>
-                )}
-              </span>
-            </Link>
-          );
-        }
-
         if (isCreatePostButton) {
           const triggerCreatePost = () => {
             const now = Date.now();
@@ -396,6 +317,7 @@ export const BottomNav = React.memo(function BottomNav() {
 
         const isProfile = path === '/profile';
         const showBadge = path === '/notification' && !!session && unreadCount > 0;
+        const showCompareBadge = path === '/compare' && comparePosts.unreadCount > 0;
         const isNotificationTab = path === '/notification';
 
         const runNav = () => {
@@ -606,6 +528,32 @@ export const BottomNav = React.memo(function BottomNav() {
                     }}
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+                {showCompareBadge && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -9,
+                      minWidth: 16,
+                      height: 16,
+                      padding: '0 4px',
+                      borderRadius: 999,
+                      background: '#e0245e',
+                      border: '1px solid #ffffff',
+                      boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
+                      color: '#fff',
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: '16px',
+                      zIndex: 2,
+                    }}
+                  >
+                    {comparePosts.unreadCount > 99 ? '99+' : comparePosts.unreadCount}
                   </span>
                 )}
               </span>

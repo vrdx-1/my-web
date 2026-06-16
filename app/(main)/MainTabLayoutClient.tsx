@@ -333,14 +333,14 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     if (!prev) return;
 
     const leftHomeToMainTab =
-      prev === '/home' && (resolvedPathname === '/notification' || resolvedPathname === '/profile');
+      prev === '/home' && (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare');
     if (leftHomeToMainTab) {
       mainTabScroll?.saveCurrentScroll('/home');
       return;
     }
 
     const returnedHomeFromMainTab =
-      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile' || prev === '/register');
+      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile' || prev === '/compare' || prev === '/register');
     if (!returnedHomeFromMainTab) return;
 
     // ยิง restore ทันที + retry 2 เฟรม + timeout เพื่อกันจังหวะ iOS/layout race

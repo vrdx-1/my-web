@@ -268,7 +268,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
 
       {showCompareSuccess && (
         <SuccessPopup
-          message="ເພີ່ມເຂົ້າລາຍການປຽບທຽບສຳເລັດ"
+          message="ເພີ່ມສຳເລັດ"
           onClose={() => setShowCompareSuccess(false)}
         />
       )}
