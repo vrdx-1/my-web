@@ -14,18 +14,12 @@ type ProfileRow = {
   id: string;
   username: string | null;
   full_name: string | null;
+  display_name: string | null;
+  name: string | null;
   avatar_url: string | null;
   role: string | null;
   is_sub_account: boolean | null;
   parent_admin_id: string | null;
-};
-
-type ProfileRowFallback = {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-  role: string | null;
 };
 
 type CarRow = {
@@ -113,12 +107,27 @@ function createAdminClient() {
 }
 
 function personLabel(profile: ProfileRow | null, userId: string): string {
-  const fullName = (profile?.full_name || '').trim();
+  const fullName = (profile?.full_name || profile?.display_name || profile?.name || '').trim();
   const username = (profile?.username || '').trim();
   if (fullName && username) return `${fullName} (@${username})`;
   if (fullName) return fullName;
   if (username) return `@${username}`;
   return `User ${userId.slice(0, 8)}`;
+}
+
+function toStringOrNull(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function toBooleanOrNull(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+  }
+  return null;
 }
 
 function isNormalUser(profile: ProfileRow | null): boolean {
@@ -169,33 +178,32 @@ export async function GET(request: NextRequest) {
     let profiles: ProfileRow[] = [];
     let profilesLookupWarning: string | null = null;
     if (userIds.length > 0) {
-      const { data: fullProfiles, error: fullProfilesError } = await admin
+      const { data: rawProfiles, error: profilesError } = await admin
         .from('profiles')
-        .select('id, username, full_name, avatar_url, role, is_sub_account, parent_admin_id')
+        .select('*')
         .in('id', userIds);
 
-      if (!fullProfilesError) {
-        profiles = (fullProfiles as ProfileRow[] | null) || [];
+      if (!profilesError) {
+        profiles = ((rawProfiles as Record<string, unknown>[] | null) || [])
+          .map((row) => {
+            const id = toStringOrNull(row.id);
+            if (!id) return null;
+            return {
+              id,
+              username: toStringOrNull(row.username) || toStringOrNull(row.user_name),
+              full_name: toStringOrNull(row.full_name),
+              display_name: toStringOrNull(row.display_name),
+              name: toStringOrNull(row.name),
+              avatar_url: toStringOrNull(row.avatar_url) || toStringOrNull(row.avatar),
+              role: toStringOrNull(row.role),
+              is_sub_account: toBooleanOrNull(row.is_sub_account),
+              parent_admin_id: toStringOrNull(row.parent_admin_id),
+            };
+          })
+          .filter((row): row is ProfileRow => Boolean(row));
       } else {
-        const { data: fallbackProfiles, error: fallbackProfilesError } = await admin
-          .from('profiles')
-          .select('id, username, full_name, avatar_url, role')
-          .in('id', userIds);
-
-        if (fallbackProfilesError) {
-          profilesLookupWarning = `profiles_query_failed: ${fallbackProfilesError.message || 'unknown error'}`;
-          profiles = [];
-        } else {
-          profiles = ((fallbackProfiles as ProfileRowFallback[] | null) || []).map((row) => ({
-            id: row.id,
-            username: row.username,
-            full_name: row.full_name,
-            avatar_url: row.avatar_url,
-            role: row.role,
-            is_sub_account: null,
-            parent_admin_id: null,
-          }));
-        }
+        profilesLookupWarning = `profiles_query_failed: ${profilesError.message || 'unknown error'}`;
+        profiles = [];
       }
     }
 
