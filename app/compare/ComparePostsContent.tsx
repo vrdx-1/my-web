@@ -17,6 +17,7 @@ import {
 } from '@/utils/exchangeRates';
 import { CompactPhotoGrid } from '@/components/compare/CompactPhotoGrid';
 import { CompareIcon } from '@/components/icons/CompareIcon';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
 
 let ratesCache: ExchangeRates | null = null;
 let ratesLoadedAt = 0;
@@ -126,9 +127,8 @@ function ComparePageHeader({
               width: 40,
               height: 40,
               justifySelf: 'end',
-              borderRadius: 12,
               border: 'none',
-              background: count > 0 ? '#f3f6fb' : 'transparent',
+              background: 'transparent',
               color: '#4b5563',
               display: 'inline-flex',
               alignItems: 'center',
@@ -161,7 +161,6 @@ function ComparePageHeader({
               borderRadius: 16,
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
               overflow: 'hidden',
-              border: '1px solid #e5e7eb',
             }}
           >
             <button
@@ -177,9 +176,9 @@ function ComparePageHeader({
                 background: '#ffffff',
                 textAlign: 'left',
                 padding: '15px 18px',
-                fontSize: 15,
-                fontWeight: 600,
-                color: count === 0 ? '#9ca3af' : '#b91c1c',
+                fontSize: 17,
+                fontWeight: 400,
+                color: count === 0 ? '#9ca3af' : '#4a4d52',
                 cursor: count === 0 ? 'not-allowed' : 'pointer',
               }}
             >
@@ -421,12 +420,11 @@ function ComparePostRow({
               aria-label="ລົບອອກຈາກລາຍການປຽບທຽບ"
               onClick={onRemove}
               style={{
-                width: 30,
-                height: 30,
+                width: 24,
+                height: 24,
                 flexShrink: 0,
-                borderRadius: 999,
                 border: 'none',
-                background: '#f3f4f6',
+                background: 'transparent',
                 color: '#374151',
                 fontSize: 24,
                 lineHeight: 1,
@@ -553,6 +551,7 @@ export function ComparePostsContent() {
   const [posts, setPosts] = React.useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = React.useState(false);
   const [exchangeRates, setExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
+  const [showClearAllSuccess, setShowClearAllSuccess] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -616,13 +615,22 @@ export function ComparePostsContent() {
   }, [loaded, postIds]);
 
   const showEmpty = loaded && !loadingPosts && postIds.length === 0;
+  const showLoadingSkeleton = !loaded || (loadingPosts && posts.length === 0);
 
   return (
     <main style={{ minHeight: '100vh', background: '#f7f9fc' }}>
-      <ComparePageHeader count={count} onClearAll={() => void clearAll()} />
+      <ComparePageHeader
+        count={count}
+        onClearAll={() => {
+          if (count === 0) return;
+          void clearAll().then(() => {
+            setShowClearAllSuccess(true);
+          });
+        }}
+      />
 
       <div style={{ padding: '14px 12px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {!loaded || loadingPosts ? (
+        {showLoadingSkeleton ? (
           Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
@@ -677,17 +685,28 @@ export function ComparePostsContent() {
           </div>
         ) : null}
 
-        {!loadingPosts && posts.map((post) => (
+        {posts.map((post) => (
           <ComparePostRow
             key={post.id}
             post={post}
             exchangeRates={exchangeRates}
             activeProfileId={activeProfileId}
             sessionAccessToken={session?.access_token}
-            onRemove={() => void removePost(String(post.id))}
+            onRemove={() => {
+              const nextPostId = String(post.id);
+              setPosts((prev) => prev.filter((item) => String(item.id) !== nextPostId));
+              void removePost(nextPostId);
+            }}
           />
         ))}
       </div>
+
+      {showClearAllSuccess && (
+        <SuccessPopup
+          message="ລົບລາຍການທັງໝົດສຳເລັດ"
+          onClose={() => setShowClearAllSuccess(false)}
+        />
+      )}
     </main>
   );
 }
