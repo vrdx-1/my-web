@@ -276,14 +276,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           </>
         ) : (
           <>
-            {showCompare && (
-              <div onClick={onCompare} style={menuItemStyleBalanced}>
-                <ActionLabel
-                  label="ເພີ່ມເຂົ້າປຽບທຽບ"
-                  icon={compareIcon}
-                />
-              </div>
-            )}
             <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}
