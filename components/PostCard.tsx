@@ -16,6 +16,7 @@ import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { SuccessPopup } from './modals/SuccessPopup';
 import { ChangePostPriceModal } from './modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { useComparePosts } from '@/contexts/ComparePostsContext';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { mergeHeaders } from '@/utils/activeProfile';
 import { resolveEffectiveWhatsAppPhone } from '@/utils/whatsapp';
@@ -138,6 +139,7 @@ export function PostCard({
 }: PostCardProps) {
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
+  const comparePosts = useComparePosts();
   const isOwner = isPostOwner(post, session, activeProfileId, authUserId, availableProfiles);
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
@@ -727,6 +729,7 @@ export function PostCard({
               activeMenuState={activeMenuState}
               isMenuAnimating={isMenuAnimating}
               menuButtonRefs={menuButtonRefs}
+              onCompare={comparePosts.addPost}
               onSave={onMenuSave || onSave}
               saveLabel={menuSaveLabel}
               onShare={onShare}

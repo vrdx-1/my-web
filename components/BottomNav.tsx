@@ -2,8 +2,10 @@
 
 import React, { useRef, useState, useEffect, Suspense, startTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Bell, House, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { CompareIcon } from '@/components/icons/CompareIcon';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
@@ -52,6 +54,7 @@ const NAV_ICON_INACTIVE = '#2f3238';
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
+  { path: '/compare', label: 'ປຽບທຽບລາຄາ', match: (p: string) => p === '/compare' },
   { path: '/create-post', label: 'ໂພສ', match: (p: string) => p === '/create-post' },
   { path: '/notification', label: 'ການແຈ້ງເຕືອນ', match: (p: string) => p === '/notification' },
   { path: '/profile', label: 'ໂປຣຟາຍ', match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
@@ -185,6 +188,24 @@ function BellNavIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
+function CompareNavIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <CompareIcon
+      size={NAV_ICON_SIZE}
+      color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
+      strokeWidth={isActive ? 2.05 : 1.95}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        margin: 'auto',
+        zIndex: 1,
+        pointerEvents: 'none',
+        transform: 'translateY(0px)',
+      }}
+    />
+  );
+}
+
 export const BottomNav = React.memo(function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
@@ -201,6 +222,7 @@ export const BottomNav = React.memo(function BottomNav() {
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
+  const isCompare = effectivePath === '/compare';
   const isNotificationOrProfile =
     effectivePath === '/notification' || effectivePath === '/profile' || effectivePath.startsWith('/profile/');
 
@@ -238,7 +260,58 @@ export const BottomNav = React.memo(function BottomNav() {
     >
       {routes.map(({ path, label, match }) => {
         const isPostSlot = path === '/create-post';
-        const isCreatePostButton = isPostSlot && (isHome || isNotificationOrProfile);
+        const isCreatePostButton = isPostSlot && (isHome || isCompare || isNotificationOrProfile);
+
+        if (path === '/compare') {
+          const compareHref = session ? '/compare' : REGISTER_PATH;
+          return (
+            <Link
+              key={path}
+              href={compareHref}
+              onClick={() => {
+                if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+                  mainTabScroll?.saveCurrentScroll(pathname);
+                }
+              }}
+              aria-label={label}
+              aria-current={match(effectivePath) ? 'page' : undefined}
+              style={{
+                position: 'relative',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0px',
+                background: 'none',
+                border: 'none',
+                padding: NAV_BUTTON_PADDING,
+                cursor: 'pointer',
+                color: match(effectivePath) ? '#1877f2' : NAV_ICON_INACTIVE,
+                touchAction: 'manipulation',
+                minWidth: 0,
+                minHeight: NAV_BUTTON_MIN_HEIGHT,
+                overflow: 'visible',
+                textDecoration: 'none',
+              }}
+            >
+              <span
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: NAV_ICON_SIZE,
+                  height: NAV_ICON_SIZE,
+                  transform: `translateY(${NAV_ICON_SHIFT_UP_PX}px)`,
+                  flexShrink: 0,
+                }}
+              >
+                <CompareNavIcon isActive={match(effectivePath)} />
+              </span>
+            </Link>
+          );
+        }
 
         if (isCreatePostButton) {
           const triggerCreatePost = () => {
@@ -300,6 +373,21 @@ export const BottomNav = React.memo(function BottomNav() {
           const last = lastNavRef.current;
           if (last && last.path === path && now - last.at < NAV_DEBOUNCE_MS) return;
           lastNavRef.current = { path, at: now };
+
+          if (path === '/compare') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+              mainTabScroll?.saveCurrentScroll(pathname);
+            }
+
+            // Guest กดเปรียบเทียบราคา → ไปหน้าลงทะเบียนทันที (เหมือนปุ่มบันทึกใน PostCard)
+            if (!session) {
+              router.push(REGISTER_PATH, { scroll: false });
+              return;
+            }
+
+            router.push('/compare', { scroll: false });
+            return;
+          }
 
           // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
           if (path === '/notification' && !session) {
@@ -460,6 +548,7 @@ export const BottomNav = React.memo(function BottomNav() {
                 }}
               >
                 {path === '/home' && <HomeNavIcon isActive={isActive} />}
+                {path === '/compare' && <CompareNavIcon isActive={isActive} />}
                 {path === '/notification' && (
                   <BellNavIcon isActive={isActive} />
                 )}

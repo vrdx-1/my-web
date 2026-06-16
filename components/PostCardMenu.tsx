@@ -16,6 +16,7 @@ interface PostCardMenuProps {
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
+  onCompare?: (postId: string) => void | Promise<void>;
   onSave: (postId: string) => void;
   saveLabel?: string;
   onShare: (post: any) => void;
@@ -35,6 +36,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   activeMenuState: _activeMenuState,
   isMenuAnimating: _isMenuAnimating,
   menuButtonRefs,
+  onCompare,
   onSave,
   saveLabel,
   onShare,
@@ -125,6 +127,14 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             onDelete={() => {
               setIsMenuOpen(false);
               onDeletePost(post.id);
+            }}
+            onCompare={() => {
+              setIsMenuOpen(false);
+              if (!session) {
+                router.push(REGISTER_PATH);
+                return;
+              }
+              void onCompare?.(post.id);
             }}
             onSave={() => {
               setIsMenuOpen(false);

@@ -3,6 +3,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { commonStyles } from '@/utils/commonStyles';
+import { CompareIcon } from '@/components/icons/CompareIcon';
 
 const menuItemContentStyle: React.CSSProperties = {
   display: 'flex',
@@ -113,6 +114,8 @@ const repostIcon = (
   </span>
 );
 
+const compareIcon = <CompareIcon size={22} color="currentColor" />;
+
 interface MenuDropdownProps {
   postId: string;
   isOwner: boolean;
@@ -123,6 +126,7 @@ interface MenuDropdownProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onCompare?: () => void;
   onSave?: () => void;
   saveLabel?: string;
   onShare?: () => void;
@@ -148,6 +152,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onClose,
   onEdit,
   onDelete,
+  onCompare,
   onSave,
   saveLabel,
   onShare,
@@ -167,6 +172,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   };
 
   const showBoost = typeof onBoost === 'function';
+  const showCompare = typeof onCompare === 'function';
   const showPrivateNote = typeof onPrivateNote === 'function';
   const showRepost = typeof onRepost === 'function';
   const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
@@ -205,6 +211,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
       >
         {isOwner ? (
           <>
+            {showCompare && (
+              <div onClick={onCompare} style={menuItemStyleBalanced}>
+                <ActionLabel
+                  label="ເພີ່ມເຂົ້າລາຍການປຽບທຽບ"
+                  icon={compareIcon}
+                />
+              </div>
+            )}
             <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}
@@ -262,6 +276,14 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           </>
         ) : (
           <>
+            {showCompare && (
+              <div onClick={onCompare} style={menuItemStyleBalanced}>
+                <ActionLabel
+                  label="ເພີ່ມເຂົ້າລາຍການປຽບທຽບ"
+                  icon={compareIcon}
+                />
+              </div>
+            )}
             <div onClick={onSave} style={menuItemStyleBalanced}>
               <ActionLabel
                 label={resolvedSaveLabel}
