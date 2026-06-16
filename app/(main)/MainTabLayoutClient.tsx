@@ -91,7 +91,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   );
   const resolvedPathname = pathname ?? initialPathname;
   const isMainTabRoute =
-    resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile';
+    resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare';
   const { session, userProfile, activeProfileId } = useSessionAndProfile();
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
     userId: activeProfileId || session?.user?.id,
@@ -371,7 +371,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [session, createPostContext, handleCreatePostClick]);
 
   const setProfileOverlayOpen = useCallback((open: boolean) => {
-    if (open && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile')) {
+    if (open && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare')) {
       mainTabScroll?.saveCurrentScroll(resolvedPathname);
     }
     mainTab?.setProfileOverlayOpen(open);
@@ -382,7 +382,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       router.push(REGISTER_PATH, { scroll: false });
       return;
     }
-    if (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile') {
+    if (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare') {
       mainTabScroll?.saveCurrentScroll(resolvedPathname);
     }
     router.push('/notification', { scroll: false });
@@ -425,10 +425,19 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       if (resolvedPathname === '/home') {
         router.prefetch('/notification');
         router.prefetch('/profile');
-      } else if (resolvedPathname === '/notification' || resolvedPathname?.startsWith('/profile')) {
+        router.prefetch('/compare');
+      } else if (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare') {
         router.prefetch('/home');
-        if (resolvedPathname === '/notification') router.prefetch('/profile');
-        else router.prefetch('/notification');
+        if (resolvedPathname === '/notification') {
+          router.prefetch('/profile');
+          router.prefetch('/compare');
+        } else if (resolvedPathname === '/profile') {
+          router.prefetch('/notification');
+          router.prefetch('/compare');
+        } else {
+          router.prefetch('/notification');
+          router.prefetch('/profile');
+        }
       }
     }, delay);
     return () => clearTimeout(t);

@@ -5,7 +5,7 @@
 import React, { createContext, useCallback, useRef, useContext, useEffect, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-const MAIN_TAB_PATHS = ['/home', '/notification', '/profile'] as const;
+const MAIN_TAB_PATHS = ['/home', '/notification', '/profile', '/compare'] as const;
 type MainTabId = (typeof MAIN_TAB_PATHS)[number];
 
 const STORAGE_KEY_PREFIX = 'mainTabScroll_';
@@ -133,7 +133,9 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   }, [getSavedScroll]);
 
   const activeTabId: MainTabId | null =
-    pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? pathname : null;
+    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare'
+      ? pathname
+      : null;
 
   const prevTabIdRef = useRef<MainTabId | null>(null);
 
@@ -141,7 +143,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const onScroll = () => {
       const p = pathnameRef.current;
-      if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/compare') return;
       lastWindowScrollByTabRef.current[p as MainTabId] = getPageScrollY();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -155,7 +157,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     const current = pathname ?? null;
     prevPathnameForPersistRef.current = current;
     if (prev == null) return;
-    if (prev !== '/home' && prev !== '/notification' && prev !== '/profile') return;
+    if (prev !== '/home' && prev !== '/notification' && prev !== '/profile' && prev !== '/compare') return;
     if (current === prev) return;
     const left = prev as MainTabId;
     const rememberedY = lastWindowScrollByTabRef.current[left];
@@ -174,7 +176,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const persistActiveTabScroll = () => {
       const p = pathnameRef.current;
-      if (p !== '/home' && p !== '/notification' && p !== '/profile') return;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/compare') return;
       const tabId = p as MainTabId;
       const rememberedY = lastWindowScrollByTabRef.current[tabId];
       const liveY = typeof window !== 'undefined' ? getPageScrollY() : undefined;

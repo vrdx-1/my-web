@@ -9,8 +9,9 @@ import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { HomePageContent } from './home/HomePageContent';
+import { ComparePostsContent } from './compare/ComparePostsContent';
 
-const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile'];
+const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile', '/compare'];
 
 function getPageScrollY(): number {
   if (typeof window === 'undefined') return 0;
@@ -64,6 +65,10 @@ function ProfilePanel() {
   return <LazyProfileContent />;
 }
 
+function ComparePanel() {
+  return <ComparePostsContent />;
+}
+
 /** ลงทะเบียน scroll ของหน้าโฮม (window) — ใช้ useLayoutEffect ให้ทันก่อน restore ใน context
  * การคืน scroll หลังไปหน้าอื่นแล้วกลับมาโฮมทำใน HomePageContent หลังฟีด + virtualizer พร้อม (ไม่ restore ที่นี่) */
 function PanelScrollRegister({ tabId, children }: { tabId: MainTabId; children: React.ReactNode }) {
@@ -84,7 +89,9 @@ function PanelScrollRegister({ tabId, children }: { tabId: MainTabId; children: 
 function MainTabPanelsInner() {
   const pathname = usePathname();
   const activeTabId: MainTabId | null =
-    pathname === '/home' || pathname === '/notification' || pathname === '/profile' ? pathname : null;
+    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare'
+      ? pathname
+      : null;
   const [mountedTabs, setMountedTabs] = useState<Partial<Record<MainTabId, true>>>(() => ({
     '/home': true,
   }));
@@ -123,6 +130,11 @@ function MainTabPanelsInner() {
             )}
             {renderTab && tabId === '/notification' && <NotificationPanel />}
             {renderTab && tabId === '/profile' && <ProfilePanel />}
+            {renderTab && tabId === '/compare' && (
+              <PanelScrollRegister tabId={tabId}>
+                <ComparePanel />
+              </PanelScrollRegister>
+            )}
           </div>
         );
       })}

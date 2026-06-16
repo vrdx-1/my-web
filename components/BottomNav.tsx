@@ -327,7 +327,7 @@ export const BottomNav = React.memo(function BottomNav() {
           lastNavRef.current = { path, at: now };
 
           if (path === '/compare') {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
               mainTabScroll?.saveCurrentScroll(pathname);
             }
 
@@ -343,7 +343,7 @@ export const BottomNav = React.memo(function BottomNav() {
 
           // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
           if (path === '/notification' && !session) {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
               mainTabScroll?.saveCurrentScroll(pathname);
               if (pathname === '/home' && typeof window !== 'undefined') {
                 try {
@@ -362,7 +362,7 @@ export const BottomNav = React.memo(function BottomNav() {
             return;
           }
           if (path === '/profile' && !session) {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
               mainTabScroll?.saveCurrentScroll(pathname);
               if (pathname === '/home' && typeof window !== 'undefined') {
                 try {
@@ -395,7 +395,7 @@ export const BottomNav = React.memo(function BottomNav() {
             if (path === '/profile') return;
           }
           // สลับไปอีกแท็บ → บันทึก scroll แล้ว navigate
-          if (pathname === '/home' || pathname === '/notification' || pathname === '/profile') {
+          if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
             mainTabScroll?.saveCurrentScroll(pathname);
           }
           setPendingPath(path);
