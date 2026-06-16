@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { internalServerError } from '@/lib/apiSecurity';
 
 type CompareUsageLogRow = {
   id: string;
@@ -21,6 +20,14 @@ type ProfileRow = {
   parent_admin_id: string | null;
 };
 
+type ProfileRowFallback = {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+};
+
 type CarRow = {
   id: string;
   short_id: string | null;
@@ -29,6 +36,29 @@ type CarRow = {
   price_currency: string | null;
   province: string | null;
 };
+
+type CarRowFallback = {
+  id: string;
+  short_id: string | null;
+  caption: string | null;
+  price: number | null;
+  province: string | null;
+};
+
+function routeError(stage: string, err: unknown) {
+  const anyErr = err as { message?: string; code?: string; details?: string; hint?: string } | null;
+  return NextResponse.json(
+    {
+      error: `Compare usage API failed at ${stage}`,
+      stage,
+      message: anyErr?.message || 'Unknown error',
+      code: anyErr?.code || null,
+      details: anyErr?.details || null,
+      hint: anyErr?.hint || null,
+    },
+    { status: 500 }
+  );
+}
 
 async function ensureAdmin() {
   const cookieStore = await cookies();
@@ -92,7 +122,9 @@ function personLabel(profile: ProfileRow | null, userId: string): string {
 }
 
 function isNormalUser(profile: ProfileRow | null): boolean {
-  if (!profile) return false;
+  // If profile lookup is unavailable in this environment, keep rows visible.
+  // Admin/sub-account actors are already filtered at insert-time.
+  if (!profile) return true;
   if (profile.role === 'admin') return false;
   if (profile.is_sub_account && profile.parent_admin_id) return false;
   return true;
@@ -127,42 +159,83 @@ export async function GET(request: NextRequest) {
 
     const { data: rawLogs, error: logsError } = await logsQuery;
     if (logsError) {
-      return internalServerError('admin/compare-usage logs query failed', logsError);
+      return routeError('logs_query', logsError);
     }
 
     const logs = ((rawLogs as CompareUsageLogRow[] | null) || []).filter(Boolean);
     const userIds = Array.from(new Set(logs.map((row) => row.user_id)));
     const postIds = Array.from(new Set(logs.map((row) => row.post_id).filter((postId): postId is string => !!postId)));
 
-    const [{ data: profiles, error: profilesError }, { data: cars, error: carsError }] = await Promise.all([
-      userIds.length > 0
-        ? admin
-            .from('profiles')
-            .select('id, username, full_name, avatar_url, role, is_sub_account, parent_admin_id')
-            .in('id', userIds)
-        : Promise.resolve({ data: [], error: null }),
-      postIds.length > 0
-        ? admin
-            .from('cars')
-            .select('id, short_id, caption, price, price_currency, province')
-            .in('id', postIds)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
+    let profiles: ProfileRow[] = [];
+    let profilesLookupWarning: string | null = null;
+    if (userIds.length > 0) {
+      const { data: fullProfiles, error: fullProfilesError } = await admin
+        .from('profiles')
+        .select('id, username, full_name, avatar_url, role, is_sub_account, parent_admin_id')
+        .in('id', userIds);
 
-    if (profilesError) {
-      return internalServerError('admin/compare-usage profiles query failed', profilesError);
+      if (!fullProfilesError) {
+        profiles = (fullProfiles as ProfileRow[] | null) || [];
+      } else {
+        const { data: fallbackProfiles, error: fallbackProfilesError } = await admin
+          .from('profiles')
+          .select('id, username, full_name, avatar_url, role')
+          .in('id', userIds);
+
+        if (fallbackProfilesError) {
+          profilesLookupWarning = `profiles_query_failed: ${fallbackProfilesError.message || 'unknown error'}`;
+          profiles = [];
+        } else {
+          profiles = ((fallbackProfiles as ProfileRowFallback[] | null) || []).map((row) => ({
+            id: row.id,
+            username: row.username,
+            full_name: row.full_name,
+            avatar_url: row.avatar_url,
+            role: row.role,
+            is_sub_account: null,
+            parent_admin_id: null,
+          }));
+        }
+      }
     }
-    if (carsError) {
-      return internalServerError('admin/compare-usage cars query failed', carsError);
+
+    let cars: CarRow[] = [];
+    if (postIds.length > 0) {
+      const { data: fullCars, error: fullCarsError } = await admin
+        .from('cars')
+        .select('id, short_id, caption, price, price_currency, province')
+        .in('id', postIds);
+
+      if (!fullCarsError) {
+        cars = (fullCars as CarRow[] | null) || [];
+      } else {
+        const { data: fallbackCars, error: fallbackCarsError } = await admin
+          .from('cars')
+          .select('id, short_id, caption, price, province')
+          .in('id', postIds);
+
+        if (fallbackCarsError) {
+          return routeError('cars_query', fallbackCarsError);
+        }
+
+        cars = ((fallbackCars as CarRowFallback[] | null) || []).map((row) => ({
+          id: row.id,
+          short_id: row.short_id,
+          caption: row.caption,
+          price: row.price,
+          price_currency: null,
+          province: row.province,
+        }));
+      }
     }
 
     const profileMap = new Map<string, ProfileRow>();
-    for (const profile of (profiles as ProfileRow[] | null) || []) {
+    for (const profile of profiles) {
       profileMap.set(profile.id, profile);
     }
 
     const carMap = new Map<string, CarRow>();
-    for (const car of (cars as CarRow[] | null) || []) {
+    for (const car of cars) {
       carMap.set(car.id, car);
     }
 
@@ -238,8 +311,9 @@ export async function GET(request: NextRequest) {
       },
       people,
       recentLogs,
+      warnings: profilesLookupWarning ? [profilesLookupWarning] : [],
     });
   } catch (error) {
-    return internalServerError('admin/compare-usage unexpected error', error);
+    return routeError('unexpected', error);
   }
 }

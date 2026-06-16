@@ -9,6 +9,7 @@ import { MenuDropdown } from './MenuDropdown';
 import { SuccessPopup } from './modals/SuccessPopup';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { mergeHeaders } from '@/utils/activeProfile';
+import { supabase } from '@/lib/supabase';
 
 interface PostCardMenuProps {
   post: any;
@@ -87,12 +88,20 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
 
   const trackCompareUsage = React.useCallback(async () => {
     try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token || '';
+
       const response = await fetch('/api/analytics/compare-click', {
         method: 'POST',
         credentials: 'include',
         keepalive: true,
         headers: mergeHeaders(
-          { 'Content-Type': 'application/json' },
+          {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
           activeProfileId,
         ),
         body: JSON.stringify({ post_id: post.id }),
@@ -114,6 +123,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           reason: payload?.skipped_reason || 'unknown',
           postId: post.id,
           activeProfileId,
+          payload,
         });
         return;
       }
@@ -121,6 +131,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
       console.debug('[compare-usage] inserted', {
         postId: post.id,
         activeProfileId,
+        payload,
       });
     } catch (error) {
       console.warn('[compare-usage] request error', {
