@@ -114,7 +114,7 @@ const repostIcon = (
   </span>
 );
 
-const compareIcon = <CompareIcon size={22} color="currentColor" strokeWidth={1.8} variant="outline" />;
+const compareIcon = <CompareIcon size={22} color="currentColor" strokeWidth={1.7} variant="outline" />;
 
 interface MenuDropdownProps {
   postId: string;

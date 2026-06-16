@@ -191,9 +191,9 @@ function BellNavIcon({ isActive }: { isActive: boolean }) {
 function CompareNavIcon({ isActive }: { isActive: boolean }) {
   return (
     <CompareIcon
-      size={NAV_ICON_SIZE}
+      size={NAV_ICON_SIZE - 1}
       color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
-      strokeWidth={isActive ? 2 : 2}
+      strokeWidth={isActive ? 1.95 : 1.9}
       variant={isActive ? 'filled' : 'outline'}
       style={{
         position: 'absolute',
