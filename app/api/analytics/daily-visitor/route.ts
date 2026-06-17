@@ -31,6 +31,50 @@ function getBangkokDateString(date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+function normalizeSessionKey(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, 160);
+}
+
+function normalizeEntryPath(value: unknown): string {
+  if (typeof value !== 'string') return '/';
+  const trimmed = value.trim();
+  if (!trimmed) return '/';
+  const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return normalized.slice(0, 240);
+}
+
+async function upsertVisitEvent(
+  admin: NonNullable<ReturnType<typeof getServiceRoleClient>>,
+  payload: {
+    visitDate: string;
+    actorType: 'user' | 'guest';
+    actorKey: string;
+    sessionKey: string;
+    entryPath: string;
+    userAgent: string | null;
+    userId?: string | null;
+    guestToken?: string | null;
+  }
+) {
+  return admin.from('visitor_visit_logs').upsert(
+    {
+      visit_date: payload.visitDate,
+      actor_type: payload.actorType,
+      actor_key: payload.actorKey,
+      user_id: payload.userId ?? null,
+      guest_token: payload.guestToken ?? null,
+      session_key: payload.sessionKey,
+      entry_path: payload.entryPath,
+      user_agent: payload.userAgent,
+    },
+    {
+      onConflict: 'visit_date,actor_type,actor_key,session_key',
+      ignoreDuplicates: true,
+    }
+  );
+}
+
 /**
  * POST /api/analytics/daily-visitor
  * บันทึกผู้ใช้งานรายวันแบบ unique
@@ -79,6 +123,11 @@ export async function POST(request: Request) {
   if (!admin) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
   }
+
+  const payload = await request.json().catch(() => ({}));
+  const sessionKey = normalizeSessionKey(payload?.sessionKey);
+  const entryPath = normalizeEntryPath(payload?.path);
+  const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
   if (user?.id) {
     const userId = user.id;
@@ -157,10 +206,25 @@ export async function POST(request: Request) {
       return internalServerError('analytics/daily-visitor user upsert failed', error);
     }
 
+    if (sessionKey) {
+      const visitEventResult = await upsertVisitEvent(admin, {
+        visitDate: today,
+        actorType: 'user',
+        actorKey: profileId,
+        userId: profileId,
+        sessionKey,
+        entryPath,
+        userAgent,
+      });
+
+      if (visitEventResult.error) {
+        return internalServerError('analytics/daily-visitor user event upsert failed', visitEventResult.error);
+      }
+    }
+
     return NextResponse.json({ ok: true, tracked: 'user' });
   }
 
-  const payload = await request.json().catch(() => ({}));
   const rawGuestToken = typeof payload?.guestToken === 'string' ? payload.guestToken : '';
   const guestToken = rawGuestToken.trim();
 
@@ -181,6 +245,22 @@ export async function POST(request: Request) {
 
   if (error) {
     return internalServerError('analytics/daily-visitor guest upsert failed', error);
+  }
+
+  if (sessionKey) {
+    const visitEventResult = await upsertVisitEvent(admin, {
+      visitDate: today,
+      actorType: 'guest',
+      actorKey: guestToken,
+      guestToken,
+      sessionKey,
+      entryPath,
+      userAgent,
+    });
+
+    if (visitEventResult.error) {
+      return internalServerError('analytics/daily-visitor guest event upsert failed', visitEventResult.error);
+    }
   }
 
   return NextResponse.json({ ok: true, tracked: 'guest' });

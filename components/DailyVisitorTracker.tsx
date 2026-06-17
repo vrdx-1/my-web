@@ -7,6 +7,11 @@ import { supabase } from '@/lib/supabase';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 
 const TRACKING_STORAGE_PREFIX = 'analytics:daily-visitor';
+const TRACKING_SESSION_PREFIX = 'analytics:visit-session';
+const TRACKING_SESSION_MARKER_PREFIX = 'analytics:visit-marker';
+const SESSION_IDLE_WINDOW_MS = 30 * 60 * 1000;
+
+type TrackingScope = 'user' | 'guest';
 
 function getBangkokDateString(date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -26,8 +31,57 @@ function getBangkokDateString(date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-function buildStorageKey(date: string, scope: 'user' | 'guest', identifier: string): string {
+function buildStorageKey(date: string, scope: TrackingScope, identifier: string): string {
   return `${TRACKING_STORAGE_PREFIX}:${date}:${scope}:${identifier}`;
+}
+
+function buildSessionStateKey(date: string, scope: TrackingScope, identifier: string): string {
+  return `${TRACKING_SESSION_PREFIX}:${date}:${scope}:${identifier}`;
+}
+
+function buildSessionMarkerKey(date: string, scope: TrackingScope, identifier: string, sessionKey: string): string {
+  return `${TRACKING_SESSION_MARKER_PREFIX}:${date}:${scope}:${identifier}:${sessionKey}`;
+}
+
+function createSessionKey(date: string, scope: TrackingScope, identifier: string): string {
+  const entropy = `${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+  return `${date}:${scope}:${identifier.slice(0, 24)}:${entropy}`.slice(0, 160);
+}
+
+function getVisitSessionKey(date: string, scope: TrackingScope, identifier: string): string {
+  const storageKey = buildSessionStateKey(date, scope, identifier);
+  const now = Date.now();
+
+  try {
+    const raw = window.sessionStorage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { sessionKey?: string; lastActivityAt?: number };
+      if (
+        parsed?.sessionKey &&
+        typeof parsed.lastActivityAt === 'number' &&
+        now - parsed.lastActivityAt < SESSION_IDLE_WINDOW_MS
+      ) {
+        window.sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({ sessionKey: parsed.sessionKey, lastActivityAt: now })
+        );
+        return parsed.sessionKey;
+      }
+    }
+  } catch {
+    // ignore storage failures
+  }
+
+  const sessionKey = createSessionKey(date, scope, identifier);
+  try {
+    window.sessionStorage.setItem(
+      storageKey,
+      JSON.stringify({ sessionKey, lastActivityAt: now })
+    );
+  } catch {
+    // ignore storage failures
+  }
+  return sessionKey;
 }
 
 async function postDailyVisitor(payload: Record<string, unknown>): Promise<boolean> {
@@ -55,31 +109,60 @@ export function DailyVisitorTracker() {
     let idleId: number | null = null;
     const isHome = pathname === '/' || pathname === '/home';
 
-    const trackByKey = async (
+    const trackVisit = async (
       date: string,
-      scope: 'user' | 'guest',
+      scope: TrackingScope,
       identifier: string,
       payload: Record<string, unknown>
     ) => {
       if (!identifier) return;
 
-      const key = buildStorageKey(date, scope, identifier);
-      if (inFlightRef.current.has(key)) return;
+      const dailyKey = buildStorageKey(date, scope, identifier);
+      const sessionKey = getVisitSessionKey(date, scope, identifier);
+      const sessionMarkerKey = buildSessionMarkerKey(date, scope, identifier, sessionKey);
+
+      let needsDailyTrack = true;
+      let needsSessionTrack = true;
 
       try {
-        if (window.localStorage.getItem(key) === '1') return;
+        needsDailyTrack = window.localStorage.getItem(dailyKey) !== '1';
       } catch {
         // ignore storage failures
       }
 
-      inFlightRef.current.add(key);
-      const ok = await postDailyVisitor(payload);
-      inFlightRef.current.delete(key);
+      try {
+        needsSessionTrack = window.sessionStorage.getItem(sessionMarkerKey) !== '1';
+      } catch {
+        // ignore storage failures
+      }
+
+      if (!needsDailyTrack && !needsSessionTrack) return;
+
+      const requestKey = `${sessionMarkerKey}:request`;
+      if (inFlightRef.current.has(requestKey)) return;
+
+      inFlightRef.current.add(requestKey);
+      const ok = await postDailyVisitor({
+        ...payload,
+        sessionKey,
+        path: pathname,
+      });
+      inFlightRef.current.delete(requestKey);
 
       if (cancelled || !ok) return;
 
       try {
-        window.localStorage.setItem(key, '1');
+        if (needsDailyTrack) {
+          window.localStorage.setItem(dailyKey, '1');
+        }
+      } catch {
+        // ignore storage failures
+      }
+
+      try {
+        if (needsSessionTrack) {
+          window.sessionStorage.setItem(sessionMarkerKey, '1');
+        }
       } catch {
         // ignore storage failures
       }
@@ -94,13 +177,13 @@ export function DailyVisitorTracker() {
 
       const userId = session?.user?.id ? String(session.user.id) : '';
       if (userId) {
-        await trackByKey(date, 'user', userId, {});
+        await trackVisit(date, 'user', userId, {});
         return;
       }
 
       const guestToken = String(getPrimaryGuestToken() || '').trim();
       if (!guestToken || guestToken.length > 200) return;
-      await trackByKey(date, 'guest', guestToken, { guestToken });
+      await trackVisit(date, 'guest', guestToken, { guestToken });
     };
 
     const scheduleRun = (sessionOverride?: Session | null) => {
@@ -122,6 +205,20 @@ export function DailyVisitorTracker() {
 
     scheduleRun();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        scheduleRun();
+      }
+    };
+
+    const handleFocus = () => {
+      scheduleRun();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleFocus);
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -141,6 +238,9 @@ export function DailyVisitorTracker() {
         ).cancelIdleCallback(idleId);
         idleId = null;
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleFocus);
       subscription.unsubscribe();
     };
   }, [pathname]);
