@@ -104,6 +104,21 @@ function personLabel(profile: ProfileRow | null, userId: string): string {
   return `User ${userId.slice(0, 8)}`;
 }
 
+function toStringOrNull(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function toBooleanOrNull(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+  }
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const auth = await ensureAdmin();
   if (!auth.ok) {
@@ -146,14 +161,29 @@ export async function GET(request: NextRequest) {
     if (userIds.length > 0) {
       const { data: rawProfiles, error: profilesError } = await admin
         .from('profiles')
-        .select('id, username, full_name, display_name, name, role, is_sub_account, parent_admin_id')
+        .select('*')
         .in('id', userIds);
 
       if (profilesError) {
         return routeError('profiles_query', profilesError);
       }
 
-      profiles = (rawProfiles as ProfileRow[] | null) || [];
+      profiles = ((rawProfiles as Record<string, unknown>[] | null) || [])
+        .map((row) => {
+          const id = toStringOrNull(row.id);
+          if (!id) return null;
+          return {
+            id,
+            username: toStringOrNull(row.username) || toStringOrNull(row.user_name),
+            full_name: toStringOrNull(row.full_name),
+            display_name: toStringOrNull(row.display_name),
+            name: toStringOrNull(row.name),
+            role: toStringOrNull(row.role),
+            is_sub_account: toBooleanOrNull(row.is_sub_account),
+            parent_admin_id: toStringOrNull(row.parent_admin_id),
+          };
+        })
+        .filter((row): row is ProfileRow => Boolean(row));
     }
 
     let cars: CarRow[] = [];
