@@ -1113,7 +1113,7 @@ export function PostCard({
       </div>
 
       {/* Confirm Mark as Sold Modal (same design as logout confirm) - portal to body for full-screen overlay + center of viewport */}
-      {typeof document !== 'undefined' && isOwner && !isSoldPost && showMarkSoldConfirm && createPortal(
+      {typeof document !== 'undefined' && isOwner && showMarkSoldConfirm && createPortal(
         <div
           style={{
             position: 'fixed',
