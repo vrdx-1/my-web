@@ -84,13 +84,20 @@ function getVisitSessionKey(date: string, scope: TrackingScope, identifier: stri
   return sessionKey;
 }
 
-async function postDailyVisitor(payload: Record<string, unknown>): Promise<boolean> {
+async function postDailyVisitor(
+  payload: Record<string, unknown>,
+  accessToken?: string | null
+): Promise<boolean> {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
     const res = await fetch('/api/analytics/daily-visitor', {
       method: 'POST',
       credentials: 'include',
       keepalive: true,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload),
     });
     return res.ok;
@@ -141,12 +148,15 @@ export function DailyVisitorTracker() {
       const requestKey = `${sessionMarkerKey}:request`;
       if (inFlightRef.current.has(requestKey)) return;
 
+      const accessToken = scope === 'user'
+        ? (await supabase.auth.getSession()).data.session?.access_token ?? null
+        : null;
+
       inFlightRef.current.add(requestKey);
-      const ok = await postDailyVisitor({
-        ...payload,
-        sessionKey,
-        path: pathname,
-      });
+      const ok = await postDailyVisitor(
+        { ...payload, sessionKey, path: pathname },
+        accessToken
+      );
       inFlightRef.current.delete(requestKey);
 
       if (cancelled || !ok) return;

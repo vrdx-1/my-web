@@ -114,9 +114,25 @@ export async function POST(request: Request) {
     }
   );
 
-  const {
+  let {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Fallback: ถ้า cookie ไม่มี session (เช่น user ยังใช้ client เก่าที่เก็บแค่ localStorage)
+  // ให้รับ Bearer token จาก Authorization header แล้ว verify กับ Supabase โดยตรง
+  if (!user) {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    if (bearerToken) {
+      const adminForVerify = getServiceRoleClient();
+      if (adminForVerify) {
+        const { data: userData } = await adminForVerify.auth.getUser(bearerToken);
+        if (userData?.user?.id) {
+          user = userData.user;
+        }
+      }
+    }
+  }
 
   const today = getBangkokDateString();
   const admin = getServiceRoleClient();
