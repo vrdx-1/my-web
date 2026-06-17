@@ -165,7 +165,7 @@ export default function Login() {
     try {
       await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${window.location.origin}/` },
       });
     } catch (err) {
       console.error('OAuth login error', err);

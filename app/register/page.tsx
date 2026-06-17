@@ -86,7 +86,7 @@ export default function Register() {
 
   const handleOAuthLogin = async (provider: 'facebook' | 'google') => {
     try {
-      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback'
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}${PROFILE_PATH}` : PROFILE_PATH
       await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo },
