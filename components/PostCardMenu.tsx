@@ -142,6 +142,60 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
     }
   }, [activeProfileId, post.id]);
 
+  const trackShareUsage = React.useCallback(async () => {
+    try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token || '';
+
+      const response = await fetch('/api/analytics/share-click', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: true,
+        headers: mergeHeaders(
+          {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          activeProfileId,
+        ),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        console.warn('[share-usage] request failed', {
+          status: response.status,
+          postId: post.id,
+          activeProfileId,
+          payload,
+        });
+        return;
+      }
+
+      const payload = await response.json().catch(() => null);
+      if (payload?.skipped) {
+        console.debug('[share-usage] skipped', {
+          reason: payload?.skipped || 'unknown',
+          postId: post.id,
+          activeProfileId,
+          payload,
+        });
+        return;
+      }
+
+      console.debug('[share-usage] inserted', {
+        postId: post.id,
+        activeProfileId,
+      });
+    } catch (error) {
+      console.warn('[share-usage] request error', {
+        postId: post.id,
+        activeProfileId,
+        error,
+      });
+    }
+  }, [activeProfileId, post.id]);
+
   return (
     <div style={{ position: 'relative' }}>
       <button 
@@ -217,6 +271,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
             saveLabel={saveLabel}
             onShare={() => {
               setIsMenuOpen(false);
+              void trackShareUsage();
               onShare(post);
             }}
             onBoost={

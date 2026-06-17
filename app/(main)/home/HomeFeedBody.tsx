@@ -81,6 +81,12 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
     hideBoost = false,
   } = postFeedProps;
 
+  // Keep the first SSR/CSR render identical to avoid hydration drift from client-only feed state.
+  const [hasHydrated, setHasHydrated] = React.useState(false);
+  React.useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
   // เพิ่ม state สำหรับ skeleton transition (กันจอขาวระหว่างเปลี่ยน tab หรือโหลดใหม่)
   const [showingSkeleton, setShowingSkeleton] = React.useState(showSkeleton);
   React.useEffect(() => {
@@ -225,6 +231,7 @@ export function HomeFeedBody({ showSkeleton, forceSkeletonWhenEmpty = false, may
 
   // เงื่อนไข skeleton ที่ครอบคลุม: loading, empty, กำลังเปลี่ยน tab, หรือ transition
   const effectivelyShowSkeleton =
+    !hasHydrated ||
     showingSkeleton ||
     (forceSkeletonWhenEmpty && posts.length === 0) ||
     (isSearchLoading && posts.length === 0);

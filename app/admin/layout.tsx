@@ -120,6 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Exchange Rates', path: '/admin/exchange-rates' },
     { name: 'Download Clicks', path: '/admin/download-clicks' },
     { name: 'Exchange Rate Clicks', path: '/admin/exchange-rate-clicks' },
+    { name: 'Share Clicks', path: '/admin/share-clicks' },
     { name: 'WhatsApp Clicks', path: '/admin/whatsapp-clicks' },
     { name: 'WhatsApp Insights', path: '/admin/whatsapp-clicks-insights' },
     { name: 'Compare Usage', path: '/admin/compare-usage' },
