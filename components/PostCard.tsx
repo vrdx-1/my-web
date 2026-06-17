@@ -1143,6 +1143,7 @@ export function PostCard({
               <button
                 type="button"
                 onClick={() => setShowMarkSoldConfirm(false)}
+                disabled={isTogglingStatus}
                 style={{
                   flex: 1,
                   padding: '10px 16px',
@@ -1152,7 +1153,8 @@ export function PostCard({
                   fontSize: '15px',
                   fontWeight: 'bold',
                   color: '#1c1e21',
-                  cursor: 'pointer',
+                  cursor: isTogglingStatus ? 'not-allowed' : 'pointer',
+                  opacity: isTogglingStatus ? 0.6 : 1,
                 }}
               >
                 ຍັງບໍ່ທັນຂາຍ
@@ -1160,10 +1162,11 @@ export function PostCard({
               <button
                 type="button"
                 onClick={async () => {
+                  if (isTogglingStatus) return;
                   setIsTogglingStatus(true);
-                  setShowMarkSoldConfirm(false);
                   try {
                     await onTogglePostStatus(post.id, post.status);
+                    setShowMarkSoldConfirm(false);
                   } finally {
                     setIsTogglingStatus(false);
                   }
