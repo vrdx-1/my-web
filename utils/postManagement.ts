@@ -18,6 +18,68 @@ function getStoredActiveProfileId(authUserId: string | null | undefined): string
   }
 }
 
+async function trackRepostUsage(postId: string): Promise<void> {
+  try {
+    const sessionResult = await supabase.auth.getSession();
+    let session = sessionResult.data.session;
+    let accessToken = session?.access_token ?? '';
+
+    if (!accessToken) {
+      const refreshed = await supabase.auth.refreshSession();
+      session = refreshed.data.session ?? session;
+      accessToken = session?.access_token ?? '';
+    }
+
+    const authUserId = session?.user?.id ?? null;
+    const activeProfileId = getStoredActiveProfileId(authUserId) || authUserId;
+
+    const response = await fetch('/api/analytics/repost-click', {
+      method: 'POST',
+      credentials: 'include',
+      keepalive: true,
+      headers: mergeHeaders(
+        {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        activeProfileId,
+      ),
+      body: JSON.stringify({ post_id: postId }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      console.warn('[repost-usage] request failed', {
+        status: response.status,
+        postId,
+        activeProfileId,
+        payload,
+      });
+      return;
+    }
+
+    const payload = await response.json().catch(() => null);
+    if (payload?.skipped) {
+      console.debug('[repost-usage] skipped', {
+        reason: payload?.skipped_reason || 'unknown',
+        postId,
+        activeProfileId,
+      });
+      return;
+    }
+
+    console.debug('[repost-usage] inserted', {
+      postId,
+      activeProfileId,
+    });
+  } catch (error) {
+    console.warn('[repost-usage] request error', {
+      postId,
+      error,
+    });
+  }
+}
+
 /**
  * Toggle post status between 'recommend' and 'sold'
  * เมื่อผู้ขายย้ายไป "ຂາຍແລ້ວ" ระบบปิด boost อัตโนมัติ
@@ -227,6 +289,8 @@ export async function repostPost(
     }
     throw error;
   }
+
+  await trackRepostUsage(postId);
 
   invalidateFeedCacheClient();
 }
