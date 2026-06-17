@@ -31,15 +31,32 @@ const geistMono = Geist_Mono({
 
 const APP_NAME = "Jutpai";
 const APP_DESCRIPTION = "ຕະຫຼາດລົດມືສອງປະເທດລາວ";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jutpai.com";
 
 export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: APP_NAME,
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: APP_NAME,
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
