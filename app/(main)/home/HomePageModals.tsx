@@ -55,6 +55,7 @@ interface PostFeedHandlersLike {
   showReportSuccess: boolean;
   setShowReportSuccess?: (visible: boolean) => void;
   showDeleteConfirm: boolean;
+  isDeletingPost: boolean;
   handleConfirmDelete: () => void;
   handleCancelDelete: () => void;
   showDeleteSuccess: boolean;
@@ -181,6 +182,7 @@ function HomePageModalsBase(props: HomePageModalsProps) {
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
           onCancel={handlers.handleCancelDelete}
+          loading={handlers.isDeletingPost}
         />
       )}
       {!isSoldTabNoSearch && handlers.showDeleteSuccess && (

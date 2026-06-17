@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { MenuDropdown } from './MenuDropdown';
 import { SuccessPopup } from './modals/SuccessPopup';
+import { ButtonSpinner } from './LoadingSpinner';
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { mergeHeaders } from '@/utils/activeProfile';
 import { supabase } from '@/lib/supabase';
@@ -374,10 +375,17 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                   fontWeight: 'bold',
                   color: '#fff',
                   cursor: isReposting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   opacity: isReposting ? 0.6 : 1,
                 }}
               >
-                {isReposting ? 'ກຳລັງໂພສໃໝ່...' : 'ໂພສໃໝ່'}
+                {isReposting ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ButtonSpinner />
+                  </span>
+                ) : 'ໂພສໃໝ່'}
               </button>
             </div>
           </div>

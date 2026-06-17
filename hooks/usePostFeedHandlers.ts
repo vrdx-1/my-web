@@ -75,6 +75,7 @@ export function usePostFeedHandlers({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
 
   const handleDeletePost = useCallback(
     (postId: string) => {
@@ -87,7 +88,8 @@ export function usePostFeedHandlers({
 
   const handleConfirmDelete = useCallback(
     async () => {
-      if (!postToDelete) return;
+      if (!postToDelete || isDeletingPost) return;
+      setIsDeletingPost(true);
       try {
         await deletePost(postToDelete, setPosts);
         setShowDeleteConfirm(false);
@@ -96,15 +98,18 @@ export function usePostFeedHandlers({
       } catch (error: any) {
         const message = String(error?.message || '').trim();
         window.alert(message || 'ລົບໂພສບໍ່ສຳເລັດ');
+      } finally {
+        setIsDeletingPost(false);
       }
     },
-    [postToDelete, setPosts]
+    [postToDelete, isDeletingPost, setPosts]
   );
 
   const handleCancelDelete = useCallback(() => {
+    if (isDeletingPost) return;
     setShowDeleteConfirm(false);
     setPostToDelete(null);
-  }, []);
+  }, [isDeletingPost]);
 
   const handleReport = useCallback(
     (post: any) => {
@@ -169,6 +174,7 @@ export function usePostFeedHandlers({
       handleShare,
       handleRepost,
       showDeleteConfirm,
+      isDeletingPost,
       handleConfirmDelete,
       handleCancelDelete,
       showDeleteSuccess,
@@ -187,6 +193,7 @@ export function usePostFeedHandlers({
       handleShare,
       handleRepost,
       showDeleteConfirm,
+      isDeletingPost,
       handleConfirmDelete,
       handleCancelDelete,
       showDeleteSuccess,

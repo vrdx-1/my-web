@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useEffect } from 'react';
+import { ButtonSpinner } from '@/components/LoadingSpinner';
 
 interface DeleteConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
-export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfirm, onCancel }) => {
+export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfirm, onCancel, loading = false }) => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const prevOverflow = document.body.style.overflow;
@@ -49,6 +51,7 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
           <button
             type="button"
             onClick={onCancel}
+            disabled={loading}
             style={{
               flex: 1,
               padding: '10px 16px',
@@ -58,7 +61,8 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
               fontSize: '15px',
               fontWeight: 'bold',
               color: '#1c1e21',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
             }}
           >
             ຍົກເລີກ
@@ -66,6 +70,7 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
           <button
             type="button"
             onClick={onConfirm}
+            disabled={loading}
             style={{
               flex: 1,
               padding: '10px 16px',
@@ -75,10 +80,17 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
               fontSize: '15px',
               fontWeight: 'bold',
               color: '#fff',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            ລົບ
+            {loading ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ButtonSpinner />
+              </span>
+            ) : 'ລົບ'}
           </button>
         </div>
       </div>

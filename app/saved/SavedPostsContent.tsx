@@ -471,6 +471,7 @@ export function SavedPostsContent() {
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
           onCancel={handlers.handleCancelDelete}
+          loading={handlers.isDeletingPost}
         />
       )}
 

@@ -155,6 +155,7 @@ function SoldTabFeedWrapperBase({
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
           onCancel={handlers.handleCancelDelete}
+          loading={handlers.isDeletingPost}
         />
       )}
       {handlers.showDeleteSuccess && (

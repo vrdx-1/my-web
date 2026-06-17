@@ -680,6 +680,7 @@ export function MyPostsContent() {
         <DeleteConfirmModal
           onConfirm={handlers.handleConfirmDelete}
           onCancel={handlers.handleCancelDelete}
+          loading={handlers.isDeletingPost}
         />
       )}
 

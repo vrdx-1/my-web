@@ -207,7 +207,11 @@ export default function NotificationDetail() {
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
       )}
       {handlers.showDeleteConfirm && (
-        <DeleteConfirmModal onConfirm={handlers.handleConfirmDelete} onCancel={handlers.handleCancelDelete} />
+        <DeleteConfirmModal
+          onConfirm={handlers.handleConfirmDelete}
+          onCancel={handlers.handleCancelDelete}
+          loading={handlers.isDeletingPost}
+        />
       )}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
