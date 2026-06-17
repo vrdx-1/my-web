@@ -1,37 +1,36 @@
 import type { MetadataRoute } from "next";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jutpai.com";
+import { SITE_URL } from "@/lib/siteConfig";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   return [
     {
-      url: `${siteUrl}/`,
+      url: `${SITE_URL}/`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: `${siteUrl}/terms`,
+      url: `${SITE_URL}/terms`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: `${siteUrl}/ai-policy`,
+      url: `${SITE_URL}/ai-policy`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: `${siteUrl}/home`,
+      url: `${SITE_URL}/home`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/search`,
+      url: `${SITE_URL}/search`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,

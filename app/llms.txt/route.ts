@@ -1,29 +1,28 @@
 import { NextResponse } from "next/server";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jutpai.com";
+import { SITE_URL } from "@/lib/siteConfig";
 
 export async function GET() {
   const body = [
     "# Jutpai LLM Access Notes",
     "",
-    `site: ${siteUrl}`,
+    `site: ${SITE_URL}`,
     "owner: Jutpai",
     "",
     "## Preferred Public Pages",
-    `${siteUrl}/`,
-    `${siteUrl}/post/{id}`,
-    `${siteUrl}/terms`,
-    `${siteUrl}/ai-policy`,
+    `${SITE_URL}/`,
+    `${SITE_URL}/post/{id}`,
+    `${SITE_URL}/terms`,
+    `${SITE_URL}/ai-policy`,
     "",
     "## Restricted Areas",
-    `${siteUrl}/admin`,
-    `${siteUrl}/api`,
-    `${siteUrl}/login`,
-    `${siteUrl}/register`,
-    `${siteUrl}/my-posts`,
-    `${siteUrl}/saved`,
-    `${siteUrl}/create-post`,
-    `${siteUrl}/edit-post/{id}`,
+    `${SITE_URL}/admin`,
+    `${SITE_URL}/api`,
+    `${SITE_URL}/login`,
+    `${SITE_URL}/register`,
+    `${SITE_URL}/my-posts`,
+    `${SITE_URL}/saved`,
+    `${SITE_URL}/create-post`,
+    `${SITE_URL}/edit-post/{id}`,
     "",
     "## Policy",
     "Use public information for discovery and summarization.",

@@ -18,6 +18,7 @@ import { CreatePostProvider } from "@/contexts/CreatePostContext";
 import { NotificationRefreshProvider } from "@/contexts/NotificationRefreshContext";
 import { HomeRefreshProvider } from "@/contexts/HomeRefreshContext";
 import { ComparePostsProvider } from "@/contexts/ComparePostsContext";
+import { SITE_URL } from "@/lib/siteConfig";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,6 @@ const geistMono = Geist_Mono({
 
 const APP_NAME = "Jutpai";
 const APP_DESCRIPTION = "ຕະຫຼາດລົດມືສອງປະເທດລາວ";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jutpai.com";
 
 export const viewport: Viewport = {
   themeColor: "#000000",
