@@ -62,17 +62,31 @@ const MONTHS_LAO = [
 ];
 
 function formatIsoDateForLocal(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value || date.toISOString().slice(0, 4);
+  const month = parts.find((part) => part.type === 'month')?.value || date.toISOString().slice(5, 7);
+  const day = parts.find((part) => part.type === 'day')?.value || date.toISOString().slice(8, 10);
   return `${year}-${month}-${day}`;
 }
 
+function parseIsoDateParts(dateStr: string) {
+  const [yearStr, monthStr, dayStr] = dateStr.split('-');
+  const year = Number(yearStr || 0);
+  const month = Number(monthStr || 1);
+  const day = Number(dayStr || 1);
+  return { year, month, day };
+}
+
 export default function AdminVisitorPage() {
-  const now = new Date();
-  const todayIso = formatIsoDateForLocal(now);
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const todayIso = formatIsoDateForLocal();
+  const todayParts = parseIsoDateParts(todayIso);
+  const [selectedMonth, setSelectedMonth] = useState(Math.max(0, todayParts.month - 1));
+  const [selectedYear, setSelectedYear] = useState(todayParts.year);
   const [selectedDate, setSelectedDate] = useState(todayIso);
   const [isMonthOpen, setIsMonthOpen] = useState(false);
   const [isYearOpen, setIsYearOpen] = useState(false);
@@ -82,8 +96,10 @@ export default function AdminVisitorPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detail, setDetail] = useState<VisitorDetail | null>(null);
+  const [selectedPersonKey, setSelectedPersonKey] = useState('');
+  const [showPeopleLeaderboard, setShowPeopleLeaderboard] = useState(true);
   const [summary, setSummary] = useState<VisitorSummary>({
-    year: now.getFullYear(),
+    year: todayParts.year,
     totalUniqueUsersInRange: 0,
     totalUniqueGuestsInRange: 0,
     totalUniqueVisitorsInRange: 0,
@@ -96,7 +112,7 @@ export default function AdminVisitorPage() {
   });
 
   // ย้อนหลัง 10 ปีถึงปีปัจจุบัน
-  const years = Array.from({ length: 11 }, (_, i) => now.getFullYear() - i);
+  const years = Array.from({ length: 11 }, (_, i) => todayParts.year - i);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +158,7 @@ export default function AdminVisitorPage() {
     const monthPrefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
     if (selectedDate.startsWith(monthPrefix)) return;
 
-    const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth();
+    const isCurrentMonth = selectedYear === todayParts.year && selectedMonth === todayParts.month - 1;
     if (isCurrentMonth) {
       setSelectedDate(todayIso);
       return;
@@ -158,7 +174,7 @@ export default function AdminVisitorPage() {
     }
 
     setSelectedDate(`${monthPrefix}-01`);
-  }, [allRows, now, selectedDate, selectedMonth, selectedYear, todayIso]);
+  }, [allRows, selectedDate, selectedMonth, selectedYear, todayIso, todayParts.month, todayParts.year]);
 
   useEffect(() => {
     let cancelled = false;
@@ -220,11 +236,12 @@ export default function AdminVisitorPage() {
   }, [monthRows]);
 
   const formatDisplayDate = (dateStr: string) => {
-    const date = new Date(`${dateStr}T00:00:00Z`);
-    return date.toLocaleDateString('th-TH', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      weekday: 'short', timeZone: 'UTC',
-    });
+    const { year, month, day } = parseIsoDateParts(dateStr);
+    const date = new Date(Date.UTC(year, Math.max(0, month - 1), day));
+    const weekdays = ['ອາ', 'ຈ', 'ອັງ', 'ພຸດ', 'ພະຫັດ', 'ສຸກ', 'ເສົາ'];
+    const weekday = weekdays[date.getUTCDay()] || '';
+    const buddhistYear = year + 543;
+    return `${weekday} ${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${buddhistYear}`;
   };
 
   const formatBangkokTime = (dateTimeStr: string) => {
@@ -236,7 +253,44 @@ export default function AdminVisitorPage() {
     });
   };
 
+  const formatBangkokDateTime = (dateTimeStr: string) => {
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString('th-TH', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Bangkok',
+    });
+  };
+
   const detailDateLabel = selectedDate ? formatDisplayDate(selectedDate) : '-';
+
+  const people = detail?.people ?? [];
+
+  useEffect(() => {
+    if (!selectedPersonKey) return;
+    if (!people.some((person) => `${person.actor_type}:${person.actor_key}` === selectedPersonKey)) {
+      setSelectedPersonKey('');
+    }
+  }, [people, selectedPersonKey]);
+
+  const selectedPerson = useMemo(
+    () => people.find((person) => `${person.actor_type}:${person.actor_key}` === selectedPersonKey) ?? null,
+    [people, selectedPersonKey]
+  );
+
+  const personVisitRows = useMemo(() => {
+    if (!selectedPerson) return [];
+    return [...selectedPerson.visits]
+      .sort((a, b) => b.visited_at.localeCompare(a.visited_at))
+      .map((visit, index) => ({
+        rowId: `${selectedPerson.actor_key}-${visit.visited_at}-${index}`,
+        visited_at: visit.visited_at,
+        entry_path: visit.entry_path,
+      }));
+  }, [selectedPerson]);
 
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', background: '#ffffff', minHeight: '100vh', fontFamily: LAO_FONT, paddingBottom: '40px' }}>
@@ -331,7 +385,7 @@ export default function AdminVisitorPage() {
                   <th style={{ padding: '10px 0', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Unique User</th>
                   <th style={{ padding: '10px 0', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Unique Guest</th>
                   <th style={{ padding: '10px 0', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Unique ລວມ</th>
-                  <th style={{ padding: '10px 0', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Visits</th>
+                  <th style={{ padding: '10px 0', paddingRight: '24px', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Visits</th>
                 </tr>
               </thead>
               <tbody>
@@ -358,7 +412,7 @@ export default function AdminVisitorPage() {
                       <td style={{ padding: '18px 0', textAlign: 'right', fontSize: '17px', color: users > 0 ? '#000' : '#bbb' }}>{users.toLocaleString()}</td>
                       <td style={{ padding: '18px 0', textAlign: 'right', fontSize: '17px', color: guests > 0 ? '#000' : '#bbb' }}>{guests.toLocaleString()}</td>
                       <td style={{ padding: '18px 0', textAlign: 'right', fontSize: '17px', fontWeight: total > 0 ? 700 : 400, color: total > 0 ? '#000' : '#bbb' }}>{total.toLocaleString()}</td>
-                      <td style={{ padding: '18px 0', textAlign: 'right', fontSize: '17px', color: visitEventsTotal > 0 ? '#0f172a' : '#bbb' }}>
+                      <td style={{ padding: '18px 0', paddingRight: '24px', textAlign: 'right', fontSize: '17px', color: visitEventsTotal > 0 ? '#0f172a' : '#bbb' }}>
                         <div style={{ fontWeight: visitEventsTotal > 0 ? 700 : 400 }}>{visitEventsTotal.toLocaleString()}</div>
                         <div style={{ fontSize: '12px', color: '#94a3b8' }}>
                           u {row?.visit_events_users ?? 0} / g {row?.visit_events_guests ?? 0}
@@ -384,6 +438,78 @@ export default function AdminVisitorPage() {
         <p style={{ fontSize: '15px', fontWeight: 600, color: '#333', margin: '0 0 12px' }}>
           ປະຫວັດລາຍບຸກຄົນ — {detailDateLabel}
         </p>
+        <div
+          style={{
+            marginBottom: 12,
+            padding: '10px 14px',
+            borderRadius: 12,
+            background: '#ffffffd9',
+            border: '1px solid #e2e8f0',
+            color: '#0f172a',
+            fontSize: 14,
+          }}
+        >
+          {selectedPerson
+            ? `กำลังดูรายบุคคล: ${selectedPerson.display_name}`
+            : 'กำลังดูภาพรวมทั้งวัน (Guest + User)'}
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+          <select
+            value={selectedPersonKey}
+            onChange={(e) => setSelectedPersonKey(e.target.value)}
+            style={{
+              height: 40,
+              borderRadius: 10,
+              border: '1px solid #cbd5e1',
+              background: '#fff',
+              padding: '0 12px',
+              minWidth: 280,
+              color: '#0f172a',
+              fontWeight: 500,
+            }}
+          >
+            <option value="">ທຸກຄົນ (Guest + User)</option>
+            {people.map((person) => {
+              const key = `${person.actor_type}:${person.actor_key}`;
+              return (
+                <option key={key} value={key}>
+                  {person.display_name} ({person.visit_count.toLocaleString()})
+                </option>
+              );
+            })}
+          </select>
+
+          <button
+            onClick={() => setShowPeopleLeaderboard(true)}
+            style={{
+              padding: '10px 20px',
+              background: showPeopleLeaderboard ? 'linear-gradient(135deg,#1877f2,#10b981)' : '#e2e8f0',
+              color: showPeopleLeaderboard ? '#fff' : '#334155',
+              border: 'none',
+              borderRadius: '999px',
+              cursor: 'pointer',
+              fontWeight: showPeopleLeaderboard ? 700 : 500,
+            }}
+          >
+            Top ບຸກຄົນ
+          </button>
+          <button
+            onClick={() => setShowPeopleLeaderboard(false)}
+            style={{
+              padding: '10px 20px',
+              background: !showPeopleLeaderboard ? 'linear-gradient(135deg,#1877f2,#10b981)' : '#e2e8f0',
+              color: !showPeopleLeaderboard ? '#fff' : '#334155',
+              border: 'none',
+              borderRadius: '999px',
+              cursor: 'pointer',
+              fontWeight: !showPeopleLeaderboard ? 700 : 500,
+            }}
+          >
+            ປະຫວັດລາຍຄັ້ງ
+          </button>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px' }}>
             <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Unique People</div>
@@ -407,58 +533,72 @@ export default function AdminVisitorPage() {
           <div style={{ color: '#dc2626', padding: '20px 0', fontWeight: 500 }}>{detailError}</div>
         ) : !detail || detail.people.length === 0 ? (
           <div style={{ padding: '20px 0', color: '#64748b' }}>ບໍ່ມີປະຫວັດສຳລັບວັນນີ້</div>
-        ) : (
+        ) : showPeopleLeaderboard ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', minWidth: '920px', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #f0f0f0' }}>
+                  <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ອັນດັບ</th>
                   <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ບຸກຄົນ</th>
                   <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Type</th>
-                  <th style={{ padding: '10px 0', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Visits</th>
-                  <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>First</th>
-                  <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Last</th>
-                  <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>History</th>
+                  <th style={{ padding: '10px 0', paddingRight: '28px', textAlign: 'right', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Visits</th>
+                  <th style={{ padding: '10px 0', paddingLeft: '8px', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Last Active</th>
+                  <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ID</th>
                 </tr>
               </thead>
               <tbody>
-                {detail.people.map((person) => (
-                  <tr key={`${person.actor_type}:${person.actor_key}`} style={{ borderBottom: '1px solid #f5f5f5', verticalAlign: 'top' }}>
-                    <td style={{ padding: '16px 0', color: '#111827' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700 }}>{person.display_name}</div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                        {person.actor_type === 'user' ? person.user_id : person.guest_token}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 0', color: person.actor_type === 'user' ? '#1d4ed8' : '#c2410c', fontWeight: 600 }}>
-                      {person.actor_type}
-                    </td>
-                    <td style={{ padding: '16px 0', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{person.visit_count.toLocaleString()}</td>
-                    <td style={{ padding: '16px 0', color: '#334155' }}>{formatBangkokTime(person.first_visit_at)}</td>
-                    <td style={{ padding: '16px 0', color: '#334155' }}>{formatBangkokTime(person.last_visit_at)}</td>
-                    <td style={{ padding: '16px 0' }}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {person.visits.map((visit, index) => (
-                          <div
-                            key={`${person.actor_key}-${visit.visited_at}-${index}`}
-                            style={{
-                              borderRadius: '999px',
-                              background: '#f8fafc',
-                              border: '1px solid #e2e8f0',
-                              padding: '6px 10px',
-                              fontSize: '12px',
-                              color: '#334155',
-                            }}
-                          >
-                            {formatBangkokTime(visit.visited_at)} {visit.entry_path}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {people.map((person, index) => {
+                  const key = `${person.actor_type}:${person.actor_key}`;
+                  const isSelected = selectedPersonKey === key;
+                  return (
+                    <tr
+                      key={key}
+                      onClick={() => setSelectedPersonKey(key)}
+                      style={{
+                        borderBottom: '1px solid #f5f5f5',
+                        background: isSelected ? '#f8fafc' : '#ffffff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <td style={{ padding: '14px 0', color: '#334155', fontWeight: 700 }}>#{index + 1}</td>
+                      <td style={{ padding: '14px 0', color: '#111827', fontWeight: 700 }}>{person.display_name}</td>
+                      <td style={{ padding: '14px 0', color: person.actor_type === 'user' ? '#1d4ed8' : '#c2410c', fontWeight: 600 }}>{person.actor_type}</td>
+                      <td style={{ padding: '14px 0', paddingRight: '28px', textAlign: 'right', color: '#0f172a', fontWeight: 700 }}>{person.visit_count.toLocaleString()}</td>
+                      <td style={{ padding: '14px 0', paddingLeft: '8px', color: '#334155' }}>{formatBangkokDateTime(person.last_visit_at)}</td>
+                      <td style={{ padding: '14px 0', color: '#64748b', fontSize: 12 }}>{person.actor_type === 'user' ? person.user_id : person.guest_token}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+        ) : (
+          selectedPerson ? (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: '860px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f0f0f0' }}>
+                    <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ລຳດັບ</th>
+                    <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ວັນເວລາ</th>
+                    <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>ເສັ້ນທາງ</th>
+                    <th style={{ padding: '10px 0', textAlign: 'left', fontSize: '14px', color: '#6b7280', fontWeight: 600 }}>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {personVisitRows.map((row, index) => (
+                    <tr key={row.rowId} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                      <td style={{ padding: '14px 0', color: '#334155', fontWeight: 700 }}>{index + 1}</td>
+                      <td style={{ padding: '14px 0', color: '#0f172a' }}>{formatBangkokDateTime(row.visited_at)}</td>
+                      <td style={{ padding: '14px 0', color: '#1e40af', fontWeight: 600 }}>{row.entry_path}</td>
+                      <td style={{ padding: '14px 0', color: '#64748b' }}>{formatBangkokTime(row.visited_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ padding: '12px 0', color: '#64748b' }}>เลือกบุคคลจาก dropdown เพื่อดูประวัติรายครั้งแบบอ่านง่าย</div>
+          )
         )}
       </div>
 
