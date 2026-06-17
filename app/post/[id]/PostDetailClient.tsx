@@ -52,6 +52,8 @@ export default function PostDetail() {
     handlers,
     toggleSave,
     handleTogglePostStatus,
+    showToggleStatusSuccess,
+    setShowToggleStatusSuccess,
   } = usePostDetail(id as string | undefined);
 
   return (
@@ -188,6 +190,9 @@ export default function PostDetail() {
       )}
       {handlers.showRepostSuccess && (
         <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
+      )}
+      {showToggleStatusSuccess && (
+        <SuccessPopup message="ສຳເລັດ" onClose={() => setShowToggleStatusSuccess(false)} />
       )}
     </>
   );

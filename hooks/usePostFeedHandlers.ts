@@ -64,14 +64,6 @@ export function usePostFeedHandlers({
     [viewingPostHook, setPosts, setHeaderVisible, headerScroll]
   );
 
-  const handleTogglePostStatus = useCallback(
-    (postId: string, currentStatus: string) => {
-      const postToRestore = postsRef.current.find((p) => p.id === postId);
-      return togglePostStatus(postId, currentStatus, setPosts, postToRestore);
-    },
-    [setPosts]
-  );
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
@@ -128,6 +120,7 @@ export function usePostFeedHandlers({
 
   const [showReportSuccess, setShowReportSuccess] = useState(false);
   const [showRepostSuccess, setShowRepostSuccess] = useState(false);
+  const [showToggleStatusSuccess, setShowToggleStatusSuccess] = useState(false);
 
   const handleSubmitReport = useCallback(async () => {
     if (!reportingPost || !setReportingPost || !setReportReason || !setIsSubmittingReport) return;
@@ -149,6 +142,17 @@ export function usePostFeedHandlers({
       await sharePost(post, session, setPosts);
     },
     [session, setPosts]
+  );
+
+  const handleTogglePostStatus = useCallback(
+    async (postId: string, currentStatus: string) => {
+      const postToRestore = postsRef.current.find((p) => p.id === postId);
+      await togglePostStatus(postId, currentStatus, setPosts, postToRestore);
+      if (currentStatus === 'recommend') {
+        setShowToggleStatusSuccess(true);
+      }
+    },
+    [setPosts]
   );
 
   const handleRepost = useCallback(
@@ -183,6 +187,8 @@ export function usePostFeedHandlers({
       setShowReportSuccess,
       showRepostSuccess,
       setShowRepostSuccess,
+      showToggleStatusSuccess,
+      setShowToggleStatusSuccess,
     }),
     [
       handleViewPost,
@@ -199,6 +205,7 @@ export function usePostFeedHandlers({
       showDeleteSuccess,
       showReportSuccess,
       showRepostSuccess,
+      showToggleStatusSuccess,
     ],
   );
 }

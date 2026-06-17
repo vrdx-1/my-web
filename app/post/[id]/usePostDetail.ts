@@ -139,6 +139,8 @@ export function usePostDetail(id: string | undefined) {
     setJustSavedPosts,
   });
 
+  const [showToggleStatusSuccess, setShowToggleStatusSuccess] = useState(false);
+
   const handleTogglePostStatus = useCallback(async (postId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'recommend' ? 'sold' : 'recommend';
     const { error } = await supabase.from('cars').update({ status: newStatus }).eq('id', postId);
@@ -148,6 +150,9 @@ export function usePostDetail(id: string | undefined) {
         await supabase.from('post_boosts').update({ status: 'reject' }).eq('post_id', postId).eq('status', 'success');
       }
       setPost((prev: any) => (prev?.id === postId ? { ...prev, status: newStatus } : prev));
+      if (newStatus === 'sold') {
+        setShowToggleStatusSuccess(true);
+      }
     }
   }, []);
 
@@ -184,5 +189,7 @@ export function usePostDetail(id: string | undefined) {
     handlers,
     toggleSave,
     handleTogglePostStatus,
+    showToggleStatusSuccess,
+    setShowToggleStatusSuccess,
   };
 }

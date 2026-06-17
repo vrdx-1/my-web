@@ -691,6 +691,9 @@ export function MyPostsContent() {
       {handlers.showRepostSuccess && (
         <SuccessPopup message="ໂພສໃໝ່ສຳເລັດ" onClose={() => handlers.setShowRepostSuccess?.(false)} />
       )}
+      {handlers.showToggleStatusSuccess && (
+        <SuccessPopup message="ສຳເລັດ" onClose={() => handlers.setShowToggleStatusSuccess?.(false)} />
+      )}
     </main>
   );
 }
