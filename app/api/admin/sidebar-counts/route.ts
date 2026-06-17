@@ -137,6 +137,7 @@ export async function GET(request: Request) {
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
     counts['/admin/download-clicks'] = downloadClickLogs.count ?? 0;
     counts['/admin/whatsapp-clicks'] = whatsappClickLogs.count ?? 0;
+    counts['/admin/whatsapp-clicks-insights'] = whatsappClickLogs.count ?? 0;
     counts['/admin/compare-usage'] = compareUsageLogs.count ?? 0;
     counts['/admin/verification'] = verificationTotal.count ?? 0;
     counts['/admin/hidden-posts'] = hiddenPosts.count ?? 0;
