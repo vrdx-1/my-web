@@ -122,6 +122,7 @@ function SoldTabFeedWrapperBase({
   }, [handlers.handleSubmitReport]);
 
   const showSkeleton = soldListData.posts.length === 0 && (soldListData.loadingMore || isRefreshing);
+  const pauseVirtualUpdates = Boolean(viewingPostHook.viewingPost || fullScreenViewer.fullScreenImages);
 
   return (
     <>
@@ -147,6 +148,7 @@ function SoldTabFeedWrapperBase({
         onLoadMore={handleSoldLoadMore}
         showSkeleton={showSkeleton}
         isRefreshing={isRefreshing}
+        pauseVirtualUpdates={pauseVirtualUpdates}
       />
       {handlers.showReportSuccess && (
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />

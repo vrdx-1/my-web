@@ -117,6 +117,7 @@ export interface SoldVirtualFeedBodyProps {
   onLoadMore: () => void;
   showSkeleton: boolean;
   isRefreshing?: boolean;
+  pauseVirtualUpdates?: boolean;
 }
 
 function findStartIndex(offsets: number[], scrollTop: number): number {
@@ -154,6 +155,7 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
     onLoadMore,
     showSkeleton,
     isRefreshing = false,
+    pauseVirtualUpdates = false,
   } = props;
 
   const [viewport, setViewport] = useState(() =>
@@ -167,6 +169,8 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (pauseVirtualUpdates) return;
+
     const onScrollOrResize = () => {
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
@@ -184,7 +188,7 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
         window.cancelAnimationFrame(rafRef.current);
       }
     };
-  }, []);
+  }, [pauseVirtualUpdates]);
 
   useEffect(() => {
     let active = true;
@@ -227,11 +231,13 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   const relativeScrollBottom = relativeScrollTop + viewport.height;
 
   useEffect(() => {
+    if (pauseVirtualUpdates) return;
+
     const threshold = relativeScrollBottom + 700;
     if (threshold >= totalHeight && hasMore && !loadingMore) {
       onLoadMore();
     }
-  }, [relativeScrollBottom, totalHeight, hasMore, loadingMore, onLoadMore, posts.length]);
+  }, [pauseVirtualUpdates, relativeScrollBottom, totalHeight, hasMore, loadingMore, onLoadMore, posts.length]);
 
   const start = Math.max(0, findStartIndex(offsets, relativeScrollTop) - SOLD_OVERSCAN);
   const end = Math.min(
