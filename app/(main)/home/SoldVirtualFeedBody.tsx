@@ -65,6 +65,8 @@ function rememberSoldPreloadDone(key: string) {
 
 function SoldImageGate({ post, enabled, children }: { post: any; enabled: boolean; children: React.ReactNode }) {
   const stableKey = soldPreloadKey(post);
+  const postRef = useRef(post);
+  postRef.current = post;
   const [ready, setReady] = useState(() => !enabled || SOLD_PRELOAD_DONE_KEYS.has(stableKey));
 
   useEffect(() => {
@@ -81,7 +83,7 @@ function SoldImageGate({ post, enabled, children }: { post: any; enabled: boolea
     let cancelled = false;
     setReady(false);
 
-    enqueuePreload(() => preloadPostVisibleImages(post)).then(() => {
+    enqueuePreload(() => preloadPostVisibleImages(postRef.current)).then(() => {
       if (cancelled) return;
       rememberSoldPreloadDone(stableKey);
       setReady(true);
@@ -90,7 +92,7 @@ function SoldImageGate({ post, enabled, children }: { post: any; enabled: boolea
     return () => {
       cancelled = true;
     };
-  }, [enabled, stableKey, post]);
+  }, [enabled, stableKey]);
   if (enabled && !ready) return <FeedSkeleton count={1} />;
   return <>{children}</>;
 }
@@ -167,6 +169,8 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const resizeObserversRef = useRef<Map<number, ResizeObserver>>(new Map());
   const rafRef = useRef<number | null>(null);
+  /** document-relative top of the container — updated in RAF to avoid forced layout during render */
+  const containerTopRef = useRef(0);
 
   useEffect(() => {
     if (pauseVirtualUpdates) return;
@@ -175,9 +179,19 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
         rafRef.current = null;
-        setViewport({ top: window.scrollY, height: window.innerHeight });
+        const top = window.scrollY;
+        const height = window.innerHeight;
+        if (containerRef.current) {
+          containerTopRef.current = top + containerRef.current.getBoundingClientRect().top;
+        }
+        setViewport({ top, height });
       });
     };
+
+    // Seed containerTop once before the first scroll event
+    if (containerRef.current) {
+      containerTopRef.current = window.scrollY + containerRef.current.getBoundingClientRect().top;
+    }
 
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize, { passive: true });
@@ -223,11 +237,7 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   }, [posts.length, measuredHeights]);
 
   const totalHeight = offsets[offsets.length - 1] ?? 0;
-  const containerTop =
-    typeof window !== 'undefined' && containerRef.current
-      ? window.scrollY + containerRef.current.getBoundingClientRect().top
-      : 0;
-  const relativeScrollTop = Math.max(0, viewport.top - containerTop);
+  const relativeScrollTop = Math.max(0, viewport.top - containerTopRef.current);
   const relativeScrollBottom = relativeScrollTop + viewport.height;
 
   useEffect(() => {
