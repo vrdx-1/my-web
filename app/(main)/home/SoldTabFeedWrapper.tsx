@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { UseSoldPostListDataReturn } from '@/hooks/useSoldPostListData';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
 import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
@@ -55,19 +55,37 @@ function SoldTabFeedWrapperBase({
 }: SoldTabFeedWrapperProps) {
   /** แสดงแถว skeleton โหลดเพิ่มทันทีที่ sentinel ยิง setPage — ก่อน loadingMore จาก API */
   const [soldLoadMoreShell, setSoldLoadMoreShell] = useState(false);
+  const loadMoreRequestLockedRef = useRef(false);
+  const loadMoreSawNetworkRef = useRef(false);
   const effectiveLoadingMore = soldListData.loadingMore || soldLoadMoreShell;
 
   const handleSoldLoadMore = () => {
+    if (loadMoreRequestLockedRef.current) return;
     if (soldListData.loadingMore || soldLoadMoreShell || !soldListData.hasMore) return;
+
+    loadMoreRequestLockedRef.current = true;
+    loadMoreSawNetworkRef.current = false;
     setSoldLoadMoreShell(true);
     soldListData.setPage((p) => p + 1);
   };
   useEffect(() => {
-    if (soldListData.loadingMore) setSoldLoadMoreShell(false);
+    if (soldListData.loadingMore) {
+      loadMoreSawNetworkRef.current = true;
+      setSoldLoadMoreShell(false);
+      return;
+    }
+
+    // Unlock only after we have observed a full request cycle (loadingMore true -> false)
+    if (loadMoreRequestLockedRef.current && loadMoreSawNetworkRef.current) {
+      loadMoreRequestLockedRef.current = false;
+      loadMoreSawNetworkRef.current = false;
+    }
   }, [soldListData.loadingMore]);
 
   useEffect(() => {
     if (!soldListData.hasMore || !isActive) {
+      loadMoreRequestLockedRef.current = false;
+      loadMoreSawNetworkRef.current = false;
       setSoldLoadMoreShell(false);
     }
   }, [soldListData.hasMore, isActive]);
@@ -89,7 +107,11 @@ function SoldTabFeedWrapperBase({
   ]);
   useEffect(() => {
     if (!soldLoadMoreShell) return;
-    const t = window.setTimeout(() => setSoldLoadMoreShell(false), 8000);
+    const t = window.setTimeout(() => {
+      loadMoreRequestLockedRef.current = false;
+      loadMoreSawNetworkRef.current = false;
+      setSoldLoadMoreShell(false);
+    }, 8000);
     return () => clearTimeout(t);
   }, [soldLoadMoreShell]);
 
