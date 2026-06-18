@@ -162,6 +162,7 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [measuredHeights, setMeasuredHeights] = useState<Record<number, number>>({});
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const resizeObserversRef = useRef<Map<number, ResizeObserver>>(new Map());
   const rafRef = useRef<number | null>(null);
 
@@ -208,14 +209,6 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const docHeight = document.documentElement.scrollHeight;
-    const threshold = viewport.top + viewport.height + 700;
-    if (threshold >= docHeight && hasMore && !loadingMore) {
-      onLoadMore();
-    }
-  }, [viewport, hasMore, loadingMore, onLoadMore, posts.length]);
-
   const offsets = useMemo(() => {
     const arr = new Array(posts.length + 1).fill(0);
     for (let i = 0; i < posts.length; i += 1) {
@@ -226,10 +219,24 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   }, [posts.length, measuredHeights]);
 
   const totalHeight = offsets[offsets.length - 1] ?? 0;
-  const start = Math.max(0, findStartIndex(offsets, viewport.top) - SOLD_OVERSCAN);
+  const containerTop =
+    typeof window !== 'undefined' && containerRef.current
+      ? window.scrollY + containerRef.current.getBoundingClientRect().top
+      : 0;
+  const relativeScrollTop = Math.max(0, viewport.top - containerTop);
+  const relativeScrollBottom = relativeScrollTop + viewport.height;
+
+  useEffect(() => {
+    const threshold = relativeScrollBottom + 700;
+    if (threshold >= totalHeight && hasMore && !loadingMore) {
+      onLoadMore();
+    }
+  }, [relativeScrollBottom, totalHeight, hasMore, loadingMore, onLoadMore, posts.length]);
+
+  const start = Math.max(0, findStartIndex(offsets, relativeScrollTop) - SOLD_OVERSCAN);
   const end = Math.min(
     posts.length - 1,
-    findStartIndex(offsets, viewport.top + viewport.height) + SOLD_OVERSCAN,
+    findStartIndex(offsets, relativeScrollBottom) + SOLD_OVERSCAN,
   );
 
   const topSpacer = offsets[start] ?? 0;
@@ -278,7 +285,7 @@ export function SoldVirtualFeedBody(props: SoldVirtualFeedBodyProps) {
   const visiblePosts = start <= end ? posts.slice(start, end + 1) : [];
 
   return (
-    <div style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
+    <div ref={containerRef} style={{ animation: 'feed-content-fade-in 0.25s ease-out forwards' }}>
       {topSpacer > 0 ? <div style={{ height: `${topSpacer}px` }} /> : null}
       {visiblePosts.map((post, localIndex) => {
         const index = start + localIndex;
