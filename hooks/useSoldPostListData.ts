@@ -4,7 +4,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import {
   SOLD_FEED_PAGE_SIZE,
@@ -32,6 +31,7 @@ export interface PostListLikedSavedShared {
 interface SoldCursor {
   id: string;
   createdAt: string;
+  isBoosted: boolean;
 }
 
 interface SoldCacheEntry {
@@ -287,7 +287,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         status: 'sold';
         pageSize: number;
         feedSeed?: string;
-        cursorId?: string;
+        cursorBoosted?: boolean;
         province?: string;
         minPriceKip?: number;
         maxPriceKip?: number;
@@ -324,6 +324,8 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         const useCursor = !isInitial && !!cursorRef.current?.id;
         if (useCursor) {
           body.cursorId = cursorRef.current!.id;
+          body.cursorCreatedAt = cursorRef.current!.createdAt;
+          body.cursorBoosted = cursorRef.current!.isBoosted;
         } else {
           const startIndex = isInitial ? 0 : posts.length;
           body.startIndex = startIndex;
@@ -358,8 +360,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
       if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
 
       const fetchedPosts = Array.isArray(payload.posts) ? payload.posts : [];
-      const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, fetchedPosts as any[]);
-      const filteredPosts = hydratedPosts.filter((post: any) => post.status === 'sold' && !post.is_hidden);
+      const filteredPosts = fetchedPosts.filter((post: any) => post.status === 'sold' && !post.is_hidden);
 
       const nextHasMore = typeof payload.hasMore === 'boolean'
         ? payload.hasMore
@@ -393,22 +394,25 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
           cursorRef.current = {
             id: nextCursor.id,
             createdAt: nextCursor.createdAt,
+            isBoosted: false,
           };
         } else if (filteredPosts.length > 0) {
-          const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string };
+          const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string; is_boosted?: boolean };
           if (typeof last.id === 'string' && typeof last.created_at === 'string') {
             cursorRef.current = {
               id: last.id,
               createdAt: last.created_at,
+              isBoosted: !!last.is_boosted,
             };
           }
         }
       } else if (filteredPosts.length > 0) {
-        const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string };
+        const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string; is_boosted?: boolean };
         if (typeof last.id === 'string' && typeof last.created_at === 'string') {
           cursorRef.current = {
             id: last.id,
             createdAt: last.created_at,
+            isBoosted: !!last.is_boosted,
           };
         }
       }
