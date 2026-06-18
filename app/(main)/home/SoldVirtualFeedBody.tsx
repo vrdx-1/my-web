@@ -8,6 +8,7 @@ import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { EmptyState } from '@/components/EmptyState';
 import { PostCard } from '@/components/PostCard';
 import { HomePostImageGate } from '@/components/home/HomePostImageGate';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { DEFAULT_EXCHANGE_RATES, normalizeExchangeRates, type ExchangeRates } from '@/utils/exchangeRates';
 
 export interface SoldVirtualFeedBodyProps {
@@ -83,16 +84,6 @@ export function SoldVirtualFeedBody({
     };
   }, []);
 
-  // IntersectionObserver sentinel — identical strategy to useInfiniteScroll used on recommend tab.
-  // No scroll-position math, no getBoundingClientRect during render, no setViewport re-renders.
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const onLoadMoreRef = useRef(onLoadMore);
-  onLoadMoreRef.current = onLoadMore;
-  const loadingMoreRef = useRef(loadingMore);
-  loadingMoreRef.current = loadingMore;
-  const hasMoreRef = useRef(hasMore);
-  hasMoreRef.current = hasMore;
-
   // Skeleton transition — identical to HomeFeedBody (prevents flash)
   const [showingSkeleton, setShowingSkeleton] = useState(showSkeleton);
   useEffect(() => {
@@ -104,25 +95,13 @@ export function SoldVirtualFeedBody({
     }
   }, [showSkeleton]);
 
-  useEffect(() => {
-    // Re-attach observer whenever content mode changes; the sentinel does not exist during skeleton render.
-    if (showingSkeleton || posts.length === 0) return;
-
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasMoreRef.current && !loadingMoreRef.current) {
-          onLoadMoreRef.current();
-        }
-      },
-      { rootMargin: '400px' },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [showingSkeleton, posts.length]);
+  const { lastElementRef } = useInfiniteScroll({
+    enabled: !showingSkeleton,
+    loadingMore,
+    hasMore,
+    onLoadMore,
+    feedPostCount: posts.length,
+  });
 
   const effectivelyShowSkeleton =
     showingSkeleton || (posts.length === 0 && (loadingMore || isRefreshing));
@@ -163,6 +142,7 @@ export function SoldVirtualFeedBody({
               justSavedPosts={justSavedPosts}
               activeMenuState={activeMenuState}
               isMenuAnimating={isMenuAnimating}
+              lastPostElementRef={index === posts.length - 1 ? lastElementRef : undefined}
               menuButtonRefs={menuButtonRefs}
               onViewPost={onViewPost}
               onSave={onSave}
@@ -178,9 +158,6 @@ export function SoldVirtualFeedBody({
             />
           </HomePostImageGate>
         ))}
-
-        {/* Sentinel triggers onLoadMore when scrolled into view — no scroll math needed */}
-        <div ref={sentinelRef} style={{ height: 1 }} />
 
         <div
           className="feed-bottom-slot"
