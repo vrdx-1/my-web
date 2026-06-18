@@ -9,7 +9,8 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useMenu } from '@/hooks/useMenu';
 import { useViewingPost } from '@/hooks/useViewingPost';
 import { useFullScreenViewer } from '@/hooks/useFullScreenViewer';
-import { SoldVirtualFeedBody } from './SoldVirtualFeedBody';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { HomeFeedBody } from './HomeFeedBody';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -143,34 +144,49 @@ function SoldTabFeedWrapperBase({
     handleSubmitReportRef.current = handlers.handleSubmitReport;
   }, [handlers.handleSubmitReport]);
 
+  const { lastElementRef: soldLastPostElementRef } = useInfiniteScroll({
+    enabled: isActive,
+    loadingMore: effectiveLoadingMore,
+    hasMore: soldListData.hasMore ?? true,
+    onLoadMore: handleSoldLoadMore,
+    feedPostCount: soldListData.posts.length,
+  });
+
   const showSkeleton = soldListData.posts.length === 0 && (soldListData.loadingMore || isRefreshing);
-  const pauseVirtualUpdates = Boolean(viewingPostHook.viewingPost || fullScreenViewer.fullScreenImages);
 
   return (
     <>
-      <SoldVirtualFeedBody
-        posts={soldListData.posts}
-        session={soldListData.session}
-        savedPosts={soldListData.savedPosts}
-        justSavedPosts={justSavedPosts}
-        activeMenuState={menu.activeMenuState}
-        isMenuAnimating={menu.isMenuAnimating}
-        menuButtonRefs={menu.menuButtonRefs}
-        onViewPost={handlers.handleViewPost}
-        onSave={toggleSave}
-        onShare={handlers.handleShare}
-        onTogglePostStatus={handlers.handleTogglePostStatus}
-        onDeletePost={handlers.handleDeletePost}
-        onReport={handlers.handleReport}
-        onRepost={handlers.handleRepost}
-        onSetActiveMenu={menu.setActiveMenu}
-        onSetMenuAnimating={menu.setIsMenuAnimating}
-        loadingMore={effectiveLoadingMore}
-        hasMore={soldListData.hasMore ?? true}
-        onLoadMore={handleSoldLoadMore}
+      <HomeFeedBody
         showSkeleton={showSkeleton}
-        isRefreshing={isRefreshing}
-        pauseVirtualUpdates={pauseVirtualUpdates}
+        forceSkeletonWhenEmpty={false}
+        mayShowEmptyState={true}
+        isSearchLoading={false}
+        skeletonCount={3}
+        gateImageReady={false}
+        enableViewportTracking={false}
+        postFeedProps={{
+          posts: soldListData.posts,
+          session: soldListData.session,
+          savedPosts: soldListData.savedPosts,
+          justSavedPosts,
+          activeMenuState: menu.activeMenuState,
+          isMenuAnimating: menu.isMenuAnimating,
+          lastPostElementRef: soldLastPostElementRef,
+          menuButtonRefs: menu.menuButtonRefs,
+          onViewPost: handlers.handleViewPost,
+          onSave: toggleSave,
+          onShare: handlers.handleShare,
+          onTogglePostStatus: handlers.handleTogglePostStatus,
+          onDeletePost: handlers.handleDeletePost,
+          onReport: handlers.handleReport,
+          onRepost: handlers.handleRepost,
+          onSetActiveMenu: menu.setActiveMenu,
+          onSetMenuAnimating: menu.setIsMenuAnimating,
+          loadingMore: effectiveLoadingMore,
+          hasMore: soldListData.hasMore ?? true,
+          onLoadMore: handleSoldLoadMore,
+          hideBoost: true,
+        }}
       />
       {handlers.showReportSuccess && (
         <ReportSuccessPopup onClose={() => handlers.setShowReportSuccess?.(false)} />
