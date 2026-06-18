@@ -25,7 +25,7 @@ type SuggestionsPagination = {
   nextPage: number | null;
 };
 
-const SEARCH_HEADER_HEIGHT = 66;
+const SEARCH_HEADER_HEIGHT = 72;
 
 function SearchPageContent() {
   const router = useRouter();
@@ -348,7 +348,7 @@ function SearchPageContent() {
             aria-hidden
             style={{
               position: 'absolute',
-              left: 13,
+              left: 14,
               top: '50%',
               transform: 'translateY(-50%)',
               color: '#6b7280',
@@ -358,7 +358,7 @@ function SearchPageContent() {
               pointerEvents: 'none',
             }}
           >
-            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -375,12 +375,12 @@ function SearchPageContent() {
             style={{
               flex: 1,
               minWidth: 0,
-              height: 40,
-              paddingLeft: 37,
-              paddingRight: query.trim().length > 0 ? 34 : 16,
+              height: 46,
+              paddingLeft: 41,
+              paddingRight: query.trim().length > 0 ? 36 : 16,
               fontSize: '16px',
               border: '1px solid #d0d5dd',
-              borderRadius: 20,
+              borderRadius: 23,
               background: '#ffffff',
               color: '#101828',
               fontFamily: LAO_FONT,
@@ -424,14 +424,14 @@ function SearchPageContent() {
           onClick={() => commitSearch(query, 'manual')}
           style={{
             flexShrink: 0,
-            height: 40,
-            padding: '0 16px',
-            borderRadius: 20,
+            height: 46,
+            padding: '0 18px',
+            borderRadius: 23,
             border: 'none',
             background: '#1877f2',
             color: '#fff',
-            fontSize: '14px',
-            fontWeight: 600,
+            fontSize: '16px',
+            fontWeight: 700,
             fontFamily: LAO_FONT,
             cursor: 'pointer',
             display: 'flex',
