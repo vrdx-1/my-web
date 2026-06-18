@@ -26,9 +26,10 @@ export function DevServiceWorkerReset() {
 
         window.sessionStorage.setItem(DEV_SW_RESET_KEY, "1");
 
-        if (hadRegistrations || hadCaches) {
-          window.location.reload();
-        }
+        // Avoid auto-reload to keep first page entry stable.
+        // Cleanup still happens best-effort and takes effect on next manual refresh/navigation.
+        void hadRegistrations;
+        void hadCaches;
       } catch {
         // Best-effort cleanup only.
       }

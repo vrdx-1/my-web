@@ -753,8 +753,9 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       if (previousActorKey.startsWith('guest:') && currentActorKey.startsWith('user:')) {
         migrateHomeFeedSeenPostIds(province, previousActorKey, currentActorKey);
       }
+      // Keep current feed unchanged when session resolves (guest -> user)
+      // to avoid perceived auto-refresh on first entry.
       lastResolvedActorKeyRef.current = currentActorKey;
-      void refreshData();
     }
   }, [activeProfileId, authUserId, currentSessionUserId, province, minPriceKip, maxPriceKip, priceSortOrder, refreshData]);
 
