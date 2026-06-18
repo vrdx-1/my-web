@@ -115,6 +115,24 @@ body[data-home-ios-scrollbar-hidden="1"] {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Notification list: hide scroll indicator on iPhone Safari and other browsers */
+.notification-scroll-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.notification-scroll-container::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+.notification-scroll-container::-webkit-scrollbar-track,
+.notification-scroll-container::-webkit-scrollbar-thumb {
+  display: none;
+  background: transparent;
+}
+
 /* ซ่อน scrollbar ใน viewing mode container (ตัวที่ scroll จริง) */
 #viewing-mode-container {
   scrollbar-width: none !important;

@@ -294,7 +294,9 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
 
     const body = document.body;
     const html = document.documentElement;
-    const shouldHideScrollbar = resolvedPathname === '/home' && !isProfileOverlayOpen;
+    const shouldHideScrollbar =
+      !isProfileOverlayOpen
+      && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/compare');
 
     if (shouldHideScrollbar) {
       body.setAttribute('data-home-ios-scrollbar-hidden', '1');

@@ -182,7 +182,7 @@ export default function NotificationPage() {
           <EmptyState message="ບໍ່ມີການແຈ້ງເຕືອນ" variant="minimal" />
         </div>
       ) : (
-        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: 'auto' }}>
+        <div ref={scrollContainerRef} className="notification-scroll-container" style={{ flex: 1, overflowY: 'auto' }}>
           {visibleItemsWithTime.map((item, index) => {
             const uniqueKey = `${item.post_id}-${item.created_at}-${index}`;
             return (
