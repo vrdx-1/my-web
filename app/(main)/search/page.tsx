@@ -26,6 +26,10 @@ type SuggestionsPagination = {
 };
 
 const SEARCH_HEADER_HEIGHT = 72;
+const SEARCH_INPUT_PADDING_LEFT = 41;
+const SEARCH_INPUT_PADDING_RIGHT_WITH_CLEAR = 36;
+const SEARCH_INPUT_PADDING_RIGHT_DEFAULT = 16;
+const EDGE_TAP_THRESHOLD = 6;
 
 function SearchPageContent() {
   const router = useRouter();
@@ -243,6 +247,52 @@ function SearchPageContent() {
     });
   }, []);
 
+  const moveCaretToEnd = useCallback(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const len = input.value.length;
+    input.setSelectionRange(len, len);
+  }, []);
+
+  const shouldTreatAsEdgeTap = useCallback((clientX: number, clientY: number) => {
+    const input = inputRef.current;
+    if (!input || !query.trim()) return false;
+    const rect = input.getBoundingClientRect();
+    const rightPadding = query.trim().length > 0
+      ? SEARCH_INPUT_PADDING_RIGHT_WITH_CLEAR
+      : SEARCH_INPUT_PADDING_RIGHT_DEFAULT;
+    const textStart = rect.left + SEARCH_INPUT_PADDING_LEFT;
+    const textEnd = rect.right - rightPadding;
+    const isHorizontalEdgeTap = clientX < textStart - EDGE_TAP_THRESHOLD || clientX > textEnd + EDGE_TAP_THRESHOLD;
+    const isVerticalEdgeTap = clientY < rect.top + EDGE_TAP_THRESHOLD || clientY > rect.bottom - EDGE_TAP_THRESHOLD;
+
+    return isHorizontalEdgeTap || isVerticalEdgeTap;
+  }, [query]);
+
+  const handleInputTouchStart = useCallback((e: React.TouchEvent<HTMLInputElement>) => {
+    const touch = e.touches[0];
+    const isEdgeTap = !!touch && shouldTreatAsEdgeTap(touch.clientX, touch.clientY);
+    if (!isEdgeTap) return;
+
+    // Block Safari from moving caret to the start when user taps the input border.
+    e.preventDefault();
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    moveCaretToEnd();
+  }, [shouldTreatAsEdgeTap]);
+
+  const handleInputMouseDown = useCallback((e: React.MouseEvent<HTMLInputElement>) => {
+    const isEdgeTap = shouldTreatAsEdgeTap(e.clientX, e.clientY);
+    if (!isEdgeTap) return;
+
+    e.preventDefault();
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    moveCaretToEnd();
+  }, [moveCaretToEnd, shouldTreatAsEdgeTap]);
+
   const handleRemoveHistoryItem = useCallback(
     async (item: SearchHistoryItem) => {
       try {
@@ -372,12 +422,14 @@ function SearchPageContent() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            onTouchStart={handleInputTouchStart}
+            onMouseDown={handleInputMouseDown}
             style={{
               flex: 1,
               minWidth: 0,
               height: 46,
-              paddingLeft: 41,
-              paddingRight: query.trim().length > 0 ? 36 : 16,
+              paddingLeft: SEARCH_INPUT_PADDING_LEFT,
+              paddingRight: query.trim().length > 0 ? SEARCH_INPUT_PADDING_RIGHT_WITH_CLEAR : SEARCH_INPUT_PADDING_RIGHT_DEFAULT,
               fontSize: '16px',
               border: '1px solid #d0d5dd',
               borderRadius: 23,
