@@ -40,6 +40,15 @@ interface SoldCacheEntry {
   cursor: SoldCursor | null;
 }
 
+function normalizeSoldCursor(cursor: SoldCursor | null | undefined): SoldCursor | null {
+  if (!cursor || typeof cursor.id !== 'string' || typeof cursor.createdAt !== 'string') return null;
+  return {
+    id: cursor.id,
+    createdAt: cursor.createdAt,
+    isBoosted: !!cursor.isBoosted,
+  };
+}
+
 const SOLD_CACHE_MAX = 6;
 const soldCache: Record<string, SoldCacheEntry> = {};
 
@@ -159,7 +168,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
       setHasMore(cached.hasMore);
       setPage(0);
       setLoadingMore(false);
-      cursorRef.current = cached.cursor;
+      cursorRef.current = normalizeSoldCursor(cached.cursor);
       return;
     }
 
@@ -316,6 +325,10 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
 
       if (!hasPriceMode) {
         // Random path: prefer cursor pagination for deep-scroll performance.
+        // Keep feedSeed stable across pages; otherwise ordering may reshuffle and cut hasMore early.
+        if (!feedSeedRef.current) {
+          feedSeedRef.current = createSoldFeedSeed();
+        }
         // Fallback to startIndex/endIndex on first page.
         if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
         const pageSize = isInitial ? SOLD_INITIAL_FEED_PAGE_SIZE : SOLD_FEED_PAGE_SIZE;
@@ -325,7 +338,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         if (useCursor) {
           body.cursorId = cursorRef.current!.id;
           body.cursorCreatedAt = cursorRef.current!.createdAt;
-          body.cursorBoosted = cursorRef.current!.isBoosted;
+          body.cursorBoosted = !!cursorRef.current!.isBoosted;
         } else {
           const startIndex = isInitial ? 0 : posts.length;
           body.startIndex = startIndex;
@@ -358,6 +371,10 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
 
       const payload = await response.json().catch(() => ({}));
       if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
+
+      if (typeof payload.feedSeed === 'string' && payload.feedSeed) {
+        feedSeedRef.current = payload.feedSeed;
+      }
 
       const fetchedPosts = Array.isArray(payload.posts) ? payload.posts : [];
       const filteredPosts = fetchedPosts.filter((post: any) => post.status === 'sold' && !post.is_hidden);
