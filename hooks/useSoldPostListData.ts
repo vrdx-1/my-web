@@ -287,6 +287,7 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         status: 'sold';
         pageSize: number;
         feedSeed?: string;
+        cursorId?: string;
         province?: string;
         minPriceKip?: number;
         maxPriceKip?: number;
@@ -314,12 +315,20 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
       if (priceSortOrder) body.priceSortOrder = priceSortOrder;
 
       if (!hasPriceMode) {
-        // Random path: ส่ง feedSeed + startIndex/endIndex (server ใช้ computeFeed)
+        // Random path: prefer cursor pagination for deep-scroll performance.
+        // Fallback to startIndex/endIndex on first page.
         if (feedSeedRef.current) body.feedSeed = feedSeedRef.current;
         const pageSize = isInitial ? SOLD_INITIAL_FEED_PAGE_SIZE : SOLD_FEED_PAGE_SIZE;
-        const startIndex = isInitial ? 0 : posts.length;
-        body.startIndex = startIndex;
-        body.endIndex = startIndex + pageSize - 1;
+        body.pageSize = pageSize;
+
+        const useCursor = !isInitial && !!cursorRef.current?.id;
+        if (useCursor) {
+          body.cursorId = cursorRef.current!.id;
+        } else {
+          const startIndex = isInitial ? 0 : posts.length;
+          body.startIndex = startIndex;
+          body.endIndex = startIndex + pageSize - 1;
+        }
       } else {
         // Price-filter path: ใช้ cursor เดิม
         const useCursor = (!priceSortOrder || priceSortOrder === 'latest') && !isInitial && !!cursorRef.current;
@@ -376,7 +385,8 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
         });
       }
 
-      // cursor ใช้เฉพาะ price-filter path เท่านั้น
+      // Update cursor for next page. Price mode may provide nextCursor from API;
+      // otherwise fallback to the last returned post.
       if (hasPriceMode) {
         const nextCursor = payload?.nextCursor;
         if (nextCursor && typeof nextCursor.id === 'string' && typeof nextCursor.createdAt === 'string') {
@@ -392,6 +402,14 @@ export function useSoldPostListData(options: UseSoldPostListDataOptions): UseSol
               createdAt: last.created_at,
             };
           }
+        }
+      } else if (filteredPosts.length > 0) {
+        const last = filteredPosts[filteredPosts.length - 1] as { id?: string; created_at?: string };
+        if (typeof last.id === 'string' && typeof last.created_at === 'string') {
+          cursorRef.current = {
+            id: last.id,
+            createdAt: last.created_at,
+          };
         }
       }
 
