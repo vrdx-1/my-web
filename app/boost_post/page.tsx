@@ -327,15 +327,12 @@ function BoostPostContent() {
                   setSelectedPkg(pkg);
                   setStep(2);
                 }}
-                className="w-full bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md hover:border-violet-300 transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 text-gray-900"
+                className="w-full bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-[0_8px_24px_rgba(15,23,42,0.08)] hover:shadow-[0_14px_32px_rgba(15,23,42,0.14)] hover:border-violet-300 transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 text-gray-900"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-base font-semibold text-gray-900">{pkg.name}</span>
                   {pkg.days === 7 && (
-                    <span className="flex items-center gap-1 text-base font-semibold text-amber-600">
-                      <span>★</span>
-                      <span>ແນະນຳ</span>
-                    </span>
+                    <span className="text-base font-semibold text-amber-600">ແນະນຳ</span>
                   )}
                 </div>
                 <span className="text-base font-bold text-gray-900">{pkg.price}</span>

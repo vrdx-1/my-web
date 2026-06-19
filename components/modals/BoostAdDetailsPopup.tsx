@@ -20,33 +20,6 @@ interface BoostAdDetailsPopupProps {
   zIndex?: number;
 }
 
-const getRemainingText = (expiresAtIso: string | null, nowMs: number) => {
-  if (!expiresAtIso) return '0 ນາທີ';
-  const expiresMs = new Date(expiresAtIso).getTime();
-  const diffMs = expiresMs - nowMs;
-  if (!Number.isFinite(expiresMs) || diffMs <= 0) return '0 ນາທີ';
-
-  const diffMinutes = Math.ceil(diffMs / (60 * 1000));
-  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (diffDays >= 1) return `${diffDays} ມື້`;
-  if (diffHours >= 1) return `${diffHours} ຊົ່ວໂມງ`;
-  return `${diffMinutes} ນາທີ`;
-};
-
-const formatExpiresAt = (expiresAtIso: string | null) => {
-  if (!expiresAtIso) return '-';
-  const d = new Date(expiresAtIso);
-  if (!Number.isFinite(d.getTime())) return '-';
-  return d.toLocaleString('lo-LA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
   show,
   status,
@@ -59,15 +32,6 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
   confirmOnly = false,
   zIndex = 50,
 }) => {
-  const [nowMs, setNowMs] = React.useState(() => Date.now());
-
-  React.useEffect(() => {
-    if (!show) return;
-    if (status !== 'success' || !expiresAt) return;
-    const id = window.setInterval(() => setNowMs(Date.now()), 60 * 1000);
-    return () => window.clearInterval(id);
-  }, [show, status, expiresAt]);
-
   if (!show) return null;
 
   const closeLabel = 'ຕົກລົງ';
@@ -111,9 +75,8 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
           </>
         ) : status === 'success' ? (
           <>
-            <h2 className="text-2xl font-bold mb-3 text-green-600">ກຳລັງໂຄສະນາ</h2>
-            <p className="text-gray-700">ໂຄສະນາຈະໝົດອາຍຸພາຍໃນ {getRemainingText(expiresAt, nowMs)}</p>
-            <div className="mt-2 text-sm text-gray-500">ໝົດອາຍຸເມື່ອ: {formatExpiresAt(expiresAt)}</div>
+            <h2 className="text-2xl font-bold mb-3 text-green-600">ດັນໂພສສຳເລັດ</h2>
+            <p className="text-gray-700">ໂພສຂອງທ່ານກຳລັງຖືກດັນເພື່ອໃຫ້ຂາຍໄດ້ໄວຂຶ້ນ</p>
             <button
               type="button"
               onClick={onClose}

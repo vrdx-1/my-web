@@ -9,6 +9,7 @@ import { BOOST_PACKAGES } from "@/data/boostPackages";
 import { REGISTER_PATH } from "@/utils/authRoutes";
 import { useBoostSlip } from "../BoostSlipContext";
 import { compressImage } from "@/utils/imageCompression";
+import { invalidateFeedCacheClient } from "@/utils/invalidateFeedCacheClient";
 
 function BoostSlipPageContent() {
   const router = useRouter();
@@ -90,6 +91,10 @@ function BoostSlipPageContent() {
 
       if (uploadError) throw uploadError;
 
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + selectedPkg.days);
+      const expiresAtIso = expiryDate.toISOString();
+
       const { error: dbError } = await supabase.from("post_boosts").insert({
         post_id: postId,
         user_id: userId,
@@ -97,7 +102,8 @@ function BoostSlipPageContent() {
         boost_days: selectedPkg.days,
         price: parseInt(selectedPkg.price.replace(/\D/g, "")),
         slip_url: fileName,
-        status: "pending",
+        status: "success",
+        expires_at: expiresAtIso,
       });
 
       if (dbError) {
@@ -107,10 +113,30 @@ function BoostSlipPageContent() {
         throw dbError;
       }
 
+      const { error: carBoostError } = await supabase
+        .from("cars")
+        .update({ is_boosted: true, boost_expiry: expiresAtIso })
+        .eq("id", postId)
+        .eq("user_id", userId);
+
+      if (carBoostError) {
+        await supabase
+          .from("post_boosts")
+          .update({ status: "reject", expires_at: null })
+          .eq("post_id", postId)
+          .eq("user_id", userId)
+          .eq("slip_url", fileName)
+          .eq("status", "success")
+          .catch(() => {});
+        throw carBoostError;
+      }
+
+      invalidateFeedCacheClient();
+
       clearSlip();
       setBoostResult({
-        dbStatus: "pending",
-        expiresAt: null,
+        dbStatus: "success",
+        expiresAt: expiresAtIso,
         justSubmitted: true,
         submitError: null,
       });

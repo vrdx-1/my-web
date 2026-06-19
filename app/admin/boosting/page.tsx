@@ -5,12 +5,11 @@
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
-import { Check, X, Clock, ExternalLink, Trash2, Heart, Eye, Bookmark, Share2 } from "lucide-react";
+import { Trash2, Eye } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
 import { formatTime } from "@/utils/postUtils";
-import { formatTimeAgo } from "@/utils/formatTime";
-import { PhotoGrid } from "@/components/PhotoGrid";
 import { lazyNamed } from "@/utils/lazyLoad";
+import { invalidateFeedCacheClient } from "@/utils/invalidateFeedCacheClient";
 
 // Dynamic Imports
 const ViewingPostModal = lazyNamed(
@@ -26,7 +25,7 @@ export default function AdminBoostingPage() {
   const router = useRouter();
   const fromPath = '/admin/boosting';
   const supabase = supabaseClient;
-  const [activeTab, setActiveTab] = useState<"waiting" | "boosting" | "sold">("waiting");
+  const [activeTab, setActiveTab] = useState<"boosting" | "sold">("boosting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
@@ -83,16 +82,14 @@ export default function AdminBoostingPage() {
       return;
     }
 
-    const statusFilter = activeTab === "waiting" ? "pending" : "success";
-    // PENDING: ส่งก่อนอยู่บนสุด ส่งทีหลังอยู่ล่างสุด (เรียง created_at เก่า→ใหม่)
-    const pendingOrderAsc = statusFilter === "pending";
+    const statusFilter = "success";
 
     // 1. ดึง ID ของ boost ทั้งหมด
     const { data: boostsData, error: boostsError } = await supabase
       .from("post_boosts")
       .select('id, post_id')
       .eq("status", statusFilter)
-      .order("created_at", { ascending: pendingOrderAsc });
+      .order("created_at", { ascending: false });
 
     if (boostsError) {
       console.error("Error fetching boosts:", boostsError);
@@ -137,12 +134,11 @@ export default function AdminBoostingPage() {
           combinedData = combinedData.filter((item) => item?.cars?.status !== "sold");
         }
 
-        // จัดลำดับ: PENDING = ส่งก่อนอยู่บน (created_at เก่า→ใหม่), Boosting = ใหม่อยู่บน
-        const sortAsc = statusFilter === "pending";
+        // แท็บ Boosting: ใหม่อยู่บน
         combinedData = [...combinedData].sort((a, b) => {
           const ta = new Date((a as any).created_at).getTime();
           const tb = new Date((b as any).created_at).getTime();
-          return sortAsc ? ta - tb : tb - ta;
+          return tb - ta;
         });
 
         setItems(prev => {
@@ -162,41 +158,13 @@ export default function AdminBoostingPage() {
 
   // Removed duplicate functions - using from shared utils/components
 
-  const handleApprove = async (item: any) => {
-    if (!confirm("ຢືນຢັນການອະນຸມັດການ Boost?")) return;
-    try {
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + item.boost_days);
-      
-      // บังคับเปลี่ยนแท็บล่วงหน้า (Optimistic UI)
-      setActiveTab("boosting");
-
-      const { error: boostError } = await supabase
-        .from("post_boosts")
-        .update({ status: "success", expires_at: expiryDate.toISOString() })
-        .eq("id", item.id);
-      const { error: carError } = await supabase
-        .from("cars")
-        .update({ is_boosted: true, boost_expiry: expiryDate.toISOString() })
-        .eq("id", item.post_id);
-      
-      if (boostError || carError) {
-         throw new Error("Update failed - ตรวจสอบ RLS ใน Supabase Dashboard");
-      }
-
-      fetchBoosts(); // โหลดข้อมูลใหม่หลังจากเปลี่ยนแท็บ
-    } catch (err: any) { 
-      setActiveTab("waiting"); // ถ้าพังให้กลับมาหน้าเดิม
-      fetchBoosts();
-    }
-  };
-
   const handleDecline = async (item: any) => {
-    const msg = item.status === "pending" ? "ຢືນຢັນການປະຕິເສດ ແລະ ລຶບລາຍການນີ້?" : "ຢືນຢັນການຍົກເລີກການ Boost?";
+    const msg = "ຢືນຢັນການຍົກເລີກການ Boost?";
     if (!confirm(msg)) return;
     try {
       await supabase.from("cars").update({ is_boosted: false, boost_expiry: null }).eq("id", item.post_id);
       await supabase.from("post_boosts").update({ status: "reject" }).eq("id", item.id);
+      invalidateFeedCacheClient();
       fetchBoosts();
     } catch (err) { }
   };
@@ -208,12 +176,6 @@ export default function AdminBoostingPage() {
       <div className="flex flex-col items-center mb-10 space-y-4">
         <h2 className="text-xl font-bold text-gray-800">Boosting Management ({items.length})</h2>
         <div className="flex bg-gray-200/50 p-1.5 rounded-2xl border border-gray-300 shadow-inner">
-          <button 
-            onClick={() => setActiveTab("waiting")} 
-            className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'waiting' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Pending
-          </button>
           <button 
             onClick={() => setActiveTab("boosting")} 
             className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'boosting' ? 'bg-white text-green-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
@@ -273,11 +235,6 @@ export default function AdminBoostingPage() {
               </div>
 
               <div className="w-full lg:w-[320px] bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col">
-                {activeTab === 'waiting' && item.status === 'pending' && item.created_at && (
-                  <p className="text-[15px] font-bold text-red-600 mb-3 text-center">
-                    ສົ່ງເມື່ອ {formatTimeAgo(item.created_at)}
-                  </p>
-                )}
                 <p className="text-[11px] font-black text-gray-400 uppercase mb-3 tracking-widest text-center">Transfer Slip</p>
                 
                 <div 
@@ -303,21 +260,6 @@ export default function AdminBoostingPage() {
                     <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 rounded-lg py-3 px-4 text-center font-bold text-xs uppercase tracking-wider">
                       ປິດ Boost ອັດຕະໂນມັດ (ຂາຍແລ້ວ)
                     </div>
-                  ) : item.status === 'pending' ? (
-                    <>
-                      <button 
-                        onClick={() => handleApprove(item)} 
-                        className="flex-[2] bg-blue-600 text-white h-12 rounded-lg font-black text-sm hover:bg-blue-700 transition-transform active:scale-95 shadow-md shadow-blue-100 uppercase"
-                      >
-                        Approve
-                      </button>
-                      <button 
-                        onClick={() => handleDecline(item)} 
-                        className="flex-1 bg-gray-50 text-red-500 border border-red-100 h-12 rounded-lg font-bold text-xs hover:bg-red-50 transition-colors uppercase"
-                      >
-                        decline
-                      </button>
-                    </>
                   ) : (
                     <button 
                       onClick={() => handleDecline(item)} 
