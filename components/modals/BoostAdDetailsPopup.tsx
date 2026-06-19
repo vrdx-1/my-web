@@ -44,7 +44,29 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
       ].join(' ')}
       style={{ zIndex }}
     >
-      <div className="w-full max-w-sm border-2 border-gray-300 rounded-2xl p-8 relative text-center bg-white text-gray-900" style={{ backgroundColor: '#ffffff' }}>
+      {overlay === 'white' && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="ກັບຄືນ"
+          className="absolute top-4 left-4 w-10 h-10 inline-flex items-center justify-center text-gray-600 hover:text-gray-800"
+          style={{ background: 'transparent', border: 'none' }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      )}
+      <div className="w-full max-w-sm rounded-2xl p-8 relative text-center bg-white text-gray-900" style={{ backgroundColor: '#ffffff' }}>
         {status === 'pending' ? (
           <>
             <h2 className="text-2xl font-bold mb-3 text-green-600">
@@ -61,10 +83,8 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
           </>
         ) : status === 'reject' ? (
           <>
-            <h2 className="text-2xl font-bold mb-3 text-red-600">ຖືກປະຕິເສດ</h2>
-            <p className="text-gray-700">
-              ຄຳຮ້ອງຂໍ boost ຂອງທ່ານຖືກປະຕິເສດບໍ່ສາມາດສົ່ງໃໝ່ໄດ້
-            </p>
+            <h2 className="text-2xl font-bold mb-3 text-red-600">ການດັນໂພສຖືກຍົກເລີກ</h2>
+            <p className="text-gray-700">ບໍ່ສາມາດສົ່ງໃໝ່ໄດ້</p>
             <button
               type="button"
               onClick={onClose}

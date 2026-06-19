@@ -99,7 +99,7 @@ export default function NotificationDetail() {
                     }}
                     style={BOOST_BUTTON_STYLE}
                   >
-                    ສະຖານະໂຄສະນາ
+                    ການດັນໂພສ
                   </button>
                 </div>
               )}

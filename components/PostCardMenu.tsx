@@ -31,6 +31,7 @@ interface PostCardMenuProps {
   onSetMenuAnimating: (animating: boolean) => void;
   onOpenPrivateNote?: (post: any) => void;
   onRepost?: (postId: string) => void | Promise<void>;
+  onBoostClick?: (postId: string) => void | Promise<void>;
 }
 
 export const PostCardMenu = React.memo<PostCardMenuProps>(({
@@ -52,6 +53,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onSetMenuAnimating: _onSetMenuAnimating,
   onOpenPrivateNote,
   onRepost,
+  onBoostClick,
 }) => {
   const router = useRouter();
   const menuInstanceId = React.useId();
@@ -280,6 +282,10 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
                 ? undefined
                 : () => {
                     setIsMenuOpen(false);
+                    if (onBoostClick) {
+                      void Promise.resolve(onBoostClick(post.id));
+                      return;
+                    }
                     router.push(`/boost_post?id=${post.id}`);
                   }
             }

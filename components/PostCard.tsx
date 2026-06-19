@@ -14,6 +14,7 @@ import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
 import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { SuccessPopup } from './modals/SuccessPopup';
+import { BoostAdDetailsPopup } from './modals/BoostAdDetailsPopup';
 import { ChangePostPriceModal } from './modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useComparePosts } from '@/contexts/ComparePostsContext';
@@ -26,6 +27,7 @@ import {
   toEstimatedPrices,
   type ExchangeRates,
 } from '@/utils/exchangeRates';
+import { supabase } from '@/lib/supabase';
 
 const CAPTION_TOGGLE_TRANSITION_LOCK_MS = 260;
 
@@ -147,6 +149,9 @@ export function PostCard({
   const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
   const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
+  const [showBoostStatusPopup, setShowBoostStatusPopup] = React.useState(false);
+  const [boostStatusPopupStatus, setBoostStatusPopupStatus] = React.useState<string | null>(null);
+  const [boostStatusPopupExpiresAt, setBoostStatusPopupExpiresAt] = React.useState<string | null>(null);
   const [showPriceEstimatePopup, setShowPriceEstimatePopup] = React.useState(false);
   const [priceEstimatePopupPosition, setPriceEstimatePopupPosition] = React.useState<{
     top: number;
@@ -267,6 +272,50 @@ export function PostCard({
       delete document.body.dataset.captionToggleActive;
     }
   }, []);
+
+  const handleBoostClick = React.useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('post_boosts')
+        .select('status, expires_at, created_at')
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      const latest = data?.[0] as { status?: string | null; expires_at?: string | null } | undefined;
+      if (!latest?.status) {
+        router.push(`/boost_post?id=${post.id}`);
+        return;
+      }
+
+      const latestStatus = String(latest.status);
+      const latestExpiresAt = latest.expires_at ?? null;
+      const isSuccessAndExpired =
+        latestStatus === 'success' &&
+        !!latestExpiresAt &&
+        new Date(latestExpiresAt).getTime() <= Date.now();
+
+      if (latestStatus === 'reject') {
+        setBoostStatusPopupStatus('reject');
+        setBoostStatusPopupExpiresAt(null);
+        setShowBoostStatusPopup(true);
+        return;
+      }
+
+      if (latestStatus === 'success' && !isSuccessAndExpired) {
+        setBoostStatusPopupStatus('success');
+        setBoostStatusPopupExpiresAt(latestExpiresAt);
+        setShowBoostStatusPopup(true);
+        return;
+      }
+
+      router.push(`/boost_post?id=${post.id}`);
+    } catch {
+      router.push(`/boost_post?id=${post.id}`);
+    }
+  }, [post.id, router]);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showPrivateNotePopup || showChangePriceModal || showChangePriceSuccess;
@@ -739,6 +788,7 @@ export function PostCard({
               onRepost={onRepost}
               onSetActiveMenu={onSetActiveMenu}
               onSetMenuAnimating={onSetMenuAnimating}
+              onBoostClick={handleBoostClick}
               onOpenPrivateNote={() => {
                 onSetActiveMenu(null);
                 setShowPrivateNotePopup(true);
@@ -981,7 +1031,7 @@ export function PostCard({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/boost_post?id=${post.id}`);
+                      void handleBoostClick();
                     }}
                     style={{
                       background: '#fff7e6',
@@ -1323,6 +1373,18 @@ export function PostCard({
           onClose={() => setShowChangePriceSuccess(false)}
         />
       )}
+
+      <BoostAdDetailsPopup
+        show={showBoostStatusPopup}
+        status={boostStatusPopupStatus}
+        expiresAt={boostStatusPopupExpiresAt}
+        justSubmitted={false}
+        submitError={null}
+        overlay="dim"
+        confirmOnly
+        zIndex={2000}
+        onClose={() => setShowBoostStatusPopup(false)}
+      />
 
       {showPriceEstimatePopup && priceValue && priceValue > 0 && priceEstimatePopupPosition && typeof document !== 'undefined' && createPortal(
         <>
