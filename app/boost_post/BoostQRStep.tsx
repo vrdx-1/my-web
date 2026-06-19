@@ -36,7 +36,7 @@ export function BoostQRStep({ selectedPkg, postId }: BoostQRStepProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border mt-4 text-center text-gray-900">
+    <div className="bg-white rounded-2xl p-6 mt-4 text-center text-gray-900">
       <div className="w-64 h-64 mx-auto mb-4 flex items-center justify-center rounded-lg overflow-hidden border">
         <img
           src={selectedPkg.qr_url}
@@ -45,19 +45,21 @@ export function BoostQRStep({ selectedPkg, postId }: BoostQRStepProps) {
         />
       </div>
       <p className="text-gray-900 font-bold text-lg mb-6">{selectedPkg.price}</p>
-      <p className="text-gray-600 mb-8 text-sm">
-        ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກໂອນສຳເລັດ
-      </p>
-      <label className="block w-full bg-blue-600 text-white py-4 rounded-xl font-bold cursor-pointer hover:bg-blue-700 transition-colors relative overflow-hidden">
-        ແຈ້ງສະລິບການໂອນ
-        <input
-          ref={slipInputRef}
-          type="file"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={handleFileSelect}
-          accept="image/*"
-        />
-      </label>
+      <div className="mt-28">
+        <p className="text-gray-600 mb-4 text-sm">
+          ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກໂອນສຳເລັດ
+        </p>
+        <label className="block w-full bg-blue-600 text-white py-4 rounded-xl font-bold cursor-pointer hover:bg-blue-700 transition-colors relative overflow-hidden">
+          ແຈ້ງສະລິບການໂອນ
+          <input
+            ref={slipInputRef}
+            type="file"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onChange={handleFileSelect}
+            accept="image/*"
+          />
+        </label>
+      </div>
     </div>
   );
 }
