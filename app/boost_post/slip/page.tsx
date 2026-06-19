@@ -75,6 +75,7 @@ function BoostSlipPageContent() {
 
       const { data: sessionData } = await supabase.auth.getSession();
       let userId = sessionData.session?.user?.id ?? null;
+      const accessToken = sessionData.session?.access_token ?? null;
       if (!userId) {
         const { data: refreshed } = await supabase.auth.refreshSession();
         userId = refreshed.session?.user?.id ?? null;
@@ -135,7 +136,10 @@ function BoostSlipPageContent() {
       if (insertedBoost?.id) {
         const recognizeResponse = await fetch("/api/boost/revenue/recognize", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({
             boostId: String(insertedBoost.id),
             postId,
