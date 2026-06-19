@@ -96,7 +96,7 @@ function BoostSlipPageContent() {
       expiryDate.setDate(expiryDate.getDate() + selectedPkg.days);
       const expiresAtIso = expiryDate.toISOString();
 
-      const { error: dbError } = await supabase.from("post_boosts").insert({
+      const { data: insertedBoost, error: dbError } = await supabase.from("post_boosts").insert({
         post_id: postId,
         user_id: userId,
         package_name: selectedPkg.name,
@@ -105,7 +105,7 @@ function BoostSlipPageContent() {
         slip_url: fileName,
         status: "success",
         expires_at: expiresAtIso,
-      });
+      }).select("id").single();
 
       if (dbError) {
         if (uploadData?.path) {
@@ -130,6 +130,22 @@ function BoostSlipPageContent() {
           .eq("status", "success")
           .catch(() => {});
         throw carBoostError;
+      }
+
+      if (insertedBoost?.id) {
+        const recognizeResponse = await fetch("/api/boost/revenue/recognize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            boostId: String(insertedBoost.id),
+            postId,
+          }),
+        });
+
+        if (!recognizeResponse.ok) {
+          const errorPayload = await recognizeResponse.json().catch(() => ({}));
+          console.error("Failed to recognize boost revenue", errorPayload);
+        }
       }
 
       invalidateFeedCacheClient();

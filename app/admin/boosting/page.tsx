@@ -162,11 +162,33 @@ export default function AdminBoostingPage() {
     const msg = "ຢືນຢັນການຍົກເລີກການ Boost?";
     if (!confirm(msg)) return;
     try {
-      await supabase.from("cars").update({ is_boosted: false, boost_expiry: null }).eq("id", item.post_id);
-      await supabase.from("post_boosts").update({ status: "reject" }).eq("id", item.id);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("UNAUTHORIZED");
+
+      const response = await fetch("/api/admin/boosting/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          boostId: String(item.id),
+          postId: String(item.post_id),
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(String(payload?.error || "CANCEL_BOOST_FAILED"));
+      }
+
       invalidateFeedCacheClient();
       fetchBoosts();
-    } catch (err) { }
+    } catch (err) {
+      console.error("Cancel boost failed", err);
+      alert("ຍົກເລີກ Boost ບໍ່ສຳເລັດ");
+    }
   };
 
   const hasRenderableItems = items.some((item) => Boolean(item?.cars));
