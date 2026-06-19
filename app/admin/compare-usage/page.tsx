@@ -150,7 +150,7 @@ export default function AdminCompareUsagePage() {
             Compare Usage Analytics
           </div>
           <h1 style={{ margin: 0, fontSize: 34, lineHeight: '42px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            ສະຖິຕິການເພີ່ມເຂົ້າປຽບທຽບ
+            ສະຖິຕິການເພີ່ມເຂົ້າ ປຽບທຽບ
           </h1>
           <p style={{ margin: '10px 0 0', color: '#475569', fontSize: 15, lineHeight: '24px' }}>
             ສະແດງສະເພາະການໃຊ້ງານຂອງ User ທົ່ວໄປ. Admin ແລະ Sub account ຍັງໃຊ້ຟີເຈີໄດ້ ປົກກະຕິ ແຕ່ຈະບໍ່ຖືກນັບໃນ dashboard ນີ້.
