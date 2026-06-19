@@ -219,7 +219,7 @@ function BoostSlipPageContent() {
               className="max-w-full max-h-64 object-contain"
             />
           </div>
-          <p className="text-gray-500 text-sm mb-6">ກະລຸນາກວດສອບຮູບກ່ອນຢືນຢັນ</p>
+
           <input
             ref={fileInputRef}
             type="file"

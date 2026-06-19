@@ -997,7 +997,7 @@ export function PostCard({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    Boost
+                    ດັນໂພສ
                   </button>
                 )}
                 <button 

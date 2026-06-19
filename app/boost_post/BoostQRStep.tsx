@@ -44,11 +44,9 @@ export function BoostQRStep({ selectedPkg, postId }: BoostQRStepProps) {
           className="w-full h-full object-contain"
         />
       </div>
-      <p className="text-gray-900 font-bold text-lg mb-6">
-        ຈຳນວນເງິນທີ່ຕ້ອງໂອນ: {selectedPkg.price}
-      </p>
+      <p className="text-gray-900 font-bold text-lg mb-6">{selectedPkg.price}</p>
       <p className="text-gray-600 mb-8 text-sm">
-        ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກທ່ານໂອນສຳເລັດ
+        ກະລຸນາແຈ້ງສະລິບການໂອນ ຫຼັງຈາກໂອນສຳເລັດ
       </p>
       <label className="block w-full bg-blue-600 text-white py-4 rounded-xl font-bold cursor-pointer hover:bg-blue-700 transition-colors relative overflow-hidden">
         ແຈ້ງສະລິບການໂອນ

@@ -252,7 +252,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
                 style={menuItemStyleBalanced}
               >
                 <ActionLabel
-                  label="boost ໂພສ"
+                  label="ດັນໂພສ"
                   icon={boostIcon}
                 />
               </div>

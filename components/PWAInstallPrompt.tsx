@@ -15,7 +15,7 @@ const DISMISS_KEY = 'pwa-install-dismissed';
 const LABEL = 'ຕິດຕັ້ງແອັບ';
 const APP_NAME = 'Jutpai';
 const APP_ICON = '/icons/icon-192x192.png';
-const HINT_IOS_TITLE = 'ຂັ້ນຕອນການຕິດຕັ້ງແອັບ:';
+const HINT_IOS_TITLE = 'ຂັ້ນຕອນຕິດຕັ້ງແອັບ:';
 
 declare global {
   interface Window {

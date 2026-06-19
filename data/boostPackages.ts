@@ -9,60 +9,39 @@ export interface BoostPackage {
 
 export const BOOST_PACKAGES: BoostPackage[] = [
   {
-    name: '24 ຊົ່ວໂມງ',
-    price: '10.000 ກີບ',
+    name: '1 ມື້',
+    price: '5.000 ກີບ',
     days: 1,
     qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.25.20.jpeg',
+      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-06-19%20at%2010.51.14.jpeg',
   },
   {
     name: '3 ມື້',
-    price: '30.000 ກີບ',
+    price: '14.000 ກີບ',
     days: 3,
     qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.26.13.jpeg',
-  },
-  {
-    name: '5 ມື້',
-    price: '50.000 ກີບ',
-    days: 5,
-    qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.27.12.jpeg',
+      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-06-19%20at%2010.53.33.jpeg',
   },
   {
     name: '7 ມື້',
-    price: '70.000 ກີບ',
+    price: '29.000 ກີບ',
     days: 7,
     qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.28.12.jpeg',
+      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-06-19%20at%2010.56.00.jpeg',
   },
   {
-    name: '10 ມື້',
-    price: '100.000 ກີບ',
-    days: 10,
+    name: '14 ມື້',
+    price: '59.000 ກີບ',
+    days: 14,
     qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.28.51.jpeg',
-  },
-  {
-    name: '15 ມື້',
-    price: '150.000 ກີບ',
-    days: 15,
-    qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.29.37.jpeg',
-  },
-  {
-    name: '20 ມື້',
-    price: '200.000 ກີບ',
-    days: 20,
-    qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.30.27.jpeg',
+      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-06-19%20at%2010.57.11.jpeg',
   },
   {
     name: '30 ມື້',
-    price: '300.000 ກີບ',
+    price: '99.000 ກີບ',
     days: 30,
     qr_url:
-      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-01-31%20at%2013.31.06.jpeg',
+      'https://pkvtwuwicjqodkyraune.supabase.co/storage/v1/object/public/slips/WhatsApp%20Image%202026-06-19%20at%2010.58.03.jpeg',
   },
 ];
 

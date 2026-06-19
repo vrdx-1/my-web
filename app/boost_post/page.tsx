@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase as supabaseClient } from "@/lib/supabase";
 import { PageSpinner } from "@/components/LoadingSpinner";
 import { BoostAdDetailsPopup } from "@/components/modals/BoostAdDetailsPopup";
-import { BoostHowToModal } from "@/components/modals/BoostHowToModal";
 import { BOOST_PACKAGES } from "@/data/boostPackages";
 import { REGISTER_PATH } from "@/utils/authRoutes";
 import { BoostQRStep } from "./BoostQRStep";
@@ -26,7 +25,6 @@ function BoostPostContent() {
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [selectedPkg, setSelectedPkg] = useState<{ name: string; price: string; days: number; qr_url: string } | null>(null);
   const [dbStatus, setDbStatus] = useState<string | null>(null);
-  const [showHowTo, setShowHowTo] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [justSubmitted, setJustSubmitted] = useState(false);
@@ -224,7 +222,30 @@ function BoostPostContent() {
     );
   }
 
-  if (checkingStatus) return <div className="p-10 text-center font-bold text-gray-900">ກຳລັງກວດສອບຂໍ້ມູນ...</div>;
+  if (checkingStatus) return (
+    <div className="min-h-screen bg-white pb-10">
+      {/* Header skeleton */}
+      <div style={{ padding: "10px 15px", display: "flex", alignItems: "center", position: "sticky", top: 0, background: "#ffffff", zIndex: 10 }}>
+        <div style={{ width: "72px", flexShrink: 0 }}>
+          <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="h-5 w-40 bg-gray-200 rounded-full animate-pulse" />
+        </div>
+        <div style={{ width: "72px", flexShrink: 0 }} />
+      </div>
+      {/* Body skeleton */}
+      <div className="max-w-md mx-auto p-4 pt-8 space-y-4">
+        <div className="h-4 w-48 bg-gray-200 rounded-full animate-pulse mx-auto mb-6" />
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-full bg-gray-100 rounded-2xl p-4 flex justify-between items-center animate-pulse">
+            <div className="h-4 w-20 bg-gray-200 rounded-full" />
+            <div className="h-4 w-24 bg-gray-200 rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white pb-10 text-gray-900">
@@ -288,7 +309,7 @@ function BoostPostContent() {
             color: "#1c1e21",
           }}
         >
-          {step === 2 ? "ຊຳລະຄ່າໂຄສະນາ" : "ສ້າງໂຄສະນາ"}
+          {step === 2 ? "ຊຳລະເງິນເພື່ອດັນໂພສ" : "ດັນໂພສເພື່ອຂາຍໄດ້ໄວຂຶ້ນ"}
         </h3>
         <div style={{ width: "72px", flexShrink: 0 }} aria-hidden />
       </div>
@@ -296,8 +317,8 @@ function BoostPostContent() {
       <div className="max-w-md mx-auto p-4">
         {step === 1 && (
           <div className="space-y-4 pt-4">
-            <p className="text-gray-700 text-center text-base font-medium mb-2">
-              ກະລຸນາເລືອກ Package ທີ່ທ່ານຕ້ອງການ boost
+            <p className="text-gray-700 text-center text-base font-medium mb-6">
+              ເລືອກໄລຍະເວລາດັນໂພສ
             </p>
             {packages.map((pkg) => (
               <button
@@ -308,20 +329,18 @@ function BoostPostContent() {
                 }}
                 className="w-full bg-white border border-gray-200 p-4 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md hover:border-violet-300 transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 text-gray-900"
               >
-                <span className="text-base font-semibold text-gray-900">{pkg.name}</span>
-                <span className="text-base font-bold text-violet-600">{pkg.price}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold text-gray-900">{pkg.name}</span>
+                  {pkg.days === 7 && (
+                    <span className="flex items-center gap-1 text-base font-semibold text-amber-600">
+                      <span>★</span>
+                      <span>ແນະນຳ</span>
+                    </span>
+                  )}
+                </div>
+                <span className="text-base font-bold text-gray-900">{pkg.price}</span>
               </button>
             ))}
-
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowHowTo(true)}
-                className="z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl ring-2 ring-blue-200 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-              >
-                ວິທີສ້າງໂຄສະນາ
-              </button>
-            </div>
           </div>
         )}
 
@@ -341,9 +360,6 @@ function BoostPostContent() {
           />
         )}
       </div>
-
-      {/* Modal อธิบายขั้นตอน */}
-      <BoostHowToModal show={showHowTo} onClose={() => setShowHowTo(false)} />
     </div>
   );
 }
