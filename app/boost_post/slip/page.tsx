@@ -10,6 +10,7 @@ import { REGISTER_PATH } from "@/utils/authRoutes";
 import { useBoostSlip } from "../BoostSlipContext";
 import { compressImage } from "@/utils/imageCompression";
 import { invalidateFeedCacheClient } from "@/utils/invalidateFeedCacheClient";
+import { ButtonSpinner, PageSpinner } from "@/components/LoadingSpinner";
 
 function BoostSlipPageContent() {
   const router = useRouter();
@@ -133,7 +134,6 @@ function BoostSlipPageContent() {
 
       invalidateFeedCacheClient();
 
-      clearSlip();
       setBoostResult({
         dbStatus: "success",
         expiresAt: expiresAtIso,
@@ -147,7 +147,6 @@ function BoostSlipPageContent() {
       router.replace(`/boost_post?id=${postId}`);
     } catch (error: any) {
       console.error(error);
-      clearSlip();
       setBoostResult({
         dbStatus: "error",
         expiresAt: null,
@@ -167,7 +166,7 @@ function BoostSlipPageContent() {
   if (!postId || !selectedPkg || !pendingSlipFile || !previewUrl) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
-        <p className="text-gray-500">ກຳລັງໂຫຼດ...</p>
+        <PageSpinner />
       </div>
     );
   }
@@ -231,18 +230,18 @@ function BoostSlipPageContent() {
             color: "#1c1e21",
           }}
         >
-          ຢືນຢັນສະລິບການໂອນ
+          ແຈ້ງສະລິບການໂອນ
         </h3>
         <div style={{ width: "72px", flexShrink: 0 }} aria-hidden />
       </div>
 
       <div className="max-w-md mx-auto p-4 pt-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border text-center text-gray-900">
-          <div className="w-full max-h-64 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center mb-6">
+        <div className="bg-white rounded-2xl p-6 text-center text-gray-900">
+          <div className="w-[72%] max-w-[260px] mx-auto aspect-[3/4] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center mb-6">
             <img
               src={previewUrl}
               alt="ສະລິບ"
-              className="max-w-full max-h-64 object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
 
@@ -266,9 +265,9 @@ function BoostSlipPageContent() {
               type="button"
               onClick={handleConfirmUpload}
               disabled={loading}
-              className="flex-1 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
+              className="flex-1 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors inline-flex items-center justify-center"
             >
-              {loading ? "ກຳລັງສົ່ງ..." : "ຢືນຢັນ"}
+              {loading ? <ButtonSpinner /> : "ຢືນຢັນ"}
             </button>
           </div>
         </div>
@@ -282,7 +281,7 @@ export default function BoostSlipPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-white flex items-center justify-center">
-          <p className="text-gray-500">ກຳລັງໂຫຼດ...</p>
+          <PageSpinner />
         </div>
       }
     >

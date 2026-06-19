@@ -54,6 +54,11 @@ function BoostPostContent() {
 
   useEffect(() => {
     async function checkExistingBoost() {
+      if (boostResult) {
+        setCheckingStatus(false);
+        return;
+      }
+
       // Guest users must create an account before boosting
       const { data: sessionData } = await supabase.auth.getSession();
       let session = sessionData.session;
@@ -181,7 +186,7 @@ function BoostPostContent() {
       }
     }
     checkExistingBoost();
-  }, [postId, router, supabase, searchParams]);
+  }, [postId, router, supabase, searchParams, boostResult]);
 
   useEffect(() => {
     const fromSlip = searchParams.get("from_slip");
@@ -206,6 +211,7 @@ function BoostPostContent() {
 
   useEffect(() => {
     if (!boostResult) return;
+    setCheckingStatus(false);
     setDbStatus(boostResult.dbStatus);
     setExpiresAt(boostResult.expiresAt);
     setJustSubmitted(boostResult.justSubmitted);
@@ -222,7 +228,7 @@ function BoostPostContent() {
     );
   }
 
-  if (checkingStatus) return (
+  if (checkingStatus && !boostResult) return (
     <div className="min-h-screen bg-white pb-10">
       {/* Header skeleton */}
       <div style={{ padding: "10px 15px", display: "flex", alignItems: "center", position: "sticky", top: 0, background: "#ffffff", zIndex: 10 }}>
@@ -364,7 +370,7 @@ function BoostPostContent() {
 // ฟังก์ชันหลักที่ส่งออก โดยหุ้มด้วย Suspense เพื่อแก้ Build Error
 export default function BoostPostPage() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><PageSpinner /></div>}>
+    <Suspense fallback={null}>
       <BoostPostContent />
     </Suspense>
   );
