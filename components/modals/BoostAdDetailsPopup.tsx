@@ -97,6 +97,12 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
           <>
             <h2 className="text-2xl font-bold mb-3 text-green-600">ດັນໂພສສຳເລັດ</h2>
             <p className="text-gray-700">ໂພສຂອງທ່ານກຳລັງຖືກດັນເພື່ອໃຫ້ຂາຍໄດ້ໄວຂຶ້ນ</p>
+            {submitError && (
+              <div className="mt-3 text-left text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <div className="font-bold text-orange-800 mb-1">⚠ Revenue log warning</div>
+                <div className="break-words whitespace-pre-wrap font-mono text-xs text-orange-800">{submitError}</div>
+              </div>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -110,9 +116,9 @@ export const BoostAdDetailsPopup = React.memo<BoostAdDetailsPopupProps>(({
             <h2 className="text-2xl font-bold mb-3 text-red-600">ສົ່ງບໍ່ສຳເລັດ</h2>
             <p className="text-gray-700">ກະລຸນາລອງໃໝ່ (ກວດສອບອິນເຕີເນັດ / ການລ໋ອກອິນ).</p>
             {submitError && (
-              <div className="mt-3 text-left text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                <div className="font-bold text-gray-700 mb-1">Error</div>
-                <div className="break-words text-gray-700">{submitError}</div>
+              <div className="mt-3 text-left text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div className="font-bold text-red-800 mb-1">Error debug</div>
+                <div className="break-words whitespace-pre-wrap font-mono text-xs text-red-800">{submitError}</div>
               </div>
             )}
             <button

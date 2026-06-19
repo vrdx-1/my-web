@@ -110,7 +110,10 @@ function BoostSlipPageContent() {
 
       if (dbError) {
         if (uploadData?.path) {
-          await supabase.storage.from("slips").remove([uploadData.path]).catch(() => {});
+          const { error: removeError } = await supabase.storage.from("slips").remove([uploadData.path]);
+          if (removeError) {
+            console.error("Failed to cleanup uploaded slip after db error", removeError);
+          }
         }
         throw dbError;
       }
@@ -122,14 +125,15 @@ function BoostSlipPageContent() {
         .eq("user_id", userId);
 
       if (carBoostError) {
-        await supabase
+        const revertBoostQuery = supabase
           .from("post_boosts")
           .update({ status: "reject", expires_at: null })
           .eq("post_id", postId)
           .eq("user_id", userId)
           .eq("slip_url", fileName)
-          .eq("status", "success")
-          .catch(() => {});
+          .eq("status", "success");
+        const { error: revertBoostError } = await revertBoostQuery;
+        if (revertBoostError) console.error("Failed to revert post_boosts after car update error", revertBoostError);
         throw carBoostError;
       }
 
@@ -147,8 +151,34 @@ function BoostSlipPageContent() {
         });
 
         if (!recognizeResponse.ok) {
-          const errorPayload = await recognizeResponse.json().catch(() => ({}));
-          console.error("Failed to recognize boost revenue", errorPayload);
+          const statusCode = recognizeResponse.status;
+          const statusText = recognizeResponse.statusText;
+          let errorPayload: any = { statusCode, statusText };
+          let rawText = '';
+          try {
+            rawText = await recognizeResponse.text();
+            if (rawText) {
+              try {
+                errorPayload = { ...errorPayload, ...JSON.parse(rawText) };
+              } catch {
+                errorPayload.rawResponse = rawText.substring(0, 500);
+              }
+            }
+          } catch {
+            errorPayload.error = 'Failed to read response';
+          }
+          console.error("Failed to recognize boost revenue", { statusCode, statusText, errorPayload, rawText });
+          const debugInfo = typeof errorPayload?.debug === 'object' && errorPayload.debug
+            ? JSON.stringify(errorPayload.debug)
+            : '';
+          const errorMsg = errorPayload?.error ? String(errorPayload.error) : `HTTP ${statusCode} ${statusText}`;
+          throw new Error([
+            'REVENUE_LOG_FAILED',
+            `status=${statusCode}`,
+            errorMsg,
+            errorPayload?.details ? String(errorPayload.details) : '',
+            debugInfo ? `debug=${debugInfo}` : '',
+          ].filter(Boolean).join(' | '));
         }
       }
 

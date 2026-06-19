@@ -79,13 +79,8 @@ BEGIN
   END IF;
 END $$;
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_revenue_logs_boost_recognized
-  ON public.revenue_logs (source_boost_id, event_type)
-  WHERE event_type = 'boost_revenue_recognized';
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_revenue_logs_boost_reversed
-  ON public.revenue_logs (source_boost_id, event_type)
-  WHERE event_type = 'boost_revenue_reversed';
+CREATE UNIQUE INDEX IF NOT EXISTS uq_revenue_logs_boost_event
+  ON public.revenue_logs (source_boost_id, event_type);
 
 CREATE INDEX IF NOT EXISTS idx_revenue_logs_created_at
   ON public.revenue_logs (created_at DESC);
