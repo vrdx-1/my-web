@@ -45,11 +45,11 @@ export const NotificationPostPreviewCard = React.memo<{
     notification.boost_status === 'pending'
       ? { text: 'ກຳລັງກວດສອບ', bg: '#fffbeb', border: '#fcd34d', color: '#92400e' }
       : notification.boost_status === 'reject'
-        ? { text: 'ຖືກປະຕິເສດ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
+        ? { text: 'ການດັນໂພສຖືກຍົກເລີກ', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c' }
         : notification.boost_status === 'success'
           ? isBoostExpired
-            ? { text: 'ໂຄສະນາຫມົດອາຍຸແລ້ວ', bg: '#f3f4f6', border: '#d1d5db', color: '#4b5563' }
-            : { text: 'ກຳລັງໂຄສະນາ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
+            ? { text: 'ດັນໂພສສິ້ນສຸດແລ້ວ', bg: '#f3f4f6', border: '#d1d5db', color: '#4b5563' }
+            : { text: 'ກຳລັງດັນໂພສ', bg: '#ecfdf5', border: '#86efac', color: '#166534' }
           : null;
 
   return (
@@ -100,29 +100,26 @@ export const NotificationPostPreviewCard = React.memo<{
 
       {/* Notification Content */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: '4px' }}>
-        {/* แถวบนสุด: ข้อความแจ้งเตือน boost */}
-        <div
-          style={{
-            fontSize: '14px',
-            lineHeight: '1.4',
-            color: '#050505',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            marginBottom: '6px',
-            minWidth: 0,
-            WebkitTouchCallout: 'none',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-          }}
-        >
-          {shouldShowSenderName && (
+        {/* แถวบนสุด: ชื่อผู้ส่ง (ถ้ามี) */}
+        {shouldShowSenderName && (
+          <div
+            style={{
+              fontSize: '14px',
+              lineHeight: '1.4',
+              color: '#050505',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '6px',
+              minWidth: 0,
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+            }}
+          >
             <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a4d52', flexShrink: 0 }}>{latestName}</span>
-          )}
-          <span style={{ color: '#050505', flexShrink: 0 }}>
-            ອັບເດດສະຖານະ Boost ໂພສຂອງທ່ານ{captionPreview ? ':' : ''}
-          </span>
-        </div>
+          </div>
+        )}
 
         {/* แถวที่สอง: ตัวอย่างแคปชั่นของโพสต์ */}
         {captionPreview && (
@@ -149,7 +146,6 @@ export const NotificationPostPreviewCard = React.memo<{
         {/* กลาง: ສະຖານະໂຄສະນາ (เฉพาะโพสต์ที่มี boost) */}
         {boostBadgeConfig && (
           <div style={{ marginTop: '2px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', color: '#6b6b6b', fontWeight: 600 }}>ສະຖານະໂຄສະນາ:</span>
             <div
               style={{
                 display: 'inline-block',
