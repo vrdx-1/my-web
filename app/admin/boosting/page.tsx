@@ -25,7 +25,7 @@ export default function AdminBoostingPage() {
   const router = useRouter();
   const fromPath = '/admin/boosting';
   const supabase = supabaseClient;
-  const [activeTab, setActiveTab] = useState<"boosting" | "sold">("boosting");
+  const [activeTab, setActiveTab] = useState<"boosting" | "sub_account" | "sold" | "cancelled">("boosting");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
@@ -66,7 +66,7 @@ export default function AdminBoostingPage() {
       }
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified, is_sub_account)')
         .in('id', soldPostIds);
       if (carsError || !allCarsData?.length) {
         setLoading(false);
@@ -82,6 +82,42 @@ export default function AdminBoostingPage() {
       return;
     }
 
+    if (activeTab === "cancelled") {
+      // แท็บ Cancelled: boosts ที่ถูก cancel (status = 'reject')
+      const { data: boostsData, error: boostsError } = await supabase
+        .from("post_boosts")
+        .select('id, post_id, status, slip_url, price, package_name, boost_days, expires_at, created_at')
+        .eq("status", "reject")
+        .order("created_at", { ascending: false });
+
+      if (boostsError || !boostsData?.length) {
+        setLoading(false);
+        return;
+      }
+
+      const postIds = boostsData.map((b: any) => b.post_id);
+      const { data: allCarsData, error: carsError } = await supabase
+        .from("cars")
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified, is_sub_account)')
+        .in('id', postIds);
+
+      if (carsError) {
+        setLoading(false);
+        return;
+      }
+
+      const carsMap = new Map((allCarsData || []).map((car: any) => [car.id, car]));
+      const combinedData = boostsData.map((boostData: any) => ({
+        ...boostData,
+        cars: carsMap.get(boostData.post_id),
+      }));
+
+      setItems(combinedData);
+      setLoading(false);
+      return;
+    }
+
+    // แท็บ boosting และ sub_account: active boosts (status = success)
     const statusFilter = "success";
 
     // 1. ดึง ID ของ boost ทั้งหมด
@@ -108,10 +144,10 @@ export default function AdminBoostingPage() {
         .select('id, post_id, status, slip_url, price, package_name, boost_days, expires_at, created_at')
         .in('id', boostIds);
 
-      // โหลด posts ทั้งหมด
+      // โหลด posts ทั้งหมด (รวม is_sub_account เพื่อกรองแท็บ)
       const { data: allCarsData, error: carsError } = await supabase
         .from("cars")
-        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified)')
+        .select('id, short_id, caption, price, price_currency, province, images, layout, status, created_at, user_id, likes, shares, is_hidden, is_boosted, profiles!cars_user_id_fkey(username, avatar_url, phone, is_verified, is_sub_account)')
         .in('id', postIds);
 
       if (!boostsErr && !carsError && allBoostsData && allCarsData) {
@@ -122,19 +158,25 @@ export default function AdminBoostingPage() {
           return { ...boostData, cars: carData };
         });
 
-        // กรอง Boost ที่หมดอายุแล้วไม่ให้แสดงในหน้า Admin (แท็บ Boosting)
-        if (statusFilter === "success") {
-          const now = Date.now();
-          combinedData = combinedData.filter((item) => {
-            if (!item.expires_at) return true;
-            const expiresAtTime = new Date(item.expires_at as string).getTime();
-            return Number.isFinite(expiresAtTime) && expiresAtTime > now;
-          });
-          // แท็บ Boosting: ไม่แสดงโพสต์ที่ขายแล้ว (ຂາຍແລ້ວ) — ระบบปิด boost อัตโนมัติแล้ว
-          combinedData = combinedData.filter((item) => item?.cars?.status !== "sold");
+        // กรอง Boost ที่หมดอายุแล้ว
+        const now = Date.now();
+        combinedData = combinedData.filter((item) => {
+          if (!item.expires_at) return true;
+          const expiresAtTime = new Date(item.expires_at as string).getTime();
+          return Number.isFinite(expiresAtTime) && expiresAtTime > now;
+        });
+        // ไม่แสดงโพสต์ที่ขายแล้ว (ຂາຍແລ້ວ)
+        combinedData = combinedData.filter((item) => item?.cars?.status !== "sold");
+
+        // กรองตามแท็บ: sub_account หรือ user ทั่วไป
+        if (activeTab === "sub_account") {
+          combinedData = combinedData.filter((item) => (item?.cars?.profiles as any)?.is_sub_account === true);
+        } else {
+          // แท็บ boosting: เฉพาะ user ทั่วไป (ไม่ใช่ sub account)
+          combinedData = combinedData.filter((item) => !(item?.cars?.profiles as any)?.is_sub_account);
         }
 
-        // แท็บ Boosting: ใหม่อยู่บน
+        // ใหม่อยู่บน
         combinedData = [...combinedData].sort((a, b) => {
           const ta = new Date((a as any).created_at).getTime();
           const tb = new Date((b as any).created_at).getTime();
@@ -197,18 +239,30 @@ export default function AdminBoostingPage() {
     <main className="max-w-[1200px] mx-auto p-5 bg-[#f0f2f5] min-h-screen">
       <div className="flex flex-col items-center mb-10 space-y-4">
         <h2 className="text-xl font-bold text-gray-800">Boosting Management ({items.length})</h2>
-        <div className="flex bg-gray-200/50 p-1.5 rounded-2xl border border-gray-300 shadow-inner">
+        <div className="flex flex-wrap justify-center gap-1 bg-gray-200/50 p-1.5 rounded-2xl border border-gray-300 shadow-inner">
           <button 
             onClick={() => setActiveTab("boosting")} 
-            className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'boosting' ? 'bg-white text-green-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'boosting' ? 'bg-white text-green-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Boosting
           </button>
           <button 
+            onClick={() => setActiveTab("sub_account")} 
+            className={`px-6 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'sub_account' ? 'bg-white text-purple-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Sub Account
+          </button>
+          <button 
             onClick={() => setActiveTab("sold")} 
-            className={`px-10 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'sold' ? 'bg-white text-amber-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'sold' ? 'bg-white text-amber-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
           >
             SOLD
+          </button>
+          <button 
+            onClick={() => setActiveTab("cancelled")} 
+            className={`px-6 py-2.5 rounded-xl font-black transition-all text-sm uppercase tracking-wider ${activeTab === 'cancelled' ? 'bg-white text-red-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Cancelled
           </button>
         </div>
       </div>
@@ -258,6 +312,11 @@ export default function AdminBoostingPage() {
 
               <div className="w-full lg:w-[320px] bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex flex-col">
                 <p className="text-[11px] font-black text-gray-400 uppercase mb-3 tracking-widest text-center">Transfer Slip</p>
+                {(post?.profiles as any)?.is_sub_account && (
+                  <div className="mb-3 bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-black uppercase tracking-wider rounded-lg py-1.5 px-3 text-center">
+                    Sub Account
+                  </div>
+                )}
                 
                 <div 
                   onClick={() => setFullScreenSlip(slipFullUrl)}
@@ -281,6 +340,10 @@ export default function AdminBoostingPage() {
                   {activeTab === 'sold' ? (
                     <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 rounded-lg py-3 px-4 text-center font-bold text-xs uppercase tracking-wider">
                       ປິດ Boost ອັດຕະໂນມັດ (ຂາຍແລ້ວ)
+                    </div>
+                  ) : activeTab === 'cancelled' ? (
+                    <div className="w-full bg-red-50 text-red-600 border border-red-200 rounded-lg py-3 px-4 text-center font-bold text-xs uppercase tracking-wider">
+                      ຍົກເລີກແລ້ວ (Cancelled)
                     </div>
                   ) : (
                     <button 
