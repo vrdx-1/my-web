@@ -49,6 +49,7 @@ export function MyPostsContent() {
   const [tab, setTab] = useState('recommend');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
   const [hasFetchedSold, setHasFetchedSold] = useState(false);
@@ -62,7 +63,21 @@ export function MyPostsContent() {
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const ownershipScopeKeyRef = useRef<string | null>(null);
   const fixedHeaderRef = useRef<HTMLDivElement | null>(null);
-  const [fixedHeaderHeight, setFixedHeaderHeight] = useState(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+  const yearDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [fixedHeaderHeight, setFixedHeaderHeight] = useState<number>(
+    Number.parseInt(LAYOUT_CONSTANTS.HEADER_HEIGHT, 10) || 118,
+  );
+  const yearSuggestions = useMemo(() => {
+    const startYear = 2026;
+    const minYear = 1980;
+    return Array.from({ length: startYear - minYear + 1 }, (_, index) => startYear - index);
+  }, []);
+  const selectedYear = useMemo(() => {
+    const trimmed = searchInput.trim();
+    if (!/^\d{4}$/.test(trimmed)) return null;
+    const parsed = Number(trimmed);
+    return yearSuggestions.includes(parsed) ? parsed : null;
+  }, [searchInput, yearSuggestions]);
 
   const activeProfileRecord = useMemo(() => {
     const resolvedProfileId = activeProfileId || authUserId;
@@ -92,6 +107,38 @@ export function MyPostsContent() {
   }, [searchInput]);
 
   useEffect(() => {
+    if (!showYearDropdown) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!yearDropdownRef.current?.contains(target)) {
+        setShowYearDropdown(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setShowYearDropdown(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [showYearDropdown]);
+
+  useEffect(() => {
+    if (showSearchControls) return;
+    setShowYearDropdown(false);
+  }, [showSearchControls]);
+
+  useEffect(() => {
     setMounted(true);
   }, []);
 
@@ -104,7 +151,7 @@ export function MyPostsContent() {
   useEffect(() => {
     const element = fixedHeaderRef.current;
     if (!element) {
-      setFixedHeaderHeight(LAYOUT_CONSTANTS.HEADER_HEIGHT);
+      setFixedHeaderHeight(Number.parseInt(LAYOUT_CONSTANTS.HEADER_HEIGHT, 10) || 118);
       return;
     }
 
@@ -493,53 +540,141 @@ export function MyPostsContent() {
             >
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  border: '1px solid #d1d5db',
-                  borderRadius: 12,
-                  padding: '8px 10px',
-                  background: '#f9fafb',
                   flex: 1,
                   minWidth: 0,
+                  position: 'relative',
                 }}
+                ref={yearDropdownRef}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="ຄົ້ນຫາໂພສຂອງຂ້ອຍ"
+                <div
                   style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    background: 'transparent',
-                    // iOS Safari auto-zooms focused inputs smaller than 16px.
-                    fontSize: 16,
-                    color: '#111827',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    border: '1px solid #d1d5db',
+                    borderRadius: 12,
+                    padding: '8px 10px',
+                    background: '#f9fafb',
                   }}
-                />
-                {searchInput ? (
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    placeholder="ຄົ້ນຫາໂພສຂອງຂ້ອຍ"
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      // iOS Safari auto-zooms focused inputs smaller than 16px.
+                      fontSize: 16,
+                      color: '#111827',
+                    }}
+                  />
+                  {searchInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchInput('')}
+                      aria-label="ລ້າງຄຳຄົ້ນ"
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        cursor: 'pointer',
+                        fontSize: 18,
+                        lineHeight: 1,
+                        padding: 0,
+                      }}
+                    >
+                      ×
+                    </button>
+                  ) : null}
                   <button
                     type="button"
-                    onClick={() => setSearchInput('')}
-                    aria-label="ລ້າງຄຳຄົ້ນ"
+                    onClick={() => setShowYearDropdown((prev) => !prev)}
+                    aria-label="ເລືອກປີ"
+                    aria-expanded={showYearDropdown}
                     style={{
                       border: 'none',
                       background: 'transparent',
-                      color: '#6b7280',
+                      color: '#4b5563',
                       cursor: 'pointer',
-                      fontSize: 18,
-                      lineHeight: 1,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 20,
+                      height: 20,
                       padding: 0,
+                      flexShrink: 0,
                     }}
                   >
-                    ×
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ transform: showYearDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </button>
+                </div>
+
+                {showYearDropdown ? (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      width: 140,
+                      maxHeight: 'calc(100dvh - 210px - env(safe-area-inset-bottom, 0px))',
+                      height: 'calc(100dvh - 210px - env(safe-area-inset-bottom, 0px))',
+                      overflowY: 'auto',
+                      background: '#ffffff',
+                      borderRadius: 12,
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 10px 24px rgba(17, 24, 39, 0.12)',
+                      zIndex: 120,
+                    }}
+                  >
+                    {yearSuggestions.map((year) => {
+                      const isActiveYear = selectedYear === year;
+                      return (
+                        <button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            setSearchInput(String(year));
+                            setShowYearDropdown(false);
+                          }}
+                          style={{
+                            width: '100%',
+                            border: 'none',
+                            borderBottom: '1px solid #f3f4f6',
+                            background: isActiveYear ? '#eff6ff' : '#ffffff',
+                            color: isActiveYear ? '#1d4ed8' : '#111827',
+                            fontWeight: isActiveYear ? 700 : 500,
+                            fontSize: 14,
+                            lineHeight: '20px',
+                            cursor: 'pointer',
+                            padding: '10px 12px',
+                            textAlign: 'left',
+                          }}
+                        >
+                          {year}
+                        </button>
+                      );
+                    })}
+                  </div>
                 ) : null}
               </div>
               {showMyPostsCreateButton ? (

@@ -119,7 +119,7 @@ export interface UsePostListDataReturn {
   setSavedPosts: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   
   // Functions
-  fetchPosts: (isInitial?: boolean) => Promise<void>;
+  fetchPosts: (isInitial?: boolean, pageToFetch?: number) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
