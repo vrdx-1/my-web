@@ -518,7 +518,8 @@ export function MyPostsContent() {
                     border: 'none',
                     outline: 'none',
                     background: 'transparent',
-                    fontSize: 14,
+                    // iOS Safari auto-zooms focused inputs smaller than 16px.
+                    fontSize: 16,
                     color: '#111827',
                   }}
                 />
