@@ -696,24 +696,6 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
-                {post.short_id ? (
-                  <>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '3px',
-                        height: '3px',
-                        borderRadius: '50%',
-                        backgroundColor: '#9ea2a7',
-                        margin: '0 6px',
-                        transform: 'translateY(1px)',
-                      }}
-                    />
-                    <span style={{ color: '#4a4d52', fontWeight: 400 }}>
-                      ID: {String(post.short_id).slice(0, 6)}
-                    </span>
-                  </>
-                ) : null}
                 <span
                   style={{
                     display: 'inline-block',
@@ -742,24 +724,6 @@ export function PostCard({
                   }}
                 />
                 <span style={{ color: '#4a4d52' }}>{post.province}</span>
-                {post.short_id ? (
-                  <>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '3px',
-                        height: '3px',
-                        borderRadius: '50%',
-                        backgroundColor: '#9ea2a7',
-                        margin: '0 6px',
-                        transform: 'translateY(1px)',
-                      }}
-                    />
-                    <span style={{ color: '#4a4d52', fontWeight: 400 }}>
-                      ID: {String(post.short_id).slice(0, 6)}
-                    </span>
-                  </>
-                ) : null}
               </span>
             )}
           </div>
