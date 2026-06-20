@@ -153,7 +153,7 @@ export default function AdminCompareUsagePage() {
             ສະຖິຕິການເພີ່ມເຂົ້າ ປຽບທຽບ
           </h1>
           <p style={{ margin: '10px 0 0', color: '#475569', fontSize: 15, lineHeight: '24px' }}>
-            ສະແດງສະເພາະການໃຊ້ງານຂອງ User ທົ່ວໄປ. Admin ແລະ Sub account ຍັງໃຊ້ຟີເຈີໄດ້ ປົກກະຕິ ແຕ່ຈະບໍ່ຖືກນັບໃນ dashboard ນີ້.
+            ສະແດງສະເພາະການໃຊ້ງານຂອງ  User ທົ່ວໄປ. Admin ແລະ Sub account ຍັງໃຊ້ຟີເຈີໄດ້ ປົກກະຕິ ແຕ່ຈະບໍ່ຖືກນັບໃນ dashboard ນີ້.
           </p>
         </div>
 
