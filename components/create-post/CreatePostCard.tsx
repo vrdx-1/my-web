@@ -3,52 +3,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/Avatar';
 import { PhotoPreviewGrid } from '@/components/PhotoPreviewGrid';
 import { LayoutPreviewSelector } from './LayoutPreviewSelector';
 import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
 
-const actionIconStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#4b5563',
-  flexShrink: 0,
-};
-
-const ActionLineIcon = ({ children }: { children: React.ReactNode }) => (
-  <svg
-    viewBox="0 0 24 24"
-    width="22"
-    height="22"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    style={{ display: 'block' }}
-  >
-    {children}
-  </svg>
-);
-
-const privateNoteIcon = (
-  <ActionLineIcon>
-    <rect x="4" y="3" width="16" height="18" rx="2" />
-    <path d="M8 8h8" />
-    <path d="M8 12h8" />
-    <path d="M8 16h5" />
-  </ActionLineIcon>
-);
-
 interface CreatePostCardProps {
-  selectedPrivateShop?: {
-    shop_name: string | null;
-    shop_phone: string | null;
-  } | null;
-  onClearPrivateShop?: () => void;
   userProfile: any;
   session: any;
   caption: string;
@@ -67,8 +27,6 @@ interface CreatePostCardProps {
 
 export const CreatePostCard = React.memo<CreatePostCardProps>(
   ({
-    selectedPrivateShop,
-    onClearPrivateShop,
     userProfile,
     session,
     caption,
@@ -84,20 +42,8 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
     layout,
     onLayoutChange,
   }) => {
-    const router = useRouter();
     const formattedCarPrice = carPrice ? Number(carPrice).toLocaleString('en-US') : '';
     const currencyOptions: Array<'₭' | '฿' | '$'> = ['₭', '฿', '$'];
-    const privateNoteSummary = (() => {
-      const noteName = selectedPrivateShop?.shop_name?.trim();
-      if (noteName) return noteName;
-
-      const rawPhone = selectedPrivateShop?.shop_phone?.trim();
-      if (!rawPhone) return '';
-      if (rawPhone.startsWith('85620') && rawPhone.length === 13) {
-        return `020${rawPhone.slice(5)}`;
-      }
-      return rawPhone;
-    })();
 
     return (
       <div>
@@ -378,102 +324,6 @@ export const CreatePostCard = React.memo<CreatePostCardProps>(
             </div>
           )}
 
-          {previews.length > 0 && (
-            <div
-              style={{
-                padding: '0 15px 16px',
-                paddingTop: '0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0',
-              }}
-            >
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => router.push('/create-post/private-note')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    router.push('/create-post/private-note');
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '14px 0',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#4b5563',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                }}
-              >
-                <span style={actionIconStyle}>{privateNoteIcon}</span>
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    minWidth: 0,
-                    flex: 1,
-                  }}
-                >
-                  <span style={{ color: '#4b5563', flexShrink: 0 }}>ໂນດສ່ວນຕົວ</span>
-                  {privateNoteSummary ? (
-                    <>
-                      <span
-                        style={{
-                          minWidth: 0,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          color: '#1877f2',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {privateNoteSummary}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onClearPrivateShop?.();
-                        }}
-                        aria-label="ลบโน๊ดส่วนตัว"
-                        title="ลบโน๊ดส่วนตัว"
-                        style={{
-                          border: '1px solid #fecaca',
-                          background: '#fff1f2',
-                          color: '#e11d48',
-                          width: '22px',
-                          height: '22px',
-                          borderRadius: '999px',
-                          cursor: 'pointer',
-                          padding: 0,
-                          marginLeft: '4px',
-                          flexShrink: 0,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
-                          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    </>
-                  ) : null}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );

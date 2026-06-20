@@ -10,16 +10,7 @@ import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 
-const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
 const CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY = 'create_post_redirect_after_submit';
-
-function getCreatePostPrivateShopStorageKey(profileId: string): string {
-  return `${CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX}_${profileId}`;
-}
-
-interface CreatePostPrivateShopSelection {
-  id: string;
-}
 
 interface ImageUploadLike {
   selectedFiles: File[];
@@ -29,7 +20,6 @@ interface ImageUploadLike {
 interface UseCreatePostUploadParams {
   session: Session | null;
   activeProfileId?: string | null;
-  selectedPrivateShop?: CreatePostPrivateShopSelection | null;
   caption: string;
   province: string;
   carPrice: string;
@@ -43,7 +33,6 @@ interface UseCreatePostUploadParams {
 export function useCreatePostUpload({
   session,
   activeProfileId,
-  selectedPrivateShop,
   caption,
   province,
   carPrice,
@@ -124,29 +113,6 @@ export function useCreatePostUpload({
           );
       }
 
-      let privateShopId: string | null = null;
-      if (typeof window !== 'undefined') {
-        privateShopId = selectedPrivateShop?.id ?? null;
-
-        const currentProfileId = activeProfileId || session?.user?.id || null;
-        const scopedRaw = currentProfileId
-          ? window.sessionStorage.getItem(getCreatePostPrivateShopStorageKey(currentProfileId))
-          : null;
-        const legacyRaw = window.sessionStorage.getItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX);
-        const raw = scopedRaw || legacyRaw;
-
-        if (!privateShopId && raw) {
-          try {
-            const parsed = JSON.parse(raw) as { id?: string };
-            if (parsed.id) {
-              privateShopId = parsed.id;
-            }
-          } catch {
-            // ignore parse error
-          }
-        }
-      }
-
       const normalizedPrice = carPrice.replace(/\D/g, '');
       const priceValue = normalizedPrice ? Number(normalizedPrice) : null;
 
@@ -166,10 +132,6 @@ export function useCreatePostUpload({
       if (priceValue && Number.isFinite(priceValue)) {
         insertData.price = priceValue;
         insertData.price_currency = carCurrency || '₭';
-      }
-
-      if (privateShopId) {
-        insertData.private_shop_id = privateShopId;
       }
 
       // เพิ่ม layout field ถ้ามี 6+ รูป
@@ -263,12 +225,6 @@ export function useCreatePostUpload({
         sessionStorage.removeItem('create_post_currency');
         sessionStorage.removeItem('create_post_step');
         sessionStorage.removeItem('create_post_layout');
-        if (activeProfileId || session?.user?.id) {
-          sessionStorage.removeItem(
-            getCreatePostPrivateShopStorageKey(activeProfileId || session!.user.id),
-          );
-        }
-        sessionStorage.removeItem(CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX);
         localStorage.removeItem('create_post_caption_ls');
         localStorage.removeItem('create_post_province_ls');
         localStorage.removeItem('create_post_price_ls');

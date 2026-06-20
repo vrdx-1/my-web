@@ -86,15 +86,6 @@ const boostIcon = (
   </LineIcon>
 );
 
-const privateNoteIcon = (
-  <LineIcon>
-    <rect x="4" y="3" width="16" height="18" rx="2" />
-    <path d="M8 8h8" />
-    <path d="M8 12h8" />
-    <path d="M8 16h5" />
-  </LineIcon>
-);
-
 const reportIcon = (
   <LineIcon>
     <circle cx="12" cy="12" r="9" />
@@ -132,7 +123,6 @@ interface MenuDropdownProps {
   onShare?: () => void;
   onBoost?: () => void;
   onReport?: () => void;
-  onPrivateNote?: () => void;
   onRepost?: () => void;
 }
 
@@ -158,7 +148,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onShare,
   onBoost,
   onReport,
-  onPrivateNote,
   onRepost,
 }) => {
   if (!isOpen) return null;
@@ -173,7 +162,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
 
   const showBoost = typeof onBoost === 'function';
   const showCompare = typeof onCompare === 'function';
-  const showPrivateNote = typeof onPrivateNote === 'function';
   const showRepost = typeof onRepost === 'function';
   const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
 
@@ -254,14 +242,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
                 <ActionLabel
                   label="ດັນໂພສ"
                   icon={boostIcon}
-                />
-              </div>
-            )}
-            {showPrivateNote && (
-              <div onClick={onPrivateNote} style={menuItemStyleBalanced}>
-                <ActionLabel
-                  label="ໂນດສ່ວນຕົວ"
-                  icon={privateNoteIcon}
                 />
               </div>
             )}

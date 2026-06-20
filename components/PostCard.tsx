@@ -12,7 +12,6 @@ import { PostCardMenu } from './PostCardMenu';
 import { formatTime, isPostOwner } from '@/utils/postUtils';
 import { commonStyles } from '@/utils/commonStyles';
 import { ButtonSpinner } from '@/components/LoadingSpinner';
-import { PrivateNotePopup } from './modals/PrivateNotePopup';
 import { SuccessPopup } from './modals/SuccessPopup';
 import { BoostAdDetailsPopup } from './modals/BoostAdDetailsPopup';
 import { ChangePostPriceModal } from './modals/ChangePostPriceModal';
@@ -146,7 +145,6 @@ export function PostCard({
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
-  const [showPrivateNotePopup, setShowPrivateNotePopup] = React.useState(false);
   const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
   const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
   const [showBoostStatusPopup, setShowBoostStatusPopup] = React.useState(false);
@@ -318,14 +316,14 @@ export function PostCard({
   }, [post.id, router]);
 
   React.useEffect(() => {
-    const anyModalOpen = showMarkSoldConfirm || showPrivateNotePopup || showChangePriceModal || showChangePriceSuccess;
+    const anyModalOpen = showMarkSoldConfirm || showChangePriceModal || showChangePriceSuccess;
     if (typeof document === 'undefined' || !anyModalOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [showMarkSoldConfirm, showPrivateNotePopup, showChangePriceModal, showChangePriceSuccess]);
+  }, [showMarkSoldConfirm, showChangePriceModal, showChangePriceSuccess]);
 
   React.useEffect(() => {
     if (!registerVisibilityRef) return;
@@ -789,10 +787,6 @@ export function PostCard({
               onSetActiveMenu={onSetActiveMenu}
               onSetMenuAnimating={onSetMenuAnimating}
               onBoostClick={handleBoostClick}
-              onOpenPrivateNote={() => {
-                onSetActiveMenu(null);
-                setShowPrivateNotePopup(true);
-              }}
             />
           </div>
         )}
@@ -1341,15 +1335,6 @@ export function PostCard({
           </div>
         </div>,
         document.body
-      )}
-
-      {showPrivateNotePopup && (
-        <PrivateNotePopup
-          show={showPrivateNotePopup}
-          postId={post.id}
-          session={session}
-          onClose={() => setShowPrivateNotePopup(false)}
-        />
       )}
 
       <ChangePostPriceModal

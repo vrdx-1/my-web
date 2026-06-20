@@ -84,9 +84,7 @@ export function clearGuestUserData(): void {
     'my_guest_posts',
   ];
 
-  const sessionKeys = [
-    'create_post_private_shop',
-  ];
+  const sessionKeys: string[] = [];
 
   try {
     localKeys.forEach((key) => window.localStorage.removeItem(key));

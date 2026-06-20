@@ -27,44 +27,6 @@ import { CreatePostProvinceStep } from '@/components/create-post/CreatePostProvi
 /** เก็บ caption ล่าสุดระดับโมดูล — กัน caption หายเมื่อหน้า remount */
 let createPostCaptionBackup = '';
 
-const CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX = 'create_post_private_shop';
-const CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT = 'create-post-private-shop-updated';
-
-function getLastUsedPrivateShopStorageKey(profileId: string): string {
-  return `create_post_last_used_private_shop_${profileId}`;
-}
-
-function getCreatePostPrivateShopStorageKey(profileId: string): string {
-  return `${CREATE_POST_PRIVATE_SHOP_STORAGE_KEY_PREFIX}_${profileId}`;
-}
-
-interface CreatePostPrivateShop {
-  id: string;
-  shop_name: string | null;
-  shop_phone: string | null;
-}
-
-function readCreatePostPrivateShop(profileId: string | null): CreatePostPrivateShop | null {
-  if (typeof window === 'undefined' || !profileId) return null;
-
-  try {
-    const raw = window.sessionStorage.getItem(getCreatePostPrivateShopStorageKey(profileId));
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as Partial<CreatePostPrivateShop>;
-    if (!parsed.id || typeof parsed.id !== 'string') return null;
-
-    return {
-      id: parsed.id,
-      shop_name: typeof parsed.shop_name === 'string' ? parsed.shop_name : null,
-      shop_phone: typeof parsed.shop_phone === 'string' ? parsed.shop_phone : null,
-    };
-  } catch {
-    window.sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(profileId));
-    return null;
-  }
-}
-
 export default function CreatePost() {
   const router = useRouter();
   const createPostContext = useCreatePostContext();
@@ -94,8 +56,6 @@ export default function CreatePost() {
   const [showVideoAlert, setShowVideoAlert] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState('');
   const { userProfile, activeProfileId } = useSessionAndProfile();
-  const currentPrivateShopProfileId = activeProfileId || session?.user?.id || null;
-  const [selectedPrivateShop, setSelectedPrivateShop] = useState<CreatePostPrivateShop | null>(null);
 
   const setSharedDraft = useCallback((draft: { files: File[]; layout: string }) => {
     createPostContext?.setDraft(draft);
@@ -129,76 +89,6 @@ export default function CreatePost() {
     createPostCaptionBackup = caption;
     captionLatestRef.current = caption;
   }, [caption]);
-
-  useEffect(() => {
-    const syncSelectedPrivateShop = () => {
-      setSelectedPrivateShop(readCreatePostPrivateShop(currentPrivateShopProfileId));
-    };
-
-    syncSelectedPrivateShop();
-
-    window.addEventListener(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT, syncSelectedPrivateShop);
-    window.addEventListener('pageshow', syncSelectedPrivateShop);
-    window.addEventListener('focus', syncSelectedPrivateShop);
-
-    return () => {
-      window.removeEventListener(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT, syncSelectedPrivateShop);
-      window.removeEventListener('pageshow', syncSelectedPrivateShop);
-      window.removeEventListener('focus', syncSelectedPrivateShop);
-    };
-  }, [currentPrivateShopProfileId]);
-
-  useEffect(() => {
-    const profileId = activeProfileId || session?.user?.id;
-    if (!profileId) return;
-    if (selectedPrivateShop?.id) return;
-    if (typeof window === 'undefined') return;
-
-    const lastUsedId = window.localStorage.getItem(getLastUsedPrivateShopStorageKey(profileId));
-    if (!lastUsedId) return;
-
-    let cancelled = false;
-
-    const hydrateLastUsedPrivateShop = async () => {
-      const { data, error } = await supabase
-        .from('user_private_shops')
-        .select('id, shop_name, shop_phone')
-        .eq('user_id', profileId)
-        .eq('id', lastUsedId)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error || !data) {
-        window.localStorage.removeItem(getLastUsedPrivateShopStorageKey(profileId));
-        return;
-      }
-
-      const restoredShop: CreatePostPrivateShop = {
-        id: data.id,
-        shop_name: typeof data.shop_name === 'string' ? data.shop_name : null,
-        shop_phone: typeof data.shop_phone === 'string' ? data.shop_phone : null,
-      };
-
-      try {
-        window.sessionStorage.setItem(
-          getCreatePostPrivateShopStorageKey(profileId),
-          JSON.stringify(restoredShop),
-        );
-      } catch {
-        return;
-      }
-
-      setSelectedPrivateShop(restoredShop);
-      window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
-    };
-
-    void hydrateLastUsedPrivateShop();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProfileId, session?.user?.id, selectedPrivateShop?.id]);
 
   // Guest เข้าหน้า create-post โดยตรง → ไปหน้าลงทะเบียน หลังรอให้ checkUser() ใน useCreatePostDraft โหลด session ก่อน (ถ้า redirect ทันทีจะทำให้ User ที่ล็อกอินแล้วโดนเด้งไปโฮม/ลงทะเบียนตอนเลือกรูป)
   const guestRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -316,33 +206,17 @@ export default function CreatePost() {
      sessionStorage.removeItem('create_post_currency');
      sessionStorage.removeItem('create_post_step');
      sessionStorage.removeItem('create_post_layout');
-     if (currentPrivateShopProfileId) {
-       sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(currentPrivateShopProfileId));
-     }
     localStorage.removeItem('create_post_caption_ls');
     localStorage.removeItem('create_post_province_ls');
     localStorage.removeItem('create_post_price_ls');
     localStorage.removeItem('create_post_currency_ls');
     localStorage.removeItem('create_post_step_ls');
     localStorage.removeItem('create_post_layout_ls');
-     window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
    }
    createPostContext?.clearDraft();
    setShowLeaveConfirm(false);
    router.push('/');
  };
-
- const handleClearPrivateShop = useCallback(() => {
-   if (!currentPrivateShopProfileId || typeof window === 'undefined') {
-     setSelectedPrivateShop(null);
-     return;
-   }
-
-   sessionStorage.removeItem(getCreatePostPrivateShopStorageKey(currentPrivateShopProfileId));
-   localStorage.removeItem(getLastUsedPrivateShopStorageKey(currentPrivateShopProfileId));
-   setSelectedPrivateShop(null);
-   window.dispatchEvent(new Event(CREATE_POST_PRIVATE_SHOP_UPDATED_EVENT));
- }, [currentPrivateShopProfileId]);
 
 const handleLeaveCancel = () => {
   setShowLeaveConfirm(false);
@@ -390,7 +264,6 @@ useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validati
 const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
   session,
   activeProfileId,
-  selectedPrivateShop,
   caption,
   province,
   carPrice,
@@ -486,8 +359,6 @@ if (isUploading) {
               onRemoveImage={removeImage}
               layout={layout}
               onLayoutChange={setLayout}
-              selectedPrivateShop={selectedPrivateShop}
-              onClearPrivateShop={handleClearPrivateShop}
             />
           </div>
           <div

@@ -29,7 +29,6 @@ interface PostCardMenuProps {
   onReport: (post: any) => void;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
-  onOpenPrivateNote?: (post: any) => void;
   onRepost?: (postId: string) => void | Promise<void>;
   onBoostClick?: (postId: string) => void | Promise<void>;
 }
@@ -51,7 +50,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onReport,
   onSetActiveMenu: _onSetActiveMenu,
   onSetMenuAnimating: _onSetMenuAnimating,
-  onOpenPrivateNote,
   onRepost,
   onBoostClick,
 }) => {
@@ -293,14 +291,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
               setIsMenuOpen(false);
               onReport(post);
             }}
-            onPrivateNote={
-              isOwner
-                ? () => {
-                    setIsMenuOpen(false);
-                    onOpenPrivateNote?.();
-                  }
-                : undefined
-            }
             onRepost={
               canRepost
                 ? () => {
