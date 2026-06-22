@@ -52,7 +52,7 @@ type SavedSource = {
 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SAVED_VIEW_MODE_STORAGE_KEY = 'saved_posts_view_mode';
+let savedViewModeMemory = false;
 
 function isValidSavedKey(value: unknown): value is string {
   return typeof value === 'string' && value !== 'null' && value !== 'undefined' && value.trim().length > 0;
@@ -251,10 +251,7 @@ function SavedActionsMenuButton({
 export function SavedPostsContent() {
   const [mounted, setMounted] = useState(false);
   const [feedReady, setFeedReady] = useState(false);
-  const [isCompactMode, setIsCompactMode] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.sessionStorage.getItem(SAVED_VIEW_MODE_STORAGE_KEY) === 'compact';
-  });
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(savedViewModeMemory);
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
@@ -279,11 +276,7 @@ export function SavedPostsContent() {
   }, [mounted]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(
-      SAVED_VIEW_MODE_STORAGE_KEY,
-      isCompactMode ? 'compact' : 'default',
-    );
+    savedViewModeMemory = isCompactMode;
   }, [isCompactMode]);
 
   useEffect(() => {

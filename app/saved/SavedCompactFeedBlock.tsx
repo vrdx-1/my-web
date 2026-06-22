@@ -154,12 +154,11 @@ function SavedCompactPostRow({
       }
 
       const popupWidth = 250;
-      const horizontalMargin = 12;
-      const maxLeft = Math.max(horizontalMargin, window.innerWidth - popupWidth - horizontalMargin);
+      const centeredLeft = (window.innerWidth - popupWidth) / 2;
 
       setPopupPosition({
         top: rect.bottom + 8,
-        left: Math.min(Math.max(rect.left, horizontalMargin), maxLeft),
+        left: Math.max(8, centeredLeft),
       });
     };
 
@@ -356,7 +355,7 @@ function SavedCompactPostRow({
               position: 'fixed',
               top: popupPosition.top,
               left: popupPosition.left,
-              minWidth: 250,
+              width: 250,
               background: '#ffffff',
               borderRadius: 16,
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
