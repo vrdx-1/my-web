@@ -11,15 +11,29 @@ import {
   toEstimatedPrices,
   type ExchangeRates,
 } from '@/utils/exchangeRates';
+import { PostCardMenu } from '@/components/PostCardMenu';
 import { CompactPhotoGrid } from '@/components/compare/CompactPhotoGrid';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
+import { isPostOwner } from '@/utils/postUtils';
 
 interface SavedCompactFeedBlockProps {
   showSkeleton: boolean;
   skeletonCount: number;
   posts: any[];
+  session: any;
+  activeMenuState: string | null;
+  isMenuAnimating: boolean;
+  menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
+  onShare: (post: any) => void;
+  onDeletePost: (postId: string) => void;
+  onReport: (post: any) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
+  onSetActiveMenu: (postId: string | null) => void;
+  onSetMenuAnimating: (animating: boolean) => void;
+  hideBoost?: boolean;
   loadingMore?: boolean;
   hasMore?: boolean;
   lastPostElementRef?: (node: HTMLElement | null) => void;
@@ -62,13 +76,45 @@ async function getLatestExchangeRates(): Promise<ExchangeRates> {
 function SavedCompactPostRow({
   post,
   exchangeRates,
-  onRemove,
+  session,
+  activeProfileId,
+  authUserId,
+  availableProfiles,
+  activeMenuState,
+  isMenuAnimating,
+  menuButtonRefs,
+  onRemoveSave,
+  onShare,
+  onDeletePost,
+  onReport,
+  onRepost,
+  onSetActiveMenu,
+  onSetMenuAnimating,
+  hideBoost,
 }: {
   post: any;
   exchangeRates: ExchangeRates;
-  onRemove: () => void;
+  session: any;
+  activeProfileId?: string | null;
+  authUserId?: string | null;
+  availableProfiles?: any[];
+  activeMenuState: string | null;
+  isMenuAnimating: boolean;
+  menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
+  onRemoveSave: (postId: string) => void;
+  onShare: (post: any) => void;
+  onDeletePost: (postId: string) => void;
+  onReport: (post: any) => void;
+  onRepost?: (postId: string) => void | Promise<void>;
+  onSetActiveMenu: (postId: string | null) => void;
+  onSetMenuAnimating: (animating: boolean) => void;
+  hideBoost?: boolean;
 }) {
   const router = useRouter();
+  const isOwner = React.useMemo(
+    () => isPostOwner(post, session, activeProfileId, authUserId, availableProfiles ?? []),
+    [activeProfileId, authUserId, availableProfiles, post, session],
+  );
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [showPricePopup, setShowPricePopup] = React.useState(false);
   const [popupPosition, setPopupPosition] = React.useState<{ top: number; left: number } | null>(null);
@@ -263,27 +309,26 @@ function SavedCompactPostRow({
               </button>
             </div>
 
-            <button
-              type="button"
-              aria-label="ລົບອອກຈາກລາຍການທີ່ບັນທຶກ"
-              onClick={onRemove}
-              style={{
-                width: 28,
-                height: 28,
-                flexShrink: 0,
-                border: 'none',
-                background: 'transparent',
-                color: '#374151',
-                fontSize: 30,
-                lineHeight: 1,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-              }}
-            >
-              ×
-            </button>
+            <div style={{ marginTop: '-2px' }}>
+              <PostCardMenu
+                post={post}
+                session={session}
+                activeProfileId={activeProfileId}
+                isOwner={isOwner}
+                hideBoost={hideBoost ?? false}
+                activeMenuState={activeMenuState}
+                isMenuAnimating={isMenuAnimating}
+                menuButtonRefs={menuButtonRefs}
+                onSave={onRemoveSave}
+                saveLabel="ຍົກເລີກບັນທຶກ"
+                onShare={onShare}
+                onDeletePost={onDeletePost}
+                onReport={onReport}
+                onRepost={onRepost}
+                onSetActiveMenu={onSetActiveMenu}
+                onSetMenuAnimating={onSetMenuAnimating}
+              />
+            </div>
           </div>
 
           <button
@@ -397,11 +442,23 @@ export function SavedCompactFeedBlock({
   showSkeleton,
   skeletonCount,
   posts,
+  session,
+  activeMenuState,
+  isMenuAnimating,
+  menuButtonRefs,
+  onShare,
+  onDeletePost,
+  onReport,
+  onRepost,
+  onSetActiveMenu,
+  onSetMenuAnimating,
+  hideBoost = false,
   loadingMore = false,
   hasMore = true,
   lastPostElementRef,
   onRemoveSave,
 }: SavedCompactFeedBlockProps) {
+  const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const [exchangeRates, setExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
 
   React.useEffect(() => {
@@ -482,7 +539,21 @@ export function SavedCompactFeedBlock({
               <SavedCompactPostRow
                 post={post}
                 exchangeRates={exchangeRates}
-                onRemove={() => onRemoveSave(postId)}
+                session={session}
+                activeProfileId={activeProfileId}
+                authUserId={authUserId}
+                availableProfiles={availableProfiles}
+                activeMenuState={activeMenuState}
+                isMenuAnimating={isMenuAnimating}
+                menuButtonRefs={menuButtonRefs}
+                onRemoveSave={onRemoveSave}
+                onShare={onShare}
+                onDeletePost={onDeletePost}
+                onReport={onReport}
+                onRepost={onRepost}
+                onSetActiveMenu={onSetActiveMenu}
+                onSetMenuAnimating={onSetMenuAnimating}
+                hideBoost={hideBoost}
               />
             </div>
           );

@@ -651,6 +651,17 @@ export function SavedPostsContent() {
           showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
           skeletonCount={3}
           posts={postListData.posts}
+          session={postListData.session}
+          activeMenuState={menu.activeMenuState}
+          isMenuAnimating={menu.isMenuAnimating}
+          menuButtonRefs={menu.menuButtonRefs}
+          onShare={handlers.handleShare}
+          onDeletePost={handlers.handleDeletePost}
+          onReport={handlers.handleReport}
+          onRepost={handlers.handleRepost}
+          onSetActiveMenu={menu.setActiveMenu}
+          onSetMenuAnimating={menu.setIsMenuAnimating}
+          hideBoost={tab === 'sold'}
           loadingMore={postListData.hasMore ? postListData.loadingMore : false}
           hasMore={postListData.hasMore}
           lastPostElementRef={lastPostElementRef}
