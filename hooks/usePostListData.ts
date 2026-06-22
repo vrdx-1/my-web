@@ -16,6 +16,7 @@ import type { CurrencySymbol } from '@/utils/exchangeRates';
 const FEED_LIST_CACHE_MAX = 6;
 const INTERACTION_IDS_PAGE_SIZE = 500;
 const POST_IDS_IN_QUERY_CHUNK_SIZE = 200;
+const SAVED_MY_POSTS_PAGE_SIZE = 50;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
 function getFeedListCacheKey(
   type: string,
@@ -380,14 +381,20 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     if (!skipSkeleton) setLoadingMore(true);
     
     const currentPage = isInitial ? 0 : (pageToFetch !== undefined ? pageToFetch : pageRef.current);
-    // หน้า liked / saved / my-posts โหลดทีละน้อยแบบโฮม (6 แล้ว 10); หน้าอื่นใช้ LIST_FEED_PAGE_SIZE
-    const isIncrementalList = type === 'liked' || type === 'saved' || type === 'my-posts';
-    const listPageSize = isIncrementalList
-      ? (currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE)
-      : LIST_FEED_PAGE_SIZE;
-    const rangeStart = isIncrementalList
-      ? (currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE)
-      : currentPage * LIST_FEED_PAGE_SIZE;
+    // saved / my-posts โหลดครั้งละ 50 คงที่; liked คงพฤติกรรมเดิม (initial+incremental)
+    const isFixedChunkList = type === 'saved' || type === 'my-posts';
+    const isLegacyIncrementalList = type === 'liked';
+    const isIncrementalList = isFixedChunkList || isLegacyIncrementalList;
+    const listPageSize = isFixedChunkList
+      ? SAVED_MY_POSTS_PAGE_SIZE
+      : isLegacyIncrementalList
+        ? (currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE)
+        : LIST_FEED_PAGE_SIZE;
+    const rangeStart = isFixedChunkList
+      ? currentPage * SAVED_MY_POSTS_PAGE_SIZE
+      : isLegacyIncrementalList
+        ? (currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE)
+        : currentPage * LIST_FEED_PAGE_SIZE;
     const rangeEnd = rangeStart + listPageSize - 1;
     
     // ตรวจสอบ currentUserId อย่างเข้มงวด - ต้องไม่เป็น null, undefined, หรือ string "null"
@@ -462,8 +469,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         // Load more: ใช้รายการที่เก็บไว้ใน ref แทนการยิง DB ซ้ำ
         if (!isInitial && soldTabFullListRef.current && soldTabFullListRef.current.length > 0) {
           const sorted = soldTabFullListRef.current;
-          const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
-          const start = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+          const pageSize = listPageSize;
+          const start = currentPage * pageSize;
           const end = start + pageSize;
           const slicePosts = sorted.slice(start, end);
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
@@ -536,8 +543,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           return ai - bi;
         });
         soldTabFullListRef.current = sorted;
-        const pageSize = currentPage === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE;
-        const start = currentPage === 0 ? 0 : INITIAL_FEED_PAGE_SIZE + (currentPage - 1) * FEED_PAGE_SIZE;
+        const pageSize = listPageSize;
+        const start = currentPage * pageSize;
         const end = start + pageSize;
         const slicePosts = sorted.slice(start, end);
         if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
