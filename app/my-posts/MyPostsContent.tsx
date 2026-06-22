@@ -4,6 +4,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -32,6 +33,7 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { getOwnedProfileIds } from '@/utils/postUtils';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -42,10 +44,160 @@ const MyPostsFeedBlock = dynamic(
   { ssr: false, loading: () => <FeedSkeleton count={3} /> }
 );
 
+const MyPostsCompactFeedBlock = dynamic(
+  () => import('@/app/my-posts/MyPostsCompactFeedBlock').then((mod) => ({ default: mod.MyPostsCompactFeedBlock })),
+  { ssr: false, loading: () => <FeedSkeleton count={3} /> }
+);
+
+let myPostsViewModeMemory = false;
+
+function MyPostsActionsMenuButton({
+  compactMode,
+  onToggleCompactMode,
+}: {
+  compactMode: boolean;
+  onToggleCompactMode: () => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const updatePosition = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    };
+
+    const closeMenu = () => setIsOpen(false);
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition, { passive: true });
+    window.addEventListener('scroll', closeMenu, { passive: true });
+    window.addEventListener('touchmove', closeMenu, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', closeMenu);
+      window.removeEventListener('touchmove', closeMenu);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label="ເປີດເມນູ"
+        onClick={() => setIsOpen((prev) => !prev)}
+        style={{
+          border: 'none',
+          background: 'transparent',
+          width: 44,
+          height: 44,
+          padding: 0,
+          color: '#111111',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="2.1" />
+          <circle cx="12" cy="12" r="2.1" />
+          <circle cx="19" cy="12" r="2.1" />
+        </svg>
+      </button>
+
+      {isOpen && position && typeof document !== 'undefined' && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2200 }}>
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.18)' }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: position.top,
+              right: position.right,
+              width: 280,
+              background: '#ffffff',
+              borderRadius: 16,
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+              overflow: 'hidden',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onToggleCompactMode();
+              }}
+              style={{
+                width: '100%',
+                border: 'none',
+                background: '#ffffff',
+                textAlign: 'left',
+                padding: '14px 18px',
+                fontSize: 17,
+                lineHeight: '24px',
+                fontWeight: 500,
+                color: '#111111',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  width: 22,
+                  height: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#4a4d52',
+                  flexShrink: 0,
+                }}
+              >
+                {compactMode ? (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4.5" y="4.5" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="13" y="4.5" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="4.5" y="13" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="13" y="13" width="6.5" height="6.5" rx="1.4" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="5" width="16" height="14" rx="2.2" />
+                    <path d="M9 9h6" />
+                    <path d="M9 12h6" />
+                    <path d="M9 15h4" />
+                  </svg>
+                )}
+              </span>
+              <span>{compactMode ? 'ສະແດງແບບໃຫຍ່' : 'ສະແດງແບບນ້ອຍ'}</span>
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 export function MyPostsContent() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [feedReady, setFeedReady] = useState(false);
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(myPostsViewModeMemory);
   const [tab, setTab] = useState('recommend');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,6 +257,10 @@ export function MyPostsContent() {
     }, 250);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
+
+  useEffect(() => {
+    myPostsViewModeMemory = isCompactMode;
+  }, [isCompactMode]);
 
   useEffect(() => {
     if (!showYearDropdown) return;
@@ -490,6 +646,8 @@ export function MyPostsContent() {
           background: '#ffffff',
           backgroundColor: '#ffffff',
           transform: isHeaderVisible ? 'translateX(-50%)' : 'translate(-50%, -100%)',
+          transition: MOTION_TRANSITIONS.HOME_CHROME,
+          willChange: 'transform',
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
@@ -497,7 +655,13 @@ export function MyPostsContent() {
           title={`ໂພສຂອງຂ້ອຍ  (${subAccountPostCountLoading ? '...' : (subAccountPostCount ?? 0)} ໂພສ)`} 
           centerTitle 
           onBack={handleBack} 
-          showDivider={false} 
+          showDivider={false}
+          rightSlot={(
+            <MyPostsActionsMenuButton
+              compactMode={isCompactMode}
+              onToggleCompactMode={() => setIsCompactMode((prev) => !prev)}
+            />
+          )}
         />
         <TabNavigation
           className="home-tab-navigation"
@@ -710,6 +874,27 @@ export function MyPostsContent() {
 
       {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
+      ) : isCompactMode ? (
+        <MyPostsCompactFeedBlock
+          showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
+          skeletonCount={3}
+          posts={postListData.posts}
+          session={postListData.session}
+          activeMenuState={menu.activeMenuState}
+          isMenuAnimating={menu.isMenuAnimating}
+          menuButtonRefs={menu.menuButtonRefs}
+          onShare={handlers.handleShare}
+          onDeletePost={handlers.handleDeletePost}
+          onReport={handlers.handleReport}
+          onRepost={handlers.handleRepost}
+          onSetActiveMenu={menu.setActiveMenu}
+          onSetMenuAnimating={menu.setIsMenuAnimating}
+          hideBoost={tab === 'sold'}
+          loadingMore={postListData.hasMore ? postListData.loadingMore : false}
+          hasMore={postListData.hasMore}
+          lastPostElementRef={lastPostElementRef}
+          onSave={toggleSave}
+        />
       ) : (
         <MyPostsFeedBlock
           showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
