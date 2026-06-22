@@ -153,12 +153,13 @@ function SavedCompactPostRow({
         return;
       }
 
-      const popupWidth = 250;
-      const centeredLeft = (window.innerWidth - popupWidth) / 2;
+      const popupWidth = 220;
+      const horizontalMargin = 8;
+      const maxLeft = Math.max(horizontalMargin, window.innerWidth - popupWidth - horizontalMargin);
 
       setPopupPosition({
         top: rect.bottom + 8,
-        left: Math.max(8, centeredLeft),
+        left: Math.min(Math.max(rect.left, horizontalMargin), maxLeft),
       });
     };
 
@@ -355,27 +356,27 @@ function SavedCompactPostRow({
               position: 'fixed',
               top: popupPosition.top,
               left: popupPosition.left,
-              width: 250,
+              width: 220,
               background: '#ffffff',
-              borderRadius: 16,
+              borderRadius: 14,
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
-              padding: '16px 18px',
+              padding: '12px 14px',
               zIndex: 1202,
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
+              gap: 12,
             }}
           >
-            <div style={{ fontSize: 20, lineHeight: '26px', fontWeight: 700, color: '#C2410C' }}>
+            <div style={{ fontSize: 16, lineHeight: '21px', fontWeight: 700, color: '#C2410C' }}>
               ອັດຕາແລກປ່ຽນໂດຍປະມານ
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {estimatedLines.map((line) => (
                 <div
                   key={line.symbol}
                   style={{
-                    fontSize: 16,
-                    lineHeight: '21px',
+                    fontSize: 14,
+                    lineHeight: '18px',
                     fontWeight: 700,
                     color: '#0f172a',
                   }}
