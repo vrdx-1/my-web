@@ -40,6 +40,7 @@ function HomeUrlSync({ pathname }: { pathname: string | null }) {
 
 // ขนาดองค์ประกอบใน BottomNav (ขยายขึ้นเล็กน้อยและคงสัดส่วนให้สมดุลกันทุกปุ่ม)
 const NAV_ICON_SIZE = 30;
+const SAVED_NAV_ICON_SIZE = 28;
 const NAV_PROFILE_AVATAR_SIZE = 28;
 const NAV_BUTTON_MIN_HEIGHT = 64;
 const NAV_BUTTON_PADDING_TOP = 4;
@@ -191,8 +192,8 @@ function SavedNavIcon({ isActive }: { isActive: boolean }) {
   if (isActive) {
     return (
       <svg
-        width={NAV_ICON_SIZE}
-        height={NAV_ICON_SIZE}
+        width={SAVED_NAV_ICON_SIZE}
+        height={SAVED_NAV_ICON_SIZE}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
@@ -221,8 +222,8 @@ function SavedNavIcon({ isActive }: { isActive: boolean }) {
 
   return (
     <svg
-      width={NAV_ICON_SIZE}
-      height={NAV_ICON_SIZE}
+      width={SAVED_NAV_ICON_SIZE}
+      height={SAVED_NAV_ICON_SIZE}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden

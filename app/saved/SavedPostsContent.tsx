@@ -28,6 +28,7 @@ import { usePostFeedHandlers } from '@/hooks/usePostFeedHandlers';
 import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
+import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -125,18 +126,14 @@ export function SavedPostsContent() {
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
   const setHeaderVisible = useSetHeaderVisibility();
-  const headerScroll = useHeaderScroll({ disableScrollHide: true, hideOnScrollUp: false });
+  const headerScroll = useHeaderScroll({
+    hideOnScrollUp: false,
+    onVisibilityChange: (visible) => setHeaderVisible?.(visible),
+  });
 
-  const lockHeaderVisible = (visible: boolean) => {
-    void visible;
-    headerScroll.setIsHeaderVisible(true);
-    setHeaderVisible?.(true);
-  };
-
-  const lockedHeaderScroll = {
-    ...headerScroll,
-    isHeaderVisible: true,
-    setIsHeaderVisible: lockHeaderVisible,
+  const setHeaderVisibleFromScroll = (visible: boolean) => {
+    headerScroll.setIsHeaderVisible(visible);
+    setHeaderVisible?.(visible);
   };
 
   useEffect(() => {
@@ -245,7 +242,7 @@ export function SavedPostsContent() {
     posts: postListData.posts,
     setPosts: postListData.setPosts,
     viewingPostHook,
-    headerScroll: lockedHeaderScroll,
+    headerScroll,
     menu,
     reportingPost,
     setReportingPost,
@@ -270,7 +267,7 @@ export function SavedPostsContent() {
     setFullScreenIsDragging: fullScreenViewer.setFullScreenIsDragging,
     setFullScreenTransitionDuration: fullScreenViewer.setFullScreenTransitionDuration,
     setFullScreenShowDetails: fullScreenViewer.setFullScreenShowDetails,
-    setIsHeaderVisible: lockHeaderVisible,
+    setIsHeaderVisible: setHeaderVisibleFromScroll,
   });
 
   const { addBackStep } = useBackHandler();
@@ -290,9 +287,9 @@ export function SavedPostsContent() {
   }, [fullScreenViewer.fullScreenImages]);
   useEffect(() => {
     if (!viewingPostHook.viewingPost) return;
-    const close = () => viewingPostHook.closeViewingMode(headerScroll.setIsHeaderVisible);
+    const close = () => viewingPostHook.closeViewingMode(setHeaderVisibleFromScroll);
     return addBackStep(close);
-  }, [viewingPostHook.viewingPost]);
+  }, [viewingPostHook.viewingPost, setHeaderVisibleFromScroll, addBackStep, viewingPostHook]);
 
   const handleBack = useCallback(() => {
     router.push('/profile');
@@ -308,7 +305,7 @@ export function SavedPostsContent() {
     !sessionReady ||
     isFeedSkeleton ||
     (tab === 'recommend' ? !hasReadyRecommendFeed : !hasReadySoldFeed);
-  const isHeaderVisible = lockedHeaderScroll.isHeaderVisible;
+  const isHeaderVisible = headerScroll.isHeaderVisible;
   const headerSpacerStyle = {
     height: fixedHeaderHeight,
     pointerEvents: 'none' as const,
@@ -330,6 +327,8 @@ export function SavedPostsContent() {
           background: '#ffffff',
           backgroundColor: '#ffffff',
           transform: isHeaderVisible ? 'translateX(-50%)' : 'translate(-50%, -100%)',
+          transition: MOTION_TRANSITIONS.HOME_CHROME,
+          willChange: 'transform',
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
@@ -428,7 +427,7 @@ export function SavedPostsContent() {
         savedScrollPosition={viewingPostHook.savedScrollPosition}
         initialImageIndex={viewingPostHook.initialImageIndex}
         onViewingPostClose={() => {
-          viewingPostHook.closeViewingMode(lockHeaderVisible);
+          viewingPostHook.closeViewingMode(setHeaderVisibleFromScroll);
         }}
         onViewingPostTouchStart={viewingPostHook.handleViewingModeTouchStart}
         onViewingPostTouchMove={viewingPostHook.handleViewingModeTouchMove}
