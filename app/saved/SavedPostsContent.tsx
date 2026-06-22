@@ -10,6 +10,7 @@ import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
+import { CompareIcon } from '@/components/icons/CompareIcon';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -332,7 +333,33 @@ export function SavedPostsContent() {
           pointerEvents: isHeaderVisible ? 'auto' : 'none',
         }}
       >
-        <PageHeader title="ລາຍການທີ່ບັນທຶກ" centerTitle onBack={handleBack} showDivider={false} />
+        <PageHeader
+          title="ລາຍການທີ່ບັນທຶກ"
+          centerTitle
+          onBack={handleBack}
+          showDivider={false}
+          rightSlot={(
+            <button
+              type="button"
+              aria-label="ປຽບທຽບລາຄາລາຍການທີ່ບັນທຶກ"
+              onClick={() => router.push('/saved/compare')}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                width: 44,
+                height: 44,
+                padding: 0,
+                color: '#4b5563',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <CompareIcon size={22} color="currentColor" strokeWidth={1.7} variant="outline" />
+            </button>
+          )}
+        />
         <TabNavigation
           className="home-tab-navigation"
           tabs={[

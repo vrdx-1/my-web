@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 interface PageHeaderProps {
   title: string;
   onBack?: () => void;
+  rightSlot?: React.ReactNode;
   actionButton?: {
     label: string;
     onClick: () => void;
@@ -26,6 +27,7 @@ interface PageHeaderProps {
 export const PageHeader = React.memo<PageHeaderProps>(({
   title,
   onBack,
+  rightSlot,
   actionButton,
   centerTitle = false,
   className = '',
@@ -176,7 +178,18 @@ export const PageHeader = React.memo<PageHeaderProps>(({
           >
             {title}
           </h3>
-          <div style={{ width: sideWidth, flexShrink: 0 }} aria-hidden />
+          <div
+            style={{
+              width: sideWidth,
+              flexShrink: 0,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              minHeight: 44,
+            }}
+          >
+            {rightSlot ?? <div aria-hidden style={{ width: 44, height: 44 }} />}
+          </div>
         </>
       ) : (
         <>
