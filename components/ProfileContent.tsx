@@ -1620,21 +1620,6 @@ export function ProfileContent({ onBack, onNotLoggedIn }: ProfileContentProps) {
             </div>
           </Link>
 
-          {/* Saved Items */}
-          <Link href="/saved" style={{ textDecoration: 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', cursor: 'pointer', transition: 'background 0.15s ease' }}
-              onMouseEnter={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = '#f9fafb'; }}
-              onMouseLeave={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z" />
-                </svg>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: '#4b5563' }}>ລາຍການທີ່ບັນທຶກ</span>
-              </div>
-            </div>
-          </Link>
-
           {/* Settings */}
           <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', cursor: 'pointer', transition: 'background 0.15s ease' }}
             onClick={() => router.push('/profile/settings')}
