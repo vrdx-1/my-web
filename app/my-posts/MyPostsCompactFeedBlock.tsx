@@ -13,9 +13,9 @@ import {
 } from '@/utils/exchangeRates';
 import { PostCardMenu } from '@/components/PostCardMenu';
 import { CompactPhotoGrid } from '@/components/compare/CompactPhotoGrid';
+import { CompactFeedSkeleton } from '@/components/compare/CompactFeedSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
-import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { ChangePostPriceModal } from '@/components/modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
@@ -543,8 +543,8 @@ export function MyPostsCompactFeedBlock({
 
   if (showSkeleton) {
     return (
-      <FeedWithPreload showSkeleton={true} skeletonCount={skeletonCount}>
-        <div style={{ display: 'contents' }} />
+      <FeedWithPreload showSkeleton={false} skeletonCount={skeletonCount}>
+        <CompactFeedSkeleton count={skeletonCount} />
       </FeedWithPreload>
     );
   }
@@ -575,7 +575,7 @@ export function MyPostsCompactFeedBlock({
         gap: 8,
       }}
     >
-      {loadingMore ? <FeedSkeleton count={1} /> : null}
+      {loadingMore ? <CompactFeedSkeleton count={1} withOuterPadding={false} /> : null}
       <span
         style={{
           fontSize: '13px',
