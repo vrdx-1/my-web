@@ -14,6 +14,8 @@ import type { CurrencySymbol } from '@/utils/exchangeRates';
 
 /** แคช feed ต่อ type+user (+ tab สำหรับ saved/liked/my-posts เพื่อแยก list พร้อมขาย/ขายแล้ว) */
 const FEED_LIST_CACHE_MAX = 6;
+const INTERACTION_IDS_PAGE_SIZE = 500;
+const POST_IDS_IN_QUERY_CHUNK_SIZE = 200;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
 function getFeedListCacheKey(
   type: string,
@@ -300,6 +302,75 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
   const setLikedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.setLikedPosts : setLikedPosts;
   const setSavedPostsOut = type === 'sold' && sharedLikedSaved ? sharedLikedSaved.setSavedPosts : setSavedPosts;
 
+  const fetchAllInteractionPostIds = useCallback(async (
+    table: 'post_saves' | 'post_saves_guest' | 'post_likes' | 'post_likes_guest',
+    column: 'user_id' | 'guest_token',
+    idOrToken: string,
+  ): Promise<{ ids: string[]; error: any | null }> => {
+    let rangeStart = 0;
+    const ids: string[] = [];
+    const seen = new Set<string>();
+
+    while (true) {
+      const rangeEnd = rangeStart + INTERACTION_IDS_PAGE_SIZE - 1;
+      const { data, error } = await supabase
+        .from(table)
+        .select('post_id')
+        .eq(column, idOrToken)
+        .order('created_at', { ascending: false })
+        .order('post_id', { ascending: false })
+        .range(rangeStart, rangeEnd);
+
+      if (error) {
+        return { ids: [], error };
+      }
+
+      if (!data || data.length === 0) {
+        break;
+      }
+
+      const pageIds = data
+        .map((item: { post_id: string }) => item.post_id)
+        .filter((id): id is string => !!id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
+
+      for (const id of pageIds) {
+        if (seen.has(id)) continue;
+        seen.add(id);
+        ids.push(id);
+      }
+
+      if (data.length < INTERACTION_IDS_PAGE_SIZE) {
+        break;
+      }
+
+      rangeStart += INTERACTION_IDS_PAGE_SIZE;
+    }
+
+    return { ids, error: null };
+  }, []);
+
+  const fetchCarsByIdsChunked = useCallback(async (ids: string[]): Promise<{ posts: any[]; error: any | null }> => {
+    if (ids.length === 0) return { posts: [], error: null };
+
+    const rows: any[] = [];
+    for (let i = 0; i < ids.length; i += POST_IDS_IN_QUERY_CHUNK_SIZE) {
+      const chunk = ids.slice(i, i + POST_IDS_IN_QUERY_CHUNK_SIZE);
+      const { data, error } = await supabase
+        .from('cars')
+        .select(POST_WITH_PROFILE_SELECT)
+        .in('id', chunk);
+
+      if (error) {
+        return { posts: [], error };
+      }
+      if (data && data.length > 0) {
+        rows.push(...data);
+      }
+    }
+
+    return { posts: rows, error: null };
+  }, []);
+
   const fetchPosts = useCallback(async (isInitial = false, pageToFetch?: number) => {
     if (currentSession === undefined) return;
     if (loadingMoreRef.current && !isInitial) return;
@@ -383,9 +454,11 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         return null;
       };
 
-      // หน้า likes/saves แท็บ "ขายแล้ว": ดึง ID ทั้งหมดที่ like/save แล้วกรองเฉพาะ status=sold จาก DB เพื่อให้เห็นรายการถูกต้อง
-      const isLikedSavedSoldTab = (type === 'liked' || type === 'saved') && tab === 'sold';
-      if (isLikedSavedSoldTab) {
+      // หน้า saved ใช้แนวทางเดียวกับ saved/compare: ดึง ID ทั้งหมดก่อน แล้วค่อยกรองแท็บในหน่วยความจำ
+      const isSavedTabUsingFullSource = type === 'saved' && (tab === 'sold' || tab === 'recommend');
+      // หน้า liked แท็บ sold ยังคงใช้ full source เช่นเดิม
+      const isLikedSoldTabUsingFullSource = type === 'liked' && tab === 'sold';
+      if (isSavedTabUsingFullSource || isLikedSoldTabUsingFullSource) {
         // Load more: ใช้รายการที่เก็บไว้ใน ref แทนการยิง DB ซ้ำ
         if (!isInitial && soldTabFullListRef.current && soldTabFullListRef.current.length > 0) {
           const sorted = soldTabFullListRef.current;
@@ -420,23 +493,16 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
         const isUser = !!currentUserId;
         const table = type === 'saved' ? (isUser ? 'post_saves' : 'post_saves_guest') : (isUser ? 'post_likes' : 'post_likes_guest');
         const column = isUser ? 'user_id' : 'guest_token';
-        const { data: idsData, error: idsError } = await supabase
-          .from(table)
-          .select('post_id')
-          .eq(column, idOrToken)
-          .order('created_at', { ascending: false })
-          .limit(500);
+        const { ids: allIds, error: idsError } = await fetchAllInteractionPostIds(table, column, idOrToken);
         if (cancelledRef.current) return;
-        if (idsError || !idsData) {
+        if (idsError) {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
             setLoadingMore(false);
             setHasMore(false);
           }
           return;
         }
-        const allIds = (idsData as { post_id: string }[])
-          .map((item) => item.post_id)
-          .filter((id): id is string => !!id && id !== 'null' && id !== 'undefined' && typeof id === 'string');
+
         if (allIds.length === 0) {
           if (isInitial && fetchIdRef.current === currentFetchId && !skipSkeleton) setPosts([]);
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
@@ -445,20 +511,23 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           }
           return;
         }
-        const { data: postsData, error: postsError } = await supabase
-          .from('cars')
-          .select(POST_WITH_PROFILE_SELECT)
-          .in('id', allIds)
-          .eq('status', 'sold');
+
+        const { posts: rawPostsData, error: postsError } = await fetchCarsByIdsChunked(allIds);
         if (cancelledRef.current) return;
-        if (postsError || !postsData) {
+        if (postsError) {
           if (!cancelledRef.current && fetchIdRef.current === currentFetchId) {
             setLoadingMore(false);
             setHasMore(false);
           }
           return;
         }
-        const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, postsData as any[]);
+
+        const tabFilteredPosts = (rawPostsData || []).filter((postData: any) => {
+          if (type === 'saved' && tab === 'sold') return postData.status === 'sold';
+          if (type === 'saved' && tab === 'recommend') return postData.status !== 'sold';
+          return postData.status === 'sold';
+        });
+        const hydratedPosts = await attachEffectiveWhatsAppPhones(supabase, tabFilteredPosts as any[]);
         const orderMap = new Map<string, number>(allIds.map((id, idx) => [String(id), idx]));
         const sorted = [...hydratedPosts].filter((p: any) => !p.is_hidden || (currentUserId && p.user_id === currentUserId));
         sorted.sort((a: any, b: any) => {
@@ -530,7 +599,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('post_id', { ascending: false });
 
         // saved โหลดทีละน้อย (ไม่ใช้ loadAll)
         savesQuery = savesQuery.range(rangeStart, rangeEnd);
@@ -592,7 +662,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
           .from(table)
           .select('post_id')
           .eq(column, idOrToken)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('post_id', { ascending: false });
 
         // liked โหลดทีละน้อย (ไม่ใช้ loadAll)
         likesQuery = likesQuery.range(rangeStart, rangeEnd);
@@ -974,6 +1045,7 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
                 .select('post_id')
                 .eq(likedSavedListSource.column, likedSavedListSource.idOrToken)
                 .order('created_at', { ascending: false })
+                .order('post_id', { ascending: false })
                 .range(nextRangeStart, nextRangeEnd);
 
               if (cancelledRef.current || fetchIdRef.current !== currentFetchId) return;
@@ -1232,6 +1304,8 @@ export function usePostListData(options: UsePostListDataOptions): UsePostListDat
     searchQuery,
     onlySubAccounts,
     subAccountProfileIds,
+    fetchAllInteractionPostIds,
+    fetchCarsByIdsChunked,
   ]);
 
   const refreshData = useCallback(async () => {
