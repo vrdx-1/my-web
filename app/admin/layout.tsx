@@ -122,6 +122,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Exchange Rate Clicks', path: '/admin/exchange-rate-clicks' },
     { name: 'Share Clicks', path: '/admin/share-clicks' },
     { name: 'Post Saves', path: '/admin/post-saves' },
+    { name: 'Saved View Mode', path: '/admin/view-mode-clicks/saved' },
+    { name: 'My Posts View Mode', path: '/admin/view-mode-clicks/my-posts' },
     { name: 'WhatsApp Clicks', path: '/admin/whatsapp-clicks' },
     { name: 'WhatsApp Insights', path: '/admin/whatsapp-clicks-insights' },
     { name: 'Repost Clicks', path: '/admin/repost-clicks' },

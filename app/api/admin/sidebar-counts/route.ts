@@ -112,6 +112,8 @@ export async function GET(request: Request) {
       searchLogsTotal,
       dailyUserVisitors,
       dailyGuestVisitors,
+      savedViewModeClicks,
+      myPostsViewModeClicks,
     ] = await Promise.all([
       admin.from('reports').select('*', { count: 'exact', head: true }),
       admin.from('user_problem_reports').select('*', { count: 'exact', head: true }),
@@ -129,6 +131,8 @@ export async function GET(request: Request) {
       admin.from('search_logs').select('*', { count: 'exact', head: true }),
       admin.from('daily_user_visitors').select('*', { count: 'exact', head: true }),
       admin.from('daily_guest_visitors').select('*', { count: 'exact', head: true }),
+      admin.from('saved_view_mode_clicks').select('*', { count: 'exact', head: true }),
+      admin.from('my_posts_view_mode_clicks').select('*', { count: 'exact', head: true }),
     ]);
 
     counts['/admin/reporting'] = reportsTotal.count ?? 0;
@@ -149,6 +153,8 @@ export async function GET(request: Request) {
     counts['/admin/top-user'] = profilesTotal.count ?? 0;
     counts['/admin/search-history'] = searchLogsTotal.count ?? 0;
     counts['/admin/visitor'] = (dailyUserVisitors.count ?? 0) + (dailyGuestVisitors.count ?? 0);
+    counts['/admin/view-mode-clicks/saved'] = savedViewModeClicks.count ?? 0;
+    counts['/admin/view-mode-clicks/my-posts'] = myPostsViewModeClicks.count ?? 0;
   } catch (e) {
     console.error('sidebar-counts error:', e);
     return NextResponse.json({ error: 'Failed to fetch counts' }, { status: 500 });

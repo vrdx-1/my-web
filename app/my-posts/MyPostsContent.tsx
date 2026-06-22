@@ -34,6 +34,7 @@ import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { getOwnedProfileIds } from '@/utils/postUtils';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
+import { trackViewModeClick } from '@/utils/viewModeClickAnalytics';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -659,7 +660,10 @@ export function MyPostsContent() {
           rightSlot={(
             <MyPostsActionsMenuButton
               compactMode={isCompactMode}
-              onToggleCompactMode={() => setIsCompactMode((prev) => !prev)}
+              onToggleCompactMode={() => {
+                setIsCompactMode((prev) => !prev);
+                void trackViewModeClick('my-posts');
+              }}
             />
           )}
         />

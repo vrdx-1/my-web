@@ -30,6 +30,7 @@ import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
 import { supabase } from '@/lib/supabase';
+import { trackViewModeClick } from '@/utils/viewModeClickAnalytics';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -611,7 +612,10 @@ export function SavedPostsContent() {
           rightSlot={(
             <SavedActionsMenuButton
               compactMode={isCompactMode}
-              onToggleCompactMode={() => setIsCompactMode((prev) => !prev)}
+              onToggleCompactMode={() => {
+                setIsCompactMode((prev) => !prev);
+                void trackViewModeClick('saved');
+              }}
               onClearAll={() => {
                 setShowClearAllConfirm(true);
               }}
