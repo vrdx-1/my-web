@@ -14,12 +14,12 @@ const feedFallback = (
 );
 
 /** ปิด SSR เพื่อหลีกเลี่ยง React "Expected static flag was missing" ตอน hydrate กับ PostFeed */
-const LazySavedPosts = dynamicNamed(() => import('./SavedPostsContent'), 'SavedPostsContent', {
+const LazySavedPosts = dynamicNamed(() => import('@/app/saved/SavedPostsContent'), 'SavedPostsContent', {
   ssr: false,
   loading: () => feedFallback,
 });
 
-export default function SavedPosts() {
+export default function SavedPostsPage() {
   return (
     <Suspense fallback={feedFallback}>
       <LazySavedPosts />

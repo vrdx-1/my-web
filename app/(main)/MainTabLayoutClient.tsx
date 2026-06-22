@@ -91,7 +91,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   );
   const resolvedPathname = pathname ?? initialPathname;
   const isMainTabRoute =
-    resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare';
+    resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/saved';
   const { session, userProfile, activeProfileId } = useSessionAndProfile();
   const { unreadCount, refetch: refetchUnreadCount } = useUnreadNotificationCount({
     userId: activeProfileId || session?.user?.id,
@@ -296,7 +296,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     const html = document.documentElement;
     const shouldHideScrollbar =
       !isProfileOverlayOpen
-      && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/compare');
+      && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/saved');
 
     if (shouldHideScrollbar) {
       body.setAttribute('data-home-ios-scrollbar-hidden', '1');
@@ -335,14 +335,14 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
     if (!prev) return;
 
     const leftHomeToMainTab =
-      prev === '/home' && (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare');
+      prev === '/home' && (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/saved');
     if (leftHomeToMainTab) {
       mainTabScroll?.saveCurrentScroll('/home');
       return;
     }
 
     const returnedHomeFromMainTab =
-      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile' || prev === '/compare' || prev === '/register');
+      resolvedPathname === '/home' && (prev === '/notification' || prev === '/profile' || prev === '/saved' || prev === '/register');
     if (!returnedHomeFromMainTab) return;
 
     // ยิง restore ทันที + retry 2 เฟรม + timeout เพื่อกันจังหวะ iOS/layout race
@@ -373,7 +373,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
   }, [session, createPostContext, handleCreatePostClick]);
 
   const setProfileOverlayOpen = useCallback((open: boolean) => {
-    if (open && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare')) {
+    if (open && (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/saved')) {
       mainTabScroll?.saveCurrentScroll(resolvedPathname);
     }
     mainTab?.setProfileOverlayOpen(open);
@@ -384,7 +384,7 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       router.push(REGISTER_PATH, { scroll: false });
       return;
     }
-    if (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare') {
+    if (resolvedPathname === '/home' || resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/saved') {
       mainTabScroll?.saveCurrentScroll(resolvedPathname);
     }
     router.push('/notification', { scroll: false });
@@ -427,15 +427,15 @@ function MainTabLayoutClientInner({ children }: { children: React.ReactNode }) {
       if (resolvedPathname === '/home') {
         router.prefetch('/notification');
         router.prefetch('/profile');
-        router.prefetch('/compare');
-      } else if (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/compare') {
+        router.prefetch('/saved');
+      } else if (resolvedPathname === '/notification' || resolvedPathname === '/profile' || resolvedPathname === '/saved') {
         router.prefetch('/home');
         if (resolvedPathname === '/notification') {
           router.prefetch('/profile');
-          router.prefetch('/compare');
+          router.prefetch('/saved');
         } else if (resolvedPathname === '/profile') {
           router.prefetch('/notification');
-          router.prefetch('/compare');
+          router.prefetch('/saved');
         } else {
           router.prefetch('/notification');
           router.prefetch('/profile');

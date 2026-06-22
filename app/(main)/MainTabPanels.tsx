@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { HomePageContent } from './home/HomePageContent';
+import { SavedPostsContent } from '@/app/saved/SavedPostsContent';
 
 const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile', '/saved'];
 
@@ -62,6 +63,10 @@ function NotificationPanel() {
 
 function ProfilePanel() {
   return <LazyProfileContent key="profile-content-v2" />;
+}
+
+function SavedPanel() {
+  return <SavedPostsContent />;
 }
 
 /** ลงทะเบียน scroll ของหน้าโฮม (window) — ใช้ useLayoutEffect ให้ทันก่อน restore ใน context
@@ -125,7 +130,11 @@ function MainTabPanelsInner() {
             )}
             {renderTab && tabId === '/notification' && <NotificationPanel />}
             {renderTab && tabId === '/profile' && <ProfilePanel key="profile-tab-v2" />}
-            {renderTab && tabId === '/saved' && <div />}
+            {renderTab && tabId === '/saved' && (
+              <PanelScrollRegister tabId={tabId}>
+                <SavedPanel />
+              </PanelScrollRegister>
+            )}
           </div>
         );
       })}

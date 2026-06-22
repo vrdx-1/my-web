@@ -133,7 +133,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   }, [getSavedScroll]);
 
   const activeTabId: MainTabId | null =
-    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare'
+    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved'
       ? pathname
       : null;
 
@@ -143,7 +143,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const onScroll = () => {
       const p = pathnameRef.current;
-      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/compare') return;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/saved') return;
       lastWindowScrollByTabRef.current[p as MainTabId] = getPageScrollY();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -157,7 +157,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
     const current = pathname ?? null;
     prevPathnameForPersistRef.current = current;
     if (prev == null) return;
-    if (prev !== '/home' && prev !== '/notification' && prev !== '/profile' && prev !== '/compare') return;
+    if (prev !== '/home' && prev !== '/notification' && prev !== '/profile' && prev !== '/saved') return;
     if (current === prev) return;
     const left = prev as MainTabId;
     const rememberedY = lastWindowScrollByTabRef.current[left];
@@ -176,7 +176,7 @@ export function MainTabScrollProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const persistActiveTabScroll = () => {
       const p = pathnameRef.current;
-      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/compare') return;
+      if (p !== '/home' && p !== '/notification' && p !== '/profile' && p !== '/saved') return;
       const tabId = p as MainTabId;
       const rememberedY = lastWindowScrollByTabRef.current[tabId];
       const liveY = typeof window !== 'undefined' ? getPageScrollY() : undefined;
