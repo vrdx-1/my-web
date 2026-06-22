@@ -8,7 +8,7 @@ import { MainTabScrollProvider } from '@/contexts/MainTabScrollContext';
 import { useHeaderVisibilityState } from '@/contexts/HeaderVisibilityContext';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
 
-const BOTTOM_NAV_PATHS = ['/home', '/compare', '/notification', '/profile'];
+const BOTTOM_NAV_PATHS = ['/home', '/saved', '/notification', '/profile'];
 
 function shouldShowBottomNav(pathname: string): boolean {
   if (!pathname) return false;

@@ -336,7 +336,7 @@ export function SavedPostsContent() {
         <PageHeader
           title="ລາຍການທີ່ບັນທຶກ"
           centerTitle
-          onBack={handleBack}
+          hideBackButton
           showDivider={false}
           rightSlot={(
             <button

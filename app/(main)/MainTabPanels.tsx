@@ -9,9 +9,8 @@ import dynamic from 'next/dynamic';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 import { HomePageContent } from './home/HomePageContent';
-import { ComparePostsContent } from './compare/ComparePostsContent';
 
-const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile', '/compare'];
+const MAIN_TAB_PATHS: MainTabId[] = ['/home', '/notification', '/profile', '/saved'];
 
 function getPageScrollY(): number {
   if (typeof window === 'undefined') return 0;
@@ -62,11 +61,7 @@ function NotificationPanel() {
 }
 
 function ProfilePanel() {
-  return <LazyProfileContent />;
-}
-
-function ComparePanel() {
-  return <ComparePostsContent />;
+  return <LazyProfileContent key="profile-content-v2" />;
 }
 
 /** ลงทะเบียน scroll ของหน้าโฮม (window) — ใช้ useLayoutEffect ให้ทันก่อน restore ใน context
@@ -89,7 +84,7 @@ function PanelScrollRegister({ tabId, children }: { tabId: MainTabId; children: 
 function MainTabPanelsInner() {
   const pathname = usePathname();
   const activeTabId: MainTabId | null =
-    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare'
+    pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved'
       ? pathname
       : null;
   const [mountedTabs, setMountedTabs] = useState<Partial<Record<MainTabId, true>>>(() => ({
@@ -129,12 +124,8 @@ function MainTabPanelsInner() {
               </PanelScrollRegister>
             )}
             {renderTab && tabId === '/notification' && <NotificationPanel />}
-            {renderTab && tabId === '/profile' && <ProfilePanel />}
-            {renderTab && tabId === '/compare' && (
-              <PanelScrollRegister tabId={tabId}>
-                <ComparePanel />
-              </PanelScrollRegister>
-            )}
+            {renderTab && tabId === '/profile' && <ProfilePanel key="profile-tab-v2" />}
+            {renderTab && tabId === '/saved' && <div />}
           </div>
         );
       })}

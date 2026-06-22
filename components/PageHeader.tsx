@@ -7,6 +7,7 @@ interface PageHeaderProps {
   title: string;
   onBack?: () => void;
   rightSlot?: React.ReactNode;
+  hideBackButton?: boolean;
   actionButton?: {
     label: string;
     onClick: () => void;
@@ -28,6 +29,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
   title,
   onBack,
   rightSlot,
+  hideBackButton = false,
   actionButton,
   centerTitle = false,
   className = '',
@@ -98,7 +100,9 @@ export const PageHeader = React.memo<PageHeaderProps>(({
     >
       {actionButton ? (
         <>
-          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
+            {hideBackButton ? <div aria-hidden style={{ width: 44, height: 44 }} /> : backButton}
+          </div>
           <h3
             style={{
               flex: 1,
@@ -164,7 +168,9 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         </>
       ) : centerTitle ? (
         <>
-          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>{backButton}</div>
+          <div style={{ width: sideWidth, flexShrink: 0, display: 'flex', justifyContent: 'flex-start' }}>
+            {hideBackButton ? <div aria-hidden style={{ width: 44, height: 44 }} /> : backButton}
+          </div>
           <h3
             style={{
               flex: 1,
@@ -193,7 +199,7 @@ export const PageHeader = React.memo<PageHeaderProps>(({
         </>
       ) : (
         <>
-          {backButton}
+          {hideBackButton ? null : backButton}
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#111111' }}>
             {title}
           </h1>

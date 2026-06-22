@@ -124,7 +124,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Post Saves', path: '/admin/post-saves' },
     { name: 'WhatsApp Clicks', path: '/admin/whatsapp-clicks' },
     { name: 'WhatsApp Insights', path: '/admin/whatsapp-clicks-insights' },
-    { name: 'Compare Usage', path: '/admin/compare-usage' },
     { name: 'Repost Clicks', path: '/admin/repost-clicks' },
     { name: 'All Post', path: '/admin/post' },
     { name: 'Hidden Post', path: '/admin/hidden-posts' },

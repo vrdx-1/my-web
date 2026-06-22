@@ -4,8 +4,7 @@ import React, { useRef, useState, useEffect, Suspense, startTransition } from 'r
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Bell, House, Plus } from 'lucide-react';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
-import { CompareIcon } from '@/components/icons/CompareIcon';
-import { useComparePosts } from '@/contexts/ComparePostsContext';
+
 import { REGISTER_PATH } from '@/utils/authRoutes';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useCreatePostContext } from '@/contexts/CreatePostContext';
@@ -54,7 +53,7 @@ const NAV_ICON_INACTIVE = '#2f3238';
 
 const routes = [
   { path: '/home', label: 'ໜ້າຫຼັກ', match: (p: string) => p === '/home' },
-  { path: '/compare', label: 'ປຽບທຽບລາຄາ', match: (p: string) => p === '/compare' },
+  { path: '/saved', label: 'ລາຍການທີ່ບັນທຶກ', match: (p: string) => p === '/saved' || p.startsWith('/saved/') },
   { path: '/create-post', label: 'ໂພສ', match: (p: string) => p === '/create-post' },
   { path: '/notification', label: 'ການແຈ້ງເຕືອນ', match: (p: string) => p === '/notification' },
   { path: '/profile', label: 'ໂປຣຟາຍ', match: (p: string) => p === '/profile' || p.startsWith('/profile/') },
@@ -188,22 +187,65 @@ function BellNavIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
-function CompareNavIcon({ isActive }: { isActive: boolean }) {
+function SavedNavIcon({ isActive }: { isActive: boolean }) {
+  if (isActive) {
+    return (
+      <svg
+        width={NAV_ICON_SIZE}
+        height={NAV_ICON_SIZE}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          margin: 'auto',
+          zIndex: 1,
+          opacity: 1,
+          transition: 'opacity 0.15s ease-out',
+          pointerEvents: 'none',
+          transform: 'translateY(0px)',
+        }}
+      >
+        <path
+          d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"
+          fill="#1877f2"
+          stroke="#1877f2"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
   return (
-    <CompareIcon
-      size={NAV_ICON_SIZE - 1}
-      color={isActive ? '#1877f2' : NAV_ICON_INACTIVE}
-      strokeWidth={isActive ? 1.95 : 1.9}
-      variant={isActive ? 'filled' : 'outline'}
+    <svg
+      width={NAV_ICON_SIZE}
+      height={NAV_ICON_SIZE}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
       style={{
         position: 'absolute',
         inset: 0,
         margin: 'auto',
         zIndex: 1,
+        opacity: 1,
+        transition: 'opacity 0.15s ease-out',
         pointerEvents: 'none',
         transform: 'translateY(0px)',
       }}
-    />
+    >
+      <path
+        d="M6 2h12a2 2 0 0 1 2 2v18l-8-5-8 5V4a2 2 0 0 1 2-2z"
+        fill="none"
+        stroke={NAV_ICON_INACTIVE}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -214,7 +256,6 @@ export const BottomNav = React.memo(function BottomNav() {
   const lastCreatePostTriggerRef = useRef<number>(0);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const { session, userProfile } = useSessionAndProfile();
-  const comparePosts = useComparePosts();
   const { unreadCount } = useUnreadNotificationCount({ userId: session?.user?.id });
   const createPostContext = useCreatePostContext();
   const notificationRefreshContext = useNotificationRefreshContext();
@@ -224,7 +265,7 @@ export const BottomNav = React.memo(function BottomNav() {
 
   const effectivePath = pendingPath ?? pathname ?? '';
   const isHome = effectivePath === '/home';
-  const isCompare = effectivePath === '/compare';
+  const isSaved = effectivePath === '/saved' || effectivePath.startsWith('/saved/');
   const isNotificationOrProfile =
     effectivePath === '/notification' || effectivePath === '/profile' || effectivePath.startsWith('/profile/');
 
@@ -262,7 +303,7 @@ export const BottomNav = React.memo(function BottomNav() {
     >
       {routes.map(({ path, label, match }) => {
         const isPostSlot = path === '/create-post';
-        const isCreatePostButton = isPostSlot && (isHome || isCompare || isNotificationOrProfile);
+        const isCreatePostButton = isPostSlot && (isHome || isSaved || isNotificationOrProfile);
 
         if (isCreatePostButton) {
           const triggerCreatePost = () => {
@@ -317,7 +358,6 @@ export const BottomNav = React.memo(function BottomNav() {
 
         const isProfile = path === '/profile';
         const showBadge = path === '/notification' && !!session && unreadCount > 0;
-        const showCompareBadge = path === '/compare' && comparePosts.unreadCount > 0;
         const isNotificationTab = path === '/notification';
 
         const runNav = () => {
@@ -326,24 +366,9 @@ export const BottomNav = React.memo(function BottomNav() {
           if (last && last.path === path && now - last.at < NAV_DEBOUNCE_MS) return;
           lastNavRef.current = { path, at: now };
 
-          if (path === '/compare') {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
-              mainTabScroll?.saveCurrentScroll(pathname);
-            }
-
-            // Guest กดเปรียบเทียบราคา → ไปหน้าลงทะเบียนทันที (เหมือนปุ่มบันทึกใน PostCard)
-            if (!session) {
-              router.push(REGISTER_PATH, { scroll: false });
-              return;
-            }
-
-            router.push('/compare', { scroll: false });
-            return;
-          }
-
           // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
           if (path === '/notification' && !session) {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved') {
               mainTabScroll?.saveCurrentScroll(pathname);
               if (pathname === '/home' && typeof window !== 'undefined') {
                 try {
@@ -362,7 +387,7 @@ export const BottomNav = React.memo(function BottomNav() {
             return;
           }
           if (path === '/profile' && !session) {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
+            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved') {
               mainTabScroll?.saveCurrentScroll(pathname);
               if (pathname === '/home' && typeof window !== 'undefined') {
                 try {
@@ -395,7 +420,7 @@ export const BottomNav = React.memo(function BottomNav() {
             if (path === '/profile') return;
           }
           // สลับไปอีกแท็บ → บันทึก scroll แล้ว navigate
-          if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/compare') {
+          if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved') {
             mainTabScroll?.saveCurrentScroll(pathname);
           }
           setPendingPath(path);
@@ -500,7 +525,7 @@ export const BottomNav = React.memo(function BottomNav() {
                 }}
               >
                 {path === '/home' && <HomeNavIcon isActive={isActive} />}
-                {path === '/compare' && <CompareNavIcon isActive={isActive} />}
+                {path === '/saved' && <SavedNavIcon isActive={isActive} />}
                 {path === '/notification' && (
                   <BellNavIcon isActive={isActive} />
                 )}
@@ -528,32 +553,6 @@ export const BottomNav = React.memo(function BottomNav() {
                     }}
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-                {showCompareBadge && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: -5,
-                      right: -9,
-                      minWidth: 16,
-                      height: 16,
-                      padding: '0 4px',
-                      borderRadius: 999,
-                      background: '#e0245e',
-                      border: '1px solid #ffffff',
-                      boxShadow: '0 4px 10px rgba(224, 36, 94, 0.25)',
-                      color: '#fff',
-                      fontSize: 10,
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: '16px',
-                      zIndex: 2,
-                    }}
-                  >
-                    {comparePosts.unreadCount > 99 ? '99+' : comparePosts.unreadCount}
                   </span>
                 )}
               </span>

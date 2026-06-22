@@ -21,7 +21,6 @@ interface PostCardMenuProps {
   activeMenuState: string | null;
   isMenuAnimating: boolean;
   menuButtonRefs: React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>;
-  onCompare?: (postId: string) => void | Promise<void>;
   onSave: (postId: string) => void;
   saveLabel?: string;
   onShare: (post: any) => void;
@@ -42,7 +41,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   activeMenuState: _activeMenuState,
   isMenuAnimating: _isMenuAnimating,
   menuButtonRefs,
-  onCompare,
   onSave,
   saveLabel,
   onShare,
@@ -60,7 +58,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [showCompareSuccess, setShowCompareSuccess] = React.useState(false);
 
   React.useEffect(() => {
     if (!isMenuOpen || typeof window === 'undefined') return;
@@ -244,22 +241,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
               setIsMenuOpen(false);
               onDeletePost(post.id);
             }}
-            onCompare={() => {
-              setIsMenuOpen(false);
-              void trackCompareUsage();
-              if (!session) {
-                console.debug('[compare-usage] guest click redirected to register', {
-                  postId: post.id,
-                });
-                router.push(REGISTER_PATH);
-                return;
-              }
-              Promise.resolve(onCompare?.(post.id))
-                .then(() => {
-                  setShowCompareSuccess(true);
-                })
-                .catch(() => {});
-            }}
             onSave={() => {
               setIsMenuOpen(false);
               if (!session) {
@@ -374,13 +355,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
           </div>
         </div>,
         document.body
-      )}
-
-      {showCompareSuccess && (
-        <SuccessPopup
-          message="ເພີ່ມສຳເລັດ"
-          onClose={() => setShowCompareSuccess(false)}
-        />
       )}
     </div>
   );

@@ -5,7 +5,7 @@
 import React, { createContext, useCallback, useRef, useContext, useEffect, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-const MAIN_TAB_PATHS = ['/home', '/notification', '/profile', '/compare'] as const;
+const MAIN_TAB_PATHS = ['/home', '/notification', '/profile', '/saved'] as const;
 type MainTabId = (typeof MAIN_TAB_PATHS)[number];
 
 const STORAGE_KEY_PREFIX = 'mainTabScroll_';

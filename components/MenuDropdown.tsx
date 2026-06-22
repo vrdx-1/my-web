@@ -3,7 +3,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { commonStyles } from '@/utils/commonStyles';
-import { CompareIcon } from '@/components/icons/CompareIcon';
 
 const menuItemContentStyle: React.CSSProperties = {
   display: 'flex',
@@ -105,7 +104,6 @@ const repostIcon = (
   </span>
 );
 
-const compareIcon = <CompareIcon size={22} color="currentColor" strokeWidth={1.7} variant="outline" />;
 
 interface MenuDropdownProps {
   postId: string;
@@ -117,7 +115,6 @@ interface MenuDropdownProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
-  onCompare?: () => void;
   onSave?: () => void;
   saveLabel?: string;
   onShare?: () => void;
@@ -142,7 +139,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   onClose,
   onEdit,
   onDelete,
-  onCompare,
   onSave,
   saveLabel,
   onShare,
@@ -161,7 +157,6 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
   };
 
   const showBoost = typeof onBoost === 'function';
-  const showCompare = typeof onCompare === 'function';
   const showRepost = typeof onRepost === 'function';
   const resolvedSaveLabel = saveLabel || 'ບັນທຶກໂພສ';
 
@@ -197,14 +192,7 @@ export const MenuDropdown = React.memo<MenuDropdownProps>(({
           pointerEvents: 'auto',
         }}
       >
-        {showCompare && (
-          <div onClick={onCompare} style={menuItemStyleBalanced}>
-            <ActionLabel
-              label="ເພີ່ມເຂົ້າປຽບທຽບ"
-              icon={compareIcon}
-            />
-          </div>
-        )}
+
         {isOwner ? (
           <>
             <div onClick={onSave} style={menuItemStyleBalanced}>

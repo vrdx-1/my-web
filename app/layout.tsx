@@ -17,7 +17,6 @@ import { SessionProfileProvider } from "@/contexts/SessionProfileContext";
 import { CreatePostProvider } from "@/contexts/CreatePostContext";
 import { NotificationRefreshProvider } from "@/contexts/NotificationRefreshContext";
 import { HomeRefreshProvider } from "@/contexts/HomeRefreshContext";
-import { ComparePostsProvider } from "@/contexts/ComparePostsContext";
 import { SITE_URL } from "@/lib/siteConfig";
 
 const geistSans = Geist({
@@ -102,10 +101,8 @@ export default function RootLayout({
               <SavePostSuccessPopupHost />
               <HeaderVisibilityProvider>
                 <SessionProfileProvider>
-                  <ComparePostsProvider>
                     <DailyVisitorTracker />
                     <BottomNavWrapper>{children}</BottomNavWrapper>
-                  </ComparePostsProvider>
                 </SessionProfileProvider>
               </HeaderVisibilityProvider>
             </BackHandlerProvider>
