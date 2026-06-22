@@ -838,7 +838,7 @@ export function SavedComparePostsContent() {
               <CompareIcon size={32} color="currentColor" />
             </div>
             <div style={{ fontSize: 18, lineHeight: '24px', fontWeight: 700, color: '#6b7280' }}>
-              ຍັງບໍ່ມີລາຍການບັນທຶກ
+              ຍັງບໍ່ມີລາຍການ
             </div>
           </div>
         ) : null}

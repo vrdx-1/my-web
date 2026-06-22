@@ -333,7 +333,7 @@ export function SavedPostsContent() {
         }}
       >
         <PageHeader
-          title="ລາຍການທີ່ບັນທຶກ"
+          title="ໂພສທີ່ບັນທຶກ"
           centerTitle
           hideBackButton
           showDivider={false}
@@ -348,14 +348,14 @@ export function SavedPostsContent() {
                 width: 44,
                 height: 44,
                 padding: 0,
-                color: '#4b5563',
+                color: '#111111',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
               }}
             >
-              <CompareIcon size={22} color="currentColor" strokeWidth={1.7} variant="outline" />
+              <CompareIcon size={27} color="currentColor" strokeWidth={1.8} variant="outline" />
             </button>
           )}
         />

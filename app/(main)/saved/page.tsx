@@ -6,7 +6,7 @@ import { FeedPageSkeletonFallback } from '@/components/FeedPageSkeletonFallback'
 /** ตรงกับ SavedPostsContent (home-tab-navigation + ไม่มีเส้นใต้ header + FeedSkeleton 3 การ์ด เหมือนหน้า liked) */
 const feedFallback = (
   <FeedPageSkeletonFallback
-    title="ລາຍການທີ່ບັນທຶກ"
+    title="ໂພສທີ່ບັນທຶກ"
     tabNavigationClassName="home-tab-navigation"
     showHeaderDivider={false}
     feedSkeletonCount={3}
