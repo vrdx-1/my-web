@@ -113,6 +113,31 @@ export default function Settings() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
 
+          {/* ╔══════════════════════════════╗ */}
+          {/* ║   ຢືນຢັນຕົວຕົນ (Verify)     ║ */}
+          {/* ╚══════════════════════════════╝ */}
+          <div
+            onClick={() => router.push('/profile/settings/identity-verification')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '16px 0',
+              cursor: 'pointer',
+              transition: 'background 0.15s ease'
+            }}
+            onMouseEnter={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = '#f9fafb'; }}
+            onMouseLeave={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = 'transparent'; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M7 8h5M7 12h4"/>
+                <path d="M15 14l1.5 1.5 3-3"/>
+              </svg>
+              <span style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600' }}>ຢືນຢັນຕົວຕົນ</span>
+            </div>
+          </div>
+
           {/* เมนู ປ່ຽນອີເມລ */}
           <div
             onClick={() => router.push('/profile/settings/change-email')}
@@ -178,31 +203,6 @@ export default function Settings() {
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
               <span style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600' }}>ລາຍງານບັນຫາ</span>
-            </div>
-          </div>
-
-          {/* ╔══════════════════════════════╗ */}
-          {/* ║   ຢືນຢັນຕົວຕົນ (Verify)     ║ */}
-          {/* ╚══════════════════════════════╝ */}
-          <div
-            onClick={() => router.push('/profile/settings/identity-verification')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '16px 0',
-              cursor: 'pointer',
-              transition: 'background 0.15s ease'
-            }}
-            onMouseEnter={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = '#f9fafb'; }}
-            onMouseLeave={(e) => { if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.background = 'transparent'; }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/>
-                <path d="M7 8h5M7 12h4"/>
-                <path d="M15 14l1.5 1.5 3-3"/>
-              </svg>
-              <span style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600' }}>ຢືນຢັນຕົວຕົນ</span>
             </div>
           </div>
 
