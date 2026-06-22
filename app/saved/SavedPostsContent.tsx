@@ -671,6 +671,13 @@ export function SavedPostsContent() {
           onRemoveSave={(postId) => {
             void removeSave(postId);
           }}
+          onLocalUpdate={(postId, data) => {
+            postListData.setPosts((prev) => prev.map((item) => (
+              String(item.id) === String(postId)
+                ? { ...item, ...data }
+                : item
+            )));
+          }}
         />
       ) : (
         <SavedFeedBlock

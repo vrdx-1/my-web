@@ -16,6 +16,8 @@ import { CompactPhotoGrid } from '@/components/compare/CompactPhotoGrid';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedWithPreload } from '@/components/FeedWithPreload';
 import { FeedSkeleton } from '@/components/FeedSkeleton';
+import { SuccessPopup } from '@/components/modals/SuccessPopup';
+import { ChangePostPriceModal } from '@/components/modals/ChangePostPriceModal';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { isPostOwner } from '@/utils/postUtils';
 
@@ -38,6 +40,7 @@ interface MyPostsCompactFeedBlockProps {
   loadingMore?: boolean;
   hasMore?: boolean;
   lastPostElementRef?: (node: HTMLElement | null) => void;
+  onLocalUpdate?: (postId: string, data: Record<string, unknown>) => void;
 }
 
 let ratesCache: ExchangeRates | null = null;
@@ -91,6 +94,7 @@ function MyPostsCompactPostRow({
   onSetActiveMenu,
   onSetMenuAnimating,
   hideBoost,
+  onLocalUpdate,
 }: {
   post: any;
   exchangeRates: ExchangeRates;
@@ -109,6 +113,7 @@ function MyPostsCompactPostRow({
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   hideBoost?: boolean;
+  onLocalUpdate?: (postId: string, data: Record<string, unknown>) => void;
 }) {
   const router = useRouter();
   const isOwner = React.useMemo(
@@ -117,6 +122,8 @@ function MyPostsCompactPostRow({
   );
   const [isCaptionExpanded, setIsCaptionExpanded] = React.useState(false);
   const [showPricePopup, setShowPricePopup] = React.useState(false);
+  const [showChangePriceModal, setShowChangePriceModal] = React.useState(false);
+  const [showChangePriceSuccess, setShowChangePriceSuccess] = React.useState(false);
   const [popupPosition, setPopupPosition] = React.useState<{ top: number; left: number } | null>(null);
   const popupAnchorRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -252,34 +259,71 @@ function MyPostsCompactPostRow({
                 gap: 6,
               }}
             >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 36,
-                  borderRadius: 12,
-                  border: '1px solid #d1d5db',
-                  background: showPricePopup ? '#ffffff' : 'transparent',
-                  boxShadow: showPricePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none',
-                  padding: '8px 14px',
-                  minWidth: 0,
-                }}
-              >
-                <span
+              {isOwner ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowChangePriceModal(true);
+                  }}
                   style={{
-                    fontSize: 16,
-                    lineHeight: '21px',
-                    fontWeight: 700,
-                    color: '#111827',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 36,
+                    borderRadius: 12,
+                    border: '1px solid #d1d5db',
+                    background: showPricePopup ? '#ffffff' : 'transparent',
+                    boxShadow: showPricePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none',
+                    padding: '8px 14px',
+                    minWidth: 0,
+                    cursor: 'pointer',
                   }}
                 >
-                  {priceText}
-                </span>
-              </div>
+                  <span
+                    style={{
+                      fontSize: 16,
+                      lineHeight: '21px',
+                      fontWeight: 700,
+                      color: '#111827',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {priceText}
+                  </span>
+                </button>
+              ) : (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 36,
+                    borderRadius: 12,
+                    border: '1px solid #d1d5db',
+                    background: showPricePopup ? '#ffffff' : 'transparent',
+                    boxShadow: showPricePopup ? '0 12px 24px rgba(15, 23, 42, 0.08)' : 'none',
+                    padding: '8px 14px',
+                    minWidth: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 16,
+                      lineHeight: '21px',
+                      fontWeight: 700,
+                      color: '#111827',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {priceText}
+                  </span>
+                </div>
+              )}
 
               <button
                 type="button"
@@ -433,6 +477,27 @@ function MyPostsCompactPostRow({
         </>,
         document.body,
       )}
+
+      <ChangePostPriceModal
+        isOpen={showChangePriceModal}
+        postId={post.id}
+        price={post.price}
+        currency={post.price_currency}
+        onClose={() => setShowChangePriceModal(false)}
+        onSaved={(changes) => {
+          if (changes && onLocalUpdate) {
+            onLocalUpdate(post.id, changes);
+          }
+          setShowChangePriceSuccess(true);
+        }}
+      />
+
+      {showChangePriceSuccess && (
+        <SuccessPopup
+          message="ປ່ຽນລາຄາສຳເລັດ"
+          onClose={() => setShowChangePriceSuccess(false)}
+        />
+      )}
     </div>
   );
 }
@@ -456,6 +521,7 @@ export function MyPostsCompactFeedBlock({
   loadingMore = false,
   hasMore = true,
   lastPostElementRef,
+  onLocalUpdate,
 }: MyPostsCompactFeedBlockProps) {
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const [exchangeRates, setExchangeRates] = React.useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
@@ -553,6 +619,7 @@ export function MyPostsCompactFeedBlock({
                 onSetActiveMenu={onSetActiveMenu}
                 onSetMenuAnimating={onSetMenuAnimating}
                 hideBoost={hideBoost}
+                onLocalUpdate={onLocalUpdate}
               />
             </div>
           );

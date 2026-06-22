@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import { ButtonSpinner } from '@/components/LoadingSpinner';
 
 type Currency = '₭' | '฿' | '$';
 
@@ -225,10 +226,17 @@ export const ChangePostPriceModal = React.memo<ChangePostPriceModalProps>(({
               fontWeight: 'bold',
               color: '#fff',
               cursor: !hasChanges || isSaving ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               opacity: isSaving ? 0.7 : 1,
             }}
           >
-            {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກ'}
+            {isSaving ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ButtonSpinner />
+              </span>
+            ) : 'ບັນທຶກ'}
           </button>
         </div>
       </div>

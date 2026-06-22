@@ -894,6 +894,13 @@ export function MyPostsContent() {
           hasMore={postListData.hasMore}
           lastPostElementRef={lastPostElementRef}
           onSave={toggleSave}
+          onLocalUpdate={(postId, data) => {
+            postListData.setPosts((prev) => prev.map((item) => (
+              String(item.id) === String(postId)
+                ? { ...item, ...data }
+                : item
+            )));
+          }}
         />
       ) : (
         <MyPostsFeedBlock
