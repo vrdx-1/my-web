@@ -7,9 +7,19 @@ interface DeleteConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  title?: string;
+  cancelLabel?: string;
+  confirmLabel?: string;
 }
 
-export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfirm, onCancel, loading = false }) => {
+export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ 
+  onConfirm,
+  onCancel,
+  loading = false,
+  title = 'ທ່ານຕ້ອງການລົບໂພສບໍ?',
+  cancelLabel = 'ຍົກເລີກ',
+  confirmLabel = 'ລົບ',
+}) => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const prevOverflow = document.body.style.overflow;
@@ -45,7 +55,7 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
         onClick={(e) => e.stopPropagation()}
       >
         <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center', color: '#111111' }}>
-          ທ່ານຕ້ອງການລົບໂພສບໍ?
+          {title}
         </h3>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
           <button
@@ -65,7 +75,7 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
               opacity: loading ? 0.6 : 1,
             }}
           >
-            ຍົກເລີກ
+            {cancelLabel}
           </button>
           <button
             type="button"
@@ -90,7 +100,7 @@ export const DeleteConfirmModal = React.memo<DeleteConfirmModalProps>(({ onConfi
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ButtonSpinner />
               </span>
-            ) : 'ລົບ'}
+            ) : confirmLabel}
           </button>
         </div>
       </div>

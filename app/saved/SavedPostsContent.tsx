@@ -2,15 +2,14 @@
 
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 
 // Shared Components
 import { FeedSkeleton } from '@/components/FeedSkeleton';
 import { TabNavigation } from '@/components/TabNavigation';
 import { PostFeedModals } from '@/components/PostFeedModals';
 import { PageHeader } from '@/components/PageHeader';
-import { CompareIcon } from '@/components/icons/CompareIcon';
 import { ReportSuccessPopup } from '@/components/modals/ReportSuccessPopup';
 import { SuccessPopup } from '@/components/modals/SuccessPopup';
 import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
@@ -29,6 +28,8 @@ import { useBackHandler } from '@/components/BackHandlerContext';
 import { useSessionAndProfile } from '@/hooks/useSessionAndProfile';
 import { useSetHeaderVisibility } from '@/contexts/HeaderVisibilityContext';
 import { MOTION_TRANSITIONS } from '@/utils/motionConstants';
+import { getPrimaryGuestToken } from '@/utils/postUtils';
+import { supabase } from '@/lib/supabase';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
@@ -39,14 +40,229 @@ const SavedFeedBlock = dynamic(
   { ssr: false, loading: () => <FeedSkeleton count={3} /> }
 );
 
+const SavedCompactFeedBlock = dynamic(
+  () => import('./SavedCompactFeedBlock').then((mod) => ({ default: mod.SavedCompactFeedBlock })),
+  { ssr: false, loading: () => <FeedSkeleton count={3} /> }
+);
+
+type SavedSource = {
+  table: 'post_saves' | 'post_saves_guest';
+  column: 'user_id' | 'guest_token';
+  idOrToken: string;
+};
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SAVED_VIEW_MODE_STORAGE_KEY = 'saved_posts_view_mode';
+
+function isValidSavedKey(value: unknown): value is string {
+  return typeof value === 'string' && value !== 'null' && value !== 'undefined' && value.trim().length > 0;
+}
+
+function SavedActionsMenuButton({
+  compactMode,
+  onToggleCompactMode,
+  onClearAll,
+  disableClearAll,
+}: {
+  compactMode: boolean;
+  onToggleCompactMode: () => void;
+  onClearAll: () => void;
+  disableClearAll: boolean;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const updatePosition = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    };
+
+    const handleScroll = () => setIsOpen(false);
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label="ເປີດເມນູ"
+        onClick={() => setIsOpen((prev) => !prev)}
+        style={{
+          border: 'none',
+          background: 'transparent',
+          width: 44,
+          height: 44,
+          padding: 0,
+          color: '#111111',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="2.1" />
+          <circle cx="12" cy="12" r="2.1" />
+          <circle cx="19" cy="12" r="2.1" />
+        </svg>
+      </button>
+
+      {isOpen && position && typeof document !== 'undefined' && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2200 }}>
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.18)' }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: position.top,
+              right: position.right,
+              width: 280,
+              background: '#ffffff',
+              borderRadius: 16,
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+              overflow: 'hidden',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onToggleCompactMode();
+              }}
+              style={{
+                width: '100%',
+                border: 'none',
+                borderBottom: '1px solid #f1f5f9',
+                background: '#ffffff',
+                textAlign: 'left',
+                padding: '14px 18px',
+                fontSize: 17,
+                lineHeight: '24px',
+                fontWeight: 500,
+                color: '#111111',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  width: 22,
+                  height: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#4a4d52',
+                  flexShrink: 0,
+                }}
+              >
+                {compactMode ? (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4.5" y="4.5" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="13" y="4.5" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="4.5" y="13" width="6.5" height="6.5" rx="1.4" />
+                    <rect x="13" y="13" width="6.5" height="6.5" rx="1.4" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="5" width="16" height="14" rx="2.2" />
+                    <path d="M9 9h6" />
+                    <path d="M9 12h6" />
+                    <path d="M9 15h4" />
+                  </svg>
+                )}
+              </span>
+              <span>{compactMode ? 'ສະແດງແບບໃຫຍ່' : 'ສະແດງແບບນ້ອຍ'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onClearAll();
+              }}
+              disabled={disableClearAll}
+              style={{
+                width: '100%',
+                border: 'none',
+                background: '#ffffff',
+                textAlign: 'left',
+                padding: '14px 18px',
+                fontSize: 17,
+                lineHeight: '24px',
+                fontWeight: 500,
+                color: disableClearAll ? '#9ca3af' : '#111111',
+                cursor: disableClearAll ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  width: 22,
+                  height: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: disableClearAll ? '#9ca3af' : '#4a4d52',
+                  flexShrink: 0,
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+              </span>
+              <span>ລົບລາຍການທີ່ບັນທຶກທັງໝົດ</span>
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 export function SavedPostsContent() {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [feedReady, setFeedReady] = useState(false);
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.sessionStorage.getItem(SAVED_VIEW_MODE_STORAGE_KEY) === 'compact';
+  });
   const [tab, setTab] = useState('recommend');
   const [tabRefreshing, setTabRefreshing] = useState(false);
   const [hasFetchedRecommend, setHasFetchedRecommend] = useState(false);
   const [hasFetchedSold, setHasFetchedSold] = useState(false);
+  const [savedSource, setSavedSource] = useState<SavedSource | null | undefined>(undefined);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [showClearAllSuccess, setShowClearAllSuccess] = useState(false);
   const fixedHeaderRef = useRef<HTMLDivElement | null>(null);
   const [fixedHeaderHeight, setFixedHeaderHeight] = useState(LAYOUT_CONSTANTS.HEADER_HEIGHT);
   const savedScopeKeyRef = useRef<string | null>(null);
@@ -61,6 +277,14 @@ export function SavedPostsContent() {
     });
     return () => cancelAnimationFrame(id);
   }, [mounted]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(
+      SAVED_VIEW_MODE_STORAGE_KEY,
+      isCompactMode ? 'compact' : 'default',
+    );
+  }, [isCompactMode]);
 
   useEffect(() => {
     const element = fixedHeaderRef.current;
@@ -99,6 +323,30 @@ export function SavedPostsContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
+
+  useEffect(() => {
+    const userIdCandidate = activeProfileId || authUserId || session?.user?.id || null;
+    if (isValidSavedKey(userIdCandidate) && UUID_PATTERN.test(userIdCandidate)) {
+      setSavedSource({
+        table: 'post_saves',
+        column: 'user_id',
+        idOrToken: userIdCandidate,
+      });
+      return;
+    }
+
+    const guestToken = getPrimaryGuestToken();
+    if (isValidSavedKey(guestToken)) {
+      setSavedSource({
+        table: 'post_saves_guest',
+        column: 'guest_token',
+        idOrToken: guestToken,
+      });
+      return;
+    }
+
+    setSavedSource(null);
+  }, [activeProfileId, authUserId, session?.user?.id]);
 
   const recommendListData = usePostListData({
     type: 'saved',
@@ -291,9 +539,35 @@ export function SavedPostsContent() {
     return addBackStep(close);
   }, [viewingPostHook.viewingPost, setHeaderVisibleFromScroll, addBackStep, viewingPostHook]);
 
-  const handleBack = useCallback(() => {
-    router.push('/profile');
-  }, [router]);
+  const handleClearAllSaved = useCallback(async () => {
+    if (!savedSource || isClearingAll) return;
+
+    setIsClearingAll(true);
+
+    const { error } = await supabase
+      .from(savedSource.table)
+      .delete()
+      .eq(savedSource.column, savedSource.idOrToken);
+
+    setIsClearingAll(false);
+    if (error) return;
+
+    setJustSavedPosts({});
+    recommendListData.setPosts([]);
+    recommendListData.setSavedPosts({});
+    recommendListData.setPage(0);
+    recommendListData.setHasMore(false);
+
+    soldListData.setPosts([]);
+    soldListData.setSavedPosts({});
+    soldListData.setPage(0);
+    soldListData.setHasMore(false);
+
+    setHasFetchedRecommend(true);
+    setHasFetchedSold(true);
+    setTabRefreshing(false);
+    setShowClearAllSuccess(true);
+  }, [isClearingAll, recommendListData, savedSource, soldListData]);
 
   // Skeleton เฉพาะพื้นที่โพสต์ — Header + แท็บພ້ອມຂາຍ/ຂາຍແລ້ວ แสดงจริงเสมอ (เหมือนหน้า liked)
   const isFeedSkeleton = postListData.posts.length === 0 && postListData.loadingMore;
@@ -310,6 +584,7 @@ export function SavedPostsContent() {
     height: fixedHeaderHeight,
     pointerEvents: 'none' as const,
   };
+  const canClearAll = savedSource !== undefined && savedSource !== null;
 
   return (
     <main style={LAYOUT_CONSTANTS.MAIN_CONTAINER}>
@@ -338,25 +613,14 @@ export function SavedPostsContent() {
           hideBackButton
           showDivider={false}
           rightSlot={(
-            <button
-              type="button"
-              aria-label="ປຽບທຽບລາຄາລາຍການທີ່ບັນທຶກ"
-              onClick={() => router.push('/saved/compare')}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                width: 44,
-                height: 44,
-                padding: 0,
-                color: '#111111',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
+            <SavedActionsMenuButton
+              compactMode={isCompactMode}
+              onToggleCompactMode={() => setIsCompactMode((prev) => !prev)}
+              onClearAll={() => {
+                setShowClearAllConfirm(true);
               }}
-            >
-              <CompareIcon size={27} color="currentColor" strokeWidth={1.8} variant="outline" />
-            </button>
+              disableClearAll={!canClearAll || isClearingAll}
+            />
           )}
         />
         <TabNavigation
@@ -389,6 +653,18 @@ export function SavedPostsContent() {
 
       {showFeedSkeleton ? (
         <FeedSkeleton count={3} />
+      ) : isCompactMode ? (
+        <SavedCompactFeedBlock
+          showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
+          skeletonCount={3}
+          posts={postListData.posts}
+          loadingMore={postListData.hasMore ? postListData.loadingMore : false}
+          hasMore={postListData.hasMore}
+          lastPostElementRef={lastPostElementRef}
+          onRemoveSave={(postId) => {
+            void removeSave(postId);
+          }}
+        />
       ) : (
         <SavedFeedBlock
           showSkeleton={postListData.posts.length === 0 && postListData.loadingMore}
@@ -501,6 +777,22 @@ export function SavedPostsContent() {
         />
       )}
 
+      {showClearAllConfirm && (
+        <DeleteConfirmModal
+          onConfirm={() => {
+            void (async () => {
+              await handleClearAllSaved();
+              setShowClearAllConfirm(false);
+            })();
+          }}
+          onCancel={() => setShowClearAllConfirm(false)}
+          loading={isClearingAll}
+          title="ລົບລາຍການທີ່ບັນທຶກທັງໝົດບໍ?"
+          cancelLabel="ຍົກເລີກ"
+          confirmLabel="ລົບ"
+        />
+      )}
+
       {/* ป๊อบอัพแสดงผลสำเร็จการลบโพสต์ */}
       {handlers.showDeleteSuccess && (
         <SuccessPopup message="ລົບໂພສສຳເລັດ" onClose={() => handlers.setShowDeleteSuccess?.(false)} />
@@ -510,6 +802,9 @@ export function SavedPostsContent() {
       )}
       {handlers.showToggleStatusSuccess && (
         <SuccessPopup message="ສຳເລັດ" onClose={() => handlers.setShowToggleStatusSuccess?.(false)} />
+      )}
+      {showClearAllSuccess && (
+        <SuccessPopup message="ລົບສຳເລັດ" onClose={() => setShowClearAllSuccess(false)} />
       )}
     </main>
   );
