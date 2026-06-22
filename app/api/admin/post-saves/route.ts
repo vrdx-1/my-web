@@ -27,6 +27,28 @@ type CarRow = {
   user_id: string | null;
   short_id: string | null;
   caption: string | null;
+  images: string[] | null;
+  layout: string | null;
+  status: string | null;
+  created_at: string;
+  likes: number | null;
+  shares: number | null;
+  is_hidden: boolean | null;
+  is_boosted: boolean | null;
+  profiles:
+    | {
+        username: string | null;
+        avatar_url: string | null;
+        phone: string | null;
+        is_verified: boolean | null;
+      }
+    | Array<{
+        username: string | null;
+        avatar_url: string | null;
+        phone: string | null;
+        is_verified: boolean | null;
+      }>
+    | null;
   price: number | null;
   price_currency: string | null;
   province: string | null;
@@ -135,6 +157,13 @@ function formatPostCode(shortId: string | null, postId: string) {
   return postId.slice(0, 8);
 }
 
+function normalizeImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter((item) => !!item);
+}
+
 export async function GET(request: NextRequest) {
   const auth = await ensureAdmin();
   if (!auth.ok) {
@@ -203,9 +232,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: rawCars, error: carsError } = postIds.length > 0
-      ? await admin
+        ? await admin
           .from('cars')
-          .select('id, user_id, short_id, caption, price, price_currency, province')
+            .select('id, user_id, short_id, caption, images, layout, status, created_at, likes, shares, is_hidden, is_boosted, price, price_currency, province, profiles(username, avatar_url, phone, is_verified)')
           .in('id', postIds)
       : { data: [], error: null };
 
@@ -214,7 +243,10 @@ export async function GET(request: NextRequest) {
     const carMap = new Map<string, CarRow>();
     const ownerIds = new Set<string>();
     for (const row of (rawCars as CarRow[] | null) || []) {
-      carMap.set(row.id, row);
+      carMap.set(row.id, {
+        ...row,
+        images: normalizeImages(row.images),
+      });
       if (row.user_id) ownerIds.add(row.user_id);
     }
 
@@ -268,11 +300,13 @@ export async function GET(request: NextRequest) {
           post_id: row.post_id,
           post_code: formatPostCode(car?.short_id || null, row.post_id),
           caption: car?.caption || null,
+          images: car?.images || [],
           price: car?.price || null,
           price_currency: car?.price_currency || null,
           province: car?.province || null,
           post_owner_id: car?.user_id || null,
           post_owner_label: ownerLabel,
+          post: car,
         };
       })
       .filter((row): row is NonNullable<typeof row> => Boolean(row));

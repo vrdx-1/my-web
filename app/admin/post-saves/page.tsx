@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { TimeFilter } from '@/components/admin/TimeFilter';
 import { StatCard } from '@/components/admin/StatCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { TabNavigation } from '@/components/TabNavigation';
 import { getDateRange, type DateFilterType } from '@/utils/dateFilter';
 import { LAO_FONT } from '@/utils/constants';
+
+const MyPostsFeedBlock = dynamic(
+  () => import('../../my-posts/MyPostsFeedBlock').then((mod) => ({ default: mod.MyPostsFeedBlock })),
+  { ssr: false }
+);
 
 type SavePerson = {
   person_key: string;
@@ -25,11 +32,13 @@ type SaveLog = {
   post_id: string;
   post_code: string;
   caption: string | null;
+  images: string[];
   price: number | null;
   price_currency: string | null;
   province: string | null;
   post_owner_id: string | null;
   post_owner_label: string;
+  post: any;
 };
 
 type SaveStats = {
@@ -50,16 +59,13 @@ function formatDateTime(dateString: string | null) {
   });
 }
 
-function formatPrice(price: number | null, currency: string | null) {
-  if (typeof price !== 'number' || !Number.isFinite(price)) return '-';
-  const symbol = currency === '฿' || currency === '$' ? currency : '₭';
-  return `${price.toLocaleString('en-US')} ${symbol}`;
-}
-
 export default function AdminPostSavesPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<DateFilterType>('A');
   const [selectedSaverKey, setSelectedSaverKey] = useState<string>('');
+  const [historyTab, setHistoryTab] = useState<'recommend' | 'sold'>('recommend');
+  const [activeMenuState, setActiveMenuState] = useState<string | null>(null);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [stats, setStats] = useState<SaveStats>({
@@ -70,6 +76,7 @@ export default function AdminPostSavesPage() {
   });
   const [people, setPeople] = useState<SavePerson[]>([]);
   const [recentLogs, setRecentLogs] = useState<SaveLog[]>([]);
+  const menuButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +140,45 @@ export default function AdminPostSavesPage() {
 
   const topSavers = useMemo(() => people.slice(0, 10), [people]);
   const topSaver = topSavers[0] || null;
+  const selectedSaver = useMemo(
+    () => people.find((item) => item.person_key === selectedSaverKey) || null,
+    [people, selectedSaverKey]
+  );
+
+  useEffect(() => {
+    if (loading) return;
+    if (!selectedSaverKey && topSaver?.person_key) {
+      setSelectedSaverKey(topSaver.person_key);
+    }
+  }, [loading, selectedSaverKey, topSaver?.person_key]);
+
+  const noOp = () => {};
+
+  const selectedUserPosts = useMemo(() => {
+    return recentLogs
+      .map((item) => {
+        const post = item.post;
+        if (!post || !post.id) return null;
+        return {
+          ...post,
+          // Keep stable ordering as save history while reusing my-posts feed UI.
+          __saved_at: item.created_at,
+        };
+      })
+      .filter((item): item is any => Boolean(item));
+  }, [recentLogs]);
+
+  const recommendPosts = useMemo(
+    () => selectedUserPosts.filter((post) => String(post.status || 'recommend') === 'recommend'),
+    [selectedUserPosts]
+  );
+
+  const soldPosts = useMemo(
+    () => selectedUserPosts.filter((post) => String(post.status || '') === 'sold'),
+    [selectedUserPosts]
+  );
+
+  const displayPosts = historyTab === 'recommend' ? recommendPosts : soldPosts;
 
   return (
     <main
@@ -161,27 +207,6 @@ export default function AdminPostSavesPage() {
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <TimeFilter filter={filter} onFilterChange={setFilter} />
-          <select
-            value={selectedSaverKey}
-            onChange={(e) => setSelectedSaverKey(e.target.value)}
-            style={{
-              height: 40,
-              borderRadius: 10,
-              border: '1px solid #cbd5e1',
-              background: '#fff',
-              padding: '0 12px',
-              minWidth: 260,
-              color: '#0f172a',
-              fontWeight: 600,
-            }}
-          >
-            <option value=''>ผู้ใช้ทั้งหมด</option>
-            {people.map((person) => (
-              <option key={person.person_key} value={person.person_key}>
-                {person.person_label} ({person.total_saves.toLocaleString()})
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -216,8 +241,28 @@ export default function AdminPostSavesPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {topSavers.map((person, index) => (
-                  <div key={person.person_key} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 18, background: index === 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.08))' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                {topSavers.map((person, index) => {
+                  const isActive = selectedSaverKey === person.person_key;
+                  return (
+                  <button
+                    key={person.person_key}
+                    type='button'
+                    onClick={() => setSelectedSaverKey(person.person_key)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      padding: '14px 16px',
+                      borderRadius: 18,
+                      background: isActive
+                        ? 'linear-gradient(135deg, rgba(16,185,129,0.16), rgba(59,130,246,0.10))'
+                        : (index === 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.08))' : '#f8fafc'),
+                      border: isActive ? '1px solid #14b8a6' : '1px solid #e2e8f0',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <div style={{ width: 38, height: 38, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: index === 0 ? '#0f766e' : '#e2e8f0', color: index === 0 ? '#fff' : '#334155', fontWeight: 800 }}>
                       {index + 1}
                     </div>
@@ -243,8 +288,8 @@ export default function AdminPostSavesPage() {
                       <div style={{ fontSize: 22, fontWeight: 900, color: index === 0 ? '#0f766e' : '#2563eb' }}>{person.total_saves.toLocaleString()}</div>
                       <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>ครั้ง</div>
                     </div>
-                  </div>
-                ))}
+                  </button>
+                )})}
               </div>
             )}
           </div>
@@ -260,59 +305,58 @@ export default function AdminPostSavesPage() {
 
         <section style={{ background: '#ffffff', borderRadius: 24, border: '1px solid #e5e7eb', boxShadow: '0 18px 48px rgba(15,23,42,0.08)', overflow: 'hidden' }}>
           <div style={{ padding: '18px 20px', borderBottom: '1px solid #eef2f7', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.04))' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>รายละเอียดการบันทึกล่าสุด</div>
-            <div style={{ marginTop: 4, color: '#64748b', fontSize: 13 }}>แสดงว่าใครบันทึกโพสต์อะไร เวลาไหน และเป็นโพสต์ของใคร</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+              ประวัติการบันทึกของ {selectedSaver?.person_label || '-'}
+            </div>
+            <div style={{ marginTop: 4, color: '#64748b', fontSize: 13 }}>
+              แสดงโพสต์จริงที่ผู้ใช้นี้บันทึกไว้ (กดเลือกผู้ใช้จาก Top ด้านซ้าย)
+            </div>
           </div>
 
-          <div style={{ maxHeight: 780, overflow: 'auto' }}>
+          <div style={{ padding: '0 14px', borderBottom: '1px solid #eef2f7', background: '#ffffff' }}>
+            <TabNavigation
+              className='home-tab-navigation'
+              tabs={[
+                { value: 'recommend', label: 'ພ້ອມຂາຍ' },
+                { value: 'sold', label: 'ຂາຍແລ້ວ' },
+              ]}
+              activeTab={historyTab}
+              onTabChange={(value) => setHistoryTab(value as 'recommend' | 'sold')}
+            />
+          </div>
+
+          <div style={{ maxHeight: 780, overflow: 'auto', padding: 8 }}>
             {loading ? (
               <div style={{ minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <LoadingSpinner />
               </div>
-            ) : recentLogs.length === 0 ? (
+            ) : !selectedSaverKey ? (
               <div style={{ minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 600 }}>
-                ຍັງບໍ່ມີລາຍການ
+                กรุณาเลือกผู้ใช้จาก Top ทางซ้าย
               </div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: 980 }}>
-                <thead>
-                  <tr style={{ position: 'sticky', top: 0, zIndex: 2, background: '#f8fafc' }}>
-                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>เวลา</th>
-                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>ผู้บันทึก</th>
-                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>โพสต์</th>
-                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>เจ้าของโพสต์</th>
-                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>จังหวัด</th>
-                    <th style={{ textAlign: 'right', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>ราคา</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentLogs.map((item, index) => (
-                    <tr key={item.id} style={{ background: index % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7', whiteSpace: 'nowrap' }}>
-                        {formatDateTime(item.created_at)}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#0f172a', borderBottom: '1px solid #eef2f7', fontWeight: 700 }}>
-                        {item.person_label}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <span style={{ fontWeight: 800, color: '#0f172a' }}>{item.post_code}</span>
-                          <span style={{ color: '#64748b' }}>{item.caption || '-'}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
-                        {item.post_owner_label}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
-                        {item.province || '-'}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#0f172a', borderBottom: '1px solid #eef2f7', textAlign: 'right', fontWeight: 700 }}>
-                        {formatPrice(item.price, item.price_currency)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <MyPostsFeedBlock
+                showSkeleton={false}
+                skeletonCount={3}
+                posts={displayPosts}
+                session={null}
+                savedPosts={{}}
+                justSavedPosts={{}}
+                activeMenuState={activeMenuState}
+                isMenuAnimating={isMenuAnimating}
+                menuButtonRefs={menuButtonRefs as React.MutableRefObject<{ [key: string]: HTMLButtonElement | null }>}
+                onViewPost={noOp}
+                onSave={noOp}
+                onShare={noOp}
+                onTogglePostStatus={noOp}
+                onDeletePost={noOp}
+                onReport={noOp}
+                onSetActiveMenu={setActiveMenuState}
+                onSetMenuAnimating={setIsMenuAnimating}
+                loadingMore={false}
+                hasMore={false}
+                hideBoost={historyTab === 'sold'}
+              />
             )}
           </div>
         </section>
