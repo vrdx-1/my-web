@@ -293,7 +293,7 @@ export const BottomNav = React.memo(function BottomNav() {
             minHeight: BOTTOM_NAV_HEIGHT,
             background: '#ffffff',
             backgroundColor: '#ffffff',
-            borderTop: 'none',
+            borderTop: '1px solid #e5e7eb',
             display: 'flex',
             alignItems: 'stretch',
             justifyContent: 'space-around',
