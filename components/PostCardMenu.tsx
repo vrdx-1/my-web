@@ -38,7 +38,7 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   session,
   activeProfileId,
   isOwner,
-  hideBoost,
+  hideBoost: _hideBoost,
   activeMenuState: _activeMenuState,
   isMenuAnimating: _isMenuAnimating,
   menuButtonRefs,
@@ -51,12 +51,11 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
   onSetActiveMenu: _onSetActiveMenu,
   onSetMenuAnimating: _onSetMenuAnimating,
   onRepost,
-  onBoostClick,
+  onBoostClick: _onBoostClick,
 }) => {
   const router = useRouter();
   const menuInstanceId = React.useId();
   const isRecommendPost = post.status === 'recommend';
-  const canBoost = !hideBoost && post.status !== 'sold';
   const canRepost = isOwner && isRecommendPost && typeof onRepost === 'function';
   const [showRepostConfirm, setShowRepostConfirm] = React.useState(false);
   const [isReposting, setIsReposting] = React.useState(false);
@@ -275,18 +274,6 @@ export const PostCardMenu = React.memo<PostCardMenuProps>(({
               void trackShareUsage();
               onShare(post);
             }}
-            onBoost={
-              !canBoost
-                ? undefined
-                : () => {
-                    setIsMenuOpen(false);
-                    if (onBoostClick) {
-                      void Promise.resolve(onBoostClick(post.id));
-                      return;
-                    }
-                    router.push(`/boost_post?id=${post.id}`);
-                  }
-            }
             onReport={() => {
               setIsMenuOpen(false);
               onReport(post);
