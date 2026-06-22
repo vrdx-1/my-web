@@ -103,6 +103,7 @@ export async function GET(request: Request) {
       postBoostsTotal,
       revenueLogs,
       downloadClickLogs,
+      postSavesLogs,
       whatsappClickLogs,
       compareUsageLogs,
       verificationTotal,
@@ -119,6 +120,7 @@ export async function GET(request: Request) {
       admin.from('post_boosts').select('*', { count: 'exact', head: true }),
       admin.from('revenue_logs').select('*', { count: 'exact', head: true }),
       admin.from('download_click_logs').select('*', { count: 'exact', head: true }),
+      admin.from('post_saves').select('*', { count: 'exact', head: true }),
       admin.from('whatsapp_click_logs').select('*', { count: 'exact', head: true }),
       admin.from('compare_usage_logs').select('*', { count: 'exact', head: true }),
       admin.from('verification_requests').select('*', { count: 'exact', head: true }),
@@ -136,6 +138,7 @@ export async function GET(request: Request) {
     counts['/admin/boosting'] = postBoostsTotal.count ?? 0;
     counts['/admin/revenue'] = revenueLogs.count ?? 0;
     counts['/admin/download-clicks'] = downloadClickLogs.count ?? 0;
+    counts['/admin/post-saves'] = postSavesLogs.count ?? 0;
     counts['/admin/whatsapp-clicks'] = whatsappClickLogs.count ?? 0;
     counts['/admin/whatsapp-clicks-insights'] = whatsappClickLogs.count ?? 0;
     counts['/admin/compare-usage'] = compareUsageLogs.count ?? 0;

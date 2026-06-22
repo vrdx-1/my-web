@@ -1,0 +1,322 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { TimeFilter } from '@/components/admin/TimeFilter';
+import { StatCard } from '@/components/admin/StatCard';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { getDateRange, type DateFilterType } from '@/utils/dateFilter';
+import { LAO_FONT } from '@/utils/constants';
+
+type SavePerson = {
+  person_key: string;
+  person_label: string;
+  avatar_url: string | null;
+  total_saves: number;
+  last_saved_at: string;
+};
+
+type SaveLog = {
+  id: string;
+  created_at: string;
+  user_id: string;
+  person_key: string;
+  person_label: string;
+  post_id: string;
+  post_code: string;
+  caption: string | null;
+  price: number | null;
+  price_currency: string | null;
+  province: string | null;
+  post_owner_id: string | null;
+  post_owner_label: string;
+};
+
+type SaveStats = {
+  totalSaves: number;
+  uniqueUsers: number;
+  uniquePosts: number;
+  avgSavesPerUser: number;
+};
+
+function formatDateTime(dateString: string | null) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleString('th-TH', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatPrice(price: number | null, currency: string | null) {
+  if (typeof price !== 'number' || !Number.isFinite(price)) return '-';
+  const symbol = currency === '฿' || currency === '$' ? currency : '₭';
+  return `${price.toLocaleString('en-US')} ${symbol}`;
+}
+
+export default function AdminPostSavesPage() {
+  const router = useRouter();
+  const [filter, setFilter] = useState<DateFilterType>('A');
+  const [selectedSaverKey, setSelectedSaverKey] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [stats, setStats] = useState<SaveStats>({
+    totalSaves: 0,
+    uniqueUsers: 0,
+    uniquePosts: 0,
+    avgSavesPerUser: 0,
+  });
+  const [people, setPeople] = useState<SavePerson[]>([]);
+  const [recentLogs, setRecentLogs] = useState<SaveLog[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const { startDate, endDate } = getDateRange(filter);
+        const search = new URLSearchParams();
+        if (startDate) search.set('start', startDate);
+        if (endDate) search.set('end', endDate);
+        if (selectedSaverKey) search.set('saverKey', selectedSaverKey);
+
+        const response = await fetch(`/api/admin/post-saves?${search.toString()}`, {
+          credentials: 'include',
+        });
+
+        if (response.status === 401) {
+          router.replace('/admin/login');
+          return;
+        }
+
+        if (response.status === 403) {
+          router.replace('/home');
+          return;
+        }
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload) {
+          throw new Error(payload?.error || 'ไม่สามารถโหลดข้อมูลสถิติการบันทึกโพสต์ได้');
+        }
+
+        if (cancelled) return;
+
+        setStats({
+          totalSaves: Number(payload?.stats?.totalSaves || 0),
+          uniqueUsers: Number(payload?.stats?.uniqueUsers || 0),
+          uniquePosts: Number(payload?.stats?.uniquePosts || 0),
+          avgSavesPerUser: Number(payload?.stats?.avgSavesPerUser || 0),
+        });
+        setPeople(Array.isArray(payload?.people) ? payload.people : []);
+        setRecentLogs(Array.isArray(payload?.recentLogs) ? payload.recentLogs : []);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'ไม่สามารถโหลดข้อมูลได้');
+        setPeople([]);
+        setRecentLogs([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, selectedSaverKey, router]);
+
+  const topSavers = useMemo(() => people.slice(0, 10), [people]);
+  const topSaver = topSavers[0] || null;
+
+  return (
+    <main
+      style={{
+        maxWidth: '1500px',
+        margin: '0 auto',
+        padding: '28px 20px 42px',
+        minHeight: '100vh',
+        fontFamily: LAO_FONT,
+        background:
+          'radial-gradient(circle at 8% 10%, rgba(16,185,129,0.14), transparent 34%), radial-gradient(circle at 92% 0%, rgba(59,130,246,0.12), transparent 36%), linear-gradient(180deg, #f8fbff 0%, #f5f8fd 100%)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div style={{ maxWidth: 860 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 999, background: 'rgba(16,185,129,0.12)', color: '#0f766e', fontSize: 13, fontWeight: 800, marginBottom: 14 }}>
+            Saved Post Intelligence
+          </div>
+          <h1 style={{ margin: 0, fontSize: 34, lineHeight: '42px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>
+            ສະຖິຕິການບັນທຶກໂພສ
+          </h1>
+          <p style={{ margin: '10px 0 0', color: '#475569', fontSize: 15, lineHeight: '24px' }}>
+            แสดงว่าใครบันทึกโพสต์อะไรบ้าง โดยนับเฉพาะ user ปกติเท่านั้น และตัด admin/sub-account ออกจากสถิติทั้งหมด
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TimeFilter filter={filter} onFilterChange={setFilter} />
+          <select
+            value={selectedSaverKey}
+            onChange={(e) => setSelectedSaverKey(e.target.value)}
+            style={{
+              height: 40,
+              borderRadius: 10,
+              border: '1px solid #cbd5e1',
+              background: '#fff',
+              padding: '0 12px',
+              minWidth: 260,
+              color: '#0f172a',
+              fontWeight: 600,
+            }}
+          >
+            <option value=''>ผู้ใช้ทั้งหมด</option>
+            {people.map((person) => (
+              <option key={person.person_key} value={person.person_key}>
+                {person.person_label} ({person.total_saves.toLocaleString()})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ marginBottom: 18, padding: '12px 14px', borderRadius: 14, background: '#fff7ed', border: '1px solid #fdba74', color: '#9a3412', fontWeight: 600 }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18 }}>
+        <StatCard label='การบันทึกทั้งหมด' value={stats.totalSaves.toLocaleString()} loading={loading} variant='centered' />
+        <StatCard label='ผู้ใช้ที่บันทึกจริง' value={stats.uniqueUsers.toLocaleString()} loading={loading} variant='centered' />
+        <StatCard label='โพสต์ที่ถูกบันทึก' value={stats.uniquePosts.toLocaleString()} loading={loading} variant='centered' />
+        <StatCard label='เฉลี่ยต่อผู้ใช้' value={loading ? '...' : stats.avgSavesPerUser.toFixed(1)} loading={loading} variant='centered' />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.55fr)', gap: 18, alignItems: 'start' }}>
+        <section style={{ background: '#ffffff', borderRadius: 24, border: '1px solid #e5e7eb', boxShadow: '0 18px 48px rgba(15,23,42,0.08)', overflow: 'hidden' }}>
+          <div style={{ padding: '18px 20px', borderBottom: '1px solid #eef2f7', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.04))' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Top ผู้ใช้ที่บันทึกมากที่สุด</div>
+            <div style={{ marginTop: 4, color: '#64748b', fontSize: 13 }}>เรียงตามจำนวนการบันทึกโพสต์</div>
+          </div>
+
+          <div style={{ padding: 16 }}>
+            {loading ? (
+              <div style={{ minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LoadingSpinner />
+              </div>
+            ) : topSavers.length === 0 ? (
+              <div style={{ minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 600 }}>
+                ຍັງບໍ່ມີຂໍ້ມູນ
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {topSavers.map((person, index) => (
+                  <div key={person.person_key} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 18, background: index === 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.08))' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: index === 0 ? '#0f766e' : '#e2e8f0', color: index === 0 ? '#fff' : '#334155', fontWeight: 800 }}>
+                      {index + 1}
+                    </div>
+
+                    <div style={{ width: 42, height: 42, borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#dcfce7,#dbeafe)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#065f46', fontWeight: 800 }}>
+                      {person.avatar_url ? (
+                        <img src={person.avatar_url} alt='' style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        person.person_label.slice(0, 1).toUpperCase()
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {person.person_label}
+                      </div>
+                      <div style={{ marginTop: 3, fontSize: 12, color: '#64748b' }}>
+                        ล่าสุด {formatDateTime(person.last_saved_at)}
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: index === 0 ? '#0f766e' : '#2563eb' }}>{person.total_saves.toLocaleString()}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>ครั้ง</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ margin: '0 16px 16px', borderRadius: 18, padding: 16, background: 'linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%)', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 700, marginBottom: 6 }}>ผู้ใช้ที่บันทึกสูงสุด</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{topSaver ? topSaver.person_label : 'ยังไม่มีข้อมูล'}</div>
+            <div style={{ marginTop: 8, fontSize: 13, color: '#334155' }}>
+              {topSaver ? `${topSaver.total_saves.toLocaleString()} ครั้ง` : '-'}
+            </div>
+          </div>
+        </section>
+
+        <section style={{ background: '#ffffff', borderRadius: 24, border: '1px solid #e5e7eb', boxShadow: '0 18px 48px rgba(15,23,42,0.08)', overflow: 'hidden' }}>
+          <div style={{ padding: '18px 20px', borderBottom: '1px solid #eef2f7', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.04))' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>รายละเอียดการบันทึกล่าสุด</div>
+            <div style={{ marginTop: 4, color: '#64748b', fontSize: 13 }}>แสดงว่าใครบันทึกโพสต์อะไร เวลาไหน และเป็นโพสต์ของใคร</div>
+          </div>
+
+          <div style={{ maxHeight: 780, overflow: 'auto' }}>
+            {loading ? (
+              <div style={{ minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LoadingSpinner />
+              </div>
+            ) : recentLogs.length === 0 ? (
+              <div style={{ minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 600 }}>
+                ຍັງບໍ່ມີລາຍການ
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: 980 }}>
+                <thead>
+                  <tr style={{ position: 'sticky', top: 0, zIndex: 2, background: '#f8fafc' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>เวลา</th>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>ผู้บันทึก</th>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>โพสต์</th>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>เจ้าของโพสต์</th>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>จังหวัด</th>
+                    <th style={{ textAlign: 'right', padding: '12px 14px', fontSize: 12, fontWeight: 800, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>ราคา</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentLogs.map((item, index) => (
+                    <tr key={item.id} style={{ background: index % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7', whiteSpace: 'nowrap' }}>
+                        {formatDateTime(item.created_at)}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#0f172a', borderBottom: '1px solid #eef2f7', fontWeight: 700 }}>
+                        {item.person_label}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span style={{ fontWeight: 800, color: '#0f172a' }}>{item.post_code}</span>
+                          <span style={{ color: '#64748b' }}>{item.caption || '-'}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
+                        {item.post_owner_label}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#334155', borderBottom: '1px solid #eef2f7' }}>
+                        {item.province || '-'}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: '#0f172a', borderBottom: '1px solid #eef2f7', textAlign: 'right', fontWeight: 700 }}>
+                        {formatPrice(item.price, item.price_currency)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
