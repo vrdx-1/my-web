@@ -85,15 +85,17 @@ function SavedActionsMenuButton({
       });
     };
 
-    const handleScroll = () => setIsOpen(false);
+    const closeMenu = () => setIsOpen(false);
 
     updatePosition();
     window.addEventListener('resize', updatePosition, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', closeMenu, { passive: true });
+    window.addEventListener('touchmove', closeMenu, { passive: true });
 
     return () => {
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', closeMenu);
+      window.removeEventListener('touchmove', closeMenu);
     };
   }, [isOpen]);
 
@@ -368,6 +370,7 @@ export function SavedPostsContent() {
   const viewingPostHook = useViewingPost();
   const setHeaderVisible = useSetHeaderVisibility();
   const headerScroll = useHeaderScroll({
+    disableScrollHide: true,
     hideOnScrollUp: false,
     onVisibilityChange: (visible) => setHeaderVisible?.(visible),
   });

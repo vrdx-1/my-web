@@ -21,7 +21,7 @@ function shouldShowBottomNav(pathname: string): boolean {
 
 /** หน้าโฮม: ซ่อนแถบล่างตาม header ตอนเลื่อนลง — แท็บอื่นแสดงคงที่ */
 function hideBottomNavWithScrollOnPath(pathname: string | null): boolean {
-  return pathname === '/home' || pathname === '/saved';
+  return pathname === '/home';
 }
 
 function BottomNavSurface({
