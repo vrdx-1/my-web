@@ -40,7 +40,7 @@ function HomeUrlSync({ pathname }: { pathname: string | null }) {
 
 // ขนาดองค์ประกอบใน BottomNav (ขยายขึ้นเล็กน้อยและคงสัดส่วนให้สมดุลกันทุกปุ่ม)
 const NAV_ICON_SIZE = 30;
-const SAVED_NAV_ICON_SIZE = 28;
+const SAVED_NAV_ICON_SIZE = 27;
 const NAV_PROFILE_AVATAR_SIZE = 28;
 const NAV_BUTTON_MIN_HEIGHT = 64;
 const NAV_BUTTON_PADDING_TOP = 4;
@@ -367,27 +367,8 @@ export const BottomNav = React.memo(function BottomNav() {
           if (last && last.path === path && now - last.at < NAV_DEBOUNCE_MS) return;
           lastNavRef.current = { path, at: now };
 
-          // Guest กดแจ้งเตือนหรือโปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าโฮม)
-          if (path === '/notification' && !session) {
-            if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved') {
-              mainTabScroll?.saveCurrentScroll(pathname);
-              if (pathname === '/home' && typeof window !== 'undefined') {
-                try {
-                  const homeScrollY = Number(window.scrollY ?? 0);
-                  window.sessionStorage.setItem(
-                    PENDING_HOME_SCROLL_AFTER_REGISTER_KEY,
-                    String(homeScrollY),
-                  );
-                  window.sessionStorage.setItem(MAIN_TAB_HOME_SCROLL_STORAGE_KEY, String(homeScrollY));
-                } catch {
-                  // ignore
-                }
-              }
-            }
-            router.push(REGISTER_PATH, { scroll: false });
-            return;
-          }
-          if (path === '/profile' && !session) {
+          // Guest กด saved/แจ้งเตือน/โปรไฟล์ → ไปหน้าลงทะเบียน (ใช้ push เพื่อกดย้อนกลับได้กลับหน้าเดิม)
+          if ((path === '/saved' || path === '/notification' || path === '/profile') && !session) {
             if (pathname === '/home' || pathname === '/notification' || pathname === '/profile' || pathname === '/saved') {
               mainTabScroll?.saveCurrentScroll(pathname);
               if (pathname === '/home' && typeof window !== 'undefined') {
