@@ -186,7 +186,7 @@ export default function ReportProblemPage() {
                 setMessage(val)
               }
             }}
-            placeholder="ກະລຸນາແຈ້ງບັນຫາ ຫຼື ຄຳແນະນຳ"
+            placeholder="ກະລຸນາແຈ້ງບັນຫາ ຫຼື ໃຫ້ຄຳແນະນຳ"
             rows={3}
             maxLength={300}
             style={{
