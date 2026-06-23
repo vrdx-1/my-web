@@ -1,5 +1,6 @@
 import React from 'react';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
+import { transformSupabaseImageUrl } from '@/utils/supabaseImageTransform';
 
 /** Style รูปพื้นฐานในกริด — ใช้ร่วมทุก layout */
 export const baseImgStyle: React.CSSProperties = {
@@ -61,6 +62,6 @@ export function buildEffectiveImages(normalizedImages: string[], preloadImages?:
       preloadImages && typeof preloadImages[i] === 'string' && preloadImages[i].trim().length > 0
         ? preloadImages[i].trim()
         : url;
-    return normalizeImageUrl(rawUrl, 'car-images');
+    return transformSupabaseImageUrl(normalizeImageUrl(rawUrl, 'car-images'));
   });
 }

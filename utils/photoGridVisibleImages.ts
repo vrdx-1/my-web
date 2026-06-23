@@ -2,6 +2,8 @@
  * จำนวนรูปที่แสดงในกริดตาม layout (ตรงกับ PhotoGrid) — ไม่นับรูปที่ซ่อนหลัง +N
  */
 
+import { transformSupabaseImageUrl } from '@/utils/supabaseImageTransform';
+
 function normalizeLayout(layout: string | undefined): string {
   return layout && layout.trim() !== '' ? layout : 'default';
 }
@@ -78,7 +80,7 @@ export function getVisibleImageUrlsForPost(post: {
         : null;
     const raw = fromPreload ?? normalized[i];
     if (typeof raw === 'string' && raw.trim().length > 0) {
-      urls.push(raw.trim());
+      urls.push(transformSupabaseImageUrl(raw.trim()));
     }
   }
   return urls;
