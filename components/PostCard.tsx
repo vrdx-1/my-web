@@ -83,7 +83,7 @@ interface PostCardProps {
   onTogglePostStatus: (postId: string, currentStatus: string) => void | Promise<void>;
   onDeletePost: (postId: string) => void;
   onReport: (post: any) => void;
-  onRepost?: (postId: string) => void | Promise<void>;
+  onRepost?: (postId: string, options?: { silentSuccessPopup?: boolean }) => void | Promise<void>;
   onSetActiveMenu: (postId: string | null) => void;
   onSetMenuAnimating: (animating: boolean) => void;
   /** ลงทะเบียนการ์ดกับ observer สำหรับ viewport — ให้โพสต์ในจอได้ priority โหลดรูปก่อน */
@@ -140,6 +140,18 @@ export function PostCard({
   const router = useRouter();
   const { activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const isOwner = isPostOwner(post, session, activeProfileId, authUserId, availableProfiles);
+  const activeProfile = React.useMemo(
+    () => availableProfiles.find((profile) => profile.id === activeProfileId)
+      ?? availableProfiles.find((profile) => profile.id === authUserId)
+      ?? null,
+    [activeProfileId, authUserId, availableProfiles],
+  );
+  const isAdminSubAccount = Boolean(
+    activeProfile?.is_sub_account
+    && (activeProfile?.parent_admin_id || activeProfile?.role === 'admin'),
+  );
+  const isRecommendPost = post.status === 'recommend';
+  const canQuickRepost = isAdminSubAccount && isOwner && isRecommendPost && typeof onRepost === 'function';
   const isSoldPost = post.status === 'sold';
   const [showMarkSoldConfirm, setShowMarkSoldConfirm] = React.useState(false);
   const [showSoldInfo, setShowSoldInfo] = React.useState(false);
@@ -148,6 +160,7 @@ export function PostCard({
   const [showBoostStatusPopup, setShowBoostStatusPopup] = React.useState(false);
   const [boostStatusPopupStatus, setBoostStatusPopupStatus] = React.useState<string | null>(null);
   const [boostStatusPopupExpiresAt, setBoostStatusPopupExpiresAt] = React.useState<string | null>(null);
+  const [isQuickReposting, setIsQuickReposting] = React.useState(false);
   const [showPriceEstimatePopup, setShowPriceEstimatePopup] = React.useState(false);
   const [priceEstimatePopupPosition, setPriceEstimatePopupPosition] = React.useState<{
     top: number;
@@ -312,6 +325,16 @@ export function PostCard({
       router.push(`/boost_post?id=${post.id}`);
     }
   }, [post.id, router]);
+
+  const handleQuickRepost = React.useCallback(async () => {
+    if (!canQuickRepost || typeof onRepost !== 'function' || isQuickReposting) return;
+    setIsQuickReposting(true);
+    try {
+      await onRepost(post.id, { silentSuccessPopup: true });
+    } finally {
+      setIsQuickReposting(false);
+    }
+  }, [canQuickRepost, isQuickReposting, onRepost, post.id]);
 
   React.useEffect(() => {
     const anyModalOpen = showMarkSoldConfirm || showChangePriceModal || showChangePriceSuccess;
@@ -729,7 +752,44 @@ export function PostCard({
         
         {/* Menu Button */}
         {showMenuButton && (
-          <div style={{ marginTop: '-2px' }}>
+          <div style={{ marginTop: '-2px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            {canQuickRepost && (
+              <button
+                type="button"
+                onClick={handleQuickRepost}
+                disabled={isQuickReposting}
+                aria-label="ໂພສໃໝ່"
+                title="ໂພສໃໝ່"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '6px',
+                  cursor: isQuickReposting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#9ea2a7',
+                  opacity: isQuickReposting ? 0.65 : 1,
+                  touchAction: 'manipulation',
+                }}
+              >
+                {isQuickReposting ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ButtonSpinner />
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', transform: 'rotate(90deg)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M17 1l4 4-4 4" />
+                      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                      <path d="M7 23l-4-4 4-4" />
+                      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            )}
+
             <PostCardMenu
               post={post}
               session={session}

@@ -30,6 +30,10 @@ interface UsePostFeedHandlersProps {
   setIsSubmittingReport?: (submitting: boolean) => void;
 }
 
+interface RepostActionOptions {
+  silentSuccessPopup?: boolean;
+}
+
 /**
  * usePostFeedHandlers Hook
  * Centralizes common post feed handlers used across multiple pages
@@ -156,13 +160,15 @@ export function usePostFeedHandlers({
   );
 
   const handleRepost = useCallback(
-    async (postId: string) => {
+    async (postId: string, options?: RepostActionOptions) => {
       const postToRestore = postsRef.current.find((p) => String(p.id) === String(postId));
       if (!postToRestore || postToRestore.status !== 'recommend') return;
       await repostPost(postId, setPosts, postToRestore, {
         reorderToTop: repostOptions?.reorderToTop,
       });
-      setShowRepostSuccess(true);
+      if (!options?.silentSuccessPopup) {
+        setShowRepostSuccess(true);
+      }
       repostOptions?.onSuccess?.({ postId, post: postToRestore });
     },
     [repostOptions, setPosts]
