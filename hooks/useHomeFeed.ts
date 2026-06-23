@@ -93,7 +93,14 @@ function isBrowserReloadNavigation(): boolean {
   try {
     const navEntries = performance.getEntriesByType('navigation');
     const navEntry = Array.isArray(navEntries) ? (navEntries[0] as PerformanceNavigationTiming | undefined) : undefined;
-    return navEntry?.type === 'reload';
+    if (navEntry?.type !== 'reload') return false;
+
+    // Only bypass cache when the current route itself was reloaded.
+    // If user reloaded another route and then navigates to /home, keep home cache fast-path.
+    const initialUrl = typeof navEntry.name === 'string' && navEntry.name ? navEntry.name : '';
+    if (!initialUrl) return false;
+    const initialPathname = new URL(initialUrl, window.location.origin).pathname;
+    return initialPathname === window.location.pathname;
   } catch {
     return false;
   }
@@ -435,7 +442,8 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       // Price-filtered/sorted feeds should not exclude previously seen IDs,
       // otherwise narrow ranges can intermittently return empty results.
       if (actorKey && !hasPriceFilter && !hasPriceSort) {
-        const excludePostIds = readHomeFeedSeenPostIds(province, actorKey);
+        const FEED_EXCLUDE_IDS_LIMIT = 180;
+        const excludePostIds = readHomeFeedSeenPostIds(province, actorKey, FEED_EXCLUDE_IDS_LIMIT);
         if (excludePostIds.length > 0) {
           body.excludePostIds = excludePostIds;
         }
@@ -713,8 +721,13 @@ export function useHomeFeed(options: UseHomeFeedOptions): UseHomeFeedReturn {
       }
       setPosts(shuffled);
       setHasMore(cacheHasMore || shuffled.length < allPosts.length);
-      // 4. mark seen กับโพสต์ที่แสดงผลทันที
-      markHomeFeedSeenPostIds(province, actorKey, shuffled.map(p => String(p.id)));
+      // 4. mark seen เฉพาะช่วงที่มักถูกเห็นทันที เพื่อลด exclude list ที่ส่งไป backend
+      const INITIAL_IMPRESSION_TRACK_LIMIT = 20;
+      markHomeFeedSeenPostIds(
+        province,
+        actorKey,
+        shuffled.slice(0, INITIAL_IMPRESSION_TRACK_LIMIT).map((p) => String(p.id)),
+      );
     } else {
       // ถ้าไม่มี cache ให้ fetch ใหม่จาก server
       forceNewSeedOnNextInitialFetchRef.current = true;
