@@ -46,7 +46,13 @@ export function useEditPostPage(id: string) {
   const hasChangesRef = useRef(false);
   const allowLeaveRef = useRef(false);
 
-  const imageUpload = useImageUpload({ maxFiles: 15 });
+  // แก้ไขโพสต์: ไม่ย่อขนาด + คุณภาพสูงสุด (ยังแปลงเป็น JPEG เพื่อรองรับ HEIC จาก iPhone)
+  // เก็บรูปต้นฉบับให้คมชัดที่สุด — การย่อรูปเพื่อแสดงผลใน feed ทำที่ฝั่ง Supabase transform ตอนแสดงผลแทน
+  const imageUpload = useImageUpload({
+    maxFiles: 15,
+    compressMaxWidth: Number.MAX_SAFE_INTEGER,
+    compressQuality: 1,
+  });
 
   const adjustCaptionHeight = useCallback(() => {
     const el = captionRef.current;

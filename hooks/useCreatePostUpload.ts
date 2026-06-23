@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { safeParseJSON } from '@/utils/storageUtils';
 import { getPrimaryGuestToken } from '@/utils/postUtils';
-import { compressImage } from '@/utils/imageCompression';
 import { POST_WITH_PROFILE_SELECT } from '@/utils/queryOptimizer';
 import { attachEffectiveWhatsAppPhones } from '@/utils/whatsapp';
 
@@ -69,15 +68,19 @@ export function useCreatePostUpload({
       const uploadFolder = session ? session.user.id : 'guest-uploads';
       const totalFiles = files.length;
 
-      // บีบอัดรูปทั้งหมดก่อนอัปโหลด (มาตรฐานสากล: quality 82%, maxWidth 1080px)
-      // ใช้ maxWidth 1080px และ quality 0.82 ตามมาตรฐานเว็บใหญ่ระดับโลก
-      const compressedFiles = await Promise.all(
-        files.map((file) => compressImage(file, 1080, 0.82)),
-      );
-
+      // ไม่บีบอัด/ย่อรูปก่อนอัปโหลด — เก็บไฟล์ต้นฉบับให้คมชัดที่สุด
+      // (การแปลงเป็น JPEG เพื่อรองรับ HEIC ทำตั้งแต่ตอนเลือกไฟล์ใน useImageUpload แล้ว)
+      // การย่อรูปเพื่อแสดงผลใน feed ทำที่ฝั่ง Supabase transform ตอนแสดงผลแทน
       for (let i = 0; i < totalFiles; i++) {
-        const file = compressedFiles[i];
-        const fileExt = file.type === 'image/jpeg' ? 'jpg' : 'webp';
+        const file = files[i];
+        const fileExt =
+          file.type === 'image/jpeg'
+            ? 'jpg'
+            : file.type === 'image/png'
+              ? 'png'
+              : file.type === 'image/webp'
+                ? 'webp'
+                : (file.name.split('.').pop() || 'jpg').toLowerCase();
         const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
         const filePath = `${uploadFolder}/${fileName}`;
 

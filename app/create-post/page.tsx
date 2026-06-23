@@ -43,11 +43,13 @@ export default function CreatePost() {
   const [carCurrency, setCarCurrency] = useState<'₭' | '฿' | '$'>('₭');
   const [layout, setLayout] = useState('default');
   // Use shared image upload hook (replaces selectedFiles, previews, loading states)
-  // สร้างโพสต์: บีบอัดรูปแรง แต่ยังพอเห็นรายละเอียด (quality ~ 0.5)
+  // อัปโหลดรูปคมชัดเต็มต้นฉบับ: ไม่ย่อขนาด + คุณภาพสูงสุด
+  // (ยังแปลงเป็น JPEG เพื่อรองรับไฟล์ HEIC จาก iPhone)
+  // การย่อรูปเพื่อแสดงผลทำที่ฝั่ง Supabase transform ตอนแสดงใน feed แทน
   const imageUpload = useImageUpload({
     maxFiles: 30,
-    compressMaxWidth: 720,
-    compressQuality: 0.5,
+    compressMaxWidth: Number.MAX_SAFE_INTEGER,
+    compressQuality: 1,
   });
   const [session, setSession] = useState<Session | null>(null);
   const [isViewing, setIsViewing] = useState(false);
