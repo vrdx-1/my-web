@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -43,12 +43,84 @@ export function useCreatePostUpload({
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadPhaseLabel, setUploadPhaseLabel] = useState('');
+
+  // Real progress ceiling — display never exceeds this
+  const realProgressRef = useRef(0);
+  const animIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startProgressAnimation = useCallback(() => {
+    realProgressRef.current = 0;
+    setUploadProgress(0);
+
+    animIntervalRef.current = setInterval(() => {
+      setUploadProgress(prev => {
+        const target = realProgressRef.current;
+        if (prev >= 100) return 100;
+        // Asymptotic: fast when far, slow when close — minimum 0.15% per tick
+        const gap = target - prev;
+        const step = Math.max(0.15, gap * 0.1);
+        return Math.min(prev + step, target);
+      });
+    }, 50);
+  }, []);
+
+  const stopProgressAnimation = useCallback(() => {
+    if (animIntervalRef.current !== null) {
+      clearInterval(animIntervalRef.current);
+      animIntervalRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => stopProgressAnimation();
+  }, [stopProgressAnimation]);
+
+  // XHR-based upload to Supabase Storage for real byte progress
+  const uploadFileWithProgress = useCallback(
+    (filePath: string, file: File, onProgress: (pct: number) => void): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const accessToken = session?.access_token ?? anonKey ?? '';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${supabaseUrl}/storage/v1/object/car-images/${filePath}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        xhr.setRequestHeader('Cache-Control', 'max-age=3600');
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            onProgress(e.loaded / e.total);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+        xhr.send(file);
+      });
+    },
+    [session],
+  );
 
   const handleSubmit = async () => {
     const files: File[] = imageUpload.selectedFiles.slice(0, 15);
     if (imageUpload.loading || isUploading || files.length === 0) return;
     setIsUploading(true);
-    setUploadProgress(0);
+    startProgressAnimation();
+
+    // Phase 1: Preparation (0 → 15%)
+    setUploadPhaseLabel('ກຳລັງກຽມຮູບ...');
+    realProgressRef.current = 15;
 
     try {
       const imageUrls: string[] = [];
@@ -68,9 +140,20 @@ export function useCreatePostUpload({
       const uploadFolder = session ? session.user.id : 'guest-uploads';
       const totalFiles = files.length;
 
-      // ไม่บีบอัด/ย่อรูปก่อนอัปโหลด — เก็บไฟล์ต้นฉบับให้คมชัดที่สุด
-      // (การแปลงเป็น JPEG เพื่อรองรับ HEIC ทำตั้งแต่ตอนเลือกไฟล์ใน useImageUpload แล้ว)
-      // การย่อรูปเพื่อแสดงผลใน feed ทำที่ฝั่ง Supabase transform ตอนแสดงผลแทน
+      // Phase 2: Upload files (15 → 85%) — real XHR progress per file
+      setUploadPhaseLabel('ກຳລັງອັບໂຫລດຮູບ...');
+
+      // Total bytes across all files for overall progress calculation
+      const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
+      const uploadedBytes: number[] = new Array(totalFiles).fill(0);
+
+      const updateUploadProgress = () => {
+        const loadedBytes = uploadedBytes.reduce((a, b) => a + b, 0);
+        const filePct = totalBytes > 0 ? loadedBytes / totalBytes : 0;
+        // Map 0→1 file progress to 15→85 display range
+        realProgressRef.current = 15 + filePct * 70;
+      };
+
       for (let i = 0; i < totalFiles; i++) {
         const file = files[i];
         const fileExt =
@@ -84,25 +167,37 @@ export function useCreatePostUpload({
         const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
         const filePath = `${uploadFolder}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('car-images')
-          .upload(filePath, file);
-        if (uploadError) {
-          // Cleanup files ที่ upload แล้วก่อนหน้า
-          for (const path of uploadedPaths) {
-            await supabase.storage.from('car-images').remove([path]).catch(() => {});
+        try {
+          await uploadFileWithProgress(filePath, file, (ratio) => {
+            uploadedBytes[i] = file.size * ratio;
+            updateUploadProgress();
+          });
+        } catch {
+          // XHR failed — fallback to supabase client
+          const { error: uploadError } = await supabase.storage
+            .from('car-images')
+            .upload(filePath, file);
+          if (uploadError) {
+            for (const path of uploadedPaths) {
+              await supabase.storage.from('car-images').remove([path]).catch(() => {});
+            }
+            throw uploadError;
           }
-          throw uploadError;
         }
+
+        uploadedBytes[i] = file.size;
+        updateUploadProgress();
 
         uploadedPaths.push(filePath);
         const {
           data: { publicUrl },
         } = supabase.storage.from('car-images').getPublicUrl(filePath);
         imageUrls.push(publicUrl);
-
-        setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
       }
+
+      // Phase 3: Save to database (85 → 99%)
+      setUploadPhaseLabel('ກຳລັງບັນທຶກ...');
+      realProgressRef.current = 92;
 
       if (isGuest && guestToken) {
         await supabase
@@ -205,7 +300,7 @@ export function useCreatePostUpload({
                 r.onerror = () => reject(r.error);
                 r.readAsDataURL(file);
               });
-            const dataUrls = await Promise.all(compressedFiles.map(fileToDataUrl));
+            const dataUrls = await Promise.all(files.map(fileToDataUrl));
             sessionStorage.setItem('just_posted_post_preload', JSON.stringify(dataUrls));
           } catch {
             // ข้ามถ้า sessionStorage เต็มหรือแปลงรูปไม่สำเร็จ
@@ -237,6 +332,13 @@ export function useCreatePostUpload({
       }
       onDraftCleared?.();
 
+      // Snap to 100% and wait briefly for visual satisfaction
+      setUploadPhaseLabel('ສຳເລັດ!');
+      realProgressRef.current = 100;
+      setUploadProgress(100);
+      stopProgressAnimation();
+      await new Promise(r => setTimeout(r, 400));
+
       let redirectPath = '/';
       if (typeof window !== 'undefined') {
         const storedRedirectPath = window.sessionStorage.getItem(CREATE_POST_REDIRECT_AFTER_SUBMIT_KEY);
@@ -249,6 +351,7 @@ export function useCreatePostUpload({
       router.push(redirectPath);
     } catch (err: unknown) {
       console.error(err instanceof Error ? err.message : err);
+      stopProgressAnimation();
       setIsUploading(false);
     }
   };
@@ -256,6 +359,7 @@ export function useCreatePostUpload({
   return {
     isUploading,
     uploadProgress,
+    uploadPhaseLabel,
     handleSubmit,
   };
 }

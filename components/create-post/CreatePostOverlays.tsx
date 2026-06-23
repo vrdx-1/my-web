@@ -5,10 +5,12 @@ import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
 
 interface CreatePostUploadingOverlayProps {
   uploadProgress: number;
+  uploadPhaseLabel?: string;
 }
 
 export const CreatePostUploadingOverlay = React.memo<CreatePostUploadingOverlayProps>(
-  ({ uploadProgress }) => {
+  ({ uploadProgress, uploadPhaseLabel }) => {
+    const displayPct = Math.round(uploadProgress);
     return (
       <div style={{ ...LAYOUT_CONSTANTS.MAIN_CONTAINER_FLEX, minHeight: '100vh' }}>
         <div
@@ -46,8 +48,9 @@ export const CreatePostUploadingOverlay = React.memo<CreatePostUploadingOverlayP
               style={{
                 width: `${uploadProgress}%`,
                 height: '100%',
-                background: '#1877f2',
-                transition: 'width 0.3s ease',
+                background: 'linear-gradient(90deg, #1877f2, #42a5f5)',
+                borderRadius: '10px',
+                transition: 'width 0.1s linear',
               }}
             />
           </div>
@@ -59,7 +62,7 @@ export const CreatePostUploadingOverlay = React.memo<CreatePostUploadingOverlayP
               color: '#1877f2',
             }}
           >
-            {uploadProgress}%
+            {displayPct}%
           </div>
         </div>
       </div>

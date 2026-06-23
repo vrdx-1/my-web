@@ -263,7 +263,7 @@ useOverlayScrollLock(isViewing || showLeaveConfirm || showVideoAlert || validati
 
  // Removed duplicate generateGuestToken - using from utils/postUtils
 
-const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
+const { isUploading, uploadProgress, uploadPhaseLabel, handleSubmit } = useCreatePostUpload({
   session,
   activeProfileId,
   caption,
@@ -280,7 +280,7 @@ const { isUploading, uploadProgress, handleSubmit } = useCreatePostUpload({
 });
 
 if (isUploading) {
-  return <CreatePostUploadingOverlay uploadProgress={uploadProgress} />;
+  return <CreatePostUploadingOverlay uploadProgress={uploadProgress} uploadPhaseLabel={uploadPhaseLabel} />;
 }
 
  return (
