@@ -32,6 +32,8 @@ interface PostCardHeaderProps {
   isQuickReposting: boolean;
   onHandleQuickRepost: () => Promise<void>;
   leftOfAvatar?: React.ReactNode;
+  /** true = โหลด avatar แบบ eager (สำหรับการ์ดบนสุด above the fold เพื่อ LCP) */
+  eagerAvatar?: boolean;
 }
 
 export function PostCardHeader({
@@ -59,6 +61,7 @@ export function PostCardHeader({
   isQuickReposting,
   onHandleQuickRepost,
   leftOfAvatar,
+  eagerAvatar = false,
 }: PostCardHeaderProps) {
   return (
     <div style={{ ...commonStyles.postHeader, gap: '10px' }}>
@@ -75,7 +78,7 @@ export function PostCardHeader({
           onProfileClick(post);
         }}
       >
-        <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} useProfileImage />
+        <Avatar avatarUrl={post.profiles?.avatar_url} size={40} session={session} useProfileImage eager={eagerAvatar} />
       </div>
       <div style={{ flex: 1, minWidth: 0, marginTop: '2px' }}>
         <div style={{ fontWeight: 'bold', fontSize: '15px', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '3px', color: '#111111' }}>

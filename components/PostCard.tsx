@@ -155,6 +155,7 @@ export function PostCard({
         isQuickReposting={isQuickReposting}
         onHandleQuickRepost={handleQuickRepost}
         leftOfAvatar={leftOfAvatar}
+        eagerAvatar={priority}
       />
 
       <PostCardCaption

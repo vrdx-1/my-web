@@ -11,6 +11,8 @@ interface AvatarProps {
   className?: string;
   /** true = แสดงรูปจาก OAuth เสมอ (ใช้ใน Bottom Nav / Header) ไม่ตัด URL ขนาดเล็ก */
   useProfileImage?: boolean;
+  /** true = โหลดรูปทันที (eager) สำหรับ avatar ที่อยู่ above the fold เช่นการ์ดแรกในฟีด เพื่อ LCP ที่ดีขึ้น */
+  eager?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export const Avatar = React.memo<AvatarProps>(({
   session,
   className,
   useProfileImage = false,
+  eager = false,
 }) => {
   const displayUrl = getDisplayAvatarUrl(avatarUrl, useProfileImage);
   const defaultSize = size;
@@ -48,7 +51,8 @@ export const Avatar = React.memo<AvatarProps>(({
           src={displayUrl}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           alt="Avatar"
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
+          fetchPriority={eager ? 'high' : undefined}
         />
       ) : (
         <GuestAvatarIcon size={defaultSize * 0.65} />
