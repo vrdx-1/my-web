@@ -33,6 +33,12 @@ export const SubAccountsList = React.memo<SubAccountsListProps>(({
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [deleteTarget, setDeleteTarget] = useState<SubAccount | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
   useEffect(() => {
     fetchSubAccounts();
   }, []);
@@ -70,6 +76,55 @@ export const SubAccountsList = React.memo<SubAccountsListProps>(({
     );
   }, [subAccounts, searchQuery]);
 
+  const openDeleteModal = useCallback((e: React.MouseEvent, subAccount: SubAccount) => {
+    e.stopPropagation();
+    setDeleteTarget(subAccount);
+    setConfirmText('');
+    setDeleteError('');
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setConfirmText('');
+    setDeleteError('');
+  }, [deleting]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    const expectedUsername = (deleteTarget.username || '').trim();
+    if (confirmText.trim() !== expectedUsername) {
+      setDeleteError('ຊື່ Username ບໍ່ກົງກັນ ກະລຸນາພິມໃຫ້ຖືກຕ້ອງ');
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch('/api/admin/sub-accounts', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subAccountId: deleteTarget.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || 'ລຶບບໍ່ສຳເລັດ');
+      }
+
+      setSubAccounts((prev) => prev.filter((acc) => acc.id !== deleteTarget.id));
+      setServerTotal((prev) => (typeof prev === 'number' ? Math.max(0, prev - 1) : prev));
+      setSuccessMessage(`ລຶບ "${expectedUsername}" ສຳເລັດແລ້ວ`);
+      setDeleteTarget(null);
+      setConfirmText('');
+      window.setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'ມີຂໍ້ຜິດພາດເກີດຂື້ນ');
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, confirmText]);
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       {/* Header */}
@@ -79,6 +134,22 @@ export const SubAccountsList = React.memo<SubAccountsListProps>(({
       <div style={{ fontSize: '13px', color: '#4a4d52', marginTop: '-14px', marginBottom: '16px' }}>
         ຈຳນວນບັນຊີທັງໝົດ: {subAccounts.length}{serverTotal !== null ? ` (API: ${serverTotal})` : ''}
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div
+          style={{
+            padding: '12px 16px',
+            background: '#e6f4ea',
+            color: '#1e7e34',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          ✅ {successMessage}
+        </div>
+      )}
 
       {/* Search Box */}
       <div style={{ marginBottom: '20px' }}>
@@ -125,18 +196,17 @@ export const SubAccountsList = React.memo<SubAccountsListProps>(({
       {/* Empty State */}
       {!loading && filteredSubAccounts.length === 0 && (
         <EmptyState
-          title={searchQuery ? 'ບໍ່ພົບຜົນ' : 'ບໍ່ມີ Sub-Account'}
-          description={searchQuery ? 'ບໍ່ມີ Sub-Account ກົງກັບ "' + searchQuery + '"' : 'ສ້າງ Sub-Account ໃຫມ່ໄປໃນ Profile Settings'}
+          message={searchQuery ? 'ບໍ່ພົບ Sub-Account ກົງກັບ "' + searchQuery + '"' : 'ບໍ່ມີ Sub-Account, ສ້າງ Sub-Account ໃຫມ່ໄປໃນ Profile Settings'}
         />
+
       )}
 
       {/* Sub-Accounts List */}
       {!loading && filteredSubAccounts.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {filteredSubAccounts.map((subAccount) => (
-            <button
+            <div
               key={subAccount.id}
-              onClick={() => onSelectSubAccount(subAccount)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -145,47 +215,191 @@ export const SubAccountsList = React.memo<SubAccountsListProps>(({
                 background: '#fff',
                 border: '1px solid #d0d7de',
                 borderRadius: '8px',
-                cursor: 'pointer',
                 transition: 'all 0.2s',
-                textAlign: 'left',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#f5f6f7';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#fff';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
               }}
             >
-              {/* Avatar */}
-              <div
+              <button
+                onClick={() => onSelectSubAccount(subAccount)}
                 style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  background: '#e4e6eb',
-                  overflow: 'hidden',
-                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flex: 1,
+                  minWidth: 0,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  padding: 0,
                 }}
               >
-                <Avatar avatarUrl={subAccount.avatar_url} size={48} session={session} />
-              </div>
-
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: '600', fontSize: '15px', color: '#111111', marginBottom: '4px' }}>
-                  {subAccount.username || 'Unknown'}
+                {/* Avatar */}
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: '#e4e6eb',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Avatar avatarUrl={subAccount.avatar_url} size={48} session={session} />
                 </div>
-                <div style={{ fontSize: '13px', color: '#4a4d52' }}>
-                  {subAccount.phone ? `☎️ ${subAccount.phone}` : 'ບໍ່ມີເບີໂທລະສັບ'}
-                </div>
-              </div>
 
-              {/* Arrow */}
-              <div style={{ fontSize: '20px', color: '#4a4d52' }}>→</div>
-            </button>
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: '600', fontSize: '15px', color: '#111111', marginBottom: '4px' }}>
+                    {subAccount.username || 'Unknown'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#4a4d52' }}>
+                    {subAccount.phone ? `☎️ ${subAccount.phone}` : 'ບໍ່ມີເບີໂທລະສັບ'}
+                  </div>
+                </div>
+
+                {/* Arrow */}
+                <div style={{ fontSize: '20px', color: '#4a4d52' }}>→</div>
+              </button>
+
+              {/* Delete button */}
+              <button
+                onClick={(e) => openDeleteModal(e, subAccount)}
+                title="ລຶບ Sub-Account"
+                style={{
+                  flexShrink: 0,
+                  width: '38px',
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#fce8e6',
+                  color: '#d93025',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                }}
+              >
+                🗑️
+              </button>
+            </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteTarget && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+          }}
+          onClick={closeDeleteModal}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#d93025', marginBottom: '12px' }}>
+              ⚠️ ຢືນຢັນການລຶບ Sub-Account
+            </h3>
+            <p style={{ fontSize: '14px', color: '#4a4d52', marginBottom: '8px' }}>
+              ການລຶບ &quot;<strong>{deleteTarget.username || 'Unknown'}</strong>&quot; ຈະລຶບໂພສທັງໝົດ, ຮູບພາບ,
+              ແລະ ຂໍ້ມູນທີ່ກ່ຽວຂ້ອງທັງໝົດຂອງບັນຊີນີ້ຢ່າງຖາວອນ ບໍ່ສາມາດກູ້ຄືນໄດ້
+            </p>
+            <p style={{ fontSize: '14px', color: '#111111', marginBottom: '8px' }}>
+              ພິມ <strong>{deleteTarget.username || ''}</strong> ເພື່ອຢືນຢັນ:
+            </p>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={deleteTarget.username || ''}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: '1px solid #d0d7de',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                marginBottom: '12px',
+              }}
+            />
+
+            {deleteError && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  background: '#fce8e6',
+                  color: '#d93025',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  fontSize: '13px',
+                }}
+              >
+                ⚠️ {deleteError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={closeDeleteModal}
+                disabled={deleting}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #d0d7de',
+                  background: '#fff',
+                  color: '#111111',
+                  fontSize: '14px',
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting || confirmText.trim() !== (deleteTarget.username || '').trim()}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#d93025',
+                  color: '#fff',
+                  fontSize: '14px',
+                  cursor:
+                    deleting || confirmText.trim() !== (deleteTarget.username || '').trim()
+                      ? 'not-allowed'
+                      : 'pointer',
+                  opacity:
+                    deleting || confirmText.trim() !== (deleteTarget.username || '').trim() ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                {deleting && <LoadingSpinner />}
+
+                {deleting ? 'ກຳລັງລຶບ...' : 'ລຶບຖາວອນ'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

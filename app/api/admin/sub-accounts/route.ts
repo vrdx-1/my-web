@@ -5,9 +5,13 @@ import { cookies } from 'next/headers';
 import { internalServerError, tooManyRequests } from '@/lib/apiSecurity';
 import { checkRateLimit, getRequestIp } from '@/lib/rateLimit';
 import { normalizeWhatsAppNumberSource } from '@/utils/whatsapp';
+import { getStorageObjectPaths } from '@/utils/storageObjectPath';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const POSTS_BUCKET = 'car-images';
+
 
 type EnsureAdminOptions = {
   allowSubAccounts?: boolean;
@@ -426,7 +430,139 @@ export async function POST(request: NextRequest) {
   }, { status: 201 });
 }
 
+export async function DELETE(request: NextRequest) {
+  const ip = getRequestIp(request);
+  const rateLimit = await checkRateLimit({
+    namespace: 'admin:sub-accounts:delete',
+    identifier: ip,
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return tooManyRequests(rateLimit.reset);
+
+  const auth = await ensureAdmin({ allowSubAccounts: false });
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'Server configuration missing' }, { status: 503 });
+  }
+
+  let body: { subAccountId?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
+
+  const subAccountId = typeof body?.subAccountId === 'string' ? body.subAccountId.trim() : '';
+  if (!subAccountId) {
+    return NextResponse.json({ error: 'subAccountId required' }, { status: 400 });
+  }
+
+  // ตรวจสอบว่า sub account นี้เป็นของ admin เจ้านี้จริง (กันลบข้าม parent / ลบบัญชีหลัก)
+  const { data: subAccountProfile, error: subAccountLookupError } = await admin
+    .from('profiles')
+    .select('id, is_sub_account, parent_admin_id')
+    .eq('id', subAccountId)
+    .maybeSingle();
+
+  if (subAccountLookupError) {
+    return internalServerError('admin/sub-accounts delete lookup failed', subAccountLookupError);
+  }
+  if (
+    !subAccountProfile ||
+    !subAccountProfile.is_sub_account ||
+    subAccountProfile.parent_admin_id !== auth.adminId
+  ) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // 1) ดึงโพสต์ทั้งหมดของ sub account นี้
+  const { data: posts, error: postsLookupError } = await admin
+    .from('cars')
+    .select('id, images')
+    .eq('user_id', subAccountId);
+
+  if (postsLookupError) {
+    return internalServerError('admin/sub-accounts delete posts lookup failed', postsLookupError);
+  }
+
+  const postIds = (posts ?? []).map((p) => String(p.id)).filter(Boolean);
+
+  // 2) ลบรูปทั้งหมดใน storage
+  const allImageValues = (posts ?? []).flatMap((p) =>
+    Array.isArray(p.images) ? p.images.filter((v): v is string => typeof v === 'string') : []
+  );
+  const imagePaths = getStorageObjectPaths(allImageValues, POSTS_BUCKET);
+  if (imagePaths.length > 0) {
+    const { error: storageError } = await admin.storage.from(POSTS_BUCKET).remove(imagePaths);
+    if (storageError) {
+      console.warn('[admin/sub-accounts DELETE] storage remove failed', storageError);
+    }
+  }
+
+  // 3) ลบแถวที่อ้างอิงตาม post_id ของโพสต์เหล่านี้ (best-effort, ตารางบางตัวอาจไม่มี migration ในโปรเจกต์)
+  if (postIds.length > 0) {
+    const postRefTables: Array<{ table: string; column: string }> = [
+      { table: 'post_likes', column: 'post_id' },
+      { table: 'post_likes_guest', column: 'post_id' },
+      { table: 'post_saves', column: 'post_id' },
+      { table: 'post_saves_guest', column: 'post_id' },
+      { table: 'reports', column: 'car_id' },
+      { table: 'post_boosts', column: 'post_id' },
+      { table: 'compare_usage_logs', column: 'post_id' },
+      { table: 'whatsapp_click_logs', column: 'post_id' },
+      { table: 'post_compare_lists', column: 'post_id' },
+      { table: 'revenue_logs', column: 'post_id' },
+      { table: 'admin_sub_account_clears', column: 'car_id' },
+    ];
+
+    for (const ref of postRefTables) {
+      const { error } = await admin.from(ref.table).delete().in(ref.column, postIds);
+      if (error) {
+        console.warn(`[admin/sub-accounts DELETE] cleanup ${ref.table} failed`, error);
+      }
+    }
+  }
+
+  // 4) ลบโพสต์ทั้งหมด (car_edits จะ cascade อัตโนมัติ)
+  if (postIds.length > 0) {
+    const { error: deletePostsError } = await admin.from('cars').delete().eq('user_id', subAccountId);
+    if (deletePostsError) {
+      return internalServerError('admin/sub-accounts delete posts failed', deletePostsError);
+    }
+  }
+
+  // 5) ลบแถวที่อ้างอิงตาม user_id ของ sub account เอง
+  const userRefTables: Array<{ table: string; column: string }> = [
+    { table: 'post_compare_lists', column: 'user_id' },
+    { table: 'compare_usage_logs', column: 'user_id' },
+    { table: 'whatsapp_click_logs', column: 'target_profile_id' },
+    { table: 'revenue_logs', column: 'payer_user_id' },
+    { table: 'admin_sub_account_clears', column: 'sub_account_id' },
+  ];
+
+  for (const ref of userRefTables) {
+    const { error } = await admin.from(ref.table).delete().eq(ref.column, subAccountId);
+    if (error) {
+      console.warn(`[admin/sub-accounts DELETE] cleanup ${ref.table} by ${ref.column} failed`, error);
+    }
+  }
+
+  // 6) ลบ profile ของ sub account เอง
+  const { error: deleteProfileError } = await admin.from('profiles').delete().eq('id', subAccountId);
+  if (deleteProfileError) {
+    return internalServerError('admin/sub-accounts delete profile failed', deleteProfileError);
+  }
+
+  return NextResponse.json({ ok: true, deletedSubAccountId: subAccountId, deletedPostCount: postIds.length });
+}
+
 export async function PATCH(request: NextRequest) {
+
   const ip = getRequestIp(request);
   const rateLimit = await checkRateLimit({
     namespace: 'admin:sub-accounts:whatsapp-settings',
