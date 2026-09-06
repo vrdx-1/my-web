@@ -3,22 +3,20 @@ import { ImageWithSkeleton } from '../ImageWithSkeleton';
 import { PhotoOverlayBadge } from '../PhotoOverlayBadge';
 import { baseImgStyle, PhotoGridLayoutProps } from '../shared';
 
-/** layout 'three-images' (6+) — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก (เหมือน post 3 รูป) */
+/** layout 'three-images' (6+) — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก (เหมือน post 3 รูป) สัดส่วนสมมาตรรวมสูง 300px */
 export function ThreeImagesGalleryLayout({ images, count, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap, gap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative' }}>
-      <div style={{ gridRow: 'span 2' }}>
-        <ImageWithSkeleton
-          src={images[0]}
-          imageIndex={0}
-          onPostClick={onPostClick}
-          loading={firstImageLoading}
-          fetchPriority={firstImgFetchPriority}
-          containerStyle={{ width: '100%', height: '400px' }}
-          imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-        />
-      </div>
-      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative', height: '300px' }}>
+      <ImageWithSkeleton
+        src={images[0]}
+        imageIndex={0}
+        onPostClick={onPostClick}
+        loading={firstImageLoading}
+        fetchPriority={firstImgFetchPriority}
+        containerStyle={{ width: '100%', height: '100%' }}
+        imgStyle={baseImgStyle}
+      />
+      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap, height: '100%' }}>
         {images.slice(1, 3).map((img, i) => {
           const idx = i + 1;
           return (
@@ -27,6 +25,7 @@ export function ThreeImagesGalleryLayout({ images, count, onPostClick, firstImag
               style={{
                 position: 'relative',
                 cursor: 'pointer',
+                height: '100%',
               }}
               onClick={() => onPostClick(idx)}
             >
@@ -35,8 +34,8 @@ export function ThreeImagesGalleryLayout({ images, count, onPostClick, firstImag
                 imageIndex={idx}
                 onPostClick={onPostClick}
                 loading="lazy"
-                containerStyle={{ width: '100%', height: '198.5px' }}
-                imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+                containerStyle={{ width: '100%', height: '100%' }}
+                imgStyle={baseImgStyle}
               />
               {idx === 2 && count > 3 && <PhotoOverlayBadge remaining={count - 3} />}
             </div>

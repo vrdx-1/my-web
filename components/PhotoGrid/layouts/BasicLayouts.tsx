@@ -2,10 +2,10 @@ import React from 'react';
 import { ImageWithSkeleton } from '../ImageWithSkeleton';
 import { baseImgStyle, PhotoGridLayoutProps } from '../shared';
 
-/** 1 รูป — เต็มความกว้าง สูง 400px */
+/** 1 รูป — เต็มความกว้าง สัดส่วนสมมาตร 4:3 สวยงาม (ไม่ครอบตัดรูปภาพรถเกินไป) */
 export function SingleImageLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority }: PhotoGridLayoutProps) {
   return (
-    <div style={{ position: 'relative', width: '100%', height: '400px', cursor: 'pointer' }}>
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', cursor: 'pointer', overflow: 'hidden' }}>
       <ImageWithSkeleton
         src={images[0]}
         imageIndex={0}
@@ -19,7 +19,7 @@ export function SingleImageLayout({ images, onPostClick, firstImageLoading, firs
   );
 }
 
-/** 2 รูป — 2 คอลัมน์เท่ากัน */
+/** 2 รูป — 2 คอลัมน์เท่ากัน สัดส่วนสมมาตรแบบสี่เหลี่ยมจัตุรัส 1:1 */
 export function TwoImageLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
@@ -29,7 +29,7 @@ export function TwoImageLayout({ images, onPostClick, firstImageLoading, firstIm
         onPostClick={onPostClick}
         loading={firstImageLoading}
         fetchPriority={firstImgFetchPriority}
-        containerStyle={{ width: '100%', height: '300px' }}
+        containerStyle={{ width: '100%', aspectRatio: '1' }}
         imgStyle={baseImgStyle}
       />
       <ImageWithSkeleton
@@ -37,44 +37,42 @@ export function TwoImageLayout({ images, onPostClick, firstImageLoading, firstIm
         imageIndex={1}
         onPostClick={onPostClick}
         loading="lazy"
-        containerStyle={{ width: '100%', height: '300px' }}
+        containerStyle={{ width: '100%', aspectRatio: '1' }}
         imgStyle={baseImgStyle}
       />
     </div>
   );
 }
 
-/** 3 รูป — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก */
+/** 3 รูป — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก สัดส่วนสมมาตรรวมสูง 300px */
 export function ThreeImageLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
-      <div style={{ gridRow: 'span 2' }}>
-        <ImageWithSkeleton
-          src={images[0]}
-          imageIndex={0}
-          onPostClick={onPostClick}
-          loading={firstImageLoading}
-          fetchPriority={firstImgFetchPriority}
-          containerStyle={{ width: '100%', height: '400px' }}
-          imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
-        />
-      </div>
-      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', height: '300px' }}>
+      <ImageWithSkeleton
+        src={images[0]}
+        imageIndex={0}
+        onPostClick={onPostClick}
+        loading={firstImageLoading}
+        fetchPriority={firstImgFetchPriority}
+        containerStyle={{ width: '100%', height: '100%' }}
+        imgStyle={baseImgStyle}
+      />
+      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap, height: '100%' }}>
         <ImageWithSkeleton
           src={images[1]}
           imageIndex={1}
           onPostClick={onPostClick}
           loading="lazy"
-          containerStyle={{ width: '100%', height: '199px' }}
-          imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          containerStyle={{ width: '100%', height: '100%' }}
+          imgStyle={baseImgStyle}
         />
         <ImageWithSkeleton
           src={images[2]}
           imageIndex={2}
           onPostClick={onPostClick}
           loading="lazy"
-          containerStyle={{ width: '100%', height: '199px' }}
-          imgStyle={{ ...baseImgStyle, background: '#f0f0f0' }}
+          containerStyle={{ width: '100%', height: '100%' }}
+          imgStyle={baseImgStyle}
         />
       </div>
     </div>
