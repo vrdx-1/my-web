@@ -116,6 +116,45 @@ export async function togglePostStatus(
 }
 
 /**
+ * ย้ายโพสทั้งหมดของซับบัญชีปัจจุบันไป status = sold
+ * ตรวจสิทธิ์ฝั่ง API — อัปเดตเฉพาะ user_id ของโปรไฟล์ที่กำลังใช้
+ */
+export async function markAllPostsSold(activeProfileIdOverride?: string | null): Promise<{ updated: number }> {
+  const sessionResult = await supabase.auth.getSession();
+  let session = sessionResult.data.session;
+  let accessToken = session?.access_token ?? '';
+
+  if (!accessToken) {
+    const refreshed = await supabase.auth.refreshSession();
+    session = refreshed.data.session ?? session;
+    accessToken = session?.access_token ?? '';
+  }
+
+  const authUserId = session?.user?.id ?? null;
+  const activeProfileId = activeProfileIdOverride || getStoredActiveProfileId(authUserId) || authUserId;
+
+  const response = await fetch('/api/posts/mark-all-sold', {
+    method: 'POST',
+    credentials: 'include',
+    headers: mergeHeaders(
+      {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      activeProfileId,
+    ),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error || 'Mark all posts sold failed');
+  }
+
+  invalidateFeedCacheClient();
+  return { updated: typeof payload?.updated === 'number' ? payload.updated : 0 };
+}
+
+/**
  * Delete a post (without confirmation - confirmation should be handled by caller)
  */
 export async function deletePost(

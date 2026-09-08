@@ -38,6 +38,7 @@ import { trackViewModeClick } from '@/utils/viewModeClickAnalytics';
 
 // Shared Utils
 import { LAYOUT_CONSTANTS } from '@/utils/layoutConstants';
+import { markAllPostsSold } from '@/utils/postManagement';
 
 /** ใช้ MyPostsFeedBlock (ไม่ใช้ PostFeed) เพื่อหลีกเลี่ยง React 19 "Expected static flag was missing" */
 const MyPostsFeedBlock = dynamic(
@@ -55,9 +56,13 @@ let myPostsViewModeMemory = false;
 function MyPostsActionsMenuButton({
   compactMode,
   onToggleCompactMode,
+  showMarkAllSold,
+  onMarkAllSoldClick,
 }: {
   compactMode: boolean;
   onToggleCompactMode: () => void;
+  showMarkAllSold: boolean;
+  onMarkAllSoldClick: () => void;
 }) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -127,7 +132,7 @@ function MyPostsActionsMenuButton({
               position: 'absolute',
               top: position.top,
               right: position.right,
-              width: 280,
+              width: showMarkAllSold ? 300 : 280,
               background: '#ffffff',
               borderRadius: 16,
               boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
@@ -186,6 +191,49 @@ function MyPostsActionsMenuButton({
               </span>
               <span>{compactMode ? 'ສະແດງແບບໃຫຍ່' : 'ສະແດງແບບນ້ອຍ'}</span>
             </button>
+            {showMarkAllSold ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onMarkAllSoldClick();
+                }}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  borderTop: '1px solid #eef2f7',
+                  background: '#ffffff',
+                  textAlign: 'left',
+                  padding: '14px 18px',
+                  fontSize: 17,
+                  lineHeight: '24px',
+                  fontWeight: 500,
+                  color: '#111111',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-flex',
+                    width: 22,
+                    height: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#e0245e',
+                    flexShrink: 0,
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 7L10 17l-5-5" />
+                  </svg>
+                </span>
+                <span>ແຈ້ງວ່າຂາຍແລ້ວຂອງໂພສທັງໝົດ</span>
+              </button>
+            ) : null}
           </div>
         </div>,
         document.body,
@@ -212,9 +260,13 @@ export function MyPostsContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [subAccountPostCount, setSubAccountPostCount] = useState<number | null>(null);
   const [subAccountPostCountLoading, setSubAccountPostCountLoading] = useState(false);
+  const [showMarkAllSoldConfirm, setShowMarkAllSoldConfirm] = useState(false);
+  const [isMarkingAllSold, setIsMarkingAllSold] = useState(false);
+  const [showMarkAllSoldSuccess, setShowMarkAllSoldSuccess] = useState(false);
 
   const { session, sessionReady, activeProfileId, authUserId, availableProfiles } = useSessionAndProfile();
   const ownershipScopeKeyRef = useRef<string | null>(null);
+  const markingAllSoldRef = useRef(false);
   const fixedHeaderRef = useRef<HTMLDivElement | null>(null);
   const yearDropdownRef = useRef<HTMLDivElement | null>(null);
   const [fixedHeaderHeight, setFixedHeaderHeight] = useState<number>(
@@ -246,6 +298,7 @@ export function MyPostsContent() {
     );
     return parentAdminProfile?.role === 'admin';
   }, [activeProfileRecord, availableProfiles]);
+  const showMarkAllSold = Boolean(activeProfileRecord?.is_sub_account && activeProfileRecord?.parent_admin_id);
   const {
     hiddenFileInputRef: myPostsHiddenFileInputRef,
     handleFileChange: handleMyPostsFileChange,
@@ -294,6 +347,11 @@ export function MyPostsContent() {
     if (showSearchControls) return;
     setShowYearDropdown(false);
   }, [showSearchControls]);
+
+  useEffect(() => {
+    if (showMarkAllSold) return;
+    setShowMarkAllSoldConfirm(false);
+  }, [showMarkAllSold]);
 
   useEffect(() => {
     setMounted(true);
@@ -402,6 +460,40 @@ export function MyPostsContent() {
   const searchScopeKey = searchQuery;
 
   const postListData = tab === 'recommend' ? recommendListData : soldListData;
+
+  const handleConfirmMarkAllSold = useCallback(async () => {
+    if (!showMarkAllSold || isMarkingAllSold || markingAllSoldRef.current) return;
+    markingAllSoldRef.current = true;
+    setIsMarkingAllSold(true);
+    try {
+      await markAllPostsSold(activeProfileId);
+      recommendListData.setPosts([]);
+      recommendListData.setPage(0);
+      recommendListData.setHasMore(false);
+      soldListData.setPage(0);
+      soldListData.setHasMore(true);
+      setHasFetchedRecommend(true);
+      setHasFetchedSold(true);
+      await Promise.all([
+        recommendListData.fetchPosts(true),
+        soldListData.fetchPosts(true),
+      ]);
+      setShowMarkAllSoldConfirm(false);
+      setShowMarkAllSoldSuccess(true);
+    } catch (error) {
+      console.error('Mark all posts sold failed:', error);
+    } finally {
+      markingAllSoldRef.current = false;
+      setIsMarkingAllSold(false);
+    }
+  }, [
+    activeProfileId,
+    isMarkingAllSold,
+    recommendListData,
+    showMarkAllSold,
+    soldListData,
+  ]);
+
   const menu = useMenu();
   const fullScreenViewer = useFullScreenViewer();
   const viewingPostHook = useViewingPost();
@@ -664,6 +756,8 @@ export function MyPostsContent() {
                 setIsCompactMode((prev) => !prev);
                 void trackViewModeClick('my-posts');
               }}
+              showMarkAllSold={showMarkAllSold}
+              onMarkAllSoldClick={() => setShowMarkAllSoldConfirm(true)}
             />
           )}
         />
@@ -1025,6 +1119,24 @@ export function MyPostsContent() {
       )}
       {handlers.showToggleStatusSuccess && (
         <SuccessPopup message="ສຳເລັດ" onClose={() => handlers.setShowToggleStatusSuccess?.(false)} />
+      )}
+      {showMarkAllSoldConfirm && (
+        <DeleteConfirmModal
+          title="ທ່ານຕ້ອງການແຈ້ງວ່າຂາຍແລ້ວຂອງໂພສທັງໝົດບໍ?"
+          cancelLabel="ຍົກເລີກ"
+          confirmLabel="ແຈ້ງວ່າຂາຍແລ້ວ"
+          loading={isMarkingAllSold}
+          onConfirm={() => {
+            void handleConfirmMarkAllSold();
+          }}
+          onCancel={() => {
+            if (isMarkingAllSold) return;
+            setShowMarkAllSoldConfirm(false);
+          }}
+        />
+      )}
+      {showMarkAllSoldSuccess && (
+        <SuccessPopup message="ສຳເລັດ" onClose={() => setShowMarkAllSoldSuccess(false)} />
       )}
     </main>
   );
