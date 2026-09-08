@@ -41,7 +41,7 @@ export const ImageWithSkeleton = memo(function ImageWithSkeleton({
   }, [src]);
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', ...containerStyle }}>
+    <div style={{ position: 'relative', overflow: 'hidden', minWidth: 0, minHeight: 0, ...containerStyle }}>
       {/* Facebook-style placeholder: grey shimmer until image loads */}
       {!loaded && (
         <div
@@ -67,7 +67,10 @@ export const ImageWithSkeleton = memo(function ImageWithSkeleton({
         alt={imageIndex === 0 ? 'Post image' : `Post image ${imageIndex + 1}`}
         style={{
           ...imgStyle,
-          position: 'relative',
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
           zIndex: 1,
           opacity: loaded ? 1 : 0,
           transition: 'opacity 0.25s ease-out',

@@ -83,6 +83,9 @@ body {
  * ผลคือเมื่อ caption ขยาย/ยุบ browser จะไม่เลื่อน scrollY ตาม PhotoGrid ข้างในการ์ด
  * (ถ้าไม่ทำ header/avatar ของการ์ดจะ "ดันขึ้น" เพราะ scrollY ถูก anchoring ดันหลัง useLayoutEffect ทำงานแล้ว)
  */
+.feed-card {
+  isolation: isolate;
+}
 .feed-card * {
   overflow-anchor: none;
 }

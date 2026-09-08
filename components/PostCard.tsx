@@ -163,7 +163,7 @@ export function PostCard({
         customCaption={customCaption}
       />
 
-      <div style={{ padding: 0 }}>
+      <div style={{ padding: 0, overflow: 'hidden', isolation: 'isolate' }}>
         <PhotoGrid images={post.images || []} preloadImages={post._preloadImages} onPostClick={(imageIndex) => onViewPost(post, imageIndex)} priority={priority} firstImageFetchPriority={imageFetchPriority} layout={post.layout || 'default'} gap={PHOTO_GRID_GAP} />
       </div>
 

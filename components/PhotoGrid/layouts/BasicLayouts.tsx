@@ -22,7 +22,7 @@ export function SingleImageLayout({ images, onPostClick, firstImageLoading, firs
 /** 2 รูป — 2 คอลัมน์เท่ากัน สัดส่วนสมมาตรแบบสี่เหลี่ยมจัตุรัส 1:1 */
 export function TwoImageLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', width: '100%', minWidth: 0 }}>
       <ImageWithSkeleton
         src={images[0]}
         imageIndex={0}
@@ -82,7 +82,7 @@ export function ThreeImageLayout({ images, onPostClick, firstImageLoading, first
 /** 4 รูป — grid 2x2 */
 export function FourImageLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', width: '100%', minWidth: 0 }}>
       {images.map((img, i) => (
         <ImageWithSkeleton
           key={i}
@@ -91,7 +91,7 @@ export function FourImageLayout({ images, onPostClick, firstImageLoading, firstI
           onPostClick={onPostClick}
           loading={i === 0 ? firstImageLoading : 'lazy'}
           fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
-          containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
+          containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', minWidth: 0, minHeight: 0 }}
           imgStyle={baseImgStyle}
         />
       ))}
@@ -102,7 +102,7 @@ export function FourImageLayout({ images, onPostClick, firstImageLoading, firstI
 /** Fallback (5 รูป / layout ไม่ตรง) — 2 บน, 3 ล่าง */
 export function DefaultFiveLayout({ images, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', width: '100%', minWidth: 0 }}>
       {images.slice(0, 2).map((img, i) => (
         <ImageWithSkeleton
           key={i}
@@ -111,7 +111,7 @@ export function DefaultFiveLayout({ images, onPostClick, firstImageLoading, firs
           onPostClick={onPostClick}
           loading={i === 0 ? firstImageLoading : 'lazy'}
           fetchPriority={i === 0 ? firstImgFetchPriority : undefined}
-          containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden' }}
+          containerStyle={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', minWidth: 0, minHeight: 0 }}
           imgStyle={baseImgStyle}
         />
       ))}
@@ -126,6 +126,8 @@ export function DefaultFiveLayout({ images, onPostClick, firstImageLoading, firs
                 aspectRatio: '1',
                 cursor: 'pointer',
                 overflow: 'hidden',
+                minWidth: 0,
+                minHeight: 0,
               }}
               onClick={() => onPostClick(idx)}
             >

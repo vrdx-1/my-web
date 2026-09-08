@@ -2,8 +2,10 @@ import React from 'react';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 import { transformSupabaseImageUrl } from '@/utils/supabaseImageTransform';
 
-/** Style รูปพื้นฐานในกริด — ใช้ร่วมทุก layout */
+/** Style รูปพื้นฐานในกริด — ใช้ร่วมทุก layout (absolute เพื่อไม่ดันความสูงกริดตามสัดส่วนไฟล์) */
 export const baseImgStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
   width: '100%',
   height: '100%',
   objectFit: 'cover',

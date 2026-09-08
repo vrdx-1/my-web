@@ -6,7 +6,7 @@ import { baseImgStyle, PhotoGridLayoutProps } from '../shared';
 /** layout 'default' (6+) — grid 2x2, +N บนรูปที่ 4 */
 export function DefaultGridLayout({ images, count, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', width: '100%', minWidth: 0 }}>
       {images.slice(0, 4).map((img, i) => (
         <div
           key={i}
@@ -15,6 +15,8 @@ export function DefaultGridLayout({ images, count, onPostClick, firstImageLoadin
             aspectRatio: '1',
             cursor: 'pointer',
             overflow: 'hidden',
+            minWidth: 0,
+            minHeight: 0,
           }}
           onClick={() => onPostClick(i)}
         >
@@ -37,7 +39,7 @@ export function DefaultGridLayout({ images, count, onPostClick, firstImageLoadin
 /** layout 'five-images' (6+) — 2 บน, 3 ล่าง */
 export function FiveImagesLayout({ images, count, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', ...gridGap, cursor: 'pointer', width: '100%', minWidth: 0 }}>
       {images.slice(0, 2).map((img, i) => (
         <div
           key={i}
@@ -46,6 +48,8 @@ export function FiveImagesLayout({ images, count, onPostClick, firstImageLoading
             aspectRatio: '1',
             cursor: 'pointer',
             overflow: 'hidden',
+            minWidth: 0,
+            minHeight: 0,
           }}
           onClick={() => onPostClick(i)}
         >
@@ -71,6 +75,8 @@ export function FiveImagesLayout({ images, count, onPostClick, firstImageLoading
                 aspectRatio: '1',
                 cursor: 'pointer',
                 overflow: 'hidden',
+                minWidth: 0,
+                minHeight: 0,
               }}
               onClick={() => onPostClick(idx)}
             >

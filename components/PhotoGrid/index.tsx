@@ -68,29 +68,40 @@ export const PhotoGrid = React.memo<PhotoGridProps>(({ images, preloadImages, on
     gap,
   };
 
-  // Single image
-  if (count === 1) return <SingleImageLayout {...layoutProps} />;
-  // Two images
-  if (count === 2) return <TwoImageLayout {...layoutProps} />;
-  // Three images
-  if (count === 3) return <ThreeImageLayout {...layoutProps} />;
-  // Four images — 2x2 grid
-  if (count === 4) return <FourImageLayout {...layoutProps} />;
+  const layoutNode =
+    count === 1 ? (
+      <SingleImageLayout {...layoutProps} />
+    ) : count === 2 ? (
+      <TwoImageLayout {...layoutProps} />
+    ) : count === 3 ? (
+      <ThreeImageLayout {...layoutProps} />
+    ) : count === 4 ? (
+      <FourImageLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'default' ? (
+      <DefaultGridLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'five-images' ? (
+      <FiveImagesLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'car-gallery' ? (
+      <CarGalleryLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'two-left-three-right' ? (
+      <TwoLeftThreeRightLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'three-images' ? (
+      <ThreeImagesGalleryLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'one-top-two-bottom' ? (
+      <OneTopTwoBottomLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'one-top-three-bottom' ? (
+      <OneTopThreeBottomLayout {...layoutProps} />
+    ) : count >= 6 && layout === 'one-left-three-right' ? (
+      <OneLeftThreeRightLayout {...layoutProps} />
+    ) : (
+      <DefaultFiveLayout {...layoutProps} />
+    );
 
-  // Five or more images — ใช้ layout ที่เลือก (เหมือน PhotoPreviewGrid)
-  if (count >= 6) {
-    if (layout === 'default') return <DefaultGridLayout {...layoutProps} />;
-    if (layout === 'five-images') return <FiveImagesLayout {...layoutProps} />;
-    if (layout === 'car-gallery') return <CarGalleryLayout {...layoutProps} />;
-    if (layout === 'two-left-three-right') return <TwoLeftThreeRightLayout {...layoutProps} />;
-    if (layout === 'three-images') return <ThreeImagesGalleryLayout {...layoutProps} />;
-    if (layout === 'one-top-two-bottom') return <OneTopTwoBottomLayout {...layoutProps} />;
-    if (layout === 'one-top-three-bottom') return <OneTopThreeBottomLayout {...layoutProps} />;
-    if (layout === 'one-left-three-right') return <OneLeftThreeRightLayout {...layoutProps} />;
-  }
-
-  // Five images — fallback to default layout (2 บน, 3 ล่าง)
-  return <DefaultFiveLayout {...layoutProps} />;
+  return (
+    <div style={{ overflow: 'hidden', isolation: 'isolate', width: '100%' }}>
+      {layoutNode}
+    </div>
+  );
 });
 
 PhotoGrid.displayName = 'PhotoGrid';
