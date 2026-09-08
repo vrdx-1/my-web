@@ -3,7 +3,9 @@
  *
  * แปลง public object URL → render/image endpoint ของ Supabase แล้วเติม width/quality
  *   จาก: https://<proj>.supabase.co/storage/v1/object/public/<bucket>/<path>
- *   เป็น: https://<proj>.supabase.co/storage/v1/render/image/public/<bucket>/<path>?width=..&quality=..
+ *   เป็น: .../render/image/public/...?width=..&quality=..&resize=contain
+ *
+ * - ต้องใส่ resize=contain เพราะถ้าใส่แค่ width Supabase จะครอปแบบ cover (รูปในฟีดดูซูม)
  *
  * - ใช้ได้เฉพาะ URL ที่เป็น Supabase Storage public เท่านั้น
  * - ข้าม data:/blob:/URL ภายนอก (OAuth ฯลฯ) — คืนค่าเดิมไม่แตะ
@@ -29,12 +31,15 @@ export const IMAGE_TRANSFORM_ENABLED = true;
 export interface SupabaseImageTransformOptions {
   width?: number;
   quality?: number;
+  /** cover = ครอป (ค่าเริ่มต้นของ Supabase) — ฟีดต้องใช้ contain ไม่งั้นรูปซูม */
+  resize?: 'contain' | 'cover' | 'fill';
 }
 
-/** ค่าเริ่มต้นสำหรับรูปในกริดฟีด — ปรับที่นี่ที่เดียวเพื่อเปลี่ยนทั้งระบบ */
+/** ค่าเริ่มต้นสำหรับรูปในกริดฟีด — ย่อความกว้างโดยไม่ครอป */
 export const FEED_IMAGE_TRANSFORM: SupabaseImageTransformOptions = {
   width: 800,
   quality: 75,
+  resize: 'contain',
 };
 
 export function transformSupabaseImageUrl(
@@ -62,6 +67,9 @@ export function transformSupabaseImageUrl(
   }
   if (typeof options.quality === 'number' && options.quality > 0) {
     params.push(`quality=${Math.round(options.quality)}`);
+  }
+  if (options.resize === 'contain' || options.resize === 'cover' || options.resize === 'fill') {
+    params.push(`resize=${options.resize}`);
   }
   if (params.length === 0) return url;
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 import { transformSupabaseImageUrl } from '@/utils/supabaseImageTransform';
 
-/** Style รูปพื้นฐานในกริด — ใช้ร่วมทุก layout (absolute เพื่อไม่ดันความสูงกริดตามสัดส่วนไฟล์) */
+/** Style รูปพื้นฐานในกริด — เติมช่องด้วย cover แบบเดียวกับ PhotoPreviewGrid (Next Image fill) */
 export const baseImgStyle: React.CSSProperties = {
   position: 'absolute',
   inset: 0,

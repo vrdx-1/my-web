@@ -71,6 +71,8 @@ export const ImageWithSkeleton = memo(function ImageWithSkeleton({
           inset: 0,
           width: '100%',
           height: '100%',
+          objectFit: 'cover',
+          objectPosition: 'center',
           zIndex: 1,
           opacity: loaded ? 1 : 0,
           transition: 'opacity 0.25s ease-out',

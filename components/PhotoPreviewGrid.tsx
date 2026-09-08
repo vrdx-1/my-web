@@ -2,7 +2,13 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { PHOTO_GRID_GAP } from '@/utils/layoutConstants';
+import {
+  PHOTO_GRID_GAP,
+  PHOTO_GRID_THREE_GALLERY_RIGHT_HEIGHT,
+  PHOTO_GRID_THREE_LEFT_HEIGHT,
+  PHOTO_GRID_THREE_RIGHT_HEIGHT,
+  PHOTO_GRID_TWO_IMAGE_HEIGHT,
+} from '@/utils/layoutConstants';
 import { normalizeImageUrl } from '@/utils/avatarUtils';
 
 interface PhotoPreviewGridProps {
@@ -117,7 +123,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             style={{
               position: 'relative',
               width: '100%',
-              height: '300px',
+              height: PHOTO_GRID_TWO_IMAGE_HEIGHT,
               background: '#f0f0f0',
             }}
           >
@@ -154,7 +160,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
             alt="Preview 1"
             style={{
               width: '100%',
-              height: '400px',
+              height: PHOTO_GRID_THREE_LEFT_HEIGHT,
               objectFit: 'cover',
               objectPosition: 'center',
               background: '#f0f0f0',
@@ -169,7 +175,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               style={{
                 position: 'relative',
                 width: '100%',
-                height: '199px',
+                height: PHOTO_GRID_THREE_RIGHT_HEIGHT,
                 background: '#f0f0f0',
               }}
             >
@@ -569,7 +575,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
               alt="Preview 1"
               style={{
                 width: '100%',
-                height: '400px',
+                height: PHOTO_GRID_THREE_LEFT_HEIGHT,
                 objectFit: 'cover',
                 objectPosition: 'center',
                 background: '#f0f0f0',
@@ -584,7 +590,7 @@ export const PhotoPreviewGrid = React.memo<PhotoPreviewGridProps>(({
                 style={{
                   position: 'relative',
                   width: '100%',
-                  height: '198.5px',
+                  height: PHOTO_GRID_THREE_GALLERY_RIGHT_HEIGHT,
                   background: '#f0f0f0',
                 }}
               >

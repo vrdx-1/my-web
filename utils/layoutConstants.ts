@@ -9,6 +9,17 @@ import { LAO_FONT } from './constants';
 /** Gap เส้นแบ่งรูปใน grid — เท่ากับ layout 2×2 ใช้กับทุก template (PhotoGrid, PhotoPreviewGrid, PostCard) */
 export const PHOTO_GRID_GAP = '3px';
 
+/** ความสูงช่อง 1 รูปในฟีด — ค่าจาก PhotoGrid ตอนแสดงรูปพอดี (commit 58ef0d0) */
+export const PHOTO_GRID_SINGLE_IMAGE_HEIGHT = '400px';
+/** ความสูงช่อง 2 รูป — PhotoGrid กับ PhotoPreviewGrid ใช้ค่าเดียวกัน */
+export const PHOTO_GRID_TWO_IMAGE_HEIGHT = '300px';
+/** ความสูงรูปซ้ายตอน 3 รูป / layout three-images */
+export const PHOTO_GRID_THREE_LEFT_HEIGHT = '400px';
+/** ความสูงรูปขวาตอน 3 รูป */
+export const PHOTO_GRID_THREE_RIGHT_HEIGHT = '199px';
+/** ความสูงรูปขวา layout three-images (6+) ให้รวมกับ gap แล้วสูงเท่าฝั่งซ้าย */
+export const PHOTO_GRID_THREE_GALLERY_RIGHT_HEIGHT = '198.5px';
+
 /** Aspect ratio ของแต่ละ layout (ใช้ในหน้าจัดเรียงให้ตัวอย่างขนาดสมจริง) */
 export const LAYOUT_ASPECT_RATIO: Record<string, string> = {
   default: '1',

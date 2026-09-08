@@ -2,21 +2,25 @@ import React from 'react';
 import { ImageWithSkeleton } from '../ImageWithSkeleton';
 import { PhotoOverlayBadge } from '../PhotoOverlayBadge';
 import { baseImgStyle, PhotoGridLayoutProps } from '../shared';
+import {
+  PHOTO_GRID_THREE_GALLERY_RIGHT_HEIGHT,
+  PHOTO_GRID_THREE_LEFT_HEIGHT,
+} from '@/utils/layoutConstants';
 
-/** layout 'three-images' (6+) — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก (เหมือน post 3 รูป) สัดส่วนสมมาตรรวมสูง 300px */
+/** layout 'three-images' (6+) — ซ้ายใหญ่ 1 รูป, ขวา 2 รูปเล็ก ความสูงช่องเดียวกับ PhotoPreviewGrid */
 export function ThreeImagesGalleryLayout({ images, count, onPostClick, firstImageLoading, firstImgFetchPriority, gridGap, gap }: PhotoGridLayoutProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative', height: '300px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: gap, rowGap: 0, cursor: 'pointer', position: 'relative' }}>
       <ImageWithSkeleton
         src={images[0]}
         imageIndex={0}
         onPostClick={onPostClick}
         loading={firstImageLoading}
         fetchPriority={firstImgFetchPriority}
-        containerStyle={{ width: '100%', height: '100%' }}
+        containerStyle={{ width: '100%', height: PHOTO_GRID_THREE_LEFT_HEIGHT, background: '#f0f0f0' }}
         imgStyle={baseImgStyle}
       />
-      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap, height: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', ...gridGap }}>
         {images.slice(1, 3).map((img, i) => {
           const idx = i + 1;
           return (
@@ -25,7 +29,9 @@ export function ThreeImagesGalleryLayout({ images, count, onPostClick, firstImag
               style={{
                 position: 'relative',
                 cursor: 'pointer',
-                height: '100%',
+                width: '100%',
+                height: PHOTO_GRID_THREE_GALLERY_RIGHT_HEIGHT,
+                background: '#f0f0f0',
               }}
               onClick={() => onPostClick(idx)}
             >
