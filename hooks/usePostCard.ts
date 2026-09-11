@@ -214,6 +214,26 @@ export function usePostCard({ post, session, onRepost, exchangeRatesOverride = n
       }
 
       if (latestStatus === 'success' && !isSuccessAndExpired) {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData.session?.access_token;
+          const activateResponse = await fetch('/api/boost/activate-car', {
+            method: 'POST',
+            headers: mergeHeaders(
+              {
+                'Content-Type': 'application/json',
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              },
+              activeProfileId,
+            ),
+            body: JSON.stringify({ postId: post.id }),
+          });
+          if (activateResponse.ok && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('post:updated', { detail: { postId: post.id } }));
+          }
+        } catch {
+          // Keep showing the boost status popup even if the car flag sync fails.
+        }
         setBoostStatusPopupStatus('success');
         setBoostStatusPopupExpiresAt(latestExpiresAt);
         setShowBoostStatusPopup(true);
@@ -224,7 +244,7 @@ export function usePostCard({ post, session, onRepost, exchangeRatesOverride = n
     } catch {
       router.push(`/boost_post?id=${post.id}`);
     }
-  }, [post.id, router]);
+  }, [activeProfileId, post.id, router]);
 
   const handleQuickRepost = React.useCallback(async () => {
     if (!canQuickRepost || typeof onRepost !== 'function' || isQuickReposting) return;

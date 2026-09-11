@@ -18,6 +18,13 @@ const INTERACTION_IDS_PAGE_SIZE = 500;
 const POST_IDS_IN_QUERY_CHUNK_SIZE = 200;
 const SAVED_MY_POSTS_PAGE_SIZE = 50;
 const feedListCache: Record<string, { posts: any[]; hasMore: boolean }> = {};
+
+export function clearFeedListCache() {
+  Object.keys(feedListCache).forEach((key) => {
+    delete feedListCache[key];
+  });
+}
+
 function getFeedListCacheKey(
   type: string,
   session: any,

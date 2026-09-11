@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { resolveServerActiveProfile } from '@/utils/serverActiveProfile';
 import { internalServerError } from '@/lib/apiSecurity';
+import { setCarBoosted } from '@/lib/activateBoostedCar';
 
 type RecognizeRevenueBody = {
   boostId?: string;
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     debug.stage = 'load_boost';
     const { data: boost, error: boostError } = await admin
       .from('post_boosts')
-      .select('id, post_id, user_id, status, price')
+      .select('id, post_id, user_id, status, price, expires_at')
       .eq('id', boostId)
       .maybeSingle();
 
@@ -148,6 +149,26 @@ export async function POST(request: NextRequest) {
       debug.stage = 'boost_not_success';
       debug.boostStatus = String(boost.status || '');
       return NextResponse.json({ ok: true, skipped: true, reason: 'boost_not_success', debug });
+    }
+
+    debug.stage = 'activate_car_boost';
+    try {
+      await setCarBoosted(
+        admin,
+        post_id,
+        typeof boost.expires_at === 'string' ? boost.expires_at : null,
+      );
+    } catch (carBoostError) {
+      debug.stage = 'activate_car_boost_error';
+      console.error('[boost/revenue/recognize] activate car boost failed', { debug, carBoostError });
+      return NextResponse.json(
+        {
+          error: 'Activate car boost failed',
+          debug,
+          details: String(carBoostError instanceof Error ? carBoostError.message : carBoostError),
+        },
+        { status: 500 },
+      );
     }
 
     debug.stage = 'load_profile';

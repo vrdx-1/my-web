@@ -118,23 +118,28 @@ function BoostSlipPageContent() {
         throw dbError;
       }
 
-      const { error: carBoostError } = await supabase
-        .from("cars")
-        .update({ is_boosted: true, boost_expiry: expiresAtIso })
-        .eq("id", postId)
-        .eq("user_id", userId);
-
-      if (carBoostError) {
-        const revertBoostQuery = supabase
+      const revertInsertedBoost = async () => {
+        const { error: revertBoostError } = await supabase
           .from("post_boosts")
           .update({ status: "reject", expires_at: null })
           .eq("post_id", postId)
           .eq("user_id", userId)
           .eq("slip_url", fileName)
           .eq("status", "success");
-        const { error: revertBoostError } = await revertBoostQuery;
         if (revertBoostError) console.error("Failed to revert post_boosts after car update error", revertBoostError);
-        throw carBoostError;
+      };
+
+      const activateResponse = await fetch("/api/boost/activate-car", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ postId }),
+      });
+      if (!activateResponse.ok) {
+        await revertInsertedBoost();
+        throw new Error(`CAR_BOOST_UPDATE_FAILED | status=${activateResponse.status}`);
       }
 
       if (insertedBoost?.id) {
@@ -183,6 +188,13 @@ function BoostSlipPageContent() {
       }
 
       invalidateFeedCacheClient();
+      if (typeof window !== "undefined") {
+        const { clearFeedListCache } = await import("@/hooks/usePostListData");
+        const { clearHomeFeedStorage } = await import("@/hooks/homeFeedStorage");
+        clearFeedListCache();
+        clearHomeFeedStorage({ clearCache: true });
+        window.dispatchEvent(new CustomEvent("post:updated", { detail: { postId } }));
+      }
 
       setBoostResult({
         dbStatus: "success",
