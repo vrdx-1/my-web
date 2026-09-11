@@ -48,6 +48,7 @@ export function buildTrendingFeedOrder(
  *  2. Posts matching global trending search terms (trending)
  *  3. Posts posted within the last 24 hours      (fresh)
  *  4. Everything else                            (regular)
+ *  After ranking, posts older than 7 days are moved to the very end.
  *
  * Boosted posts are NOT placed at the top — they are interleaved
  * every BOOST_INTERVAL regular positions so they don't dominate the feed.
@@ -535,5 +536,17 @@ export function buildPersonalizedFeedOrder(
   );
 
   // Interleave boosted every BOOST_INTERVAL positions
-  return interleaveBoost(ratioOrderedNonBoosted, boostedOrdered, BOOST_INTERVAL);
+  const rankedIds = interleaveBoost(ratioOrderedNonBoosted, boostedOrdered, BOOST_INTERVAL);
+
+  // Home feed only: posts older than 7 days always come after every other post.
+  // Relative order from the ranking above is kept within each group.
+  const cutoff7d = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const recentIds: string[] = [];
+  const olderThan7DaysIds: string[] = [];
+  for (const id of rankedIds) {
+    const createdAt = rowById.get(id)?.created_at;
+    if (createdAt && createdAt < cutoff7d) olderThan7DaysIds.push(id);
+    else recentIds.push(id);
+  }
+  return [...recentIds, ...olderThan7DaysIds];
 }
