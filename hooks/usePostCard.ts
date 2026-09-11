@@ -74,9 +74,32 @@ export function usePostCard({ post, session, onRepost, exchangeRatesOverride = n
     activeProfile?.is_sub_account &&
       (activeProfile?.parent_admin_id || activeProfile?.role === 'admin'),
   );
+  const isActingAsMainAccount = Boolean(
+    authUserId &&
+      String(activeProfileId || authUserId) === String(authUserId) &&
+      !activeProfile?.is_sub_account,
+  );
+  const postOwnerId = post?.user_id ? String(post.user_id) : '';
+  const postOwnerFromJoin = Array.isArray(post?.profiles) ? post.profiles[0] : post?.profiles;
+  const postBelongsToManagedSubAccount = Boolean(
+    postOwnerId &&
+      authUserId &&
+      postOwnerId !== String(authUserId) &&
+      ((postOwnerFromJoin?.is_sub_account &&
+        String(postOwnerFromJoin?.parent_admin_id || '') === String(authUserId)) ||
+        availableProfiles.some(
+          (profile) =>
+            String(profile.id) === postOwnerId &&
+            Boolean(profile.is_sub_account) &&
+            String(profile.parent_admin_id || '') === String(authUserId),
+        )),
+  );
   const isRecommendPost = post.status === 'recommend';
   const canQuickRepost =
-    isAdminSubAccount && isOwner && isRecommendPost && typeof onRepost === 'function';
+    isOwner &&
+    isRecommendPost &&
+    typeof onRepost === 'function' &&
+    (isAdminSubAccount || (isActingAsMainAccount && postBelongsToManagedSubAccount));
   const isSoldPost = post.status === 'sold';
 
   // Modal state
